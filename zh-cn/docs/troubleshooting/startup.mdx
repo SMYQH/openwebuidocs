@@ -1,0 +1,96 @@
+---
+title: "启动与 Docker 故障"
+sidebar_position: 1
+---
+
+# 启动与 Docker 故障
+
+Open WebUI 完全无法启动？从这里开始。关于 Alembic 迁移的问题（`no such table`、`Can't locate revision`），请参阅[数据库迁移](./manual-database-migration)。
+
+## Apple Silicon (M1/M2/M3) 上容器启动时挂起
+
+### 症状
+
+在 macOS Apple Silicon 上，容器在迁移完成后、打印出以下信息时**在启动过程中卡死**：
+
+```text
+WARNING: CORS_ALLOW_ORIGIN IS SET TO '*' - NOT RECOMMENDED FOR PRODUCTION DEPLOYMENTS.
+```
+
+没有 `Started server process`、没有 ASCII 横幅、没有错误。它会**无限期**卡住（一小时后仍然没有响应），即使在**全新的空数据卷**上也会重现。`OFFLINE_MODE` / `HF_HUB_OFFLINE` 没有区别。使用 `Ctrl+C` 停止会留下仍在运行的容器，必须使用 `docker kill` 才能终止。
+
+### 原因
+
+在此窗口中没有运行 Open WebUI 自身的任何逻辑，迁移已经完成，也没有发生数据库查询或网络调用。这完全是 Python `import` 应用及其原生依赖项（`pycrdt`、嵌入/向量库、`pydub` 等）的过程。
+
+通常的触发原因是**架构不匹配**：主机全局设置了 `DOCKER_DEFAULT_PLATFORM=linux/amd64`，导致 Docker 拉取 **x86_64 镜像并在 ARM 主机上通过 Rosetta 仿真运行**。原生扩展在仿真环境下导入时卡住。
+
+### 修复
+
+运行**原生的 `arm64` 镜像**，不要在 Apple Silicon 上仿真 x86：
+
+1. 让 Docker 自动选择架构，或显式指定：
+
+   ```bash
+   docker run --platform linux/arm64 ... ghcr.io/open-webui/open-webui:main
+   ```
+
+2. 检查全局覆盖设置并取消（或在每次运行时覆盖）：
+
+   ```bash
+   echo $DOCKER_DEFAULT_PLATFORM     # 同时检查 Docker Desktop → 设置
+   ```
+
+3. 确认容器实际运行的架构（Apple Silicon 上应为 `aarch64`）：
+
+   ```bash
+   docker run --rm ghcr.io/open-webui/open-webui:main uname -m
+   ```
+
+:::warning 不支持仿真
+在 Apple Silicon 上通过仿真（Rosetta）运行 **x86 镜像是尽力而为且不受支持的**，可能会像这样在启动时卡住。请使用原生 `arm64` 镜像。
+:::
+
+:::tip 捕获确切的阻塞导入
+如果启动挂起*不*是架构相关的问题，可以在 60 秒后转储每个线程的堆栈（无需安装，`faulthandler` 是标准库）：
+
+```bash
+docker run --rm --entrypoint python ghcr.io/open-webui/open-webui:main \
+  -X faulthandler -c "import faulthandler; faulthandler.dump_traceback_later(60); import open_webui.main; print('IMPORT OK')"
+```
+
+`IMPORT OK` 表示导入没有问题，问题出在其他地方；约 60 秒后的堆栈跟踪将显示确切阻塞的导入。
+:::
+
+---
+
+## 离线模式新安装时出现 `ValueError: No embedding model is loaded`
+
+### 症状
+
+启动失败（在横幅之后）并显示：
+
+```text
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached
+snapshot folder ... outgoing traffic has been disabled.
+
+ValueError: No embedding model is loaded. Set RAG_EMBEDDING_MODEL to a valid
+SentenceTransformer model name, or configure an external RAG_EMBEDDING_ENGINE
+(ollama, openai, azure_openai).
+```
+
+这发生在**新安装**上设置了 [`OFFLINE_MODE=true`](/reference/env-configuration#offline_mode) 和/或 [`HF_HUB_OFFLINE=1`](/reference/env-configuration#hf_hub_offline) 时。
+
+### 原因
+
+离线模式意味着*永不访问网络*。默认的 RAG 嵌入引擎使用一个**必须下载一次的本地 SentenceTransformers 模型**。在新安装上已经启用了离线模式的情况下，模型从未被缓存，因此没有可加载的内容，启动中止。
+
+### 修复
+
+选择一种方案：
+
+- **先缓存。** 在不设置 `OFFLINE_MODE` / `HF_HUB_OFFLINE` 的情况下启动一次，让嵌入模型下载并缓存，然后在后续运行中重新启用离线模式。
+- **使用外部嵌入器**，这样无需下载：将 [`RAG_EMBEDDING_ENGINE`](/reference/env-configuration#rag_embedding_engine) 设置为 `ollama`（配合已拉取的 [`RAG_EMBEDDING_MODEL`](/reference/env-configuration#rag_embedding_model)）、`openai` 或 `azure_openai`。
+- **预烘焙或挂载模型缓存**到镜像/卷中，用于离线部署。
+
+有关完整的离线设置，请参阅[离线模式指南](/tutorials/maintenance/offline-mode)。

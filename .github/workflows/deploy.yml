@@ -1,0 +1,42 @@
+name: Deploy to GitHub Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: "部署URL(例如`https://myorg.github.io/docs`)"
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6 # latest
+      - uses: actions/setup-node@v6 # latest
+        with:
+          node-version-file: "zh-cn/.node-version"
+      - name: Install dependencies
+        working-directory: zh-cn
+        run: npm ci
+      - name: Apply deployment URL to config
+        working-directory: zh-cn
+        run: |
+          DEPLOY_URL="${{ github.event.inputs.domain }}"
+          [[ "$DEPLOY_URL" =~ ^https?:// ]] || DEPLOY_URL="https://$DEPLOY_URL"
+          CLEAN_URL="${DEPLOY_URL%/}"
+          SCHEME_HOST="$(echo "$CLEAN_URL" | sed -E 's|^(https?://[^/]+).*|\1|')"
+          PATH_PART="$(echo "$CLEAN_URL" | sed -E 's|^https?://[^/]+(.*)|\1|')"
+          BASE_URL="${PATH_PART:-/}"
+          [[ "$BASE_URL" != /* ]] && BASE_URL="/$BASE_URL"
+          [[ "$BASE_URL" != */ ]] && BASE_URL="$BASE_URL/"
+          sed -i "s|url: \"https://openwebui.com\"|url: \"$SCHEME_HOST\"|" docusaurus.config.ts
+          sed -i "s|baseUrl: \"/\"|baseUrl: \"$BASE_URL\"|" docusaurus.config.ts
+          echo "url=$SCHEME_HOST baseUrl=$BASE_URL"
+      - name: Build
+        working-directory: zh-cn
+        run: npm run build
+      - uses: peaceiris/actions-gh-pages@v4 # latest
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: zh-cn/build

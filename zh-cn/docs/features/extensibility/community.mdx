@@ -1,0 +1,123 @@
+---
+title: "社区插件"
+sidebar_position: 1
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# 社区插件
+
+<ThemedImage
+  alt="Open WebUI 插件社区：Pipe、Tool、Action、Event、Filter 和 MCP 插件类型围绕 Open WebUI 标志，周围是社区构建的插件星座"
+  sources={{
+    light: useBaseUrl('/images/banners/community-light.svg'),
+    dark: useBaseUrl('/images/banners/community-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
+
+[Open WebUI 社区网站](https://openwebui.com/) 上有数百个社区构建的工具和函数，你可以一键导入到你的实例中。本页面是初学者的地图：库的工作原理，如何根据你想要的功能选择插件，以及如何安全导入。
+
+:::danger 高亮不代表经过审查
+
+在本页面或 Open WebUI 社区网站上被标记为**精选、热门或列出，并不代表认可**，也**不**意味着代码已经过安全或质量审查。列表是社区提交的，未经审计。
+
+工具和函数在你的服务器上执行**任意 Python 代码**。插件的星数或排名无法说明其代码的实际行为。每次导入前请阅读源代码。请参阅完整的[插件安全警告](/features/extensibility/plugin/)。
+
+:::
+
+## 库的工作原理
+
+- **浏览** openwebui.com 上的[工具和函数](https://openwebui.com/)，或按关键字[搜索](https://openwebui.com/search)。
+- **一键导入**（或通过将源代码粘贴到内置编辑器中）。无需 `pip install`，无需重启。
+- **导入后的位置：** 导入的**工具**出现在**工作区 → 工具**下，导入的**函数**出现在**管理面板 → 函数**下。两者均由管理员管理。关于两者的区别，请参见[工具与函数](/features/extensibility/plugin/)。
+
+## 根据你想要的功能查找插件
+
+插件*类型*并不总是从名称中明显看出，所以从目标开始。在[社区网站](https://openwebui.com/search)上搜索以下术语，然后在导入前阅读代码。
+
+| 我想要…… | 插件类型 | 在社区网站搜索 |
+| :--- | :--- | :--- |
+| 给模型**实时网络搜索**或实时数据 | [工具](/features/extensibility/plugin/tools) | `web search`、`weather`、`search` |
+| **添加模型提供商**（Anthropic、Gemini、路由器、本地引擎） | [Pipe](/features/extensibility/plugin/functions/pipe) | `pipe`、提供商名称 |
+| **跟踪或限制每个用户的成本/使用量** | [Filter](/features/extensibility/plugin/functions/filter) | `cost`、`usage`、`budget`、`rate limit` |
+| **编辑 PII** 或审核消息内容 | [Filter](/features/extensibility/plugin/functions/filter) | `pii`、`redact`、`moderation` |
+| **总结或压缩**长对话 | [Filter](/features/extensibility/plugin/functions/filter) | `context`、`memory`、`compaction` |
+| 在消息上添加**按钮**（导出、重新运行、翻译） | [Action](/features/extensibility/plugin/functions/action) | `action`、任务名称 |
+| **响应系统事件**（审计日志、注册门控、资源预配） | [Event](/features/extensibility/plugin/functions/event) | `event`、`webhook`、`audit` |
+| 连接**现有的 HTTP 服务** | [OpenAPI / MCP 服务器](/features/extensibility/mcp) | 不适用（将 Open WebUI 指向规范即可） |
+
+不确定哪种类型适合？[我需要哪种扩展？](/features/extensibility#which-extension-do-i-need) 表格会帮你理清。
+
+## 精选插件
+
+一组精选插件，展示可能的功能，按插件类型分组。**精选不代表经过审查**（参见上面的警告）——每次导入前请阅读源代码。
+
+### 工具
+
+[工具](/features/extensibility/plugin/tools)赋予模型可以调用的新能力。
+
+| 插件 | 功能说明 |
+| :--- | :--- |
+| **[Inline Visualizer（流式）](https://github.com/Classic298/open-webui-plugins/tree/main/inline-visualizer-v2)** | 在模型流式输出时**实时渲染**仪表板、图表、图示和交互式 HTML/SVG，直接显示在聊天中，无需等待回复完成。包含 46 种语言本地化、亮/暗主题、可配置的内容安全策略和交互桥接（`sendPrompt()`、`copyText()`、通知、状态保存/加载）。需要**允许 iframe 同源**用户设置；附带配套的[技能](/features/workspace/skills)。 |
+| **[MCP App Bridge](https://github.com/Classic298/open-webui-plugins/tree/main/mcp-app-bridge)** | 在任何 [MCP](/features/extensibility/mcp) 服务器上发现和调用工具，然后通过 Open WebUI 的 Rich UI 管道将应用的 UI 资源渲染为**沙盒化的交互式嵌入**显示在聊天中。遵循服务器声明的 CSP 和域策略（connect/resource/frame），并自动调整 iframe 大小。需要可访问的 MCP 服务器和可流式传输的 HTTP 端点。 |
+| **[Email Composer](https://github.com/Classic298/open-webui-plugins/tree/main/email-composer)** | 将自然语言请求转化为可发送的电子邮件，以**交互式 Rich UI 卡片**呈现：富文本正文带格式工具栏、收件人/抄送/密送管理、优先级徽章、字数统计、复制为富文本、下载为 `.eml`，以及通过 `mailto:` 一键发送。需要原生函数调用；自动保存使用**允许 iframe 同源**设置。 |
+| **[Sub Agent](https://github.com/Skyzi000/open-webui-extensions/blob/main/tools/sub_agent.py)** | 将工具密集、多步骤的任务委托给在**隔离上下文**中运行的自主子代理，只返回最终结果，这样主对话不会被中间工具调用填满。支持并行运行子代理，通过允许/排除列表控制每个子代理可以使用的工具（常规、MCP、终端、内置）和技能。需要原生函数调用。 |
+| **[Ollama Model Card Generator](https://openwebui.com/posts/ollama_model_card_generator_ee80d7a1)** | **管理工具。** 从 `/api/show` 元数据自动为已安装的 Ollama 模型生成丰富的模型卡片：描述、显示名称、标签、能力、推理参数（含 VRAM 感知上下文上限）、系统和建议提示词以及供应商资料图片，并可将其包装为完整充实的工作区模型。31 个可切换的阀门，带覆盖保护；直接写入数据库，建议先预览。 |
+| **[Reveal.js Slide Deck Builder](https://openwebui.com/posts/revealjs_presentation_slide_deck_builder_rich_ui_59243191)** | 让模型在聊天中生成和渲染完全交互式的 [Reveal.js](https://revealjs.com/) HTML5 幻灯片，支持 9 种主题、键盘和箭头导航以及全屏。从 CDN 加载 Reveal.js；需要**允许 iframe 同源**用户设置。 |
+| **[Ask User](https://openwebui.com/posts/ask_user_14182520)** | 让模型在回答前暂停并弹出 1-5 个澄清问题，然后将收集到的答案反馈到其上下文中。设计上有边界限制（最多 5 个问题，无开放式后续循环），因此模糊的请求能够被清晰地界定。 |
+
+### Actions（操作）
+
+[Actions](/features/extensibility/plugin/functions/action) 在消息工具栏上添加按钮。
+
+| 插件 | 功能说明 |
+| :--- | :--- |
+| **[转发到频道](https://openwebui.com/posts/forward_to_channel_b60c1f03)** | 在每条消息上添加一个转发按钮，将消息发布到 Open WebUI [频道](/features/channels)。支持多频道定位、用户和模型的 `@提及`（提及模型会让它在频道中回复）、私信支持和可选格式（链接的聊天标题、时间戳）。通过 UserValves 支持每个用户的覆盖。需要实例启用频道功能。 |
+| **[导出为 Word（增强版）](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/actions/export_to_docx)** | 将对话导出为格式化的 `.docx` Word 文档：语法高亮代码（500+ 语言）、从 LaTeX 转换的原生 Word 公式、渲染为图片的 Mermaid 图表、智能表格和自动生成的参考文献部分。去除 `<think>` / `<analysis>` 推理块；可配置字体和中英文界面。安装 pip 依赖（`python-docx`、`Pygments`、`latex2mathml`、`mathml2omml`），因此请按照下面的检查清单进行审查。 |
+| **[导出为 Excel](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/actions/export_to_excel)** | 从对话中提取 Markdown 表格并导出为格式化的 `.xlsx` 电子表格，自动检测表头、支持多表格、斑马条纹、智能类型转换和可配置的文件名（聊天标题、AI 生成或标题）。可导出最后一条消息或整个聊天。 |
+| **[下载代码块](https://openwebui.com/posts/download_code_blocks_06f51b22)** | 从回复中提取每个围栏代码块，并将每个块下载为正确命名的文件（170+ 语言到扩展名的映射）。多块导航弹窗，带语法高亮预览、行号和可编辑的文件名，以及可选的一键批量模式。 |
+| **[Fork Chat](https://openwebui.com/posts/fork_chat_8f77883b)** | 在你点击的确切消息处将对话分支到一个全新的聊天，重建到该点的完整历史（树感知），清理卡住的状态伪影，然后重定向到分支。原始聊天保持不变。就像对话的 `git branch`。 |
+| **[转发到 Webhook](https://openwebui.com/posts/forward_to_webhook_493add62)** | 将回复转发到 Discord、Slack、Microsoft Teams 或任何通用 webhook，从 URL 自动检测平台并相应格式化（Discord 嵌入带自定义颜色、Slack mrkdwn 等）。支持多 URL 路由和并行投递、可选推理块去除和每个用户的 webhook 覆盖。 |
+| **[重新生成后续建议](https://openwebui.com/posts/regenerate_followups_9b5ac6d6)** | 仅重新生成助手消息下的后续建议标签，保持回复本身不变。调用 Open WebUI 的原生后续任务并通过 websocket 事件原地替换标签。需要在管理设置中启用后续生成功能。 |
+| **[生成图片](https://openwebui.com/posts/generate_image_3fadc3ca)** | 重新实现 v0.6.44 中删除的消息工具栏"生成图片"按钮，使用消息文本作为提示词。支持批量生成、增量显示、重新生成模式和可选的 LLM 提示增强，通过 Open WebUI 的内部图片引擎路由（ComfyUI、Automatic1111、DALL-E）。 |
+| **[固定消息](https://openwebui.com/posts/pin_message_action_143594d1)** | 一键切换固定（收藏）消息，在聊天概览节点图中以心形图标显示。写入与内置概览相同的 `favorite` 标志，并通过 websocket 事件同步前端。 |
+| **[将网页来源添加到知识库](https://openwebui.com/posts/add_sources_to_knowledge_action_65d97417)** | 一键将回复中引用的网络搜索来源 URL 直接保存到[知识库](/features/workspace/knowledge)：选择哪些 URL 和哪个知识库，然后获取、存储和索引每个 URL，支持重复检测和批量处理。 |
+
+### Filters（过滤器）
+
+[过滤器](/features/extensibility/plugin/functions/filter)在消息输入或输出时进行转换。
+
+| 插件 | 功能说明 |
+| :--- | :--- |
+| **[Markdown Normalizer](https://openwebui.com/posts/markdown_normalizer_baaa8732)** | 在 LLM 输出渲染前修复格式错误的 Markdown：未闭合或混乱的代码块、`\[...\]` 风格的 LaTeX、损坏的 Mermaid 图表（自动引用标签）、表格、标题、思维 / `<details>` 标签和残留的 XML 伪影。每个修复都可以独立开关，带有完整的回滚保证和多语言状态消息。 |
+| **[Mermaid Doctor](https://openwebui.com/posts/mermaid_doctor_heals_broken_mermaid_diagrams_gener_310d7852)** | 确定性地修复来自小型或幻觉模型的损坏 Mermaid 图表，在令牌流到达时直接重写无效语法（无需第二次 LLM 调用，零令牌开销）。涵盖流程图、ER 图、甘特图、思维导图和饼图，并可注入少量示例来引导模型并去除幻觉样式。 |
+| **[Thinking Toggle](https://openwebui.com/posts/thinking_toggle_one_click_reasoning_control_for_ll_bb3f66ad)** | 为 **llama.cpp** 模型提供一键推理控制：从聊天面板切换思维开关，选择深度预算（512 令牌到无限制）、13 种推理风格预设、11 种呈现预设和 4 种采样预设。每次请求注入 `enable_thinking` 和推理预算；需要 `llama-server` 以 `--reasoning off` 启动。 |
+| **[Token Usage Display](https://openwebui.com/posts/token_usage_display_a94ea72f)** | 在每条回复下方附加输入/输出/总令牌数、推理和缓存提示令牌、生成时间和每秒令牌数。读取 API 报告的使用量（Ollama、OpenAI、Anthropic、Gemini）并回退到 `tiktoken` 估算；每个指标都可以单独开关。 |
+| **[OpenRouter Balance & Token Tracker](https://openwebui.com/posts/openrouter_cost_token_tracker_22d1e74b)** | 在每条回复下方显示每条消息的 [OpenRouter](https://openrouter.ai/) 使用情况：提示/完成/推理/缓存令牌数、消息成本、速度和你的剩余账户信用余额。自动检测 OpenRouter 模型；需要在阀门中提供你的 OpenRouter API 密钥。 |
+
+### Event Functions（事件函数）
+
+[Event 函数](/features/extensibility/plugin/functions/event)让你自己的 Python 代码响应系统范围的事件。
+
+| 插件 | 功能说明 |
+| :--- | :--- |
+| **[Interface Defaults](https://github.com/Classic298/open-webui-plugins/tree/main/interface-defaults)** | 从一个函数的阀门中设置你的实例的**设置 → 界面**默认值。新用户（注册、OAuth、SCIM）在创建时**自动应用**；两个一次性按钮可以将默认值推送给所有人或恢复出厂设置。原生阀门 UI、后台批量操作，无需自定义 UI 或 monkey-patching。需要 Open WebUI 0.10.0。 |
+| **[Theme Designer Pro](https://github.com/silentoplayz/theme-designer-pro-presets/tree/main/event-function)** | 实例级主题设计器，作为**独立管理页面**运行（无聊天，无 iframe 沙盒），将 CSS 和状态持久化存储在服务器端的 `DATA_DIR/theme/` 下，并通过 SSE 实时推送给每个连接的用户。包括 OKLCH 颜色引擎、草稿/发布预览模式、自定义 CSS 自动作用域和登录页面主题设置。 |
+
+## 导入前的初学者安全检查清单
+
+社区插件与服务器其他部分具有相同的访问权限。安装社区插件就像以管理员身份运行他人的脚本。在导入之前：
+
+1. **阅读代码。** 如果你不理解它的功能，就不要安装。特别警惕对未知主机的网络调用、读取你的 `data` 目录或环境变量的代码，以及任何混淆的代码。
+2. **检查它是否只做声称的事情。** 一个"翻译"操作没有理由回传数据或读取你的数据库。
+3. **查看 `requirements:`。** 额外的 pip 依赖在加载时安装。未知的包是供应链风险，在多副本部署中，运行时安装会在工作节点间竞争（设置 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements) 并将其烘焙到你的镜像中）。
+4. **先在非生产实例上尝试**，确认可信后再推广。
+5. **限制谁能导入。** 只有受信任的管理员才能创建或导入插件。除非必要，普通用户不应拥有工作区访问权限。
+
+关于插件加载后能访问什么（以及随之而来的风险），请参见[底层机制](/features/extensibility/plugin/development/under-the-hood)。
+
+## 分享你自己的插件
+
+构建了有用的东西？将其发布到社区网站，以便其他人可以找到并导入它。同样的警告也适用于你：清晰的 README 和可读、可审计的代码才能赢得信任，因为没有人会替你审计。将密钥放在[阀门](/features/extensibility/plugin/development/valves)中而非硬编码，并编写 `async` 处理程序，以便你的插件在后端向完全异步执行演进时保持兼容。

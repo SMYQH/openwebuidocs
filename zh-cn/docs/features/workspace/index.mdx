@@ -1,0 +1,32 @@
+---
+title: "工作区"
+sidebar_position: 0
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# 工作区
+
+<ThemedImage
+  alt="工作区：五个构建块（模型、知识、提示词、技能、工具）组合成 Open WebUI 核心"
+  sources={{
+    light: useBaseUrl('/images/banners/workspace-light.svg'),
+    dark: useBaseUrl('/images/banners/workspace-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
+
+**用五个构建块组合你自己的 AI。**
+
+工作区是你将原始模型转变为适合你工作的工具的地方。绑定知识、附加工具、设置系统提示词、教授技能并将结果保存为可复用的模型。每个部分都是可选的，它们可以叠加：一个附加了你的手册的模型、你的风格提示词和正确的工具的模型。
+
+| 构建块 | 用途 |
+| :--- | :--- |
+| [**模型**](/features/workspace/models) | 用系统提示词、参数、知识和工具包装基础模型，然后将其保存为模型选择器中的可复用预设。 |
+| [**知识**](/features/workspace/knowledge) | 上传文档并构建 AI 检索的集合（RAG），使其从你的来源回答而不是猜测。 |
+| [**提示词**](/features/workspace/prompts) | 保存带有类型变量的可复用提示词模板，在任何聊天中使用 `/` 斜杠命令调用。 |
+| [**技能**](/features/workspace/skills) | 教授模型如何完成任务（方法论、步骤、规则）的 Markdown 指令集，按需加载。 |
+| [**工具** ↗](/features/extensibility/plugin/tools) | 赋予模型可以调用的真正能力：API、代码、网络。工具在**插件与扩展**下文档说明，不在此处。 |
+
+每个都有单独的页面，所以从任何地方开始都可以。大多数人从自定义**模型**开始，然后根据需要添加其他部分。

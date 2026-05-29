@@ -1,0 +1,136 @@
+---
+sidebar_position: 7
+title: "Open Responses"
+
+---
+
+## 概览
+
+Open WebUI 对 **[Open Responses](https://www.openresponses.org/)** 提供实验性支持。它是一套面向多提供商、可互操作的开放 LLM 接口规范。本指南将带你为某个连接启用 Open Responses API。
+
+:::warning 实验性功能
+该功能目前仍处于实验阶段，未必能在所有提供商上按预期工作。
+:::
+
+---
+
+## 什么是 Open Responses？
+
+Open Responses 是一个开源规范，用于统一不同提供商之间 LLM 请求与响应的结构。它带来的好处包括：
+
+- **一套规范，多家提供商**：一次描述输入/输出，就能运行在 OpenAI、Anthropic、Gemini 或本地模型上。
+- **可组合的 Agent 循环**：统一流式输出、工具调用与消息编排。
+- **更容易做评估与路由**：在共享 schema 下比较不同提供商、路由请求并记录结果。
+
+Open Responses 基于 OpenAI Responses API 格式，但目标是面向任何实现该规范的提供商。
+
+---
+
+## 第 1 步：新增或编辑连接
+
+1. 进入 ⚙️ **Admin Settings**。
+2. 打开 **Connections > OpenAI > Manage**（查找扳手图标）。
+3. 点击 ➕ **Add New Connection**，或编辑现有连接。
+
+---
+
+## 第 2 步：选择 API 类型
+
+在连接弹窗中，找到 **API Type** 设置：
+
+- **聊天补全**（默认）：使用标准 OpenAI 聊天补全 API 格式
+- **Responses**（实验性）：使用 Open Responses API 格式
+
+点击切换到 **Responses**。你会看到 “实验性” 标记，表示该功能仍在开发中。
+
+![API Type 切换](/images/getting-started/quick-start/api-type-responses.gif)
+
+---
+
+## 第 3 步：配置你的提供商
+
+填写支持 Open Responses 格式的提供商连接信息：
+
+- **URL**：提供商 API 端点
+- **API Key**：认证凭据
+- **Model IDs**：（可选）指定你要使用的特定模型
+
+---
+
+## 第 4 步（可选）：启用原生服务端工具
+
+某些提供商，最著名的是 **OpenAI**，通过 Responses API 公开了**服务端工具**。最典型的例子是**原生网络搜索**：模型自行运行搜索，然后返回带有来源引用的 grounded 回答。Open WebUI 将这些工具转发给提供商，并原生渲染其结果，因此无需额外配置。
+
+:::info 这与 Open WebUI 的网络搜索是分开的
+原生服务端工具完全在提供商端运行，仅适用于 **API Type: Responses** 连接（上述第 1 至 2 步）。它们**独立于** Open WebUI 自己的[网络搜索](/features/chat-conversations/web-search)提供商（Tavily、SearXNG 等），你无需配置或启用那些。请将模型的**网络搜索**功能保持**关闭**状态；原生工具会替代它，同时启用两者是多余的。
+:::
+
+要为模型启用原生网络搜索：
+
+1. 进入 **Workspace → Models**，编辑（✏️）一个使用你 Responses 连接的模型。
+2. 展开 **Advanced Params**。
+3. 在底部，点击 **➕ Add Custom Parameter** 并设置：
+   - **Name**: `tools`
+   - **Value**: `[{"type": "web_search"}]`
+4. 保存模型。
+
+当你与该模型聊天时，提供商会执行服务端网络搜索，Open WebUI 会流式显示：
+
+- 一个 **"Web Search"** 状态块，显示模型运行的查询。
+- 来自结果中的**可点击来源引用**。
+- 模型的 grounded 回答。
+
+:::tip 多个工具和工具选项
+`tools` 自定义参数接受提供商在 Responses API 中支持的任何工具。通过将它们添加到数组中传递多个：
+
+```json
+[{"type": "web_search"}, {"type": "code_interpreter"}]
+```
+
+你也可以在工具对象中包含提供商特定的选项（对于网络搜索，例如 `search_context_size` 或 `user_location`）。请参阅你的提供商的 Responses API 文档。较旧的 OpenAI 模型快照可能需要 `{"type": "web_search_preview"}` 而不是 `web_search`。
+:::
+
+:::warning 仅限管理员
+**Add Custom Parameter** 按钮在模型编辑器中仅对管理员显示。自定义参数会按原样转发给提供商，因此请仅使用有效的 Responses API 工具定义。
+:::
+
+---
+
+## 支持的提供商
+
+Open Responses 是一项较新的规范，因此提供商支持仍在持续增长。请查看 [Open Responses 官网](https://www.openresponses.org/) 以获取最新的兼容提供商与实现列表。
+
+---
+
+## 故障排查
+
+### 聊天补全可用，但 Responses 不可用
+
+并非所有提供商都已经支持 Open Responses 格式。你可以尝试：
+
+1. 切回聊天补全
+2. 确认你的提供商是否明确声明支持 Open Responses
+3. 使用可以转换到 Open Responses 格式的中间代理
+
+### 流式输出或工具调用行为异常
+
+对于 Responses API 连接，工具调用、重新调用与流式输出都受支持。Open WebUI 会在聊天补全与 Responses API 格式之间透明转换，包括工具调用参数、函数调用输出以及多轮工具使用。如果你仍然遇到问题：
+
+1. 查看已知问题
+2. 在 [GitHub](https://github.com/open-webui/open-webui/issues) 报告 bug
+
+### 有状态会话
+
+默认情况下，Open WebUI 会把 Responses API 连接当作**无状态**连接处理——它会在本地管理对话历史，并在每次请求时发送完整上下文。如果你的上游提供商支持**有状态会话**（例如支持 `previous_response_id` 锚定的服务端响应存储，如直接 OpenAI 连接），你可以启用 `ENABLE_RESPONSES_API_STATEFUL=true`，让提供商自己管理会话状态。
+
+:::warning
+大多数代理和第三方 Responses API 端点都是无状态的，启用有状态模式后会直接出问题。只有在提供商明确支持有状态 Responses API 会话时才应开启。
+:::
+
+---
+
+## 了解更多
+
+- **[Open Responses 规范](https://www.openresponses.org/specification)**：完整技术规范
+- **[Open Responses GitHub](https://github.com/openresponses/openresponses)**：源码与讨论
+- **[FAQ：为什么 Open WebUI 不原生支持私有 API？](/faq#q-why-doesnt-open-webui-natively-support-provider-xs-proprietary-api)**：了解我们的协议优先理念

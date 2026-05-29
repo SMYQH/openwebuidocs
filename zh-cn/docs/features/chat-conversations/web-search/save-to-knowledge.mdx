@@ -1,0 +1,64 @@
+---
+sidebar_position: 10
+title: "将搜索结果保存到知识库"
+---
+
+# 将搜索结果保存到知识库 📚
+
+**Add Web Sources to Knowledge Action** 允许你通过一次点击，直接把网页搜索结果 URL 保存到 Knowledge Base。该功能可以自动完成网页内容抓取、清洗与上传，大幅简化研究资料沉淀流程。
+
+## 功能特性
+
+- **一键保存**：快速把聊天消息中选中的来源添加到任意 Knowledge Base
+- **URL 选择**：可从编号列表中挑选要保存的特定 URL
+- **批量处理**：单次操作可处理多个 URL
+- **重复检测**：自动跳过目标 Knowledge Base 中已存在的 URL
+- **可配置默认值**：可设置默认 Knowledge Base，并跳过确认弹窗，以获得更快工作流
+
+## 设置
+
+“Add Web Sources to Knowledge” 功能以 **Function Action** 的形式实现。使用方法如下：
+
+1.  **下载该 Action**：访问 Open WebUI Community Hub，并下载 [Add Web Sources to Knowledge Action](https://openwebui.com/posts/65d97417-d079-4720-b2cc-a63dd59b7e3e)
+2.  **启用该 Action**： 
+    *   前往 **Workspace > Functions**
+    *   导入它，或使用提供的代码创建一个新 function
+    *   在全局或特定模型上启用该 action
+
+## 如何使用
+
+1.  **触发网页搜索**：提出一个会触发 web search 的问题（例如使用 DDGS、Google PSE 等）
+2.  **点击 Action 按钮**：当模型返回 citations 后，点击消息工具栏中的 **folder+** 图标
+3.  **选择来源**：会弹出一个对话框。输入你想保存的来源编号（例如 `1,3,5`、`1-3` 或 `all`）
+4.  **选择 Knowledge Base**：选择目标 Knowledge Base，用于保存对应内容
+5.  **完成**：系统会使用你配置好的 **Web Loader** 抓取内容，并将其加入 Knowledge Base
+
+## 配置（Valves）
+
+你可以在 function 设置中通过 **Valves** 自定义该 action 的行为。
+
+### 管理员设置（全局默认）
+
+| 设置项 | 默认值 | 说明 |
+|---------|---------|-------------|
+| `max_urls_per_action` | `10` | 单次 action 最多处理的 URL 数量 |
+| `enable_duplicate_check` | `True` | 添加前检查 URL 是否已存在于 Knowledge Base |
+| `default_knowledge_base` | `""` | 系统级默认 Knowledge Base 名称或 ID |
+| `skip_confirmation` | `False` | 跳过确认弹窗，直接使用默认 Knowledge Base |
+| `file_name_prefix` | `""` | 生成文件名的前缀（例如 `web_`） |
+
+### 用户设置（个人覆盖）
+
+用户也可以在自己的设置中覆盖全局默认值：
+- **默认知识库（Default Knowledge Base）**：设置一个偏好的 KB，避免每次手动选择
+- **跳过确认（Skip Confirmation）**：启用后可实现即时一键保存（要求已设置默认 KB）
+- **文件名前缀（File Name Prefix）**：自定义保存来源时的文件名前缀
+
+:::tip 高级用法
+在你的 User Valves 中设置 **默认知识库（Default Knowledge Base）**，并启用 **跳过确认（Skip Confirmation）**，即可实现真正的一键式即时保存网页来源！
+:::
+
+## 故障排查
+
+- **内容质量**：最终保存内容的质量取决于你的 **Web Loader Engine** 设置（Admin > Settings > Documents）。对于重度依赖 JavaScript 的网站，建议使用 **Firecrawl** 或 **Playwright**
+- **未检测到 URL**：该 action 依赖带结构化 citations 的 web search 结果。如果检测不到 URL，请确认 web search 已正确启用并且确实返回了结果

@@ -1,0 +1,115 @@
+---
+sidebar_position: 31
+title: "自托管 Claude 替代品"
+sidebar_label: "Open WebUI 与 Claude"
+description: "寻找自托管 Claude 替代品？通过 Open WebUI 在您自己的基础设施上使用 Claude 模型。"
+keywords: ["Open WebUI vs Claude", "Claude alternative", "self-hosted Claude", "Claude alternative self-hosted", "use Claude on own server", "open webui alternative", "open webui comparison"]
+---
+
+import Head from '@docusaurus/Head';
+
+<Head>
+<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "我可以自托管 Claude 吗？", "acceptedAnswer": {"@type": "Answer", "text": "Claude 本身不能，但您可以通过 Anthropic API 在 Open WebUI 中使用 Claude 模型。Open WebUI 本身在您的基础设施上运行，尽管 API 调用仍然去 Anthropic。"}}, {"@type": "Question", "name": "我可以在 Open WebUI 中使用 Claude 吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。在设置中添加您的 Anthropic API 密钥，Claude 模型将出现在模型选择器中。"}}, {"@type": "Question", "name": "我可以同时使用 Claude 和 ChatGPT 吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以，Open WebUI 支持同时连接多个提供商。"}}, {"@type": "Question", "name": "Open WebUI 支持 Claude 的扩展思考吗？", "acceptedAnswer": {"@type": "Answer", "text": "支持。扩展思考对提供该功能的模型得到支持，包括通过 Anthropic API 的 Claude。"}}]})}</script>
+</Head>
+
+
+# Open WebUI 与 Claude
+
+*最后更新：2026 年 5 月*
+
+[Claude](https://claude.ai/) 由 Anthropic 推出，因其在写作、推理和长上下文分析方面的实力而赢得了忠实的追随者，我们也是其中一员。我们每天都在使用 Claude。扩展思考功能、大规模上下文窗口（高达 200k tokens）以及 Anthropic 对安全和有益性的关注使其真正成为最好的 AI 体验之一。
+
+商用 · 免费层可用
+
+---
+
+## Claude 擅长的领域
+
+- **写作和推理**，具有周到、细致的回应和仔细的分析
+- **扩展思考**，在实时展示复杂问题的分步推理
+- **大规模上下文窗口**，高达 200k tokens，用于处理大型文档和代码库
+- **Artifacts** 用于对话旁的交互输出（代码、文档、可视化）
+- **Claude Code** 用于直接在您的终端进行代理编程
+- **计算机使用**，让 Claude 与桌面应用和网络界面交互
+- **MCP（模型上下文协议）**，Anthropic 创建的标准化 AI 工具与数据源连接的方式
+- **安全优先设计**，通过 Anthropic 的宪法 AI 方法
+- **强大的代码能力**，具有出色的代码生成、审查和调试
+- **Projects** 用于组织具有持久上下文和指令的对话
+
+---
+
+## Open WebUI 擅长的领域
+
+- **任何模型、一个界面**，所以您可以在 Claude *旁边* 使用 GPT-5.5、Gemini、Llama 和本地模型
+- **自托管**，所以平台本身在您的基础设施上运行
+- **知识库和 RAG** 用于具有高级检索的持久知识库
+- **Python 可扩展性**，具有自定义工具、MCP 服务器、管道和社区扩展
+- **团队平台**，包括频道、笔记、自动化、RBAC、SSO/OIDC/LDAP 和 SCIM 2.0
+- **Open Terminal** 提供完整的沙盒计算环境
+- **免费社区版**，在您自己的基础设施上无限用户
+
+---
+
+## 一览表
+
+| | Open WebUI | Claude |
+| :--- | :--- | :--- |
+| **模型** | 任何提供商的任何模型 | Anthropic 的 Claude 模型系列 |
+| **扩展思考** | 支持提供该功能的模型（包括通过 API 的 Claude） | 原生扩展思考 |
+| **上下文窗口** | 取决于您连接的模型 | 高达 200k tokens |
+| **知识库和 RAG** | 9 个向量数据库、5 个提取引擎、混合搜索 | 具有持久上下文的 Projects |
+| **代码执行** | Python 浏览器内 + Open Terminal | Artifacts 中的交互式代码 |
+| **数据** | 自托管，您的基础设施 | 由 Anthropic 云托管 |
+| **定价** | 免费社区版；企业计划可用 | 免费层、Pro、Team 和 Enterprise 计划 |
+
+---
+
+## 何时使用每一个
+
+**选择 Claude** 如果您想要最好的写作和推理体验，特别是对于长上下文工作、代码审查或细致的分析。扩展思考模式对于复杂问题特别强大。Claude Code 和计算机使用推进了 AI 可以自主做什么的边界。
+
+**选择 Open WebUI** 如果您想在一个界面中使用 Claude 与其他模型、构建持久知识库，或需要团队协作功能。Open WebUI 也支持通过 API 的 Claude 扩展思考。
+
+**两者都使用**。将 Open WebUI 连接到 Anthropic API，使用 Claude 进行深度分析，同时使用 GPT-5.5 处理其他任务，使用本地模型处理隐私敏感工作。想要 Artifacts、Projects 或计算机使用时直接使用 claude.ai。
+
+---
+
+## 通过 Open WebUI 使用 Claude
+
+Claude 模型通过 Anthropic API 在 Open WebUI 中可用。许多 Open WebUI 用户将 Claude 作为他们的主要模型，在 Open WebUI 的知识库、工具和团队功能旁边使用 Claude 的推理。
+
+**如何连接：**
+
+1. 从 [console.anthropic.com](https://console.anthropic.com/) 获取 API 密钥
+2. 在 Open WebUI 中，转到 **Admin → Settings → Connections**
+3. 使用您的 Anthropic API 密钥添加新连接，基础 URL 为 `https://api.anthropic.com/v1`
+4. Claude 模型将出现在您的模型选择器中
+
+您可以使用 Claude 进行复杂分析和写作，同时通过 Ollama 将更简单的任务路由到本地模型，所有这些都在同一界面中。
+
+---
+
+*Claude 是杰出的 AI。Open WebUI 是在您自己的基础设施上使用这些相同模型的一种方式，与您依赖的其他模型一起。*
+
+**准备好尝试 Open WebUI 了吗？** [开始使用 →](/getting-started)
+
+---
+
+## 常见问题
+
+**我可以自托管 Claude 吗？**
+Claude 本身不能，但您可以通过 Anthropic API 在 Open WebUI 中使用 Claude 模型。Open WebUI 本身在您的基础设施上运行，尽管 API 调用仍然去 Anthropic。
+
+**我可以在 Open WebUI 中使用 Claude 吗？**
+可以。在设置中添加您的 Anthropic API 密钥，Claude 模型将出现在模型选择器中。
+
+**我可以同时使用 Claude 和 ChatGPT 吗？**
+可以，Open WebUI 支持同时连接多个提供商。
+
+**Open WebUI 支持 Claude 的扩展思考吗？**
+支持。扩展思考对提供该功能的模型得到支持，包括通过 Anthropic API 的 Claude。
+
+
+---
+
+**相关：** [Open WebUI 与 ChatGPT](/alternatives/chatgpt) · [Open WebUI 与 Gemini](/alternatives/gemini) · [Open WebUI 与 Ollama](/alternatives/ollama)

@@ -1,0 +1,116 @@
+---
+sidebar_position: 30
+title: "自托管 ChatGPT 替代品"
+sidebar_label: "Open WebUI 与 ChatGPT"
+description: "寻找自托管 ChatGPT 替代品？Open WebUI 连接到 OpenAI API 并在您自己的基础设施上运行。"
+keywords: ["Open WebUI vs ChatGPT", "ChatGPT alternative", "self-hosted ChatGPT", "ChatGPT alternative open source", "ChatGPT self-hosted", "open webui alternative", "open webui comparison"]
+---
+
+import Head from '@docusaurus/Head';
+
+<Head>
+<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "我可以自托管 ChatGPT 吗？", "acceptedAnswer": {"@type": "Answer", "text": "ChatGPT 本身不能，但 Open WebUI 连接到 OpenAI API 所以您可以使用相同的模型。Open WebUI 在您的基础设施上运行，尽管 API 调用仍然去 OpenAI。"}}, {"@type": "Question", "name": "我可以在 Open WebUI 中使用 OpenAI 模型吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。在设置中添加您的 OpenAI API 密钥，所有 OpenAI 模型都会出现在模型选择器中。"}}, {"@type": "Question", "name": "Open WebUI 是 ChatGPT 替代品吗？", "acceptedAnswer": {"@type": "Answer", "text": "Open WebUI 可以连接到 OpenAI API，所以您可以使用相同的模型。Open WebUI 在您自己的基础设施上运行，尽管 API 调用仍然去提供商。它还支持连接到其他提供商。"}}, {"@type": "Question", "name": "我可以同时使用 ChatGPT 和本地模型吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。许多用户在同一个 Open WebUI 界面中使用 OpenAI 处理复杂推理，同时通过 Ollama 使用本地模型处理隐私敏感任务。"}}]})}</script>
+</Head>
+
+
+# Open WebUI 与 ChatGPT
+
+*最后更新：2026 年 5 月*
+
+[ChatGPT](https://chat.openai.com/) 由 OpenAI 推出，让数亿人了解了 AI 并设定了会话 AI 体验应该是什么样的标准。我们每天都在使用它。GPT-5.5、o 系列推理模型和持续创新的步伐使其始终处于前沿，说实话，它也在推动我们使 Open WebUI 变得更好。
+
+商用 · 免费层可用
+
+---
+
+## ChatGPT 擅长的领域
+
+- **前沿模型**，包括 GPT-5.5、o3 和 o 系列推理模型
+- **Canvas** 用于对话内的协作文档和代码编辑
+- **Projects** 用于组织具有持久上下文和自定义指令的对话
+- **深度研究**，将来自多个来源的信息综合成全面报告
+- **精致的体验**，来自多年的界面迭代
+- **GPT 商店**，包含社区构建的自定义 GPT 生态系统
+- **多模态**，具有视觉、语音、图像生成（DALL-E）和代码执行
+- **记忆**，能够跨对话记住上下文
+- **Operator** 用于代理网页浏览和任务自动化
+- **企业层**，包含 SSO、管理控制和数据隐私承诺
+- **零设置**，您注册并开始，无需安装
+
+---
+
+## Open WebUI 擅长的领域
+
+- **自托管**，所以平台本身在您的硬件上运行
+- **任何模型、任何提供商**，所以您可以在一个界面中使用 GPT-5.5 *和* Claude *和* Gemini *和* 本地模型
+- **知识库和 RAG** 用于从您的文档构建知识库和高级检索
+- **Python 可扩展性**，具有自定义工具、MCP 服务器、管道和社区扩展
+- **团队平台**，包括频道、笔记、自动化、RBAC、SSO/OIDC/LDAP 和 SCIM 2.0
+- **Open Terminal** 提供完整的沙盒计算环境
+- **免费社区版**，在您自己的基础设施上无限用户
+
+---
+
+## 一览表
+
+| | Open WebUI | ChatGPT |
+| :--- | :--- | :--- |
+| **模型** | 任何提供商的任何模型 | OpenAI 模型（GPT-5.5、o 系列） |
+| **数据** | 自托管，您的基础设施 | 由 OpenAI 云托管 |
+| **知识库和 RAG** | 9 个向量数据库、5 个提取引擎、混合搜索 | 文件上传和对话内上下文 |
+| **自定义代理** | 具有工具、知识和参数的模型代理 | 通过 GPT 商店的自定义 GPT |
+| **代码执行** | Python 浏览器内 + Open Terminal | 内置代码解释器 |
+| **可扩展性** | Python 工具、MCP、OpenAPI、管道 | GPT 操作和插件 |
+| **定价** | 免费社区版；企业计划可用 | 免费层、Plus、Team 和 Enterprise 计划 |
+
+---
+
+## 何时使用每一个
+
+**选择 ChatGPT** 如果您想要最简单的前沿 AI 路径。无需安装，无需配置，只需注册并开始。Canvas、Projects 和深度研究功能的原生体验是精致的并在不断改进。
+
+**选择 Open WebUI** 如果您想在自己的基础设施上运行、在一个界面中连接多个提供商、从您的文档构建知识库，或需要免费社区版中包含的 RBAC 和 SSO 之类的团队功能。
+
+**两者都使用**。许多人都这样做。将 Open WebUI 连接到 OpenAI API 并使用 GPT-5.5 与 Claude、Gemini 和本地模型，都在一个地方。想要 Canvas 或深度研究时直接使用 ChatGPT，需要知识库或团队工作区时使用 Open WebUI。
+
+---
+
+## 通过 Open WebUI 使用 OpenAI 模型
+
+Open WebUI 连接到 OpenAI API，所以所有 OpenAI 的模型都与 Open WebUI 的知识管理、工具和团队功能一起可用。
+
+**如何连接：**
+
+1. 从 [platform.openai.com](https://platform.openai.com/) 获取 API 密钥
+2. 在 Open WebUI 中，转到 **Admin → Settings → Connections**
+3. 使用您的 API 密钥添加新的 OpenAI 连接
+4. OpenAI 模型将出现在您的模型选择器中
+
+许多用户在同一界面中使用 OpenAI 模型进行复杂推理，同时通过 Ollama 使用本地模型处理隐私敏感任务。
+
+---
+
+*ChatGPT 为世界带来了 AI。Open WebUI 是在自己的基础设施上使用相同模型的一种方式。*
+
+**准备好尝试 Open WebUI 了吗？** [开始使用 →](/getting-started)
+
+---
+
+## 常见问题
+
+**我可以自托管 ChatGPT 吗？**
+ChatGPT 本身不能，但 Open WebUI 连接到 OpenAI API 所以您可以使用相同的模型。Open WebUI 在您的基础设施上运行，尽管 API 调用仍然去 OpenAI。
+
+**我可以在 Open WebUI 中使用 OpenAI 模型吗？**
+可以。在设置中添加您的 OpenAI API 密钥，所有 OpenAI 模型都会出现在模型选择器中。
+
+**Open WebUI 是 ChatGPT 替代品吗？**
+Open WebUI 可以连接到 OpenAI API，所以您可以使用相同的模型。Open WebUI 在您自己的基础设施上运行，尽管 API 调用仍然去提供商。它还支持连接到其他提供商。
+
+**我可以同时使用 ChatGPT 和本地模型吗？**
+可以。许多用户在同一个 Open WebUI 界面中使用 OpenAI 处理复杂推理，同时通过 Ollama 使用本地模型处理隐私敏感任务。
+
+
+---
+
+**相关：** [Open WebUI 与 Claude](/alternatives/claude) · [Open WebUI 与 Gemini](/alternatives/gemini) · [Open WebUI 与 Ollama](/alternatives/ollama)

@@ -1,0 +1,193 @@
+---
+sidebar_position: 1510
+title: "🔐 聊天数据隐私与加密"
+---
+
+# 聊天数据隐私与加密
+
+Open WebUI 是自托管软件。您的组织控制服务器、数据库、存储、模型连接、日志、备份和网络部署。
+
+Open WebUI 可以通过数据库加密、HTTPS/TLS、SSO/RBAC、管理员访问控制、临时聊天、私有模型以及为敏感组提供独立部署来减少聊天数据暴露。
+
+Open WebUI 的标准体验旨在提供自托管控制、可审计性、历史记录、搜索、RAG、工具和管理治理。以下控制帮助组织决定聊天数据存储的位置、谁可以通过产品访问、哪些模型端点接收提示以及数据保留多长时间。
+
+## 按关注领域划分的控制
+
+| 关注领域 | 最佳可用措施 |
+| :--- | :--- |
+| 减少管理员对员工聊天的产品访问 | 设置 `ENABLE_ADMIN_CHAT_ACCESS=false` |
+| 控制管理员产品导出 | 设置 `ENABLE_ADMIN_EXPORT=false` |
+| 限定管理员工作区列表/选择器可见性 | 设置 `BYPASS_ADMIN_ACCESS_CONTROL=false` |
+| 生产数据库存储暴露 | 使用 PostgreSQL，配合加密卷、提供商加密、TDE（如可用）、TLS 和加密备份 |
+| 仅 SQLite 部署 | 使用 SQLCipher，设置 `DATABASE_TYPE=sqlite+sqlcipher` |
+| 员工提出敏感或个人问题 | 使用临时聊天，或通过 `USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true` 强制所有用户使用临时聊天 |
+| 将提示保留在基础设施内部 | 使用本地或私有模型端点，并按组限制批准的模型 |
+| 敏感文档上传或索引 | 默认关闭文件上传和知识库权限；仅按组授予 |
+| 控制服务器端代码执行 | 将工具和函数限制为受信任的管理员 |
+| 聊天内容出现在日志中 | 除非明确批准记录正文，否则将审计日志保持在元数据级别 |
+| 共享控制 | 默认关闭社区共享，并审查聊天共享权限 |
+| 不同团队需要不同的信任边界 | 使用独立的 Open WebUI 实例，配备独立的数据库、备份、凭证、操作员和模型提供商 |
+
+## 推荐基线
+
+### 使用 PostgreSQL 配合加密存储
+
+对于生产部署，请使用 PostgreSQL 并在 PostgreSQL 或存储层配置加密。使用加密卷、提供商管理的加密、TDE（如可用）、TLS 用于数据库连接、加密备份和网络隔离。
+
+```bash
+DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
+```
+
+数据库加密保护静态数据。运行中的 Open WebUI 应用程序使用数据库密钥为经过身份验证的用户提供服务并执行正常产品工作流。
+
+对于仅 SQLite 部署，SQLCipher 可以加密本地 SQLite 数据库文件：
+
+```bash
+DATABASE_TYPE=sqlite+sqlcipher
+DATABASE_PASSWORD=your-secure-password
+```
+
+### 限制管理员聊天和导出表面
+
+```bash
+ENABLE_ADMIN_CHAT_ACCESS=false
+ENABLE_ADMIN_EXPORT=false
+BYPASS_ADMIN_ACCESS_CONTROL=false
+```
+
+这些设置减少了管理员通过 Open WebUI 可访问的内容。数据库、主机、备份和应用密钥的直接访问应限于您批准的信任边界内的操作员。
+
+### 使用 SSO 并限制账户
+
+```bash
+ENABLE_LOGIN_FORM=false
+ENABLE_PASSWORD_AUTH=false
+ENABLE_PASSWORD_CHANGE_FORM=false
+DEFAULT_USER_ROLE=pending
+```
+
+使用您的身份提供商进行 MFA、条件访问、设备状态、组成员资格和用户生命周期管理。尽可能使用 SCIM。
+
+### 在不需要历史记录时使用临时聊天
+
+临时聊天减少保存的聊天历史。强制临时聊天可以要求用户默认使用此行为，而不是让其可选。
+
+要使临时聊天默认可用：
+
+```bash
+USER_PERMISSIONS_CHAT_TEMPORARY=true
+```
+
+要强制所有用户默认使用临时聊天：
+
+```bash
+USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true
+```
+
+相关权限：
+
+- **聊天 > 临时聊天**
+- **聊天 > 强制临时**
+
+临时聊天是保存历史记录的数据最小化控制。活跃提示仍由 Open WebUI 和配置的模型端点处理。
+
+### 将敏感提示保留在私有模型上
+
+对于敏感数据，优先选择由您的组织控制的本地或私有模型端点。按组限制外部模型，并按数据类别批准提供商。
+
+### 限制高级功能
+
+```bash
+USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS=false
+USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ACCESS=false
+USER_PERMISSIONS_CHAT_FILE_UPLOAD=false
+ENABLE_DIRECT_CONNECTIONS=false
+ENABLE_COMMUNITY_SHARING=false
+ENABLE_API_KEYS=false
+```
+
+仅向批准的组授予高级功能。
+
+### 默认保持日志仅为元数据
+
+```bash
+AUDIT_LOG_LEVEL=METADATA
+ENABLE_AUDIT_STDOUT=true
+LOG_FORMAT=json
+```
+
+仅在您的日志平台获批用于聊天内容时，使用 `REQUEST` 或 `REQUEST_RESPONSE` 审计日志记录。
+
+## 谁可以阅读聊天数据？
+
+### 普通用户
+
+普通用户可以阅读自己的聊天记录以及明确与他们共享的聊天记录。访问权限由角色、组、权限和资源级访问授予控制。
+
+### 管理员用户
+
+管理员按设计拥有广泛的控制权限。`ENABLE_ADMIN_CHAT_ACCESS=false` 和 `ENABLE_ADMIN_EXPORT=false` 可防止通过 Open WebUI 产品表面的随意访问。基础设施级别的访问应通过操作员信任、访问审查和职责分离来处理。
+
+### 数据库、主机和备份操作员
+
+有权访问数据库、主机、持久卷、应用密钥或未加密备份的操作员属于聊天数据信任边界的一部分。
+
+对于需要独立操作员信任边界的组，请使用具有独立基础设施和操作员的独立 Open WebUI 实例。
+
+### 模型提供商
+
+如果配置了外部模型提供商，发送用于推理的提示和上下文可能对该提供商可见。对于应保留在您基础设施内部的数据，请使用私有/本地模型。
+
+## 加密保护什么
+
+静态加密有助于防止以下情况：
+
+- 磁盘丢失或被盗。
+- 数据库文件被复制。
+- 卷快照放错位置。
+- 备份泄露（当备份单独加密时）。
+- 某些基础设施泄露（保持在活跃应用密钥之外）。
+
+将这些路径保留在您的运营信任边界内：
+
+- 运行中的 Open WebUI 应用程序及其数据库密钥。
+- 具有实时查询访问权限的数据库管理员。
+- 有权访问环境变量或挂载密钥的主机操作员。
+- 包含聊天数据的导出、日志、跟踪和备份。
+- 接收提示进行推理的模型提供商。
+
+## 实际部署模式
+
+对于一般内部用途：
+
+- 使用 SSO/MFA。
+- 加密数据库和备份。
+- 限制管理员聊天访问和导出。
+- 保持日志仅为元数据。
+- 按组限制外部模型和文件上传。
+
+对于敏感部门（如人力资源、法务或受监管工作负载）：
+
+- 运行独立的 Open WebUI 实例。
+- 使用独立的数据库和备份。
+- 使用独立操作员和凭证。
+- 使用私有/本地模型。
+- 考虑强制临时聊天，或通过 `USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true` 默认启用。
+
+对于个人或高度敏感的员工问题：
+
+- 发布清晰的使用指南。
+- 提供临时聊天，或默认要求所有用户使用。
+- 仅将那些提示路由到批准的模型提供商。
+- 明确说明谁管理系统以及保留什么内容。
+
+## 相关文档
+
+- [加固 Open WebUI](/getting-started/advanced-topics/hardening)
+- [HTTPS 参考](/reference/https)
+- [使用 SQLCipher 进行数据库加密](/reference/database-schema#database-encryption-with-sqlcipher)
+- [认证与访问](/features/authentication-access)
+- [RBAC 权限](/features/authentication-access/rbac/permissions)
+- [临时聊天 URL 参数](/features/chat-conversations/chat-features/url-params#8-temporary-chat-sessions)
+- [企业安全](/enterprise/security)
+- [主权 AI 平台](/enterprise/sovereign-ai)

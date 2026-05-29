@@ -1,0 +1,41 @@
+---
+name: CI (zh-cn)
+
+on:
+  pull_request:
+    paths:
+      - "zh-cn/**"
+  workflow_dispatch:
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: "zh-cn/.node-version"
+
+      - name: Install dependencies
+        working-directory: zh-cn
+        run: npm ci
+
+      - name: Run Prettier
+        working-directory: zh-cn
+        run: npm run prettier:check
+
+      - name: Run ESLint
+        working-directory: zh-cn
+        run: npm run lint
+
+      - name: Run stylelint
+        working-directory: zh-cn
+        run: npm run stylelint
+
+      - name: Test build
+        working-directory: zh-cn
+        run: npm run build

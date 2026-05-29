@@ -1,0 +1,28 @@
+---
+title: "网络搜索"
+sidebar_position: 0
+slug: /features/chat-conversations/web-search
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import DocCardList from '@theme/DocCardList';
+
+# 网络搜索
+
+<ThemedImage
+  alt="聊天与对话地图，网络搜索模块高亮"
+  sources={{
+    light: useBaseUrl('/images/banners/chat-conversations-websearch-light.svg'),
+    dark: useBaseUrl('/images/banners/chat-conversations-websearch-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
+
+让 Open WebUI 搜索实时网络和获取页面，然后根据找到的内容来回答。选择一个提供商，在每个聊天中切换搜索开关，模型就能引用或保存它检索到的内容。
+
+:::tip 搜索前要求确认
+管理员可以要求用户在**网络搜索运行前进行确认**，这样查询就不会无意中发送到外部提供商。在**管理面板 → 设置 → 网络搜索**中启用（或通过 [`ENABLE_WEB_SEARCH_CONFIRMATION`](/reference/env-configuration#enable_web_search_confirmation)）；提示文本由 [`WEB_SEARCH_CONFIRMATION_CONTENT`](/reference/env-configuration#web_search_confirmation_content) 设置。
+:::
+
+<DocCardList />

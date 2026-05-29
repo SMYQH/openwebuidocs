@@ -1,0 +1,4 @@
+# Open WebUI Docs — Full Corpus
+
+本文件在每次部署时由 postbuild 脚本自动生成。
+占位版本 — 实际内容将在构建后覆盖。

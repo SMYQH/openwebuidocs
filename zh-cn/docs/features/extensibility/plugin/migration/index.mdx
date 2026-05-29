@@ -1,0 +1,22 @@
+---
+sidebar_position: 9999
+title: "迁移指南"
+---
+
+# 🚚 插件迁移指南
+
+Open WebUI 偶尔会发布需要更新现有 Tools、Functions、Pipes、Filters 和 Actions 的版本。本节为插件作者收集了各版本的迁移指南。
+
+选择与你**从**中升级的版本匹配的指南。如果你跨越多个主要版本，请按顺序阅读各指南。
+
+---
+
+## 可用指南
+
+- **[迁移到 0.5.0](/features/extensibility/plugin/migration/to-0.5.0)** — `apps` → `routers` 重构、统一的 `chat_completion` 端点以及函数签名中新增的 `__request__` 参数。
+- **[迁移到 0.9.0](/features/extensibility/plugin/migration/to-0.9.0)** — 后端全面从同步改为异步。数据库模型方法和大多数 `open_webui.*` 辅助函数现在返回协程，必须使用 `await`。
+
+---
+
+💬 **问题或反馈？**
+如果在升级插件时遇到问题，请提交 [GitHub issue](https://github.com/open-webui/open-webui) 或在社区论坛中提问。

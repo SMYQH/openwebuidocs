@@ -1,0 +1,95 @@
+---
+sidebar_position: 400
+title: "OpenAPI 工具服务器"
+---
+
+
+# 🌟 OpenAPI 工具服务器
+
+这个仓库提供了一组参考性的 OpenAPI 工具服务器实现，帮助开发者以简单且安全的方式，把外部工具与数据源接入到 LLM agents 和工作流中。它以被广泛采用的 [OpenAPI specification](https://www.openapis.org/) 作为标准协议，目标是**上手门槛最低、集成效率最高**。
+
+借助 OpenAPI，我们无需引入专有或陌生的通信协议，因此你可以更快速、更有把握地构建或接入服务器。这样一来，你无需把时间耗在理解自定义接口上，而能把精力集中在打造真正增强 AI 应用能力的工具上。
+
+:::tip 一个第一方示例
+[oikb](/ecosystem/knowledge-base-sync) 同步守护进程就是一个开箱即用的 OpenAPI 工具服务器。运行它，然后在 **Settings → Tools** 中添加它的 URL，模型就可以从对话中触发知识库同步并查看其状态。参见[让模型触发同步](/ecosystem/knowledge-base-sync/daemon#let-the-model-trigger-syncs)。
+:::
+
+## ☝️ 为什么选择 OpenAPI？
+
+- **成熟标准：** OpenAPI 是一个被广泛使用、经过生产验证的 API 标准，背后有海量工具、公司与社区支持
+
+- **无需重复发明轮子：** 不需要额外文档，也不会陷入专有规范困境。如果你今天已经在构建 REST API 或使用 OpenAPI，那你已经具备所需基础
+
+- **易于集成与托管：** 你可以把工具服务器部署在本地或外部环境中，无需 vendor lock-in，也不用做复杂配置
+
+- **强安全导向：** OpenAPI 基于 HTTP / REST API，自然支持 HTTPS、OAuth、JWT、API Keys 等广泛使用且经过验证的安全机制
+
+- **更稳定、更面向未来：** OpenAPI 受益于广泛采用、长期社区维护以及清晰的演进机制
+
+## ⚠️ 限制
+
+虽然 OpenAPI 工具非常适合用外部服务扩展 Open WebUI，但与原生 Python 工具相比，仍有一些限制：
+
+- **仅支持单向事件：** OpenAPI 工具可以通过 REST endpoint 发出状态更新、通知和其他[单向事件](/features/extensibility/plugin/development/events#-external-tool-events)。Open WebUI 会自动传递 `X-Open-WebUI-Chat-Id` 与 `X-Open-WebUI-Message-Id` headers 来支持这一点。但需要用户输入或确认的交互式事件，仅原生 Python 工具支持
+- **不支持流式输出：** 工具响应会作为完整结果返回，而不是 token-by-token 地流式传回
+
+如果你需要交互式 UI 反馈（例如确认框、用户输入），建议把工具实现为 [native Python Tool](/features/extensibility/plugin/tools/development)。
+
+## ✅ 受支持的规范形态
+
+Open WebUI 按照 OpenAPI 3.x 的 path-item 模型解析工具服务器的 spec。解析器：
+
+- 仅识别八个标准 HTTP 方法键（`get`、`put`、`post`、`delete`、`options`、`head`、`patch`、`trace`）作为操作。path 下的其他键——包括扩展键（`x-codeSamples`、`x-internal` 等）、`summary`、`description`、`servers` 和 `parameters`——在操作发现阶段会被跳过，因此不会引发解析错误。
+- 支持 **path 层级的 `parameters`**：在 path 层级声明一次的参数会自动应用于该 path 下的所有操作。同名 `(name, in)` 的操作级参数会按 OpenAPI 规范覆盖 path 级参数。
+- 会对 path 参数值（`{id}` 替换）和 query 参数值进行 URL 编码，确保包含空格、`/`、`&`、`?` 等保留字符的值能正确传输。
+- 在抓取 spec 时会在 JSON 与 YAML 之间优雅地回退——`.yaml`/`.yml` 链接按 YAML 解析；其他类型先按 JSON 尝试，失败再按 YAML 解析。
+
+把 `parameters` 放在 path 层级、暴露扩展键，或依赖 path-item 元数据字段的 spec 都可以直接使用，无需改动。
+
+## 🚀 快速开始
+
+你可以直接使用 `servers/` 目录中提供的基于 FastAPI 的参考实现快速上手。（当然，你也可以把这些示例改写为自己喜欢的技术栈，例如 [FastAPI](https://fastapi.tiangolo.com/)、[FastOpenAPI](https://github.com/mr-fatalyst/fastopenapi) 或任何兼容 OpenAPI 的库）
+
+```bash
+git clone https://github.com/open-webui/openapi-servers
+cd openapi-servers
+```
+
+### 使用 Bash
+
+```bash
+
+# 示例：为特定 server（如 filesystem）安装依赖
+cd servers/filesystem
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --reload
+```
+
+filesystem server 应可通过以下地址访问： [http://localhost:8000](http://localhost:8000)
+
+文档地址通常也会位于： [http://localhost:8000](http://localhost:8000)
+
+### 使用 Docker
+
+如果你安装了 docker compose，可直接通过以下命令启动：
+
+```bash
+docker compose up
+```
+
+这些服务默认可通过如下地址访问：
+
+* [Filesystem localhost:8081](http://localhost:8081)
+* [memory server localhost:8082](http://localhost:8082)
+* [time-server localhost:8083](http://localhost:8083)
+
+然后，只需把你的 OpenAPI 兼容客户端或 AI agent 指向本地或公网部署后的 URL 即可——无需繁琐配置，也无需复杂传输层。
+
+## 🌱 Open WebUI 社区
+
+- 若要参与一般讨论、技术交流或查看公告，请访问我们的 [Community Discussions](https://github.com/open-webui/openapi-servers/discussions)
+- 有想法或反馈？欢迎直接提 issue！
+
+:::tip 一手示例
+[oikb](/ecosystem/knowledge-base-sync) 同步守护进程是一个开箱即用的 OpenAPI 工具服务器。运行它之后，在 **设置 → 工具** 中添加它的 URL，模型就能在聊天中触发知识库同步并查询同步状态。详见[让模型触发同步](/ecosystem/knowledge-base-sync/daemon#let-the-model-trigger-syncs)。
+:::

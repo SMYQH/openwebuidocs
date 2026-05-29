@@ -1,0 +1,101 @@
+---
+sidebar_position: 1600
+title: "🤝 贡献"
+---
+
+# 🤝 贡献
+
+**帮助构建每个人都值得拥有的 AI 界面。**
+
+Open WebUI 是一个独立项目，由一个小型且专注核心团队构建并维护。最有价值的贡献通常不是代码。测试开发构建版本、提交清晰的 Bug 报告、在 Discussions 中提出想法、改进文档以及翻译 UI，都会对项目产生巨大的影响。本页面将介绍如何参与贡献以及期望达到的标准。
+
+---
+
+## 行为准则
+
+所有贡献者和社区参与者都必须遵守 **[行为准则 (Code of Conduct)](https://github.com/open-webui/open-webui/blob/main/CODE_OF_CONDUCT.md)**。我们实行**零容忍政策**：任何不尊重、强求或带有敌意的行为，都将在没有事先警告的情况下受到立即处理。
+
+Open WebUI 由一个专注的核心小团队领导，并得到了来自整个项目贡献者的支持。请以专业和尊重的态度对待每一次互动。
+
+---
+
+## 贡献方式
+
+### 测试开发分支（dev）
+
+最有价值的贡献之一完全不需要编写代码。只需运行开发分支，在日常中使用它，并报告出现的问题。
+
+```bash
+docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui ghcr.io/open-webui/open-webui:dev
+```
+
+开发分支更新很快，因此请**定期拉取最新更新**。如果你不想使用 Docker，请改为遵循 [开发 Open WebUI](/getting-started/advanced-topics/development) 指南。
+
+在 [GitHub](https://github.com/open-webui/open-webui/issues) 上报告问题时，请提供清晰的复现步骤。没有社区的测试，我们无法交付高质量的发布版本。
+
+### 提交代码
+
+最具影响力的贡献方式是通过编写良好的 Bug 报告、详细的功能讨论，以及在 [Discussions](https://github.com/open-webui/open-webui/discussions/new/choose) 中发布深思熟虑的想法。这些内容会直接塑造项目的发展方向。
+
+如果你确实提交了 Pull Request (PR)，请理解 Open WebUI 保持着对代码质量、一致性和架构连贯性的最高标准。被合并的每一行代码都会成为核心团队必须无限期拥有、维护和支持的内容。因此，提交的代码可能会被重构、重写，或者被用作不同实现方案的灵感。这并不是对你工作质量的否定。这是为了确保一个小团队能够深入理解并不断演进代码库的每一个部分。
+
+在提交 PR 之前：
+
+1. **先发起讨论。** 在[这里](https://github.com/open-webui/open-webui/discussions/new/choose)提出你的想法，以便团队在你写代码之前就能在方法上达成一致。
+2. **遵循现有约定。** 与项目的编码标准、命名模式和架构保持一致。
+3. **保持 PR 原子化。** 每个 Pull Request 应该只解决一个目标。如果范围扩大，请将其拆分为更小、逻辑上独立的 PR。
+4. **避免引入新的外部依赖。** 未经事先讨论，请勿添加库或框架。我们的目标是保持框架无关性，并在可行的情况下自己实现功能。
+5. **包含测试。** 为新功能编写测试，并根据需要更新文档。
+6. **编写清晰的提交信息。** 描述性的提交信息可以让审查和历史追踪变得更容易。
+
+### 改进文档
+
+通过改进文档、编写教程或创建设置指南，帮助让 Open WebUI 变得更容易上手。文档存放于 [docs 仓库](https://github.com/GamblerIX2/open-webui-docs) 中。
+
+### 翻译 UI
+
+Open WebUI 在 `src/lib/i18n/locales` 中使用 JSON 格式的翻译文件。每个子目录的命名都遵循 [ISO 639 语言代码](http://www.lingoes.net/en/translator/langcode.htm)（例如 `en-US`, `fr-FR`）。
+
+要添加一种新语言：
+
+1. 在 `src/lib/i18n/locales` 下创建一个使用相应语言代码命名的新目录
+2. 将 `en-US` 翻译文件复制到新目录中
+3. 翻译每个 JSON 文件中的字符串值，同时保留对象结构不变
+4. 在 `src/lib/i18n/locales/languages.json` 中注册该语言
+
+### 改进无障碍支持
+
+无障碍体验是优秀设计的核心部分。在贡献 UI 更改时：
+
+| 原则 | 做法 |
+|-----------|-----------|
+| **语义化 HTML** | 使用 `<button>`, `<label>`, `<nav>` 以及其他语义化元素，而不是通用的 `<div>` 包装器 |
+| **键盘导航** | 确保所有交互元素在没有鼠标的情况下也能正常工作 |
+| **ARIA 标签** | 当仅靠语义化 HTML 不足时，请添加 [ARIA](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA) 角色和标签 |
+| **色彩对比度** | 使用 [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) 验证对比度比例 |
+| **替代文本 (Alt text)** | 为有意义的图像提供描述性的 `alt` 属性；对装饰性图像使用 `alt=""` |
+
+使用 Lighthouse 或浏览器的无障碍工具测试你的更改。
+
+---
+
+## 报告问题
+
+在开启新 Issue 之前，请先查看 [Issues 选项卡](https://github.com/open-webui/open-webui/issues)。提交时请注意：
+
+- **使用 Issue 模板。** 不遵守模板或缺少所需信息的 Issue 将被关闭。
+- **包含复现步骤。** 描述你做了什么、你期望发生什么，以及实际发生了什么。
+- **请具体说明。** 模糊的报告（“它不起作用”）无法被有效地调查。
+
+:::warning 支持范围
+Open WebUI 支持 Docker 部署，但我们假设你熟悉 Docker 的基本原理。与反向代理配置、容器网络或主机操作系统设置相关的问题，不在本项目的支持范围之内。有关这些主题，请参阅 [Docker 官方文档](https://docs.docker.com/get-started/overview/)。
+:::
+
+---
+
+## 联系我们
+
+| 渠道 | 链接 |
+|---------|------|
+| **GitHub Issues** | [open-webui/open-webui/issues](https://github.com/open-webui/open-webui/issues) |
+| **GitHub Discussions** | [open-webui/open-webui/discussions](https://github.com/open-webui/open-webui/discussions) |

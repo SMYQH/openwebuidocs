@@ -1,0 +1,84 @@
+---
+sidebar_position: 0
+title: "管理"
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# 🔧 管理
+
+<ThemedImage
+  alt="管理：管理面板仪表板，显示使用统计和消息时序图"
+  sources={{
+    light: useBaseUrl('/images/banners/administration-light.svg'),
+    dark: useBaseUrl('/images/banners/administration-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
+
+**在管理面板中监控使用情况、评估模型质量，并与用户沟通，一切尽在掌握。**
+
+Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的模型及其费用。通过盲测评估找到最适合工作负载的模型。向所有用户推送可定制的横幅公告。配置 Webhook 以在用户注册或长时间任务完成时收到通知。
+
+---
+
+## 本节内容
+
+| | |
+| :--- | :--- |
+| 📊 **[Analytics（分析）](./analytics)** | 包含消息量、Token 消耗、模型明细及每用户活动的使用仪表板 |
+| 🏆 **[Evaluation（评估）](./evaluation)** | 模型竞技场、盲测 A/B 对比、基于 ELO 的排行榜及用于微调的对话快照 |
+| 📢 **[Banners（横幅）](./banners)** | 可定制的全系统公告，支持用户关闭通知 |
+| 🔔 **[Webhooks](./webhooks)** | 用户注册、对话完成及外部服务集成的自动通知 |
+
+---
+
+## Analytics（分析）
+
+从全局视角了解实例的使用情况。分析仪表板展示消息量、Token 消耗、模型热度及用户活动，可按时间段和用户组进行筛选。
+
+**适用场景：** 容量规划、费用估算、识别热门模型、跟踪推广趋势以及按部门统计用量。
+
+[**了解 Analytics →**](./analytics)
+
+---
+
+## Evaluation（评估）
+
+不确定哪个模型最适合您的团队？评估系统允许用户在日常对话中通过点赞/踩对模型回复评分。评分结果会汇入基于 ELO 的排行榜，已评分的对话将生成快照，用于未来的模型微调。
+
+**两种评估模式：**
+- **竞技场模式**：随机选择模型进行盲测对比，消除偏见
+- **普通交互**：在日常使用中对回复评分，然后通过切换模型进行比较
+
+[**了解 Evaluation →**](./evaluation)
+
+---
+
+## Banners（横幅）
+
+向所有已登录用户推送高可见度消息。将横幅用于维护窗口、故障告警、政策提醒和功能公告。可通过管理面板或 `WEBUI_BANNERS` 环境变量（适用于 GitOps 工作流）进行配置。
+
+| 类型 | 颜色 | 最适合 |
+|------|-------|----------|
+| `info` | 蓝色 | 一般公告 |
+| `success` | 绿色 | 故障已解决、变更完成 |
+| `warning` | 黄色 | 计划维护、局部降级 |
+| `error` | 红色 | 活跃故障、服务中断 |
+
+[**了解 Banners →**](./banners)
+
+---
+
+## Webhooks
+
+三种 Webhook 集成类型让您的外部服务保持同步：
+
+| Webhook | 用途 |
+|---------|---------|
+| **管理员 Webhook** | 新用户注册时通知 Slack/Discord 频道 |
+| **用户 Webhook** | 长时间运行的对话响应就绪时通知对应用户 |
+| **频道 Webhooks** | 允许外部服务（CI/CD、监控、脚本）向 Open WebUI 频道发送消息 |
+
+[**了解 Webhooks →**](./webhooks)
