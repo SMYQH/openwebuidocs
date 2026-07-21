@@ -31,4 +31,4 @@ title: "合作伙伴与代理商"
 2. 客户的公司名称及官方工作邮箱域名。
 3. 预计部署的最终用户数量（席位数）。
 
-[**联系销售以推进客户部署**](mailto:sales@openwebui.com)
+[**联系销售以推进客户部署 →**](https://openwebui.com/contact/sales)

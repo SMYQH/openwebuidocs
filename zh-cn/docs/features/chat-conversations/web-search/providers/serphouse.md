@@ -71,5 +71,5 @@ title: "SERPHouse"
 
 ## 更多资源
 
-- [SERPHouse 文档](https://www.serphouse.com/docs)：API 参考和高级选项。
+- [SERPHouse 文档](https://docs.serphouse.com/)：API 参考和高级选项。
 - [Open WebUI 功能](/features)：有关 RAG 和网络搜索的详细信息。

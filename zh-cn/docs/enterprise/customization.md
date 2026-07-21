@@ -33,4 +33,4 @@ title: "定制"
 
 --- 
 
-[**联系企业销售 → sales@openwebui.com**](mailto:sales@openwebui.com)
+[**联系企业销售 →**](https://openwebui.com/contact/sales)

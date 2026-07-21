@@ -175,6 +175,12 @@ CORS_ALLOW_ORIGIN=https://chat.yourcompany.com
 CORS_ALLOW_ORIGIN=https://chat.yourcompany.com;https://internal.yourcompany.com
 ```
 
+如果你想完全禁用 CORS，可以将其设置为[无效域名](https://en.wikipedia.org/wiki/.invalid)：
+
+```bash
+CORS_ALLOW_ORIGIN=http://cors.invalid
+```
+
 如果你使用带自定义 URL scheme 的桌面应用，可通过以下方式加入：
 
 ```bash

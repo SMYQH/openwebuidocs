@@ -42,7 +42,7 @@ Open WebUI 从设计之初就把安全放在核心优先级上。无论你面对
 
 通用最佳实践可参考我们的[加固文档](/getting-started/advanced-topics/hardening)。符合相应层级的企业客户还可获得部署与配置决策方面的实操支持。
 
-[**联系企业销售获取合规指导 → sales@openwebui.com**](mailto:sales@openwebui.com)
+[**联系企业销售获取合规指导 →**](https://openwebui.com/contact/sales)
 :::
 
 ### 身份与访问管理
@@ -122,4 +122,4 @@ Open WebUI 的代码库可公开审计，让你获得可见性与控制权；它
 
 --- 
 
-[**联系企业销售 → sales@openwebui.com**](mailto:sales@openwebui.com)
+[**联系企业销售 →**](https://openwebui.com/contact/sales)

@@ -174,4 +174,4 @@ extraEnvVars:
 
 **需要帮助规划企业部署？** 我们的团队正与全球组织合作，共同设计和落地生产级 Open WebUI 环境。
 
-[**联系企业销售 → sales@openwebui.com**](mailto:sales@openwebui.com)
+[**联系企业销售 →**](https://openwebui.com/contact/sales)

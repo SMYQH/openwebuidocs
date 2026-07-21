@@ -46,7 +46,7 @@ flowchart LR
 | **Ollama** | Llama、Mistral、Gemma、Phi 等数千种模型（本地） | [从 Ollama 开始 →](./starting-with-ollama) |
 | **OpenAI** | GPT-4o、GPT-4.1、o3、o4-mini | [从 OpenAI 开始 →](./starting-with-openai) |
 | **Anthropic** | Claude Opus、Sonnet、Haiku | [从 Anthropic 开始 →](./starting-with-anthropic) |
-| **兼容 OpenAI** | Google Gemini、DeepSeek、Mistral、Groq、OpenRouter、Amazon Bedrock、Azure 等 | [兼容 OpenAI 的提供商 →](./starting-with-openai-compatible) |
+| **兼容 OpenAI** | Google Gemini、DeepSeek、Mistral、Groq、OpenRouter、Vercel AI Gateway、Amazon Bedrock、Azure 等 | [兼容 OpenAI 的提供商 →](./starting-with-openai-compatible) |
 
 ---
 
