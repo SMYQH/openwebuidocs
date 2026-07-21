@@ -3,9 +3,9 @@
 ## en-us Source Version
 
 - **Repo**: `en-us` (submodule)
-- **Git commit**: `bb2f97829eac5d269bd15d5bd0338cfacf43a899`
+- **Git commit**: `d412c34501c9a0b70891a05948a138482ca7776e`
 - **Branch**: `main`
-- **Snapshot date**: 2026-07-18
+- **Snapshot date**: 2026-07-22
 
 ## Translation Progress Overview
 
@@ -27,6 +27,19 @@
 | `en-us/docs/security/vendor-dispositions/_category_.json` | Added for zh-cn (📄 Vendor Dispositions) |
 
 ## Fixed Issues
+
+### 2026-07-22 Sync (en-us `bb2f9782` → `d412c345`)
+
+Minor upstream update — 7 commits covering contact link updates, CVE page refinements, and provider additions:
+
+- **Enterprise contact links (13 files)**: All `mailto:sales@openwebui.com` links replaced with `https://openwebui.com/contact/sales` across `architecture.md`, `customers/index.mdx`, `customization.md`, `deployment/container-service.md`, `deployment/index.md`, `deployment/kubernetes-helm.md`, `deployment/python-pip.md`, `index.mdx` (2 occurrences), `integration.md`, `partners.md`, `security.md` (2 occurrences), `sovereign-ai.mdx`, `support.md`.
+- **CVE vendor disposition refinements (9 files)**:
+  - cve-2024-7033, cve-2024-7034, cve-2024-7038, cve-2024-7039, cve-2024-7040, cve-2024-7959: Added `:::tip 已解决：此 CVE 现已被拒绝` block unifying the resolved status message.
+  - cve-2024-7033: Enhanced the traversal analysis paragraph to include the host allowlist's purpose and scope.
+  - cve-2026-0765, cve-2026-0766, cve-2026-0767: Renamed `### CVSS 准确性` → `### 严重性` and rewrote section to align with intended-behavior disposition framework.
+- **Vercel AI Gateway (1 new provider)**: Added Vercel AI Gateway tab to `starting-with-openai-compatible.mdx` (connection settings + tip), entry in model detection table, and mention in provider overview table.
+- **CORS hardening (hardening.md)**: Added section on disabling CORS entirely via `CORS_ALLOW_ORIGIN=http://cors.invalid`.
+- **SERPHouse link update (serphouse.md)**: Updated documentation URL from `www.serphouse.com/docs` to `docs.serphouse.com/`.
 
 ### 2026-07-18 Sync (en-us `f07c2a61` → `bb2f9782`)
 
