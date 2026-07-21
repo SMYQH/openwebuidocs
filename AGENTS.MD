@@ -21,7 +21,7 @@ The root repository contains a Git submodule and a directly maintained subdirect
 | Path | Role | Git Repository | Language | Deployment |
 | --- | --- | --- | --- | --- |
 | `en-us/` | Git Submodule | `open-webui/docs` | English | GitHub Pages (deployed upstream) |
-| `zh-cn/` | Directly Maintained | This repository | Simplified Chinese | Cloudflare Pages |
+| `zh-cn/` | Directly Maintained | This repository | Simplified Chinese | Cloudflare Workers |
 
 * `en-us/` is included as a Git submodule pointing to `[https://github.com/open-webui/docs.git](https://github.com/open-webui/docs.git)`.
 * The internationalization strategy uses "cloning the full project then translating" rather than Docusaurus's built-in i18n mechanism for two reasons: 1. Upstream does not have built-in i18n enabled; 2. This maintenance strategy facilitates side-by-side English-Chinese comparison and makes syncing future upstream updates easier.
@@ -30,7 +30,7 @@ The root repository contains a Git submodule and a directly maintained subdirect
 
 ## 2. Tech Stack
 
-Built on Docusaurus. Documentation formats are primarily MDX, with some `.md` files.
+Built on Docusaurus. Documentation formats are primarily MDX, with some `.md` files. The repository root provides a `wrangler.jsonc` configuration that deploys the Chinese site's `zh-cn/build/` static output to Cloudflare Workers.
 
 ---
 

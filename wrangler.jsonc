@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "open-webui-docs-zh-cn",
+  "compatibility_date": "2026-07-22",
+  "assets": {
+    "directory": "./zh-cn/build"
+  }
+}

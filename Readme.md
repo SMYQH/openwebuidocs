@@ -25,9 +25,9 @@
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/SMYQH/openwebuidocs&root-directory=zh-cn)
 
 > **注意**：
-> 需将构建命令中的 `https://<your-domain.com>` 替换为实际域名，以修复 `docusaurus.config.ts` 中硬编码的 URL。
-> 
-> 需设置根目录为 `zh-cn` 。
+> 点击 Cloudflare 按钮后即可将站点部署到你自己的 `*.workers.dev` 域名，无需手动设置根目录、构建命令或部署命令。
+>
+> 如需使用自定义域名，请在部署完成后前往 Cloudflare Worker 的 **Settings → Domains & Routes** 绑定域名；同时将 `zh-cn/docusaurus.config.ts` 中的 `url` 改为你的实际站点地址。
 
 ### GitHub Pages
 

@@ -18,6 +18,10 @@
 | File coverage | **100%** (all 400 en-us documents have corresponding zh-cn translations) |
 | Content completeness | **~99.9%** |
 
+## Deployment Configuration
+
+- **2026-07-22**: Added root-level Cloudflare Workers configuration for the Chinese site. The Deploy to Cloudflare button now builds `zh-cn/` and uploads `zh-cn/build/` as Workers static assets without requiring a manual root-directory setting.
+
 ## Structural Differences
 
 | Difference | Description |
