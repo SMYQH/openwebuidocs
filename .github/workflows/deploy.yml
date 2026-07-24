@@ -1,0 +1,315 @@
+name: Deploy to Cloudflare Workers
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "zh-cn/**"
+      - "wrangler.jsonc"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cloudflare
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: "zh-cn/.node-version"
+          cache: npm
+          cache-dependency-path: |
+            zh-cn/package-lock.json
+            package-lock.json
+
+      - name: Install zh-cn dependencies
+        working-directory: zh-cn
+        run: npm ci
+
+      - name: Apply DOMAIN to Docusaurus config
+        working-directory: zh-cn
+        env:
+          DOMAIN: ${{ secrets.DOMAIN }}
+        run: |
+          if [ -z "$DOMAIN" ]; then
+            echo "::error::Repository secret DOMAIN is not set"
+            exit 1
+          fi
+
+          DEPLOY_URL="$DOMAIN"
+          [[ "$DEPLOY_URL" =~ ^https?:// ]] || DEPLOY_URL="https://$DEPLOY_URL"
+          CLEAN_URL="${DEPLOY_URL%/}"
+          SCHEME_HOST="$(echo "$CLEAN_URL" | sed -E 's|^(https?://[^/]+).*|\1|')"
+          PATH_PART="$(echo "$CLEAN_URL" | sed -E 's|^https?://[^/]+(.*)|\1|')"
+          BASE_URL="${PATH_PART:-/}"
+          [[ "$BASE_URL" != /* ]] && BASE_URL="/$BASE_URL"
+          [[ "$BASE_URL" != */ ]] && BASE_URL="$BASE_URL/"
+
+          sed -i "s|url: \"https://openwebui.com\"|url: \"$SCHEME_HOST\"|" docusaurus.config.ts
+          sed -i "s|baseUrl: \"/\"|baseUrl: \"$BASE_URL\"|" docusaurus.config.ts
+          # Do not echo DOMAIN/url values — public repo Actions logs are world-readable.
+          echo "Applied Docusaurus url/baseUrl from DOMAIN secret"
+
+      - name: Build site
+        working-directory: zh-cn
+        run: npm run build
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Configure Worker custom domain from DOMAIN
+        env:
+          DOMAIN: ${{ secrets.DOMAIN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ID }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DOMAIN:-}" ]; then
+            echo "::error::Repository secret DOMAIN is not set"
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "::error::Repository secret TOKEN is not set"
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo "::error::Repository secret ID is not set"
+            exit 1
+          fi
+
+          DEPLOY_URL="$DOMAIN"
+          [[ "$DEPLOY_URL" =~ ^https?:// ]] || DEPLOY_URL="https://$DEPLOY_URL"
+          HOSTNAME="$(echo "${DEPLOY_URL%/}" | sed -E 's|^https?://([^/]+).*|\1|' | tr '[:upper:]' '[:lower:]')"
+          HOSTNAME="${HOSTNAME%%:*}"
+
+          if [ -z "$HOSTNAME" ]; then
+            echo "::error::Unable to parse hostname from DOMAIN secret"
+            exit 1
+          fi
+
+          # Public repo: never print DOMAIN/hostname/account/zone values in logs.
+          echo "Resolved hostname from DOMAIN secret"
+          export HOSTNAME
+
+          # workers.dev / pages.dev style hosts are not custom domains on a zone.
+          if [[ "$HOSTNAME" == *.workers.dev || "$HOSTNAME" == *.pages.dev ]]; then
+            echo "DOMAIN is already a Cloudflare managed subdomain; skip custom domain bind."
+            exit 0
+          fi
+
+          node <<'NODE'
+          const fs = require("fs");
+          const https = require("https");
+
+          const token = process.env.CLOUDFLARE_API_TOKEN;
+          const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+          const hostname = process.env.HOSTNAME;
+
+          // Redact secret-derived values from public Actions logs.
+          function apiError(method, statusCode, errors) {
+            const codes = (errors || [])
+              .map((e) => e.code)
+              .filter((c) => c != null)
+              .join(",");
+            const suffix = codes ? ` codes=${codes}` : "";
+            return new Error(
+              `Cloudflare API ${method} failed (${statusCode})${suffix}`
+            );
+          }
+
+          function request(method, path) {
+            return new Promise((resolve, reject) => {
+              const req = https.request(
+                {
+                  hostname: "api.cloudflare.com",
+                  path,
+                  method,
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                },
+                (res) => {
+                  let body = "";
+                  res.on("data", (chunk) => {
+                    body += chunk;
+                  });
+                  res.on("end", () => {
+                    let json;
+                    try {
+                      json = JSON.parse(body || "{}");
+                    } catch {
+                      reject(
+                        new Error(
+                          `Invalid JSON from Cloudflare API (${res.statusCode})`
+                        )
+                      );
+                      return;
+                    }
+                    if (
+                      res.statusCode < 200 ||
+                      res.statusCode >= 300 ||
+                      json.success === false
+                    ) {
+                      reject(apiError(method, res.statusCode, json.errors));
+                      return;
+                    }
+                    resolve(json);
+                  });
+                }
+              );
+              req.on("error", reject);
+              req.end();
+            });
+          }
+
+          async function listZones(accountFilter) {
+            const zones = [];
+            let page = 1;
+            for (;;) {
+              const qs = accountFilter
+                ? `account.id=${encodeURIComponent(accountId)}&`
+                : "";
+              const path = `/client/v4/zones?${qs}per_page=50&page=${page}`;
+              const json = await request("GET", path);
+              zones.push(...(json.result || []));
+              const totalPages = json.result_info?.total_pages || page;
+              if (page >= totalPages) break;
+              page += 1;
+            }
+            return zones;
+          }
+
+          function findZoneForHostname(zones, host) {
+            const labels = host.split(".").filter(Boolean);
+            // Longest DNS suffix match against zone names.
+            for (let i = 0; i < labels.length - 1; i += 1) {
+              const candidate = labels.slice(i).join(".");
+              const zone = zones.find(
+                (z) => (z.name || "").toLowerCase() === candidate
+              );
+              if (zone) return { zone, candidate };
+            }
+            return { zone: null, candidate: null };
+          }
+
+          async function findZoneByNameApi(host) {
+            const labels = host.split(".").filter(Boolean);
+            for (let i = 0; i < labels.length - 1; i += 1) {
+              const candidate = labels.slice(i).join(".");
+              const path =
+                `/client/v4/zones?name=${encodeURIComponent(candidate)}` +
+                `&account.id=${encodeURIComponent(accountId)}`;
+              const json = await request("GET", path);
+              const zone = (json.result || [])[0];
+              if (zone) return { zone, candidate };
+            }
+            return { zone: null, candidate: null };
+          }
+
+          (async () => {
+            let zones = await listZones(true);
+            // Counts only — never log zone names, account IDs, or hostnames.
+            console.log(`Zones visible in deploy account: ${zones.length}`);
+
+            // Token may lack Zone:Zone:Read on this account, or account id may be wrong.
+            if (zones.length === 0) {
+              const allZones = await listZones(false);
+              console.log(
+                `Zones visible without account filter: ${allZones.length}`
+              );
+              if (allZones.length > 0) {
+                console.log(
+                  "::warning::TOKEN can see zones, but none under secret ID. " +
+                    "Check repository secret ID, or grant Zone:Zone:Read on the deploy account."
+                );
+                zones = allZones.filter((z) => z.account?.id === accountId);
+              } else {
+                console.log(
+                  "::warning::TOKEN returned zero zones. Ensure TOKEN includes Zone:Zone:Read " +
+                    "(AccountAPI-only tokens cannot discover Custom Domain zones)."
+                );
+              }
+            }
+
+            let { zone } = findZoneForHostname(zones, hostname);
+            if (!zone) {
+              // Fallback: direct name lookup (handles pagination / permission edge cases)
+              ({ zone } = await findZoneByNameApi(hostname));
+            }
+
+            if (!zone) {
+              console.log(
+                "::warning::DOMAIN hostname is not under any zone in the deploy account. " +
+                  "Deploy will keep workers.dev enabled; bind the custom domain manually if needed."
+              );
+              process.exit(0);
+            }
+
+            if (zone.status && zone.status !== "active") {
+              console.log(
+                `::warning::Matched zone status is '${zone.status}', not active. ` +
+                  "Skip automatic custom domain bind."
+              );
+              process.exit(0);
+            }
+
+            const configPath = "wrangler.jsonc";
+            const raw = fs.readFileSync(configPath, "utf8");
+            const jsonText = raw.replace(/^\s*\/\/.*$/gm, "");
+            const config = JSON.parse(jsonText);
+
+            // Keep preview URLs; disable production workers.dev when custom domain is bound.
+            config.preview_urls = true;
+            config.workers_dev = false;
+            config.routes = [
+              {
+                pattern: hostname,
+                custom_domain: true,
+              },
+            ];
+
+            fs.writeFileSync(
+              configPath,
+              `${JSON.stringify(config, null, 2)}\n`
+            );
+            console.log(
+              "Bound custom domain from DOMAIN secret; " +
+                "disabled production workers.dev; kept preview_urls=true."
+            );
+          })().catch((err) => {
+            // Avoid dumping API bodies / secret-derived strings.
+            const msg = String(err && err.message ? err.message : err);
+            console.error(`::error::Custom domain configure failed: ${msg}`);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Deploy to Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Repository secret TOKEN is not set"
+            exit 1
+          fi
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Repository secret ID is not set"
+            exit 1
+          fi
+          npx wrangler deploy

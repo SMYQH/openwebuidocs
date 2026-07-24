@@ -1,0 +1,113 @@
+---
+sidebar_position: 700
+title: "记忆与个性化"
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# 记忆与个性化
+
+<ThemedImage
+  alt="聊天与对话地图，记忆模块高亮"
+  sources={{
+    light: useBaseUrl('/images/banners/chat-conversations-memory-light.svg'),
+    dark: useBaseUrl('/images/banners/chat-conversations-memory-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
+
+:::info 依赖模型的质量
+记忆的存储和回忆效果在很大程度上依赖于所使用的模型。Frontier 级模型可以良好地管理记忆；小型本地模型可能在存储或检索信息时表现不一致。
+:::
+
+Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话记住事实、偏好和上下文。
+随着 **原生工具调用** 的引入，这一系统已从被动注入机制升级为由模型主动管理的"长期记忆"。
+
+## 工作原理
+
+记忆系统会存储关于你的若干信息片段（例如"我偏好用 Python 处理后端任务"或"我住在维也纳"）。这些记忆有两种使用方式：
+
+### 1. 手动管理（设置中）
+
+用户可以通过以下位置手动新增、编辑或删除记忆：
+**设置 > 个性化 > 记忆**
+
+### 2. 原生记忆工具（Agentic 模式）
+
+当你使用启用了 **原生函数调用（Agentic 模式）** 的模型时，高质量模型可以通过内置工具自主管理你的记忆。关于管理员如何配置和管理这些系统级工具的详细说明，请参阅 [**中央工具调用指南**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
+
+:::tip 适合记忆管理的高质量模型
+自主记忆管理最适合 frontier 级模型（GPT-5、Claude 4.5+、Gemini 3+），因为它们能更智能地决定哪些事实值得保存以及何时回忆相关记忆。小型本地模型可能在记忆选择上表现不佳。
+:::
+
+每条记忆都带有一个**类型**和一个可选的**路径**（见下方的[记忆类型与路径](#记忆类型与路径)）。模型通过以下工具管理记忆：
+
+-   **`add_memory`**：保存新的事实、偏好或指令，标记为 `user` 或 `context` 类型，可选地指定 `path`。
+-   **`update_memory`**：在一次调用中应用批量更改（添加/替换/移动/移除）。
+-   **`replace_memory_content`**：使用 `id` 更新或修正特定的已有记忆。
+-   **`delete_memory`**：使用 `id` 移除不再相关或正确的记忆。
+-   **`search_memories`**：按内容、路径、类型或精确 `id` 搜索或浏览记忆库。结果包含每条片段的唯一 `id`（默认返回 5 条）。
+-   **`list_memories`**：检索用户的所有已存储记忆，包括内容和时间戳。
+-   **`list_memory_paths`**：列出已保存的记忆路径（分组），以便模型在写入前找到相关记忆的存放位置。
+-   **`read_memory_path`**：读取指定路径下存储的记忆，包括附近的父路径和子路径。
+
+## 记忆类型与路径
+
+每条记忆都有一个**类型**和一个可选的**路径**：
+
+- **类型** — `user` 类型的记忆是**关于你**的事实、偏好或指令（例如"偏好用 Python 处理后端"）；`context` 类型的记忆是值得在聊天之间携带的其他持久化上下文。两者在注入提示词时分别计算预算（见[后台审查与限制](#后台审查与限制)）。
+- **路径** — 一个可选的稳定"地址"，用于**对相关记忆进行分组**（例如 `work/projects`），使模型可以通过 `list_memory_paths` / `read_memory_path` 以层级结构组织和浏览它们，而不是一个扁平的列表。
+
+这些由记忆工具自动设置，你无需手动分配。
+
+## 新记忆系统的优势
+
+-   **主动学习**：你无需手动输入偏好。模型可以在后台调用 `add_memory`，例如说：*"我会记住你在 UI 项目里偏好深色模式"*
+-   **上下文检索**：如果对话突然转回几个月前提到的话题，模型可以通过 `search_memories` 去"搜索大脑"，找回相关细节
+-   **动态修正**：如果模型记错了内容，它可以使用 `replace_memory_content` 修正该事实，而不是创建一条重复记忆
+-   **清理能力**：模型可以通过 `delete_memory` 清除过期或无关事实，保持记忆库整洁
+-   **完全可见**：借助 `list_memories`，模型可以查看它所掌握的全部内容，并识别空缺或矛盾之处
+-   **用户控制**：尽管模型可以主动添加记忆，但用户始终保有完全控制权。模型添加的每条记忆都可以在个性化设置中审查并删除
+
+## 启用记忆工具
+
+1.  **管理员启用**：确保管理员已经[全局启用](#管理员控制)记忆功能，并确认你拥有所需权限
+2.  **原生模式（Agentic 模式）**：在模型高级参数中启用**原生函数调用**（**管理面板 > 设置 > 模型 > 模型特定设置 > 高级参数**）
+3.  **需要高质量模型**：若要稳定获得这些能力，请优先使用具备较强推理能力的 frontier 模型（例如 GPT-5、Claude 4.5 Sonnet、Gemini 3 Flash、MiniMax M2.5）。较小本地模型可能无法有效自主管理记忆
+4.  **按模型分类开关**：确保该模型在 **工作区 > 模型 > 编辑 > 内置工具** 中启用了**记忆**分类（默认开启）
+
+:::info 中央工具文档
+有关所有内置 agentic 工具（包括记忆、网络搜索、知识库）的完整说明及配置方法，请参阅 [**原生/Agentic 模式工具指南**](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
+:::
+
+## 管理员控制
+
+管理员可以完全控制记忆功能，包括全局禁用，或仅向特定用户组开放。
+
+### 全局开关
+
+记忆功能可以对整个实例开启或关闭。关闭后，所有用户都会看不到"个性化"标签，同时相关记忆 API 端点也会被阻止。
+- **管理 UI**：管理面板 > 设置 > 通用 > 功能 > **记忆**
+- **环境变量**：[`ENABLE_MEMORIES`](/reference/env-configuration#enable_memories)（默认：`True`）
+
+### 细粒度权限
+
+管理员还可以通过权限界面，按角色或用户组控制记忆访问。
+- **管理 UI**：管理面板 > 用户 > 权限 > 功能 > **记忆**
+- **环境变量**：[`USER_PERMISSIONS_FEATURES_MEMORIES`](/reference/env-configuration#user_permissions_features_memories)（默认：`True`）
+
+### 后台审查与限制
+
+- **后台审查** — 当启用了 [`ENABLE_MEMORY_BACKGROUND_REVIEW`](/reference/env-configuration#enable_memory_background_review)（默认**关闭**），Open WebUI 会定期检查最近的对话，并每 [`MEMORIES_REVIEW_INTERVAL_TURNS`](/reference/env-configuration#memories_review_interval_turns) 轮（默认 `10`）自动更新 `context` 记忆，而不仅仅依赖显式的工具调用。
+- **注入预算** — [`MEMORIES_CONTEXT_CHAR_LIMIT`](/reference/env-configuration#memories_context_char_limit) 和 [`MEMORIES_USER_CHAR_LIMIT`](/reference/env-configuration#memories_user_char_limit)（均默认 `2000`）限制注入到提示词中的 `context` 和 `user` 类型记忆的最大字符数。
+
+### 记忆系统上下文
+
+默认情况下，Open WebUI 会将用户的已存储记忆注入到模型的系统上下文中，使模型在每次对话轮次时都能感知到它们。此注入可以独立于记忆工具单独关闭：关闭后，模型仍然可以按需添加、更新和删除记忆，但记住的信息不再自动添加到提示词中。
+- **管理 UI**：管理面板 > 设置 > 通用 > **记忆系统上下文**（在记忆功能启用时显示）
+- **环境变量**：[`ENABLE_MEMORY_SYSTEM_CONTEXT`](/reference/env-configuration#enable_memory_system_context)（默认：`True`）
+
+## 隐私与安全
+
+记忆会本地存储在你的 Open WebUI 数据库中，并且仅作用于你的用户账号。默认情况下，它们不会与其他用户共享；你也可以随时清空自己的整个记忆库。

@@ -1,0 +1,507 @@
+---
+sidebar_position: 3
+title: "RAG"
+---
+
+检索增强生成（RAG）让语言模型能够围绕外部内容——文档、知识库等——进行推理：先检索相关信息，再把它送入模型上下文。当结果不符合预期（例如模型“幻觉”或遗漏关键信息）时，问题往往并不在模型本身，而在上下文链路。
+
+本页汇总了最常见的 RAG 问题及其处理方法。
+
+---
+
+## 按场景推荐设置
+
+RAG 性能很大程度上取决于你的模型配置。默认值较为保守以保证兼容性，但针对具体部署调优后效果会好得多。所有设置均在 **管理员面板 > 设置 > 文档** 中配置。
+
+:::tip Agentic 检索：启用 kb_exec
+如果你的模型使用 **原生函数调用**，设置 [`ENABLE_KB_EXEC=True`](/reference/env-configuration#enable_kb_exec) 会让知识库体验明显更好。它会给模型提供一套类 shell 的接口（`ls`、`tree`、`grep`、`cat`、按行读）来操作知识内容，能力强的模型会以一种比单一搜索工具更可靠的方式把它们串起来。在 Default 模式下它没有任何效果。参见 [类文件系统访问](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
+:::
+
+### 本地模型，上下文受限（≤ 8K tokens）
+
+适用于在消费级硬件上运行的 Ollama 模型（Llama 3.1 8B、Qwen 2.5 7B、Gemma 3 4B、Phi-3 Mini 等），上下文窗口有限。
+
+| 设置 | 值 | 原因 |
+|------|-----|------|
+| **文本分割器** | `token` | 基于实际 token 数的一致分块大小 |
+| **Markdown 标题分割** | **开启** | 保留文档结构 |
+| **分块大小** | `1000` | 较小的分块，使每个检索结果都能舒适地放入上下文 |
+| **分块重叠** | `100` | 标准重叠 |
+| **Top K** | `3–5` | 较少分块，避免耗尽有限的上下文预算 |
+| **完整上下文模式** | 关闭 | 无法承担发送完整文档的开销 |
+
+:::tip 上下文预算计算
+分块大小为 1000 tokens、Top K 为 5 时，RAG 会注入约 5000 tokens 的检索内容。加上系统提示词和对话历史——如果模型的上下文窗口为 8K，留给对话本身的大约只有 2–3K tokens。如果后续问题被截断，请适当降低 Top K。
+:::
+
+### 云模型，大上下文（32K+ tokens）
+
+适用于 OpenAI（GPT-4o、GPT-5）、Anthropic（Claude）、Google（Gemini）、DeepSeek 及其他 API 提供商，上下文窗口为 32K–1M+ tokens。
+
+| 设置 | 值 | 原因 |
+|------|-----|------|
+| **文本分割器** | `token` | 一致的分块大小 |
+| **Markdown 标题分割** | **开启** | 保留文档结构 |
+| **分块大小** | `2000` | 较大的分块，每次命中保留更多上下文 |
+| **分块重叠** | `200` | 更多重叠防止句子被切断 |
+| **Top K** | `15–25` | 广撒网——你有足够的上下文预算 |
+| **完整上下文模式** | 小文档可考虑 | 文档不超过约 20K tokens 时，完整上下文通常优于检索 |
+
+:::tip 何时使用完整上下文模式
+如果你使用的是单个中小型文档（不超过约 50 页）且模型上下文较大，完整上下文模式的效果通常优于分块检索，因为模型能看到全部内容而没有检索遗漏。可在聊天设置中按对话切换。
+:::
+
+### 混合环境（本地 + 云端）
+
+如果你同时使用本地和云端模型，按最低公分母配置，并在每个模型或每次对话时覆盖：
+
+| 设置 | 值 | 原因 |
+|------|-----|------|
+| **文本分割器** | `token` | 适用于两者 |
+| **Markdown 标题分割** | **开启** | 适用于两者 |
+| **分块大小** | `1500` | 折中——不太大也不太小 |
+| **分块重叠** | `200` | 安全默认值 |
+| **Top K** | `10` | 适中——混合模型使用的好平衡点 |
+
+---
+
+## 嵌入模型推荐
+
+嵌入模型决定检索质量。正确的选择取决于你的部署场景：
+
+| 场景 | 推荐 | 原因 |
+|------|------|------|
+| **单用户，入门** | `all-MiniLM-L6-v2`（默认） | 本地运行，无需配置 |
+| **多用户，有 Ollama** | 通过 Ollama 使用 `nomic-embed-text` | 卸载到 Ollama，释放 Open WebUI 内存 |
+| **生产环境，有 API 预算** | 通过 OpenAI 使用 `text-embedding-3-small` | 性价比最高的检索质量 |
+| **离线 / 自托管** | 通过 Ollama 使用 `nomic-embed-text` 或 `mxbai-embed-large` | 无需外部 API 调用 |
+
+更换嵌入模型后，请在 **管理员面板 > 设置 > 文档** 中**重新索引所有现有文档**，使新嵌入生效。
+
+---
+
+## 常见 RAG 问题与修复方法
+
+### 1. 模型“看不到”你的内容
+
+这是最常见的问题，通常发生在内容导入阶段。模型并不是故意胡编，而是它根本没有拿到正确的内容。
+
+**解决方法：** 检查内容提取设置。
+
+- 前往：**Admin Settings > Documents**
+- 确认你使用了可靠的内容提取引擎，例如：
+  - Apache Tika
+  - Docling
+  - 自定义提取器（视你的文档类型而定）
+
+:::tip
+尝试上传一个文档并预览提取结果。如果内容为空，或缺少关键段落，就需要调整提取器设置，或改用其他引擎。
+:::
+
+---
+
+### 2. 只用了文档中的一小部分内容
+
+Open WebUI 默认假设模型上下文窗口有限。例如很多本地模型（包括 Ollama 默认模型）只有 2048 token。正因如此，Open WebUI 会积极裁剪检索到的内容，以便把它塞进可用窗口中。
+
+**解决方法：**
+
+- 前往 **Admin Settings > Documents**
+- 然后任选其一：
+  - **启用 “Bypass Embedding and Retrieval”**——直接发送完整内容，不走检索过滤
+  - **打开 “Full Context Mode”**——把更完整的内容注入模型提示词
+
+:::warning
+请留意上下文上限——如果模型本身无法处理更多 token，内容仍然会被截断。
+:::
+
+---
+
+### 3. Token 上限太小
+
+即使检索正常，你的模型也可能无法真正处理收到的全部内容——因为它的上下文窗口根本装不下。
+
+默认情况下，很多模型（尤其是由 Ollama 托管的 LLM）只有 2048 token 上下文。这意味着检索到的数据只有一部分会真正被利用。
+
+**为什么 Web Search 尤其需要更大的上下文窗口：**
+网页内容对小上下文模型尤其不友好，因为网页通常比普通文档长得多，常见内容包括：
+- 主体内容（你真正想要的信息）
+- 导航菜单、页眉、页脚
+- 侧边栏与广告
+- 评论区和相关链接
+- 元数据与嵌入脚本
+
+即使经过提取和清洗，网页也很容易占用 4,000-8,000+ token。若上下文只有 2048 token，通常连一半都装不下，更别说页面后半部分经常还包含更关键的信息。即使 4096 token，对完整分析网页内容来说也往往不够。
+
+**解决方法：**
+
+- **对于 Ollama 模型**：扩大模型上下文长度：
+  - 前往：**Admin Panel > Models > Settings**（选择你要编辑的模型）
+  - 进入 **Advanced Parameters**
+  - 调整 context length（例如提高到 8192+，如果模型支持，最好 16000 token 以上）
+
+- **对于 OpenAI 和其他集成模型**：这类模型通常有自己的上下文上限，无法通过 Open WebUI 直接改动。请确认你选择的是上下文足够大的模型。
+
+对 Web Search 而言，2048 token 是非常明显的瓶颈。想获得更好的网页 RAG 效果，至少建议 8192 token，复杂网页则最好 16384+。
+
+**替代方案：** 使用上下文更大的外部 LLM（例如 GPT-4o、Claude、Gemini 8k+ 版本）。如果你想确认瓶颈是否来自上下文窗口，最好的办法之一就是拿一个大上下文模型做对照。
+
+:::tip
+在生产场景中做 Web Search 和复杂文档分析时，尽量使用支持 8192+ token 上下文的模型。
+:::
+
+---
+
+### 4. 嵌入模型质量差或不匹配
+
+嵌入差 = 检索差。如果你的向量表示质量不够，retriever 就拿不到正确内容——无论后面的 LLM 多强都没用。
+
+**解决方法：**
+
+- 切换到更高质量的嵌入模型（例如 all-MiniLM-L6-v2、Instructor X，或 OpenAI embeddings）
+- 前往：**Admin Settings > Documents**
+- 更换模型后，请务必：
+  - **重新索引全部现有文档**，让新的 embeddings 生效
+
+---
+
+<span id="5-400-nonetype-object-has-no-attribute-encode"></span>
+### 5. 400: 'NoneType' object has no attribute 'encode' {#5-400-nonetype-object-has-no-attribute-encode}
+
+这个错误通常表示嵌入模型未正确配置或根本没有可用模型。当 Open WebUI 试图创建 embedding，却没有有效模型可用时，它无法处理文本，于是就会出现这个看似晦涩的错误。
+
+**原因：**
+- 嵌入模型没有正确配置
+- 模型可能没有下载完整
+- 如果你使用的是外部嵌入模型，它可能当前不可访问
+
+**解决方法：**
+
+- 前往：**Admin Settings > Documents > Embedding Model**
+- 即使该模型看起来已经选中，也请再保存一次，以强制重新检查/下载
+- 如果你使用的是远程/外部嵌入服务，请确认它正在运行，并且 Open WebUI 能访问它
+
+:::tip
+修复配置后，请重新对某个文档执行嵌入，并确认日志中不再出现该错误。
+:::
+
+---
+
+### 6. 上传限制与约束
+
+Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用。不同上传方式受限方式不同：
+
+- **聊天上传：** 受全局文件大小和文件数量限制
+  - **最大文件大小：** 由 `RAG_FILE_MAX_SIZE` 控制（默认不限），可在 **Admin Panel > Settings > Documents > General > Max Upload Size** 中配置
+  - **最大文件数量：** 由 `RAG_FILE_MAX_COUNT` 控制（默认不限），可在 **Admin Panel > Settings > Documents > General > Max Upload Count** 中配置
+  - **允许的文件扩展名：** 由 `RAG_ALLOWED_FILE_EXTENSIONS` 控制（默认全部允许），可在 **Admin Panel > Settings > Documents > General > Allowed File Extensions** 中配置
+- **文件夹上传：** 受 `FOLDER_MAX_FILE_COUNT` [environment variable](/reference/env-configuration/#folder_max_file_count) 限制（默认 100），限制的是与文件夹直接关联的文件数
+- **知识库上传：**
+  - **文件大小限制：** 与聊天上传相同，受 `RAG_FILE_MAX_SIZE` 约束
+  - **文件数量限制：** **不受** `RAG_FILE_MAX_COUNT` 限制，因此可上传无限数量的文件
+  - **RAG 行为：** 上传到 Knowledge Base 的所有文件都会自动建立索引；但与聊天上传类似，Knowledge Base 也可以在聊天设置里启用 **Full Context Mode**，直接把完整文档内容注入模型，而不是使用向量检索
+
+:::info
+这些限制被拆分控制后，管理员就能更精细地管理不同功能的资源占用。例如，你可以允许在精心维护的 Knowledge Base 中上传更大的文件，同时限制临时 Folder 上传的文件数量。
+:::
+
+---
+
+### 7. Chunk 过于碎片化或太小
+
+使用 **Markdown Header Splitter** 时，文档有时会被切得很碎（例如只剩一条目录项或一个很短的小标题）。这类小 chunk 往往缺乏足够语义上下文，嵌入模型难以准确表示，最终导致 RAG 效果差，而且还带来额外开销。
+
+**解决方法：**
+
+- 前往 **Admin Settings > Documents**
+- 提高 **Chunk Min Size Target**
+- 例如设置为 `1000`（或约为 `CHUNK_SIZE` 的 50-60%），这样系统会把过小碎片与相邻 chunk 合并，获得更好的语义一致性，也能减少总 chunk 数量
+
+---
+
+### 8. 追问越来越慢（KV Cache 失效）
+
+如果首轮回答很快，但后续追问越来越慢，你大概率遇到了 **KV Cache invalidation**。
+
+**问题根源：** 默认情况下，Open WebUI 会把 RAG 上下文注入到 **user message**。随着对话继续，用户消息位置不断向后移动，这会迫使 Ollama、llama.cpp、vLLM 以及 OpenAI、Vertex AI 等提供商不断重新处理整段上下文。
+
+**解决方法：**
+- 设置环境变量 `RAG_SYSTEM_CONTEXT=True`
+- 这样 RAG 上下文会被注入到 **system message**，其位置固定在对话开头
+- 这能让提供商更有效地利用 **KV prefix caching** 或 **Prompt Caching**，即使文档很大，也能让后续追问接近瞬时返回
+
+---
+
+| 问题 | 修复方式 |
+|--------|------|
+| 🤔 模型看不到内容 | 检查文档提取器设置 |
+| 🧹 只使用了部分内容 | 启用 Full Context Mode 或 Bypass Embedding |
+| ⏱ 受 2048 token 限制 | 增大模型上下文，或使用大上下文 LLM |
+| 📉 检索不准确 | 切换到更好的嵌入模型并重新索引 |
+| ❌ 上传限制受阻 | 使用 Folder 上传（配合 `FOLDER_MAX_FILE_COUNT`）；Knowledge Base 限制单独计算 |
+| 🧩 Chunk 过碎 / 过小 | 提高 **Chunk Min Size Target** 合并小片段 |
+| 🐌 追问越来越慢 | 启用 `RAG_SYSTEM_CONTEXT=True` 修复 KV Cache 失效 |
+| 📄 API 返回 “empty content” | 等文件处理完成后再加入知识库 |
+| 💥 嵌入时 CUDA OOM | 降低 batch size、隔离 GPU、或重启容器 |
+| 📷 PDF 图片无法提取 | 使用 Tika/Docling、启用 OCR、或更新 pypdf |
+| 💀 上传时 worker 瞬时死亡 | 在多 worker 下不要继续使用默认 ChromaDB（SQLite） |
+| 💀 上传时 worker 超时死亡 | 更新 Open WebUI，或提高 `--timeout-worker-healthcheck` |
+| 🧠 模型忽略已附加 KB | 启用 Builtin Tools、加系统提示、或关闭 native function calling |
+
+---
+
+<span id="9-api-file-upload-the-content-provided-is-empty-error"></span>
+### 9. API 文件上传：“The content provided is empty” 错误 {#9-api-file-upload-the-content-provided-is-empty-error}
+
+通过 API 上传文件后立即把它加入知识库时，你可能会遇到：
+
+```
+400: The content provided is empty. Please ensure that there is text or data present before proceeding.
+```
+
+**问题根源：** 这其实是**竞争条件**，并不是真的空文件。默认情况下，文件上传是异步处理的——上传 endpoint 会立即返回文件 ID，而内容提取与 embedding 计算会在后台进行。如果你在处理完成前就把文件加入知识库，系统看到的内容自然还是空的。
+
+✅ **解决方法：等待处理完成**
+
+在把文件加入知识库之前，先轮询状态 endpoint：
+
+```python
+import requests
+import time
+
+def wait_for_processing(token, file_id, timeout=300):
+    url = f'http://localhost:3000/api/v1/files/{file_id}/process/status'
+    headers = {'Authorization': f'Bearer {token}'}
+
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        response = requests.get(url, headers=headers)
+        status = response.json().get('status')
+
+        if status == 'completed':
+            return True
+        elif status == 'failed':
+            raise Exception(f"Processing failed: {response.json().get('error')}")
+
+        time.sleep(2)  # 每 2 秒轮询一次
+
+    raise TimeoutError("File processing timed out")
+```
+
+**状态值说明：**
+| 状态 | 含义 |
+|--------|---------|
+| `pending` | 仍在处理中 |
+| `completed` | 可加入知识库 |
+| `failed` | 处理失败（检查 error 字段） |
+
+:::tip
+完整 API 工作流示例（包括正确的状态检查）请参阅 [API 端点文档](/reference/api-endpoints#checking-file-processing-status)。
+:::
+
+---
+
+<span id="10-cuda-out-of-memory-during-embedding"></span>
+### 10. 嵌入时 CUDA Out of Memory {#10-cuda-out-of-memory-during-embedding}
+
+在处理大文件或连续处理很多文件时，你可能会遇到如下 CUDA OOM 错误：
+
+```
+CUDA out of memory. Tried to allocate X MiB. GPU has a total capacity of Y GiB of which Z MiB is free.
+```
+
+**常见原因：**
+- 嵌入模型与聊天模型争抢 GPU 显存
+- PyTorch 重复小规模分配导致内存碎片化
+- 大文档在嵌入阶段造成瞬时内存峰值
+
+✅ **解决方法：**
+
+1. **把嵌入任务隔离到另一张 GPU**（如果有）：
+   使用 `CUDA_VISIBLE_DEVICES`，把 embedding 固定到与聊天模型不同的 GPU。
+2. **降低 Embedding Batch Size**：
+   调低 `RAG_EMBEDDING_BATCH_SIZE`（例如从 32 改到 8 或 4），减少峰值显存占用。
+3. **启用 expandable segments**：
+   ```
+   PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+   ```
+4. **大规模导入任务之间重启容器**：
+   如果碎片化越来越严重，重启 Open WebUI 容器可清理 CUDA context。
+5. **换更小的嵌入模型**：
+   批量导入时使用更轻量的 embedding 模型，正式查询再切回高质量模型。
+6. **将导入与聊天分离**：
+   做大规模导入时，不要同时运行聊天模型。先完成 embeddings，再加载聊天模型。
+
+---
+
+### 10b. 嵌入阶段的 429 限流错误
+
+当你使用**远程/外部嵌入提供商**（OpenAI、Azure OpenAI 等），并启用了 [`ENABLE_ASYNC_EMBEDDING`](/reference/env-configuration#enable_async_embedding) 时，在批量导入文档期间可能会在日志里看到 HTTP 429 “Too Many Requests”：
+
+```
+Error generating embeddings: 429 Rate limit reached
+```
+
+**问题根源：** 启用异步嵌入后，Open WebUI 会并发发送 embedding 请求。如果一次性导入很多文档或特别大的文档，很容易超过提供商 API 的限流，尤其是在免费层或较低套餐下。
+
+✅ **解决方法：**
+
+1. **限制并发嵌入请求数**：
+   通过 [`RAG_EMBEDDING_CONCURRENT_REQUESTS`](/reference/env-configuration#rag_embedding_concurrent_requests) 限制同时进行的 embedding API 调用数，例如设置成 `5` 或 `10`：
+   ```yaml
+   environment:
+     RAG_EMBEDDING_CONCURRENT_REQUESTS: 5
+   ```
+   也可以在 **Admin Panel > Settings > Documents > Concurrent Requests** 中设置。默认 `0` 表示不限制并发。
+2. **降低 batch size**：
+   调低 [`RAG_EMBEDDING_BATCH_SIZE`](/reference/env-configuration#rag_embedding_batch_size)，减少单次 API 调用发送的文本量。
+3. **关闭异步嵌入**：
+   如果限流问题始终存在，可以把 `ENABLE_ASYNC_EMBEDDING` 设为 `False`，按顺序处理嵌入（更慢，但更稳定）。
+
+### 11. PDF OCR 没有提取出图片中的文字
+
+如果包含图片文字的 PDF 上传后返回空内容：
+
+**问题根源：** 默认的 `pypdf` 提取器对某些 PDF 格式支持有限，尤其是以图片为主的 PDF。
+
+✅ **解决方法：**
+
+1. **改用其他内容提取引擎**：
+   - 前往 **Admin Settings > Documents**
+   - 尝试 **Apache Tika** 或 **Docling**，它们通常有更好的 OCR 支持
+2. **启用 PDF 图像提取**：
+   - 在 **Admin Settings > Documents** 中确认 **PDF Extract Images (OCR)** 已开启
+3. **更新 pypdf**：
+   新版本 pypdf（6.0.0+）对各类 PDF 格式处理更好
+4. **检查 PDF 是否损坏**：
+   上传前先确认该 PDF 能在常规 PDF 阅读器中正常打开
+
+---
+
+<span id="12-worker-dies-during-document-upload"></span>
+### 12. 文档上传期间 worker 死亡 {#12-worker-dies-during-document-upload}
+
+在**多 worker** 部署中上传文档时，你可能会看到：
+
+```
+INFO:     Waiting for child process [12]
+INFO:     Child process [12] died
+```
+
+在多 worker 场景下，这通常有**两类不同原因**：
+
+#### 原因 A：ChromaDB SQLite + Fork（瞬时崩溃）
+
+如果你使用的是**默认 ChromaDB**（本地 SQLite 支持的 `PersistentClient`），并且设置了 `UVICORN_WORKERS > 1`，那么崩溃原因就是 SQLite **不具备 fork-safe 特性**。uvicorn fork 多个 worker 后，每个进程都会继承同一个 SQLite 连接；多个 worker 同时写向量数据库时，就会导致瞬时崩溃，而不是慢慢超时。
+
+典型日志通常会在同一秒内出现：
+```
+save_docs_to_vector_db:1619 - adding to collection file-id
+INFO:     Waiting for child process [pid]
+INFO:     Child process [pid] died
+```
+
+**解决方法：** 使用多 worker 时，你**必须**停止使用默认本地 ChromaDB：
+- 将 [`VECTOR_DB`](/reference/env-configuration#vector_db) 改为 `pgvector`、`mariadb-vector`、`milvus` 或 `qdrant`
+- 或者把 ChromaDB 作为独立 HTTP 服务运行，并配置 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) / [`CHROMA_HTTP_PORT`](/reference/env-configuration#chroma_http_port)
+
+完整说明请参见 [扩缩容与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
+
+#### 原因 B：SentenceTransformers 健康检查超时（旧版本）
+
+当你使用**默认 SentenceTransformers** 嵌入引擎（本地嵌入）并启用多个 worker 时，uvicorn 会通过定期 ping 监控 worker 健康。默认健康检查超时仅有 **5 秒**。在旧版本 Open WebUI 中，embedding 调用会阻塞事件循环，worker 因而无法响应健康检查，最终被 uvicorn 判定为无响应并杀掉。
+
+:::note
+这个问题已经在 Open WebUI 中修复。现在 embedding 系统使用 `run_coroutine_threadsafe` 保持主事件循环可响应，因此无论嵌入耗时多久，worker 都不应再因为这个原因在上传期间被杀死。
+
+如果你已经使用包含该修复的版本，但仍看到 worker 死亡，请先优先检查上面的**原因 A**（ChromaDB SQLite），然后确认 Open WebUI 是否已更新到最新版本。
+:::
+
+**谁会受到影响：**
+- 仅限使用**默认 SentenceTransformers** 嵌入引擎（本地嵌入）的部署
+- 仅限启用了**多个 uvicorn worker** 的部署；单 worker 部署没有健康检查超时问题
+- 外部嵌入引擎（Ollama、OpenAI、Azure OpenAI）**不受影响**，因为它们的 API 调用不会阻塞事件循环
+
+✅ **解决方法（适用于尚未包含修复的旧版本）：**
+
+1. **升级 Open WebUI** 到包含 `run_coroutine_threadsafe` 修复的版本。
+2. **提高健康检查超时**，作为临时解决方案：
+   ```yaml
+   command: ["bash", "start.sh", "--workers", "2", "--timeout-worker-healthcheck", "120"]
+   ```
+3. **切换到外部嵌入引擎**，避免本地阻塞：
+   ```
+   RAG_EMBEDDING_ENGINE=ollama
+   RAG_EMBEDDING_MODEL=nomic-embed-text
+   ```
+4. **可选：设置安全超时**，通过 [`RAG_EMBEDDING_TIMEOUT`](/reference/env-configuration#rag_embedding_timeout) 中止异常长时间的 embedding 操作（这不会影响健康检查机制本身）。
+
+---
+
+<span id="13-knowledge-base-attached-to-model-not-working"></span>
+### 13. 模型附加的知识库不生效 {#13-knowledge-base-attached-to-model-not-working}
+
+你在 **Workspace > Models > Edit** 中把某个知识库附加到了模型上，但聊天时模型似乎完全不知道知识库里的内容。
+
+**问题根源：** Open WebUI 现在有两种不同的 RAG 模式，而模型附加知识库在这两种模式下的工作方式完全不同：
+
+| 模式 | 知识的工作方式 |
+|------|-------------------|
+| **Default（非 native）** | Open WebUI 会自动执行 RAG——查询附加的知识库、检索相关 chunk，并把它们注入会话上下文。整个过程由系统在幕后完成。 |
+| **Native Function Calling** | 知识**不会自动注入**。模型收到的是工具（如 `query_knowledge_bases`），它必须主动决定何时调用。这是 **agentic RAG**——模型自主判断何时需要搜索知识。 |
+
+如果你启用了 **Native Function Calling**，那么模型必须同时具备**使用工具的能力**和**被明确引导去使用工具**。
+
+#### 知识检索行为矩阵
+
+| | **模型附加了 KB** | **没有附加 KB** |
+|---|---|---|
+| **Default Mode** | Open WebUI 只会自动注入**附加 KB** 的 RAG 结果 | 不会自动执行 RAG——用户必须通过 `#` 手动把知识库加入聊天 |
+| **Native Function Calling** | 模型收到的工具只允许访问**附加 KB**——仍需主动调用 | 如果启用了 Builtin Tools，模型会收到能访问**所有可访问 KB** 的工具——仍需主动调用 |
+
+关键结论：在 Native Mode（当前受支持模式）下，模型无论如何都必须使用知识工具；附加 KB 只是限制“可以搜索哪些 KB”。Default Mode 的自动注入行为只针对历史部署做兼容说明；Default Mode 已不再受支持，所有模型都应迁移到 Native Mode。
+
+:::tip 在 Native Mode 下阻止模型访问知识库
+如果你想阻止某个模型在 native mode 下访问**任何**知识库，不需要关闭整个 Builtin Tools。你只需在 **Workspace > Models > Edit > Builtin Tools** 中关闭 **Knowledge Base** 这个类别。这样会移除所有知识相关工具，但保留其他内置工具（web search、memory、notes 等）。完整分类请参阅 [细粒度内置工具分类](/features/extensibility/plugin/tools#granular-builtin-tool-categories-per-model)。
+:::
+
+![模型编辑器中的 Builtin Tools 分类](/images/features/plugin/tools/builtin_tools.png)
+
+✅ **建议按以下顺序检查：**
+
+1. **先检查全局模型设置：**
+   - 前往 **Admin Panel > Settings > Models > ⚙️（齿轮图标）**
+   - 展开 **Model Parameters**，确认 **Function Calling** 是否被设为 `native`
+   - 如果是，它会**覆盖所有没有显式设置自身 `function_calling` 参数的模型**——即使你原本并不希望某个特定模型使用 native mode
+   - 可以把全局设置改回 `default`，或者在每个模型的 **Advanced Params** 中显式设置 `function_calling` 来覆盖全局值
+   - 同时检查 **Model Capabilities**，如果全局关闭了 **File Context**，那么未显式开启该能力的模型都不会处理 RAG 文件
+
+:::warning 全局设置会覆盖单模型默认行为
+这个问题最常见的根源，是 **Admin Panel > Settings > Models > ⚙️ > Model Parameters** 中把全局 `Function Calling` 设为了 `native`。这会悄悄应用到**每个没有显式设置 `function_calling` 的模型**上。只有在 **Workspace > Models > Edit > Advanced Params** 中为某个模型明确设置了值，才会覆盖全局默认。
+:::
+
+2. **确认该模型已启用 Builtin Tools**（适用于 native mode）：
+   - 进入该模型的 **Workspace > Models > Edit**
+   - 在 **Builtin Tools** 下确认 **Knowledge Base** 类别已启用（默认启用）
+   - 如果被关闭，模型就没有任何途径去查询附加知识库
+
+3. **加入系统提示词引导**（适用于 native mode）：
+   - 一些模型需要更明确的工具使用提示，可加入类似内容：
+     > “When users ask questions, first use list_knowledge_bases to see what knowledge is available, then use query_knowledge_bases to search for relevant information before answering.”
+
+4. **或者为该模型关闭 Native Function Calling：**
+   - 在模型设置中关闭 Native Function Calling，恢复早期版本中经典的自动注入式 RAG 行为
+
+5. **或者使用 Full Context mode：**
+   - 点击已附加的知识库并选择 **“Use Entire Document”**
+   - 这样会完全绕过 RAG，无论 native function calling 设置如何，都会始终注入完整文档内容
+
+:::info 为什么会这样变化？
+Open WebUI 正在转向 **agentic RAG**：由模型自主决定何时以及如何搜索知识库。相比传统 RAG，这种方式更强大，因为模型可以在第一次搜索效果不佳时改用不同查询重新尝试。但这也要求模型本身具备较好的工具使用能力。对于较小或较旧、工具调用能力不足的模型，推荐直接关闭 Native Function Calling。
+:::
+
+关于知识作用域与检索模式的完整说明，请参阅 [知识文档](/features/workspace/knowledge#agentic-knowledge-tools) 和 [文件上下文与内置工具](/features/chat-conversations/rag#file-context-vs-builtin-tools)。
+
+---
+
+把提取、嵌入、检索和模型上下文这些环节都调优好之后，你就能显著提升 LLM 处理文档时的准确性与稳定性。

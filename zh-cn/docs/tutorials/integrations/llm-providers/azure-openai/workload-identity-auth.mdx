@@ -1,0 +1,212 @@
+---
+title: "Workload Identity 认证"
+---
+
+:::warning
+
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+
+:::
+
+
+## 概览
+
+本指南说明如何在 Azure Kubernetes Service（AKS）上配置 Open WebUI，并使用 Workload Identity 认证访问 Azure OpenAI。
+
+Workload Identity 允许 AKS Pod 通过 Azure Entra ID（原 Azure AD）访问 Azure 服务，而无需在集群中存储任何凭证。这是一种安全、托管式的身份方案，可用于访问 Azure OpenAI。
+
+## 前提条件
+
+### Open WebUI
+
+- **Open WebUI**：版本为 0.6.30 或更高
+- **AKS 集群配置**：你的 AKS 集群必须启用以下能力
+  - **OIDC Issuer**
+    - 参考 [Microsoft Learn - Create an OpenID Connect provider on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-oidc-issuer)
+    - AzureRM Terraform: [`azurerm_kubernetes_cluster.oidc_issuer_enabled`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster#oidc_issuer_enabled-1)
+  - **Workload Identity**
+    - 参考 [Microsoft Learn - Use Microsoft Entra Workload ID with Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=dotnet)
+    - AzureRM Terraform: [`azurerm_kubernetes_cluster.workload_identity_enabled`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster#workload_identity_enabled-1)
+
+## Terraform 配置
+
+下面是一份完整的 Terraform 配置示例，用于配置 Workload Identity 认证：
+
+### 1. 创建 Kubernetes 命名空间
+
+首先需要创建一个 Kubernetes 命名空间，这样后续就能把它统一用于 Helm 部署，也能在后续步骤中赋给用户分配身份和联合身份凭据。
+
+```hcl
+resource "kubernetes_namespace" "this" {
+  metadata {
+    name = var.kubernetes_namespace
+  }
+}
+```
+
+### 2. 创建用户分配身份（User Assigned Identity）
+
+首先创建一个 Azure 用户分配身份（User Assigned Identity），后续 Open WebUI Pod 将使用它来访问 Azure 服务。
+
+```hcl
+resource "azurerm_user_assigned_identity" "uai" {
+  location            = var.location
+  name                = var.workload_identity_name
+  resource_group_name = var.resource_group_name
+}
+```
+
+### 3. 创建联合身份凭据（Federated Identity Credential）
+
+联合身份凭据（Federated Identity Credential）会在 Kubernetes service account 与 Azure 用户分配身份之间建立信任关系，从而允许 Pod 使用 Kubernetes token 交换 Azure token。
+
+```hcl
+resource "azurerm_federated_identity_credential" "federated_identity" {
+  name                = "federated-identity"
+  resource_group_name = var.resource_group_name
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = data.terraform_remote_state.aks.outputs.oidc_issuer_url
+  parent_id           = azurerm_user_assigned_identity.uai.id
+  subject             = "system:serviceaccount:${kubernetes_namespace.this.metadata[0].name}:${var.kubernetes_service_account_name}"
+}
+```
+
+### 4. 为 Azure OpenAI 访问分配 RBAC 角色
+
+在 Azure 与用户分配身份建立信任关系后，你就可以为这个身份分配角色。这里我们赋予它 `Cognitive Services OpenAI User` 角色；如果将来你还需要访问其他 Azure 能力，也可以继续添加更多角色分配。
+
+:::note
+默认情况下，用户分配身份对任何资源都没有访问权限，因此你必须显式授予所需 Azure RBAC 角色。
+:::
+
+:::warning
+请务必将 `YOUR_COGNITIVE_ACCOUNT_ID` 替换为你 Azure OpenAI 实例对应的 cognitive account id。
+:::
+
+```hcl
+resource "azurerm_role_assignment" "workload_identity_azure_openai" {
+  scope                = "YOUR_COGNITIVE_ACCOUNT_ID"
+  role_definition_name = "Cognitive Services OpenAI User"
+  principal_id         = azurerm_user_assigned_identity.uai.principal_id
+}
+```
+
+### 5. 通过 Helm 部署 Open WebUI
+
+下面会把 Open WebUI 部署到 AKS 集群中，并配置好所需的 Service Account 注解与 Pod 标签，以启用 Workload Identity 认证。
+
+```hcl
+resource "helm_release" "openwebui" {
+  name       = "open-webui"
+  repository = "https://helm.openwebui.com/"
+  chart      = "open-webui"
+  version    = "7.2.0"
+  namespace  = kubernetes_namespace.this.metadata[0].name
+  atomic     = true
+
+  values = [
+    "${file("helm.values.yaml")}"
+  ]
+
+  set {
+    name  = "image.tag"
+    value = "v0.6.33"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = var.kubernetes_service_account_name
+  }
+
+  set {
+    name  = "serviceAccount.annotations.azure\\.workload\\.identity/client-id"
+    value = azurerm_user_assigned_identity.uai.client_id
+  }
+}
+```
+
+### 6. UI 配置
+
+当 Open WebUI 部署完成后，可以按以下步骤配置 Azure OpenAI 连接：
+
+1. 前往 **管理面板** → **连接**
+2. 点击 **添加连接**
+3. 选择 **Azure OpenAI** 作为提供商
+4. 选择 **Entra ID** 作为认证类型
+5. 填写 Azure OpenAI 终结点与部署细节
+6. 保存连接
+
+:::note 自定义 / 私有终结点主机名
+如果你的 Azure OpenAI 部署在私有终结点、API 网关或其他自定义域之后（即 Base URL **不是**标准的 `*.openai.azure.com` / `*.cognitiveservices.azure.com` 主机名——这在 AKS/企业部署中很常见），仅选择 **Azure OpenAI** 提供商即可：Open WebUI 的 Azure 请求处理是基于所选提供商，而不是基于主机名模式匹配。旧版本只能通过 `azure.*` 主机名识别 Azure 连接，因此自定义域名的 Azure 连接会**验证连接**和模型列表都会失败——如果遇到这种情况，请升级到 v0.9.6 或更高。
+:::
+
+## 关键组件说明
+
+### Service Account 注解
+
+Service Account 必须带上如下注解，才能与 Azure 用户分配身份关联：
+
+```yaml
+azure.workload.identity/client-id: <USER_ASSIGNED_IDENTITY_CLIENT_ID>
+```
+
+### Pod 标签
+
+Pod 必须包含以下标签，才能启用 Workload Identity：
+
+```yaml
+azure.workload.identity/use: "true"
+```
+
+### 联合身份凭据（Federated Identity Credential）
+
+联合身份凭据会在以下三者之间建立信任关系：
+- 你的 AKS 集群 OIDC issuer
+- Kubernetes service account
+- Azure User Assigned Identity
+
+其中 `subject` 字段格式如下：
+```
+system:serviceaccount:<namespace>:<service-account-name>
+```
+
+## 故障排查
+
+### 常见问题
+
+1. **认证失败**
+   - 确认 AKS 集群已启用 OIDC issuer
+   - 确认 AKS 集群已启用 Workload Identity
+   - 确认联合身份凭据的 subject 与 namespace / service account name 完全匹配
+
+2. **权限错误**
+   - 确认用户分配身份已被赋予 `Cognitive Services OpenAI User` 角色
+   - 确认角色分配的 scope 覆盖了你的 Azure OpenAI 资源
+
+3. **Pod Identity 问题**
+   - 确认 Pod 带有 `azure.workload.identity/use: "true"` 标签
+   - 确认 Service Account 带有正确的 `azure.workload.identity/client-id` 注解
+   - 确认 Service Account 名称与联合凭据配置一致
+
+### 验证命令
+
+检查 Service Account 注解：
+```bash
+kubectl get serviceaccount <service-account-name> -n <namespace> -o yaml
+```
+
+查看 Pod 标签：
+```bash
+kubectl get pod <pod-name> -n <namespace> -o yaml
+```
+
+检查 Workload Identity webhook：
+```bash
+kubectl get mutatingwebhookconfiguration azure-wi-webhook-controller-manager-mutating-webhook-configuration
+```
+
+## 更多资源
+
+- [Azure Workload Identity 文档](https://azure.github.io/azure-workload-identity/)
+- [AKS Workload Identity 概览](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview)
+- [Open WebUI Helm Chart](https://github.com/open-webui/helm-charts)

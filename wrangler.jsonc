@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "open-webui-docs-zh-cn",
+  "compatibility_date": "2026-07-22",
+  // Preview URLs stay enabled even when production workers.dev is disabled after custom-domain bind.
+  "preview_urls": true,
+  "assets": {
+    "directory": "./zh-cn/build"
+  }
+}

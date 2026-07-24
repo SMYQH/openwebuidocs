@@ -1,0 +1,3 @@
+[submodule "en-us"]
+	path = en-us
+	url = https://github.com/open-webui/docs.git

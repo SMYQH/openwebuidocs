@@ -1,0 +1,362 @@
+---
+sidebar_position: 2
+title: "Action Function"
+---
+
+# 🎬 Action Function：自定义交互按钮
+
+:::danger ⚠️ 关键安全警告
+**Action Functions 会在你的服务器上执行任意 Python 代码。** 只有管理员才能创建 Function。请只从可信来源安装，并在导入前审查代码。恶意 Function 可能访问文件系统、窃取数据，甚至危及整套系统。完整说明请参阅 [Plugin Security Warning](/features/extensibility/plugin/)。
+:::
+
+Action functions 允许你编写自定义按钮，并将其展示在消息工具栏中供终端用户交互。这一能力可以让消息交互更加丰富：例如，在执行任务前向用户请求授权、为结构化数据生成可视化、下载聊天音频片段等等。
+
+:::warning 为未来兼容性，请使用异步函数
+Action functions 应始终定义为 `async`。后端正在逐步迁移到完全异步执行模型，同步函数在未来版本中可能阻塞执行或带来兼容性问题。
+:::
+
+Actions 是由管理员管理的函数，用于为聊天界面增加自定义交互能力。当某个模型启用了 actions 后，这些 action 会以可点击按钮的形式显示在消息上方。
+
+下方的 [函数结构](#function-structure) 小节给出了最小脚手架示例。若要查看社区构建的真实 Action 示例，可前往 [openwebui.com](https://openwebui.com/)。
+
+下方视频展示了一个图形可视化 Action 的效果。
+
+<div align="center">
+	<a href="#">
+		<img
+			src="/images/pipelines/graph-viz-action.gif"
+			alt="Graph Visualization Action"
+		/>
+	</a>
+</div>
+
+## Action Function 架构
+
+Actions 是基于 Python 的函数，可直接集成到聊天消息工具栏中。它们在服务端执行，并能通过实时事件与用户交互、修改消息内容，以及访问完整的 Open WebUI 上下文。
+
+### 函数结构 {#function-structure}
+
+Action 采用特定的类结构，核心入口是 `action` 方法：
+
+```python
+class Action:
+    def __init__(self):
+        self.valves = self.Valves()
+
+    class Valves(BaseModel):
+        # 配置参数
+        parameter_name: str = "default_value"
+        priority: int = 0  # 控制按钮显示顺序（值越小越靠前）
+
+    async def action(self, body: dict, __user__=None, __event_emitter__=None, __event_call__=None):
+        # Action 逻辑
+        return {"content": "Modified message content"}
+```
+
+### Action 方法参数
+
+`action` 方法会收到多个参数，用于提供执行上下文：
+
+- **`body`** —— 包含消息数据与上下文的字典
+- **`__user__`** —— 当前用户对象，包含权限与设置
+- **`__event_emitter__`** —— 向前端发送实时更新的函数
+- **`__event_call__`** —— 用于双向交互（确认、输入等）的函数
+- **`__model__`** —— 触发该 action 的模型信息
+- **`__request__`** —— FastAPI request 对象，可访问 headers 等
+- **`__id__`** —— Action ID（适用于 multi-action functions）
+
+## 事件系统集成
+
+Actions 可以使用 Open WebUI 的实时事件系统构建交互体验：
+
+### 事件发射器（`__event_emitter__`）
+
+**有关 Events 与 Event emitters 的完整说明，请参阅 [Events and Event Emitters](/features/extensibility/plugin/development/events/)。**
+
+可在 action 执行过程中向前端发送实时更新：
+
+```python
+async def action(self, body: dict, __event_emitter__=None):
+    # 发送状态更新
+    await __event_emitter__({
+        "type": "status",
+        "data": {"description": "Processing request..."}
+    })
+
+    # 发送通知
+    await __event_emitter__({
+        "type": "notification",
+        "data": {"type": "info", "content": "Action completed successfully"}
+    })
+```
+
+### 事件调用（`__event_call__`）
+
+在执行过程中请求用户输入或确认：
+
+```python
+async def action(self, body: dict, __event_call__=None):
+    # 请求用户确认
+    response = await __event_call__({
+        "type": "confirmation",
+        "data": {
+            "title": "Confirm Action",
+            "message": "Are you sure you want to proceed?"
+        }
+    })
+
+    # 请求用户输入
+    user_input = await __event_call__({
+        "type": "input",
+        "data": {
+            "title": "Enter Value",
+            "message": "Please provide additional information:",
+            "placeholder": "Type your input here..."
+        }
+    })
+```
+
+## Action 类型与配置方式
+
+### 单一 Action
+
+标准 action 只有一个 `action` 方法：
+
+```python
+async def action(self, body: dict, **kwargs):
+    # 单 Action 实现
+    return {"content": "Action result"}
+```
+
+### 多重 Action
+
+Functions 可以通过 `actions` 数组定义多个子 action：
+
+```python
+actions = [
+    {
+        "id": "summarize",
+        "name": "Summarize",
+        "icon_url": "https://example.com/icons/summarize.svg"
+    },
+    {
+        "id": "translate",
+        "name": "Translate",
+        "icon_url": "https://example.com/icons/translate.svg"
+    }
+]
+
+async def action(self, body: dict, __id__=None, **kwargs):
+    if __id__ == "summarize":
+        # 总结逻辑
+        return {"content": "Summary: ..."}
+    elif __id__ == "translate":
+        # 翻译逻辑
+        return {"content": "Translation: ..."}
+```
+
+### 全局 Action 与模型级 Action
+
+- **全局 Action** —— 在 Action 设置中打开全局开关后，它会对所有用户与所有模型生效
+- **模型专属 Action** —— 也可以在模型设置中仅为特定模型启用
+
+### 按钮显示顺序（Priority）
+
+助手消息下方的 action 按钮会根据 `priority` valve 值按**升序**排序——值越小越靠前（最左侧），值越大越靠后（最右侧）。默认值是 `0`。
+
+若要控制顺序，请在 Action 的 Valves 中加入 `priority` 字段：
+
+```python
+class Valves(BaseModel):
+    priority: int = 0  # 值越小，按钮越靠前
+```
+
+这与 [filter functions](/features/extensibility/plugin/functions/filter) 使用的是同一套优先级机制，因此整个插件系统的行为保持一致。若未定义 `priority` valve，则默认值为 `0`，同优先级之间按 **function ID 字母序** 排序。
+
+## 高级能力
+
+### 后台任务执行
+
+对于耗时较长的操作，actions 可以与任务系统结合：
+
+```python
+async def action(self, body: dict, __event_emitter__=None):
+    # 开始长任务
+    await __event_emitter__({
+        "type": "status",
+        "data": {"description": "Starting background processing..."}
+    })
+
+    # 执行耗时操作
+    result = await some_long_running_function()
+
+    return {"content": f"Processing completed: {result}"}
+```
+
+### 文件与媒体处理
+
+Actions 可以处理上传文件并生成新的媒体内容：
+
+```python
+async def action(self, body: dict):
+    message = body
+
+    # 读取上传文件
+    if message.get("files"):
+        for file in message["files"]:
+            # 根据类型处理文件
+            if file["type"] == "image":
+                # 图片处理逻辑
+                pass
+
+    # 返回新文件
+    return {
+        "content": "Analysis complete",
+        "files": [
+            {
+                "type": "image",
+                "url": "generated_chart.png",
+                "name": "Analysis Chart"
+            }
+        ]
+    }
+```
+
+### 用户上下文与权限
+
+Actions 可以读取用户信息并遵循权限控制：
+
+```python
+async def action(self, body: dict, __user__=None):
+    if __user__["role"] != "admin":
+        return {"content": "This action requires admin privileges"}
+
+    user_name = __user__["name"]
+    return {"content": f"Hello {user_name}, admin action completed"}
+```
+
+## 示例：指定 Action Frontmatter {#example---specifying-action-frontmatter}
+
+每个 Action function 都可以在顶部 docstring 中写入元数据，用于自定义其在 Open WebUI 中的显示和行为。
+
+支持的 frontmatter 字段包括：
+- `title`：Action 显示名称
+- `author`：作者名
+- `version`：版本号
+- `required_open_webui_version`：最低兼容的 Open WebUI 版本
+- `icon_url (optional)`：图标 URL，可指向 PNG、SVG、JPEG 等。虽然技术上也支持 base64 data URI，但**强烈建议使用托管 URL**——见下方警告
+
+:::danger 避免使用 Base64 图标——请改用 URL
+不要把 base64 编码图片直接嵌入到 `icon_url` 中。每个 action 的图标数据都会被包含在 `/api/models` API 响应中，而该响应会在每次页面加载时，为**每个启用了该 action 的模型**发送到前端。
+
+**影响示例：** 如果你给某个 action 使用了一个 500 KB 的 base64 图标，并且该 action 被 20 个模型启用，那么这个 API 响应就会额外膨胀 **20 × 500 KB = 约 10 MB**。如果再有 3 个类似 action，就会变成 **约 30 MB 的无谓载荷**。这会：
+- **显著拖慢前端加载速度**
+- **增加后端内存占用与网络带宽开销**
+- **整体降低用户体验**，特别是在较慢网络环境下
+
+正确做法是：把图标托管为静态资源（例如你的 Web 服务器、CDN 或公开 URL），然后用 URL 引用它。这样可以把 API 负载维持在最小水平。
+:::
+
+**示例（推荐做法：URL 图标）**
+
+<details>
+<summary>示例</summary>
+
+```python
+"""
+title: Enhanced Message Processor
+author: @admin
+version: 1.2.0
+required_open_webui_version: 0.5.0
+icon_url: https://example.com/icons/message-processor.svg
+requirements: requests,beautifulsoup4
+"""
+
+from pydantic import BaseModel
+
+class Action:
+    def __init__(self):
+        self.valves = self.Valves()
+
+    class Valves(BaseModel):
+        api_key: str = ""
+        processing_mode: str = "standard"
+
+    async def action(
+        self,
+        body: dict,
+        __user__=None,
+        __event_emitter__=None,
+        __event_call__=None,
+    ):
+        # 发送初始状态
+        await __event_emitter__({
+            "type": "status",
+            "data": {"description": "Processing message..."}
+        })
+
+        # 获取用户确认
+        response = await __event_call__({
+            "type": "confirmation",
+            "data": {
+                "title": "Process Message",
+                "message": "Do you want to enhance this message?"
+            }
+        })
+
+        if not response:
+            return {"content": "Action cancelled by user"}
+
+        # 处理消息
+        original_content = body.get("content", "")
+        enhanced_content = f"Enhanced: {original_content}"
+
+        return {"content": enhanced_content}
+```
+
+</details>
+
+## 最佳实践
+
+### 错误处理
+
+始终在 action 中做好错误处理：
+
+```python
+async def action(self, body: dict, __event_emitter__=None):
+    try:
+        # Action 逻辑
+        result = perform_operation()
+        return {"content": f"Success: {result}"}
+    except Exception as e:
+        await __event_emitter__({
+            "type": "notification",
+            "data": {"type": "error", "content": f"Action failed: {str(e)}"}
+        })
+        return {"content": "Action encountered an error"}
+```
+
+### 性能注意事项
+
+- 对 I/O 操作使用 async / await
+- 为外部 API 调用设置超时
+- 对长时间任务提供进度反馈
+- 对重型处理考虑使用后台任务
+
+### 用户体验
+
+- 始终通过 event emitters 提供清晰反馈
+- 对破坏性操作使用确认对话框
+- 提供有帮助的错误消息
+
+## 与 Open WebUI 其他能力的集成
+
+Actions 可以与其他 Open WebUI 能力无缝协作：
+- **Models** —— Actions 可按模型启用，也可全局启用
+- **Tools** —— Actions 可调用外部 tools 与 API
+- **Files** —— Actions 可处理上传文件并生成新文件
+- **Memory** —— Actions 可访问对话历史与上下文
+- **Permissions** —— Actions 遵守用户角色与访问控制
+- **[Rich UI Embedding](/features/extensibility/plugin/development/rich-ui)** —— Actions 可以返回 HTML 内容，并在聊天中渲染为交互式 iframe
+
+若要查看更多示例与社区贡献的 actions，请访问 [https://openwebui.com/search](https://openwebui.com/search)，在那里你可以发现、下载并研究由 Open WebUI 社区构建的自定义 functions。

@@ -1,0 +1,112 @@
+---
+sidebar_position: 3
+title: "Open WebUI & LM Studio"
+sidebar_label: "Open WebUI & LM Studio"
+description: "How Open WebUI and LM Studio work together. Two approaches to local AI that pair well."
+keywords: ["Open WebUI vs LM Studio", "LM Studio alternative", "local AI interface", "open webui alternative", "open webui comparison"]
+---
+
+import Head from '@docusaurus/Head';
+
+<Head>
+<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can I use LM Studio with Open WebUI?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Start LM Studio's local API server and add `http://localhost:1234/v1` as a connection in Open WebUI."}}, {"@type": "Question", "name": "How do LM Studio and Open WebUI work together?", "acceptedAnswer": {"@type": "Answer", "text": "LM Studio handles model management and local inference on your desktop. Open WebUI can add web-based multi-user access, knowledge bases, and team features. A lot of people use LM Studio as the backend and Open WebUI as the frontend."}}]})}</script>
+</Head>
+
+
+# Open WebUI & LM Studio
+
+*最后更新时间：2026 年 5 月*
+
+[LM Studio](https://lmstudio.ai/) 完美地解决了本地 AI 的桌面体验问题。内置的模型浏览器使从 Hugging Face 发现和下载模型变得轻而易举，推理性能强劲，UI 简洁直观。对于任何想要运行本地模型而不触及终端的人来说，LM Studio 是一个强有力的选择。
+
+专有 · 个人和商业用途免费
+
+---
+
+## LM Studio 的优势
+
+- **模型浏览器**，用于从 Hugging Face 通过 GUI 发现、下载和管理模型
+- **模型搜索和过滤**，可按大小、架构或量化方式找到完全合适的模型
+- **量化预览**，您可以在下载前看到不同量化级别对模型质量的影响
+- **强大的性能**，具有卓越的硬件利用率（Metal、CUDA）以实现快速本地推理
+- **OpenAI 兼容 API 服务器**，为任何支持 OpenAI API 的应用程序提供本地模型
+- **MCP 支持**，用于连接到模型上下文协议服务器以获得扩展工具使用
+- **RAG 功能**，具有用于本地文件的内置文档聊天
+- **提示模板**，包含针对常见任务的预配置提示库
+- **免费供所有人使用**，个人和商业用途均可
+- **跨平台**，支持 macOS、Windows 和 Linux
+- **开发者友好**，本地 API 服务器用于将本地模型集成到您的项目中
+
+---
+
+## Open WebUI 的优势
+
+- **完整的 Web 平台**，具有多用户聊天、笔记、频道、自动化、开放终端等功能
+- **任何提供商**，因此您可以将 LM Studio 的本地模型与 OpenAI、Anthropic、Google 等一起使用
+- **深度 RAG 与知识**，拥有 9 个向量数据库、5 个提取引擎以及混合搜索和重新排名
+- **Python 扩展性**，支持自定义工具、管道、MCP 和 OpenAPI 集成
+- **团队功能**，包括 RBAC、SSO/OIDC/LDAP、SCIM 2.0、分析和评估竞技场
+- **从一扩展到数千**，通过 Docker、Kubernetes 和 pip
+
+---
+
+## 一览表
+
+| | Open WebUI | LM Studio |
+| :--- | :--- | :--- |
+| **方法** | 为团队和个人提供自托管 Web 平台 | 用于本地模型管理和聊天的桌面应用 |
+| **模型管理** | 连接到模型运行器（Ollama 等） | 内置模型浏览器，具有 Hugging Face 集成 |
+| **多提供商** | 本地 + 云模型在一个界面中 | 专注于本地模型 |
+| **知识与 RAG** | 9 个向量数据库、5 个提取引擎、混合搜索 | 内置文档聊天 |
+| **多用户** | SSO、RBAC、SCIM、团队 | 个人桌面使用 |
+| **扩展性** | Python 工具、MCP、OpenAPI、管道 | MCP 支持 |
+| **API 服务器** | 完整 API | OpenAI 兼容本地服务器 |
+| **定价** | 免费社区版；企业计划可用 | 个人和商业用途免费 |
+
+---
+
+## 何时选择各个平台
+
+**选择 LM Studio**（如果）您想要在桌面上发现和运行本地模型的最佳体验。模型浏览器使您可以轻松探索 Hugging Face 上可用的内容、比较量化并快速上手。
+
+**选择 Open WebUI**（如果）您想要一个基于 Web 的平台，具有团队访问权限、持久知识库或能够将本地模型与 OpenAI、Anthropic 和 Google 等云提供商一起使用。
+
+**同时使用两者。** LM Studio 的模型浏览器和管理功能在发现和运行模型方面非常出色。Open WebUI 可以连接到 LM Studio 的 API 服务器，在顶部添加 Web 访问、知识库和团队功能。
+
+---
+
+## 一起使用它们
+
+LM Studio 的 OpenAI 兼容 API 服务器可以很好地充当 Open WebUI 的后端。您可以使用 LM Studio 来管理和提供本地模型，然后将 Open WebUI 连接到 LM Studio 的 API。
+
+**如何连接：**
+
+1. 在 LM Studio 中，启动本地 API 服务器（默认端口 1234）
+2. 在 Open WebUI 中，转到 **Admin → Settings → Connections**
+3. 添加新的 OpenAI 兼容连接，URL 为 `http://localhost:1234/v1`
+4. 您的 LM Studio 模型将出现在模型选择器中
+
+---
+
+*LM Studio 使本地模型在桌面上可用。Open WebUI 添加了 Web 平台层。两者都使本地 AI 更有用。*
+
+**准备尝试 Open WebUI？** [开始使用 →](/getting-started)
+
+
+
+---
+
+## 常见问题
+
+**我可以将 LM Studio 与 Open WebUI 一起使用吗？**
+是的。启动 LM Studio 的本地 API 服务器并在 Open WebUI 中添加 `http://localhost:1234/v1` 作为连接。
+
+**LM Studio 和 Open WebUI 如何一起工作？**
+LM Studio 在您的桌面上处理模型管理和本地推理。Open WebUI 可以添加基于 Web 的多用户访问、知识库和团队功能。许多人使用 LM Studio 作为后端，使用 Open WebUI 作为前端。
+
+**LM Studio 是免费的吗？**
+是的。LM Studio 个人和商业用途免费，尽管它是专有软件。
+
+---
+
+**相关：** [Open WebUI & Ollama](/alternatives/ollama) · [Open WebUI & llama.cpp](/alternatives/llama-cpp) · [Open WebUI & Jan](/alternatives/jan)

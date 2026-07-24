@@ -1,0 +1,299 @@
+---
+sidebar_position: 5
+title: "Open WebUI 必备功能"
+---
+
+# Open WebUI 必备功能
+
+您已经安装了 Open WebUI，连接了一个提供商，并进行了第一次对话。本页面涵盖将基本聊天 UI 转变为日常良好运行设置的关键事项。虽然这些都不是必需的，但大多数用户在第一周内会使用所有这些功能。
+
+按顺序进行，或跳转到您需要的部分：
+
+1. [**插件**](#插件)
+2. [**工具调用（原生与旧版）**](#工具调用原生与旧版)
+3. [**任务模型**](#任务模型)
+4. [**上下文管理**](#上下文管理)
+5. [**基础 RAG**](#基础-rag)
+6. [**Web 搜索**](#web-搜索)
+7. [**开放终端**](#开放终端)
+8. [**Open WebUI Computer**](#open-webui-computer)
+9. [**故障排除**](#故障排除)
+
+:::tip 为团队部署？
+如果您正在为多个用户设置 Open WebUI，也请阅读[**扩展 Open WebUI**](/getting-started/advanced-topics/scaling)指南。它涵盖与本页面上功能级别必需品分开的基础设施决策（PostgreSQL、Redis、外部向量数据库、共享存储）。这两个指南是相辅相成的：此处完成日常使用必需品，使用扩展指南进行多用户基础设施。
+:::
+
+---
+
+## 插件
+
+Open WebUI 开箱即用地附带了很多功能，但其真正的力量在于它被设计为可扩展的。许多人们在演示中展示的高级功能（自动翻译、令牌/成本跟踪、自定义后处理、利基提供商集成）是**插件**，构建在平台之上。理解插件景观是对新用户来说最大的一个解锁。
+
+有两个插件系列：**工具**和**函数**。
+
+**工具**给模型提供在响应期间可以调用的能力：
+
+| 来源 | 它做什么 | 示例 |
+| :--- | :--- | :--- |
+| **内置** | 随 Open WebUI 附带的系统工具。在管理面板中启用，无需安装。 | Web 搜索、代码解释器、图像生成、内存、笔记、知识检索 |
+| **自定义** | | |
+| &nbsp;&nbsp;↳ 工具 | 您自己编写或从[社区网站](https://openwebui.com/)安装的代码。在**工作区 > 工具**中管理。 | Langfuse / OpenLit 可观测性、Home Assistant、arXiv / PubMed 查询、Wolfram Alpha、Jira / Linear、SQL 查询 |
+| &nbsp;&nbsp;↳ 工具服务器 | 通过 **MCP** 或 **OpenAPI** 连接的外部服务。在**管理面板 > 设置 > 工具**中配置。 | 您自己的微服务、第三方 API、现有的 MCP 服务器 |
+
+**函数**在平台级别运行并修改 Open WebUI 本身的行为方式。有三种类型：
+
+| 类型 | 它做什么 | 示例 |
+| :--- | :--- | :--- |
+| **管道** | 向模型选择器添加新"模型"，由自定义代码支持 | 模型路由（基于提示的便宜与昂贵）、多步代理循环、自定义 LLM 后端 |
+| **过滤器** | 在通过时修改每个请求和/或响应，在每个聊天轮次自动进行 | 上下文修剪、PII 洗涤、令牌/成本计数、Langfuse 追踪、响应重新格式化 |
+| **操作** | 在每条消息下添加一个按钮，用户点击它时运行自定义代码 | "重新生成后续"、"翻译回复"、"固定消息"、"保存到知识" |
+
+### 安装插件
+
+工具和函数都可以从[**Open WebUI 社区网站**](https://openwebui.com/)浏览和安装，这是一个数千个社区构建插件的一键目录。选择一个，单击"获取"，将其粘贴到管理面板中，启用它，并配置其**辅助设置**（插件的设置）。您也可以在管理面板中从头开始编写自己的。
+
+刚接触这个目录？[**社区插件**](/features/extensibility/community)指南是初学者的地图：如何根据您想做的事情找到插件，以及如何安全地导入它。现在要记住的一条规则是：插件被推荐或受欢迎**不是**安全或质量审核，插件会在您的服务器上运行真实代码，所以在导入之前请阅读源码。
+
+:::note 在构建之前，浏览
+每当您认为"如果 Open WebUI 做 X 就很好"时，它几乎肯定已经通过插件实现了。已经编写了数千个插件，您需要的那个通常已经存在。即使没有完全匹配，最接近的也通常只需约 20 行从您想要的内容进行调整，您可以从管理面板进行分叉。
+:::
+
+参考阅读：
+- [插件概览](/features/extensibility)
+- [社区插件](/features/extensibility/community)：安全地浏览和导入
+- [工具参考](/features/extensibility/plugin/tools)
+- [函数参考（管道/过滤器/操作）](/features/extensibility/plugin/functions)
+- [MCP 工具服务器](/features/extensibility/mcp)
+
+---
+
+## 工具调用（原生与旧版）
+
+本页面上几乎所有其他功能（Web 搜索、知识检索、内存、代码解释器、开放终端）都是作为**工具**提供给模型，让模型在回答过程中调用。一个实例范围内的开关决定模型*如何*调用这些工具，这个开关在 v0.10.0 版本中发生了变化。
+
+**原生模式现在是默认设置。** 每个未明确选择模式的模型现在都使用**原生（代理）模式**，该模式依赖模型自身的内置函数调用能力。这让模型可以自行决定何时搜索网络、在知识库中查找内容或保存记忆，而不是您手动切换每个工具。它更快、保持 KV 缓存温暖，并且是唯一解锁内置系统工具（内存、笔记、知识、频道、代理研究）的模式。
+
+**旧版是退出选项。** 旧的提示注入方法（以前称为"默认"）已重命名为**旧版**且不受支持。任何依赖旧行为的模型现在都会运行原生模式，除非您将其切回。如果模型在原生模式下遇到困难，正确的解决方法是使用更强的工具调用模型，而不是旧版。要获得可靠的工具使用，首选前沿模型，如 GPT-5、Claude 4.5 Sonnet、Gemini 3 Flash 或 MiniMax M2.5。
+
+更多详情，包括如何切换单个模型或整个实例到旧版：
+- [工具调用模式：原生与旧版](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)
+- [如何将所有模型切换到旧版](/features/extensibility/plugin/tools#enable-legacy-for-all-models)
+
+---
+
+## 任务模型
+
+:::info 值得知道
+默认情况下，后台任务（标题、标签、自动完成）使用您的主聊天模型。设置专用的任务模型是改进速度和减少不必要 API 成本的最简单方法。
+:::
+
+每次 Open WebUI 需要为 UI 功能进行一小段"思考"（为侧边栏写聊天**标题**、生成**标签**、建议**后续问题**、为提示框中的**自动完成**供电）时，它会调用一个**任务模型**。默认情况下，该任务模型是您当前聊天的任何主要模型，这意味着：
+
+- 您昂贵的旗舰模型每次您打开新聊天时都会被调用，只是为了写"购物清单"。
+- 在慢速本地模型上，每次按键都会感到滞后，因为自动完成正在等待 30B 参数模型。
+- 推理模型（o1、r1、Claude with extended thinking）在生成三个字的标题之前花费五秒*思考*。
+
+这些在后台运行，所以很容易被忽视。专用任务模型是一个小改变，会产生明显的差异。
+
+**解决方案：** 在**管理面板 > 设置 > 界面**中，设置专用的任务模型。有两个字段，因为正确的选择取决于您的主聊天模型是什么：
+
+:::tip 推荐的任务模型
+- **任务模型（外部）**：设置为快速、便宜的*非推理*云模型，如 `gpt-5-nano`、`gemini-2.5-flash-lite` 或 `llama-3.1-8b-instant`。
+- **任务模型（本地）**：设置为小型本地模型，如 `qwen3:1b`、`gemma3:1b` 或 `llama3.2:3b`。
+
+主聊天体验不会改变。后台工作只是停止拖累。
+:::
+
+当您在界面设置中时，如果您使用的是低规格机器或根本不想要它们，也可以完全禁用这些工作。每个都有一个**管理员切换**在同一页面和一个**环境变量**：
+
+| 工作 | 管理员切换（设置 > 界面） | 环境变量 |
+| :--- | :--- | :--- |
+| 自动完成 *（在每次按键时触发）* | **自动完成生成** | `ENABLE_AUTOCOMPLETE_GENERATION=False` |
+| 后续建议 | **后续生成** | `ENABLE_FOLLOW_UP_GENERATION=False` |
+| 聊天标题生成 | **标题生成** | `ENABLE_TITLE_GENERATION=False` |
+| 标签生成 | **标签生成** | `ENABLE_TAGS_GENERATION=False` |
+
+:::tip 弱硬件上的性能
+自动完成是弱硬件上最大的"让其快速"切换。它在每次按键时触发，所以缓慢的任务模型会将整个提示框变成糨糊。如果 UI 感到缓慢，首先禁用它。
+:::
+
+更多详情：[性能和 RAM：专用任务模型](/troubleshooting/performance#1-dedicated-task-models)。
+
+---
+
+## 上下文管理
+
+经过足够的来回后，您最终会看到：
+
+> `提示太长：207601，模型最大上下文长度：202751`
+
+:::note 这不是 Open WebUI 的错误
+此错误来自您的模型提供商，而不是来自 Open WebUI。每次您发送消息时，*整个*对话（系统提示、所有之前的轮次、附加文件、工具调用结果和您的新消息）都会作为"提示"发送。当总和超过模型的上下文窗口时，提供商会拒绝请求。
+:::
+
+Open WebUI 故意不附带内置的修剪器，因为：
+
+- 每个模型使用**不同的分词器**（GPT、Claude、Gemini、GLM、Llama 都不同）。
+- 每个模型有**不同的上下文窗口**（8k 到 1M+）。
+- 每个部署想要**不同的策略**（按令牌修剪、按轮修剪、按消息计数修剪、首先删除附件、总结旧消息等）。
+
+没有单一正确答案。支持的方法是安装一个**过滤器函数**，按您的条件修剪对话。
+
+:::tip 快速修复
+许多常见策略的社区过滤器已经存在，可以一键安装。如果没有适合的，代码足够短可以复制和调整。请参阅完整指南，包括最小的"最新 N 轮"过滤器：[故障排除：上下文窗口/提示太长](/troubleshooting/context-window)。
+:::
+
+---
+
+## 基础 RAG
+
+**RAG**（检索增强生成）是允许您说"这是一个 400 页的 PDF，回答我关于它的问题"的功能，而无需模型每次都读取整个内容。Open WebUI 将您的文档分割成块，将其嵌入为向量，将其存储在向量数据库中，并在聊天时仅检索相关部分以传递给模型。
+
+两种使用方式，按简单性顺序：
+
+1. **一次性附件。** 将文件拖到任何聊天输入中并提出问题。文件被分割和嵌入仅用于该聊天。
+2. **知识库。** 对于您想跨许多聊天重用的文档（公司手册、代码库、研究库、用户手册），去**工作区 > 知识**并创建知识库。然后您可以将整个知识库附加到聊天（通过输入中的 `#` 快捷方式），或在**工作区 > 模型**中将其绑定到模型，以便该模型始终可用。
+
+默认值对于入门是合理的。当您超过它们时，有三个最重要的旋钮：
+
+- **嵌入引擎。** 默认值（SentenceTransformers `all-MiniLM-L6-v2`）在 CPU 上本地运行，每个工作进程消耗约 500 MB 的 RAM。对于任何多用户部署，通过 `RAG_EMBEDDING_ENGINE` 指向外部嵌入 API（OpenAI 或 Ollama with `nomic-embed-text`）。
+- **内容提取引擎。** 默认值使用 `pypdf`，在重型摄取期间会泄漏内存。对于任何超出偶然使用的内容，通过 `CONTENT_EXTRACTION_ENGINE` 切换到 **Tika** 或 **Docling**。
+- **向量数据库。** 默认 ChromaDB（本地 SQLite 支持）不容忍多工作进程部署。在规模上，切换到 **PGVector**。它是 Open WebUI 团队正式支持和维护的唯一向量数据库。Milvus、Qdrant 和 MariaDB Vector 也可用，但作为非核心集成：它们可能在升级时中断，修复来自 Open WebUI 核心维护路径之外。请参阅[环境配置参考](/reference/env-configuration#vector_db)了解设置和每个提供商的集成免责声明。
+
+:::note 何时担心这个
+对于"一个有少数 PDF 的单一用户"，这些都不重要。一旦您有 100 个文档或 10 个并发用户，所有这些都开始重要。
+:::
+
+### 推荐的起始配置
+
+如果您只想 RAG 开箱即用，这些设置是坚实的通用起点。它们不是针对每个用例进行精细调整，但对大多数文档类型会比默认值产生明显更好的结果。
+
+在**管理面板 > 设置 > 文档**中设置这些：
+
+| 设置 | 默认值 | 推荐值 | 原因 |
+|---------|---------|-------------------|-----|
+| **文本分割器** | `character` | `token` | 基于令牌的分割在不同文档类型中产生更一致的块大小 |
+| **Markdown 标题分割** | 开 | **开** | 通过在标题处分割来尊重文档结构，保持部分连贯 |
+| **块大小** | `1000` | `2000` | 较大的块保留每次检索命中周围更多的上下文 |
+| **块重叠** | `100` | `200` | 更多重叠意味着更低的风险会切断关键句子一半 |
+| **顶部 K** | `3` | `15` | 检索更多候选块，给模型更广泛的相关上下文池。如果您使用具有受约束上下文大小的本地模型，将其降低到 `5` 以避免用检索块填充上下文窗口 |
+| **嵌入模型** | `all-MiniLM-L6-v2`（本地 CPU） | 外部（OpenAI 或 Ollama） | 默认值对单一用户有效，但每个工作进程消耗约 500 MB RAM。对于任何多用户设置，改用外部嵌入 API |
+
+:::tip 嵌入模型
+默认 SentenceTransformers 模型在 CPU 上本地运行，对单一用户入门是可以的。对于超出那个的任何东西，指向外部嵌入 API：使用 OpenAI API 密钥设置 `RAG_EMBEDDING_ENGINE=openai`，或使用任何 Ollama 嵌入模型设置 `RAG_EMBEDDING_ENGINE=ollama`（例如，`nomic-embed-text`）。这将卸载工作并释放重要的 RAM。
+:::
+
+:::tip 增强的代理式 RAG：启用 kb_exec
+原生函数调用现在是默认设置，因此为了获得明显更好的知识库体验，请设置 `ENABLE_KB_EXEC=True`。它会为模型提供一套面向知识库的文件系统式接口（`ls`、`tree`、`grep`、`cat`、按行读取），能力强的模型比单步的搜索工具更可靠地串联调用它们，因此更常能找到正确的内容。它对设置为旧版的模型没有任何效果。详见[文件系统式访问](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
+:::
+
+更多详情：
+- [RAG 概览](/features/chat-conversations/rag/)
+- [知识工作区](/features/workspace/knowledge)
+- [RAG 性能调优](/troubleshooting/performance#embedding-engine)
+- [扩展：外部向量数据库](/getting-started/advanced-topics/scaling#step-4-switch-to-an-external-vector-database) — 多工作进程和多副本部署所需
+- [扩展：内容提取和嵌入](/getting-started/advanced-topics/scaling#step-6-fix-content-extraction--embeddings) — 在规模上修复内存泄漏
+
+---
+
+## Web 搜索
+
+模型只知道其训练数据中的内容。那些数据有截止日期，并且从不包括您世界中的私密内容（今天的新闻、上个月发布的库、某物的当前价格）。**Web 搜索**弥补了这一差距：它让模型进行实时搜索并在回答过程中读取结果，因此回复引用当前来源，而不是根据过时的记忆进行猜测。
+
+它是一个内置工具，因此无需安装。唯一需要决定的是**使用哪个搜索提供商**，Open WebUI 支持二十多个。它们分为两大类：
+
+- **自托管，无需 API 密钥。** 运行自己的搜索后端，将每个查询保留在内部。[**SearXNG**](/features/chat-conversations/web-search/providers/searxng) 是常见选择。
+- **商业 API。** [**Tavily**](/features/chat-conversations/web-search/providers/tavily)、[**Brave**](/features/chat-conversations/web-search/providers/brave)、[**Exa AI**](/features/chat-conversations/web-search/providers/exa)、[**Perplexity Search**](/features/chat-conversations/web-search/providers/perplexity_search)、[**Firecrawl**](/features/chat-conversations/web-search/providers/firecrawl) 等用 API 密钥（通常还有账单）换取更高质量、AI 调优的结果。
+
+**启用它：** 前往**管理面板 > 设置 > Web 搜索**，切换**启用 Web 搜索**，然后选择您的提供商并粘贴其密钥或配置。在任何聊天中，通过提示字段中的 **+** 按钮为一条消息开启 Web 搜索。
+
+:::tip 原生函数调用完成其余工作
+原生模式现在是默认的工具调用模式，因此一旦 Web 搜索启用，模型会自行决定何时问题需要实时网络并作为工具运行搜索。您不必每次都切换开关；它在您想要强制进行新查询时使用。
+:::
+
+更多详情：
+- [**Web 搜索提供商**](/features/chat-conversations/web-search)：完整列表，包含每个的设置步骤，以便您选择适合的
+- [代理/多步 Web 搜索](/features/chat-conversations/web-search/agentic-search)
+- [将搜索结果保存到知识库](/features/chat-conversations/web-search/save-to-knowledge)
+- [Web 搜索故障排除](/troubleshooting/web-search)
+
+---
+
+## 开放终端
+
+如果"运行 Python"太受限制，您想让模型实际在您的机器上工作（克隆仓库、安装包、运行测试套件、启动网站的本地预览、根据真实 CSV 迭代数据报告），这就是[**开放终端**](/features/open-terminal)的用途。它连接真实的 shell（默认在 Docker 容器中沙箱化，或裸机如果您想要）作为工具模型可以调用，就像它调用任何其他工具一样。包含聊天内文件浏览器、实时网络预览和技能定义。
+
+:::tip 尝试这个
+这是超过基本聊天后最大的"恍然大悟"功能。它将 Open WebUI 从聊天 UI 转变为模型实际为您构建事物的地方。如果原生模式开启，您已给模型一个有能力的终端，要求它为您构建一个小应用程序或对文件夹进行分析，看着它进行。
+:::
+
+更多详情：
+- [开放终端：给您的 AI 一台真实的计算机](/features/open-terminal)
+- [用例：软件开发、数据报告、应用程序构建器、研究助手等](/features/open-terminal/use-cases/advanced-workflows/)
+
+:::info
+[**Open WebUI Computer**](https://github.com/open-webui/computer) 由 Open WebUI 团队开发，把你的整台电脑放进一个浏览器标签页：文件、终端、git、编辑器与 AI，从任何设备都能访问。它通过网关 API 接入 Open WebUI。
+:::
+
+---
+
+## Open WebUI Computer
+
+Open Terminal 为聊天模型提供了一个快速工具箱，让它在 Open WebUI 内部为您运行任务。**[Open WebUI Computer](/ecosystem/computer)** 则完全不同：它是一个独立的、功能齐全的代理式协同工作和编码应用程序。它是一个自托管的工作空间，包含终端、文件浏览器、编辑器、git 和一个有能力的 AI 代理，一旦您将其设置为可访问，就可以从任何地方访问。
+
+它是一个**独立的 Open WebUI 项目**，但也是一流的、完全可集成的项目。Open WebUI Computer 的 OpenAI 兼容网关将每个工作空间暴露为一个模型，因此您可以将 Open WebUI Computer 工作空间直接作为连接插入 Open WebUI，并从您普通的聊天 UI 驱动整个代理式编码循环（包括分支）。相同的工作空间也可以通过 Telegram、Discord、Slack 和其他应用程序访问，因此项目可以跟随您到任何设备上。
+
+:::tip 两者都用，它们做不同的工作
+Open Terminal 是模型在 Open WebUI 聊天内为一次性任务准备的临时工作区。Open WebUI Computer 是您拥有并从任何地方操作的常驻编码工作空间，您可以同时运行两者：Open Terminal 用于聊天内的快速工作，连接 Open WebUI Computer 工作空间用于当您需要真正的项目环境并设置了代理时。
+:::
+
+更多详情：
+- [Open WebUI Computer：浏览器中的计算机](/ecosystem/computer)
+- [将 Open WebUI Computer 工作空间连接到 Open WebUI](/ecosystem/computer/automate/open-webui)
+
+---
+
+## 接下来做什么
+
+您不需要上面的所有内容一次性完成。新安装的合理顺序：
+
+1. 选择一个好的默认模型，进行一些对话，熟悉 UI。
+2. 设置一个任务模型并决定您实际上想启用的后台工作。这是您可以进行的最大"感觉更好"的改变，它直接解决隐藏的每次聊天成本。
+3. 启用您想要的内置工具（Web 搜索、图像生成、代码执行、内存）并安装一两个与您的工作匹配的社区工具。
+4. 第一次看到"提示太长"时安装上下文过滤器。
+5. 当您想跨多个文档提问时设置知识库。
+6. 将模型指向开放终端，让它实际为您构建事物。
+7. 如果超过单一用户，重新访问 RAG 基础设施部分。
+
+所有其他东西（企业 SSO、多副本 HA、Redis 扩展、可观测性）在[高级主题](/getting-started/advanced-topics)和[故障排除](/troubleshooting)中，当且仅当您需要时。
+
+---
+
+## 故障排除
+
+当出现问题时，从这里开始：
+
+| 有问题... | 阅读这个 |
+|---|---|
+| 连接被拒绝、401 错误、CORS 失败、WebSocket 断开连接 | [连接错误](/troubleshooting/connection-error) |
+| "提示太长"或超过上下文窗口 | [上下文窗口/提示太长](/troubleshooting/context-window) |
+| RAG 不返回相关结果、上传失败、知识库问题 | [RAG 故障排除](/troubleshooting/rag) |
+| 网络搜索不工作或返回结果差 | [网络搜索故障排除](/troubleshooting/web-search) |
+| 图像生成错误或提供商设置 | [图像生成故障排除](/troubleshooting/image-generation) |
+| 语音转文本、文本转语音或音频播放 | [音频故障排除](/troubleshooting/audio) |
+| SSO、OAuth 或 LDAP 登录问题 | [SSO 和 OAuth 故障排除](/troubleshooting/sso) |
+| 高内存使用、缓慢响应或工作进程崩溃 | [性能和 RAM](/troubleshooting/performance) · [扩展指南](/getting-started/advanced-topics/scaling) |
+| 登录循环、配置偏差或多副本设置中的数据库锁 | [扩展和 HA 故障排除](/troubleshooting/multi-replica) · [扩展指南](/getting-started/advanced-topics/scaling) |
+| 锁定管理员账户 | [重置管理员密码](/troubleshooting/password-reset) |
+| 具有自定义/内部 CA 的 TLS 证书错误 | [自定义 CA 存储](/troubleshooting/custom-ca) |
+| Alembic 迁移错误或手动架构修复 | [数据库迁移](/troubleshooting/manual-database-migration) |
+
+---
+
+## 有问题？
+
+本页是简化版本。完整文档深入了解更多。如果您没有找到您需要的：
+
+- **[搜索文档](/)**：使用任何页面顶部的搜索框。这里面有比本概览涵盖的要多得多。
+- **[在 GitHub Discussions 中提问](https://github.com/open-webui/open-webui/discussions)**：最好用于开放式问题、功能讨论和"我如何做 X？"线程。可搜索且对将来遇到相同问题的用户可见。
+- **[报告错误](https://github.com/open-webui/open-webui/issues)**：仅在您确认它是错误之后（可重现、最新版本、模板已填写）。"它不工作"问题会关闭；"这是确切的重现、这些是日志"问题会得到修复。

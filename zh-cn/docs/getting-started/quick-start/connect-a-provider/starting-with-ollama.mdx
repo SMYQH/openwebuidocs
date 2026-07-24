@@ -1,0 +1,133 @@
+---
+sidebar_position: 1
+title: "Ollama"
+---
+
+## 概览
+
+Open WebUI 可以很方便地连接并管理你的 **Ollama** 实例。本指南将带你完成连接配置、模型管理以及快速上手。
+
+---
+
+## 面向协议的设计
+
+Open WebUI 的设计是**面向协议（Protocol-Oriented）**的。当我们提到 “Ollama” 时，具体指的是 **Ollama API 协议**（通常运行在 `11434` 端口）。
+
+尽管某些工具可能提供基础兼容，但这一连接类型针对 Ollama 服务本身的独特能力做了优化，例如原生模型管理，以及直接通过管理界面拉取模型。
+
+如果你的后端主要遵循 OpenAI 标准（例如 LocalAI 或 Docker Model Runner），我们建议使用[兼容 OpenAI 的服务指南](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)以获得最佳体验。
+
+---
+
+## 第 1 步：设置 Ollama 连接
+
+当 Open WebUI 安装并启动后，它会自动尝试连接你的 Ollama 实例。如果一切顺利，你可以立即开始管理和使用模型。
+
+如果连接失败，最常见原因通常是网络配置错误。你可以参考我们的[连接故障排查指南](/troubleshooting/connection-error)来解决。
+
+---
+
+## 第 2 步：管理你的 Ollama 实例
+
+在 Open WebUI 中管理 Ollama 的步骤如下：
+
+1. 打开 Open WebUI 中的 **Admin Settings**。
+2. 进入 **Connections > Ollama > Manage**（点击扳手图标）。
+   在这里，你可以下载模型、调整设置并管理 Ollama 连接。
+
+### 连接提示
+
+*   **Docker 用户：** 如果 Ollama 运行在宿主机上，请使用 `http://host.docker.internal:11434` 作为 URL。
+*   **负载均衡：** 你可以添加**多个** Ollama 实例。Open WebUI 会采用**随机选择**策略在它们之间分发请求，从而为并发用户提供基础负载均衡。
+    *   **注意：** 要启用这一点，必须确保各实例中的 **Model ID 完全一致**。如果使用了 **Prefix ID**，它们也必须一致（或都为空），这样模型才会合并为同一条目。
+
+### 高级配置
+
+*   **Prefix ID：** 如果你有多个 Ollama 实例都在提供相同模型名，可加上前缀（例如 `remote/`）加以区分。
+*   **Model IDs (Filter)：** 在这里列出需要展示的特定模型（白名单）。留空则显示全部。
+
+:::tip 连接超时配置
+
+使用多个 Ollama 实例时（尤其跨网络时），如果某个端点不可达，就可能带来连接延迟。你可以通过以下方式调整超时：
+
+```bash
+# 降低超时（默认 10 秒）以加快故障切换
+AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=3
+```
+
+如果你保存了一个不可达 URL，导致连 Settings 都打不开，请参见 [模型列表加载问题](/troubleshooting/connection-error#️-model-list-loading-issues-slow-ui--unreachable-endpoints) 故障排查页面。
+
+:::
+
+下面是管理界面的样子：
+
+![Ollama 管理界面](/images/getting-started/quick-start/manage-ollama.png)
+
+![Ollama 管理弹窗](/images/getting-started/quick-start/manage-modal-ollama.png)
+
+## 快速高效下载模型
+
+如果你想更快开始，也可以直接在 **模型选择器** 中下载模型。只需输入模型名称；如果本地尚未可用，Open WebUI 会提示你直接从 Ollama 下载。
+
+示例如下：
+
+![Ollama 下载提示](/images/getting-started/quick-start/selector-ollama.png)
+
+如果你不想在 Admin Settings 菜单里来回切换，而是想直接开始用模型，这种方式会非常方便。
+
+---
+
+## 卸载已加载的模型
+
+Open WebUI 会在任何当前被 Ollama 运行时保活的模型旁显示一个绿色的 "Loaded" 指示符；管理员还会在模型行看到一个 **Eject** 按钮，无需重启服务即可将其卸载。背后 Open WebUI 会调用 `POST /api/models/unload`（仅管理员可用），向提供该模型的每一个 Ollama 节点转发一个 `keep_alive=0` 的 generate 请求。
+
+当你需要在多个大模型之间切换、释放 GPU / VRAM，或者在拉取新版本后希望强制重新加载时，这非常有用。如果尝试卸载的模型所在提供商不支持卸载，将直接返回错误，而不是静默失败。
+
+---
+
+## 使用推理 / Thinking 模型
+
+如果你使用的是 **DeepSeek-R1** 或 **Qwen3** 这类会在 `<think>...</think>` 标签中输出思考内容的推理模型，则需要在 Ollama 中配置 **reasoning parser** 才能正确显示。
+
+### 配置 reasoning parser
+
+使用 `--reasoning-parser` 参数启动 Ollama：
+
+```bash
+ollama serve --reasoning-parser deepseek_r1
+```
+
+这样可以确保思考块与最终答案被正确分离，并在 Open WebUI 中显示为可折叠区域。
+
+:::tip
+`deepseek_r1` 解析器适用于大多数推理模型，包括 Qwen3。如果遇到问题，请查看我们的[推理与思考模型指南](/features/chat-conversations/chat-features/reasoning-models)，了解其他解析器与详细排查方法。
+:::
+
+---
+
+## 上下文长度 (`num_ctx`) 和 `OLLAMA_CONTEXT_LENGTH`
+
+模型实际能"看到"多少对话内容由**上下文长度**决定。对于 Ollama，它来自两个地方，其中一个会静默覆盖另一个：
+
+- **`OLLAMA_CONTEXT_LENGTH`** 在 **Ollama 服务器**上设置，是 Ollama 用于模型的默认上下文长度。Ollama 自身默认为较小的值（历史上为 `2048`，新版本为 `4096`）。
+- **`num_ctx`** 是 **Open WebUI 的高级参数**（聊天控制 > 高级参数，或在模型编辑器中按模型设置）。它默认**未设置**，因此默认情况下应用 Ollama 的 `OLLAMA_CONTEXT_LENGTH`。
+
+:::warning `num_ctx` 会覆盖 `OLLAMA_CONTEXT_LENGTH`
+如果在 Open WebUI 中的任何地方设置了 `num_ctx`（模型预设的参数或聊天的高级参数），Open WebUI 会在每次请求时将其发送给 Ollama，并且每次请求的 `num_ctx` **会覆盖**服务器的 `OLLAMA_CONTEXT_LENGTH`。打开 `num_ctx` 控制开关会**预填 `2048`**，这是一个非常小的值，因此很容易在不知情的情况下将模型限制在 2048 个 token，即使你在 Ollama 端提高了 `OLLAMA_CONTEXT_LENGTH`。
+:::
+
+过小的上下文会静默截断提示词。这在**原生函数调用**时最为明显，因为工具模式被注入到提示词中：在 `2048` token 时，模型可能会空间不足并返回**空白响应**，或者输出原始的 tool-call JSON 块而不是实际调用工具。提高上下文长度可以解决这个问题。
+
+**操作建议：**
+
+- 要为所有 Ollama 模型设置默认值，请在 **Ollama 服务器**上设置 `OLLAMA_CONTEXT_LENGTH`，并在 Open WebUI 中**保持 `num_ctx` 未设置**，这样就不会被覆盖。
+- 要按模型或按聊天设置，请将 `num_ctx` 设置为模型的合理值（例如 `8192`、`16384` 或模型的最大值），而不是 `2048` 默认值。请记住它会覆盖 `OLLAMA_CONTEXT_LENGTH`。
+- 更大的上下文会使用更多 VRAM 和 RAM，请根据你的硬件容量合理设置。
+
+---
+
+## 一切就绪！
+
+就是这样！完成连接配置并下载好模型后，你就可以在 Open WebUI 中开始使用 Ollama 了。无论是探索新模型，还是继续使用已有模型，Open WebUI 都能让整个过程保持简单高效。
+
+如果遇到问题或需要更多帮助，请查看我们的[帮助页面](/troubleshooting)。祝你使用 Ollama 愉快！🎉

@@ -1,0 +1,271 @@
+---
+sidebar_position: 5
+title: "事件函数"
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# 事件函数：响应系统事件
+
+<ThemedImage
+  alt="事件函数响应系统事件：auth.signup、chat.deleted、system.startup 和 config.updated 流入 Open WebUI 事件函数"
+  sources={{
+    light: useBaseUrl('/images/banners/event-function-light.svg'),
+    dark: useBaseUrl('/images/banners/event-function-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
+
+:::info 0.10.0 中的新功能
+Event 函数是 Open WebUI **0.10.0** 中引入的新插件原语。
+:::
+
+:::danger ⚠️ 关键安全警告
+**函数在你的服务器上执行任意 Python 代码**，而 Event 函数会自动响应系统活动运行，而不仅仅是在用户操作时。函数创建仅限于管理员。仅从可信来源安装并在导入前审查代码。请参阅[插件安全警告](/features/extensibility/plugin/)。
+:::
+
+**Event 函数**是第四种函数原语，与 [Pipe](./pipe)、[Filter](./filter) 和 [Action](./action) 并列。前者处理单个聊天请求，而 Event 函数运行自定义 Python 代码**响应 Open WebUI 中发生的系统事件**：用户注册、聊天被删除、模型被创建、服务器启动、配置更改等等。
+
+这将 Open WebUI 从一个你可以配置的应用转变为一个你可以编程的平台：生命周期自动化、审计日志、注册门控、资源预配、告警以及与外部系统的集成，全部以单个函数的形式表达。
+
+---
+
+## 基本结构
+
+类型从顶层的 `class Event` 自动检测：
+
+```python
+"""
+title: 示例事件
+author: open-webui
+version: 0.1
+"""
+
+from pydantic import BaseModel
+
+
+class Event:
+    class Valves(BaseModel):
+        pass
+
+    def __init__(self):
+        self.valves = self.Valves()
+
+    async def event(
+        self,
+        event: dict,
+        __event_id__: str = None,
+        __event_name__: str = None,
+        __id__: str = None,
+        __app__=None,
+        __request__=None,
+    ):
+        print(f"事件 ID:   {__event_id__}")
+        print(f"事件名称: {__event_name__}")
+        print(f"负载:    {event}")
+```
+
+你的 `event()` 处理程序会被**每个**系统事件调用。你通过检查 `__event_name__` 来决定对什么做出响应。
+
+### `event()` 处理程序参数
+
+| 参数 | 描述 |
+| :--- | :--- |
+| `event` | 事件负载（一个 `dict`）：什么发生了变化，以及 `actor`（触发事件的用户，如果适用）。敏感字段在负载到达你的函数之前已被编辑。 |
+| `__event_name__` | 事件的名称，例如 `auth.signup` 或 `chat.deleted`。用于过滤。 |
+| `__event_id__` | 此特定事件发生的唯一 ID。 |
+| `__id__` | 你的 Event 函数的 ID。 |
+| `__app__` | Open WebUI FastAPI 应用实例。这让你可以注册新的 API 路由、读取或更新应用状态以及调用内部服务（参见[注册端点](#注册端点和自安装插件)）。 |
+| `__request__` | 当前请求（如果事件是由请求触发的）。 |
+
+### 按事件过滤
+
+```python
+async def event(self, event: dict, __event_name__: str = None, **kwargs):
+    if __event_name__ == "auth.signup":
+        await self.on_signup(event)
+    elif __event_name__ == "system.startup.completed":
+        await self.on_startup()
+```
+
+---
+
+## 事件目录
+
+Open WebUI 发出 **170+ 事件**，涵盖每个子系统。每个名称以 `<区域>.<操作>` 命名空间组织。代表性选择：
+
+| 区域 | 示例事件 |
+| :--- | :--- |
+| **系统** | `system.startup.started`、`system.startup.completed`、`system.shutdown.started`、`system.shutdown.completed` |
+| **认证** | `auth.signup`、`auth.login`、`auth.logout`、`auth.password_changed`、`auth.api_key.created` |
+| **用户与组** | `user.created`、`user.deleted`、`user.role_updated`、`user.permissions_updated`、`group.member_added` |
+| **聊天与消息** | `chat.created`、`chat.deleted`、`chat.shared`、`chat.archived`、`chat.compacted`、`message.created`、`message.reaction_added` |
+| **模型与提示词** | `model.created`、`model.updated`、`model.access_updated`、`prompt.created` |
+| **知识与文件** | `knowledge.created`、`knowledge.file.added`、`knowledge.reindexed`、`file.uploaded`、`file.deleted` |
+| **插件** | `tool.created`、`function.enabled`、`function.valves_updated`、`tool.valves_updated`、`skill.created` |
+| **配置** | `config.updated`、`config.models.updated`、`config.connections.updated`、`config.webhook.updated` |
+| **其他** | `channel.*`、`calendar.*`、`automation.*`、`memory.*`、`note.*`、`image.*`、`audio.*`、`terminal.*`、`feedback.*` |
+
+权威的完整列表由后端事件目录公开，并在**管理设置 > 事件**中配置 webhook 时显示。
+
+---
+
+## 生命周期钩子（启动与关闭）
+
+`system.startup.completed` 事件在服务器就绪时触发一次，`system.shutdown.started` 在服务器开始停止时触发。用于设置和清理：
+
+```python
+async def event(self, event: dict, __event_name__: str = None, __app__=None, **kwargs):
+    if __event_name__ == "system.startup.completed":
+        # 应用保存的配置、预热缓存、注册路由等
+        ...
+    elif __event_name__ == "system.shutdown.started":
+        # 刷新缓冲区、关闭连接等
+        ...
+```
+
+这就是 Event 函数非常适合**自应用配置**的原因：在每次启动时使用管理员在[阀门](#使用阀门进行配置)中设置的值运行相同的设置，因此整个配置都存在于 Open WebUI 内部，而不是外部脚本中。
+
+---
+
+## 并发、多副本和精确一次执行
+
+:::danger 你负责去重
+Open WebUI **在处理活动的实例上进程内**分发事件，即发即弃：失败的处理程序会被记录但不会重试，并且**没有精确一次执行的保证，也没有跨副本的协调**。如果你的处理程序有必须执行一次的副作用，你必须自己强制执行。
+:::
+
+你的 `event()` 运行频率取决于事件：
+
+- **请求范围的事件**（`auth.signup`、`chat.deleted`、`model.created` 等）在处理该请求的**单个**实例上触发。一次注册，一次处理程序调用。
+- **生命周期事件**（`system.startup.completed`、`system.shutdown.started`）在**每个副本**上触发，因为每个副本独立启动和关闭。在 4 副本部署中，你的启动处理程序运行 **4 次**。
+
+所以经典的陷阱是：一个记录注册、发送"服务器已启动"告警或在启动时预配资源的 Event 函数，当你扩展到超过单个实例时，会**每副本执行一次**，而不是全局一次。
+
+解决方案是共享锁或幂等性密钥。在正确配置的多实例部署中，`REDIS_URL` 已经设置（websocket 和共享缓存需要它），因此使用 Redis 来让恰好一个副本认领工作：
+
+```python
+from open_webui.utils.redis import get_redis_connection
+from open_webui.env import REDIS_URL, REDIS_KEY_PREFIX
+
+_redis = get_redis_connection(REDIS_URL, decode_responses=True) if REDIS_URL else None
+
+
+def run_once(key: str, ttl: int = 300) -> bool:
+    # Redis SET NX EX：原子"如果不存在则设置"并带过期时间。在 ttl 窗口内，
+    # 所有副本中恰好有一个调用者得到 True。
+    if _redis is None:
+        return True  # 单进程：无需协调
+    return bool(_redis.set(f"{REDIS_KEY_PREFIX}:event:{key}", "1", nx=True, ex=ttl))
+
+
+class Event:
+    async def event(self, event: dict, __event_name__: str = None, **kwargs):
+        if __event_name__ == "system.startup.completed":
+            if run_once("startup-provision"):
+                await self.provision()          # 仅在一个副本上运行
+        elif __event_name__ == "auth.signup":
+            actor_id = (event.get("actor") or {}).get("id", "unknown")
+            if run_once(f"signup-log:{actor_id}"):
+                await self.log_signup(event)     # 即使投递两次也只记录一次
+```
+
+这是相同的模式，以及相同的注意事项（密钥选择、`ttl`、用于长时间运行工作的内置 `RedisLock` 帮助类），在所有插件类型的[底层机制 → 并发和多实例](/features/extensibility/plugin/development/under-the-hood#concurrency-and-multiple-instances)中都有文档说明。
+
+---
+
+## 注册端点和自安装插件
+
+因为处理程序接收 `__app__`（FastAPI 应用），Event 函数可以在启动时**注册自己的 API 路由**并访问内部服务。这解锁了以前需要外部服务的模式：
+
+- **自安装/自配置插件。** 在 `system.startup.completed` 时，检查组件是否已安装和配置，如果没有，通过调用管理端点并使用阀门中的值来预配它。管理员在 Open WebUI 内部配置一切，而不是手动设置。
+- **跨越请求和事件的自定义流程。** 例如，**邮箱验证**流程：在 `system.startup.completed` 时注册 `/verify` 端点；在 `auth.signup` 时向新用户发送带令牌的链接；当他们点击链接访问你的端点时，将其角色从 `pending` 切换为 `user`。一个函数实现完整的激活流程，无需外部服务。
+- **服务器渲染页面，而不仅仅是 JSON。** 注册的路由可以返回 HTML、JavaScript、CSS 或整个打包的 SPA（FastAPI `HTMLResponse` / `Response`），因此函数可以在自己的 URL 上托管同意页面、状态仪表板、审批屏幕或安装程序 UI，**无需前端重建**。例如，**版本化 ToS 门控**：将新账户保持为 `pending`，在 `/tos` 提供协议，接受后将角色切换为 `user`，并将接受的版本存储在用户设置中，这样更新 ToS 会自动重新门控所有用户。注意边界：这提供*你自己的页面*，它不会注入到 Open WebUI 聊天 UI 本身，请参见[从路由提供页面或资产](/features/extensibility/plugin/development/under-the-hood#3-serve-a-page-or-asset-from-a-route)。
+
+:::warning
+从函数注册路由和调用管理端点功能强大且实际上不受限制。将任何 Event 函数视为受信任的服务器级代码。
+:::
+
+---
+
+## 使用阀门进行配置
+
+与其他函数一样，Event 函数支持[阀门](/features/extensibility/plugin/development/valves)用于管理员可配置的设置（以及适用的 `UserValves`）。将你的端点、允许列表、调度、API 密钥和开关放在 `Valves` 中，这样行为就可以从**管理面板 → 函数 → ⚙️** 配置，而不是硬编码。
+
+`function.valves_updated` 事件也会在管理员保存新的阀门值时触发，因此函数可以**响应自身配置的变化**并实时应用。
+
+---
+
+## 示例用例
+
+Event 函数将一次性管理任务和外部粘合脚本转换为存在于 Open WebUI 内部的配置。因为它们接收 `__app__`，它们可以读写应用状态、调用内部服务、注册路由和运行定时工作，全部通过[阀门](#使用阀门进行配置)门控。
+
+:::info 响应而非拦截
+Event 函数在它所响应的活动**之后**运行（用户已创建、消息已存在）。它可以响应、补救或通知，但不能在带内阻塞或重写触发操作。要验证或转换正在流转的聊天请求，请使用 [Filter](./filter)；要对注册进行门控，将新创建的账户保持为 `pending` 状态，而不是试图阻止请求。
+:::
+
+### 入职和预配
+
+在 `auth.signup` / `user.created` 时触发，塑造新用户的头五分钟；在 `system.startup.completed` 时触发，预配实例本身。
+
+- **欢迎聊天。** 在新用户的侧边栏中放入预填充的入门聊天，附带可选的通知指向它。
+- **自动组分配。** 将新用户添加到默认组，使他们在第一天就继承正确的模型、频道和权限。
+- **应用界面默认值。** 将管理选择的 UI 默认值推送给新用户，并在更改时重新应用于所有人。
+- **邮箱验证。** 注册时通过电子邮件发送带令牌的链接；点击后将账户从 `pending` 切换为 `user`。无需外部服务（[如何实现](#注册端点和自安装插件)）。
+- **种子启动内容。** 为每个新用户提供启动知识库、提示词集或个人频道。
+- **渐进式入职培育。** 根据每个用户的账户年龄发送计划系列（第 1 天欢迎、第 3 天提示、第 7 天进阶）。
+- **功能发布公告。** 当推出新功能时，向所有现有用户推送一次性公告聊天或通知。
+
+### 访问控制和注册门控
+
+因为事件触发时账户已经存在，门控意味着*持有或移除*它，而不是拒绝请求。
+
+- **邮箱域名策略。** 允许受信任的域名，将其他域名保持为 `pending`，拒绝一次性或临时域名。
+- **突发防御。** 在注册激增期间自动持有新账户（机器人防御）。
+- **审批队列。** 将"用户 X 请求访问 [批准] / [拒绝]"发布到 Slack 或 Discord，从手机上批准。
+
+### 生命周期和日常维护
+
+在 `system.startup.completed` 上注册周期性后台任务（参见[生成后台任务](/features/extensibility/plugin/development/under-the-hood#patterns)），让它按计划运行。
+
+- **自清理聊天。** 归档或删除超过时限的聊天。使用 `chat.created` 作为节流心跳，而不是 cron 盒子。
+- **孤立知识垃圾回收。** 定期清理不再被任何模型引用的知识文件。
+- **离职级联。** 在 `user.deleted` 时，撤销 API 密钥、清除共享资源、禁用自动化。干净地清理。
+
+### 合规和审计
+
+- **事件驱动的告警。** 在高信号事件上发出多接收方告警（频道 + 邮件 + SIEM）。旗舰场景：当有人成为**管理员**时发出告警；`config.*` 变更同理。
+- **不可变审计接收器。** 将每个事件发送到仅追加存储或 SIEM。免费获得防篡改审计日志。
+- **内容标记。** 扫描 `message.created` 中的密钥和 PII 并进行标记。（要在线阻断，请使用 [Filter](./filter)。）
+- **访问重新认证。** 定期要求资源所有者重新批准谁能访问他们的资源。自动化访问审查。
+
+### 实例即代码和集群运维
+
+- **从清单启动。** 从阀门清单按规格预配整个实例。新部署，粘贴清单，完成。
+- **GitOps 同步。** 从中央 git 仓库拉取提示词、模型、组和配置，使集群保持同步。
+- **变更时备份。** 在每次 `config.updated` 时将配置快照到外部存储或持久化的 `/data` 目录。
+- **模型退役与重新分配。** 将退役模型指向目标，并自动重写所有引用它的模型和自动化。
+
+### 运维和集成
+
+- **自愈连接器。** 健康检查连接器，自动禁用一个失效的连接器并告警，使模型选择器保持干净。
+- **通知一切桥接。** 将选定的事件转发到外部服务，使 Open WebUI 成为自动化图中的一个节点。
+- **使用量计量。** 累积每个用户的令牌使用量并导出。（真正的货币预算还需要外部价格来源。）
+- **蜜罐/入侵检测。** 注册诱饵管理路由，然后记录并自动停用任何探测它们的人。
+
+:::warning 一次性工作每副本运行一次
+其中几个（预配、欢迎聊天、定时作业）必须全局发生一次，但 `system.startup.completed` 在**每个**副本上触发，请求范围的处理程序可以并发运行。使用分布式锁保护至多一次的副作用，参见[并发、多副本和精确一次执行](#并发多副本和精确一次执行)。
+:::
+
+---
+
+## Event 函数与 Event Webhook 的对比
+
+有两种方式响应事件，满足不同需求：
+
+- **Event 函数**（本页）在进程内运行 **Python**。当你需要真正的逻辑时使用它们：分支、调用内部服务、注册端点、转换数据。
+- **Event webhook**（在**管理设置 > 事件**中配置）将选定的事件作为 **JSON 发送到外部 HTTP 端点**，或发送到聊天目的地（Slack、Discord）作为可读消息，按事件模式和用户或组过滤。用于无需编写代码的简单"通知外部系统"需求。
+
+:::info 0.10.0 中的重大变更
+单个全局通知 webhook 正在被此按事件 webhook 系统取代。现有的 webhook 配置会自动迁移到**管理设置 > 事件**。如果你以前在每个操作（包括页面刷新）上都收到通知，现在你可以精确选择哪些事件触发 webhook 以及发送到哪里。
+:::

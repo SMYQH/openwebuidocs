@@ -1,0 +1,10 @@
+{
+        "label": "📚 参考",
+	"position": 11,
+	"collapsible": true,
+	"collapsed": true,
+	"link": {
+		"type": "doc",
+		"id": "ecosystem/computer/reference/index"
+	}
+}

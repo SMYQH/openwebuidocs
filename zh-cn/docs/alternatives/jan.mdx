@@ -1,0 +1,104 @@
+---
+sidebar_position: 4
+title: "Open WebUI & Jan"
+sidebar_label: "Open WebUI & Jan"
+description: "How Open WebUI and Jan work together. Two local-first AI tools with different strengths."
+keywords: ["Open WebUI vs Jan", "Jan AI alternative", "local AI desktop app", "open webui alternative", "open webui comparison"]
+---
+
+import Head from '@docusaurus/Head';
+
+<Head>
+<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can I use Jan with Open WebUI?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Jan can serve models via a local API endpoint. Connect Open WebUI to Jan's API for web-based access with team features."}}, {"@type": "Question", "name": "How do Jan and Open WebUI work together?", "acceptedAnswer": {"@type": "Answer", "text": "Jan handles running models locally on your desktop. Open WebUI can add web-based access, knowledge bases, and team features. You can connect Open WebUI to Jan's API and use them together."}}]})}</script>
+</Head>
+
+
+# Open WebUI & Jan
+
+*最后更新时间：2026 年 5 月*
+
+[Jan](https://jan.ai/)（由 Homebrew/Menlo Research 开发）建立在一个清晰的愿景之上：AI 应该在您的设备上运行，离线，完全在您的控制下。桌面应用整洁，模型中心使上手变得容易，对隐私的承诺是真诚的。
+
+[GitHub](https://github.com/janhq/jan) · [Apache 2.0 License](https://github.com/janhq/jan/blob/main/LICENSE)
+
+---
+
+## Jan 的优势
+
+- **本地优先**，一切在您的机器上运行，100% 离线
+- **简单专注**，界面简洁，避免不必要的复杂性
+- **内置模型中心**，可以浏览和下载模型，一键即得
+- **Cortex 引擎**，驱动运行时，支持 GGUF 和 TensorRT-LLM
+- **基于线程的对话**，按主题组织聊天
+- **扩展系统**，通过社区插件添加功能
+- **开源**，采用 Apache 2.0 许可证
+- **隐私设计**，您的数据永不离开您的设备
+- **轻量级**，在适度硬件上运行良好
+- **跨平台**，支持 macOS、Windows 和 Linux
+
+---
+
+## Open WebUI 的优势
+
+- **基于 Web 的平台**，从任何浏览器支持多用户访问
+- **任何模型、任何提供商**，使用本地模型以及 OpenAI、Anthropic、Google 等
+- **知识与 RAG**，具有持久知识库和高级检索
+- **Python 扩展性**，支持自定义工具、MCP 服务器、管道和社区扩展
+- **团队功能**，包括频道、笔记、自动化、RBAC、SSO/OIDC/LDAP 和 SCIM 2.0
+- **开放终端**，提供用于代码执行的完整计算环境
+- **可扩展**，从一个人到数千人，从 Docker 到 Kubernetes
+
+---
+
+## 一览表
+
+| | Open WebUI | Jan |
+| :--- | :--- | :--- |
+| **方法** | 为个人和团队提供自托管 Web 平台 | 为私人本地 AI 提供桌面应用 |
+| **模型管理** | 连接到模型运行器和 API | 内置模型中心，一键下载 |
+| **多提供商** | 本地 + 云模型 | 专注于本地模型 |
+| **知识与 RAG** | 9 个向量数据库、5 个提取引擎、混合搜索 | 专注于聊天 |
+| **多用户** | SSO、RBAC、SCIM、团队 | 个人桌面使用 |
+| **离线** | 使用本地模型完全离线 | 100% 离线 |
+| **许可证** | Open WebUI 许可证 | Apache 2.0 |
+
+---
+
+## 何时选择各个平台
+
+**选择 Jan**（如果）您想要最简单、最私密的方式在桌面上本地运行 AI。无需服务器、无需配置、无需账户。只需下载、选择模型并开始聊天。
+
+**选择 Open WebUI**（如果）您需要基于 Web 的访问、团队协作、知识库或希望将本地模型与云提供商结合。Open WebUI 作为您整个团队可以使用的 Web 服务器运行。
+
+**同时使用两者。** Jan 可以通过其本地 API 提供模型。将 Open WebUI 连接到 Jan 的 API 以获得 Web 体验，同时拥有团队支持、知识库和工具，但保持 Jan 作为您的模型运行器。
+
+---
+
+## 与 Open WebUI 协同工作
+
+Jan 可以通过本地 API 端点提供模型。如果您使用 Jan 来管理本地模型，可以将 Open WebUI 连接到 Jan 的 API，以获得具有多用户支持、知识库和工具的基于 Web 的体验。
+
+---
+
+*Jan 使本地 AI 简单私密。Open WebUI 在顶部添加了一个平台层。不同的方法，相同的信念即 AI 应该在您的硬件上运行。*
+
+**准备尝试 Open WebUI？** [开始使用 →](/getting-started)
+
+
+
+---
+
+## 常见问题
+
+**我可以将 Jan 与 Open WebUI 一起使用吗？**
+是的。Jan 可以通过本地 API 端点提供模型。将 Open WebUI 连接到 Jan 的 API 以获得具有团队功能的基于 Web 的访问。
+
+**Jan 和 Open WebUI 如何协同工作？**
+Jan 处理在桌面上本地运行模型。Open WebUI 可以添加基于 Web 的访问、知识库和团队功能。您可以将 Open WebUI 连接到 Jan 的 API 并一起使用它们。
+
+**Jan 是免费的吗？**
+是的。Jan 是在 Apache 2.0 许可证下的开源软件。
+
+---
+
+**相关：** [Open WebUI & Ollama](/alternatives/ollama) · [Open WebUI & LM Studio](/alternatives/lm-studio) · [Open WebUI & llama.cpp](/alternatives/llama-cpp)

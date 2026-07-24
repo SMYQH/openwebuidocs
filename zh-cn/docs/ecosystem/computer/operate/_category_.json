@@ -1,0 +1,10 @@
+{
+  "label": "🔧 运维",
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "ecosystem/computer/operate/index"
+  },
+  "position": 10
+}

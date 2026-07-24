@@ -1,0 +1,232 @@
+---
+sidebar_position: 2
+title: "Functions"
+---
+
+# 🧩 Functions
+
+:::danger ⚠️ 重要安全警告
+**Functions 在你的服务器上执行任意 Python 代码。** Function 创建仅限管理员。只从受信任的来源安装，导入前审查代码。恶意 Function 可能访问你的文件系统、泄露数据或危害整个系统。详情参见[插件安全警告](/features/extensibility/plugin/)。
+:::
+
+Functions 是**模块化 Python 插件**，扩展 Open WebUI 本身的能力。[Tools](/features/extensibility/plugin/tools/) 让 LLM 在推理时调用外部 API，而 Functions 在更深层次上改变平台的行为方式。它们可以添加由任何 Python 逻辑驱动的全新"模型"、拦截和转换流经系统的每条消息，或者直接在对话 UI 中放置交互式按钮。
+
+可能性非常广泛：连接专有 AI 提供商、构建响应自然语言的智能家居控制器、创建数据库查询界面、为每次对话添加实时翻译、执行合规策略、从数据生成图表，或通过按钮点击触发外部工作流。如果你能用 Python 编写它，你就能将其变成 Function。
+
+Functions 以 Python 源代码的形式存储在数据库中，在运行时动态加载，并在服务器端执行。管理员创建和管理它们；普通用户与结果交互。
+
+---
+
+## Function 类型
+
+Open WebUI 支持四种类型的 Functions。类型根据你 Python 代码中的类名**自动检测**，因此你无需手动配置。
+
+| 类型 | 类名 | 功能 | 用户如何看到它 |
+|:-----|:-----------|:-------------|:-----------------|
+| **Pipe** | `class Pipe` | 添加自定义模型或智能体 | 显示为聊天侧边栏中可选择的模型 |
+| **Filter** | `class Filter` | 拦截流向模型/从模型返回的数据 | 作为现有模型上的透明中间件运行 |
+| **Action** | `class Action` | 为消息添加交互式按钮 | 显示为聊天消息上的可点击按钮 |
+| **Event** | `class Event` | 在系统事件发生时运行自定义逻辑 | 在后台运行；无直接 UI |
+
+### Pipe Functions
+
+Pipe 将自己注册为 Open WebUI 中的新"模型"。当用户选择它并发送消息时，`pipe()` 方法处理整个请求，无需 LLM 后端。这使 Pipes 极其灵活：
+
+- **模型提供商**：集成不遵循 OpenAI 协议的 API（Anthropic 原生、Google Vertex、自定义推理服务器）。
+- **代理和工作流**：构建调用工具、搜索网络并跨多轮推理的多步骤代理。
+- **非 LLM 界面**：创建智能家居控制器、数据库查询工具、搜索引擎、计算器或代码执行器。任何接受用户输入并返回响应的东西。
+- **代理和路由器**：通过你自己的逻辑路由请求，添加缓存、负载均衡或成本追踪。
+
+单个 Pipe 还可以通过定义返回模型标识符列表的 `pipes()` 方法暴露**多个模型**（称为"manifold"）。
+
+→ **[Pipe Function 指南](./pipe)**
+
+### Filter Functions
+
+Filter 位于用户和模型之间，在三个阶段拦截数据：
+
+- **`inlet()`**：在请求到达模型**之前**修改它（添加上下文、净化输入、检测语言、执行速率限制、估算令牌成本）。
+- **`stream()`**：实时拦截来自模型的**流式块**（审查内容、替换术语、追踪令牌使用）。
+- **`outlet()`**：在生成**之后**处理完整响应（记录到可观测性平台、格式化引用、追加免责声明、缓存响应）。
+
+Filters 支持强大的横切关注点，如实时翻译、内容审核、提示注入检测、A/B 测试、合规日志记录和 PII 删除，所有这些都不需要修改底层模型。
+
+Filters 可以全局应用（到所有模型）或附加到特定模型。可切换的过滤器让用户按对话启用/禁用它们。
+
+→ **[Filter Function 指南](./filter)**
+
+### Action Functions
+
+Action 向对话消息工具栏添加自定义按钮。当用户点击它时，`action()` 方法运行，可完全访问事件系统以进行实时 UI 反馈、用户提示和确认。
+
+Actions 可以做 Python 能做的任何事情：摘要或翻译消息、复制格式化输出、固定重要消息、将对话导出到外部系统、触发 CI/CD 管道、发送 Slack 通知、生成 PDF 报告、运行代码片段或启动外部工作流。
+
+→ **[Action Function 指南](./action)**
+
+### Event Functions
+
+*Open WebUI 0.10.0 中的新功能。*
+
+Event Function 针对**系统事件**（用户注册、聊天删除、服务器启动、配置变更）运行自定义 Python。其 `event()` 方法针对每个事件被调用，并根据事件名称进行过滤。Event Function 可以注册自己的 API 端点并调用内部服务，这使其适用于生命周期自动化、审计日志、注册门控、资源预置和自安装插件。
+
+→ **[Event Function 指南](./event)**
+
+---
+
+## Functions 的工作原理
+
+### 类型检测
+
+保存 Function 时，Open WebUI 扫描 Python 源代码中名为 `Pipe`、`Filter`、`Action` 或 `Event` 的顶级类。第一个匹配项确定函数类型。你永远不需要手动设置类型，因为它是从代码推断出来的。
+
+```
+# This is detected as a Pipe function:
+class Pipe:
+    async def pipe(self, body: dict) -> str:
+        return "Hello from my custom model!"
+
+# This is detected as a Filter function:
+class Filter:
+    async def inlet(self, body: dict) -> dict:
+        return body
+```
+
+### 模块加载和缓存
+
+Python 源代码通过 `exec()` 加载到临时模块命名空间中。一旦加载，模块就会缓存在内存中（`request.app.state.FUNCTIONS`），只有在源代码更改时才重新加载。你代码中的 import 语句会自动重写以在 Open WebUI 包命名空间内解析。
+
+### Frontmatter（前置信息）
+
+文件顶部的三引号文档字符串被解析为元数据的 YAML 前置信息：
+
+```python
+"""
+title: My Custom Function
+author: your_name
+author_url: https://github.com/your_name
+version: 1.0.0
+icon_url: https://example.com/icon.svg
+required_open_webui_version: 0.4.0
+requirements: requests, beautifulsoup4
+"""
+```
+
+| 字段 | 作用 |
+|:------|:--------|
+| `title` | 管理界面中的显示名称 |
+| `author` / `author_url` | 作者归属元数据 |
+| `version` | 版本标识符 |
+| `icon_url` | 显示在函数名称旁边的图标（使用 URL，而非 base64） |
+| `required_open_webui_version` | 最低兼容的 Open WebUI 版本 |
+| `requirements` | 自动安装的 pip 包列表，使用逗号分隔 |
+
+:::tip 自动依赖安装
+当在前置信息中指定 `requirements` 时，Open WebUI 在函数第一次加载时通过 `pip` 自动安装列出的包。这由 `PIP_INSTALL_FRONTMATTER_REQUIREMENTS` 环境变量控制（默认启用）。
+:::
+
+---
+
+## 安装 Functions
+
+### 从社区库
+
+1. 浏览[社区 Function 库](https://openwebui.com/search)。
+2. 点击你想要的 Function 上的 **Get**。
+3. 输入你的 Open WebUI 实例 URL（如 `http://localhost:3000`）。
+4. 点击 **Import to Open WebUI**。你将被重定向到 Function 编辑器。
+5. 审查代码，然后点击**保存**。
+
+:::warning
+导入前务必审查源代码。社区 Functions 是用户贡献的，**直接在你的服务器上运行**。
+:::
+
+### 从 URL
+
+1. 前往**管理面板 → Functions**。
+2. 点击**从 URL 导入**，粘贴 Python 文件的链接。
+   - GitHub URL 会自动转换为原始文件 URL。
+3. 审查并保存。
+
+### 手动创建
+
+1. 前往**管理面板 → Functions**。
+2. 点击**创建**。
+3. 输入 ID（仅限字母数字和下划线）、名称和描述。
+4. 在编辑器中编写 Python 代码。
+5. 点击**保存**。函数类型从你的代码自动检测。
+
+---
+
+## 管理 Functions
+
+### 管理员控制
+
+Functions 从**管理面板 → Functions** 管理。每个 Function 具有以下控制：
+
+| 控件 | 说明 |
+|:--------|:-----------|
+| **Active 开关** | 启用或禁用该函数。禁用后不会被加载或执行。 |
+| **Global 开关** | 启用后，函数会自动应用到**所有模型**。适用于 Filters 和 Actions。 |
+| **Valves**（⚙️ 齿轮图标） | 打开该函数可由管理员配置的设置界面。 |
+| **导出 / 删除** | 将函数导出为文件，或将其移除。 |
+
+### 将 Functions 分配给特定模型
+
+除了将 Filter 或 Action 设为全局，你也可以将其附加到特定模型：
+
+1. 前往 **Workspace → 模型**。
+2. 编辑目标模型。
+3. 在 **Filters** 或 **Actions** 部分，选择要附加的 Functions。
+
+这允许不同模型使用不同的过滤器。例如，你可能只在面向公众的模型上应用内容审核过滤器。
+
+### 可切换的 Filters
+
+通过在 `__init__` 中设置 `self.toggle = True`，可以使 Filters 用户可切换。可切换时，用户在对话输入区域看到开/关开关，可以按对话启用或禁用过滤器。没有 `self.toggle` 的 Filters 在激活时始终开启。
+
+---
+
+## Valves 与 UserValves
+
+Functions 支持基于 [Pydantic](https://docs.pydantic.dev/) 的双层配置系统：
+
+| 层级 | 类名 | 谁来配置 | 配置位置 |
+|:------|:-----------|:---------------|:------|
+| **管理员层** | `Valves` | 仅管理员 | Admin Panel → Functions → ⚙️ |
+| **用户层** | `UserValves` | 任意用户 | 聊天界面，按函数单独配置 |
+
+**Valves** 适合存放 API key、模型端点和全局行为设置。**UserValves** 则允许用户自行定制行为（例如偏好语言、输出格式或个人 API key）。
+
+两者都定义为你 `Pipe`、`Filter` 或 `Action` 类中的嵌套 Pydantic `BaseModel`。管理员配置的值会存储到数据库中，并在运行时自动加载。
+
+→ **[Valves Development Guide](/features/extensibility/plugin/development/valves)**
+
+---
+
+## Functions vs Tools：何时使用哪个
+
+| 使用场景 | 应该使用…… | 原因 |
+|:---------|:---------|:----|
+| 让 LLM 获取实时数据（天气、股票、API） | **Tool** | Tools 在推理过程中由模型主动调用 |
+| 添加一个不兼容 OpenAI API 的模型提供商 | **Pipe Function** | Pipes 会注册为侧边栏中的模型 |
+| 构建非 LLM 型界面（搜索、数据库、智能家居） | **Pipe Function** | Pipes 可在无需 LLM 的情况下处理整个请求 |
+| 构建带有自定义逻辑的多步骤智能体 | **Pipe Function** | Pipes 控制完整请求/响应周期 |
+| 实时翻译、审核或脱敏内容 | **Filter Function** | Filters 会透明地拦截每条消息 |
+| 将请求记录到可观测性平台 | **Filter Function** | Inlet/outlet 过滤器可以看到所有流量 |
+| 进行速率限制或执行使用策略 | **Filter Function** | Inlet 过滤器可在模型执行前拒绝请求 |
+| 添加用于导出、摘要或分享消息的按钮 | **Action Function** | Actions 会显示在消息工具栏中 |
+| 从聊天 UI 触发外部工作流 | **Action Function** | Actions 在点击时执行任意 Python 代码 |
+
+---
+
+## 开发资源
+
+| 指南 | 说明 |
+|:------|:-----------|
+| [Pipe Function Guide](./pipe) | 构建自定义模型、智能体和非 LLM 界面 |
+| [Filter Function Guide](./filter) | 拦截、翻译、审核并记录消息 |
+| [Action Function Guide](./action) | 添加用于导出、工作流和交互任务的按钮 |
+| [Valves](/features/extensibility/plugin/development/valves) | 使用管理员和用户设置来配置函数 |
+| [Events](/features/extensibility/plugin/development/events) | 向 UI 发送实时更新 |
+| [Reserved Arguments](/features/extensibility/plugin/development/reserved-args) | `__user__`、`__event_emitter__`、`__metadata__` 等 |
+| [Rich UI](/features/extensibility/plugin/development/rich-ui) | 在响应中嵌入交互式 HTML/JS 内容 |

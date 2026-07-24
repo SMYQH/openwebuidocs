@@ -1,0 +1,101 @@
+---
+sidebar_position: 2
+title: "Open WebUI 与 llama.cpp"
+sidebar_label: "Open WebUI 与 llama.cpp"
+description: "如何将 llama-server 连接到 Open WebUI。两个必要本地 AI 工具的集成指南。"
+keywords: ["Open WebUI vs llama.cpp", "llama.cpp frontend", "llama-server alternative", "llama.cpp web UI", "llama-server web interface", "open webui alternative", "open webui comparison"]
+---
+
+import Head from '@docusaurus/Head';
+
+<Head>
+<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "我可以将 llama-server 连接到 Open WebUI 吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。llama-server 公开与 OpenAI 兼容的 API。在 Open WebUI 中添加 `http://localhost:8081/v1` 作为连接，您的模型将自动出现。"}}, {"@type": "Question", "name": "Open WebUI 支持 llama-server 的多模型路由吗？", "acceptedAnswer": {"@type": "Answer", "text": "支持。如果您以路由模式运行 llama-server 并使用多个模型，Open WebUI 将通过 API 检测并列出所有可用模型。"}}]})}</script>
+</Head>
+
+
+# Open WebUI 与 llama.cpp
+
+*最后更新：2026 年 5 月*
+
+[llama.cpp](https://github.com/ggml-org/llama.cpp) 由 Georgi Gerganov 创建，是 AI 生态系统中最重要的项目之一，我们真的是这么想的。没有 llama.cpp，我们现在所知的本地 AI 运动就不会存在。它证明了您可以在消费级硬件上运行严肃的模型，引入了成为行业标准的 GGUF 格式，并启发了整个一代工具。通过 `llama-server`，它不再只是一个引擎：它拥有自己的内置网络界面和已就绪的 OpenAI 兼容 API。
+
+[GitHub](https://github.com/ggml-org/llama.cpp) · [MIT 许可证](https://github.com/ggml-org/llama.cpp/blob/main/LICENSE)
+
+---
+
+## llama.cpp 擅长的领域
+
+- **最先进的推理性能**，在消费级硬件上，不断推动可能性的边界
+- **内置网络界面**，通过 `llama-server`，开箱即用
+- **广泛的硬件支持**，包括 CPU、CUDA、Metal、Vulkan 和 SYCL
+- **GGUF 格式**，成为整个行业量化模型的标准
+- **量化选项**，从 Q2 到 Q8，多种策略实现不同的质量/速度权衡
+- **推测解码**，使用草稿模型加速生成
+- **Flash Attention** 和其他先进推理优化
+- **语法约束生成**，用于结构化输出（JSON、代码等）
+- **OpenAI 兼容 API**，通过 `llama-server`，任何工具都可以连接到它
+- **多模型路由模式**，从一个端点提供多个模型
+- **AI 领域最活跃开发的项目之一**，提交速率难以匹敌
+- **MIT 许可证**，真正由社区驱动
+
+---
+
+## Open WebUI 擅长的领域
+
+- **丰富的网络平台**，具有完整聊天、对话、历史、组织和搜索
+- **知识库和 RAG**，9 个向量数据库、5 个提取引擎和混合搜索与重排
+- **Python 可扩展性**，包括自定义工具、MCP 服务器、管道和社区扩展
+- **多供应商支持**，以便在 llama.cpp 模型旁边使用 OpenAI、Anthropic、Google 等
+- **团队平台**，包括频道、笔记、自动化、RBAC、SSO/OIDC/LDAP 和 SCIM 2.0
+- **Open Terminal**，提供用于代码执行的完整计算环境
+- **多用户支持**，从一个人到数千人
+
+---
+
+## 何时使用每一个
+
+**直接使用 llama.cpp** 如果您想要最大的推理控制。它为您提供量化、上下文大小、批处理和硬件利用的微调，任何包装器都无法比拟。内置网络 UI 适合单独使用。
+
+**添加 Open WebUI** 如果您需要更丰富的界面、知识库、团队访问，或能够在 llama.cpp 旁边连接其他提供商。Open WebUI 通过 OpenAI 兼容 API 与 `llama-server` 通信。
+
+**两者都使用**。llama.cpp 以最大性能处理推理。Open WebUI 处理具有知识、工具和协作的平台层。
+
+---
+
+## 将它们一起使用
+
+llama.cpp 的 `llama-server` 公开与 OpenAI 兼容的 API，这意味着 Open WebUI 可以直接连接到它。使用 llama.cpp 进行高性能推理，使用 Open WebUI 处理平台层。
+
+```bash
+# 启动 llama-server
+llama-server -m your-model.gguf --port 8081
+
+# 将 Open WebUI 指向它
+# 在 Admin → Settings → Connections 中，添加：
+# URL: http://localhost:8081/v1
+```
+
+---
+
+*llama.cpp 使本地 AI 成为可能。Open WebUI 在此基础上构建平台层。它们配合得很好。*
+
+**准备好尝试 Open WebUI 了吗？** [开始使用 →](/getting-started)
+
+
+
+---
+
+## 常见问题
+
+**我可以将 llama-server 连接到 Open WebUI 吗？**
+可以。llama-server 公开与 OpenAI 兼容的 API。在 Open WebUI 中添加 `http://localhost:8081/v1` 作为连接，您的模型将自动出现。
+
+**Open WebUI 支持 llama-server 的多模型路由吗？**
+支持。如果您以路由模式运行 llama-server 并使用多个模型，Open WebUI 将通过 API 检测并列出所有可用模型。
+
+**llama.cpp 免费吗？**
+免费。llama.cpp 采用 MIT 许可证，可免费用于任何用途。
+
+---
+
+**相关：** [Open WebUI 与 Ollama](/alternatives/ollama) · [Open WebUI 与 LM Studio](/alternatives/lm-studio) · [Open WebUI 与 Jan](/alternatives/jan)

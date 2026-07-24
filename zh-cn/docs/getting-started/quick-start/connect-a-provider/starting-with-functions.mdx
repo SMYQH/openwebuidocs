@@ -1,0 +1,91 @@
+---
+sidebar_position: 6
+title: "Functions"
+---
+
+## 概览
+
+**Pipe Functions** 是一类 Python 插件，会像模型一样出现在聊天侧边栏中。在底层，它们几乎能做任何 Python 能做的事：接入私有 AI 提供商、用自然语言控制智能家居、查询数据库、调用搜索引擎、构建多步 Agent、生成图表、自动化工作流，甚至充当计算器。它甚至**不一定需要 LLM**。只要你能用 Python 写出逻辑，它就能变成一个用户可聊天的“模型”。
+
+本指南会以 [Anthropic Pipe](https://openwebui.com/posts/60984ebf-cf4e-4822-98b8-0492463c2852) 为例，带你导入并启用第一个 Pipe Function。
+
+:::info 已经有兼容 OpenAI 的提供商？
+如果你的提供商支持 **OpenAI 聊天补全 API 协议**（如 OpenAI、Google Gemini、Mistral、Groq、DeepSeek 等），那你根本不需要 Function。直接[添加一个连接](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)即可。Anthropic 也已经通过其兼容 OpenAI 的端点获得原生支持；详见 [Anthropic 指南](/getting-started/quick-start/connect-a-provider/starting-with-anthropic)。Functions 适用于其他场景：私有 API、自定义 Agent，或完全全新的交互接口。
+:::
+
+---
+
+## 第 1 步：找到一个 Function
+
+1. 打开 [社区函数库](https://openwebui.com/search)。
+2. 浏览或搜索你需要的函数。社区里已有数千个由贡献者提供的函数，涵盖 AI 提供商、搜索工具、家居自动化、生产力工具、内容过滤等各种场景。
+3. 在你想导入的函数上点击 **Get**。
+
+:::note 需要社区账号
+要直接从社区库导入，你需要在 [openwebui.com](https://openwebui.com) 注册账号。
+:::
+
+---
+
+## 第 2 步：导入到 Open WebUI
+
+随后会出现一个弹窗：
+
+1. 输入你的 Open WebUI 实例 URL（例如 `http://localhost:3000`）。
+2. 点击 **导入到 Open WebUI**。
+
+之后你会被重定向到正在运行实例中的 **函数编辑器**。
+
+![导入弹窗截图](/images/getting-started/pipe-import-modal.png)
+
+---
+
+## 第 3 步：审查并保存
+
+在编辑器中查看 Python 源代码。由于 Function 会在你的服务器上执行任意代码，因此只应安装来自可信来源的内容。
+
+点击 **Save**，将该 Function 添加到你的实例中。
+
+![Function 编辑器截图](/images/getting-started/pipe-function-editor.png)
+
+---
+
+## 第 4 步：启用 Function
+
+新导入的 Function 默认是禁用状态。请切换开关将其启用。
+
+![启用 Function 截图](/images/getting-started/pipe-enable.png)
+
+---
+
+## 第 5 步：配置 Valves
+
+很多 Function 都需要进一步配置，例如 API key 或服务端点 URL：
+
+1. 点击开关旁边的 ⚙️ **齿轮图标**。
+2. 输入所需值（例如 Anthropic API key）。
+3. 保存。
+
+![Valves 配置截图](/images/getting-started/pipe-valves.png)
+
+---
+
+## 第 6 步：开始聊天
+
+现在这个 Function 会作为可选模型出现在聊天侧边栏中。选中它，即可开始聊天。
+
+![将 Pipe Function 作为模型选择的截图](/images/getting-started/pipe-select-model.png)
+
+---
+
+:::danger ⚠️ 安全提醒
+Functions 会在你的服务器上执行任意 Python 代码。启用前务必先审查源码，并且只从可信来源导入。详见 [插件安全警告](/features/extensibility/plugin/)。
+:::
+
+## 了解更多
+
+- **[Functions 概览](/features/extensibility/plugin/functions/)**：架构、类型与完整能力范围
+- **[Pipe Function 指南](/features/extensibility/plugin/functions/pipe)**：构建自定义模型、Agent 与非 LLM 接口
+- **[Filter Function 指南](/features/extensibility/plugin/functions/filter)**：拦截、翻译、审核并记录消息
+- **[Action Function 指南](/features/extensibility/plugin/functions/action)**：为导出、工作流等添加交互按钮
+- **[社区库](https://openwebui.com/search)**：浏览数千个社区 Functions

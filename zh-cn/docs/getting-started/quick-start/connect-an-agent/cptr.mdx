@@ -1,0 +1,160 @@
+---
+sidebar_position: 0
+title: "Open WebUI Computer (cptr)"
+sidebar_label: "Open WebUI Computer (cptr)"
+---
+
+# Open WebUI Computer (cptr)
+
+**Open WebUI Computer。把 `cptr` 接入 Open WebUI。**
+
+[**cptr**](https://github.com/open-webui/computer) 把你的电脑放进浏览器标签页。文件、终端、git、编辑器、AI，任何设备都能访问。它运行在你的机器上，并通过 HTTP 为你提供服务。
+
+cptr 提供一个**兼容 OpenAI 的网关 API**（`/v1/chat/completions`）。每个工作区都会作为 Open WebUI 中的一个模型出现，并拥有完整的工具访问能力：文件操作、终端命令、网页搜索，等等。
+
+:::info 你需要准备
+- 本机已安装 **cptr**（`pip install cptr` 或 `uvx cptr@latest run`）
+- 正在运行的 **Open WebUI**（Docker、pip 或桌面应用均可）
+- 大约 **5 分钟** 完成本次配置
+:::
+
+---
+
+## 第 1 步：安装并启动 cptr
+
+如果你还没有安装 cptr：
+
+```bash
+pip install cptr
+cptr run
+```
+
+或者使用 [uv](https://docs.astral.sh/uv/)：
+
+```bash
+uvx cptr@latest run
+```
+
+cptr 默认在 **8000** 端口启动，并在你的浏览器中打开。
+
+如果需要允许局域网中的其他设备访问：
+
+```bash
+cptr run --host 0.0.0.0
+```
+
+---
+
+## 第 2 步：创建 API 密钥
+
+1. 在浏览器中打开 cptr。
+2. 进入 **Settings > Gateway**。
+3. 输入密钥名称并点击 **Create Key**。
+4. 复制该密钥（`sk-cptr-...`）。你只会看到这一次。
+
+Gateway 设置页面还会显示你的实例的 **Base URL**（例如 `http://localhost:8000/v1`）。
+
+---
+
+## 第 3 步：在 Open WebUI 中添加连接
+
+1. 在浏览器中打开 Open WebUI。
+2. 进入 ⚙️ **Admin Settings** > **Connections** > **OpenAI**。
+3. 点击 ➕ **Add Connection**。
+4. 填写以下内容：
+
+| 设置项 | 值 |
+|---|---|
+| **URL** | `http://localhost:8000/v1` |
+| **API Key** | 第 2 步中获取的 `sk-cptr-...` 密钥 |
+
+5. 点击 ✅ 勾选按钮进行验证，然后点击 **Save**。
+
+:::tip Open WebUI 运行在 Docker 中？
+请把 `localhost` 替换为 `host.docker.internal`：
+
+```
+http://host.docker.internal:8000/v1
+```
+:::
+
+---
+
+## 第 4 步：配置自定义请求头（推荐）
+
+为了获得最佳体验，建议设置自定义请求头，让 Open WebUI 把会话元数据传递给 cptr。这可以实现正确的会话映射（让两个界面之间的对话保持同步），并确保标题生成等后台任务被高效处理。
+
+1. 在 Open WebUI 中进入 **Admin Settings > Connections**。
+2. 找到 cptr 连接，点击 **⋮** 菜单，然后选择 **Custom Headers**。
+3. 粘贴以下内容：
+
+```json
+{
+  "X-OpenWebUI-Chat-Id": "{{CHAT_ID}}",
+  "X-OpenWebUI-Message-Id": "{{MESSAGE_ID}}",
+  "X-OpenWebUI-User-Message-Id": "{{USER_MESSAGE_ID}}",
+  "X-OpenWebUI-User-Message-Parent-Id": "{{USER_MESSAGE_PARENT_ID}}",
+  "X-OpenWebUI-Task": "{{TASK}}"
+}
+```
+
+:::tip
+你可以直接从 cptr 的 **Settings > Gateway** 页面复制这些请求头。
+:::
+
+---
+
+## 第 5 步：开始聊天
+
+你的 cptr 工作区现在应该已经以 `cptr/<workspace-name>` 的形式出现在模型下拉框中。选中一个即可开始聊天。该 AI 拥有对该工作区的完整访问能力：文件、终端、网页搜索以及任何已配置的工具。
+
+对话是双向同步的。在 Open WebUI 中完成的工作会出现在 cptr 的侧边栏中，反之亦然。
+
+---
+
+## 选择网关模型
+
+默认情况下，cptr 使用第一个可用的模型连接来处理网关请求。如果要指定一个特定模型：
+
+1. 在 cptr 中进入 **Settings > Gateway**。
+2. 从下拉框中选择一个模型。
+3. 点击 **Save**。
+
+你也可以通过在工作区根目录创建 `.cptr/model` 文件来为单个工作区设置模型：
+
+```bash
+echo "anthropic/claude-sonnet-4-20250514" > /path/to/workspace/.cptr/model
+```
+
+---
+
+## 故障排查
+
+### 下拉框中没有模型
+
+- 确认 URL 包含 `/v1`：`http://localhost:8000/v1`（而不只是 `:8000`）
+- 检查 cptr 是否正在运行且可访问
+- 确认 API 密钥是否正确
+
+### 连接测试通过，但模型仍未加载
+
+几乎总是因为缺少 `/v1` 后缀。Open WebUI 的连接测试只检查基础连通性，不会验证模型发现。
+
+### Docker 网络问题
+
+如果 Open WebUI 运行在 Docker 中，`localhost` 指向的是容器本身。请改用 `host.docker.internal`。在没有 Docker Desktop 的 Linux 上：
+
+```bash
+docker run --add-host=host.docker.internal:host-gateway ...
+```
+
+### 对话没有同步
+
+请确认第 4 步中的自定义请求头已正确配置。缺少这些请求头时，cptr 会为每次请求都新建一个聊天，而不是继续已有的对话。
+
+---
+
+## 了解更多
+
+- [cptr GitHub](https://github.com/open-webui/computer)
+- [Open WebUI 连接](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)
