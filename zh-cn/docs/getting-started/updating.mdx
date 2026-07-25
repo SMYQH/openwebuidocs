@@ -21,7 +21,7 @@ import TabItem from '@theme/TabItem';
 | 场景 | 推荐做法 |
 |---|---|
 | **个人 / homelab** | 使用 `:main` 标签，需要最新版本时手动拉取 |
-| **共享 / 团队实例** | 固定特定版本（例如 `:v0.8.6`），并使用 [Diun](#diun) 接收更新通知 |
+| **共享 / 团队实例** | 固定特定版本（例如 `:vX.Y.Z`），并使用 [Diun](#diun) 接收更新通知 |
 | **生产 / 关键系统** | 固定版本，升级前查看[发布说明](https://github.com/open-webui/open-webui/releases)，先在预发布环境测试 |
 
 ### `:main` 与固定版本
@@ -31,9 +31,9 @@ import TabItem from '@theme/TabItem';
 如果你更重视稳定性，请固定到具体的发行标签：
 
 ```
-ghcr.io/open-webui/open-webui:v0.10.1
-ghcr.io/open-webui/open-webui:v0.10.1-cuda
-ghcr.io/open-webui/open-webui:v0.10.1-ollama
+ghcr.io/open-webui/open-webui:vX.Y.Z
+ghcr.io/open-webui/open-webui:vX.Y.Z-cuda
+ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 ```
 
 你可以在 [GitHub releases 页面](https://github.com/open-webui/open-webui/releases) 查看所有可用标签。

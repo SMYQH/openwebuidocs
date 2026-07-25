@@ -44,14 +44,33 @@ docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui ghc
 | `:cuda` | 提供 Nvidia GPU 支持（需在 `docker run` 中加入 `--gpus all`） |
 | `:ollama` | 在容器内集成 Ollama，适合一体化部署 |
 
+### 标签更新机制
+
+`:main` 和 `:latest` 是**相同的滚动镜像**：两者都指向 `main` 分支的最新构建，每次有变更合入时都会重建，因此其摘要会随开发进展不断变化。注意 `:latest` 跟随 `main`，**不**指向最新的稳定版本。
+
+`:dev` 对 `dev` 分支（即将推出的功能）采用相同机制，也是滚动更新。
+
+版本标签（例如 `:vX.Y.Z` 以及简写 `:X.Y.Z` 和 `:X.Y`）是**固定的**，指向特定稳定发布版本，永不改变。`:git-<commit-sha>` 则固定到某个确切提交。
+
+这就是 `:main` 和特定发布标签可能同时显示不同镜像摘要的原因：`:main` 已包含该发布之后的所有合入内容，而版本标签始终保持不变。
+
+| 标签 | 指向 | 是否不可变？ |
+| :--- | :--- | :--- |
+| `:main`, `:latest` | `main` 分支的最新构建 | 否（滚动） |
+| `:dev` | `dev` 分支的最新构建 | 否（滚动） |
+| `:vX.Y.Z`, `:X.Y.Z`, `:X.Y` | 特定稳定发布版本 | 是 |
+| `:git-<sha>` | 某个确切提交 | 是 |
+
+对于可重现或生产部署，请固定到版本标签。如需最新构建，请使用 `:main`（或与之相同的 `:latest`）。
+
 ### 固定特定发布版本
 
-生产环境建议固定版本，而不是使用浮动标签：
+生产环境建议固定版本，而不是使用浮动标签。将 `X.Y.Z` 替换为 [releases 页面](https://github.com/open-webui/open-webui/releases) 中的版本号：
 
 ```bash
-docker pull ghcr.io/open-webui/open-webui:v0.10.1
-docker pull ghcr.io/open-webui/open-webui:v0.10.1-cuda
-docker pull ghcr.io/open-webui/open-webui:v0.10.1-ollama
+docker pull ghcr.io/open-webui/open-webui:vX.Y.Z
+docker pull ghcr.io/open-webui/open-webui:vX.Y.Z-cuda
+docker pull ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 ```
 
 ---
