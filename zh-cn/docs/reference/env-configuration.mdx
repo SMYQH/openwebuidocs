@@ -1814,7 +1814,7 @@ Open WebUI 有**两种彼此独立的模型缓存机制**：
   - `X-OpenWebUI-Chat-Id`
   - `X-OpenWebUI-Message-Id`
 
-这使外部服务能够按用户进行授权、审计、限流和请求追踪。聊天 ID 和消息 ID 标头也是 [外部工具事件发送](/features/extensibility/plugin/development/events#-external-tool-events) 所必需的。
+这使外部服务能够按用户进行授权、审计、限流和请求追踪。聊天 ID 和消息 ID 标头也是 [外部工具事件发送](/features/extensibility/plugin/development/events#external-tools-events) 所必需的。
 
 #### `FORWARD_USER_INFO_HEADER_USER_NAME`
 
@@ -1850,7 +1850,7 @@ Open WebUI 有**两种彼此独立的模型缓存机制**：
 
 - 类型：`str`
 - 默认值：`X-OpenWebUI-Message-Id`
-- 描述：自定义用于转发当前消息 ID 的标头名称。此标头也是 [外部工具事件发送](/features/extensibility/plugin/development/events#-external-tool-events) 所必需的。
+- 描述：自定义用于转发当前消息 ID 的标头名称。此标头也是 [外部工具事件发送](/features/extensibility/plugin/development/events#external-tools-events) 所必需的。
 
 :::tip 自定义标头前缀
 在集成需要特定标头命名规范的服务时使用这些变量。例如，AWS Bedrock AgentCore 要求标头带有 `X-Amzn-Bedrock-AgentCore-Runtime-Custom-` 前缀：
@@ -3991,6 +3991,10 @@ This variable is essential for the work/school integration. It should point to t
 
 This Tenant ID (also known as Directory ID) is required for the work/school integration. You can find this value on the main overview page of your Azure App Registration in the Microsoft Entra ID portal.
 
+:::
+
+## Web 搜索 {#web-search}
+
 #### `ENABLE_WEB_SEARCH`
 
 - 类型：`bool`
@@ -4614,6 +4618,8 @@ This **timeout only applies when `WEB_LOADER_ENGINE` is set to `safe_web`** or l
 :::
 
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
+
+## 音频 {#audio}
 
 #### `BYPASS_PYDUB_PREPROCESSING`
 

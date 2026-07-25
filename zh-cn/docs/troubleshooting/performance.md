@@ -89,7 +89,7 @@ Open WebUI 通过向数据库写入每个用户的 `last_active_at` 时间戳来
 - **默认值**：未设置（**无限流——每个请求都写入**）
 - **建议**：设置一个正整数秒数——`300`–`600` 都是不错的范围。它可以把数千次写入压缩到每个用户每个间隔最多一次。对任何环境都是**免费获得的性能提升**，对大型/生产环境**几乎可以说是必需的**；不设置是一个常见但完全可以避免的数据库瓶颈。在弱硬件上也**没有**副作用——它只会*减少*写入次数。详见 [`DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL`](/reference/env-configuration#database_user_active_status_update_interval)。
 
-### 数据库会话共享
+### 数据库会话共享 {#database-session-sharing}
 从 v0.7.1 开始，Open WebUI 提供数据库会话共享功能，在高并发下可减少频繁新建 session 的开销。
 
 - **Env Var**：`DATABASE_ENABLE_SESSION_SHARING`
@@ -185,7 +185,7 @@ Open WebUI 通过向数据库写入每个用户的 `last_active_at` 时间戳来
 
 ---
 
-## ⚡ 高并发与网络优化
+## ⚡ 高并发与网络优化 {#-high-concurrency--network-optimization}
 
 当同时在线用户较多时，下列设置很容易成为关键瓶颈。
 

@@ -271,7 +271,7 @@ S3_REGION_NAME=us-east-1
 
 ---
 
-## 第 6 步——修复内容提取与 Embeddings 默认配置
+## 第 6 步——修复内容提取与 Embeddings 默认配置 {#step-6-fix-content-extraction--embeddings}
 
 **何时需要：** 你在生产环境中会持续处理文档（RAG、知识库等）时。
 

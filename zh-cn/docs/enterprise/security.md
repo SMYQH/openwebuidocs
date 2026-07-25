@@ -96,7 +96,7 @@ Open WebUI 的已发布制品是从 [open-webui/open-webui](https://github.com/o
 
 自动化供应链扫描器（例如 socket.dev）会定期针对软件包提出行为风险指标、未确认的分类以及许可证或维护者评分。这些反映的是软件的设计能力及元数据产物，而非已确认的漏洞或恶意代码。如果你的审查中出现此类标记，[供应链与安全扫描器](/security/supply-chain-security) 解释了我们对每个类别的立场以及如何解读。第三方依赖项通过日常维护进行跟踪和更新。
 
-### 代码执行与沙箱化
+### 代码执行与沙箱化 {#code-execution--sandboxing}
 
 Open WebUI 中的服务器端代码执行受到明确的管理员操作控制，不会暴露给任意用户：
 

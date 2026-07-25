@@ -249,7 +249,7 @@ await __event_emitter__(
 
 ---
 
-### `embeds` 或 `chat:message:embeds`
+### `embeds` 或 `chat:message:embeds` {#embeds-or-chatmessageembeds}
 
 将 Rich UI iframe 附加到助手消息上。`embeds` 列表中的每个条目是一个**字符串**，直接传给 embed iframe 的 `src`/`srcdoc`：
 
@@ -540,7 +540,7 @@ result = await __event_call__(
 
 ---
 
-### `execute`（同时适用于 `__event_call__` 和 `__event_emitter__`） {#execute-works-with-both-__event_call__-and-__event_emitter__}
+### `execute`（同时适用于 `__event_call__` 和 `__event_emitter__`） {#execute-event}
 
 **直接在用户浏览器中运行 JavaScript。**
 
@@ -752,7 +752,7 @@ response = await __event_call__({
 ### 问：`__event_call__` 可用哪些事件类型？
 - `"input"`：输入框对话框
 - `"confirmation"`：是/否、确定/取消对话框
-- `"execute"`：在客户端运行提供的代码并返回结果（也可与 `__event_emitter__` 配合用于发出即忘——见上方 [execute](#execute-works-with-both-__event_call__-and-__event_emitter__)）
+- `"execute"`：在客户端运行提供的代码并返回结果（也可与 `__event_emitter__` 配合用于发出即忘——见上方 [execute](#execute-event)）
 
 ### 问：我可以更新附加在消息上的文件吗？
 可以——使用 `"files"` 或 `"chat:message:files"` 事件类型，并传入 `{files: [...]}` 载荷。
@@ -765,7 +765,7 @@ response = await __event_call__({
 
 ---
 
-## 🌐 外部工具事件
+## 🌐 外部工具事件 {#external-tools-events}
 
 外部工具（OpenAPI 和 MCP 服务器）可以通过 REST 端点向 Open WebUI UI 发出事件。这使得运行在外部服务器上的工具也能实现状态更新、通知和流式内容等功能。
 
@@ -921,7 +921,7 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 - Open WebUI 服务进程重启
 :::
 
-### 哪些事件类型会持久化到数据库？
+### 哪些事件类型会持久化到数据库？ {#which-event-types-are-persisted-to-the-database}
 
 事件发射器会直接把某些事件类型写入数据库，**不管当前是否连接着浏览器**。这些写入与 `ENABLE_REALTIME_CHAT_SAVE` 设置无关。
 

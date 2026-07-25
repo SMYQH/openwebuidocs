@@ -203,7 +203,7 @@ if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], HTML
 
 当 `allowSameOrigin` **开启**时（通过用户设置 `iframeSandboxAllowSameOrigin`），父页面可以直接测量 iframe 的内容高度并自动调整大小——你的 HTML 中不需要任何脚本。不过，这会带来安全上的权衡（见下文）。
 
-## 沙箱与安全性
+## 沙箱与安全性 {#sandbox-and-security}
 
 嵌入的 iframe 运行在 [sandbox](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe#sandbox) 中。以下沙箱标志默认始终启用：
 
@@ -244,7 +244,7 @@ if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], HTML
 
 如果你的 Rich UI 嵌入需要触发下载、与 Open WebUI 前端交互，或执行会影响父页面的 JavaScript，**就必须开启同源 iframe 访问**。请在 **设置 → 界面 → Iframe 同源访问** 中启用它。
 
-如果你只是需要一些临时交互，并且需要完整页面访问权限，可以考虑改用 [`execute` 事件](/features/extensibility/plugin/development/events#execute-works-with-both-__event_call__-and-__event_emitter__)，它会在主页面上下文中以未沙箱化的方式运行。
+如果你只是需要一些临时交互，并且需要完整页面访问权限，可以考虑改用 [`execute` 事件](/features/extensibility/plugin/development/events#execute-event)，它会在主页面上下文中以未沙箱化的方式运行。
 :::
 
 :::tip 社区展示：开启同源后的流式 Rich UI
@@ -392,7 +392,7 @@ Rich UI 嵌入可以通过三种消息类型与聊天输入框交互：
 
 ## 富 UI 嵌入与 `execute` 事件
 
-Rich UI 嵌入与 [`execute` 事件](/features/extensibility/plugin/development/events#execute-works-with-both-__event_call__-and-__event_emitter__) 是创建交互体验的两种互补方式。请根据需求选择：
+Rich UI 嵌入与 [`execute` 事件](/features/extensibility/plugin/development/events#execute-event) 是创建交互体验的两种互补方式。请根据需求选择：
 
 | | Rich UI 嵌入 | `execute` 事件 |
 |---|---|---|

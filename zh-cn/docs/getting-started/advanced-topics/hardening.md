@@ -49,7 +49,7 @@ DDoS 防护和暴力破解防护（限速、连接节流、fail2ban）应由代�
 
 ---
 
-## 认证与注册
+## 认证与注册 {#authentication-and-signup}
 
 ### 注册 {#registration}
 
@@ -110,7 +110,7 @@ ENABLE_PASSWORD_CHANGE_FORM=false
 
 ---
 
-## 会话与 Cookie 安全
+## 会话与 Cookie 安全 {#session-and-cookie-security}
 
 ### Cookie 设置 {#cookie-settings}
 
@@ -338,7 +338,7 @@ LDAP_CA_CERT_FILE=/path/to/ca-cert.pem
 
 ---
 
-## 数据库
+## 数据库 {#database}
 
 ### PostgreSQL {#postgresql}
 
@@ -518,7 +518,7 @@ AUDIT_EXCLUDED_PATHS=/chats,/chat,/folders
 
 ---
 
-## 网络与外发请求
+## 网络与外发请求 {#network-and-outbound-requests}
 
 ### 外发 TLS {#outbound-tls}
 
@@ -599,7 +599,7 @@ IFRAME_CSP=default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect
 
 上面的示例允许内联脚本在沙箱内运行（大多数 artifacts 需要），但阻止所有 `fetch`/`XMLHttpRequest`/`WebSocket` 流量，适用于你不想让模型通过生成的 artifact 泄露会话数据的场景。请根据实际情况收紧或放宽；过于严格的策略会破坏合法的 artifacts。
 
-### 文件上传限制
+### 文件上传限制 {#file-upload-limits}
 
 默认情况下，上传文件既没有大小限制，也没有数量限制。为防止存储被占满，建议设置：
 
@@ -651,7 +651,7 @@ CODE_INTERPRETER_ENGINE=pyodide
 
 默认引擎是 `pyodide`，它通过 WebAssembly 在浏览器中运行 Python，不会在服务器上执行代码。如果你切换到 Jupyter（`jupyter`），代码就会在 Jupyter 服务器端运行，也就具备服务端访问权限。如果使用此引擎，请务必额外保护好 Jupyter 实例。
 
-### 安全模式
+### 安全模式 {#safe-mode}
 
 如果某个 Function 在启动时导致问题，你可以通过安全模式禁用全部 Functions：
 
@@ -708,7 +708,7 @@ docker build --build-arg UID=1000 --build-arg GID=1000 .
 docker build --build-arg USE_PERMISSION_HARDENING=true .
 ```
 
-### 数据目录
+### 数据目录 {#data-directory}
 
 数据目录（`/app/backend/data`）包含数据库、上传文件、缓存插件以及自动生成的密钥。请使用合适的文件系统权限保护该目录，并将它纳入你的备份策略。
 
@@ -799,7 +799,7 @@ docker pull ghcr.io/open-webui/open-webui:main
 
 ---
 
-## 安全优先的部署基线
+## 安全优先的部署基线 {#security-first-deployment}
 
 对于把安全放在首位的组织，以下做法构成推荐部署基线。每一项都覆盖部署中的不同层面，组合起来可以形成纵深防御。括号中的链接可跳转到上文对应配置章节。
 

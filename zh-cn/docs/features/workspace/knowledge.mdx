@@ -85,7 +85,7 @@ title: "知识库"
 
 关键区别：`list_knowledge` 和 `list_knowledge_bases` 互斥。附加知识库会将模型范围限定为只处理那些文档。不附加则让模型发现用户有权访问的所有内容。
 
-#### 何时优先使用 `grep_knowledge_files` 而非 `query_knowledge_files`
+#### 何时优先使用 `grep_knowledge_files` 而非 `query_knowledge_files` {#when-to-prefer-grep_knowledge_files-over-query_knowledge_files}
 
 两个搜索工具互为补充：
 
@@ -108,7 +108,7 @@ title: "知识库"
 
 行号范围响应包含 `total_lines`、`showing_lines` 和 `next_start_line`，便于继续读取。
 
-### 类文件系统访问（`kb_exec`）
+### 类文件系统访问（`kb_exec`） {#filesystem-style-access-kb_exec}
 
 设置 [`ENABLE_KB_EXEC=True`](/reference/env-configuration#enable_kb_exec) 后，Open WebUI 会暴露一个 `kb_exec` 工具，为模型提供对知识库的类文件系统接口。
 
@@ -228,14 +228,14 @@ find docs/ "*.md" | head -10
 
 - **检索与标准 RAG** 仍然覆盖整个知识库。目录不会切分向量索引；任意子目录中的片段在单次搜索中仍然可达。
 - **智能体工具** 具有目录感知能力：
-  - `kb_exec`（启用时）把子目录当作文件系统：`ls docs/`、`tree`、`grep "x" docs/`、以及路径式引用（`docs/api/auth.md`）都可用——参见下方的[类文件系统访问（`kb_exec`）](#类文件系统访问kb_exec)。
+  - `kb_exec`（启用时）把子目录当作文件系统：`ls docs/`、`tree`、`grep "x" docs/`、以及路径式引用（`docs/api/auth.md`）都可用——参见下方的[类文件系统访问（`kb_exec`）](#filesystem-style-access-kb_exec)。
   - 其他知识工具（`query_knowledge_files`、`grep_knowledge_files`、`search_knowledge_files`）忽略目录边界，从整个知识库返回匹配结果。
 
 ### 重命名文件
 
 单个文件可以在工作区中通过文件项菜单原地重命名——无需重新上传。新名称会在所有引用该文件的地方（知识库列表、智能体工具输出、引用）反映出来。
 
-### 同步本地目录
+### 同步本地目录 {#syncing-a-local-directory}
 
 **添加内容 → 同步目录** 操作会**增量地**把本地文件夹镜像到知识库：客户端对每个本地文件做哈希（SHA-256），服务端将哈希和路径与已存储内容对比，只处理**新增**、**修改**和**已删除**的文件。未修改的文件（通常是大多数）原样保留——不会重新上传或重新嵌入。本地文件夹的子目录结构会镜像到知识库中；缺失的子目录会被创建，本地不再存在的子目录会被移除。
 
@@ -250,7 +250,7 @@ find docs/ "*.md" | head -10
 - 本地删除的文件会在清理步骤中从知识库中删除。
 - 该操作对未修改的文件是**非破坏性**的。早期版本中的相同菜单操作曾会清空并重新上传所有内容——自 v0.9.6 起已不再如此。
 
-对于编程使用，相同的工作流通过下方的[API 访问](#api-访问)中两个端点暴露。
+对于编程使用，相同的工作流通过下方的[API 访问](#api-access)中两个端点暴露。
 
 :::tip 同步远程源或按计划同步
 应用内的**同步目录**操作处理的是你机器上的本地文件夹。要镜像**远程**源（GitHub 仓库、Confluence 空间、S3 桶以及[更多](/ecosystem/knowledge-base-sync#sources-and-connectors)），或按计划/在每次推送时**自动**保持知识库最新，请使用官方的 [**Knowledge Base Sync (oikb)**](/ecosystem/knowledge-base-sync) 配套工具。它会驱动这些相同的端点来完成任务。
@@ -260,7 +260,7 @@ find docs/ "*.md" | head -10
 
 管理员可以通过项目菜单（三点）> **导出**将整个知识库导出为 zip 文件。文件转换为 `.txt` 以确保通用兼容性。普通用户不会看到导出选项。
 
-### API 访问
+### API 访问 {#api-access}
 
 知识库可以通过编程方式管理：
 

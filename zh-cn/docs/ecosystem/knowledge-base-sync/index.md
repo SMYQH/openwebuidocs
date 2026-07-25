@@ -162,7 +162,7 @@ oikb config get                    # 显示已保存的内容（令牌会被掩�
 
 ---
 
-## 来源与连接器
+## 来源与连接器 {#sources-and-connectors}
 
 **来源**可以是本地路径，也可以是 `scheme:target` 格式的字符串。oikb 将 scheme 解析为对应的连接器，拉取文件并将其同步到知识库。凭据永远不会写入来源字符串或 `.oikb.yaml` 中；每个连接器从**环境变量**中读取凭据，因此密钥不会出现在你的配置中（配合 [`${VAR}` 插值](/ecosystem/knowledge-base-sync/daemon#the-oikbyaml-config-file)使用，可使配置文件可提交）。
 
@@ -274,7 +274,7 @@ oikb watch ./docs --kb-id your-kb-id
 
 ---
 
-## CI 中的一次性同步
+## CI 中的一次性同步 {#one-shot-sync-in-ci}
 
 Docker 镜像可以作为一次性命令运行，使其成为[GitHub Actions](/ecosystem/knowledge-base-sync/daemon#deployment) 中一个即插即用的步骤，用于在每次合并时将文档推送到知识库：
 

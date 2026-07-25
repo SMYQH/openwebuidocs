@@ -144,7 +144,7 @@ class Filter:
 
 ---
 
-### 🛠️ 通过 `file_handler` 接管检索
+### 🛠️ 通过 `file_handler` 接管检索 {#file-handler-retrieval}
 
 默认情况下，当用户在聊天中挂载知识集合或上传文件时，Open WebUI 会在**所有 inlet filter 全部返回之后**才运行内置 RAG 流程：chat-completion 处理程序会基于用户的最后一条消息在向量库中查询相关 chunk，把它们包进 `<source>` 标签，再追加到最后一条用户消息（或者，根据 `RAG_SYSTEM_CONTEXT`，追加到系统消息）中，最后才调用 LLM。
 
@@ -223,7 +223,7 @@ Open WebUI 读取的是**模块对象**上的 `file_handler`（也就是 filter 
 
 ---
 
-## ⚙️ Filter 管理与配置
+## ⚙️ Filter 管理与配置 {#filter-administration--configuration}
 
 ### 🌐 全局 Filter 与模型专属 Filter
 
@@ -463,7 +463,7 @@ class WebSearchFilter:
 
 ---
 
-### 📡 Filter 在 API 请求中的行为
+### 📡 Filter 在 API 请求中的行为 {#filter-behavior-with-api-requests}
 
 当你直接使用 Open WebUI 的 API 端点（例如通过 `curl` 或外部应用）时，`inlet()` 和 `stream()` 的执行模型与 WebUI 请求相同。真正不同的是 `outlet()`：它在直接 API 调用时的行为会有明显差异，下面会详细说明。
 
@@ -1010,7 +1010,7 @@ class Filter:
 修改并返回 `body`。LLM 处理的是修改后的 `body`，所以这是你为输入补充清晰度、结构和上下文的机会。
 
 :::info 想转换 RAG chunk？`inlet()` 在检索之前运行
-在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件/集合的**引用**——真正的 chunk 文本会在所有 inlet filter 全部返回之后才被取出并注入。如果你要检查或转换 chunk 本体（PII 脱敏、重排序、翻译、chunk 级 ACL），请参阅[通过 `file_handler` 接管检索](#通过-file_handler-接管检索) 了解官方支持的开关。
+在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件/集合的**引用**——真正的 chunk 文本会在所有 inlet filter 全部返回之后才被取出并注入。如果你要检查或转换 chunk 本体（PII 脱敏、重排序、翻译、chunk 级 ACL），请参阅[通过 `file_handler` 接管检索](#file-handler-retrieval) 了解官方支持的开关。
 :::
 
 ##### 🍳 为什么要使用 `inlet`？
@@ -1154,7 +1154,7 @@ async def stream(self, event: dict) -> dict:
 - **质量评分** —— 对模型输出执行自动化质量检查
 
 :::info Outlet 与 API 请求
-对于直接的 `/api/chat/completions` 调用，`outlet()` **无法可靠运行**。在标记发布版中，该端点从不会触发它；在 `dev` 中它可以内联运行，但前提是调用方提供 `chat_id` + `id`、拥有该聊天、并使用非流式请求——即便如此，过滤后的内容也不会返回到 HTTP 响应中。对于需要 `outlet()` 的直接 API 集成，请在调用 `/api/chat/completions` 后再发起 `POST /api/chat/completed`。完整情况请参阅 [Filter Behavior with API Requests](#-filter-behavior-with-api-requests)。
+对于直接的 `/api/chat/completions` 调用，`outlet()` **无法可靠运行**。在标记发布版中，该端点从不会触发它；在 `dev` 中它可以内联运行，但前提是调用方提供 `chat_id` + `id`、拥有该聊天、并使用非流式请求——即便如此，过滤后的内容也不会返回到 HTTP 响应中。对于需要 `outlet()` 的直接 API 集成，请在调用 `/api/chat/completions` 后再发起 `POST /api/chat/completed`。完整情况请参阅 [Filter Behavior with API Requests](#filter-behavior-with-api-requests)。
 :::
 
 💡 **示例用法**：把不希望用户看到的敏感 API 响应内容去掉：

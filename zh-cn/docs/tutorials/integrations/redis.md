@@ -13,7 +13,7 @@ title: "Redis WebSocket 支持"
 
 本文介绍将 Redis 与 Open WebUI 集成以支持 WebSocket 所需的步骤。按照这些步骤操作，您将能够在 Open WebUI 实例中启用 WebSocket 功能，实现客户端与应用之间的实时通信和更新。
 
-## 何时需要 Redis？
+## 何时需要 Redis？ {#when-is-redis-required}
 
 Redis 在 Open WebUI 中服务于两个不同的目的，了解何时需要它对于正确部署至关重要。有关所有扩展要求（PostgreSQL、Redis、向量数据库、存储）的高层概述，请参阅 [扩展 Open WebUI](/getting-started/advanced-topics/scaling) 指南。
 
@@ -69,7 +69,7 @@ Redis 在 Open WebUI 中服务于两个不同的目的，了解何时需要它�
 - 用于 Open WebUI 和 Redis 通信的 Docker 网络
 - 对 Docker、Redis 和 Open WebUI 有基本了解
 
-### 关键：Redis 服务器配置
+### 关键：Redis 服务器配置 {#critical-redis-server-configuration}
 
 :::danger
 
@@ -209,7 +209,7 @@ networks:
 
 :::
 
-### WebSocket Pub/Sub 缓冲区限制
+### WebSocket Pub/Sub 缓冲区限制 {#websocket-pubsub-buffer-limits}
 
 当 `WEBSOCKET_MANAGER=redis` 启用时，Open WebUI 通过 Redis Pub/Sub 使用 Socket.IO。流式响应和工具事件可能产生较大的 WebSocket 事件，因为部分更新会包含累积的消息状态，而不仅仅是最新的 token 增量。如果 Redis 在传递这些事件时断开了 Pub/Sub 客户端，用户可能会看到流停滞、实时更新丢失，或日志中出现类似以下的消息：
 
@@ -248,7 +248,7 @@ redis-cli CONFIG GET client-output-buffer-limit
 docker network create openwebui-network
 ```
 
-## 配置 Open WebUI
+## 配置 Open WebUI {#configuring-open-webui}
 
 要在 Open WebUI 中启用 Redis 支持，需要根据部署类型配置不同的环境变量。
 
@@ -585,7 +585,7 @@ docker exec -it redis redis-cli --scan --pattern "open-webui*"
 
 如果随机被登出或看到身份验证错误，Redis 可能未正确配置。
 
-## 故障排除
+## 故障排除 {#troubleshooting}
 
 ### 常见问题与解决方案
 
@@ -681,7 +681,7 @@ REDIS_KEY_PREFIX="openwebui-dev"
    docker exec -it redis redis-cli info keyspace   # 每个 DB 的键数量
    ```
 
-2. 确认 `timeout` 已设置（空闲连接累积也会表现为内存增长），参见[关键：Redis 服务器配置](#关键redis-服务器配置)部分。
+2. 确认 `timeout` 已设置（空闲连接累积也会表现为内存增长），参见[关键：Redis 服务器配置](#critical-redis-server-configuration)部分。
 
 3. 如果必须限制内存，请同时设置 `maxmemory` 上限并搭配 **`noeviction`**，这样 Redis 会大声报错而不是丢弃认证/会话状态，然后对 `used_memory` 设置告警：
 

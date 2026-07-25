@@ -49,7 +49,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
 数据库迁移不能在 Open WebUI 仍然运行时执行。手动迁移前，**必须**先停止所有 Open WebUI 进程。
 :::
 
-## 第 1 步：创建并验证备份
+## 第 1 步：创建并验证备份 {#step-1-create-and-verify-backup}
 
 ### 备份数据库
 
@@ -155,7 +155,7 @@ cd /path/to/open-webui/backend/open_webui  # 本地
 ls -la alembic.ini
 ```
 
-### 设置必需环境变量
+### 设置必需环境变量 {#set-required-environment-variables}
 
 <Tabs groupId="install-type">
   <TabItem value="docker" label="Docker" default>

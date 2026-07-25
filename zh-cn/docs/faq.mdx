@@ -253,7 +253,7 @@ def wait_for_processing(token, file_id):
 **答：** 支持。Open WebUI 原生支持 **MCP Streamable HTTP**，可直接、一等公民地集成通过标准 HTTP 传输通信的 MCP 工具。对于**其他 MCP 传输方式或非 HTTP 实现**，请使用我们的官方代理适配器 **MCPO**，地址见 👉 [https://github.com/open-webui/mcpo](https://github.com/open-webui/mcpo)。MCPO 提供统一、兼容 OpenAPI 的中间层，可把其他 MCP 传输方式稳定且安全地桥接到 Open WebUI。这样的架构能在不同环境下最大化兼容性、保持严格的安全边界，并让工具行为更可预测，同时维持 Open WebUI 后端无关、易于维护的设计。
 
 <span id="q-why-doesnt-open-webui-natively-support-provider-xs-proprietary-api"></span>
-### 问：为什么 Open WebUI 不原生支持某个提供商的专有 API？
+### 问：为什么 Open WebUI 不原生支持某个提供商的专有 API？ {#q-why-doesnt-open-webui-natively-support-provider-xs-proprietary-api}
 
 **答：** Open WebUI 采用高度模块化设计，提供了包括 tools、functions，尤其是 **[pipes](/features/extensibility/plugin/functions/pipe)** 在内的插件系统。通过这些模块化 pipe，你几乎可以为任何你想接入的提供商添加支持——可以自己构建，也可以直接使用许多已经存在、通常维护得不错的[社区方案](https://openwebui.com/)。
 

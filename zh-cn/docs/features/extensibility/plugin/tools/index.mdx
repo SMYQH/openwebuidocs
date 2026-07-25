@@ -107,7 +107,7 @@ Tools 是你扩展 LLM 能力、超越简单文本生成的各种方式。启用
 :::danger Native 是 v0.10.0 起的默认值；"Legacy"（原名 "Default"）是不受支持的选择退出选项
 **Native（Agentic）模式现在是默认值。** 从 **v0.10.0** 起，每个未明确选择工具调用模式的聊天和模型都会运行 **Native** 模式，该模式依赖于模型内置的函数调用支持。旧的提示注入方法，之前称为 **Default**，现已更名为 **Legacy**。它是一个明确的选择退出选项，并且仍然**不受支持**：没有功能更新、没有错误修复、没有内置系统工具，并且与现代 Open WebUI 功能不兼容（Agentic Research、交错思考、内置 Memory/Notes/Knowledge/Channels 工具、网络搜索/图像生成/代码解释器工具注入）。
 
-**重大变更：** 如果你的任何模型依赖于旧的基于提示的行为，它们现在将运行 Native 模式，除非你将其切换回 **Legacy** 模式，[按对话、按模型或在全局模型参数中设置](#如何将所有模型切换到-legacy-模式)。如果某个模型在 Native 模式下有问题，正确的解决方法是选择更好的工具调用模型，而不是回退到 Legacy。
+**重大变更：** 如果你的任何模型依赖于旧的基于提示的行为，它们现在将运行 Native 模式，除非你将其切换回 **Legacy** 模式，[按对话、按模型或在全局模型参数中设置](#enable-legacy-for-all-models)。如果某个模型在 Native 模式下有问题，正确的解决方法是选择更好的工具调用模型，而不是回退到 Legacy。
 :::
 
 Open WebUI 在**模型设置 → 高级参数 → 函数调用**中提供两种模式：**Native 模式（Agentic 模式）**——唯一受支持的模式——以及 **Legacy 模式（原名 Default）**，仅为向后兼容性保留在 UI 中。
@@ -180,11 +180,11 @@ Native 模式从 v0.10.0 起是**默认值**，因此新模型和现有模型都
     *   在**高级参数**下，将**函数调用**设置为 `Native`。仅适用于该对话。
 
 :::tip 全局设置任何参数——一次性，适用于所有模型
-**全局模型参数**面板（**管理面板 → 设置 → 模型**右上角的**设置**按钮）让你配置任何模型参数——`function_calling`、temperature、top_p、max_tokens 等——**一次性，适用于 Open WebUI 实例中的每个模型**，除非特定模型覆盖它们。就工具调用而言，你很少需要它：Native 已经是默认值。你可能会在这里设置的唯一工具调用开关是 `Function Calling = Legacy`，以将整个实例回退到 Legacy（参见[如何将所有模型切换到 Legacy 模式](#如何将所有模型切换到-legacy-模式)）。
+**全局模型参数**面板（**管理面板 → 设置 → 模型**右上角的**设置**按钮）让你配置任何模型参数——`function_calling`、temperature、top_p、max_tokens 等——**一次性，适用于 Open WebUI 实例中的每个模型**，除非特定模型覆盖它们。就工具调用而言，你很少需要它：Native 已经是默认值。你可能会在这里设置的唯一工具调用开关是 `Function Calling = Legacy`，以将整个实例回退到 Legacy（参见[如何将所有模型切换到 Legacy 模式](#enable-legacy-for-all-models)）。
 :::
 
 :::info 更喜欢环境变量？使用 `DEFAULT_MODEL_PARAMS`
-如果你完全通过环境变量来配置实例，`DEFAULT_MODEL_PARAMS` 可以设置相同的全局默认值。`function_calling` 是它内部的一个键；没有独立的 `FUNCTION_CALLING_MODE`（或类似）变量。由于 Native 是默认值，这里唯一值得设置的值是 `"legacy"`（将整个实例切换到 Legacy，参见[上文](#如何将所有模型切换到-legacy-模式)）：
+如果你完全通过环境变量来配置实例，`DEFAULT_MODEL_PARAMS` 可以设置相同的全局默认值。`function_calling` 是它内部的一个键；没有独立的 `FUNCTION_CALLING_MODE`（或类似）变量。由于 Native 是默认值，这里唯一值得设置的值是 `"legacy"`（将整个实例切换到 Legacy，参见[上文](#enable-legacy-for-all-models)）：
 
 ```yaml
 DEFAULT_MODEL_PARAMS: '{"function_calling": "legacy"}'

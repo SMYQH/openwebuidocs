@@ -6,7 +6,7 @@
 		"docusaurus": "docusaurus",
 		"start": "docusaurus start",
 		"build": "docusaurus build",
-		"postbuild": "node scripts/generate-raw-docs.mjs && node scripts/generate-search-corpus.mjs && node scripts/generate-llms-files.mjs",
+		"postbuild": "node scripts/generate-raw-docs.mjs && node scripts/generate-search-corpus.mjs && node scripts/generate-llms-files.mjs && node scripts/sync-sitemap.mjs",
 		"raw-docs": "node scripts/generate-raw-docs.mjs",
 		"search-corpus": "node scripts/generate-search-corpus.mjs",
 		"llms-files": "node scripts/generate-llms-files.mjs",

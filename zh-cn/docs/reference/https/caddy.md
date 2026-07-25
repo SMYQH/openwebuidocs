@@ -108,7 +108,7 @@ docker compose up -d
 
 现在你应该可以通过 `https://your-domain.com` 访问 Open WebUI。
 
-## 可选：通过反向代理设置安全头
+## 可选：通过反向代理设置安全头 {#optional-security-headers-via-reverse-proxy}
 
 Open WebUI 支持直接在应用层通过环境变量设置安全头（推荐路径——参见 [Security Headers](/getting-started/advanced-topics/hardening#security-headers)）。如果你在同一台 Caddy 实例后面托管了多个应用，或者你的部署不允许直接修改环境变量，也可以选择在代理层设置这些头。
 

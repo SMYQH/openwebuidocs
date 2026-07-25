@@ -22,7 +22,7 @@ oikb daemon
 
 ---
 
-## `.oikb.yaml` 配置文件
+## `.oikb.yaml` 配置文件 {#the-oikbyaml-config-file}
 
 命令行上的单个来源不需要配置文件。对于多个来源、定时调度、webhook 或守护进程，你需要在 `.oikb.yaml` 中描述所有内容。使用 `oikb init` 交互式生成，或手动编写：
 
@@ -119,7 +119,7 @@ curl -X POST http://localhost:8080/sync/wiki \
 
 ---
 
-## Webhook
+## Webhook {#webhooks}
 
 为条目启用 `webhook: true` 后，守护进程会在来源发生变化的瞬间进行同步，而无需等待下一次定时调度。推送负载通过仓库或空间匹配到正确的条目，因此一个守护进程可以为多个来源提供服务。
 
@@ -202,7 +202,7 @@ oikb history --clear --days 7   # 清理超过 7 天的记录
 
 ---
 
-## 让模型触发同步
+## 让模型触发同步 {#let-the-model-trigger-syncs}
 
 守护进程也是一个 **[OpenAPI 工具服务器](/features/extensibility/mcp)**。将 Open WebUI 指向它，模型就可以在聊天过程中通过工具调用来触发同步、检查状态和读取同步历史记录：
 
@@ -229,7 +229,7 @@ oikb history --clear --days 7   # 清理超过 7 天的记录
 
 ---
 
-## 部署
+## 部署 {#deployment}
 
 ### Docker
 

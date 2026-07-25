@@ -116,7 +116,7 @@ print(response.json())
 
 有关完整的端点参考——对话补全、Ollama 代理、RAG、文件管理等——请参阅 [API 端点](/reference/api-endpoints)。
 
-### 反向代理消耗了 `Authorization` 怎么办？
+### 反向代理消耗了 `Authorization` 怎么办？ {#behind-a-reverse-proxy-that-consumes-authorization}
 
 如果 Open WebUI 部署在使用 `Authorization` 头进行自身认证的网关之后（basic auth、SSO sidecar、企业 API 网关、mutual-TLS 适配器等），客户端可以改用一个专用 header 来传递 API key。中间件会按以下顺序检查：`Authorization: Bearer`、`token` cookie，以及一个可配置的自定义 header。
 

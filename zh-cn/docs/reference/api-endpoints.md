@@ -399,7 +399,7 @@ curl -X POST http://localhost:3000/ollama/v1/responses \
 这非常适合使用 Ollama 模型在 Open WebUI 后端构建搜索索引、检索系统或自定义流水线。
 
 <a id="-retrieval-augmented-generation-rag"></a>
-### 🧩 检索增强生成（RAG）
+### 🧩 检索增强生成（RAG） {#-retrieval-augmented-generation-rag}
 
 检索增强生成（RAG）功能允许你将外部数据源内容融入到响应中。以下介绍如何通过 API 管理文件和知识库集合，以及如何在聊天补全中有效使用它们。
 

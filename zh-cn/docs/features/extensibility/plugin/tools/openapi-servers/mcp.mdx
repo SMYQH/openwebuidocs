@@ -50,7 +50,7 @@ mcpo 则解决了这些问题：
 ✨ 借助 mcpo，你那些原本只能本地使用的 AI 工具，通常无需改动 server 代码，就能立刻变成适合云端部署、界面接入和互操作的能力。
 
 :::tip
-**支持的 Events：** 虽然 mcpo 会把 MCP tools 暴露为 OpenAPI endpoints，但它们依然可以通过 Open WebUI 的 [event REST endpoint](/features/extensibility/plugin/development/events#-external-tool-events) 发出事件（如状态更新、通知）。Open WebUI 会自动传递所需的 `X-Open-WebUI-Chat-Id` 和 `X-Open-WebUI-Message-Id` headers。不过，要求用户输入的交互式事件仍然只对原生 Python tools 可用。
+**支持的 Events：** 虽然 mcpo 会把 MCP tools 暴露为 OpenAPI endpoints，但它们依然可以通过 Open WebUI 的 [event REST endpoint](/features/extensibility/plugin/development/events#external-tools-events) 发出事件（如状态更新、通知）。Open WebUI 会自动传递所需的 `X-Open-WebUI-Chat-Id` 和 `X-Open-WebUI-Message-Id` headers。不过，要求用户输入的交互式事件仍然只对原生 Python tools 可用。
 :::
 
 ### ✅ 快速开始：在本地运行代理

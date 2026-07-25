@@ -37,7 +37,7 @@ sidebar_position: 3
 
 想要一个通知？添加一个通知目标一次，然后在任务的提示词中设置条件（"仅在失败时通知我"）：代理有一个通知工具，并自行决定何时使用它。每个完成/失败运行的全面事件通知也存在。参见[通知和 webhook](./notifications)。
 
-## 使用 webhook 触发任务
+## 使用 webhook 触发任务 {#trigger-a-task-with-a-webhook}
 
 任何定时任务也可以从外部启动（CI、cron 作业、其他服务），无需浏览器会话：
 

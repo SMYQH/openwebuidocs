@@ -572,7 +572,7 @@ docker exec -it open-webui /bin/sh
 | created_at      | BigInteger    | -               | Creation timestamp       |
 | updated_at      | BigInteger    | -               | Last update timestamp    |
 
-## Message 表
+## Message 表 {#message-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**                     |
 | --------------- | ------------- | --------------- | ----------------------------------- |
@@ -1107,7 +1107,7 @@ erDiagram
 
 ---
 
-## 使用 SQLCipher 加密数据库
+## 使用 SQLCipher 加密数据库 {#database-encryption-with-sqlcipher}
 
 为了增强安全性，Open WebUI 支持使用 SQLCipher 对其主 SQLite 数据库进行静态加密。对于处理敏感数据且不需要使用更大数据库（如 PostgreSQL）的部署，建议使用此功能。
 

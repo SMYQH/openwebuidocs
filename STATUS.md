@@ -20,6 +20,8 @@
 
 ## Deployment Configuration
 
+- **2026-07-25**: Added build-time sitemap synchronization. `zh-cn/scripts/sync-sitemap.mjs` downloads the official `https://docs.openwebui.com/sitemap.xml`, rewrites its origin from the `DOMAIN` secret, and publishes it as `zh-cn/build/sitemap.xml`. Docusaurus's built-in sitemap is disabled to prevent conflicting output.
+- **2026-07-25**: Enabled strict broken-anchor validation with `onBrokenAnchors: "throw"`; production builds now fail on broken links or anchors.
 - **2026-07-25**: Switched Chinese site deployment to GitHub Actions CI/CD → Cloudflare Workers. Workflow: `.github/workflows/deploy.yml`. Required repository secrets: `DOMAIN` (site URL), `TOKEN` (Cloudflare API Token), `ID` (Cloudflare Account ID). Triggers on push to `main` (relevant paths) and `workflow_dispatch`.
 - **2026-07-22**: Added root-level Cloudflare Workers configuration for the Chinese site (`wrangler.jsonc` assets from `zh-cn/build/`).
 
@@ -32,6 +34,15 @@
 | `en-us/docs/security/vendor-dispositions/_category_.json` | Added for zh-cn (📄 Vendor Dispositions) |
 
 ## Fixed Issues
+
+### 2026-07-25 Link and Anchor Integrity
+
+- Fixed **116 broken-anchor references** covering **65 unique targets** across the Chinese documentation.
+- Added stable explicit English-compatible IDs to translated headings, including Web Search, Audio, security reporting, knowledge tools, plugin events, Redis, scaling, database schema, and troubleshooting sections.
+- Restored missing structure in `reference/env-configuration.mdx`: closed an unterminated admonition and restored the `web-search` and `audio` section headings.
+- Restored the missing concurrency and multiple instances section in `features/extensibility/plugin/development/under-the-hood.mdx`.
+- Updated same-page and cross-page links to use explicit stable IDs instead of translated or URL-encoded automatic heading fragments.
+- Verification: clean-cache production build generated 378 documentation pages with zero broken links, zero broken anchors, and exit code 0.
 
 ### 2026-07-22 Sync (en-us `bb2f9782` → `d412c345`)
 

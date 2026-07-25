@@ -60,7 +60,7 @@ Open WebUI 的插件（Tools、Functions = Filters / Pipes / Actions）并不是
 
 ---
 
-## 常用模式
+## 常用模式 {#patterns}
 
 ### 1. 在 `inlet` 中修改按请求的 model dict
 
@@ -99,7 +99,7 @@ _mw.process_chat_payload = _patched
 
 请谨慎使用。跨插件干扰是一个真实存在的风险：如果两个插件 patch 了同一个函数，结果取决于加载顺序，而加载顺序并不是确定性的。
 
-### 3. 在加载时添加新的 HTTP 路由
+### 3. 在加载时添加新的 HTTP 路由 {#3-serve-a-page-or-asset-from-a-route}
 
 ```python
 def _ensure_route(app):
@@ -166,6 +166,12 @@ Pipe 是最强大的入口点，原因恰恰在于中间件会让出控制权。
 ### 10. 将 Action 用作任意一次性操作
 
 `Action` 会在 assistant 消息上渲染一个按钮。handler 在服务器端运行，拥有与 Filters 和 Tools 相同的双下划线参数表，运行上下文是消息所属的聊天。可用于"批准这条"、"用……重新跑一遍"、"发送到外部系统"，或任何应当允许用户从特定消息触发的一次性操作。
+
+---
+
+## 并发与多实例 {#concurrency-and-multiple-instances}
+
+Open WebUI 不会串行化插件代码，也不提供恰好一次执行保证。Hook 和 handler 在异步事件循环中运行，可能相互重叠；在多副本部署中，同一逻辑工作也可能同时在多个 worker 上运行。需要至多执行一次的副作用必须由插件通过共享状态、分布式锁或幂等键自行协调。
 
 ---
 

@@ -97,7 +97,7 @@ Open Terminal 需要具备 agent 级工具调用质量的模型，而不仅仅�
 
 ---
 
-## 企业多用户
+## 企业多用户 {#enterprise-multi-user}
 
 需要为团队提供隔离的、每个用户独立的终端容器？**[Terminals](./terminals/)** 为每个用户预配专用的 Open Terminal 实例，并支持自动生命周期管理、资源控制和基于策略的环境。
 
