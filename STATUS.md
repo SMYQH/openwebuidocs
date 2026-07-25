@@ -3,19 +3,19 @@
 ## en-us Source Version
 
 - **Repo**: `en-us` (submodule)
-- **Git commit**: `d412c34501c9a0b70891a05948a138482ca7776e`
+- **Git commit**: `cb24519d47943f7b78f244bc4c2d624d851f4392`
 - **Branch**: `main`
-- **Snapshot date**: 2026-07-22
+- **Snapshot date**: 2026-07-25
 
 ## Translation Progress Overview
 
 | Metric | Value |
 | --- | --- |
-| en-us source files (.md/.mdx) | 400 |
-| zh-cn files (.md/.mdx) | 400 |
+| en-us source files (.md/.mdx) | 409 |
+| zh-cn files (.md/.mdx) | 409 |
 | en-us `_category_.json` | 49 |
 | zh-cn `_category_.json` | 49 |
-| File coverage | **100%** (all 400 en-us documents have corresponding zh-cn translations) |
+| File coverage | **100%** (all 409 en-us documents have corresponding zh-cn translations) |
 | Content completeness | **~99.9%** |
 
 ## Deployment Configuration
@@ -43,6 +43,19 @@
 - Restored the missing concurrency and multiple instances section in `features/extensibility/plugin/development/under-the-hood.mdx`.
 - Updated same-page and cross-page links to use explicit stable IDs instead of translated or URL-encoded automatic heading fragments.
 - Verification: clean-cache production build generated 378 documentation pages with zero broken links, zero broken anchors, and exit code 0.
+
+### 2026-07-25 Sync (en-us `d412c345` → `cb24519d`)
+
+Minor upstream update — 11 commits covering Docker tag docs, version placeholder usage, and expanded CVE vendor dispositions:
+
+- **Docker tag documentation (ManualDocker.md)**: Added "How the tags update" section explaining rolling vs pinned tags (`:main`/`:latest`/`:dev` vs `:vX.Y.Z`/`:git-<sha>`). All pinned version examples changed from concrete versions to `vX.Y.Z` placeholders.
+- **Version placeholders (updating.mdx)**: Replaced concrete version examples (`:v0.8.6`, `v0.10.1`) with `:vX.Y.Z` placeholders across table and code blocks.
+- **Link extensions (accepted-risks/index.mdx, vendor-dispositions/index.mdx)**: Added `.mdx` extensions to all internal relative links to match en-us conventions.
+- **CVE vendor dispositions (25 files)**:
+  - **9 new CVE files translated**: cve-2024-7036 (DoS via Oversized Signup Name), cve-2024-7037 (Path Traversal in Pipeline Upload), cve-2024-7045 (Prompt Disclosure), cve-2024-7046 (Admin Details Disclosure), cve-2024-7053 (Session Fixation), cve-2024-7990 (Stored XSS), cve-2024-8060 (Audio Transcription Path Traversal), cve-2024-12534 (Sign-in DoS), cve-2024-12537 (Code Format DoS).
+  - **12 existing files updated**: `sidebar_position` values realigned to match new sorting order; "Disclosure Pathway" section standardized (moved to after timeline, before CVE claims).
+  - **vendor-dispositions/index.mdx**: Table restructured — added "Issuing CNA" column, updated column headers, added 9 new CVE rows, added `.mdx` to links. All entries now include issuing CNA attribution (huntr/Protect AI, Zero Day Initiative, VulDB, MITRE).
+- **File count**: en-us source files increased from 400 → 409 (9 new CVE disposition files).
 
 ### 2026-07-22 Sync (en-us `bb2f9782` → `d412c345`)
 
