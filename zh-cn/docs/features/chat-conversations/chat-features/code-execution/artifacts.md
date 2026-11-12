@@ -32,6 +32,22 @@ Open WebUI 中的 Artifacts 是一项受 Claude.AI Artifacts 启发的创新功�
 - **自动更新**：Open WebUI 可能会根据你的后续消息更新现有 Artifact，窗口会显示最新内容
 - **操作按钮**：在 Artifact 右下角可以使用更多操作，例如复制内容或全屏打开 Artifact
 
+## 使用 CSP 保护 Artifact 预览 {#securing-artifact-previews-with-a-csp}
+
+Artifact 预览渲染在经过沙箱限制的 `srcdoc` iframe 中。若想更严格地控制这段生成的 HTML 能做什么（对外网络请求、脚本、样式），可以通过 [`IFRAME_CSP`](/reference/env-configuration#iframe_csp) 环境变量为预览注入一条专门的内容安全策略，它与主应用使用的 `CONTENT_SECURITY_POLICY` 相互独立。
+
+该变量默认为空（iframe 的 `sandbox` 已经提供了基础隔离），并且作用于界面中**每一个** `srcdoc` iframe：Artifacts、代码 / HTML 预览、文件预览以及引用弹窗。设置之后，Open WebUI 会在 iframe 文档前插入 `<meta http-equiv="Content-Security-Policy">` 标签；按照 CSP 规范，第一条策略生效，因此它会覆盖生成的 HTML 中已经声明的任何 CSP。一个合理的起点是：
+
+```bash
+IFRAME_CSP=default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'none'
+```
+
+这样既能让内联脚本和样式继续工作（大多数 Artifact 都需要），又阻止 `fetch` / `XMLHttpRequest` / `WebSocket`，使 Artifact 无法悄悄向网络发起调用。
+
+:::tip 先放宽，再收紧
+过于严格的策略可能让预览显示为空白，因为许多 Artifact 依赖内联的 `<script>` 和 `<style>`。请从宽松策略开始，再逐步收窄。`IFRAME_CSP` 是启动时读取的环境变量（不是管理面板设置），因此修改它需要重启服务。有关面向安全的完整说明，请参阅[加固 → Iframe content-security-policy](/getting-started/advanced-topics/hardening#iframe-content-security-policy)。
+:::
+
 ## 预览被允许做什么 {#what-a-preview-is-allowed-to-do}
 
 预览 iframe 上的沙箱由 **设置 > 界面** 下的四项设置组合而成，因此你无需改动 CSP，就能收紧或放宽生成的 HTML 可以做什么。
@@ -47,7 +63,7 @@ Open WebUI 中的 Artifacts 是一项受 Claude.AI Artifacts 启发的创新功�
 
 另外三项关系到内容在自己的框架内能做什么，把它们关掉，是一种既渲染你并不信任的内容、又不给它任何行动能力的方式。
 
-## 编辑 Artifacts
+## 编辑 Artifacts {#editing-artifacts}
 
 1. **定向更新**：描述你想改什么以及改哪里。例如：
 
@@ -65,7 +81,7 @@ Open WebUI 中的 Artifacts 是一项受 Claude.AI Artifacts 启发的创新功�
 - 对于定向更新，可引用目标附近的唯一文本作为定位依据
 - 根据你的需求判断：是小范围修改更合适，还是整体重写更合适
 
-## 使用场景 {#editing-artifacts}
+## 使用场景 {#use-cases}
 
 Open WebUI 中的 Artifacts 能帮助不同团队快速高效地产出高质量工作成果。以下是一些适合本平台的例子：
 
@@ -77,7 +93,7 @@ Open WebUI 中的 Artifacts 能帮助不同团队快速高效地产出高质量�
   - 设计带效果指标的活动落地页
   - 创建用于广告创意或社交媒体发布的 SVG 图形
 
-## 你可以用 Open WebUI Artifacts 创建哪些项目 {#use-cases}
+## 你可以用 Open WebUI Artifacts 创建哪些项目 {#examples-of-projects-you-can-create-with-open-webuis-artifacts}
 
 Open WebUI 中的 Artifacts 让不同团队和个人能够快速高效地创建高质量成果。以下示例展示了它的多样性，也希望能激发你探索其潜力：
 
@@ -116,9 +132,7 @@ Open WebUI 中的 Artifacts 让不同团队和个人能够快速高效地创建�
 
 示例项目：制作一个讲述公司发展历史的交互式故事，使用滚动效果和动画增强阅读体验，并通过定向更新优化叙事内容，再利用版本选择器测试不同故事版本。
 
-## 故障排查 {#examples-of-projects-you-can-create-with-open-webuis-artifacts}
-
-## 排查问题 {#troubleshooting}
+## 故障排查 {#troubleshooting}
 
 ### Artifacts 预览无法工作（Uncaught SecurityError） {#artifacts-preview-not-working-uncaught-securityerror}
 

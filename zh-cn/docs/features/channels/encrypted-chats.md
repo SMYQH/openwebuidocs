@@ -1,9 +1,9 @@
 ---
 sidebar_position: 4
-title: "Encrypted Chats"
+title: "加密聊天"
 ---
 
-# Encrypted Chats
+# 加密聊天 {#encrypted-chats}
 
 加密聊天是在[私信](/features/channels#direct-messages)或私有群组频道中进行的、临时的端到端加密会话。消息在每位参与者的浏览器中加密与解密。Open WebUI 服务器只在参与者之间转发加密数据包，不存储任何消息。加密聊天中的内容不会被保存、无法被搜索，也不会出现在频道的常规历史记录中。
 

@@ -211,13 +211,19 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 - 将 Open WebUI 更新到最新版（新版使用 `/v1/convert/file`）
 - 将 docling-serve 更新到 v1.0+（新版使用 `/v1` API）
 
-### 大文档出现超时错误 {#invalid-json-for-field--in-the-docling-serve-logs}
+### docling-serve 日志中的 "Invalid JSON for field ..." {#invalid-json-for-field--in-the-docling-serve-logs}
+
+**原因：** 某个嵌套的 Docling 参数被写成了内联对象。Open WebUI 会把 Docling 参数原样作为表单字段透传，因此 Docling 收到的是该对象的各个键，而不是对象本身。
+
+**解决方案：** 把 `picture_description_api` 之类的嵌套值写成经过转义的 JSON 字符串。参见 [JSON 配置示例](#json-configuration-examples)。
+
+### 大文档出现超时错误 {#timeout-errors-on-large-documents}
 
 **原因：** `DOCLING_SERVE_MAX_SYNC_WAIT` 对文档处理时间来说太低。
 
 **解决方案：** 提高 `DOCLING_SERVE_MAX_SYNC_WAIT`（例如设为 `600`，即 10 分钟）。
 
-### OCR 不工作或语言识别错误 {#timeout-errors-on-large-documents}
+### OCR 不工作或语言识别错误 {#ocr-not-working-or-incorrect-language-detection}
 
 **原因：** 针对当前 OCR engine，`ocr_lang` 使用了错误格式。
 
@@ -226,19 +232,19 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 - Tesseract 使用 3 位代码：`["eng", "deu"]`
 - EasyOCR 使用 2 位代码：`["en", "de"]`
 
-### "Error calling Docling" 但没有具体细节 {#ocr-not-working-or-incorrect-language-detection}
+### 引用指向错误的页码 {#citations-point-to-the-wrong-page}
+
+**原因**：Docling 在其 Markdown 输出中只标记页码变化，因此空白页不会留下分页符。以这些分页符计数得到的页码会使空白页之后的每条引用都显示更早的页码。Open WebUI 从 Docling 与 Markdown 一同返回的 JSON 输出中获取页码。
+
+**解决方案**：在 **设置 > 管理 > 文档** 中运行 **重建知识库与记忆向量索引**，它会重新提取每个知识库文件；对于不在知识库中的受影响文件，请重新上传一次。页码是在 Docling 提取文件时确定的。
+
+### "Error calling Docling" 但没有具体细节 {#error-calling-docling-with-no-specific-details}
 
 **排查步骤：**
 
 1. 查看 docling-serve 日志：`docker logs docling-serve`
 2. 直接通过 `http://localhost:5001/ui` 测试 Docling
 3. 验证 Open WebUI 与 docling-serve 容器之间的网络连通性
-
-#### 引用指向错误的页码 {#citations-point-to-the-wrong-page}
-
-**原因**：Docling 在其 Markdown 输出中只标记页码变化，因此空白页不会留下分页符。以这些分页符计数得到的页码会使空白页之后的每条引用都显示更早的页码。Open WebUI 从 Docling 与 Markdown 一同返回的 JSON 输出中获取页码。
-
-**解决方案**：在 **设置 > 管理 > 文档** 中运行 **重建知识库与记忆向量索引**，它会重新提取每个知识库文件；对于不在知识库中的受影响文件，请重新上传一次。页码是在 Docling 提取文件时确定的。
 
 ## 结论 {#conclusion}
 

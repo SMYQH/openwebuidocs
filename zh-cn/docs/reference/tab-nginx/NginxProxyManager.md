@@ -50,7 +50,7 @@ docker compose up -d
     - 把该域名指向你的代理所在机器的本地 IP（例如 192.168.0.6）。
     - 如果使用 DuckDNS，请从其控制台获取 API 令牌。
 
-###### 这里有一个简单示例，展示在 [DuckDNS 域名页](https://www.duckdns.org/domains) 中如何操作
+###### 这里有一个简单示例，展示在 [DuckDNS 域名页](https://www.duckdns.org/domains) 中如何操作 {#here-is-a-simple-example-how-its-done-in-httpswwwduckdnsorgdomains}
 
 4. **设置 SSL 证书：**
 

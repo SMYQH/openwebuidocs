@@ -41,7 +41,7 @@ Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话
 自主记忆管理最适合 frontier 级模型（GPT-5、Claude 4.5+、Gemini 3+），因为它们能更智能地决定哪些事实值得保存以及何时回忆相关记忆。小型本地模型可能在记忆选择上表现不佳。
 :::
 
-每条记忆都带有一个**类型**和一个可选的**路径**（见下方的[记忆类型与路径](#记忆类型与路径)）。模型通过以下工具管理记忆：
+每条记忆都带有一个**类型**和一个可选的**路径**（见下方的[记忆类型与路径](#memory-types--paths)）。模型通过以下工具管理记忆：
 
 -   **`add_memory`**：保存新的事实、偏好或指令，标记为 `user` 或 `context` 类型，可选地指定 `path`。
 -   **`update_memory`**：在一次调用中应用批量更改（添加/替换/移动/移除）。
@@ -52,11 +52,11 @@ Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话
 -   **`list_memory_paths`**：列出已保存的记忆路径（分组），以便模型在写入前找到相关记忆的存放位置。
 -   **`read_memory_path`**：读取指定路径下存储的记忆，包括附近的父路径和子路径。
 
-## 记忆类型与路径
+## 记忆类型与路径 {#memory-types--paths}
 
 每条记忆都有一个**类型**和一个可选的**路径**：
 
-- **类型** — `user` 类型的记忆是**关于你**的事实、偏好或指令（例如"偏好用 Python 处理后端"）；`context` 类型的记忆是值得在聊天之间携带的其他持久化上下文。两者在注入提示词时分别计算预算（见[后台审查与限制](#后台审查与限制)）。
+- **类型** — `user` 类型的记忆是**关于你**的事实、偏好或指令（例如"偏好用 Python 处理后端"）；`context` 类型的记忆是值得在聊天之间携带的其他持久化上下文。两者在注入提示词时分别计算预算（见[后台审查与限制](#background-review--limits)）。
 - **路径** — 一个可选的稳定"地址"，用于**对相关记忆进行分组**（例如 `work/projects`），使模型可以通过 `list_memory_paths` / `read_memory_path` 以层级结构组织和浏览它们，而不是一个扁平的列表。
 
 这些由记忆工具自动设置，你无需手动分配。
@@ -72,7 +72,7 @@ Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话
 
 ## 启用记忆工具 {#enabling-memory-tools}
 
-1.  **管理员启用**：确保管理员已经[全局启用](#管理员控制)记忆功能，并确认你拥有所需权限
+1.  **管理员启用**：确保管理员已经[全局启用](#administrative-controls)记忆功能，并确认你拥有所需权限
 2.  **原生模式（Agentic 模式）**：在模型高级参数中启用**原生函数调用**（**管理面板 > 设置 > 模型 > 模型特定设置 > 高级参数**）
 3.  **需要高质量模型**：若要稳定获得这些能力，请优先使用具备较强推理能力的 frontier 模型（例如 GPT-5、Claude 4.5 Sonnet、Gemini 3 Flash、MiniMax M2.5）。较小本地模型可能无法有效自主管理记忆
 4.  **按模型分类开关**：确保该模型在 **工作区 > 模型 > 编辑 > 内置工具** 中启用了**记忆**分类（默认开启）
@@ -80,10 +80,6 @@ Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话
 :::info 中央工具文档
 有关所有内置 agentic 工具（包括记忆、网络搜索、知识库）的完整说明及配置方法，请参阅 [**原生/Agentic 模式工具指南**](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
 :::
-
-## 管理员控制
-
-管理员可以完全控制记忆功能，包括全局禁用，或仅向特定用户组开放。
 
 ## 管理控制 {#administrative-controls}
 
@@ -101,14 +97,14 @@ Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话
 - **管理 UI**：管理面板 > 用户 > 权限 > 功能 > **记忆**
 - **环境变量**：[`USER_PERMISSIONS_FEATURES_MEMORIES`](/reference/env-configuration#user_permissions_features_memories)（默认：`True`）
 
-### 后台审查与限制
+### 后台审查与限制 {#background-review--limits}
 
-- **后台审查** — 当启用了 [`ENABLE_MEMORY_BACKGROUND_REVIEW`](/reference/env-configuration#enable_memory_background_review)（默认**关闭**），Open WebUI 会定期检查最近的对话，并每 [`MEMORIES_REVIEW_INTERVAL_TURNS`](/reference/env-configuration#memories_review_interval_turns) 轮（默认 `10`）自动更新 `context` 记忆，而不仅仅依赖显式的工具调用。
+- **后台审查** — 当启用了 [`ENABLE_MEMORY_BACKGROUND_REVIEW`](/reference/env-configuration#enable_memory_background_review)（默认**关闭**），Open WebUI 会定期使用该对话自身的模型回顾最近的对话内容，并每 [`MEMORIES_REVIEW_INTERVAL_TURNS`](/reference/env-configuration#memories_review_interval_turns) 轮（默认 `10`）添加、替换、移动或删除两种类型的记忆（其中也包括 `user` 类型），而不只是依赖显式的工具调用。
 - **注入预算** — [`MEMORIES_CONTEXT_CHAR_LIMIT`](/reference/env-configuration#memories_context_char_limit) 和 [`MEMORIES_USER_CHAR_LIMIT`](/reference/env-configuration#memories_user_char_limit)（均默认 `2000`）限制注入到提示词中的 `context` 和 `user` 类型记忆的最大字符数。
 
 ### 记忆系统上下文 {#memory-system-context}
 
-默认情况下，Open WebUI 会将用户的已存储记忆注入到模型的系统上下文中，使模型在每次对话轮次时都能感知到它们。此注入可以独立于记忆工具单独关闭：关闭后，模型仍然可以按需添加、更新和删除记忆，但记住的信息不再自动添加到提示词中。
+默认情况下，Open WebUI 会将用户的已存储记忆注入到模型的上下文，使模型能够感知到它们。使用原生函数调用时，这些记忆会在每次回复时以隐藏的 `recall_memories` 工具结果形式出现在用户消息之后；否则它们会被追加到用户消息上。记忆召回还需要模型具备 **Memory** 能力。此注入可以独立于记忆工具单独关闭：关闭后，模型仍然可以按需添加、更新和删除记忆，但记住的信息不再自动添加到提示词中。
 - **管理 UI**：管理面板 > 设置 > 通用 > **记忆系统上下文**（在记忆功能启用时显示）
 - **环境变量**：[`ENABLE_MEMORY_SYSTEM_CONTEXT`](/reference/env-configuration#enable_memory_system_context)（默认：`True`）
 

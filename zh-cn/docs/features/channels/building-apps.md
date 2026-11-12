@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-title: "Building Apps"
+title: "构建应用"
 ---
 
 # 构建 App {#building-apps}

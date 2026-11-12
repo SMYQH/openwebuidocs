@@ -28,7 +28,7 @@ title: "📦 供应链与安全扫描器"
 - **网络访问**是 Open WebUI 与模型提供商和外部工具通信的方式。
 - **代码执行（"eval"）和 shell 访问**是代码解释器以及工具和函数系统，它们按设计执行代码。
 
-这些能力由管理员配置和基于角色的权限控制（请参见下面的[代码执行和沙箱](#代码执行和沙箱)）。扫描器标记的是能力，而非任何滥用，因此这些都不是漏洞。
+这些能力由管理员配置和基于角色的权限控制（请参见下面的[代码执行和沙箱](#code-execution-and-sandboxing)）。扫描器标记的是能力，而非任何滥用，因此这些都不是漏洞。
 
 ### 未经证实的分类："潜在恶意软件"、"AI 检测的安全风险"、"潜在漏洞" {#unsubstantiated-classifications-potential-malware-ai-detected-security-risk-potential-vulnerability}
 
@@ -50,7 +50,7 @@ title: "📦 供应链与安全扫描器"
 
 扫描器报告从包元数据中获取的维护者数量，对 Open WebUI 通常为"1 个维护者"。该数字是 PyPI 包上具有发布权限的账户数量——一个单一的发布账户——而非开发项目的人数。Open WebUI 由一个核心团队和广泛的外部贡献者基础构建，这在存储库的[贡献者历史](https://github.com/open-webui/open-webui/graphs/contributors)和我们的[团队页面](/team)上是可见的。从一个账户发布版本是常见且有意的打包实践，而非维护者 Bus Factor 为 1。
 
-## 代码执行和沙箱
+## 代码执行和沙箱 {#code-execution-and-sandboxing}
 
 评估者经常询问 Open WebUI 是否"默认在没有强制沙箱的情况下"执行代码。关键在于：服务器端代码执行被明确的管理员操作所门禁，而非向任意用户开放：
 

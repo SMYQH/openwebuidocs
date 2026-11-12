@@ -1,6 +1,6 @@
 ---
 sidebar_position: 12
-title: "Default Interface Settings"
+title: "默认界面设置"
 ---
 
 ## 概述 {#overview}

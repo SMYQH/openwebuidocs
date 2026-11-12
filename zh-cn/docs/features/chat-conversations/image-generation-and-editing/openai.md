@@ -9,14 +9,10 @@ title: "OpenAI"
 
 Open WebUI 也支持通过 **OpenAI API** 进行图像生成。该方案可在各个 GPT-Image 模型（`gpt-image-1`、`gpt-image-1.5` 和 `gpt-image-2`）之间选择。`gpt-image-2` 是默认模型。
 
-## 初始设置
-
-1. 从 OpenAI 获取一个 [API key](https://platform.openai.com/api-keys)
-
 ### 初始设置 {#initial-setup}
 1. 从 OpenAI 获取 [API 密钥](https://platform.openai.com/api-keys)。
 
-## 配置 Open WebUI
+### 配置 Open WebUI {#configuring-open-webui}
 
 1. 在 Open WebUI 中前往 **Settings** > **Admin** > **Images**
 2. 将 `图像生成引擎` 设置为 `Default (Open AI)`
@@ -25,7 +21,7 @@ Open WebUI 也支持通过 **OpenAI API** 进行图像生成。该方案可在�
 
 ![Open WebUI 图像设置页面截图，已选中 Open AI，并高亮显示 API key、模型和图像尺寸字段。](/images/image-generation-and-editing/openai-settings.png)
 
-## Azure OpenAI
+### Azure OpenAI {#azure-openai}
 
 Open WebUI 同样支持 Azure OpenAI 图像生成。配置方法如下：
 
@@ -54,7 +50,7 @@ Open WebUI 同样支持 Azure OpenAI 图像生成。配置方法如下：
 例如，如果你的 Target URI 是 `https://test.openai.azure.com/openai/deployments/gpt-image-1/images/generations?api-version=2025-04-01-preview`，那么 Open WebUI 中应填写的 `API Base URL` 为 `https://test.openai.azure.com/openai/deployments/gpt-image-1/`。
 :::
 
-## 使用 OpenAI Endpoint 的 LiteLLM Proxy
+### 使用 OpenAI Endpoint 的 LiteLLM Proxy {#litellm-proxy-with-openai-endpoints}
 
 Open WebUI 支持通过使用 OpenAI endpoints 的 LiteLLM proxy 进行图像生成。配置方法如下：
 
@@ -68,7 +64,7 @@ Open WebUI 支持通过使用 OpenAI endpoints 的 LiteLLM proxy 进行图像生
 
 :::tip
 
-若要查看 LiteLLM 连接信息，请前往 **Settings** > **Admin** > **Connections**。
+若要查看 LiteLLM 连接信息，请前往 **Settings** > **Admin** > **AI** > **Connections**。
 你的连接信息会显示在 OpenAI API connection 下方。
 
 :::

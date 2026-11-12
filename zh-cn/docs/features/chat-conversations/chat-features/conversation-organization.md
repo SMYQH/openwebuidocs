@@ -161,7 +161,7 @@ Open WebUI 提供强大的基于文件夹的组织能力，把简单的聊天容
 1. **创建一个文件夹**，命名为 "Python Expert"
 2. **编辑该文件夹**，并设置系统提示词：
 
-       You are an expert Python developer. You provide clean, efficient, and well-documented code. When asked for code, prioritize clarity and adherence to PEP 8 standards.
+       你是一位经验丰富的 Python 开发者。你提供的代码简洁、高效且文档完善。当被要求编写代码时，优先考虑清晰度并遵循 PEP 8 标准。
 
 3. **附加知识**，例如关联你项目的技术规格 PDF 或库文档
 4. **点击该文件夹**，将其设为当前激活工作区

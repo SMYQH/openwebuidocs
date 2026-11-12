@@ -17,6 +17,14 @@ title: "Redis WebSocket 支持"
 
 Redis 在 Open WebUI 中服务于两个不同的目的，了解何时需要它对于正确部署至关重要。有关所有扩展要求（PostgreSQL、Redis、向量数据库、存储）的高层概述，请参阅 [扩展 Open WebUI](/getting-started/advanced-topics/scaling) 指南。
 
+### 前提条件 {#prerequisites}
+
+- 一个 Redis 容器（本示例使用 `redis:7-alpine`）
+- Docker Compose v2
+- Open WebUI 与 Redis 共享的 Docker 网络
+- 一个有效的 Open WebUI 实例（运行 1.0 或更高版本）
+- 对 Docker、Redis 和 Open WebUI 有基本了解
+
 ### 单实例部署 {#prerequisites}
 
 如果您以**单实例**模式运行 Open WebUI，`UVICORN_WORKERS=1`（默认值），则**基本功能不需要 Redis**。大多数操作不依赖 Redis 就能正常运行。
@@ -29,7 +37,7 @@ Redis 在 Open WebUI 中服务于两个不同的目的，了解何时需要它�
 
 :::
 
-### 多 Worker 和多实例部署
+### 多 Worker 和多实例部署 {#multi-worker-and-multi-instance-deployments}
 
 在以下场景中 Redis 是**必需的**：
 
@@ -125,7 +133,7 @@ redis-cli INFO clients | grep connected_clients
 
 :::
 
-### 关键：内存驱逐策略
+### 关键：内存驱逐策略 {#critical-memory-eviction-policy}
 
 Redis 的 `maxmemory-policy` 决定了当达到内存上限时，Redis 会驱逐（删除）哪些键。配置错误可能导致 Open WebUI 的会话和令牌撤销突然失效。
 
@@ -133,9 +141,9 @@ Redis 的 `maxmemory-policy` 决定了当达到内存上限时，Redis 会驱逐
 
 如果你确实必须在有**驱逐**的情况下限制内存，唯一可接受的策略是 `volatile-ttl` 或 `volatile-lru`：它们**仅**驱逐带有 TTL 的键（锁和撤销列表），绝不会驱逐持久化数据。请注意，这仍可能提前丢弃撤销记录，因此相比启用驱逐，更推荐增加 RAM。
 
-### 关键：持久化
+### 关键：持久化 {#persistence}
 
-示例命令使用 `--save 30 1`（每 30 分钟生成一次 RDB 快照，前提是至少有一个键发生了变化）。在**非正常**重启时，Redis 会丢失自上次快照以来的所有写入——最多 30 分钟的令牌撤销和会话状态——因此崩溃可能导致已登出的令牌被复活，或活动会话被丢弃。
+示例命令使用 `--save 30 1`（在 30 秒后生成一次 RDB 快照，前提是至少有一个键发生了变化）。在**非正常**重启时，Redis 会丢失自上次快照以来的所有写入，包括令牌撤销和会话状态，因此崩溃可能导致已登出的令牌被复活，或活动会话被丢弃。
 
 对于生产环境，还应启用追加文件（AOF），使持久化粒度在秒级而非分钟级：
 
@@ -147,14 +155,6 @@ appendfsync everysec
 `appendfsync everysec` 每秒将 AOF 刷新到磁盘，在最坏情况下约丢失一秒钟的数据，对于 Open WebUI 适度的 Redis 工作负载来说，I/O 开销很小且通常可忽略。RDB 和 AOF 可以共存；同时保留两者既能实现快速重启，又能提供秒级持久化。下一节的示例 `command` 已包含 `--appendonly yes` 和 `--maxmemory-policy noeviction`。
 
 :::
-
-### 前提条件 {#critical-memory-eviction-policy}
-
-- 一个有效的 Open WebUI 实例（运行 1.0 或更高版本）
-- 一个 Redis 容器（本示例使用 `redis:7-alpine`）
-- 系统上已安装 Docker Compose（版本 2.0 或更高）
-- 用于 Open WebUI 和 Redis 通信的 Docker 网络
-- 对 Docker、Redis 和 Open WebUI 有基本了解
 
 ## 设置 Redis {#setting-up-redis}
 
@@ -666,7 +666,7 @@ REDIS_KEY_PREFIX="openwebui-dev"
 - 容器最终耗尽内存
 
 :::danger
-**不要**用 `--maxmemory-policy allkeys-lru` 来"修复"这个问题。Open WebUI 的 Redis 存储的是令牌撤销键、会话池和锁，而不是可丢弃的缓存。`allkeys-*` 策略可能静默地重新激活已登出的令牌，并破坏会话。请参阅[内存驱逐策略](#关键内存驱逐策略)。
+**不要**用 `--maxmemory-policy allkeys-lru` 来"修复"这个问题。Open WebUI 的 Redis 存储的是令牌撤销键、会话池和锁，而不是可丢弃的缓存。`allkeys-*` 策略可能静默地重新激活已登出的令牌，并破坏会话。请参阅[内存驱逐策略](#critical-memory-eviction-policy)。
 :::
 
 内存持续增长通常意味着键在不断增加，而非缺少驱逐策略，因此应先调查原因，而不是用驱逐来掩盖问题。

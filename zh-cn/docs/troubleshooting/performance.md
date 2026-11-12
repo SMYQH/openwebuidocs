@@ -104,13 +104,34 @@ Open WebUI 通过向数据库写入每个用户的 `last_active_at` 时间戳来
 如果你在升级到 v0.7.0 后看到 Admin 页面加载变慢、API 超时或 UI 无响应，很可能就是因为启用了数据库会话共享。对 Raspberry Pi 或 CPU 配额很低的容器，请确保 `DATABASE_ENABLE_SESSION_SHARING=False`。
 :::
 
-### 连接池大小 {#vector-database-rag}
-对高并发 PostgreSQL 部署，默认连接池可能不够用。如果你看到 `QueuePool limit reached` 或连接超时，可考虑提高连接池：
+### 连接池大小 {#connection-pool-sizing}
+
+对高并发 PostgreSQL 部署，默认连接池可能不够用。如果未设置 `DATABASE_POOL_SIZE`，PostgreSQL 会使用 SQLAlchemy 的默认值，即 5 个连接加 10 个溢出连接。如果你看到 `QueuePool limit reached` 错误或连接超时，可以调高：
 
 - **Env Var**：`DATABASE_POOL_SIZE=15`
-- **Env Var**：`DATABASE_POOL_MAX_OVERFLOW=20`
+- **Env Var**：`DATABASE_POOL_MAX_OVERFLOW=20`（在 `DATABASE_POOL_SIZE` 设置后生效；默认 `0`）
+- **Env Var**：`DATABASE_POOL_TIMEOUT`（请求在失败前等待可用连接的秒数；默认 `30`）
 
-**重要：** 这两个值的总和应明显低于数据库的 `max_connections`。PostgreSQL 默认上限是 100，因此单个 Open WebUI 实例建议保持在 50-80 以下。
+SQLite 使用自己的连接池配置，参见[受限容器中的 SQLite 内存占用](#5-sqlite-memory-footprint-on-constrained-containers)。
+
+**重要：** 这两个值的总和（`DATABASE_POOL_SIZE` + `DATABASE_POOL_MAX_OVERFLOW`）应明显低于数据库的 `max_connections` 上限。PostgreSQL 默认上限是 100 个连接，因此单个 Open WebUI 实例建议保持在 50-80 以下，为其他客户端和维护操作留出余量。
+
+### 向量数据库（RAG） {#vector-database-rag}
+
+对于多用户部署，向量数据库的选择很重要。
+
+知识库搜索不会占住发起它的那个 worker，因此在搜索进行期间，其他人的回复仍会继续流式返回，而且多个集合会被同时搜索，而不是一个接一个。因此一个慢的向量数据库只会拖慢正在搜索的那次对话，而不是该 worker 上的每个用户。它仍然要承受多个副本同时访问的压力，下面的选项正是在这方面做取舍。
+
+在多用户场景中，Vector DB 的选择非常关键。
+
+- **ChromaDB（默认）**：**不适合** 多 worker（`UVICORN_WORKERS > 1`）或多副本部署。默认 ChromaDB 使用本地 **SQLite** 支持的 `PersistentClient`，SQLite 不具备 fork-safe 特性；uvicorn fork 多 worker 后，并发写入会直接导致 worker 崩溃（`Child process died`）或数据库损坏。详见 [扩缩容与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
+- **推荐方案：**
+  - **Milvus** 或 **Qdrant**：更适合大规模和高性能场景
+  - **PGVector**：如果你已经使用 PostgreSQL，这是很好的选择
+  - **ChromaDB HTTP mode**：若你仍想使用 ChromaDB，请将其作为[独立服务](/reference/env-configuration#chroma_http_host)运行，让 Open WebUI 通过 HTTP 访问
+- **多租户：** 如果使用 Milvus 或 Qdrant，可考虑开启多租户：
+  - `ENABLE_MILVUS_MULTITENANCY_MODE=True`
+  - `ENABLE_QDRANT_MULTITENANCY_MODE=True`
 
 ### 内容提取引擎 {#content-extraction-engine}
 
@@ -231,18 +252,6 @@ Open WebUI 会在每个数据块到达时重建响应的文本，每次都复制
 
 参见 [`WEBSOCKET_HEARTBEAT_INTERVAL`](/reference/env-configuration#websocket_heartbeat_interval)。
 
-### 向量数据库（RAG）
-在多用户场景中，Vector DB 的选择非常关键。
-
-- **ChromaDB（默认）**：**不适合** 多 worker（`UVICORN_WORKERS > 1`）或多副本部署。默认 ChromaDB 使用本地 **SQLite** 支持的 `PersistentClient`，SQLite 不具备 fork-safe 特性；uvicorn fork 多 worker 后，并发写入会直接导致 worker 崩溃（`Child process died`）或数据库损坏。详见 [扩缩容与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
-- **推荐方案：**
-  - **Milvus** 或 **Qdrant**：更适合大规模和高性能场景
-  - **PGVector**：如果你已经使用 PostgreSQL，这是很好的选择
-  - **ChromaDB HTTP mode**：若你仍想使用 ChromaDB，请将其作为[独立服务](/reference/env-configuration#chroma_http_host)运行，让 Open WebUI 通过 HTTP 访问
-- **多租户：** 如果使用 Milvus 或 Qdrant，可考虑开启多租户：
-  - `ENABLE_MILVUS_MULTITENANCY_MODE=True`
-  - `ENABLE_QDRANT_MULTITENANCY_MODE=True`
-
 <span id="content-extraction-engine"></span>
 #### JSON 编码器 {#json-encoder}
 
@@ -266,7 +275,7 @@ Open WebUI 会为每个请求体、API 响应、保存的对话、服务商请�
 
 完整说明参见[日志级别的代价](../getting-started/advanced-topics/logging.md#what-the-log-level-costs)。
 
-#### 线程池大小
+#### 线程池大小 {#thread-pool-size}
 限制 AnyIO 工作线程池中**并发**阻塞操作（同步 DB 调用、文件 I/O、通过 `run_in_threadpool` 卸载的同步路由处理器）一次能同时运行的数量。这是一个**并发上限**，而不是一组固定预生成的 OS 线程，也**不是** CPU 核心/线程数——线程是按需懒加载并复用的，因此设置一个很大的值并**不会**凭空创建这么多线程、消耗 CPU，或在空闲时带来争用。它只决定了多少阻塞操作可以同时进行，超出的必须排队。
 
 - **Default**：40（AnyIO 默认值——对生产环境来说远不够）

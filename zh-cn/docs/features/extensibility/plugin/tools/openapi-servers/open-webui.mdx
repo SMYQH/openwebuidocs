@@ -205,13 +205,23 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ## 故障排查与建议 🧩 {#troubleshooting--tips}
 
-### 添加 URL 后立刻连接失败 {#tools-are-enabled-but-the-model-does-not-use-them-correctly}
+### 工具已启用，但模型没有正确使用它们 {#tools-are-enabled-but-the-model-does-not-use-them-correctly}
+
+如果模型没有调用所需的工具就给出了回答、编造了工具结果、传入了无效参数，或在任务中途停下，原因可能出在模型能力上。Open WebUI 负责提供工具并执行调用；如何使用它们由模型决定。
+
+1. 确认该工具在当前对话中已启用，并且所选模型支持原生工具调用。
+2. 新开一个对话，只保留完成简单请求所需的工具，例如让时间工具返回当前时间。
+3. 保持工具和服务端配置不变，换用能力更强的模型重复同一请求。如果该模型成功，那么原来的模型或其服务配置很可能就是原因。即使简单调用正常，多步骤工作流也可能需要更强的模型。
+
+连接失败、认证错误和工具服务端错误仍需单独排查；换模型无法解决这些问题。关于模型选择的更多内容，请参阅[模型要求与注意事项](/features/extensibility/plugin/tools#model-requirements--caveats)。
+
+### 添加 URL 后立刻连接失败 {#connection-fails-immediately-after-adding-the-url}
 
 **先检查协议（HTTP vs HTTPS）。** “添加工具服务器” 弹窗可能会默认填入 `https://`。但大多数本地工具服务器并未启用 TLS，因此你需要改成普通的 `http://`。例如改为 `http://localhost:8000`（或你的实际端口）。
 
 **再检查端口号。** 默认端口取决于 server 实现。例如 uvicorn 默认是 `8000`，而 Open Terminal 默认是 `8888`。请确认你填入的 URL 中端口与实际监听端口一致。
 
-### 明明 server 在运行，但依然连接失败 {#connection-fails-immediately-after-adding-the-url}
+### 明明 server 在运行，但依然连接失败 {#connection-fails-even-though-the-server-is-running}
 
 **理解 “localhost” 指向的是哪台机器。** 这是最常见的问题，而且会随工具服务器类型不同而变化：
 
@@ -228,11 +238,11 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 :::
 
-### 浏览器控制台出现 CORS 错误 {#connection-fails-even-though-the-server-is-running}
+### 浏览器控制台出现 CORS 错误 {#cors-errors-in-the-browser-console}
 
 如果你看到了 CORS 报错，说明工具服务器需要允许来自 Open WebUI origin 的请求。你可以查看 [FAQ 中关于 CORS 的条目](/features/extensibility/plugin/tools/openapi-servers/faq)，其中提供了 FastAPI 示例。
 
-### 通用建议 {#cors-errors-in-the-browser-console}
+### 通用建议 {#general-tips}
 
 - 🔒 如果你使用远程服务器，请检查防火墙与 HTTPS 配置
 - 📝 如果你希望服务器在重启后仍保持运行，建议用 Docker 或系统服务来部署

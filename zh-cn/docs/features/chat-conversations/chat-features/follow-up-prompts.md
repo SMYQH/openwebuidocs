@@ -3,13 +3,13 @@ sidebar_position: 9
 title: "追问提示"
 ---
 
-## 追问提示 {#settings}
+# 追问提示 {#follow-up-prompts}
 
 Open WebUI 可以在每次模型响应后自动给出后续消息建议。这些建议会以可点击的标签形式显示在回复下方，帮助你无需重新输入提示词，就能进一步探索话题。
 
 使用内置提示词时，每条建议都会写成你可能接着发出的消息——一个问题或一个请求，并且最有力的一条排在最前。管理员可以在 **设置 > 管理 > 界面** 用 **Follow Up Generation Prompt** 替换它，也可以通过 [`FOLLOW_UP_GENERATION_PROMPT_TEMPLATE`](/reference/env-configuration#follow_up_generation_prompt_template) 替换。
 
-## 设置
+## 设置 {#settings}
 
 你可以在 **设置 > 界面** 的 **聊天** 区域中配置追问提示行为：
 

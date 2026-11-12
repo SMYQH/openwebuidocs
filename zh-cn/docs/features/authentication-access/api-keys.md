@@ -1,9 +1,9 @@
 ---
 sidebar_position: 500
-title: "API Keys"
+title: "API 密钥"
 ---
 
-# 🔑 API Keys {#api-keys}
+# 🔑 API 密钥 {#api-keys}
 
 **Open WebUI 的程序化访问——适用于脚本、机器人和集成。**
 

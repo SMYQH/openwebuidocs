@@ -99,29 +99,50 @@ class Filter:
 
 在 `inlet` 中添加的内容会到达第一次调用，并且随着后续调用重建消息列表而可能被丢弃。而在 `request` 中添加的内容按其定义必然出现在每次调用中，因此强制性的约束应放在这里。
 
-#### 用户如何与可切换 Filter 交互 {#where-request-sits-in-the-pipeline}
+#### `request` 在流水线中的位置 {#where-request-sits-in-the-pipeline}
 
-当一个可切换 Filter 在当前聊天的作用范围内时，会出现两个 UI 入口：
+`inlet` 在这一轮接近开头处运行；`request` 在末尾运行，作用于即将发出的载荷。流水线所做的一切都发生在两者之间，这会改变你拿到的 `body` 里有什么。
 
-- **聊天输入栏的内联标签。** 显示 Filter 的 `self.icon` 和名称。点击它：
-  - 如果 Filter 定义了 `UserValves` 类，则**打开用户 valves 模态框**（让用户调整每次聊天的设置）；**否则**
-  - **从当前会话的选中列表中移除该 Filter**（标签从内联行中消失）。
-- **集成菜单（⚙️ 图标）。** 列出作用范围内所有可切换的 Filter，每个都有一个正式的开/关**开关**。用户可在此重新启用已从标签行移除的 Filter，或关闭默认选中的 Filter。
+**等到 `request` 运行时已经消失的东西。** 在 `inlet` 返回之后，流水线会把若干键从 body 中弹出：`features`、`tool_ids`、`terminal_id`、`files`、`folder_id` 和 `skill_ids`。需要其中任何一项的过滤器只能写成 `inlet`。`variables`、`regeneration_prompt` 和 `params` 被弹出的时间更早，在 `inlet` 运行之前就已移除，而 `variables` 仍可通过 `__metadata__["variables"]` 读取。（`features` 在 `request` 中仍可通过保留参数 `__features__` 取到，因为流水线在弹出该键之前会把它另存一份；其余的则不行。）
 
-标签存在 = 该 Filter 在下次请求时启用。标签不存在（但 Filter 在集成菜单中） = 用户已关闭它。
+**等到 `request` 运行时才存在的东西。** 用 `<source>` 标签包裹的 RAG 检索 chunk、解析完成的 `tools` 数组（服务端工具与过滤器或调用方添加的内容合并而成）、聊天自身的系统消息与文件夹系统提示词（工作区模型自己的 System Prompt 是在 `request` 返回之后由 provider 路由添加的），以及网页搜索上下文，在旧版函数调用下还包括记忆上下文。在原生函数调用下，召回的记忆、技能列表和附加的知识列表会在 `inlet` 和第一次 `request` 调用之后以隐藏的工具结果形式加入，因此 `inlet` 永远看不到它们，而 `request` 从一次回复的第二次调用起会以工具消息的形式看到它们。如果你想读取或改写的是*检索到的 chunk 文本*而不是文件引用，`request` 原生就能看到，无需 `file_handler` 开关，也不需要自己写检索代码。这通常比[自行接管检索](#owning-retrieval-with-file_handler)更简单：当你要*替换*检索方式时用 `file_handler`，只需要*转换*检索结果时用 `request`。
 
-#### 选中状态存储在哪里 {#write-it-to-be-idempotent}
+提供商消息格式的归一化发生在 `request` 返回之后，因此你看到的仍然是 Open WebUI 的内部消息结构，而不是提供商的。
 
-- 以**浏览器 sessionStorage 草稿状态**形式存储，按聊天区分。
-- 在同一浏览器会话中页面刷新后仍然存在，但**不会持久化到服务器上的聊天记录**。
-- 初始状态来自模型的 `defaultFilterIds`（管理面板 → 模型设置 → 默认 Filters）——管理员决定每个模型的哪些可切换 Filter 默认**开启**或**关闭**。
-- 切换到不同模型时会重置。
+#### 幂等写法 {#write-it-to-be-idempotent}
 
-![Toggle Filter](/images/features/plugin/functions/toggle-filter.png)
+这一点最容易踩坑。由于 `request` 在工具循环的每一跳都会再次运行，而每一跳都会把**整个对话**重新过一遍你的过滤器，因此你做的任何改动都必须能够安全地应用在一个你已经改过的 body 上。
 
-`self.icon` 仍然按原来的方式工作：传一个 URL（强烈推荐）或 base64 data URI，它就会同时出现在内联标签和集成菜单的条目中。关于为何更推荐托管 URL 而不是 base64，请参阅 [Action Function icon_url 警告](/features/extensibility/plugin/functions/action#example-specifying-action-frontmatter)。
+```python
+# 错误：一轮三次工具调用会留下四行同样的内容。
+async def request(self, body: dict) -> dict:
+    body["messages"].insert(0, {"role": "system", "content": "Be concise."})
+    return body
 
----
+# 正确：无论运行多少次都会收敛到同一个 body。
+async def request(self, body: dict) -> dict:
+    marker = "Be concise."
+    if not any(
+        m.get("role") == "system" and marker in str(m.get("content", ""))
+        for m in body["messages"]
+    ):
+        body["messages"].insert(0, {"role": "system", "content": marker})
+    return body
+```
+
+要检查系统消息是否**包含**你的文本，而不是是否与它完全相等。每次调用模型之前，Open WebUI 会把所有系统消息合并成一条，因此在下一跳中，只要聊天里还有另一条系统消息（例如聊天自身的 system prompt、文件夹的 prompt，或另一个过滤器添加的），你那一行就会成为更长消息的一部分。等值判断在那种情况下会漏掉它，于是每一跳都会再加一遍。
+
+天然幂等的转换（把数值限制在范围内、缩小已经低于上限的图片、遮盖已经不再匹配的某种模式）不需要任何保护。凡是追加、前置、递增或累积的都需要。如果你真正想要的是“每轮只保证一次”，那正是 `inlet` 的用途。
+
+#### 其它需要留意的地方 {#other-things-to-watch-for}
+
+`request` 会在每一次提供商调用时运行，因此其中任何昂贵操作都会在同一次回答内被反复付出代价。由于每次调用都要重新扫描完整历史，成本会随对话长度和工具调用次数一起增长。如果这部分工作很重，可以按内容哈希做缓存。
+
+抛出异常的后果取决于所在的钩子。从 `inlet` 抛出，或从一轮中的第一次 `request` 调用抛出，会中止这一轮；从工具循环后续某跳的 `request` 抛出，则会以错误结束循环，而已经流式输出的内容保留；从 `stream` 抛出，在 WebUI 路径中会丢掉那一个事件，但对直接调用 API 流式接口的调用方则会结束整个流；从 `outlet` 抛出，只会在 debug 级别记录日志并被忽略，只有经由 `/api/chat/completed` 时才会变成 HTTP 400。如果你的过滤器在遇到格式错误的输入时可能失败，而你更希望降级而不是毁掉整个回答，请自己捕获异常并原样返回 body。
+
+`file_handler` 对 `request` 过滤器无效；参见[下面的说明](#owning-retrieval-with-file_handler)。
+
+`inlet`、`stream` 和 `outlet` 都没有变化，未定义 `request` 的过滤器行为与之前完全一致。
 
 ### 🛠️ 通过 `file_handler` 接管检索 {#owning-retrieval-with-file_handler}
 
@@ -197,7 +218,29 @@ class Filter:
         return body
 ```
 
-#### `self.toggle = True` 到底做了什么
+#### 用户如何与可切换 Filter 交互 {#how-users-interact-with-a-toggleable-filter}
+
+当一个可切换 Filter 在当前聊天的作用范围内时，会出现两个 UI 入口：
+
+- **聊天输入栏的内联标签。** 显示 Filter 的 `self.icon` 和名称。点击它：
+  - 如果 Filter 定义了 `UserValves` 类，则**打开用户 valves 模态框**（让用户调整每次聊天的设置）；**否则**
+  - **从当前会话的选中列表中移除该 Filter**（标签从内联行中消失）。
+- **集成菜单（⚙️ 图标）。** 列出作用范围内所有可切换的 Filter，每个都有一个正式的开/关**开关**。用户可在此重新启用已从标签行移除的 Filter，或关闭默认选中的 Filter。
+
+标签存在 = 该 Filter 在下次请求时启用。标签不存在（但 Filter 在集成菜单中） = 用户已关闭它。
+
+#### 选中状态存储在哪里 {#where-the-selection-lives}
+
+- 以**浏览器 sessionStorage 草稿状态**形式存储，按聊天区分。
+- 在同一浏览器会话中页面刷新后仍然存在，但**不会持久化到服务器上的聊天记录**。
+- 初始状态来自模型的 `defaultFilterIds`（管理面板 → 模型设置 → 默认 Filters）——管理员决定每个模型的哪些可切换 Filter 默认**开启**或**关闭**。
+- 切换到不同模型时会重置。
+
+![Toggle Filter](/images/features/plugin/functions/toggle-filter.png)
+
+`self.icon` 仍然按原来的方式工作：传一个 URL（强烈推荐）或 base64 data URI，它就会同时出现在内联标签和集成菜单的条目中。关于为何更推荐托管 URL 而不是 base64，请参阅 [Action Function icon_url 警告](/features/extensibility/plugin/functions/action#example-specifying-action-frontmatter)。
+
+#### `self.toggle = True` 到底做了什么 {#what-selftoggle--true-actually-does}
 
 它是一个**可见性 / 门控标志**，在请求分发时读取一次——**并不是**运行时由 UI 翻转的 Python 对象状态。具体来说：
 
@@ -209,14 +252,14 @@ class Filter:
 一些旧版 Filter 使用了类似 `if self.toggle: enable_feature() else: disable_feature()` 这样的模式放在 `inlet()` 内，期望在每次请求时读取 UI 状态。**该模式从未可靠，在 0.9.0+ 上实际上已失效。** 当 UI 中禁用了 Filter，`inlet()` 根本不会被调用，因此不会有 "else" 分支。正确的迁移方式是完全停止对 `self.toggle` 的分支判断，直接无条件地执行逻辑——用户通过选择/取消选择标签来控制 `inlet()` 是否运行。如果你需要用户驱动的配置（数字阈值、目标语言等），请通过 [`UserValves`](#filter-administration--configuration) 暴露；点击标签会自动打开用户 valves 模态框。
 :::
 
-#### 适用场景 {#what-selftoggle--true-actually-does}
+#### 适用场景 {#when-to-use-it}
 
 - **按模型脱敏。** 只有当请求目标是远端模型时才对 PII / PHI 做脱敏，让自托管模型看到原始 chunk。可以在 inlet 内根据 `__model__["owned_by"]`（或其他信号）分支判断后再改写 chunk。
 - **自定义检索逻辑。** 混合 BM25 + dense 打分、查询改写、多集合路由、用与 Open WebUI 默认不同的模型做重排序、基于改写后查询做结果缓存。
 - **注入前变换。** 翻译、摘要、去重，或任何需要拿到**实际 chunk 文本**而不仅仅是引用的转换。
 - **chunk 级访问控制。** 根据源文档上附带的元数据，过滤掉当前用户不应看到的 chunk。
 
-#### 完整步骤 {#how-users-interact-with-a-toggleable-filter}
+#### 完整步骤 {#the-recipe}
 
 1. 在 filter 模块顶部设置 `file_handler = True`。
 2. 在 `inlet()` 中，从 `body["metadata"]["files"]`（以及临时挂载的 `body["files"]`）读取文件引用。
@@ -235,7 +278,7 @@ class Filter:
    如果你不在意 UI 中的引用是否可点击，纯 Markdown 也能用——只有结构化的 `<source>` 形式才会把引用的弹出框接上。
 6. 返回 `body`。由于 `file_handler` 引发了文件引用被剥离，内置 RAG 步骤被跳过，LLM 调用会带着你清洗过的 chunk 直接发出。
 
-#### 注意：它对 filter 是“静态、全有或全无”的 {#where-the-selection-lives}
+#### 注意：它对 filter 是“静态、全有或全无”的 {#caveat-its-static-all-or-nothing-per-filter}
 
 `file_handler` 的读取是**在 filter 加载时、模块级别只读一次**。它不是 per-request 信号，不能在 `inlet()` 内部根据 model、user、chat 翻转。一旦设置，只要这个 filter 被调用，对应的请求就**总会**跳过内置 RAG——无论你那次 `inlet()` 是否真的执行了检索逻辑。
 
@@ -243,7 +286,7 @@ class Filter:
 
 如果你确实需要“同一模型上，部分用户走内置 RAG、部分用户走自定义 RAG”这种 per-request 切换，最干净的做法是：把自定义 RAG filter 套用 `self.toggle = True`，让它只在用户选中时运行——filter 没被选中时根本不跑，`file_handler` 也不生效，内置 RAG 正常处理请求。不要试图在 `inlet()` 里动态改 `file_handler`；这个标志在 inlet 被调用前就从模块对象上读走了。
 
-#### 与“在 inlet 中改 `body['files']`”相比，这为什么重要 {#when-to-use-it}
+#### 与“在 inlet 中改 `body['files']`”相比，这为什么重要 {#why-this-matters-compared-to-mutating-bodyfiles-in-inlet}
 
 另一种朴素做法是直接在 `inlet()` 里清空 `body["metadata"]["files"] = []` 和 `body["files"] = []` 来动态抑制内置 RAG。这在实践中是有效的，但很脆弱：未来 Open WebUI 版本可能会在新的键上挂更多文件/集合相关逻辑，而“我自己处理”的官方契约就是 `file_handler`。请优先使用文档化的开关。
 
@@ -407,7 +450,7 @@ class ContentModerationFilter:
 - 用户可以按聊天会话**启用/禁用**它们。选中状态保存在浏览器的 sessionStorage 中，**不会**持久化到服务器上的聊天记录。
 - **会**出现在模型的 “Default Filters” 配置中。
 - 模型上的 `defaultFilterIds` 控制**初始选中状态**（哪些可切换 Filter 在新聊天开始时默认开启）。
-- `self.toggle` 本身**永远不会被运行时改写**——它只是一个在请求分发时读取一次的可见性/门控标志。`inlet()` 只会在 Filter 当前被选中时执行，没有“else”分支可写。详见上面的[说明](#selftoggle--true-到底做了什么)。
+- `self.toggle` 本身**永远不会被运行时改写**——它只是一个在请求分发时读取一次的可见性/门控标志。`inlet()` 只会在 Filter 当前被选中时执行，没有“else”分支可写。详见上面的[说明](#what-selftoggle--true-actually-does)。
 
 **适用场景：**
 - **Web 搜索集成** —— 由用户决定何时搜索网页以获取上下文
@@ -1174,6 +1217,54 @@ async def stream(self, event: dict) -> dict:
 delta 是用户看着逐条到达的内容，但后续事件会重复**完整文本**，而 Open WebUI 会据此重建消息并把重建结果推送给浏览器。只在 `response.output_text.delta` 上做的编辑，会在 `response.output_text.done` 到达的瞬间被屏幕上的内容撤销；随后 `response.content_part.done` 会用服务商的副本替换整个内容块，`response.output_item.done` 替换整个输出项，`response.completed` 替换整个响应，而回复结束时保存的正是这份副本。反过来同样成立：有些服务商以空的 `output` 收尾，此时 Open WebUI 会保留此前事件构建的内容，而只在 `response.completed` 中做的编辑永远到不了被保存的消息中。请编辑每一个携带文本的事件。
 
 下面的示例覆盖的是助手消息文本。推理是另一种输出项类型，拥有自己的文本；拒答则位于 `refusal` 字段而非 `text` 字段，因此两者都不会被它触及。
+:::
+
+##### 示例：在 Responses API 连接上过滤标记 {#example-filtering-out-markers-on-responses-api-connections}
+
+```python
+async def stream(self, event: dict) -> dict:
+    def clean(value):
+        # Non-string values turn up, and raising here would drop the whole event
+        return value.replace(" [redacted]", "") if isinstance(value, str) else value
+
+    def clean_message(item):
+        if (item or {}).get("type") != "message":
+            return
+        for part in item.get("content") or []:
+            if "text" in part:
+                part["text"] = clean(part["text"])
+
+    # Chat Completions chunks
+    for choice in event.get("choices") or []:
+        delta = choice.get("delta") or {}
+        if "content" in delta:
+            delta["content"] = clean(delta["content"])
+
+    # Responses API events
+    event_type = event.get("type", "")
+    if event_type == "response.output_text.delta" and "delta" in event:
+        event["delta"] = clean(event["delta"])
+    elif event_type == "response.output_text.done" and "text" in event:
+        event["text"] = clean(event["text"])
+    elif event_type == "response.content_part.done":
+        part = event.get("part") or {}
+        if "text" in part:
+            part["text"] = clean(part["text"])
+    elif event_type == "response.output_item.done":
+        clean_message(event.get("item"))
+    elif event_type == "response.completed":
+        for item in (event.get("response") or {}).get("output") or []:
+            clean_message(item)
+
+    return event
+```
+
+如果 `stream()` 抛出异常，Open WebUI 会丢掉整个事件，而丢失 `response.completed` 会让这条回复失去 token 用量数据和响应 id。
+
+:::note Valves 是每次响应解析一次，而不是每个数据块一次
+
+`stream()` 会为每个片段运行，因此它的 valves 是在响应开始时从数据库读取一次、并在其余部分中复用，而不是被反复读取上千次。于是 `self.valves` 和 `__user__["valves"]` 在一次流式回复的整个过程中都是稳定的：在回复流式输出期间修改某个 valve，会在下一次回复中生效，而不是在当前回复中途生效。`inlet()` 和 `outlet()` 不受影响，因为它们本来就各只运行一次。
+
 :::
 
 #### 4️⃣ **`outlet` 函数（输出后处理）** {#outlet-function-output-post-processing}

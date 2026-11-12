@@ -1,16 +1,10 @@
-# 在 Windows 上使用自签名证书和 Nginx（无需 Docker）
-
-对于基础的内部/开发部署，你可以使用 nginx 和自签名证书把 Open WebUI 代理到 https，从而在局域网中使用麦克风输入等功能。（默认情况下，大多数浏览器都不会允许在非 localhost 的不安全网址上使用麦克风。）
-
-本指南假设你已经通过 pip 安装了 Open WebUI，并正在运行 `open-webui serve`。
-
 ### 在 Windows 上不使用 Docker，配合自签名证书与 Nginx 使用 {#using-a-self-signed-certificate-and-nginx-on-windows-without-docker}
 
 对于基础的内部/开发环境安装，你可以使用 nginx 加自签名证书把 Open WebUI 反向代理到 https，从而能够使用诸如在局域网中输入麦克风之类的功能。（默认情况下，大多数浏览器不会允许在不安全的非 localhost URL 上使用麦克风输入）
 
 本指南假设你已通过 pip 安装了 Open WebUI，并正在运行 `open-webui serve`
 
-## 第 1 步：安装用于生成证书的 openssl
+#### 第 1 步：安装用于生成证书的 openssl {#step-1-installing-openssl-for-certificate-generation}
 
 你首先需要安装 openssl。
 
@@ -37,21 +31,6 @@ openssl version
 
 如果它输出 OpenSSL 版本号（例如 `OpenSSL 3.x.x ...`），说明安装成功。
 
-## 第 2 步：安装 nginx
-
-从 [nginx.org](https://nginx.org) 下载 Windows 版官方 Nginx，或者使用 Chocolatey 之类的包管理器。
-将下载好的 ZIP 文件解压到某个目录（例如 `C:\nginx`）。
-
-## 第 3 步：生成证书
-
-运行以下命令：
-
-```bash
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx.key -out nginx.crt
-```
-
-将生成的 `nginx.key` 和 `nginx.crt` 文件移动到你选择的文件夹，或者直接放到 `C:\nginx` 目录中。
-
 #### 第 2 步：安装 nginx {#step-2-installing-nginx}
 
 从 [nginx.org](https://nginx.org) 下载官方的 Windows 版 Nginx，或使用 Chocolatey 之类的包管理器。
@@ -67,7 +46,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx.key -out nginx
 
 把生成的 nginx.key 和 nginx.crt 文件移动到你选择的目录，或移动到 C:\nginx 目录
 
-## 第 4 步：配置 nginx
+#### 第 4 步：配置 nginx {#step-4-configure-nginx}
 
 用文本编辑器打开 `C:\nginx\conf\nginx.conf`。
 

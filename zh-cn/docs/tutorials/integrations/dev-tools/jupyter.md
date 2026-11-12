@@ -1,6 +1,6 @@
 ---
 sidebar_position: 30
-title: "Jupyter Notebooks"
+title: "Jupyter Notebook"
 ---
 
 > [!WARNING]

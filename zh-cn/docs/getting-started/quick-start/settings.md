@@ -73,7 +73,17 @@ Open WebUI 从一开始就是面向多用户设计的。即使你是唯一使用
 
 ---
 
-## 快速对照 {#instance-wide-starting-values}
+## 实例级起始值 {#instance-wide-starting-values}
+
+功能开关是上限。有一项管理员控制恰好相反：**默认界面设置**决定每个人的 **设置 > 界面** 页面从哪里开始，每个人仍然可以自行修改其中任何一项。某个从未被改动过的选项会一直跟随你的默认值，因此之后对它所做的更改同样会传递给他们。
+
+可在 **设置 > 管理 > 通用** 下的 **UI > 默认界面设置** 中配置，或通过 `DEFAULT_INTERFACE_SETTINGS` 环境变量配置。
+
+[**了解默认界面设置 →**](/features/administration/interface-defaults)
+
+---
+
+## 快速对照 {#quick-reference}
 
 | | Admin Settings | User Settings |
 |---|---|---|
@@ -82,22 +92,38 @@ Open WebUI 从一开始就是面向多用户设计的。即使你是唯一使用
 | **控制内容** | API 连接、功能开关、安全、默认值 | 主题、默认模型、个人偏好 |
 | **覆盖行为** | 用户无法覆盖 | 可在管理员允许范围内自定义 |
 
+唯一有意为之的例外是[默认界面设置](/features/administration/interface-defaults)，管理员把它作为起始值而非上限来设置；每位用户仍然可以自行修改其中任何一项。
+
 ---
 
-## 常见场景 {#quick-reference}
+## 常见场景 {#common-scenarios}
 
 **“我在自己的设置里打开了某个功能，但它不生效。”**
 请先确认管理员是否已在全局范围内启用该功能。只有当管理员先让实例层面可用时，你的个人开关才会生效。
 
 **“我是管理员。OpenAI 或 Ollama 的连接要在哪里配置？”**
-前往 Admin Settings > Connections。这些连接是实例级的，会被所有用户共享。
+前往 设置 > 管理 > 连接。这些连接是实例级的，会被所有用户共享。
 
 **“我想用自己的 API 密钥，但不想和服务器共享。”**
-如果管理员启用了 **Direct Connections**，你可以在 User Settings > Connections 中添加个人 API 密钥。详见 [Direct Connections](/features/chat-conversations/direct-connections)。
+如果管理员启用了 **Direct Connections**，你可以在 用户设置 > 连接 中添加个人 API 密钥。详见 [Direct Connections](/features/chat-conversations/direct-connections)。
 
 **“我设置了 system prompt，但管理员在 Workspace 里的模型设置把它覆盖了。”**
-管理员在 Workspace 中配置的模型级设置优先于个人设置。完整优先级见 [Chat Parameters](/features/chat-conversations/chat-features/chat-params)。
+管理员在 Workspace 中为模型配置的 system prompt 优先于你个人的设置。高级参数则相反：你为账户设置的，或在 **模型控制 > 控制** 下为单个对话设置的值，才是实际发送的值。完整优先级见 [Chat Parameters](/features/chat-conversations/chat-features/chat-params)。
+
+**“设置 > 界面 中的某个开关旁边写着 Default。这是什么意思？”**
+这意味着你从未改动过该选项，因此它一直在跟随管理员配置的实例级[默认界面设置](/features/administration/interface-defaults)。改动之后它就归你了；把它改回当前默认值，它又会重新跟随。
+
+**“界面太小，看起来不太舒服。”**
+在 **设置 > 界面** 的 **UI** 区域顶部调高 **UI 缩放**。它会放大整个应用，并随你的账户保存。
+
+**“我能改字体吗？”**
+**字体族**，就在 **设置 > 界面** 中 UI 缩放的下方。点击 **默认** 会弹出一个输入框，然后输入字体名称，例如 `Aptos`。界面会随输入实时变化，方便你在确认之前先看到效果。
+
+该字体必须已经安装在你当前使用的电脑上。系统不会下载字体，因此输入一个未安装的名称只会保留标准字体且不会报错。清空输入框即可恢复。预格式化代码块无论如何都会保持标准字体。
+
+**“我是管理员。能让所有人使用相同的界面选项开始吗？”**
+可以，通过[默认界面设置](/features/administration/interface-defaults)。它决定了每个人的起点；之后每个人仍可自行修改其中任何一项。
 
 :::tip 第一次当管理员？
-建议先从 **Admin Settings > Connections** 开始，连接模型提供商（Ollama、OpenAI 等），然后再进入 **Admin Settings > Interface**，按需为用户启用或禁用功能。
+建议先从 **设置 > 管理 > 连接** 开始，连接模型提供商（Ollama、OpenAI 等），再前往 **设置 > 管理 > 界面** 按需为用户启用或禁用功能。
 :::

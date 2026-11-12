@@ -129,7 +129,9 @@ Open Terminal 从 v0.13.0 起提供这两个端点。
 
 管理员配置的终端由 Open WebUI 服务器调用，携带连接的认证信息、`Accept: application/json`、`X-User-Id`、`X-Session-Id`（对话 ID）和 `X-Terminal-Context-Id`，与其它终端调用使用相同的身份头，因此按用户或按对话划分技能范围的服务器能获得所需信息。不会跟随重定向。用户在自身设置中添加的终端则由该用户的浏览器调用，携带 bearer 密钥和 `X-Session-Id`。它只需能被浏览器访问即可，因此位于用户本机的终端（例如 `http://127.0.0.1:8000`）在 Open WebUI 部署于别处时也能正常工作。
 
----## 创建技能
+---
+
+## 创建技能 {#creating-a-skill}
 
 前往**工作区 > 技能**，点击工作区页眉中的 **创建**。
 

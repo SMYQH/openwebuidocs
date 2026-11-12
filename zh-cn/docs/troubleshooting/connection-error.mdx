@@ -235,6 +235,8 @@ Open WebUI 中有些功能提供**两种配置方式**：一种是**用户/直�
 这适用于 Open WebUI 中**所有由后端代理的连接**，不仅仅是开放终端。包括[工具服务器连接](/features/extensibility/plugin/tools/openapi-servers/open-webui#main-difference-where-are-requests-made-from)、[开放终端管理员连接](/features/open-terminal#enterprise-multi-user) 以及 Ollama/OpenAI API 端点都遵循同样的规律。
 :::
 
+## "Open WebUI backend required" / 纯前端错误 {#open-webui-backend-required--front-end-only-error}
+
 **症状：** 页面加载时显示 *"Open WebUI backend required. Oops! You're using an unsupported method (frontend only). Please serve the WebUI from the backend."* 这通常出现在**第二个实例**、反向代理之后或通过 **SSH 隧道**访问时，而另一个实例正常工作。
 
 **实际含义：** 页面加载时，前端从其自身源获取 `/api/config`。如果该请求失败，Open WebUI 会显示此错误。这**不**意味着你运行的是纯前端构建。官方镜像是一个同时提供 UI 和 API 的单一进程，监听容器端口 **`8080`**，因此如果页面到达了你，API 应该也在那里。此错误意味着对该源的 `/api/config` 请求未能到达后端。
@@ -246,7 +248,7 @@ Open WebUI 中有些功能提供**两种配置方式**：一种是**用户/直�
    - 你的 SSH 隧道将本地端口转发到**该实例实际发布的主机端口**。运行多个实例时容易转发到错误的端口。
    - 从浏览器机器通过隧道快速测试：`curl http://localhost:3001/api/config`。返回 JSON 表示后端可达，则查看原因 2。空回复或连接拒绝表示隧道或端口映射有问题。
 
-2. **过期的 Service Worker 提供缓存的页面。** Open WebUI 注册了 Service Worker，因此浏览器可能显示缓存的 UI shell，而实时 `/api/config` 调用失败，从而产生此错误。普通硬刷新不会注销 Service Worker。从 **DevTools > Application > Service Workers > Unregister** 为该源清除它，或在新的隐私/无痕窗口中打开实例。
+2. **过期的 Service Worker 提供缓存的页面。** Open WebUI 自身不注册 Service Worker，并会在加载时注销它发现的任何 Service Worker，因此出现陈旧的外壳只能来自浏览器的 HTTP 缓存，或来自同一源上另一个应用留下的 worker——此时实时的 `/api/config` 调用失败，就会产生这个确切的错误。普通的强制刷新并不会注销 Service Worker。请在 **DevTools > Application > Service Workers > Unregister** 中为该源清除它，或用全新的隐私 / 无痕窗口打开该实例。
 
 这是部署和网络条件问题，而非 Open WebUI 的错误。
 

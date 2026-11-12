@@ -1,9 +1,9 @@
 ---
 sidebar_position: 5
-title: "External Document Extraction"
+title: "外部文档提取"
 ---
 
-# External Document Extraction
+# 外部文档提取 {#external-document-extraction}
 
 内置引擎（Tika、Docling、Mistral OCR 等）可以覆盖大多数情况，但有时它们一个都不合适：你有自有的 OCR 工具、已经付费的云端提取 API、重到更适合单独跑在专用 GPU 或大内存机器上（而不是 Open WebUI 服务器上）的提取负载，或者有合规要求，需要在文本到达 Open WebUI 或模型之前先脱敏 PII。为这些场景，**external**（外部）引擎会把文档提取完全交给一个由你自己编写并运行的 HTTP 服务。
 

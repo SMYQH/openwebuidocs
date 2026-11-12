@@ -317,18 +317,19 @@ await __event_emitter__({
 
 ### `__files__`
 
-通过聊天发送的文件的 `list`。注意图片不视为文件，而是直接作为 `body["messages"]` 列表的一部分发送给模型。
+通过聊天发送的文件的 `list`，没有附件的消息中为空列表。管道和工具都会收到它。注意图片不视为文件，而是直接作为 `body["messages"]` 列表的一部分发送给模型。
 
-出于性能考虑，参数中不包含文件的实际二进制内容，但仍可通过路径访问文件。例如，在 Docker 环境中，路径的 Python 写法如下：
+出于性能考虑，参数中不包含文件的实际二进制内容，但仍可通过路径访问文件。例如使用 `docker` 时，路径的 Python 写法如下：
 
 ```python
 from pathlib import Path
 
-the_file = Path(f"/app/backend/data/uploads/{__files__[0]["files"]["id"]}_{__files__[0]["files"]["filename"]}")
+# `path` 是本地存储下的文件系统路径；在 S3、GCS 或 Azure 上则是桶 URL
+the_file = Path(__files__[0]["file"]["path"])
 assert the_file.exists()
 ```
 
-同一 files dict 也可通过 `__metadata__["files"]` 访问（无文件时值为 `[]`），或通过 `body["files"]` 访问（无文件时该键完全缺失）。
+同一 files dict 也可通过 `__metadata__["files"]` 访问（未发送文件时其值为 `None`），或通过 `body["files"]` 访问（未发送文件时该键完全缺失）。
 
 <details>
 <summary>示例</summary>
@@ -381,7 +382,7 @@ assert the_file.exists()
 
 ### `__task__`
 
-任务类型的 `str`。等同于 `__metadata__["task"]`，不存在则为 `None`。
+任务类型的 `str`。等同于 `__metadata__["task"]`，不存在则为 `None`。只有管道会收到它；声明了该参数的过滤器或工具即使在真正的任务调用中也不会拿到取值。
 
 <details>
 <summary>可能的值</summary>
@@ -390,13 +391,16 @@ assert the_file.exists()
 
 [
     "title_generation",
+    "follow_up_generation",
     "tags_generation",
     "emoji_generation",
     "query_generation",
     "image_prompt_generation",
     "autocomplete_generation",
     "function_calling",
-    "moa_response_generation"
+    "moa_response_generation",
+    "context_compaction",
+    "memory_review"
 ]
 ```
 
@@ -410,19 +414,23 @@ assert the_file.exists()
 
 ### `__tools__`
 
-`ToolUserModel` 实例的 `list`。
+以工具函数名为键的 `dict`，仅为管道注入。每个值包含 `tool_id`、`callable`（运行该工具的可等待对象）和 `spec`（发送给模型的 OpenAI 函数规范）。本地 Python 工具的条目还带有 `metadata`，而内置工具与外部工具服务器条目则带有 `type`，值为 `builtin` 或 `external`。
 
-如需了解 `ToolUserModel` 实例的属性详情，可在 [tools.py](https://github.com/open-webui/open-webui/blob/main/backend/open_webui/models/tools.py) 中查看源码。
+该 dict 由 [tools.py](https://github.com/open-webui/open-webui/blob/main/backend/open_webui/utils/tools.py) 中的 `get_tools()` 组装。
 
-#### `__id__` {#\_\_id\_\_}
+### `__oauth_token__` {#\_\_oauth\_token\_\_}
+
+已登录用户的 OAuth 令牌数据（`access_token` 以及提供商返回的其余内容，过期后会刷新）组成的 `dict`；若该用户不是通过 OAuth 登录，或没有存储会话令牌，则为 `None`。管道、工具以及过滤器的 `inlet()` 和 `request()` 都会收到它。该令牌来自浏览器的 OAuth 会话 cookie；对于自动化以及不带 cookie 发起的 API 调用，会回退到该用户最近一次存储的 OAuth 会话。
+
+### `__id__` {#\_\_id\_\_}
 
 插件本身的 `str` 类型 id：对工具而言是工具 id，对过滤器而言是过滤器 id，对操作而言是操作 id（点击子操作时则是子操作 id）。管道不会收到它。
 
-#### `__body__` {#\_\_body\_\_}
+### `__body__` {#\_\_body\_\_}
 
 仅过滤器可用。`stream()` 会把每个数据块作为 `event` 而非 `body` 接收，因此 `__body__` 承载的是该轮次发起时的请求体，其状态为 `inlet()` 过滤器运行之后。
 
-#### `__features__` {#\_\_features\_\_}
+### `__features__` {#\_\_features\_\_}
 
 仅工具可用。来自请求的 `features` 字典（`web_search`、`image_generation`、`code_interpreter` 以及客户端发送的其他开关），取自 `inlet()` 过滤器运行之后的请求体，因此工具可以看到用户开启了哪些开关。
 

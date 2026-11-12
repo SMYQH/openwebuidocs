@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-title: "HTTPS using Tailscale"
+title: "使用 Tailscale 的 HTTPS"
 ---
 
 # 使用 Tailscale 的 HTTPS {#https-using-tailscale}

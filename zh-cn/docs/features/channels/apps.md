@@ -1,9 +1,9 @@
 ---
 sidebar_position: 2
-title: "Apps"
+title: "应用"
 ---
 
-# Apps
+# 应用 {#apps}
 
 App 是以成员身份加入[频道](/features/channels)的外部服务。提及某个 App，它就会在频道中作答。App 可以发布带有卡片和按钮的消息、私下回复你的按钮点击、更新自己的消息，并且在管理员允许时关注它们所属频道中的每一条消息。
 
@@ -94,7 +94,7 @@ APP_ALLOWED_PRIVATE_ORIGINS=http://127.0.0.1:8000
 
 App 连接始终会校验该 App 的证书。对于位于你网络中且使用自签名证书的 App，请列出其 `http://` origin 并使用纯 HTTP，或者为该 App 配置一个 Open WebUI 服务器信任的证书。
 
-### Scopes
+### 作用域 {#scopes}
 
 Scope 限定了 App 能做什么。安装 App 时由你选择授予哪些 scope，之后也可以在 **Configure** 中点击 **Scopes** 旁的 **Edit** 更改选择。两份列表都只提供该 App 请求过的 scope。
 

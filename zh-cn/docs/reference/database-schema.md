@@ -952,9 +952,9 @@ docker exec -it open-webui /bin/sh
 | user_id         | String        | PK (composite)  | Tag owner                 |
 | meta            | JSON          | nullable        | Tag metadata              |
 
-Things to know about the tag table:
+关于 tag 表需要知道的事项：
 
-- Primary key is composite (id, user_id)
+- 主键是复合主键（id, user_id）
 
 ## Tool 表 {#tool-table}
 

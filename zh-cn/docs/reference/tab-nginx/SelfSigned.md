@@ -1,20 +1,12 @@
-# 自签名证书
-
-自签名证书适合开发或内部使用，尤其是在你并不特别在意信任链的场景下。
-### 访问 WebUI {#access-the-webui}
 ### 自签名证书 {#self-signed-certificate}
 
 使用自签名证书适合开发或内部使用场景，在这些场景中证书是否被信任并不是关键问题。
-
 
 通过以下 HTTPS 地址访问 Open WebUI：
 
 [https://your_domain_or_IP](https://your_domain_or_IP)
 
----
-
-
-## 自签名证书步骤
+#### 自签名证书步骤 {#self-signed-certificate-steps}
 
 1. **为 Nginx 文件创建目录：**
 
@@ -138,7 +130,7 @@
     docker compose up -d nginx
     ```
 
-## 访问 WebUI
+### 访问 WebUI {#access-the-webui}
 
 通过以下 HTTPS 地址访问 Open WebUI：
 

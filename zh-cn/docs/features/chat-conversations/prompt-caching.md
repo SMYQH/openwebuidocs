@@ -1,6 +1,6 @@
 ---
 sidebar_position: 750
-title: "Prompt Caching (KV Cache) Optimization"
+title: "提示词缓存（KV Cache）优化"
 ---
 
 # 提示词缓存（KV Cache）优化 {#prompt-caching-kv-cache-optimization}

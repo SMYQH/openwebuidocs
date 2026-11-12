@@ -269,7 +269,7 @@ if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], HTML
 
 iframe 与父窗口之间的通信不止于高度上报。还可以使用以下模式：
 
-### 负载请求
+### 负载请求 {#payload-requests}
 
 iframe 可以向父页面请求数据负载。加载完成后把动态数据传入嵌入内容时，这很有用：
 
@@ -294,14 +294,14 @@ iframe 可以向父页面请求数据负载。加载完成后把动态数据传�
 :::info 负载来自哪里
 并没有一个独立的"设置 payload"调用。payload 就是父组件在实例化 iframe 时已经配置好的内容——目前只有一条路径会真正配置它：
 
-- ✅ **在 chat-controls 嵌入面板中通过引用打开的嵌入** —— 当用户点击某个带有 embed URL 的引用徽章时，侧边面板会打开，并把**完整的引用/source 对象**（也就是你通过 `__event_emitter__` 发出的 `source` / `citation` 事件中传入的那个 dict）作为 payload 暴露出来。要设置它，就发出一个 [`source` 事件](./events#source-or-citation-and-code-execution)，把你想让 iframe 获取的内容放在 `data` 里。iframe 再通过上面的 postMessage 发起请求，父页面就会把那个引用对象原样返回。
-- ❌ **内联工具调用嵌入**（由 Tool 方法返回 `HTMLResponse` 或 `(HTMLResponse, context)` 产生）—— 这条路径父页面不会配置 payload，因此 payload 请求会返回 `{ type: 'payload', requestId: ..., payload: null }`。请改用[工具参数注入](#仅限工具的参数注入)（需要 `allowSameOrigin`）把数据传入工具调用嵌入。
+- ✅ **在 chat-controls 嵌入面板中通过引用打开的嵌入** —— 当用户点击某个带有 embed URL 的引用徽章时，侧边面板会打开，并把**完整的引用/source 对象**（也就是你通过 `__event_emitter__` 发出的 `source` / `citation` 事件中传入的那个 dict）作为 payload 暴露出来。要设置它，就发出一个 [`source` 事件](./events.mdx#source-or-citation-and-code-execution)，把你想让 iframe 获取的内容放在 `data` 里。iframe 再通过上面的 postMessage 发起请求，父页面就会把那个引用对象原样返回。
+- ❌ **内联工具调用嵌入**（由 Tool 方法返回 `HTMLResponse` 或 `(HTMLResponse, context)` 产生）—— 这条路径父页面不会配置 payload，因此 payload 请求会返回 `{ type: 'payload', requestId: ..., payload: null }`。请改用[工具参数注入](#tool-args-injection-tools-only)（需要 `allowSameOrigin`）把数据传入工具调用嵌入。
 - ❌ **`__event_emitter__({"type": "embeds", ...})` 与 Action 嵌入** —— 这两条路径也不会配置 payload；返回值为 `null`。
 
 简而言之：payload-request 走的是"侧边面板引用"专用通道，并不是通用的 iframe 数据通道。请按需要的数据流选择合适的渲染路径。
 :::
 
-### 仅限工具的参数注入
+### 仅限工具的参数注入 {#tool-args-injection-tools-only}
 
 当 **Tool** 方法以富 UI 嵌入的形式内联到工具调用展示位置时（也就是你从 Tool 方法本身返回 `HTMLResponse` 或 `(HTMLResponse, context)` 元组），模型传入的实参会以 `window.args` 的形式暴露在 iframe 上——**它是一个 JSON 字符串**，不是已经解析好的对象。 使用前请自行解析：
 
@@ -328,7 +328,7 @@ iframe 可以向父页面请求数据负载。加载完成后把动态数据传�
 - ❌ **`__event_emitter__({"type": "embeds", "data": {"embeds": [...]}})`** —— 通过 chat-controls 嵌入面板渲染，这个路径根本不会绑定 `args`。无论 sandbox 怎么设置，`window.args` 都会是 undefined。这是设计如此：embeds-event 路径没有挂载工具调用，也就没有 args 可注入。
 - ❌ **Action 嵌入** —— 由用户而不是模型触发，所以也没有模型提供的 args 可注入。
 
-如果需要在以上 ❌ 路径渲染的嵌入里传入动态数据，请改用上方的[负载请求](#负载请求)模式。
+如果需要在以上 ❌ 路径渲染的嵌入里传入动态数据，请改用上方的[负载请求](#payload-requests)模式。
 :::
 
 ### 自动注入的库 {#auto-injected-libraries}

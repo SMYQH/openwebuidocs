@@ -1,9 +1,9 @@
 ---
 sidebar_position: 200
-title: "Two-Factor Sign-In (MFA)"
+title: "双因素登录（MFA）"
 ---
 
-# Two-Factor Sign-In (MFA)
+# 双因素登录（MFA）{#two-factor-sign-in-mfa}
 
 **要求每位用户每次登录时都提供来自身份验证器应用的验证码。**
 

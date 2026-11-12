@@ -4,6 +4,19 @@ title: "SSO（OAuth、OIDC、受信任请求头）"
 description: "通过 OAuth、OpenID Connect 或可信标头认证把 Open WebUI 连接到身份提供商，并附有各提供商的配置指南链接。"
 ---
 
+## 选择你的配置方式 {#choose-your-setup}
+
+- **内置提供商**：[Google](#google)、[Microsoft](#microsoft) 或 [GitHub](#github)。
+- **其他 OpenID Connect 提供商**：可以从 [OIDC](#oidc) 开始，或参阅 [Okta](/tutorials/auth-sso/okta-oidc-sso) 与 [Keycloak](/features/authentication-access/auth/sso/keycloak) 教程。
+- **由代理处理认证**：使用[受信任请求头](#trusted-header)，并确保只有可信代理能访问 Open WebUI。
+
+:::danger 仅支持一个 OIDC 提供商
+目前，您只能通过 `OPENID_PROVIDER_URL` 一次配置**一个** OpenID Connect（OIDC）提供商。
+不能同时将 Microsoft **和** Google 作为 OIDC 提供商。
+
+*但是，社区有一个同时使用两者的变通方案！详情请参阅我们的[双 OAuth 教程](/tutorials/auth-sso/dual-oauth-configuration)。*
+:::
+
 :::info
 
 有关所有环境变量的更多信息，请查看[环境变量文档页面](/reference/env-configuration/)。
@@ -16,13 +29,6 @@ description: "通过 OAuth、OpenID Connect 或可信标头认证把 Open WebUI 
 需要 SSO 设置的故障排查帮助？
 请查看我们的[故障排查指南](/troubleshooting/sso)
 
-:::
-
-:::danger 仅支持一个 OIDC 提供商
-目前，您只能通过 `OPENID_PROVIDER_URL` 一次配置**一个** OpenID Connect（OIDC）提供商。
-不能同时将 Microsoft **和** Google 作为 OIDC 提供商。
-
-*但是，社区有一个同时使用两者的变通方案！详情请参阅我们的[双 OAuth 教程](/tutorials/auth-sso/dual-oauth-configuration)。*
 :::
 
 ## OAuth 配置概览 {#oauth-configuration-overview}
@@ -59,6 +65,18 @@ description: "通过 OAuth、OpenID Connect 或可信标头认证把 Open WebUI 
 3. **必需变量**：始终验证您使用的是[环境配置文档](/reference/env-configuration/)中的确切变量名。常见错误包括使用不存在的变量如 `OIDC_CONFIG`。
 
 :::
+
+### 管理面板中的只读 OAuth 设置 {#read-only-oauth-settings-in-the-admin-panel}
+
+`ENABLE_OAUTH_PERSISTENT_CONFIG` 决定 OAuth 设置存放在哪里，管理面板会随之变化。默认值为 `false` 时，每次启动都会从环境变量读取它们，因此 **Settings > Admin > Authentication** 中的 **OAuth / OIDC** 区域显示为只读：
+
+- 所有取值仍然可见，但整个区域会被置灰，其中每个字段和开关都不可操作，包括 **OAuth / OIDC** 主开关。
+- 区域上方有一条说明，指出这些设置来自环境变量，并给出 `ENABLE_OAUTH_PERSISTENT_CONFIG`。
+- 保存 Authentication 页面不会改动 OAuth 设置。该页面的其他区域（例如 LDAP）照常保存。
+
+将 `ENABLE_OAUTH_PERSISTENT_CONFIG=true` 可让该区域可编辑，并让保存的取值持久保存在数据库中。对提供商连接设置的修改（例如提供商 URL、client ID 与 secret、重定向 URI 和 scopes）会在所有 Open WebUI 实例重启后生效。若希望继续以环境变量为准，请保持为 `false`，改为修改环境变量后再重启。
+
+`ENABLE_PERSISTENT_CONFIG` 才是总开关。当它为 `false` 时，无论 `ENABLE_OAUTH_PERSISTENT_CONFIG` 如何设置，都不会向数据库保存任何内容，因此这个 OAuth 变量只决定该区域能否编辑，而不影响取值能否在重启后保留。两者都必须为 `true` 才能在管理面板中管理 OAuth。
 
 ### 服务端 OAuth 会话管理 {#server-side-oauth-session-management}
 

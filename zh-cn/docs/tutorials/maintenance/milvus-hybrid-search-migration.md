@@ -1,6 +1,6 @@
 ---
 sidebar_position: 320
-title: "Milvus Native Hybrid Search Migration"
+title: "Milvus 原生混合检索迁移"
 ---
 
 Open WebUI 在 Milvus 2.5 及更高版本上使用原生混合搜索。旧版本 Milvus 中的数据会在首次启动时迁移一次。不会重新做嵌入：Open WebUI 把每个集合连同其已有的向量和文本复制到一个新集合中，再由 Milvus 根据存储的文本构建关键词索引。视数据量大小，这一步可能耗时数分钟到数小时。

@@ -78,7 +78,22 @@ search:
 
 ---
 
-### 4. 连接超时 {#4-web-search-is-enabled-but-the-model-does-not-call-search_web}
+### 4. Web Search 已启用但模型没有调用 `search_web` {#4-web-search-is-enabled-but-the-model-does-not-call-search_web}
+
+如果网页搜索引擎已经配置好（例如以 DuckDuckGo 为后端的 DDGS）、模型也启用了 Web Search、当前对话的 Web Search 开关也已打开，但助手仍然不搜索就作答，那么问题通常出在模型能力而不是搜索提供商。
+
+在 Native/Agentic 模式下，Open WebUI 会把网页搜索暴露为 `search_web` 工具。模型必须自行决定调用该工具并返回有效的结构化工具调用。较旧、较小或较弱的本地模型可能会漏掉这个工具、无视它，或者即使 Open WebUI 的所有设置都正确也产出格式错误的工具调用。
+
+**解决方法：**
+
+- **为网页搜索工作流使用现代的高质量工具调用模型。** 前沿模型或近期的大型开放权重模型，在判断何时该搜索以及正确组织工具调用方面，都比老旧或较小的模型可靠得多。有关模型要求与建议，请参阅[工具调用模式：原生与旧版](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
+- **确认原生函数调用已启用**：在 **设置 > 管理 > 模型 > 编辑** 中选中模型，进入 **高级参数 > 函数调用**。内置的网页搜索工具属于原生模式工具。
+- **检查三道网页搜索开关**：全局已启用网页搜索、模型上已启用网页搜索、对话中已打开网页搜索开关。
+- **对于 DDGS / DuckDuckGo 配置**，请参照 [DDGS 提供商指南](/features/chat-conversations/web-search/providers/ddgs)单独确认提供商配置；但如果 DDGS 在日志中返回了结果而助手却从不调用 `search_web`，请更换模型。
+
+---
+
+### 5. 连接超时 {#5-connection-timeouts}
 
 如果 Web Search 经常超时：
 

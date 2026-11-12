@@ -7320,7 +7320,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 :::warning
 
-**Use with Caution**
+**谨慎使用**
 
 启用此选项会跳过基于邮箱的用户标识，而邮箱是跨认证系统唯一标识用户的标准方法。启用后：
 - 用户账户将使用 `sub` 声明（或 `OAUTH_SUB_CLAIM` 指定的声明）作为主要标识符创建
@@ -9858,14 +9858,14 @@ WEBSOCKET_REDIS_OPTIONS='{"socket_connect_timeout": 5}'
 - 持久化：这是一个实验性环境变量。
 
 :::warning
-**Experimental Feature - Known Limitations**
+**实验性功能 — 已知限制**
 
 此功能目前仍处于实验阶段，存在已知的兼容性问题：
 - **尚不支持 Redis Sentinel 和 Redis Cluster 配置**，启用此设置会导致认证失败
 - 目前仅兼容基本的 Redis 部署（单实例或标准 Redis URL）
 - 此功能是为解决多 Pod 部署中的 CSRF “mismatching_state” 错误而引入，但由于兼容性工作仍在进行，默认处于禁用状态
 
-**Only enable this setting if:**
+**仅在以下情况下启用此设置：**
 - 你在多副本部署中遇到了持续性的 OAuth 登录 CSRF 错误
 - 你使用的是基本的 Redis 部署（不是 Sentinel 或 Cluster）
 - 你已确认所有副本的 `WEBUI_SECRET_KEY` 设置为相同的值

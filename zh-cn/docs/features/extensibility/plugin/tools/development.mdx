@@ -61,29 +61,65 @@ class Tools:
         return string[::-1]
 ```
 
-### 类型注解 {#method-docstrings}
-每个工具的参数都必须提供类型注解。类型也可以是嵌套的，例如 `queries_and_docs: list[tuple[str, int]]`。这些类型注解会用于生成发送给模型的 JSON Schema。没有类型注解的工具也能运行，但一致性会差很多。
+### 方法文档字符串 {#method-docstrings}
 
-### Valves 和 UserValves（可选，但强烈建议） {#type-hints}
+每个方法的文档字符串就是模型在决定是否调用它之前会阅读的内容。第一个 `:param` 之前的文本会成为工具自身的描述，而每个 `:param name:` 会成为该参数在 JSON schema 中的描述。
 
-Valves 和 UserValves 用于定义工具的可配置项。你可以在专门的 [Valves & UserValves 页面](/features/extensibility/plugin/development/valves) 了解更多。
+参数描述可以跨越任意多行。在遇到下一个 `:param`（或 `:return:` 等其他字段）之前，后面的每一行都属于该参数。缩进会被去掉，空行会被丢弃，因此你可以把一段很长的描述排成段落，模型依然能完整收到：
 
-### 可选参数 {#return-values}
+```python
+async def search_docs(self, query: str, limit: int = 5) -> str:
+    """
+    Searches the internal documentation.
+
+    :param query: The phrase to search for.
+        Supports the AND and OR operators.
+
+        Wrap an exact phrase in double quotes.
+    :param limit: How many results to return.
+    :return: The matching passages.
+    """
+```
+
+这样模型除了第一行之外，还会知道运算符和引号规则。`:return:` 之后的文本不会发送给模型，因此模型需要知道的内容请写进描述或 `:param` 中。
+
+只有 reST 的 `:param name:` 形式会被读取。Google 风格的 `Args:` 块不会产生任何参数描述，其内容会并入工具自身的描述。
+
+### 类型注解 {#type-hints}
+
+每个工具的参数都必须提供类型注解。类型也可以是嵌套的，例如 `queries_and_docs: list[tuple[str, int]]`。这些类型注解会用于生成发送给模型的 JSON schema。没有类型注解的参数在 schema 中会被视为字符串类型，因此模型总会发送字符串。`Optional[X]` 会退化为 `X`，默认值为 `None` 的参数会被丢弃。名称以 `__` 开头的参数会连同它们的 `:param` 行一起从 schema 中移除，因此模型永远看不到下面列出的保留参数。
+
+### 返回值 {#return-values}
+
+工具可以返回 `str`、`dict` 或 `list`。`dict` 会被 JSON 编码后交给模型，裸 `list` 会被包装成 `{"results": [...]}`，其他类型则通过 `str()` 转换。以 `data:image/` 开头的字符串会被分离为图片附件，并改为向模型告知 `<name>: Image file read successfully.`。
+
+### Valves 和 UserValves（可选，但强烈建议） {#valves-and-uservalves-optional-but-highly-encouraged}
+
+Valves 和 UserValves 用于定义工具的可配置项，你可以在专门的 [Valves & UserValves 页面](/features/extensibility/plugin/development/valves) 了解更多。存储在 Valves 中的机密信息（例如 API key）可以[静态加密](/features/extensibility/plugin/development/valves#encrypting-valve-values-at-rest)。
+
+### 可选参数 {#optional-arguments}
 下面是你的工具可以依赖的可选参数列表：
 - `__event_emitter__`：发出事件（见下一节）
 - `__event_call__`：与事件发射器类似，但可用于用户交互。事件调用的服务器端超时时间可通过 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout) 配置（默认：300 秒）。
 - `__user__`：包含用户信息的字典，其中还包含 `__user__["valves"]` 中的 `UserValves` 对象。
 - `__metadata__`：聊天元数据字典
 - `__messages__`：历史消息列表
-- `__files__`：附加文件
-- `__model__`：模型信息字典
+- `__files__`：附加文件（消息没有附件时为空列表）
+- `__model__`：模型信息字典。对工作区工具而言，如果 **设置 > 管理 > 界面** 下配置了任务模型，它就是该任务模型，否则是当前对话模型。若要获取用户正在对话的模型，请读取 `__metadata__["model"]`。
+- `__id__`：工具自身的 id
+- `__chat_id__` 和 `__message_id__`：当前的聊天 id 和消息 id
+- `__request__`：FastAPI 请求
 - `__oauth_token__`：包含用户有效、自动刷新的 OAuth 令牌负载的字典。这是获取用户令牌并进行认证 API 调用的 **新式、推荐且安全** 的方式。该字典通常包含 `access_token`、`id_token` 以及其他提供商相关数据。
 
 关于 `__oauth_token__` 的更多信息，以及如何配置将该令牌传递给工具，请参阅 [环境变量文档页](/reference/env-configuration/) 中的 OAuth 部分，以及 [SSO 文档](/features/authentication-access/)。
 
-只需像上面示例中的 `__user__` 一样，把它们作为参数添加到你的 Tool 类任意方法中即可。
+只需像上面示例中的 `__user__` 一样，把它们作为参数添加到你的 Tool 类任意方法中即可。`__messages__` 和 `__files__` 会在每次原生工具调用前刷新，其余参数则在请求开始时固定。
 
-#### 在工具中使用 OAuth 令牌 {#file_handler}
+#### `file_handler` {#file_handler}
+
+模块级的 `file_handler = True` 会告诉 Open WebUI：工具运行完成后丢弃请求中的附件文件，这样检索流程就不会再把它们注入进来。只有 Legacy 函数调用路径会读取该标志，Native 循环会忽略它。
+
+#### 在工具中使用 OAuth 令牌 {#using-the-oauth-token-in-a-tool}
 
 当你构建需要代表用户与外部 API 交互的工具时，现在可以直接访问他们的 OAuth 令牌。这消除了脆弱的 cookie 抓取方式，并能确保令牌始终有效。
 
@@ -91,45 +127,6 @@ Valves 和 UserValves 用于定义工具的可配置项。你可以在专门的 
 
 ```python
 import httpx
-from typing import Optional
-
-class Tools:
-    # ... other class setup ...
-
-    async def get_user_profile_from_external_api(self, __oauth_token__: Optional[dict] = None) -> str:
-        """
-        Fetches user profile data from a secure external API using their OAuth access token.
-
-        :param __oauth_token__: Injected by Open WebUI, contains the user's token data.
-        """
-        if not __oauth_token__ or "access_token" not in __oauth_token__:
-            return "Error: User is not authenticated via OAuth or token is unavailable."
-
-        access_token = __oauth_token__["access_token"]
-
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        }
-
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get("https://api.my-service.com/v1/profile", headers=headers)
-                response.raise_for_status() # Raise an exception for bad status codes
-                return f"API Response: {response.json()}"
-        except httpx.HTTPStatusError as e:
-            return f"Error: Failed to fetch data from API. Status: {e.response.status_code}"
-        except Exception as e:
-            return f"An unexpected error occurred: {e}"
-```
-
-### 在工具中使用 OAuth 令牌 {#using-the-oauth-token-in-a-tool}
-
-在构建需要代表用户与外部 API 交互的工具时，你现在可以直接访问他们的 OAuth 令牌。这消除了脆弱的 Cookie 抓取做法，并确保令牌始终有效。
-
-**示例：** 一个使用用户访问令牌调用外部 API 的工具。
-
-```python
 from typing import Optional
 
 class Tools:
@@ -191,7 +188,32 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 :::
 
 
-#### 完整事件类型兼容性矩阵 {#detecting-the-mode-in-your-tool}
+#### 在工具中检测当前模式 {#detecting-the-mode-in-your-tool}
+
+大多数工具根本不需要区分模式。如果你的工具确实需要，请从 `__metadata__` 中读取。**Native 是默认模式，因此要显式判断 Legacy。** 只要不是 `"legacy"`（包括未设置的情况），运行的都是 Native：
+
+```python
+def is_legacy_mode(__metadata__) -> bool:
+    # Native is the default; only an explicit "legacy" opts out of it.
+    return (__metadata__ or {}).get("params", {}).get("function_calling") == "legacy"
+```
+
+把它定义一次，在所有需要分支的地方调用，而不是在每个方法里重新推导模式：
+
+```python
+if is_legacy_mode(__metadata__):
+    # Legacy: the full event-emitter surface is available (message, replace, deltas)
+    ...
+else:
+    # Native (the default): use the compatible events and return the final content
+    ...
+```
+
+:::caution 不要检查 `"native"` 或 `"default"`
+未设置模式的模型运行的是 **Native**，但并不携带 `"native"` 这个字符串，因此 `== "native"` 的判断（或把 `"default"` 作为非 Native 的兜底）会把如今默认的情况误判为 Legacy，并喂给它只在 Legacy 下可用的事件，从而悄无声息地出问题。请判断 `== "legacy"`，其余一律视为 Native。
+:::
+
+#### 完整事件类型兼容性矩阵 {#complete-event-type-compatibility-matrix}
 
 下面是各个事件类型在不同函数调用模式下行为的完整说明：
 
@@ -215,7 +237,7 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 | `execute` | ✅ 完全支持 —— 动态执行代码 | ✅ **完全相同** —— 运行函数生成的代码 | **兼容** |
 | `input` | ✅ 完全支持 —— 提供完整 UI 供用户输入 | ✅ **完全相同** —— 收集函数所需输入 | **兼容** |
 
-#### 为什么原生模式会破坏某些事件类型 {#complete-event-type-compatibility-matrix}
+#### 为什么原生模式会破坏某些事件类型 {#why-native-mode-breaks-certain-event-types}
 
 在 **Native Mode** 下，服务器会根据流式模型输出构造内容块，并反复发出带完整序列化内容快照的 `"chat:completion"` 事件。客户端会把这些快照视为权威数据，并彻底替换消息内容，从而实际上覆盖掉之前由工具发出的 `message`、`chat:message` 或 `replace` 更新。
 
@@ -225,7 +247,7 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 - 客户端的 `chatCompletionEventHandler` 会把快照当作完整替换：`message.content = content`
 - 这会导致工具发出的内容更新闪烁并消失
 
-#### 最佳实践与建议 {#why-native-mode-breaks-certain-event-types}
+#### 最佳实践与建议 {#best-practices-and-recommendations}
 
 **对于需要实时 UI 更新的工具：**
 ```python
@@ -283,7 +305,7 @@ async def universal_tool(self, prompt: str, __event_emitter__=None, __metadata__
     return "工具执行已完成"
 ```
 
-#### 事件发射器问题排查 {#best-practices-and-recommendations}
+#### 事件发射器问题排查 {#troubleshooting-event-emitter-issues}
 
 **Native 模式冲突的症状：**
 - 工具发出的消息短暂出现后又消失
@@ -339,13 +361,13 @@ async def debug_events_tool(self, __event_emitter__=None, __metadata__=None) -> 
 
 下面这些特定事件类型的行为各不相同：
 
-#### Status Events ✅ FULLY COMPATIBLE {#troubleshooting-event-emitter-issues}
+#### Status Events ✅ FULLY COMPATIBLE {#status-events-fully-compatible}
 
 **Status 事件在 Default 和 Native 两种函数调用模式下行为完全一致。** 这是在工具执行期间提供实时反馈最可靠的事件类型。
 
 Status 事件会在消息执行步骤时添加实时状态更新，可以在工具执行的任意阶段发出。状态消息会显示在消息内容正上方，对于会延迟 LLM 响应或处理大量信息的工具来说非常关键。
 
-**Basic Status Event Structure:**
+**Status 事件的基本结构：**
 ```python
 await __event_emitter__({
     "type": "status",
@@ -525,7 +547,7 @@ async def batch_processor_tool(
 ```
 </details>
 
-#### Message 事件 ⚠️ 仅限 Default 模式 {#status-events-fully-compatible}
+#### Message 事件 ⚠️ 仅限 Default 模式 {#message-events-default-mode-only}
 
 :::warning
 
@@ -823,7 +845,7 @@ Generated content here... This content is returned as the tool result rather tha
 ```
 </details>
 
-#### Citations ✅ 完全兼容 {#message-events-default-mode-only}
+#### Citations ✅ 完全兼容 {#citations-fully-compatible}
 
 **Citation 事件在 Default 与 Native 两种函数调用模式下行为完全一致。** 这种事件类型会在聊天界面中提供来源引用，用户可以点击查看原始材料。
 
@@ -1142,7 +1164,7 @@ All data sources have been properly cited for transparency and verification.
 ```
 </details>
 
-#### Additional Compatible Event Types ✅ {#citations-fully-compatible}
+#### Additional Compatible Event Types ✅ {#additional-compatible-event-types}
 
 以下事件类型在 Default 和 Native 两种函数调用模式下行为完全一致：
 
@@ -1226,7 +1248,7 @@ await __event_emitter__({
 })
 ```
 
-#### 函数调用模式综合指南 {#additional-compatible-event-types}
+#### 函数调用模式综合指南 {#comprehensive-function-calling-mode-guide}
 
 :::danger Write tools for Native Mode — Default Mode is unsupported
 Default Mode **属于旧版且不再支持**。新工具应编写为在 Native Mode 下工作。下面的模式对比细节仅保留给仍在维护旧版 Default-Mode 工具的人，帮助他们了解迁移时需要弥补的差距——这 **不是** 对新项目选择 Default Mode 的建议。

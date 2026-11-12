@@ -75,8 +75,28 @@ Open WebUI 的 SCIM 实现支持以下操作：
 - **创建用户**（`POST /Users`）：创建新用户账户
 - **获取用户**（`GET /Users/{id}`）：检索用户信息
 - **更新用户**（`PUT /Users/{id}`、`PATCH /Users/{id}`）：更新用户属性
-- **删除用户**（`DELETE /Users/{id}`）：停用用户账户
-- **列出用户**（`GET /Users`）：列出所有用户（支持过滤）
+- **删除用户**（`DELETE /Users/{id}`）：删除该用户账户及其聊天和登录记录。对于 SCIM 可见的管理员账户，该请求会返回 `403`（`The requested action has been restricted as a security measure.`），账户会保留，因此清理用户的同步不会误删管理员。本地创建的管理员则返回 `404`，详见下文。移除管理员请前往 **Admin Panel > Users**。
+- **列出用户**（`GET /Users`）：列出由外部预配的用户（支持过滤）
+
+#### PATCH 操作 {#patch-operations}
+
+`add`、`replace` 和 `remove` 都会生效。每个操作要么指定一个 `path`，要么携带不带 path 的属性对象——此时对象中的每个属性会依次应用。`remove` 必须带 path，并且可以清除 `externalId`。
+
+Open WebUI 实际处理的 path 包括 `userName`、`displayName`、`name.formatted`、`emails[primary eq true].value`、`active` 和 `externalId`。
+
+如果请求要求的内容超出上述范围，会返回一个 SCIM 错误并且不产生任何更改，因为所有操作都会在写入之前完成校验：值类型错误返回 `invalidValue`，未列出的属性返回 `invalidPath`，删除 `externalId` 以外的内容返回 `mutability`，没有 path 的 `remove` 返回 `noTarget`。
+
+:::info 只有外部预配的账户才会通过 SCIM 可见
+每个用户操作都限定在通过身份提供商进入的账户上，即由 SCIM 自身创建或通过 OAuth、OIDC 登录创建的账户。本地创建的账户（例如第一位管理员或手动添加的用户）不会出现在列表中，也无法通过 id 寻址，因此针对它的读取、更新或删除都会返回 `404`。
+
+这样可以把身份提供商的视野限制在它自己拥有的账户上。本地账户日后若通过该提供商登录，便会在那时变为可见，因为登录过程会在账户上记录该提供商。
+:::
+
+:::info 取消预配会终止在线会话
+
+`active` 标志会映射到 Open WebUI 的角色：`active: false` 把角色设为 `pending`，`active: true` 把它改回 `user`。由于这属于角色变更，SCIM 更新一落库，Open WebUI 就会立即断开该账户的在线 WebSocket 连接；此后 `pending` 账户在 API 和 WebSocket 握手两端都会被拒绝。通过 SCIM 删除用户同样会终止其在线连接。管理员账户无论 `active` 取值如何都保留原有角色，因此同步不会把它降级。参见[角色变更何时生效](/features/authentication-access/rbac/roles#when-a-role-change-takes-effect)。
+
+:::
 
 ### 用户组操作 {#group-operations}
 - **创建用户组**（`POST /Groups`）：创建新用户组
@@ -93,7 +113,7 @@ Open WebUI 的 SCIM 实现支持以下操作：
 - `name.familyName`：姓
 - `emails`：邮箱地址（提供多个时，使用标记了 `primary: true` 的条目）
 - `active`：用户状态（活跃/非活跃）
-- `externalId`：来自身份提供商的外部标识符（按提供商存储在用户的 `scim` JSON 字段中，参见 [externalId 与账户关联](#externalid-与账户关联)）
+- `externalId`：来自身份提供商的外部标识符（按提供商存储在用户的 `scim` JSON 字段中，参见 [externalId 与账户关联](#externalid-and-account-linking)）
 
 #### 用户组属性 {#group-attributes}
 - `displayName`：用户组名称（必填）
@@ -122,7 +142,7 @@ GET /api/v1/scim/v2/Groups?filter=displayName eq "Engineering"
 - `lt`：小于
 - `le`：小于或等于
 
-## externalId 与账户关联
+## externalId 与账户关联 {#externalid-and-account-linking}
 
 配置 `SCIM_AUTH_PROVIDER` 后，Open WebUI 将 `externalId` 值存储在用户 `scim` JSON 字段中的每提供商结构里：
 

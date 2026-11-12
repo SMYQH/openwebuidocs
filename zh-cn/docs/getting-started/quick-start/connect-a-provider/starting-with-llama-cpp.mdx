@@ -105,7 +105,7 @@ http://127.0.0.1:10000
    - **URL**：`http://127.0.0.1:10000/v1`
      （如果 WebUI 运行在 Docker 中，请使用 `http://host.docker.internal:10000/v1`。**注意末尾一定要有 `/v1`！**）
     - **API Key**：`none`（可留空，或在你已配置时填写特定 key）
-    - **Provider**：从 **Provider** 下拉中选择 `llama.cpp`。这会解锁模型选择器中的"已加载"指示符和管理员的 **Eject** 按钮——详见下方[卸载已加载的模型](#卸载已加载的模型)。如果不需要该功能，请保持为 `Default`。
+    - **Provider**：从 **Provider** 下拉中选择 `llama.cpp`。这会解锁模型选择器中的"已加载"指示符和管理员的 **Eject** 按钮——详见下方[卸载已加载的模型](#unloading-loaded-models)。如果不需要该功能，请保持为 `Default`。
 
 💡 保存后，Open WebUI 就会开始把你的本地 Llama.cpp 服务器作为后端使用！
 
@@ -126,7 +126,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 
 ---
 
-## 卸载已加载的模型
+## 卸载已加载的模型 {#unloading-loaded-models}
 
 当模型被你的 `llama-server` 实例加载到内存后，Open WebUI 会在模型选择器中为其加上一个绿色的 "Loaded" 指示符。管理员还会在该行看到一个 **Eject** 按钮——它会在不重启服务器的前提下卸载模型，方法是调用 `POST /api/models/unload`，进而访问 llama.cpp 在该 OpenAI 兼容连接根 URL 上的 `POST /models/unload` 端点。
 
