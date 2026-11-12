@@ -39,7 +39,7 @@ title: "API 接口"
   curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3000/api/models
   ```
 
-### �️ 程序化模型管理（导出 / 导入 / 同步） {#programmatic-model-management-export--import--sync}
+### 程序化模型管理（导出 / 导入 / 同步） {#programmatic-model-management-export--import--sync}
 
 自定义模型本质上是纯 JSON，因此你可以以声明式方式（在 Git 中、通过脚本或从 AI Agent）管理它们，而无需 UI。这些接口位于 `/api/v1/models` 下：
 
@@ -71,7 +71,7 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
 
 这样就得到了可重现、受版本控制的模型定义。使用 `/import` 替代 `/sync` 进行仅增加且从不删除现有模型的更新。在部署、CI 或容器启动时运行同步步骤，以自动加载你的模型。
 
-### �💬 聊天补全 {#chat-completions}
+### 聊天补全 {#chat-completions}
 
 - **接口**：`POST /api/chat/completions`
 - **说明**：作为兼容 OpenAI API 的聊天补全接口，支持 Open WebUI 上的所有模型，包括 Ollama 模型、OpenAI 模型和 Open WebUI Function 模型。

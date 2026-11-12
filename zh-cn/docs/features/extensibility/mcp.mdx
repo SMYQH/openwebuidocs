@@ -9,6 +9,10 @@ Open WebUI 从 **v0.6.31** 起原生支持 **MCP（Model Context Protocol）**�
 需要 **Open WebUI v0.6.31+**。
 :::
 
+:::tip MCP 工具需要胜任的模型
+MCP 把 Open WebUI 与你的工具连接起来，但它不会提升模型使用工具的能力。即使连接正常，模型也可能忽略工具、给出错误的参数，或无法完成多步骤任务。出现这种情况时，**请换用原生工具调用更可靠的更强模型**。仅仅是工具用得不好，并不代表 Open WebUI 或 MCP 集成出了问题。参见[排查模型工具使用问题](/features/extensibility/plugin/tools/openapi-servers/open-webui#tools-are-enabled-but-the-model-does-not-use-them-correctly)。
+:::
+
 :::danger 前置条件：WEBUI_SECRET_KEY
 在 Docker 配置中，你**必须**设置 `WEBUI_SECRET_KEY` 环境变量。若未设置，每次重启或重建容器后，**通过 OAuth 连接的 MCP 工具（如 Notion）**都会**失效**（错误：`Error decrypting tokens`），迫使你重新进行身份验证。
 :::
@@ -21,7 +25,13 @@ Open WebUI 从 **v0.6.31** 起原生支持 **MCP（Model Context Protocol）**�
 4. 输入你的**服务器 URL** 和**身份验证**详情（如需要，OAuth 2.1）。
 5. **保存**。如有提示，重启 Open WebUI。
 
+![管理员设置中的外部工具服务器](/images/admin/admin-integrations.png)
+
 现在你可以从 Open WebUI 调用 MCP 服务器暴露的工具了。
+
+Open WebUI 以无状态的 `2026-07-28` 协议修订版连接服务器，同时也兼容更旧的修订版。只有当重定向仍位于同一源时，它才会跟随重定向。
+
+当 [`ENABLE_TOOL_SERVERS`](/reference/env-configuration#enable_tool_servers) 被设置为 `False` 时，**外部工具服务器**部分会置灰。
 
 :::warning 常见错误：连接类型错误
 添加 MCP 服务器时，请确保**类型**设置为 **MCP (Streamable HTTP)**，而不是 **OpenAPI**。
@@ -36,7 +46,7 @@ Open WebUI 从 **v0.6.31** 起原生支持 **MCP（Model Context Protocol）**�
 
 MCP 服务器只能由**管理员**在**管理员设置 → 外部工具**下添加。普通用户按设计无法自行注册。
 
-这**不是**与 OpenAPI 相同的限制。当你授予**直接工具服务器**权限（按用户或用户组，默认关闭）后，用户可以在**设置 → 工具**下添加自己的 **OpenAPI** 工具服务器，但那条路径是 OpenAPI 专属的：连接类型被锁定，不提供 MCP 选项。
+这**不是**与 OpenAPI 相同的限制。当管理员开启**直接集成**（[`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)，默认关闭）并授予**直接工具服务器**权限（按用户或用户组，同样默认关闭）后，用户可以在**设置 → 集成**下添加自己的 **OpenAPI** 工具服务器，但那条路径是 OpenAPI 专属的：连接类型被锁定，不提供 MCP 选项。
 
 这其中的差别在于能力。用户提供的 OpenAPI 服务器是一个无状态的 HTTP URL，暴露一组固定的已声明端点。而 MCP 服务器强大得多：它有状态、能力强（支持 sampling、elicitation、持久会话以及通过 stdio 传输的任意主机命令执行），并运行在 Open WebUI 的信任边界内，拥有连接用户的完整权限范围。实际上，一个恶意的或被攻陷的 MCP 服务器可能会以该用户的访问权限执行代码、读取或外泄数据，因此该能力被限定为管理员才可使用。Open WebUI 自带的 MCP 支持仅限 Streamable HTTP，但协议本身具有特权性质，这正是为何新增 MCP 服务器只保留给管理员的原因。
 
@@ -103,7 +113,21 @@ MCP 服务器只能由**管理员**在**管理员设置 → 外部工具**下添
 
 :::
 
-### OAuth 2.1（静态）设置 {#connecting-an-account}
+:::info 没有 OAuth 发现文档的服务器
+Open WebUI 通过服务器发布的 OAuth 发现文档来定位授权服务器。有些 MCP 服务器不发布任何发现文档。当找不到发现文档、且服务器的受保护资源元数据也没有指明授权服务器时，Open WebUI 会使用 [MCP 2025-03-26 授权规范](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization)为这种情况定义的默认端点：在 MCP **URL** 的源（若设置了 **OAuth 服务器 URL**，则以其源）上的 `/authorize`、`/token` 和 `/register`。以 `https://mcp.example.com/v1/mcp` 为例，即 `https://mcp.example.com/authorize`、`https://mcp.example.com/token` 和 `https://mcp.example.com/register`。登录与令牌刷新使用 `/authorize` 和 `/token`，**OAuth 2.1** 则在 `/register` 注册其客户端。
+:::
+
+### 连接账户 {#connecting-an-account}
+
+管理员只需注册一次 MCP 服务器。之后每位用户各自把自己的账户连接到它：某人在对话中第一次从 **+** 菜单启用 OAuth 2.1 工具时，Open WebUI 会把用户引导到身份提供商，而授予的访问权限只存储在**他自己**的账户上，其他人不会继承。
+
+授权与发起它的账户以及发起它的浏览器会话绑定，因此必须在同一个浏览器中、以同一个人的身份、在 [`WEBUI_URL`](/reference/env-configuration#webui_url) 所指的地址上完成。退出登录会取消进行中的授权。任何其他情况都会让浏览器带着一条说明原因的通知回到 Open WebUI；重新启用该工具即可重试。
+
+管理员也可以直接从连接本身发起该流程。OAuth 客户端注册完成并保存连接后，在**设置 > 管理 > 集成**中重新打开该连接，会在 **注册客户端** 旁边看到 **授权 OAuth** 按钮。它发出的授权请求与在对话中启用工具时发出的完全一致，条件也相同：授权存储在管理员自己的账户上，其他人不会继承。该按钮只有在客户端注册之后才会出现，并且在连接至少保存过一次之前保持置灰。
+
+流程结束时，身份提供商会把浏览器送回 Open WebUI 首页，请重新打开**设置 > 管理 > 集成**继续编辑该连接。
+
+### OAuth 2.1（静态）设置 {#oauth-21-static-setup}
 
 当你已经有来自身份提供商的客户端 ID/客户端密钥时使用。
 
@@ -128,6 +152,8 @@ MCP 服务器只能由**管理员**在**管理员设置 → 外部工具**下添
 
 `Register Client` 对 `oauth_2.1` 和 `oauth_2.1_static` 都是必需的。在静态认证模式下，Open WebUI 会使用你提供的凭据和服务器元数据 discovery（不进行动态客户端注册）。
 
+重新打开该连接并点击 **授权 OAuth**，无需打开对话也能为自己的账户完成同样的事。参见[连接账户](#connecting-an-account)。
+
 :::
 
 :::info Resource Indicators (RFC 8707)
@@ -146,12 +172,12 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 **变通方案：** 用户应通过聊天输入区的 **➕** 按钮按每个对话手动启用 OAuth 2.1 工具。这样会在工具被调用前触发认证流程。一旦完成初次认证，令牌刷新会自动进行。
 :::
 
-### 连接 URL {#oauth-21-static-setup}
+### 连接 URL {#connection-urls}
 
 如果你在 **Docker** 中运行 Open WebUI，而 MCP 服务器在**宿主机**上：
 *   使用 `http://host.docker.internal:<port>`（如 `http://host.docker.internal:3000/sse`）而不是 `localhost`。
 
-### 自定义标头 {#connection-urls}
+### 自定义标头 {#custom-headers}
 
 无论是 MCP 还是 OpenAPI 工具服务器连接，都支持一个自由格式的 **Headers** 字段（JSON 对象），其内容会被合并进每一次出站请求。Header 值支持一小套模板变量，会在请求发起时由服务器端展开，因此你无需为每个用户、每个聊天或每条消息单独配置连接，就能让同一条连接路由到不同的后端逻辑：
 
@@ -170,13 +196,9 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 `{{USER_EMAIL}}` 和 `{{USER_ROLE}}` 是在 v0.9.6 中加入的。同一版本也修复了 MCP 服务器连接中自定义标头模板此前只被存储、但在请求时**没有**展开的问题——现在它们与之前在直接连接和 OpenAPI 工具服务器中的行为一致，会按预期展开。
 :::
 
-### 函数名称过滤列表 {#custom-headers}
+[自定义转发标头](/reference/env-configuration#custom-forwarded-headers-per-connection) 列出了每个占位符及其含义。对于本次请求没有取值的占位符（例如 **验证连接** 按钮上的 `{{CHAT_ID}}` 和 `{{USER_IP}}`），会变成空字符串。未知占位符按字面文本原样传递，非字符串的标头值会在替换前转换为字符串。**设置 > 管理 > 连接**中兼容 OpenAI 的模型连接所使用的自定义标头，其展开方式相同。
 
-此字段限制哪些工具暴露给 LLM。
-*   **默认**：大多数情况下留空以暴露所有工具。
-*   **解决方法**：如果列表为空时遇到连接错误，尝试在此字段添加一个逗号（`,`）。这会强制系统将其视为有效（但为空）的过滤器，可能绕过某些解析问题。
-
-### 函数名过滤列表 {#function-name-filter-list}
+### 函数名称过滤列表 {#function-name-filter-list}
 
 该字段用于限制向 LLM 暴露哪些工具。
 *   **默认值**：留空即暴露全部工具（大多数情况下）。
@@ -218,13 +240,15 @@ MCP 工具可以附带交互式应用（[MCP Apps](https://modelcontextprotocol.
 ### "Failed to connect to MCP server"
 
 **现象**：
-使用工具时对话显示 "Failed to connect to MCP server"，即使设置中的**验证连接**按钮显示"已连接"。
+使用工具时对话显示 "Failed to connect to MCP server"，即使设置中的**验证连接**按钮显示"已连接"。在使用任一 OAuth 2.1 模式的连接上，该按钮显示为 **检查 OAuth 发现**，它只能确认已找到并解析出授权服务器的发现文档。
+
+服务器日志会以 error 级别记录每次失败，格式为 `Failed to connect to MCP server '<id>'`，随后是具体原因，因此请优先查看它。对话过程中变得不可达的服务器只会让那一次工具调用失败：模型会收到连接错误作为工具结果，并结束本次回复。
 
 **解决方案**：
 1.  **检查身份验证**：确保没有在没有密钥的情况下选择 `Bearer`。如果不需要令牌，切换到 `None`。
 2.  **过滤列表 Bug**：如果"函数名称过滤列表"为空，尝试向其添加逗号（`,`）。
 3.  **OAuth 2.1 默认工具**：如果失败的工具使用 OAuth 2.1 并被设置为模型的默认工具，这是已知限制。从模型的默认工具中删除它，让用户每次对话手动启用。
-4.  **握手缓慢**：如果服务器冷启动较慢，或暴露了大量工具，`session.initialize()` 握手可能超过其超时时间。可以提高 [`MCP_INITIALIZE_TIMEOUT`](/reference/env-configuration#mcp_initialize_timeout)（默认 `10` 秒）。
+4.  **握手缓慢**：如果服务器冷启动较慢，或暴露了大量工具，连接、列出工具或读取资源都可能超出其超时时间。可以提高 [`MCP_INITIALIZE_TIMEOUT`](/reference/env-configuration#mcp_initialize_timeout)（默认 `10` 秒）。工具调用则使用 [`AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER`](/reference/env-configuration#aiohttp_client_timeout_tool_server)。
 
 ### 添加外部工具后出现无限加载界面 {#infinite-loading-screen-after-adding-external-tool}
 
