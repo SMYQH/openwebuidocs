@@ -9,7 +9,7 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 **让您的 AI 访问文档，并找到最相关的内容。**
 
-知识库是您存储 AI 可以搜索、阅读和推理的文件和集合的地方。上传 PDF、电子表格、代码或任何基于文本的文档。围绕项目、团队或主题构建集合。当模型需要答案时，它会从您的知识库中提取，而不是靠猜测。
+知识库是您存储 AI 可以搜索、阅读和推理的文件和集合的地方。上传 PDF、电子表格、代码或任何基于文本的文档。围绕项目、团队或主题构建集合。当模型需要答案时，它会从您的知识库中提取，而不是靠猜测。文档内容在哪里被处理，取决于你使用的提取引擎、嵌入模型和模型提供商；参见[对话数据隐私与加密](/security/chat-data-privacy-and-encryption)。
 
 与将全部内容注入每条消息的[笔记](/features/notes)不同，知识库使用检索（RAG）按需找到相关片段。这使其成为注入所有内容会超出上下文窗口的大型文档集的正确选择。
 
@@ -68,6 +68,8 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 ## 检索模式 {#retrieval-modes}
 
+![知识库列表](/images/workspace/knowledge-list.png)
+
 将文件或知识库附加到模型时，点击已附加项在两种模式之间切换：
 
 ### 🔍 专注检索（默认） {#focused-retrieval-default}
@@ -85,6 +87,8 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 ---
 
 ## 智能体知识工具 {#agentic-knowledge-tools}
+
+![知识库内的文件，带搜索和排序](/images/workspace/knowledge-detail.png)
 
 启用[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)后，模型使用内置工具与您的知识库交互。显示哪些工具取决于是否有特定知识库附加到模型：
 
@@ -112,7 +116,7 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 | **匹配方式** | 语义/向量检索（启用 [`ENABLE_RAG_HYBRID_SEARCH`](/reference/env-configuration#enable_rag_hybrid_search) 时可叠加 BM25 + 重排序） | 精确字符串匹配——自动检测正则（如 `error\|warn`、`version \d+`） |
 | **返回内容** | 相关内容片段 | 带文件 ID、文件名和 1 起始行号的匹配行 |
 | **适用场景** | “文档里关于 X 怎么说的？”——改写后的问题、概念性查找 | “找出所有提到 `OPENAI_API_KEY` 的地方”——字面标识符、错误字符串、版本号 |
-| **结果上限** | Top K（默认 5） | 50 条匹配 |
+| **结果上限** | 工具自身的 `count` 参数，由模型设置（默认 5）。管理员的 Top K 设置在此不适用 | 50 条匹配（[`KNOWLEDGE_GREP_MAX_MATCHES`](/reference/env-configuration#knowledge_grep_max_matches)） |
 | **标志** | — | `case_insensitive`、`count_only`、`file_id`（单文件模式）|
 
 在智能体流程中，典型的模式是：用 `query_knowledge_files` 定位相关文档，然后用 `grep_knowledge_files` 精确定位具体行，再用 `view_file`（下方行号范围模式）阅读周边上下文。
@@ -121,10 +125,10 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 `view_file` 支持两种寻址模式：
 
-- **字符分页** — `offset` + `max_chars`（默认 `10000`，硬上限 `100000`）。最适合流式浏览长文档；当文件被截断时响应中会包含 `next_offset`。
-- **行号范围** — `start_line` + 可选 `end_line`（1 起始，包含两端）。设置后覆盖 `offset`/`max_chars`；与 `grep_knowledge_files` 的行号天然搭配。传 `line_numbers: true` 还会在每行前加上 `<n>: <line>` 前缀。
+- **字符分页**： `offset` + `max_chars`（默认 `10000`，硬上限 `100000`；两者都可以通过 [`VIEW_FILE_DEFAULT_MAX_CHARS`](/reference/env-configuration#view_file_default_max_chars) 和 [`VIEW_FILE_MAX_CHARS`](/reference/env-configuration#view_file_max_chars) 配置）。最适合流式浏览长文档；当文件被截断时响应中会包含 `next_offset`。
+- **行号范围**： `start_line` 和 / 或 `end_line`（1 起始，包含两端）。设置后覆盖 `offset`/`max_chars`；与 `grep_knowledge_files` 的行号天然搭配。传 `line_numbers: true` 还会在每行前加上 `<n>: <line>` 前缀。
 
-行号范围响应包含 `total_lines`、`showing_lines` 和 `next_start_line`，便于继续读取。
+行号范围响应包含 `total_lines` 和 `showing_lines`。范围会在最后一整行能装进 [`VIEW_FILE_MAX_CHARS`](/reference/env-configuration#view_file_max_chars) 的位置停下；`truncated` 和 `next_start_line` 会说明从哪里继续。
 
 ### 类文件系统访问（`kb_exec`） {#filesystem-style-access-kb_exec}
 
@@ -142,6 +146,13 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 - **`query_knowledge_files`** —— 语义/RAG 搜索（始终保留）
 - **`view_note`** —— 当笔记被附加到模型时（`kb_exec` 只处理文件，所以笔记需要专用读取器）
 - **`query_knowledge_bases`** 和 **`search_knowledge_bases`** —— 当没有知识库附加到模型时，让模型仍能按名称/描述发现并搜索知识库
+
+`kb_exec` 遵循与其他知识工具相同的访问控制：用户无权读取的文件会被静默排除在结果之外。
+
+- **每次调用的输出都有上限。** 一条命令最多返回 30,000 个字符（[`KB_EXEC_MAX_OUTPUT_CHARS`](/reference/env-configuration#kb_exec_max_output_chars)），无论这些字符由什么产生；当触达上限时，模型会被告知收窄命令范围。这是整条链路的单次预算，因此对大文件执行 `cat` 与执行范围很宽的 `grep` 受到同样的限制。
+- **范围过宽的 `grep` 会被拒绝而不是执行。** 搜索超过 200 个文件（[`KB_EXEC_MAX_GREP_FILES`](/reference/env-configuration#kb_exec_max_grep_files)）会返回提示，要求把搜索限定到某个目录或 glob；`grep` 最多返回 50 行匹配（[`KNOWLEDGE_GREP_MAX_MATCHES`](/reference/env-configuration#knowledge_grep_max_matches)），与 `grep_knowledge_files` 和 `grep_chat_files` 使用相同的上限。
+- 语义搜索仍应使用 `query_knowledge_files`；当字面命令找不到改写后的概念时，请改用它。
+- 它构建在目录模型之上。`kb_exec` 是唯一能完整反映 UI 中所建目录结构的工具。
 
 该功能**默认关闭**且仍处于实验阶段，但为了获得增强的智能体 RAG 体验，我们建议为运行原生函数调用的强模型启用它（`ENABLE_KB_EXEC=True`）。它面向的是那些已经“用 Shell 思考”的前沿模型：相比编排一系列专用工具的扇出，它们往往更可靠地串联 `ls`、`grep` 和 `cat`。它只在使用原生函数调用时生效；在默认模式下没有效果。
 
@@ -218,7 +229,51 @@ find docs/ "*.md" | head -10
 3. 上传文件或添加现有文档。
 4. 在**工作区 > 模型 > 编辑**中将知识库附加到模型，或在对话中用 `#` 引用它。
 
-### 组织为目录 {#file-limits}
+关于最初的创建、上传和对话步骤，参见[提出你的第一个文档问题](#ask-your-first-document-question)。下面的章节介绍的是设置完成之后的集合管理。
+
+要更改谁可以查看或编辑某个知识库，请打开其所在行的三点菜单并选择**访问**。这会直接打开访问设置，无需先进入知识库，而且每次改动都会立即保存。管理员在每个知识库上都能看到该菜单；其他用户只在可以编辑的知识库上看到它，并且需要[**知识库共享**](/features/authentication-access/rbac/permissions#2-sharing-permissions)权限。知识库内部的**访问**按钮遵循同样的规则。在拥有写入权限的情况下保存知识库名称或描述不会改变它的共享设置，包括你本人无权设置的**公开**选项。[资源访问](/features/authentication-access/rbac/groups#resource-access-rbac)解释了可见性与访问授权。
+
+### 文件数量上限 {#file-limits}
+
+管理员在**管理设置 > 文档**中设置全局上限：**知识库批量上传上限**（每次上传的文件数）、**知识库文件大小上限**（每个文件的 MB 数）和**知识库文件数量上限**（每个知识库的文件总数）。留空表示不限制。相同的值也可以通过 [`KNOWLEDGE_MAX_UPLOAD_COUNT`](/reference/env-configuration#knowledge_max_upload_count)、[`KNOWLEDGE_MAX_FILE_SIZE`](/reference/env-configuration#knowledge_max_file_size) 和 [`KNOWLEDGE_MAX_FILE_COUNT`](/reference/env-configuration#knowledge_max_file_count) 设置。
+
+知识库的所有者或管理员可以为单个知识库设置更低的**文件数量上限**和**文件大小上限（MB）**，在创建时的**高级**选项中设置，或之后通过知识库页面上的三点菜单 > **设置**设置。当全局上限和局部上限同时存在时，适用较低的那个。外部知识库没有局部上限。
+
+超出上限的上传会被拒绝，并提示类似 `Knowledge base file limit exceeded (N files maximum).` 或 `You can only upload a maximum of N file(s) per batch.` 的错误。
+
+### 浏览与预览文件 {#browsing-and-previewing-files}
+
+打开知识库后，文件以树形结构显示在左侧，右侧是预览面板。点击文件即可在预览中打开；在小屏幕上，预览会滑入覆盖列表。拖动分隔线可以调整文件列表的宽度。
+
+预览有两种视图，通过其上方的按钮切换：
+
+- **预览**：显示文件本身——PDF、图片、音频、视频、Word 文档、Excel 工作簿（带工作表选择器）、PowerPoint 幻灯片，以及 Markdown、代码、CSV、JSON、HTML 和 SVG 等文本类文件。文本类文件和 SVG 显示其索引文本；其他格式显示原始文件。对于 Markdown、CSV、JSON、HTML 和 SVG 这类有渲染视图的格式，**⋯** 菜单可在**查看源文件**和**渲染预览**之间切换。
+- **索引文本**：显示 Open WebUI 从文件中提取的文本。检索和知识工具搜索的正是这部分内容，因此当答案遗漏了文档中确实存在的内容时，应该到这里来查看。
+
+![左侧是知识库中的文件夹和文件，右侧预览视图打开了一个 PDF](/images/workspace/knowledge-browser-preview.webp)
+
+![同一份 PDF 的索引文本视图，显示带行号的提取文本](/images/workspace/knowledge-browser-indexed-text.webp)
+
+如果原始文件不可用（例如只保存了文本），文件会在**索引文本**中打开，且**预览**按钮会被隐藏。
+
+**编辑索引文本**
+
+拥有写入权限时，点击**编辑**即可修改索引文本，然后点击**保存**（或**取消**）。保存会重新处理新的文本，并更新所有包含该文件的知识库，使检索使用你修正后的文本。原始文件保持不变，而[重新索引](/features/chat-conversations/rag#what-does-re-indexing-do)会再次提取它，从而覆盖你的修改。文本不能为空。如果处理失败，会提示错误；再次保存即可重试。
+
+在你有未保存的修改时，打开另一个文件、关闭预览、删除条目、同步、重置或离开页面，都会先询问**放弃未保存的修改？**。
+
+**下载**
+
+**下载**位于预览的**⋯** 菜单以及每个文件行的三点菜单中，它保存原始文件。对于因原始文件不可用而只在**索引文本**中打开的文件，下载会把索引文本保存为 `.txt` 文件。
+
+**搜索、筛选与排序**
+
+文件树上方的**搜索集合**输入框按文件名搜索整个知识库，文件夹内的结果会在名称旁显示文件夹路径。其旁边的筛选按钮提供：
+
+- **搜索文件内容**：同时匹配文件内部的索引文本。超大文件会按字符上限搜索（[`RAG_FILE_CONTENT_SEARCH_MAX_CHARS`](/reference/env-configuration#rag_file_content_search_max_chars)）。
+- **全部**、**由你创建** 或 **与你共享**：按文件的添加者筛选列表。
+- **名称**、**创建时间** 或 **更新时间**，以及**升序** 或 **降序**：排序方式。默认是**更新时间**，最新的在前。
+### 组织为目录 {#organizing-into-directories}
 
 知识库支持嵌套的**目录**，让大型文档集保持可导航。从**添加内容**菜单（**+ 新建目录**）创建，然后自由重组。
 
@@ -249,13 +304,9 @@ find docs/ "*.md" | head -10
   - `kb_exec`（启用时）把子目录当作文件系统：`ls docs/`、`tree`、`grep "x" docs/`、以及路径式引用（`docs/api/auth.md`）都可用——参见下方的[类文件系统访问（`kb_exec`）](#filesystem-style-access-kb_exec)。
   - 其他知识工具（`query_knowledge_files`、`grep_knowledge_files`、`search_knowledge_files`）忽略目录边界，从整个知识库返回匹配结果。
 
-### 重命名文件 {#browsing-and-previewing-files}
+### 重命名文件 {#renaming-files}
 
 单个文件可以在工作区中通过文件项菜单原地重命名——无需重新上传。新名称会在所有引用该文件的地方（知识库列表、智能体工具输出、引用）反映出来。
-
-### 导出 {#renaming-files}
-
-管理员可以通过项目菜单（三点）> **导出**将整个知识库导出为 zip 文件。文件转换为 `.txt` 以确保通用兼容性。普通用户不会看到导出选项。
 
 ### 同步本地目录 {#syncing-a-local-directory}
 
@@ -288,7 +339,7 @@ find docs/ "*.md" | head -10
 
 **文件**
 
-- `POST /api/v1/files/` — 上传文件。在上传元数据中传入 `knowledge_id`（可选 `directory_id`）会让后端**自动关联并处理该文件到指定知识库**——等价于随后调用 `POST /api/v1/knowledge/{id}/file/add`，但不依赖上传后客户端保持连接。这是推荐的单次调用路径（v0.9.6 引入，修复了上传者中途断开导致文件未关联的问题）。服务端会将上传字节做 SHA-256 哈希存入 `file.meta.file_hash`；客户端可以预先计算并通过元数据传入 `file_hash` 以跳过服务端哈希（增量同步流程会用到）。
+- `POST /api/v1/files/` — 上传文件（注意[文件数量上限](#file-limits)）。在上传元数据中传入 `knowledge_id`（可选 `directory_id`）会让后端**自动关联并处理该文件到指定知识库**——等价于随后调用 `POST /api/v1/knowledge/{id}/file/add`，但不依赖上传后客户端保持连接。这是推荐的单次调用路径（v0.9.6 引入，修复了上传者中途断开导致文件未关联的问题）。服务端会将上传字节做 SHA-256 哈希存入 `file.meta.file_hash`；客户端可以预先计算并通过元数据传入 `file_hash` 以跳过服务端哈希（增量同步流程会用到）。
 - `GET /api/v1/files/{id}/process/status` — 检查处理状态
 - `POST /api/v1/files/{id}/rename` — 重命名文件
 - `POST /api/v1/knowledge/{id}/file/add` — 向知识库添加文件
