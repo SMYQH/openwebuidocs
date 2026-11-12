@@ -21,17 +21,17 @@ title: "Firecrawl"
 
 :::
 
-## 概述
+## 概述 {#overview}
 
 [Firecrawl](https://firecrawl.dev) 是一个为 AI 应用构建的搜索和抓取 API。作为 Open WebUI 的网络搜索引擎，它运行你的查询，返回排序结果，并以干净、模型可用的形式拉回页面内容。你可以使用托管服务 `api.firecrawl.dev`，或者由于 Firecrawl 是开源的，将 Open WebUI 指向自托管的 Firecrawl 实例，这样每个查询都保持在内部。
 
-## 前提条件
+## 前提条件 {#prerequisites}
 
 - **已安装 Open WebUI**：正在运行的 Open WebUI 实例（本地或 Docker）。
 - **Firecrawl API 密钥**：来自 [firecrawl.dev](https://firecrawl.dev) 的托管服务，或来自你自己的自托管 Firecrawl 部署。
 - **管理员权限**：对 Open WebUI 实例的管理员访问权限。
 
-## 配置步骤
+## 配置步骤 {#configuration}
 
 1. 获取 API 密钥：
    - **托管版**：在 [firecrawl.dev](https://firecrawl.dev) 注册并从仪表板复制密钥。
@@ -45,7 +45,7 @@ title: "Firecrawl"
 
 然后开始一个聊天，在提示词字段中用 **+** 按钮启用网络搜索，运行一个查询以确认 Firecrawl 返回结果。
 
-## 环境变量
+## 环境变量 {#environment-variables}
 
 你可以使用环境变量来配置 Firecrawl，作为管理面板的补充或替代：
 
@@ -59,14 +59,14 @@ title: "Firecrawl"
 
 有关网络搜索变量的完整列表，请参阅[环境配置参考](/reference/env-configuration#web-search)。
 
-## 故障排除
+## 故障排除 {#troubleshooting}
 
 - **无效的 API 密钥**：确认密钥复制时没有多余空格，并且与端点匹配（托管密钥用于 `api.firecrawl.dev`，实例密钥用于自托管）。
 - **无结果**：确保网络搜索开关（`+`）已开启，并且实例可以访问 Firecrawl 端点。
 - **超时**：对于慢页面或大量抓取查询，提高 `FIRECRAWL_TIMEOUT`。
 - **自托管连接错误**：验证从 Open WebUI 容器或主机能否访问 `FIRECRAWL_API_BASE_URL`。
 
-## 更多资源
+## 更多资源 {#additional-resources}
 
 - [Firecrawl 文档](https://docs.firecrawl.dev)
 - [Open WebUI 网络搜索环境变量](/reference/env-configuration#web-search)

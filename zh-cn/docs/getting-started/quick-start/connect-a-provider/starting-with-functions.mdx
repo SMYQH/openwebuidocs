@@ -3,7 +3,7 @@ sidebar_position: 6
 title: "Functions"
 ---
 
-## 概览
+## 概览 {#overview}
 
 **Pipe Functions** 是一类 Python 插件，会像模型一样出现在聊天侧边栏中。在底层，它们几乎能做任何 Python 能做的事：接入私有 AI 提供商、用自然语言控制智能家居、查询数据库、调用搜索引擎、构建多步 Agent、生成图表、自动化工作流，甚至充当计算器。它甚至**不一定需要 LLM**。只要你能用 Python 写出逻辑，它就能变成一个用户可聊天的“模型”。
 
@@ -15,7 +15,7 @@ title: "Functions"
 
 ---
 
-## 第 1 步：找到一个 Function
+## 第 1 步：找到一个 Function {#step-1-find-a-function}
 
 1. 打开 [社区函数库](https://openwebui.com/search)。
 2. 浏览或搜索你需要的函数。社区里已有数千个由贡献者提供的函数，涵盖 AI 提供商、搜索工具、家居自动化、生产力工具、内容过滤等各种场景。
@@ -27,7 +27,7 @@ title: "Functions"
 
 ---
 
-## 第 2 步：导入到 Open WebUI
+## 第 2 步：导入到 Open WebUI {#step-2-import-to-open-webui}
 
 随后会出现一个弹窗：
 
@@ -40,7 +40,7 @@ title: "Functions"
 
 ---
 
-## 第 3 步：审查并保存
+## 第 3 步：审查并保存 {#step-3-review--save}
 
 在编辑器中查看 Python 源代码。由于 Function 会在你的服务器上执行任意代码，因此只应安装来自可信来源的内容。
 
@@ -50,7 +50,7 @@ title: "Functions"
 
 ---
 
-## 第 4 步：启用 Function
+## 第 4 步：启用 Function {#step-4-enable-the-function}
 
 新导入的 Function 默认是禁用状态。请切换开关将其启用。
 
@@ -58,7 +58,7 @@ title: "Functions"
 
 ---
 
-## 第 5 步：配置 Valves
+## 第 5 步：配置 Valves {#step-5-configure-valves}
 
 很多 Function 都需要进一步配置，例如 API key 或服务端点 URL：
 
@@ -70,7 +70,7 @@ title: "Functions"
 
 ---
 
-## 第 6 步：开始聊天
+## 第 6 步：开始聊天 {#step-6-start-chatting}
 
 现在这个 Function 会作为可选模型出现在聊天侧边栏中。选中它，即可开始聊天。
 
@@ -82,7 +82,7 @@ title: "Functions"
 Functions 会在你的服务器上执行任意 Python 代码。启用前务必先审查源码，并且只从可信来源导入。详见 [插件安全警告](/features/extensibility/plugin/)。
 :::
 
-## 了解更多
+## 了解更多 {#learn-more}
 
 - **[Functions 概览](/features/extensibility/plugin/functions/)**：架构、类型与完整能力范围
 - **[Pipe Function 指南](/features/extensibility/plugin/functions/pipe)**：构建自定义模型、Agent 与非 LLM 接口

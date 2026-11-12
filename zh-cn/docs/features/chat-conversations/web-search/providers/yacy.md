@@ -23,7 +23,7 @@ title: "Yacy"
 
 ## Yacy API
 
-### 设置
+### 设置 {#setup}
 
 1. 前往：`Admin Panel` -> `Settings` -> `Web Search`
 2. 打开 `Enable Web Search`

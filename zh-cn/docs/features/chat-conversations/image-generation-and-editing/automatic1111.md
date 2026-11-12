@@ -24,13 +24,27 @@ Open WebUI 支持通过 **AUTOMATIC1111** [API](https://github.com/AUTOMATIC1111
 docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -e AUTOMATIC1111_BASE_URL=http://host.docker.internal:7860/ -e ENABLE_IMAGE_GENERATION=True -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
 ```
 
+### 初始设置 {#initial-setup}
+1. 确保你已安装 [AUTOMATIC1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui)。
+2. 使用额外的标志启动 AUTOMATIC1111 以启用 API 访问：
+
+```python
+/webui.sh --api --listen
+```
+
+3. 如果使用预设的环境变量以 Docker 方式安装 WebUI，请使用以下命令：
+
+```docker
+docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -e AUTOMATIC1111_BASE_URL=http://host.docker.internal:7860/ -e ENABLE_IMAGE_GENERATION=True -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
+```
+
 ## 配置 Open WebUI 连接 AUTOMATIC1111
 
-1. 在 Open WebUI 中前往 **Admin Panel** > **Settings** > **Images**
-1. 将 `图像生成引擎` 设置为 `默认（Automatic1111）`
-1. 在 API 地址字段中，输入可访问 AUTOMATIC1111 API 的地址：
+1. 在 Open WebUI 中前往 **Settings** > **Admin** > **Images**
+1. 将 `图像生成引擎` 设置为 `Automatic1111`
+1. 在 `Base URL` 字段中，输入可访问 AUTOMATIC1111 API 的地址：
 
-![Open WebUI 图像设置页面截图，已选中 Default (Automatic1111)，并高亮显示 API URL 字段。](/images/image-generation-and-editing/automatic1111-settings.png)
+![已配置为 AUTOMATIC1111 的 Open WebUI 图像设置页面截图。](/images/image-generation-and-editing/automatic1111-settings.png)
 
 ```txt
 http://<your_automatic1111_address>:7860/

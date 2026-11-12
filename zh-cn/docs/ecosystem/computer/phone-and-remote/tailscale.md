@@ -3,13 +3,13 @@ title: "Tailscale（推荐）"
 sidebar_position: 2
 ---
 
-# Tailscale（推荐）
+# Tailscale（推荐） {#tailscale-recommended}
 
 Tailscale 将你的手机和电脑置于它们自己的私有网络中。没有任何东西暴露给公共互联网，没有端口转发，并且可以在你的手机所在的任何网络上工作。
 
 在两台设备上安装 Tailscale 并登录到同一个账户（[Tailscale 的设置指南](https://tailscale.com/kb/1017/install)）。然后选择两种设置之一。
 
-## 选项 A：纯 tailnet 访问
+## 选项 A：纯 tailnet 访问 {#option-a-plain-tailnet-access}
 
 你 tailnet 上的每台设备都获得一个稳定的私有 IP（以及一个 MagicDNS 名称）。运行 `cptr` 使其在该地址上可访问：
 
@@ -21,7 +21,7 @@ cptr run --host 0.0.0.0
 
 需要注意的是：默认的 `cptr run` 绑定到 `127.0.0.1`，tailnet 无法访问。你必须绑定到 Tailscale 接口或 `0.0.0.0`，这也会使其在你的 LAN 上可访问。如果你不确定这对你的网络意味着什么，请改用选项 B。
 
-## 选项 B：Tailscale Serve（HTTPS，cptr 保持在 localhost 上）
+## 选项 B：Tailscale Serve（HTTPS，cptr 保持在 localhost 上） {#option-b-tailscale-serve-https-cptr-stays-on-localhost}
 
 Tailscale Serve 从你的 tailnet 代理 HTTPS 到本地端口，因此 `cptr` 保持其默认的 localhost 绑定，而你获得一个合适的 `https://` URL（[PWA 安装](./phone-app)和剪贴板访问等浏览器功能更满意这个）。
 
@@ -45,7 +45,7 @@ tailscale serve reset
 
 Tailscale 可能首次提示管理员为你的 tailnet 启用 HTTPS 证书。
 
-## 验证它离家在外也能工作
+## 验证它离家在外也能工作 {#verify-it-works-away-from-home}
 
 关闭手机上的 Wi-Fi，使其使用蜂窝网络，然后再次打开 URL。如果你的工作区和正在运行的终端会话加载成功，就完成了；这正是它在火车上时的样子。
 

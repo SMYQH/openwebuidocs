@@ -3,9 +3,9 @@ sidebar_position: 201
 title: "使用 HAProxy 的 HTTPS"
 ---
 
-# Open WebUI 的 HAProxy 配置
+# Open WebUI 的 HAProxy 配置 {#haproxy-configuration-for-open-webui}
 
-## Open WebUI 的 HAProxy 配置
+## Open WebUI 的 HAProxy 配置 {#install-haproxy-and-lets-encrypt}
 
 HAProxy（High Availability Proxy，高可用代理）是一款专门的负载均衡和反向代理方案，可配置性很强，设计目标是在较低资源占用下处理大量连接。更多信息请参阅：[https://www.haproxy.org/](https://www.haproxy.org/)
 
@@ -13,7 +13,7 @@ HAProxy（High Availability Proxy，高可用代理）是一款专门的负载�
 
 首先安装 HAProxy 和 Let's Encrypt 的 certbot：
 
-### Red Hat 系发行版
+### Red Hat 系发行版 {#redhat-derivatives}
 
 ```sudo dnf install haproxy certbot openssl -y```
 
@@ -21,7 +21,7 @@ HAProxy（High Availability Proxy，高可用代理）是一款专门的负载�
 
 ```sudo apt install haproxy certbot openssl -y```
 
-## HAProxy 配置基础
+## HAProxy 配置基础 {#haproxy-configuration-basics}
 
 HAProxy 的配置默认保存在 ```/etc/haproxy/haproxy.cfg```。这个文件包含了决定 HAProxy 如何运行的全部配置指令。
 
@@ -182,7 +182,7 @@ chown haproxy:haproxy /etc/haproxy/certs/{domain}.pem
 随后重启 HAProxy 以应用新证书：
 `systemctl restart haproxy`
 
-## HAProxy Manager（便捷部署方案）
+## HAProxy Manager（便捷部署方案） {#haproxy-manager-easy-deployment-option}
 
 如果你希望有工具自动管理 HAProxy 配置和 Let's Encrypt SSL 证书，我写了一个简单的 Python 脚本，并提供了一个 Docker 容器，可用于创建和管理 HAProxy 配置，以及处理 Let's Encrypt 证书的生命周期。
 

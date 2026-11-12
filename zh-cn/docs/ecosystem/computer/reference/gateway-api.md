@@ -3,7 +3,7 @@ title: 网关 API（OpenAI 兼容）
 sidebar_position: 5
 ---
 
-# 网关 API（OpenAI 兼容）
+# 网关 API（OpenAI 兼容） {#gateway-api-openai-compatible}
 
 网关将你的每个工作区暴露为 OpenAI 兼容的模型，因此任何 OpenAI 风格的客户端都可以在真实工作区中运行代理任务。
 
@@ -21,11 +21,11 @@ curl http://localhost:8000/v1/chat/completions \
 
 要连接 Open WebUI？请按照[从 Open WebUI 使用 Computer](/ecosystem/computer/automate/open-webui) 中的步骤操作；此页面是端点参考。
 
-## API 密钥
+## API 密钥 {#api-keys}
 
 在**设置 → 管理 → 网关**中创建密钥。`sk-cptr-...` 值只显示一次并以哈希形式存储，所以立即复制。密钥管理本身（创建、撤销）需要浏览器会话；你不能使用 bearer 密钥管理密钥。
 
-## 工作区作为模型
+## 工作区作为模型 {#workspaces-as-models}
 
 密钥用户拥有的每个工作区显示为 `cptr/<folder-name>`；重复的文件夹名称会获得 `-2` 后缀。执行任务的实际底层模型按优先级顺序：
 
@@ -34,7 +34,7 @@ curl http://localhost:8000/v1/chat/completions \
 3. 默认聊天模型
 4. 第一个启用连接的第一个模型
 
-## 对话连续性
+## 对话连续性 {#conversation-continuity}
 
 无状态请求每次都会创建一个新的 Computer 聊天。要延续对话，发送 `X-Chat-Id`（任何客户端）或 Open WebUI 标头集：
 
@@ -52,7 +52,7 @@ curl http://localhost:8000/v1/chat/completions \
 
 Open WebUI 标记为标题、标签或后续生成（通过 `X-OpenWebUI-Task`）的请求由普通 LLM 回答，而不会在工作区中启动代理任务。
 
-## 限制
+## 限制 {#limits}
 
 :::warning 网关任务以完全工具审批运行
 在 OpenAI 兼容的 API 中没有逐操作审批：代理无需询问即可编辑文件、运行命令和调用工具。将网关密钥视为 SSH 凭据，仅交给受信任的客户端。

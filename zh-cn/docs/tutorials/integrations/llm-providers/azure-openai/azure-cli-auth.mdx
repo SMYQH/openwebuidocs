@@ -10,16 +10,16 @@ title: "Azure CLI 认证"
 
 本指南说明如何通过 Azure CLI 和 Entra ID 认证，让 Open WebUI 对 Azure OpenAI 完成认证。
 
-## 前提条件
+## 前提条件 {#prerequisites}
 
 - **Azure CLI**：从 [Microsoft Learn](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) 安装
 - **Open WebUI**：版本 0.6.30 或更高
 - **Azure 订阅**：拥有 Azure OpenAI 资源访问权限
 - **RBAC 角色**：你的用户或用户组必须对 Azure OpenAI 实例拥有 `Cognitive Services OpenAI User` 角色
 
-## 认证步骤
+## 认证步骤 {#authentication-steps}
 
-### 1. 通过 Azure CLI 登录
+### 1. 通过 Azure CLI 登录 {#1-login-with-azure-cli}
 
 运行以下命令，使用你的 Azure 订阅完成认证：
 
@@ -29,7 +29,7 @@ az login
 
 该命令会打开浏览器窗口，供你使用 Azure 账号登录。
 
-### 2. 验证 RBAC 权限
+### 2. 验证 RBAC 权限 {#2-verify-rbac-permissions}
 
 请确保你的用户账号或用户组已经对 Azure OpenAI 资源分配了 `Cognitive Services OpenAI User` 角色。可在 Azure 门户中确认：
 
@@ -37,7 +37,7 @@ az login
 2. 进入 **Access control (IAM)**
 3. 查看 **Role assignments**，确认已分配所需角色
 
-## Docker 配置
+## Docker 配置 {#docker-configuration}
 
 ### Dockerfile
 
@@ -95,7 +95,7 @@ volumes:
 - 把你的本地 Azure CLI 凭证目录（Linux 上是 `~/.azure`，Windows 上是 `%USERPROFILE%\.azure`）挂载到容器中
 - 设置 `AZURE_CONFIG_DIR` 环境变量，使 Open WebUI 能在容器中找到这些凭证
 
-### 启动 Compose 栈
+### 启动 Compose 栈 {#start-the-compose-stack}
 
 通过以下命令启动 docker compose 服务：
 
@@ -103,7 +103,7 @@ volumes:
 docker compose up
 ```
 
-### UI 配置
+### UI 配置 {#ui-configuration}
 
 当 Docker 容器启动后：
 
@@ -114,7 +114,7 @@ docker compose up
 5. 配置 Azure OpenAI 终结点和部署细节
 6. 点击保存
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
 若你遇到认证问题，可依次检查：
 

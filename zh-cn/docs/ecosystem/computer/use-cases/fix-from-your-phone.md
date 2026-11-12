@@ -3,13 +3,13 @@ title: "从手机推送修复"
 sidebar_position: 6
 ---
 
-# 从手机推送修复
+# 从手机推送修复 {#ship-a-fix-from-your-phone}
 
 用户报告注册表单拒绝了有效的电子邮件。你在火车上。仓库、你正在处理的分支以及开发数据库都在你办公桌上的机器上。无需等待两个小时或在某个云 IDE 中重建上下文，你直接打开机器本身。
 
 **你需要：** 在办公桌机器上完成[快速入门](/ecosystem/computer/quickstart)、设置 [Tailscale](/ecosystem/computer/phone-and-remote/tailscale)（或其他远程方式），理想情况下[安装 PWA](/ecosystem/computer/phone-and-remote/phone-app)，这样一步即可完成。一次性设置约 15 分钟。
 
-## 操作步骤
+## 操作步骤 {#the-walkthrough}
 
 1. **打开工作区。** 点击主屏幕图标，如果会话过期则登录，然后选择项目工作区。你的标签页和布局与你离开时完全一致，包括今早的终端。
 
@@ -29,7 +29,7 @@ sidebar_position: 6
 
 6. **或者交给 AI。** 如果修复比一行代码更大，打开聊天，用 `@` 提及文件，并描述 bug。将审批模式保持在 **ask**，从工具卡片批准每次编辑。参见[审批](/ecosystem/computer/ai/approvals-and-plan-mode)。
 
-## 为什么这样有效
+## 为什么这样有效 {#what-makes-this-work}
 
 终端、编辑器和 git 面板都在与同一个真实检出通信，所以没有任何需要同步的内容，也没有需要信任的第二个环境。有风险的部分（不熟悉的差异、推送）与你坐在办公桌前时做的相同审查，只是屏幕更小。对于任何真正繁重的工作，留下准备好的分支，稍后在桌面上完成；工作区会等待你。
 

@@ -3,7 +3,7 @@ title: 安装
 sidebar_position: 1
 ---
 
-# 安装
+# 安装 {#installation}
 
 最快的安装是在你想要提供服务的机器上执行两个命令：
 
@@ -22,7 +22,7 @@ cptr run
 | 在没有互联网访问的主机上安装 | [离线安装](./air-gapped) |
 | 升级现有安装 | [更新](./updating) |
 
-## 要求
+## 要求 {#requirements}
 
 - Python 3.10 或更新版本（Docker 不需要）
 - macOS、Linux 或 Windows

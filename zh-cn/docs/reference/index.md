@@ -5,7 +5,20 @@ title: "📖 参考文档"
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 参考文档
+## 网络拓扑图 {#network-diagrams}
+
+**看看 Open WebUI、Ollama 和 Docker 在不同部署拓扑下如何通信。**
+
+涵盖主机网络、Docker Compose 栈、独立网络以及平台差异的可视化 C4 图。排查连通性问题或规划架构时非常有用。
+
+| | |
+| :--- | :--- |
+| **macOS / Windows** | 主机上的 Ollama、Compose 栈、独立网络、host 网络的坑 |
+| **Linux** | 相同的拓扑，但 Linux 的网络行为有所不同 |
+
+[**查看网络拓扑图 →**](/reference/network-diagrams)
+
+# 参考文档 {#reference}
 <ThemedImage
   alt="Open WebUI 参考文档：环境变量、API 端点、HTTPS、监控与网络拓扑图"
   sources={{
@@ -20,7 +33,7 @@ Open WebUI 具有高度可配置性。本节是环境变量、API 接口、网�
 
 ---
 
-## ⚙️ 环境变量配置
+## ⚙️ 环境变量配置 {#environment-variable-configuration}
 
 **Open WebUI 在启动时读取的每个标志、路径和密钥，全部汇总于此。**
 
@@ -38,7 +51,7 @@ Open WebUI 具有高度可配置性。本节是环境变量、API 接口、网�
 
 ---
 
-## 🔌 API 接口
+## 🔌 API 接口 {#api-endpoints}
 
 **兼容 OpenAI 和 Anthropic 的 API，以及 RAG、文件管理和 Ollama 代理路由。**
 
@@ -56,7 +69,7 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 
 ---
 
-## 🔒 HTTPS 配置
+## 🔒 HTTPS 配置 {#server-side-tool-calling}
 
 **使用 Nginx、Caddy 或 HAProxy 在 Open WebUI 前端终止 TLS。**
 
@@ -75,7 +88,7 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 
 ---
 
-## 🔑 API 密钥
+## 🔑 API 密钥 {#https-configuration}
 
 **为脚本、机器人和集成提供对 Open WebUI 的程序化访问。**
 
@@ -91,7 +104,7 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 
 ---
 
-## 📊 监控
+## 📊 监控 {#api-keys}
 
 **使用 Uptime Kuma、OpenTelemetry、Prometheus 和 Grafana 观察你的部署。**
 
@@ -107,7 +120,7 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 
 ---
 
-## 🌐 网络架构图
+## 🌐 网络架构图 {#monitoring}
 
 **查看 Open WebUI、Ollama 和 Docker 在不同部署拓扑中的通信方式。**
 

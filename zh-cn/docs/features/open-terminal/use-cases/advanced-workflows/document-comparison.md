@@ -3,7 +3,7 @@ sidebar_position: 5
 title: "文档对比"
 ---
 
-# 📑 对比文档的两个版本
+# 📑 对比文档的两个版本 {#compare-two-versions-of-a-document}
 
 上传合同或方案的两个版本，获得清晰的变更摘要。
 
@@ -11,7 +11,7 @@ title: "文档对比"
 > *（上传 contract_v1.docx 和 contract_v2.docx）* <br/>
 > 对比这两个版本。重点关注付款条款和责任变更。
 
-## AI 的工作流程
+## AI 的工作流程 {#what-the-ai-does}
 
 1. 读取两个文档（Open Terminal 原生支持 .docx）
 2. 在段落/句子级别计算文本差异
@@ -23,7 +23,7 @@ title: "文档对比"
 
 <!-- TODO: 截图——生成的差异报告：新增内容以绿色显示、删除内容以红色显示，并标注各类变更。 -->
 
-## 技能内容
+## 技能内容 {#skill-content}
 
 将下面的内容复制到**工作区 → 技能 → 创建**：
 

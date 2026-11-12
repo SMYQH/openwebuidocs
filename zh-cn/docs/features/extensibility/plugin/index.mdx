@@ -6,7 +6,7 @@ title: "Tools & Functions（插件）"
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 🛠️ Tools & Functions
+# 🛠️ Tools & Functions {#tools--functions}
 
 <ThemedImage
   alt="Open WebUI 插件类型：Pipe、Tool、Action、Event、Filter 和 MCP 环绕 Open WebUI 标志"
@@ -35,7 +35,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 :::
 
-## 简介
+## 简介 {#tldr}
 
 - **Tools** 扩展 LLM 的能力，使其能够收集天气、股票价格等实时的现实世界数据。
 - **Functions** 扩展 Open WebUI 本身的能力，使你能够添加新的 AI 模型支持（如 Anthropic 或 Vertex AI）或改善可用性（如创建自定义按钮或过滤器）。
@@ -53,7 +53,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 如果你在权衡功能请求，心想*"这需要核心改动，"*先问问*"这能成为插件吗？"* 几乎总是肯定的答案。插件系统拥有完整的请求/响应生命周期、持久化状态、用户元数据、事件发射器以及管理员可配置的 valves 系统。实际上，大多数看起来需要核心改动的功能（自定义认证逻辑、按用户限速、响应后处理、提供商专属路由、成本追踪、上下文管理策略）都可以完全以插件形式实现，无需改动核心代码。在社区站上发布插件，也意味着其他用户能立刻受益，无需等待发布周期。
 :::
 
-## 什么是"Tools"和"Functions"？
+## 什么是"Tools"和"Functions"？ {#what-are-tools-and-functions}
 
 让我们先把 **Open WebUI** 看作一个可以完成许多与大型语言模型（LLM）相关任务的"基础"软件。但有时你需要额外的功能或能力，这些功能不是*开箱即用*的——这就是 **Tools** 和 **Functions** 发挥作用的地方。
 
@@ -61,7 +61,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 **Tools** 是一个令人兴奋的功能，因为它们允许 LLM 做的不仅仅是处理文本。它们提供了 LLM 自身没有的**外部能力**。
 
-#### Tool 示例
+#### Tool 示例 {#example-of-a-tool}
 
 想象你正在和 LLM 聊天，想让它给出最新的天气或实时的股票价格。正常情况下，LLM 是做不到的，因为它只能基于训练时的知识来回答。这就是 **Tools** 派上用场的地方！
 
@@ -69,7 +69,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 本质上，Tools 就是你赋予 AI 的**能力**，帮助它与外部世界交互。通过添加这些能力，LLM 就能根据对话上下文"抓取"有用的信息或执行特定的任务。
 
-#### Tools 的更多示例（扩展 LLM 的能力）：
+#### Tools 的更多示例（扩展 LLM 的能力）： {#examples-of-tools-extending-llms-abilities}
 
 1. **实时天气预报** 🛰️。
 2. **股票价格查询** 📈。
@@ -79,7 +79,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 **Tools** 由 AI 在对话过程中使用，而 **Functions** 则帮助扩展或定制 Open WebUI 本身的能力。想象一下，Tools 就像给菜肴添加新食材，Functions 则是你用来控制厨房的流程！🚪
 
-#### 具体来说：
+#### 具体来说： {#lets-break-that-down}
 
 - **Functions** 让你可以在 **Open WebUI 内部**调整或添加**功能**。
 - 你并不是给 LLM 赋予新能力，而是在扩展平台自身的**界面、行为或逻辑**！
@@ -92,7 +92,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 没有 Functions，这些想法都难以落地。但借助 Open WebUI 中的这套框架，你可以轻松扩展这些功能！
 
-### 在哪里找到和管理 Functions
+### 在哪里找到和管理 Functions {#where-to-find-and-manage-functions}
 
 Functions 与 Tools 不在同一位置。
 
@@ -100,14 +100,14 @@ Functions 与 Tools 不在同一位置。
 - **Functions** 关于**平台定制**，位于**管理面板**。
   它们只能由想要为所有用户扩展平台界面或行为的管理员配置和管理。
 
-### 差异小结：
+### 差异小结： {#summary-of-differences}
 
 - **Tools** 让 LLM 能在自身能力之外**做更多事情**（例如获取实时信息或基于外部数据执行自定义任务）。
 - **Functions** 让 WebUI 本身**做更多事情**，比如添加新的 AI 模型或用更聪明的方式过滤数据。
 
 两者都被设计成**可插拔**的，意味着你只需在社区点一下鼠标，就能轻松把它们导入到自己的系统里！🎉 你不需要花几个小时去写代码或折腾它们。
 
-## 什么是 Pipelines？
+## 什么是 Pipelines？ {#want-to-try}
 
 接下来，是 **Pipelines**… 这里听起来可能有些技术门槛——但别被吓到。
 

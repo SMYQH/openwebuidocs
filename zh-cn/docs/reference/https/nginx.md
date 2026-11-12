@@ -5,7 +5,7 @@ title: "使用 Nginx 的 HTTPS"
 
 <!-- markdownlint-disable MD060 -->
 
-# 使用 Nginx 的 HTTPS
+# 使用 Nginx 的 HTTPS {#https-using-nginx}
 
 ## 使用 Nginx 的 HTTPS
 
@@ -23,7 +23,7 @@ WebSocket 连接中一个非常常见、而且很难排查的问题，是跨源�
 
 如果不这样做，即使你在 Nginx Proxy Manager 中启用了 “Websockets support”，WebSocket 连接也会失败。
 
-### HTTP/2 与 WebSockets
+### HTTP/2 与 WebSockets {#http2-and-websockets}
 
 如果你在 Nginx 服务器上启用了 **HTTP/2**，请确保代理配置在连接 Open WebUI 后端时仍然使用 **HTTP/1.1**。这点非常重要，因为大多数 WebUI 功能（如流式传输和实时更新）都依赖 WebSocket，而在许多代理环境中，通过 HTTP/1.1 的 `Upgrade` 方式会比新的 RFC 8441（H2 上的 WebSocket）更稳定。
 
@@ -88,11 +88,11 @@ import Windows from '../tab-nginx/Windows.md';
   </TabItem>
 </Tabs>
 
-## 完整的优化版 NGINX 配置
+## 完整的优化版 NGINX 配置 {#complete-optimized-nginx-configuration}
 
 本节提供一个适用于生产环境的 NGINX 配置，专门针对 Open WebUI 的流式传输、WebSocket 连接以及高并发部署进行了优化。
 
-### 上游配置
+### 上游配置 {#upstream-configuration}
 
 定义一个带 keepalive 连接的 upstream，以降低连接建立开销：
 
@@ -105,7 +105,7 @@ upstream openwebui {
 }
 ```
 
-### 超时配置
+### 超时配置 {#timeout-configuration}
 
 长时间运行的 LLM 补全需要更长的超时时间：
 
@@ -124,7 +124,7 @@ location ~ ^/(ws/|socket\.io/) {
 }
 ```
 
-### 请求头和请求体大小限制
+### 请求头和请求体大小限制 {#header-and-body-size-limits}
 
 防止大请求或 OAuth token 导致错误：
 
@@ -137,20 +137,20 @@ proxy_busy_buffers_size 256k;
 large_client_header_buffers 4 32k;
 ```
 
-### 常见的流式传输误区
+### 常见的流式传输误区 {#common-streaming-mistakes}
 
 | 设置 | 对流式传输的影响 |
 |------|------------------|
-| 在 `application/json` 上启用 `gzip on` | 🔴 为压缩而缓冲 |
-| `proxy_buffering on` | 🔴 缓冲整个响应 |
+| 在 `application/json` 上启用 `gzip on` | 为压缩而缓冲 |
+| `proxy_buffering on` | 缓冲整个响应 |
 | `proxy_request_buffering on` | 应该关闭 |
-| `tcp_nodelay on` | 🔴 **最关键：** 禁用 Nagle 算法，立即发送数据包（可避免 200ms 延迟） |
-| `chunked_transfer_encoding on` | 🟡 可能破坏 SSE |
-| 在 `/api/` 上启用 `proxy_cache` | 🟡 带来额外开销 |
+| `tcp_nodelay on` | **最关键：** 禁用 Nagle 算法，立即发送数据包（可避免 200ms 延迟） |
+| `chunked_transfer_encoding on` | 可能破坏 SSE |
+| 在 `/api/` 上启用 `proxy_cache` | 带来额外开销 |
 | `X-Accel-Buffering "yes"` | 为了更安全，这个头应设置为 `no` |
 | `HTTP/2` | 如果遇到流式问题、延迟，或者前端在最后一个块到达前就结束了流式输出，改用 HTTP 1.1 而不是 HTTP/2 也可能有帮助 |
 
-### 完整示例配置
+### 完整示例配置 {#full-example-configuration}
 
 ```nginx
 upstream openwebui {
@@ -236,11 +236,11 @@ server {
 
 ---
 
-## 缓存配置
+## 缓存配置 {#caching-configuration}
 
 合理的缓存可以显著提升 Open WebUI 的性能，减少后端负载并加快页面加载。本节为希望实现服务端和客户端缓存的高级用户提供指导。
 
-### 缓存区域
+### 缓存区域 {#cache-zones}
 
 在 nginx 的 `http` 块中定义缓存区域，用于存储缓存响应：
 
@@ -267,7 +267,7 @@ sudo chown -R www-data:www-data /var/cache/nginx
 
 :::
 
-### 缓存哪些内容
+### 缓存哪些内容 {#what-to-cache}
 
 | 内容类型 | 缓存时长 | 说明 |
 |----------|----------|------|
@@ -277,7 +277,7 @@ sudo chown -R www-data:www-data /var/cache/nginx
 | HTML 页面 | 5 分钟 | 短缓存并进行重新验证 |
 | 上传文件内容 | 1 天 | 用户上传内容、生成的图片 |
 
-### 永远不要缓存什么
+### 永远不要缓存什么 {#what-to-never-cache}
 
 :::danger 关键：绝不要缓存认证
 
@@ -298,7 +298,7 @@ add_header Cache-Control "no-store, no-cache, must-revalidate";
 
 :::
 
-### 示例：图片缓存
+### 示例：图片缓存 {#example-image-caching}
 
 个人资料图片和模型头像从缓存中受益很大：
 
@@ -329,7 +329,7 @@ location ~ ^/api/v1/(users/[^/]+/profile/image|models/model/profile/image)$ {
 }
 ```
 
-### 示例：静态资源缓存
+### 示例：静态资源缓存 {#example-static-asset-caching}
 
 ```nginx
 location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|otf|eot)$ {
@@ -349,7 +349,7 @@ location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|otf|eot)$ {
 }
 ```
 
-### 缓存调试
+### 缓存调试 {#cache-debugging}
 
 添加 `X-Cache-Status` 头可以验证缓存是否生效：
 
@@ -364,7 +364,7 @@ add_header X-Cache-Status $upstream_cache_status always;
 - `EXPIRED` - 缓存已过期并被刷新
 - `BYPASS` - 故意跳过缓存
 
-### 权衡
+### 权衡 {#trade-offs}
 
 :::warning 缓存失效
 
@@ -378,12 +378,12 @@ add_header X-Cache-Status $upstream_cache_status always;
 
 ---
 
-## 下一步
+## 下一步 {#next-steps}
 
 完成 HTTPS 配置后，可以通过以下地址安全访问 Open WebUI：
 
 - [https://localhost](https://localhost)
 
-Ensure that your DNS records are correctly configured if you're using a domain name. For production environments, it's recommended to use Let's Encrypt for trusted SSL certificates.
+如果你使用域名，请确保 DNS 记录已正确配置。在生产环境中，建议使用 Let's Encrypt 签发可信的 SSL 证书。
 
 ---

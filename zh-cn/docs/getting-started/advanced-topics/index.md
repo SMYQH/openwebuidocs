@@ -3,7 +3,7 @@ sidebar_position: 500
 title: "高级主题"
 ---
 
-# 高级主题
+# 高级主题 {#advanced-topics}
 
 **超越默认配置：为生产环境与贡献开发扩展、调试并深入使用 Open WebUI。**
 
@@ -11,23 +11,23 @@ Open WebUI 开箱即可满足个人使用，但真实部署通常需要更多能
 
 ---
 
-## 为什么需要高级主题？
+## 为什么需要高级主题？ {#why-advanced-topics}
 
-### 扩展到单容器之外
+### 扩展到单容器之外 {#scale-beyond-a-single-container}
 
 默认的 SQLite 数据库与单 worker 配置适合小团队使用。你将学会如何切换到 PostgreSQL、加入 Redis 共享状态、在负载均衡器后运行多副本，以及选择外部向量数据库，而无需重构你的部署架构。
 
-### 更有把握地调试
+### 更有把握地调试 {#debug-with-confidence}
 
 当规模化环境中出现问题时，第一个问题永远是“日志里写了什么？”你可以配置日志级别、为日志聚合器启用结构化 JSON 输出，并接入 OpenTelemetry 以获得贯穿全栈的链路追踪。
 
-### 参与项目贡献
+### 参与项目贡献 {#contribute-to-the-project}
 
 你还可以搭建本地开发环境，让前端与后端支持热重载，理解贡献流程，并开始提交 pull request。
 
 ---
 
-## 本节内容
+## 本节内容 {#whats-covered}
 
 | | |
 | :--- | :--- |

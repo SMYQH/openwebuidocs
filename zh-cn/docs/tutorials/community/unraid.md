@@ -3,7 +3,7 @@ sidebar_position: 10
 title: "Unraid 部署（新手友好）"
 ---
 
-# 在 Unraid 上部署 Open WebUI（新手友好）
+# 在 Unraid 上部署 Open WebUI（新手友好） {#open-webui-on-unraid-beginner-safe}
 
 :::warning
 
@@ -13,7 +13,7 @@ title: "Unraid 部署（新手友好）"
 
 本指南面向第一次使用 Unraid 的用户，目标是实现稳定的 Docker 部署、持久化数据和安全升级。
 
-## 你将完成什么
+## 你将完成什么 {#what-you-will-do}
 
 - 在 Unraid 中创建 Open WebUI 容器。
 - 为 `/app/backend/data` 配置持久化存储。
@@ -21,7 +21,7 @@ title: "Unraid 部署（新手友好）"
 - 在不丢失数据的情况下升级 Open WebUI。
 - 排查反向代理与持久化相关问题。
 
-## 开始前准备
+## 开始前准备 {#before-you-start}
 
 - 已在 Unraid 中启用 Docker。
 - 已准备持久化 appdata 路径，例如：`/mnt/user/appdata/open-webui`。
@@ -33,7 +33,7 @@ title: "Unraid 部署（新手友好）"
 务必将 `/app/backend/data` 持久化到宿主机路径。若跳过此步骤，重建容器后聊天记录和设置可能丢失。
 :::
 
-## 1. 在 Unraid 中创建容器
+## 1. 在 Unraid 中创建容器 {#1-create-the-container-in-unraid}
 
 在 **Docker > 添加容器** 中使用以下配置：
 
@@ -52,29 +52,29 @@ title: "Unraid 部署（新手友好）"
 | --- | --- | --- |
 | Path | `/app/backend/data` | `/mnt/user/appdata/open-webui` |
 
-## 2. 配置 Ollama 连接
+## 2. 配置 Ollama 连接 {#2-configure-ollama-connectivity}
 
 请选择一种方式。
 
-### Ollama 运行在 Unraid 主机
+### Ollama 运行在 Unraid 主机 {#ollama-on-the-unraid-host}
 
 - 额外参数：
   - `--add-host=host.docker.internal:host-gateway`
 - 环境变量：
   - `OLLAMA_BASE_URL=http://host.docker.internal:11434`
 
-### Ollama 运行在其他机器
+### Ollama 运行在其他机器 {#ollama-on-another-machine}
 
 - 环境变量：
   - `OLLAMA_BASE_URL=http://<ollama-lan-ip>:11434`
 
-### Ollama 运行在其他容器
+### Ollama 运行在其他容器 {#ollama-in-another-container}
 
 - 将两个容器放到同一个自定义 Docker 网络。
 - 设置：
   - `OLLAMA_BASE_URL=http://<ollama-container-name>:11434`
 
-## 3. 首次启动验证
+## 3. 首次启动验证 {#3-first-launch-validation}
 
 1. 启动容器。
 2. 打开 `http://<unraid-ip>:3000`。
@@ -82,7 +82,7 @@ title: "Unraid 部署（新手友好）"
 4. 进入 **Settings > Admin Settings > Connections**，确认 Ollama 端点配置正确。
 5. 确认模型选择器中能看到模型。
 
-## 4. 持久化卷注意事项
+## 4. 持久化卷注意事项 {#4-persistent-volume-notes}
 
 - Open WebUI 状态数据存储在 `/app/backend/data`。
 - 在 Unraid 模板中设置固定的 `WEBUI_SECRET_KEY`，并在重建容器时保持不变，以避免不必要的会话失效。
@@ -90,7 +90,7 @@ title: "Unraid 部署（新手友好）"
 - 使用目录映射，不要使用文件映射。
 - 如持久化失败，请检查 `/mnt/user/appdata/open-webui` 目录权限。
 
-## 5. 升级步骤（安全流程）
+## 5. 升级步骤（安全流程） {#5-upgrade-steps-safe-workflow}
 
 1. 备份 `/mnt/user/appdata/open-webui`。
 2. 确保模板中的 `WEBUI_SECRET_KEY` 保持不变。
@@ -101,9 +101,9 @@ title: "Unraid 部署（新手友好）"
 
 更多升级方式请参阅 [Updating Open WebUI](/getting-started/updating)。
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 无法连接 Ollama
+### 无法连接 Ollama {#cannot-reach-ollama}
 
 现象：
 - `Connection error` in Open WebUI
@@ -114,13 +114,13 @@ title: "Unraid 部署（新手友好）"
 - 若使用主机上的 Ollama，确认已配置 `--add-host=host.docker.internal:host-gateway`。
 - 若 `host.docker.internal` 解析失败，请改用 Unraid 主机的局域网 IP。
 
-### `host.docker.internal` 无法解析
+### `host.docker.internal` 无法解析 {#hostdockerinternal-does-not-resolve}
 
 - 添加 `--add-host=host.docker.internal:host-gateway`。
 - 保存模板改动后重启容器。
 - 兜底方案：`OLLAMA_BASE_URL=http://<unraid-lan-ip>:11434`。
 
-### 反向代理子路径问题（`/openwebui`）
+### 反向代理子路径问题（`/openwebui`） {#reverse-proxy-subpath-problems-openwebui}
 
 现象：
 - 登录页或静态资源返回 `404`
@@ -135,7 +135,7 @@ title: "Unraid 部署（新手友好）"
 
 更多反向代理排障方法请参阅 [Connection Errors](/troubleshooting/connection-error)。
 
-### 更新或重建后数据丢失
+### 更新或重建后数据丢失 {#data-missing-after-updateredo}
 
 - 确认映射是否严格为 `/app/backend/data` 指向持久化宿主机目录。
 - 确认没有因路径拼写错误创建第二个空目录。

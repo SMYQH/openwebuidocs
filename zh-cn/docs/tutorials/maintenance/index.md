@@ -3,7 +3,7 @@ sidebar_position: 0
 title: "维护"
 ---
 
-# 🔧 维护教程
+# 🔧 维护教程 {#maintenance-tutorials}
 
 **保持 Open WebUI 部署健康稳定：备份、存储、离线模式与数据库管理。**
 

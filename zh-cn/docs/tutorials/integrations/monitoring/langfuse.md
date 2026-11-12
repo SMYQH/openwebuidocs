@@ -18,7 +18,7 @@ title: "Langfuse ⚠️"
 
 :::
 
-## 在 Open WebUI 中集成 Langfuse
+## 在 Open WebUI 中集成 Langfuse {#langfuse-integration-with-open-webui}
 
 [Langfuse](https://langfuse.com/)（[GitHub](https://github.com/langfuse/langfuse)）为 Open WebUI 提供开源可观测性与评估能力。启用 Langfuse 集成后，你可以追踪应用数据，用于开发、监控和优化 Open WebUI 的使用效果，包括：
 
@@ -28,7 +28,7 @@ title: "Langfuse ⚠️"
 - 会话回放用于问题排查
 - [评估（Evaluations）](https://langfuse.com/docs/scores/overview)
 
-## 如何将 Langfuse 集成到 Open WebUI
+## 如何将 Langfuse 集成到 Open WebUI {#how-to-integrate-langfuse-with-open-webui}
 
 ![Langfuse Integration](https://langfuse.com/images/docs/openwebui-integration.gif)
 *Langfuse 集成步骤*
@@ -37,13 +37,13 @@ Open WebUI 的 [Pipelines](https://github.com/open-webui/pipelines/) 是一个�
 
 要通过 Langfuse 追踪应用数据，你可以使用 [Langfuse pipeline](https://github.com/open-webui/pipelines/blob/039f9c54f8e9f9bcbabde02c2c853e80d25c79e4/examples/filters/langfuse_v3_filter_pipeline.py)，它可实现对消息交互的实时监控与分析。
 
-## 快速开始
+## 快速开始 {#quick-start-guide}
 
-### 第 1 步：准备 Open WebUI
+### 第 1 步：准备 Open WebUI {#step-1-setup-open-webui}
 
 请先确保 Open WebUI 已在运行。可参考 [Open WebUI 文档](/)。
 
-### 第 2 步：部署 Pipelines
+### 第 2 步：部署 Pipelines {#step-2-get-your-langfuse-api-keys}
 
 使用 Docker 启动 [Pipelines](https://github.com/open-webui/pipelines/)。可执行以下命令：
 
@@ -51,7 +51,7 @@ Open WebUI 的 [Pipelines](https://github.com/open-webui/pipelines/) 是一个�
 docker run -p 9099:9099 --add-host=host.docker.internal:host-gateway -v pipelines:/app/pipelines --name pipelines --restart always ghcr.io/open-webui/pipelines:main
 ```
 
-### 第 3 步：连接 Open WebUI 与 Pipelines
+### 第 3 步：连接 Open WebUI 与 Pipelines {#step-3-add-the-langfuse-filter}
 
 在 *Admin Settings* 中，新建并保存一个 OpenAI API 类型连接，参数如下：
 
@@ -60,7 +60,7 @@ docker run -p 9099:9099 --add-host=host.docker.internal:host-gateway -v pipeline
 
 ![Open WebUI Settings](https://langfuse.com/images/docs/openwebui-setup-settings.png)
 
-### 第 4 步：添加 Langfuse 过滤 Pipeline
+### 第 4 步：添加 Langfuse 过滤 Pipeline {#step-4-set-the-valves-and-turn-the-filter-on}
 
 然后进入 *Admin Settings*->*Pipelines* 并添加 Langfuse Filter Pipeline。将 Pipelines 监听地址设为 `http://host.docker.internal:9099`（与前文一致），并通过 *Install from Github URL* 使用下方 URL 安装 [Langfuse Filter Pipeline](https://github.com/open-webui/pipelines/blob/039f9c54f8e9f9bcbabde02c2c853e80d25c79e4/examples/filters/langfuse_v3_filter_pipeline.py)：
 
@@ -78,7 +78,7 @@ https://github.com/open-webui/pipelines/blob/main/examples/filters/langfuse_v3_f
 
 :::
 
-### 第 5 步：在 Langfuse 中查看追踪
+### 第 5 步：在 Langfuse 中查看追踪 {#step-5-see-your-traces-in-langfuse}
 
 现在你可以与 Open WebUI 交互，并在 Langfuse 中看到追踪数据。
 
@@ -86,6 +86,6 @@ Langfuse UI 中的[追踪示例](https://cloud.langfuse.com/project/cloramnkj000
 
 ![Open WebUI Example Trace in Langfuse](https://langfuse.com/images/docs/openwebui-example-trace.png)
 
-## 了解更多
+## 了解更多 {#learn-more}
 
 如需更完整的 Open WebUI Pipelines 指南，可阅读[这篇文章](https://ikasten.io/2024/06/03/getting-started-with-openwebui-pipelines/)。

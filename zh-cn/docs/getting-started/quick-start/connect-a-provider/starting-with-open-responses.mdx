@@ -4,7 +4,7 @@ title: "Open Responses"
 
 ---
 
-## 概览
+## 概览 {#overview}
 
 Open WebUI 对 **[Open Responses](https://www.openresponses.org/)** 提供实验性支持。它是一套面向多提供商、可互操作的开放 LLM 接口规范。本指南将带你为某个连接启用 Open Responses API。
 
@@ -14,7 +14,7 @@ Open WebUI 对 **[Open Responses](https://www.openresponses.org/)** 提供实验
 
 ---
 
-## 什么是 Open Responses？
+## 什么是 Open Responses？ {#what-is-open-responses}
 
 Open Responses 是一个开源规范，用于统一不同提供商之间 LLM 请求与响应的结构。它带来的好处包括：
 
@@ -26,28 +26,27 @@ Open Responses 基于 OpenAI Responses API 格式，但目标是面向任何实�
 
 ---
 
-## 第 1 步：新增或编辑连接
+## 第 1 步：新增或编辑连接 {#step-1-add-or-edit-a-connection}
 
-1. 进入 ⚙️ **Admin Settings**。
-2. 打开 **Connections > OpenAI > Manage**（查找扳手图标）。
-3. 点击 ➕ **Add New Connection**，或编辑现有连接。
+1. 前往 **设置 > 管理 > 连接**，找到 **Manage OpenAI API Connections** 列表。
+2. 点击 **Add Connection** 新建一个连接，或点击现有连接上的 **Configure**（齿轮图标）进行编辑。
 
 ---
 
-## 第 2 步：选择 API 类型
+## 第 2 步：选择 API 类型 {#step-2-select-the-api-type}
 
 在连接弹窗中，找到 **API Type** 设置：
 
 - **聊天补全**（默认）：使用标准 OpenAI 聊天补全 API 格式
-- **Responses**（实验性）：使用 Open Responses API 格式
+- **Responses**：使用 Open Responses API 格式
 
-点击切换到 **Responses**。你会看到 “实验性” 标记，表示该功能仍在开发中。
+点击切换到 **Responses**。
 
 ![API Type 切换](/images/getting-started/quick-start/api-type-responses.gif)
 
 ---
 
-## 第 3 步：配置你的提供商
+## 第 3 步：配置你的提供商 {#step-3-configure-your-provider}
 
 填写支持 Open Responses 格式的提供商连接信息：
 
@@ -57,7 +56,7 @@ Open Responses 基于 OpenAI Responses API 格式，但目标是面向任何实�
 
 ---
 
-## 第 4 步（可选）：启用原生服务端工具
+## 第 4 步（可选）：启用原生服务端工具 {#step-4-optional-enable-native-server-side-tools}
 
 某些提供商，最著名的是 **OpenAI**，通过 Responses API 公开了**服务端工具**。最典型的例子是**原生网络搜索**：模型自行运行搜索，然后返回带有来源引用的 grounded 回答。Open WebUI 将这些工具转发给提供商，并原生渲染其结果，因此无需额外配置。
 
@@ -67,12 +66,14 @@ Open Responses 基于 OpenAI Responses API 格式，但目标是面向任何实�
 
 要为模型启用原生网络搜索：
 
-1. 进入 **Workspace → Models**，编辑（✏️）一个使用你 Responses 连接的模型。
+1. 进入 **Workspace → Models**，编辑一个使用你 Responses 连接的模型。
 2. 展开 **Advanced Params**。
-3. 在底部，点击 **➕ Add Custom Parameter** 并设置：
+3. 在底部，点击 **Add Custom Parameter** 并设置：
    - **Name**: `tools`
    - **Value**: `[{"type": "web_search"}]`
 4. 保存模型。
+
+模型会保留 Open WebUI 自带的工具。便签、知识库、任务、附加到模型的工具以及附加文件的上下文都能照常工作，自定义的 `tools` 会与它们一同发送。
 
 当你与该模型聊天时，提供商会执行服务端网络搜索，Open WebUI 会流式显示：
 
@@ -94,17 +95,21 @@ Open Responses 基于 OpenAI Responses API 格式，但目标是面向任何实�
 **Add Custom Parameter** 按钮在模型编辑器中仅对管理员显示。自定义参数会按原样转发给提供商，因此请仅使用有效的 Responses API 工具定义。
 :::
 
+:::info 实例级设置的自定义参数依然生效
+**设置 > 管理 > 模型** 下的 **Model Defaults** 中也有同一个按钮，它会作用于每个模型。两处的自定义参数按名称逐个合并，因此在这里添加 `tools` 不会丢掉实例级那些模型未点名的参数。两处使用相同名称时，模型的值才是被发送的那个。参见[全局模型默认值](/features/workspace/models#global-model-defaults-admin)。
+:::
+
 ---
 
-## 支持的提供商
+## 支持的提供商 {#supported-providers}
 
 Open Responses 是一项较新的规范，因此提供商支持仍在持续增长。请查看 [Open Responses 官网](https://www.openresponses.org/) 以获取最新的兼容提供商与实现列表。
 
 ---
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 聊天补全可用，但 Responses 不可用
+### 聊天补全可用，但 Responses 不可用 {#connection-works-with-chat-completions-but-not-responses}
 
 并非所有提供商都已经支持 Open Responses 格式。你可以尝试：
 
@@ -112,14 +117,20 @@ Open Responses 是一项较新的规范，因此提供商支持仍在持续增�
 2. 确认你的提供商是否明确声明支持 Open Responses
 3. 使用可以转换到 Open Responses 格式的中间代理
 
-### 流式输出或工具调用行为异常
+### 流式输出或工具调用行为异常 {#streaming-or-tool-calls-behave-unexpectedly}
 
 对于 Responses API 连接，工具调用、重新调用与流式输出都受支持。Open WebUI 会在聊天补全与 Responses API 格式之间透明转换，包括工具调用参数、函数调用输出以及多轮工具使用。如果你仍然遇到问题：
 
 1. 查看已知问题
 2. 在 [GitHub](https://github.com/open-webui/open-webui/issues) 报告 bug
 
-### 有状态会话
+### 偏离 Responses 格式的提供商 {#providers-that-deviate-from-the-responses-format}
+
+并非每个宣称支持 Responses 格式的端点都会严格按该格式输出，而 Open WebUI 会吸收这些常见偏差，而不是因此丢掉整条回复。如果流在报告“无内容”时关闭，已经流式输出的部分会被保留。某个片段先于它所属的条目到达时会被跳过，但不会截断答案的其余部分。如果提供商只在最后才交出完整的回复消息，该消息仍会被应用，因此回复及其引用会被存储下来，并延续到下一轮。
+
+Open WebUI 无法恢复提供商从未发送的内容。如果回复持续偏短或为空，请先用同一个提示词与提供商自己的 API 对比，再来这里报告。
+
+### 有状态会话 {#stateful-sessions}
 
 默认情况下，Open WebUI 会把 Responses API 连接当作**无状态**连接处理——它会在本地管理对话历史，并在每次请求时发送完整上下文。如果你的上游提供商支持**有状态会话**（例如支持 `previous_response_id` 锚定的服务端响应存储，如直接 OpenAI 连接），你可以启用 `ENABLE_RESPONSES_API_STATEFUL=true`，让提供商自己管理会话状态。
 
@@ -129,7 +140,7 @@ Open Responses 是一项较新的规范，因此提供商支持仍在持续增�
 
 ---
 
-## 了解更多
+## 了解更多 {#learn-more}
 
 - **[Open Responses 规范](https://www.openresponses.org/specification)**：完整技术规范
 - **[Open Responses GitHub](https://github.com/openresponses/openresponses)**：源码与讨论

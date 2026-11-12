@@ -3,9 +3,9 @@ sidebar_position: 100
 title: "图像生成"
 ---
 
-## 🎨 图像生成故障排查
+## 🎨 图像生成故障排查 {#image-generation-troubleshooting}
 
-### 常见问题
+### 常见问题 {#general-issues}
 
 #### 图像没有生成
 
@@ -14,7 +14,7 @@ title: "图像生成"
 3. 确认所选模型已在后端服务中可用并完成加载（例如查看 ComfyUI 或 Automatic1111 控制台是否有活动日志）。
 4. **Azure OpenAI**：如果你看到 `[ERROR: azure-openai error: Unknown parameter: 'response_format'.]`，请确认使用的是 `2025-04-01-preview` 或更高版本的 API 版本。
 
-### ComfyUI 问题
+### ComfyUI 问题 {#comfyui-issues}
 
 #### 工作流格式问题
 
@@ -32,7 +32,7 @@ title: "图像生成"
     - **v0.9.6 已修复**：当图像 URL 与管理员配置的 `COMFYUI_BASE_URL` 同源时（严格的 scheme + host + port 匹配，不是字符串前缀），会被信任；因此内网 ComfyUI 在不削弱全局 SSRF 保护的前提下也能正常工作。
     - 请确保 `COMFYUI_BASE_URL` 指向 ComfyUI 提供图像的**完全一致**的源（scheme、host、port 全部匹配）。如果 ComfyUI 返回的图像 URL 使用的 host/port 与 `COMFYUI_BASE_URL` 不同，那些请求仍会经过 SSRF 校验并可能被拒绝。对于旧版本，请升级到 v0.9.6 或更高，而不是关闭 SSRF 保护。
 
-### Automatic1111 问题
+### Automatic1111 问题 {#automatic1111-issues}
 
 #### 连接问题
 
@@ -42,18 +42,18 @@ title: "图像生成"
 
 1. **Docker 连接问题**（Open WebUI 无法通过 `localhost` 访问 Automatic1111）：如果 Open WebUI 运行在 Docker 中，而 Automatic1111 运行在宿主机，请把 Base URL 设为 `http://host.docker.internal:7860`，并确保 `host.docker.internal` 可解析（在 `docker run` 中通过 `--add-host=host.docker.internal:host-gateway` 添加）。
 
-### 环境变量与配置
+### 环境变量与配置 {#environment-variables--configuration}
 
 如需高级配置，你可以设置以下环境变量。
 
-#### 通用图像生成
+#### 通用图像生成 {#general-image-generation}
 
 - `ENABLE_IMAGE_GENERATION`：设为 `true` 以启用图像生成。
 - `IMAGE_GENERATION_ENGINE`：要使用的引擎（例如 `openai`、`comfyui`、`automatic1111`、`gemini`）。
 - `IMAGE_GENERATION_MODEL`：用于生成的模型 ID。
 - `IMAGE_SIZE`：默认图像尺寸（例如 `512x512`）。
 
-#### 各引擎专属设置
+#### 各引擎专属设置 {#engine-specifics}
 
 #### OpenAI / 兼容接口
 

@@ -6,10 +6,10 @@ title: "管理"
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 🔧 管理
+# 🔧 管理 {#administration}
 
 <ThemedImage
-  alt="管理：管理面板仪表板，显示使用统计和消息时序图"
+  alt="管理：三层逐步收窄的结构，最上层被标记"
   sources={{
     light: useBaseUrl('/images/banners/administration-light.svg'),
     dark: useBaseUrl('/images/banners/administration-dark.svg'),
@@ -23,28 +23,43 @@ Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的
 
 ---
 
-## 本节内容
+## 本节内容 {#whats-in-this-section}
 
 | | |
 | :--- | :--- |
-| 📊 **[Analytics（分析）](./analytics)** | 包含消息量、Token 消耗、模型明细及每用户活动的使用仪表板 |
-| 🏆 **[Evaluation（评估）](./evaluation)** | 模型竞技场、盲测 A/B 对比、基于 ELO 的排行榜及用于微调的对话快照 |
-| 📢 **[Banners（横幅）](./banners)** | 可定制的全系统公告，支持用户关闭通知 |
-| 🔔 **[Webhooks](./webhooks)** | 用户注册、对话完成及外部服务集成的自动通知 |
+| **[Task Models（任务模型）](/features/administration/task-models)** | 为标题、标签、追问、自动补全、搜索查询和压缩摘要提供后端模型与参数 |
+| **[Analytics（分析）](/features/administration/analytics)** | 包含消息量、Token 消耗、模型明细及每用户活动的使用仪表板 |
+| **[Evaluation（评估）](/features/administration/evaluation)** | 模型竞技场、盲测 A/B 对比、基于 ELO 的排行榜及用于微调的对话快照 |
+| **[Banners（横幅）](/features/administration/banners)** | 可定制的全系统公告，支持用户关闭通知 |
+| **[Default Interface Settings（默认界面设置）](/features/administration/interface-defaults)** | 所有人「设置 > 界面」页面的实例级初始选项值 |
+| **[Translations（翻译）](/features/administration/translations)** | 为你创建的内容提供按语言区分的名称、描述、阀门标签和横幅文本 |
+| **[Webhooks](/features/administration/webhooks)** | 用户注册、对话完成及外部服务集成的自动通知 |
 
 ---
 
-## Analytics（分析）
+![管理设置 - 常规](/images/admin/admin-general.png)
+
+## Task Models（任务模型） {#task-models}
+
+聊天标题、标签、追问建议、自动补全、搜索查询改写和上下文压缩摘要，都会在后台作为独立的模型调用运行。默认情况下它们跑在用户当前对话所用的模型上——这正是旗舰模型可能悄悄写出大量三个字标题的原因。
+
+**适合用来：** 把这类工作挪到一个小而快的模型上，限制这些请求允许消耗的额度，并关掉你的实例不需要的那部分。
+
+[**了解 Task Models →**](/features/administration/task-models)
+
+---
+
+## Analytics（分析） {#analytics}
 
 从全局视角了解实例的使用情况。分析仪表板展示消息量、Token 消耗、模型热度及用户活动，可按时间段和用户组进行筛选。
 
 **适用场景：** 容量规划、费用估算、识别热门模型、跟踪推广趋势以及按部门统计用量。
 
-[**了解 Analytics →**](./analytics)
+[**了解 Analytics →**](/features/administration/analytics)
 
 ---
 
-## Evaluation（评估）
+## Evaluation（评估） {#evaluation}
 
 不确定哪个模型最适合您的团队？评估系统允许用户在日常对话中通过点赞/踩对模型回复评分。评分结果会汇入基于 ELO 的排行榜，已评分的对话将生成快照，用于未来的模型微调。
 
@@ -52,11 +67,11 @@ Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的
 - **竞技场模式**：随机选择模型进行盲测对比，消除偏见
 - **普通交互**：在日常使用中对回复评分，然后通过切换模型进行比较
 
-[**了解 Evaluation →**](./evaluation)
+[**了解 Evaluation →**](/features/administration/evaluation)
 
 ---
 
-## Banners（横幅）
+## Banners（横幅） {#banners}
 
 向所有已登录用户推送高可见度消息。将横幅用于维护窗口、故障告警、政策提醒和功能公告。可通过管理面板或 `WEBUI_BANNERS` 环境变量（适用于 GitOps 工作流）进行配置。
 
@@ -67,7 +82,17 @@ Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的
 | `warning` | 黄色 | 计划维护、局部降级 |
 | `error` | 红色 | 活跃故障、服务中断 |
 
-[**了解 Banners →**](./banners)
+[**了解 Banners →**](/features/administration/banners)
+
+---
+
+## Default Interface Settings（默认界面设置） {#default-interface-settings}
+
+你可以决定每个人「设置 > 界面」页面的初始值，而不是让每个账户都停留在出厂默认值。可在管理面板中设置，或用 `DEFAULT_INTERFACE_SETTINGS` 环境变量以适配 GitOps 工作流。
+
+**适合用来：** 让团队第一天就拥有一致的界面，关掉某个默认开启但碍眼的选项，或者推行一套团队风格同时仍允许个人自行调整。没有被改动的选项会继续跟随你的默认值，因此之后的变更会传达到所有没有覆盖过它的用户。
+
+[**了解 Default Interface Settings →**](/features/administration/interface-defaults)
 
 ---
 
@@ -77,8 +102,8 @@ Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的
 
 | Webhook | 用途 |
 |---------|---------|
-| **管理员 Webhook** | 新用户注册时通知 Slack/Discord 频道 |
+| **事件 Webhooks** | 把事件目录中的任意事件（包括注册事件）推送到 Slack、Discord 或你自己的 endpoint |
 | **用户 Webhook** | 长时间运行的对话响应就绪时通知对应用户 |
 | **频道 Webhooks** | 允许外部服务（CI/CD、监控、脚本）向 Open WebUI 频道发送消息 |
 
-[**了解 Webhooks →**](./webhooks)
+[**了解 Webhooks →**](/features/administration/webhooks)

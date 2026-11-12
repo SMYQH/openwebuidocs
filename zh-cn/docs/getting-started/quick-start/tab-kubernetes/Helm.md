@@ -1,13 +1,13 @@
-# Kubernetes 上的 Helm 配置
+# Kubernetes 上的 Helm 配置 {#helm-setup-for-kubernetes}
 
 Helm 可以帮助你管理 Kubernetes 应用。
 
-## 前置要求
+## 前置要求 {#prerequisites}
 
 - 已准备好 Kubernetes 集群
 - 已安装 Helm
 
-## Helm 步骤
+## Helm 步骤 {#helm-steps}
 
 1. **添加 Open WebUI Helm 仓库：**
 
@@ -49,7 +49,7 @@ Helm 可以帮助你管理 Kubernetes 应用。
 **如果不这样做，可能会因为并发迁移导致数据库损坏。**
 :::
 
-## 访问 WebUI
+## 访问 WebUI {#access-the-webui}
 
 你可以通过端口转发，或配置 Ingress 来访问 Open WebUI。
 
@@ -67,7 +67,7 @@ metadata:
 
 这样可以让用户会话尽量保持落在同一个 pod 上，从而减少多副本环境中的 WebSocket 问题（不过只要 Redis 配置正确，这一项的重要性会下降）。
 
-## 卸载
+## 卸载 {#uninstall}
 
 1.  **卸载 Helm Release：**
     ```bash

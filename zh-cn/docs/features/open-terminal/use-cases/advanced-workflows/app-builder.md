@@ -3,14 +3,14 @@ sidebar_position: 9
 title: "应用构建器"
 ---
 
-# 🏗️ 构建完整应用
+# 🏗️ 构建完整应用 {#build-a-complete-application}
 
 描述你想要的，获得一个具有前端、后端和数据库的完整工作应用。
 
 > **你：** $App Builder <br/>
 > 帮我做一个库存跟踪器。我需要加入带有名称、数量和价格属性的产品。显示总价值和库存预警。
 
-## AI 的工作流程
+## AI 的工作流程 {#what-the-ai-does}
 
 1. 设计数据库结构
 2. 使用 Flask 构建带有 CRUD 接口的 Python API
@@ -23,7 +23,7 @@ title: "应用构建器"
 
 {/* TODO: Screenshot — File browser showing the project structure: app.py, database.py, templates/, static/. */}
 
-## 技能内容
+## 技能内容 {#skill-content}
 
 将下面的内容复制到**工作区 → 技能 → 创建**：
 

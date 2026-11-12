@@ -3,7 +3,7 @@ title: MCP 和 OpenAPI 工具服务器
 sidebar_position: 6
 ---
 
-# MCP 和 OpenAPI 工具服务器
+# MCP 和 OpenAPI 工具服务器 {#mcp-and-openapi-tool-servers}
 
 通过在**设置 → 管理 → 工具服务器**中连接外部工具服务器，为代理提供内置工具之外的工具。支持三种服务器类型：
 
@@ -19,7 +19,7 @@ MCP 支持需要可选依赖组（Docker 镜像已包含）：
 pip install 'cptr[mcp]'
 ```
 
-## 添加服务器
+## 添加服务器 {#add-a-server}
 
 1. 在**设置 → 管理 → 工具服务器**中，添加一个服务器并选择其类型。
 2. 给它一个 **id**：仅限小写字母、数字和下划线（`[a-z0-9_]`）。工具以 `<server_id>_<tool_name>` 的形式呈现给模型，因此保持简短且可识别。

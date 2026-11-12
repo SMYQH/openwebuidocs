@@ -3,7 +3,7 @@ sidebar_position: 17
 title: "Webhook 集成"
 ---
 
-## 概述
+## 概述 {#overview}
 
 Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内发生的事件，并支持外部服务集成。这些 Webhook 允许您在 Discord、Slack 或任何支持传入 Webhook 的应用程序等外部服务中接收自动通知，也可以让外部服务向 Open WebUI 频道发送消息。
 
@@ -13,19 +13,19 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 2.  **用户 Webhook：** 当对话响应就绪时通知单个用户的个人 Webhook，对于长时间运行的任务特别有用。
 3.  **频道 Webhooks：** 允许外部服务向特定频道发送消息的传入 Webhook。
 
-## 1. 管理员 Webhook：新用户通知
+## 1. 管理员 Webhook：新用户通知 {#1-admin-webhook-new-user-notifications}
 
 此 Webhook 专为管理员设计，用于监控 Open WebUI 实例上的新用户注册情况。
 
-### 使用场景
+### 使用场景 {#use-case}
 
 - **用户注册跟踪：** 每当有新用户创建账户时，在专用的 Slack 或 Discord 频道中接收实时通知。这有助于您跟踪用户群并欢迎新成员。
 
-### 配置
+### 配置 {#configuration}
 
 您可以通过两种方式配置管理员 Webhook：
 
-#### 方式一：通过管理面板
+#### 方式一：通过管理面板 {#option-1-through-the-admin-panel}
 
 1.  以管理员身份登录。
 2.  导航到 **管理面板 > 设置 > 通用**。
@@ -33,11 +33,11 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 4.  输入您的外部服务（例如 Discord、Slack）提供的 Webhook URL。
 5.  点击 **"保存"**。
 
-#### 方式二：通过环境变量
+#### 方式二：通过环境变量 {#option-2-through-environment-variables}
 
 您也可以使用 `WEBHOOK_URL` 环境变量设置 Webhook URL。更多详情请参阅[环境变量配置](/reference/env-configuration/#webhook_url)文档。
 
-### 负载格式
+### 负载格式 {#payload-format}
 
 当新用户注册时，Open WebUI 将向配置的 URL 发送包含新用户详情的 JSON `POST` 请求。
 
@@ -53,7 +53,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 }
 ```
 
-## 2. 用户 Webhook：对话响应通知
+## 2. 用户 Webhook：对话响应通知 {#2-user-webhook-notification-targets}
 
 此 Webhook 允许单个用户在模型完成响应时收到通知。对于可能需要数分钟处理的长时间运行任务特别有用，即使您已离开 Open WebUI 标签页也能收到通知。
 
@@ -61,11 +61,11 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 
 - **长时间任务提醒：** 如果您提交了需要数分钟处理的复杂提示词，可以关闭浏览器标签页，仍会在响应就绪时立即收到通知。这让您可以处理其他任务，无需不断查看 Open WebUI 界面。
 
-### 工作原理
+### 工作原理 {#how-it-works}
 
 仅当您**未主动使用 WebUI** 时才会发送通知。如果您已打开并聚焦该标签页，则不会触发 Webhook，避免不必要的通知。
 
-### 启用/禁用用户 Webhook
+### 启用/禁用用户 Webhook {#enablingdisabling-user-webhooks}
 
 用户 Webhook 默认禁用。管理员可以在需要时为所有用户启用此功能，也可以保持禁用以防止外部请求。
 
@@ -103,11 +103,11 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 }
 ```
 
-## 3. 频道 Webhooks：外部消息集成
+## 3. 频道 Webhooks：外部消息集成 {#3-channel-webhooks-external-message-integration}
 
 频道 Webhooks 允许外部服务、自动化工具或脚本直接向 Open WebUI 频道发送消息。这支持与监控系统、CI/CD 流水线、通知服务或任何自定义自动化工具的无缝集成。
 
-### 使用场景
+### 使用场景 {#use-cases}
 
 - **系统监控：** 将监控工具（Prometheus、Grafana、Nagios）的告警直接发送到团队频道。
 - **CI/CD 集成：** 将来自 GitHub Actions、GitLab CI 或 Jenkins 的构建状态通知发送到开发频道。
@@ -124,11 +124,11 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 
 通过 Webhook 发送的消息会以 Webhook 的身份显示在频道中，清楚表明它来自外部来源而非用户。
 
-### 管理频道 Webhooks
+### 管理频道 Webhooks {#managing-channel-webhooks}
 
 只有**频道管理员**和**系统管理员**才能为频道创建和管理 Webhook。
 
-#### 创建 Webhook
+#### 创建 Webhook {#creating-a-webhook}
 
 1.  导航到要添加 Webhook 的频道。
 2.  点击频道菜单（⋮）并选择 **编辑频道**。
@@ -141,7 +141,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 7.  点击 **保存** 创建 Webhook。
 8.  使用 **复制 URL** 按钮复制生成的 Webhook URL。
 
-#### Webhook URL 格式
+#### Webhook URL 格式 {#webhook-url-format}
 
 ```
 {WEBUI_API_BASE_URL}/channels/webhooks/{webhook_id}/{token}
@@ -149,7 +149,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 
 此 URL 是唯一的，包含身份验证令牌。任何拥有此 URL 的人都可以向频道发送消息，请妥善保管。
 
-#### 更新 Webhook
+#### 更新 Webhook {#updating-a-webhook}
 
 1.  从频道设置中打开 **Webhooks** 模态框。
 2.  点击要编辑的 Webhook 展开它。
@@ -158,7 +158,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 
 更新名称或图片时，Webhook URL 保持不变。更新后发送的消息将显示新名称/图片，但已有消息保留发送时的 Webhook 身份。
 
-#### 删除 Webhook
+#### 删除 Webhook {#deleting-a-webhook}
 
 1.  从频道设置中打开 **Webhooks** 模态框。
 2.  点击要删除的 Webhook 展开它。
@@ -167,11 +167,11 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 
 删除后，Webhook URL 立即停止工作。此前由该 Webhook 发送的消息仍保留在频道中，但作者显示为"已删除的 Webhook"。
 
-### 通过 Webhook 发送消息
+### 通过 Webhook 发送消息 {#posting-messages-via-webhook}
 
 要从外部服务发送消息，请向 Webhook URL 发送包含 JSON 负载的 `POST` 请求。
 
-#### 请求格式
+#### 请求格式 {#request-format}
 
 **端点：** `POST {webhook_url}`
 **请求头：** `Content-Type: application/json`
@@ -183,7 +183,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 }
 ```
 
-#### 示例：使用 cURL
+#### 示例：使用 cURL {#example-using-curl}
 
 ```bash
 curl -X POST "https://your-instance.com/api/channels/webhooks/{webhook_id}/{token}" \
@@ -191,7 +191,7 @@ curl -X POST "https://your-instance.com/api/channels/webhooks/{webhook_id}/{toke
   -d '{"content": "生产环境部署成功完成！🚀"}'
 ```
 
-#### 示例：使用 Python
+#### 示例：使用 Python {#example-using-python}
 
 ```python
 import requests
@@ -205,7 +205,7 @@ response = requests.post(webhook_url, json=message)
 print(response.json())
 ```
 
-#### 响应格式
+#### 响应格式 {#response-format}
 
 成功时，Webhook 将返回：
 
@@ -216,14 +216,14 @@ print(response.json())
 }
 ```
 
-### 安全注意事项
+### 安全注意事项 {#security-considerations}
 
 -   **URL 保护：** Webhook URL 包含身份验证令牌，请妥善保管，不要在公共仓库或日志中暴露。
 -   **频道访问：** 任何拥有 Webhook URL 的人都可以向频道发送消息。仅与可信服务共享 URL。
 -   **消息内容：** 在发送端验证和过滤消息内容，防止注入攻击。
 -   **重新生成：** 如果 Webhook URL 泄露，请删除该 Webhook 并创建新的。
 
-### Webhook 身份
+### Webhook 身份 {#webhook-identity}
 
 通过 Webhook 发送的消息具有特殊的身份系统：
 - 消息以 Webhook 的**名称**和**头像图片**显示
@@ -231,7 +231,7 @@ print(response.json())
 - 如果 Webhook 被删除，其消息仍然可见，但显示"已删除的 Webhook"，当前 Webhook 名称不再显示
 - 每条消息在其元数据中存储 Webhook ID，即使 Webhook 后来被修改或删除，也能正确归因
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
 如果您没有收到 Webhook 通知，请检查以下几点：
 

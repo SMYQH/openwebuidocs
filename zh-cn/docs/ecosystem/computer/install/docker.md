@@ -52,7 +52,7 @@ docker compose logs cptr
 
 首次运行的设置 URL 及其令牌在日志中（`docker logs cptr` 也可以）。在应用内部，添加 `/projects`（或任何其他挂载的路径）作为工作区。
 
-## 镜像的工作原理
+## 镜像的工作原理 {#how-the-image-works}
 
 容器运行 `cptr run --host 0.0.0.0 --headless` 并设置 `CPTR_DATA_DIR=/data`，因此它监听所有容器接口，从不尝试打开浏览器，并将所有有状态内容（SQLite 数据库、`config.toml`、上传、日志）保存在 `/data` 下。镜像包含所有可选功能组，因此无需额外安装。
 

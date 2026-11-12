@@ -3,14 +3,14 @@ sidebar_position: 3
 title: "研究助手"
 ---
 
-# 🔍 研究并总结任何主题
+# 🔍 研究并总结任何主题 {#research-and-summarize-any-topic}
 
 给 AI 一个问题，它就会从网络收集信息、整理并撰写结构化简报。
 
 > **你：** $Research Assistant <br/>
 > 固态电池目前的现状是什么？主要参与者有哪些？商业化的时间线是什么？
 
-## AI 的工作流程
+## AI 的工作流程 {#what-the-ai-does}
 
 1. 使用 `curl` 从相关科技新闻网站、公司页面和文章中获取内容
 2. 解析 HTML 提取有用文本
@@ -22,7 +22,7 @@ title: "研究助手"
 
 {/* TODO: Screenshot — The briefing document showing an executive summary, a comparison table of key companies and their technology approaches, and a source list with URLs. */}
 
-## 技能内容
+## 技能内容 {#skill-content}
 
 将下面的内容复制到**工作区 → 技能 → 创建**：
 

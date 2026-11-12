@@ -3,7 +3,7 @@ sidebar_position: 13
 title: "可定制的横幅"
 ---
 
-## 概述
+## 概述 {#overview}
 
 Open WebUI 允许管理员向已登录用户展示自定义横幅。横幅适用于公告、全系统警报、维护通知及其他重要消息。
 
@@ -14,7 +14,7 @@ Open WebUI 允许管理员向已登录用户展示自定义横幅。横幅适用
 
 ---
 
-## 横幅的适用场景
+## 横幅的适用场景 {#when-to-use-banners}
 
 横幅最适合简短的高可见度消息，例如：
 
@@ -28,9 +28,9 @@ Open WebUI 允许管理员向已登录用户展示自定义横幅。横幅适用
 
 ---
 
-## 配置横幅
+## 配置横幅 {#configuring-banners}
 
-### 方式一：使用管理面板
+### 方式一：使用管理面板 {#option-1-using-the-admin-panel}
 
 这是管理横幅最直接的方式：
 
@@ -51,7 +51,7 @@ Open WebUI 允许管理员向已登录用户展示自定义横幅。横幅适用
 - **内容：** 主要消息（仅支持 HTML）。
 - **可关闭：** 启用后，用户可以关闭横幅。
 
-#### 关闭横幅的机制
+#### 关闭横幅的机制 {#how-dismissing-works}
 
 已关闭的横幅存储在用户浏览器端（客户端）。这意味着：
 
@@ -63,7 +63,7 @@ Open WebUI 允许管理员向已登录用户展示自定义横幅。横幅适用
 
 ---
 
-### 方式二：使用环境变量（`WEBUI_BANNERS`）
+### 方式二：使用环境变量（`WEBUI_BANNERS`） {#option-2-using-environment-variables-webui_banners}
 
 对于自动化部署，可使用 `WEBUI_BANNERS` 环境变量配置横幅。该值必须是一个**JSON 字符串**，表示横幅对象的**列表**（数组）。
 
@@ -74,7 +74,7 @@ Open WebUI 允许管理员向已登录用户展示自定义横幅。横幅适用
   - **默认值：** `[]`
   - **说明：** 要向用户展示的横幅对象列表
 
-#### 示例（Docker Compose）
+#### 示例（Docker Compose） {#example-docker-compose}
 
 ```yaml
 services:
@@ -88,7 +88,7 @@ services:
 
 ---
 
-## 横幅对象属性
+## 横幅对象属性 {#banner-object-properties}
 
 每个横幅对象支持以下属性：
 
@@ -99,7 +99,7 @@ services:
 - `dismissible`（布尔值，必填）：用户是否可以关闭横幅。
 - `timestamp`（整数，必填）：存在于配置中，但目前前端不使用该字段控制显示时间。
 
-### 推荐的 `id` 策略（重要）
+### 推荐的 `id` 策略（重要） {#recommended-id-strategy-important}
 
 选择支持安全更新、避免意外重新显示或永久隐藏的 `id` 格式：
 
@@ -111,11 +111,11 @@ services:
 
 ---
 
-## 支持的内容格式（仅限 HTML）
+## 支持的内容格式（仅限 HTML） {#supported-content-formatting}
 
 横幅的 `title` 和 `content` 支持**仅限 HTML** 的子集——Markdown 语法不会被渲染。不支持的标签可能以纯文本显示或破坏布局。
 
-### 文本格式
+### 文本格式 {#text-formatting}
 
 | HTML | 效果 |
 | --- | --- |
@@ -129,7 +129,7 @@ services:
 | `<code>` / `<kbd>` | 等宽内联代码 |
 | `<abbr title="提示">` | 悬停提示 |
 
-### 结构
+### 结构 {#structure}
 
 | HTML | 效果 |
 | --- | --- |
@@ -137,14 +137,14 @@ services:
 | `<hr>` | 水平分隔线 |
 | `<details><summary>点击</summary>...</details>` | 可折叠区块 |
 
-### 链接与媒体
+### 链接与媒体 {#links--media}
 
 | HTML | 效果 |
 | --- | --- |
 | `<a href="..." target="_blank">` | 可点击链接 |
 | `<img src="..." width="16" height="16">` | 内联图片 |
 
-### 自定义样式
+### 自定义样式 {#custom-styling}
 
 支持在允许的标签上使用内联样式：
 
@@ -167,11 +167,11 @@ services:
 
 ---
 
-## 设计高效的横幅
+## 设计高效的横幅 {#designing-effective-banners}
 
 当横幅易于扫读、视觉上突出且简短到不打断正常工作，效果最佳。
 
-### 组织消息结构
+### 组织消息结构 {#structure-the-message}
 
 采用可预测的结构：
 
@@ -182,7 +182,7 @@ services:
 
 对于较长的通知，使用短分段代替一段长段落。对于多语言通知，使用细 `<hr>` 分隔语言，或使用可折叠的 `<details>` 区块。
 
-### 让严重程度可见
+### 让严重程度可见 {#make-severity-visible}
 
 保持 `type` 的一致用法：
 
@@ -193,7 +193,7 @@ services:
 
 避免对非紧急公告使用 `error`。当每条消息看起来都"很紧急"时，用户会学会忽略告警。
 
-### 谨慎使用颜色
+### 谨慎使用颜色 {#use-color-carefully}
 
 颜色应辅助而非争夺横幅的视觉：
 
@@ -211,7 +211,7 @@ services:
 </div>
 ```
 
-### 让布局自适应
+### 让布局自适应 {#keep-layouts-responsive}
 
 横幅显示在应用布局内，必须在窄屏下仍能正常显示。
 
@@ -221,7 +221,7 @@ services:
 - 保持图标和徽章较小，避免增加横幅高度。
 - 在正式使用前，使用窄浏览器窗口测试横幅。
 
-### 避免意外过高
+### 避免意外过高 {#avoid-accidental-extra-height}
 
 横幅内容将字面换行视为换行符。如果您显式使用 `<br>` 标签，请保持原始 HTML 紧凑，避免在横幅内容字段中添加额外的空行或缩进。
 
@@ -235,7 +235,7 @@ services:
 
 ---
 
-## 不支持的内容
+## 不支持的内容 {#unsupported-content}
 
 以下内容在横幅中不受支持，可能以纯文本显示或破坏布局：
 
@@ -249,9 +249,9 @@ services:
 
 ---
 
-## 常见陷阱（及如何避免）
+## 常见陷阱（及如何避免） {#common-pitfalls-and-how-to-avoid-them}
 
-### 1）字面换行导致意外间距
+### 1）字面换行导致意外间距 {#1-unexpected-spacing-from-literal-newlines}
 
 横幅内容将**字面换行**视为换行符。如果您粘贴了格式化/缩进良好的 HTML（含大量换行），横幅可能比预期高得多。
 
@@ -259,7 +259,7 @@ services:
 - 有意使用 `<br>`，保持原始 HTML 相对紧凑。
 - 除非确实需要额外间距，否则不要添加空白行。
 
-### 2）横幅内容中的链接失效
+### 2）横幅内容中的链接失效 {#2-broken-links-in-banner-content}
 
 如果链接显示为"失效"或横幅其余部分变为可点击，通常是由于无效的 HTML。
 
@@ -281,7 +281,7 @@ services:
   <a href="https://example.com" target="_blank"><u>支持</u></a>
   ```
 
-### 3）`WEBUI_BANNERS` 中的 JSON/YAML 转义问题
+### 3）`WEBUI_BANNERS` 中的 JSON/YAML 转义问题 {#3-jsonyaml-escaping-issues-in-webui_banners}
 
 使用 `WEBUI_BANNERS` 时，您是在将 JSON 嵌入 YAML 字符串（或 Shell 字符串）中。常见问题包括：
 
@@ -295,13 +295,13 @@ services:
 - 如有必要，在 JSON 字符串内部引号使用 `\"` 转义。
 - 如果横幅未出现，检查服务器日志。
 
-### 4）过度使用 `<small>`
+### 4）过度使用 `<small>` {#4-overusing-small}
 
 `<small>` 适合次要文本，但将横幅的大部分内容包裹在 `<small>` 中会使内容难以阅读。
 
 **建议：** 主要消息使用普通文本，将 `<small>` 保留用于不太重要的细节。
 
-### 5）外部图片
+### 5）外部图片 {#5-external-images}
 
 图片可通过 `<img>` 嵌入，但外部图片可能：
 - 因网络限制无法加载
@@ -315,16 +315,16 @@ services:
 
 ---
 
-## 可复用模式（可复制粘贴的片段）
+## 可复用模式（可复制粘贴的片段） {#reusable-patterns-copypaste-snippets}
 
-### 模式：带链接的最简两行公告
+### 模式：带链接的最简两行公告 {#pattern-minimal-two-line-announcement-with-a-link}
 
 ```html
 <b>通知</b><br>
 服务更新：<a href="https://example.com/status" target="_blank"><u>状态页面</u></a>
 ```
 
-### 模式：紧凑"标签"徽章（日期/影响标签）
+### 模式：紧凑"标签"徽章（日期/影响标签） {#pattern-compact-label-chip-dateimpact-tag}
 
 ```html
 <span style="display:inline-block;background:#fff3cd;color:#664d03;padding:2px 8px;border-radius:999px;">
@@ -332,7 +332,7 @@ services:
 </span>
 ```
 
-### 模式：可折叠详情（保持横幅简短）
+### 模式：可折叠详情（保持横幅简短） {#pattern-styled-notice-block}
 
 ```html
 <b>计划更新</b><br>
@@ -343,7 +343,7 @@ services:
 </details>
 ```
 
-### 模式：样式化通知块
+### 模式：样式化通知块 {#pattern-collapsible-details-keep-banners-short}
 
 当整条消息应作为一个公告区域呈现时，使用全宽样式块。粘贴到横幅内容字段时，请保持该 HTML 紧凑，特别是当其中还包含 `<br>` 标签时。
 
@@ -361,16 +361,16 @@ services:
 
 ---
 
-## 运营最佳实践
+## 运营最佳实践 {#operational-best-practices}
 
-### 保持横幅易于扫读
+### 保持横幅易于扫读 {#keep-banners-scannable}
 
 一个好的横幅通常包含：
 - 简短的标题
 - 一句话描述情况
 - 一个详情链接和一个答疑链接（如有需要）
 
-### 保持横幅类型的一致性
+### 保持横幅类型的一致性 {#use-banner-types-consistently}
 
 为减少告警疲劳，建议采用一致的映射：
 - `info`：一般公告
@@ -378,26 +378,26 @@ services:
 - `warning`：计划维护或局部降级
 - `error`：活跃故障/服务中断
 
-### 移除过期横幅
+### 移除过期横幅 {#remove-expired-banners}
 
 如果不断添加横幅而不删除旧横幅，用户可能会忽略它们。事件结束后请移除或替换横幅。
 
 ---
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 横幅未显示
+### 横幅未显示 {#banner-not-appearing}
 
 - 确保 `WEBUI_BANNERS` 是有效的 JSON **数组**（不是单个对象）。
 - 检查服务器日志中与 `WEBUI_BANNERS` 相关的解析错误。
 - 如果使用管理面板，确认已点击 **保存**。
 
-### 横幅无法关闭
+### 横幅无法关闭 {#banner-cannot-be-dismissed}
 
 - 确认 `dismissible` 已设为 `true`。
 - 如果 `dismissible` 为 `false`，横幅是故意保持始终可见的。
 
-### 横幅布局看起来错乱或过高
+### 横幅布局看起来错乱或过高 {#banner-layout-looks-broken-or-too-tall}
 
 - 移除原始 HTML 中多余的空行和缩进。
 - 避免使用不支持的 HTML（列表、表格、标题）。
@@ -405,16 +405,16 @@ services:
 
 ---
 
-## 常见问题
+## 常见问题 {#faq}
 
-### 横幅内容可以使用 Markdown 吗？
+### 横幅内容可以使用 Markdown 吗？ {#can-i-use-markdown-in-banner-content}
 
 不可以。横幅内容**仅支持 HTML**。Markdown 语法不会被渲染。
 
-### `timestamp` 是否控制横幅何时显示？
+### `timestamp` 是否控制横幅何时显示？ {#does-timestamp-control-when-a-banner-shows}
 
 不会。`timestamp` 字段当前并未被前端用于控制横幅是否展示。如果需要按时间触发显示，请通过你的部署自动化来管理（按计划添加/移除横幅）。
 
-### 可以同时展示多种语言的内容吗？
+### 可以同时展示多种语言的内容吗？ {#can-i-show-content-in-multiple-languages}
 
 可以。你可以在 `content` 中包含多种语言。如果希望横幅保持简短，可以把次要语言放进 `<details>` 块中。

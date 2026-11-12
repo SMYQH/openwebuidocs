@@ -5,11 +5,11 @@ title: "Valves"
 
 ## Valves
 
-Valves 和 UserValves 用于让用户提供动态信息，例如 API key 或配置选项。它们会在对应函数的 GUI 菜单中生成可填写字段或布尔开关。它们始终是可选的，但**强烈建议**使用。
+Valves 和 UserValves 用来让用户提供动态信息，例如 API key 或某个配置项。它们会在 GUI 菜单中为对应的函数生成一个可填写的字段或一个布尔开关。它们始终是可选的，但**强烈建议**提供。
 
-因此，`Valves` 和 `UserValves` 类可以定义在 `Pipe`、`Pipeline`、`Filter` 或 `Tools` 类中。
+因此，Valves 和 UserValves 类可以定义在 `Pipe`、`Filter`、`Action` 或 `Tools` 类中。`Event` 类也可以携带 `Valves`，但绝不能携带 `UserValves`，因为事件处理器运行时并不存在具体用户。
 
-Valves 只能由管理员在 Tools 或 Functions 菜单中配置；而 UserValves 则可由任意用户直接在聊天会话中配置。
+函数级别的 Valves 只能由管理员配置，因为 Functions 仅限管理员使用。工具级别的 Valves 还可以由工具的所有者以及任何持有其写入权限的人修改，因此请把工具的 valves 视为对所有被授予写入权限的人可读。UserValves 则可以由任何用户直接在聊天会话中配置，位置在 **模型控制 > 控件** 下的 **Valves** 区域。该区域只列出已启用的工具和函数。
 
 <details>
 <summary>带注释的示例</summary>
@@ -19,66 +19,76 @@ Valves 只能由管理员在 Tools 或 Functions 菜单中配置；而 UserValve
 from pydantic import BaseModel, Field
 from typing import Literal
 
-# 定义 Valves
+# 定义 Valves 和 UserValves
 class Filter:
-   # 注意这里的缩进：Valves 和 UserValves 必须声明为
-   # Tools、Filter 或 Pipe 类的属性。这里以 Filter 为例。
+    # 注意缩进：Valves 和 UserValves 必须声明为
+    # Tools、Filter 或 Pipe 类的属性。这里以 Filter 为例。
     class Valves(BaseModel):
-       # Valves 与 UserValves 继承自 pydantic 的 BaseModel。
-       # 这使得 model validators 等高级能力也可使用。
-       test_valve: int = Field(  # 注意类型标注：它会决定 UI 中展示的控件类型
-           # 例如按钮、文本框等
-           default=4,
-           description="一个用于控制数值的 valve"
-           # required=False,  # 若设为 True 可强制要求填写
-       )
-       # 若想让用户在多个字符串中二选一或多选一，可使用 typing.Literal：
-       choice_option: Literal["choiceA", "choiceB"] = Field(
-           default="choiceA",
-           description="一个多选 valve 示例",
-       )
-       priority: int = Field(
-           default=0,
-           description="Filter 的优先级。值越小越先执行"
-       )
-       # priority 字段不是必需的，但如果存在，就会被用于
-       # 排序 Filters。
-       pass
-       # 这个 pass 有助于解析，建议保留。
+        # Valves 与 UserValves 继承自 pydantic 的 BaseModel。
+        # 这使得 model validators 等高级能力也可使用。
+        test_valve: int = Field(  # 注意类型标注：它会决定 UI 中展示的控件类型
+            # 例如按钮、文本框等
+            default=4,
+            description="一个用于控制数值的 valve"
+            # required=False,  # 若设为 True 可强制要求填写
+        )
+        # 若想让用户在多个字符串中二选一或多选一，可使用 typing.Literal：
+        choice_option: Literal["choiceA", "choiceB"] = Field(
+            default="choiceA",
+            description="一个多选 valve 示例",
+        )
+        # priority 字段不是必需的，但如果存在，就会被用于
+        # 排序 Filters。
+        priority: int = Field(
+            default=0,
+            description="Filter 的优先级。值越小越先执行"
+        )
+        pass
+        # 这个 pass 有助于解析，建议保留。
 
-   # UserValves 的定义方式完全相同。
+    # UserValves 的定义方式完全相同。
     class UserValves(BaseModel):
         test_user_valve: bool = Field(
             default=False, description="一个控制开/关的用户 valve"
-       )
-       pass
+        )
+        pass
 
-   def __init__(self):
-       self.valves = self.Valves()
-       # 由于这些值由管理员设置，因此代码执行时可直接访问
-       pass
+    def __init__(self):
+        self.valves = self.Valves()
+        # 由于这些值由管理员设置，因此代码执行时可直接访问
+        pass
 
-   # inlet 方法这里只是以 Filter 为例，__user__ 的处理逻辑相同
-   def inlet(self, body: dict, __user__: dict):
-       # 因为 UserValves 是按用户定义的，所以只有在使用时才可访问
-       # 注意：虽然 __user__ 是 dict，但 __user__["valves"] 实际是
-       # 一个 UserValves 对象，因此可以这样访问：
-       test_user_valve = __user__["valves"].test_user_valve
-       # 或者：
-       test_user_valve = dict(__user__["valves"])["test_user_valve"]
-       # 但下面这种方式会返回默认值，而不是真实值：
-       # test_user_valve = __user__["valves"]["test_user_valve"]  # 不要这样做！
+    # inlet 方法这里只是以 Filter 为例，__user__ 的处理逻辑相同
+    def inlet(self, body: dict, __user__: dict):
+        # 因为 UserValves 是按用户定义的，所以只有在使用时才可访问
+        # 注意：虽然 __user__ 是 dict，但 __user__["valves"] 实际是
+        # 一个 UserValves 对象，因此可以这样访问：
+        test_user_valve = __user__["valves"].test_user_valve
+        # 或者：
+        test_user_valve = dict(__user__["valves"])["test_user_valve"]
+        # 但下面这种方式会引发 TypeError，因为 pydantic 模型不可下标访问：
+        # test_user_valve = __user__["valves"]["test_user_valve"]  # 不要这样做！
 ```
 
 </details>
 
-## 输入类型
+## 修改现有代码中的阀门 {#changing-valves-in-existing-code}
+
+保存工具或函数时，系统会把已存储的 Valve 值与新代码进行校验。当某个已存储的值无法通过校验时——例如新代码改变了字段的类型或取值范围——保存会被拒绝，并提示 `Current Valves are incompatible with this code: <field>: <message>`，已保存的代码保持原样。请让修改后的字段与已存储的值保持兼容，或者先调整 Valves。只有存在已存储值的字段才会被校验。将较旧的版本设为生产版时同样会执行该检查。
+
+## 翻译阀门标签 {#translating-valve-labels}
+
+阀门标题、帮助文本和下拉选项标签都可以按语言分别存储，入口是工具或函数编辑器中的地球图标选择器。只有标签会改变，字段名称以及你在代码中收到的值都保持原样。参见[翻译](/features/administration/translations#translating-valve-labels)。
+
+## 输入类型 {#input-types}
 
 Valves 支持一些特殊输入类型，它们会影响字段在 UI 中的渲染方式。你可以在 Pydantic `Field` 中通过 `json_schema_extra` 的 `input` 键进行配置。
 
-### Password Input（掩码输入）
+渲染器会按固定顺序选择控件：`Literal` 或枚举字段始终渲染为下拉选择，`bool` 渲染为开关，多选渲染为独立控件，区间渲染为滑块，其他所有非字符串类型渲染为普通文本框并忽略 `input.type`。因此 `password` 和 `select` 输入类型只对 `str` 字段生效。
 
-对于密码、API key、secret 等敏感字段，你可以使用 password 输入类型，让其在 UI 中以掩码方式显示，从而避免明文暴露在屏幕上。
+### Password Input（掩码输入） {#password-input-masked-fields}
+
+对于密码、API key、secret 等敏感字段，你可以使用 password 输入类型，让其在 UI 中以掩码方式显示，从而避免明文暴露在屏幕上（防止肩窥）。
 
 ```python
 from pydantic import BaseModel, Field
@@ -98,11 +108,19 @@ class Tools:
 任何凭证或 secret 类型的用户配置项，都建议使用 password 输入类型。对于 UserValves 尤其重要，因为它们允许终端用户直接在聊天界面中配置。
 :::
 
-### 选择下拉输入
+### 静态加密阀门值 {#encrypting-valve-values-at-rest}
+
+password 输入类型只会遮蔽界面中的显示，并不会改变值的存储方式。默认情况下，Valve 的值（包括各种 secret）会以明文 JSON 形式保存在数据库中。若要静态加密，管理员可以设置 [`ENABLE_VALVE_ENCRYPTION=true`](/reference/env-configuration#enable_valve_encryption)，它会使用由 [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key) 派生的密钥，以 Fernet（AES-128）加密工具与函数的 Valve 值。
+
+:::warning
+任意长度的 `WEBUI_SECRET_KEY` 都会被哈希成合法的 Fernet 密钥，但有一个例外：长度恰好为 44 个字符的密钥会被原样使用，因此它必须是能够解码为 32 字节的 URL 安全 Base64 字符串。最关键的是它必须保持稳定，因为轮换该密钥会导致此前加密的 Valve 值无法读取，必须重新填写。详情参见 [`ENABLE_VALVE_ENCRYPTION`](/reference/env-configuration#enable_valve_encryption)。
+:::
+
+### 选择下拉输入 {#select-dropdown-input}
 
 对于用户应从预定义选项中选择的字段，可以使用 select 输入类型把它渲染为下拉菜单。选项既可以是静态列表，也可以是运行时动态生成的内容。
 
-#### 静态选项
+#### 静态选项 {#static-options}
 
 对于不会变化的选项，直接使用列表即可：
 
@@ -113,7 +131,7 @@ class Tools:
     class Valves(BaseModel):
         priority: str = Field(
             default="medium",
-            description="处理优先级",
+            description="处理优先级级别",
             json_schema_extra={
                 "input": {
                     "type": "select",
@@ -123,7 +141,7 @@ class Tools:
         )
 ```
 
-你也可以使用 label / value 对，使选项说明更清晰：
+也可以使用 label/value 键值对，以获得描述性更强的选项：
 
 ```python
 from pydantic import BaseModel, Field
@@ -137,19 +155,19 @@ class Tools:
                 "input": {
                     "type": "select",
                     "options": [
-                        {"value": "debug", "label": "Debug（详细）"},
-                        {"value": "info", "label": "Info（标准）"},
-                        {"value": "warn", "label": "Warning（最少）"},
-                        {"value": "error", "label": "Error（仅关键）"}
+                        {"value": "debug", "label": "调试（详细）"},
+                        {"value": "info", "label": "信息（标准）"},
+                        {"value": "warn", "label": "警告（最简）"},
+                        {"value": "error", "label": "错误（仅严重）"}
                     ]
                 }
             }
         )
 ```
 
-#### 动态选项
+#### 动态选项 {#dynamic-options}
 
-如果选项需要在运行时生成（例如获取可用模型、数据库、用户资源等），可以把方法名作为字符串传入。该方法会在配置 UI 渲染时被调用：
+对于需要在运行时生成的选项（例如获取可用模型、数据库或与用户相关的资源），请把方法名以字符串形式指定。该方法会在每次打开 valves 对话框时被同步调用，并且必须返回一个列表。`async def` 返回的是协程，无法通过该检查，会导致该字段没有任何选项，并在日志中留下警告。该方法可以接收 `__user__` 或 `user` 参数，以 dict 的形式接收当前用户：
 
 ```python
 from pydantic import BaseModel, Field
@@ -158,11 +176,11 @@ class Tools:
     class Valves(BaseModel):
         selected_model: str = Field(
             default="",
-            description="选择要使用的模型",
+            description="选择一个要使用的模型",
             json_schema_extra={
                 "input": {
                     "type": "select",
-                    "options": "get_model_options"  # 方法名字符串
+                    "options": "get_model_options"  # 以字符串形式指定方法名
                 }
             }
         )
@@ -171,17 +189,17 @@ class Tools:
         def get_model_options(cls, __user__=None) -> list[dict]:
             """
             动态获取可用模型。
-            当 Valves 配置 UI 打开时会调用该方法。
+            在打开 Valves 配置界面时被调用。
             """
-            # 示例：基于运行时状态返回可选项
+            # 示例：根据运行时状态返回选项
             return [
-                {"value": "gpt-4", "label": "GPT-4"},
-                {"value": "gpt-3.5-turbo", "label": "GPT-3.5 Turbo"},
-                {"value": "claude-3-opus", "label": "Claude 3 Opus"}
+                {"value": "gpt-5.6-sol", "label": "GPT-5.6 Sol"},
+                {"value": "gpt-5.6-luna", "label": "GPT-5.6 Luna"},
+                {"value": "claude-opus-5", "label": "Claude Opus 5"}
             ]
 ```
 
-该方法还可以接受可选的 `__user__` 参数，以生成用户级别的动态选项：
+该方法可以接受一个可选的 `__user__` 参数，用于生成与用户相关的选项：
 
 ```python
 from pydantic import BaseModel, Field
@@ -203,23 +221,72 @@ class Tools:
         def get_user_workspaces(cls, __user__=None) -> list[dict]:
             """
             返回当前用户可用的工作区。
-            __user__ 是一个包含用户信息的 dict。
+            __user__ 以 dict 的形式包含用户信息。
             """
             if not __user__:
                 return []
 
             user_id = __user__.get("id")
-            # 从你的数据源中获取该用户的工作区
+            # 从你的数据源获取与用户相关的工作区
             return [
-                {"value": "ws-1", "label": "Personal Workspace"},
-                {"value": "ws-2", "label": "Team Workspace"}
+                {"value": "ws-1", "label": "个人工作区"},
+                {"value": "ws-2", "label": "团队工作区"}
             ]
 ```
 
+### 多选输入 {#multi-select-input}
+
+当一个字段需要保存**多个**可选选项而不是一个时，请把它声明为列表，并使用 multiselect 输入类型。它会渲染成一个带复选框的下拉菜单，关闭状态下显示已选中的标签：
+
+```python
+from pydantic import BaseModel, Field
+
+class Tools:
+    class Valves(BaseModel):
+        enabled_regions: list[str] = Field(
+            default=["eu-west-1"],
+            description="要查询的区域",
+            json_schema_extra={
+                "input": {
+                    "type": "multiselect",
+                    "options": [
+                        {"value": "eu-west-1", "label": "欧洲（爱尔兰）"},
+                        {"value": "us-east-1", "label": "美国东部（弗吉尼亚）"},
+                        {"value": "ap-south-1", "label": "亚太（孟买）"}
+                    ]
+                }
+            }
+        )
+```
+
+选项的声明方式与 select 完全相同：可以是纯字符串列表，也可以是 `{"value": ..., "label": ...}` 键值对，或者是一个返回这些选项的方法名。
+
+该值在整条链路上始终是一个真正的列表。其他 `list` 类型的 valves 会以逗号分隔的文本形式编辑，并在保存时再拆分回去，这导致任何包含逗号的选项都无法表达；multiselect 字段完全跳过了这一往返过程，因此你的代码接收到的就是与定义时完全一致的列表。
+
 :::tip
-动态选项尤其适用于以下场景：
-- 从已连接 provider 中获取可用模型
+动态选项尤其适合以下场景：
+- 从已连接的提供商获取可用 API 模型
 - 根据当前系统状态加载数据库或文件选项
-- 展示用户专属资源，例如项目或工作区
-- 任何需要根据运行时上下文变化的选项
+- 呈现与用户相关的资源，例如项目或工作区
+- 任何选项会随运行时上下文变化的情形
 :::
+
+### 滑块输入（数值区间） {#slider-input-number-ranges}
+
+数值字段可以渲染为一个滑块，旁边配一个数字输入框。两者编辑的是同一个值，因此你可以拖动也可以直接输入。使用 range 输入类型，并通过 `ge` 与 `le` 设置两端边界：
+
+```python
+from pydantic import BaseModel, Field
+
+class Tools:
+    class Valves(BaseModel):
+        temperature: float = Field(
+            default=0.7,
+            ge=0,
+            le=2,
+            description="采样温度",
+            json_schema_extra={"input": {"type": "range", "step": 0.1}}
+        )
+```
+
+`step` 是可选的。不设置时，滑块以 1 为步长移动。请始终设置 `ge` 和 `le`，否则滑块的取值范围是 0 到 100。它在 `Valves` 和 `UserValves` 中都有效。

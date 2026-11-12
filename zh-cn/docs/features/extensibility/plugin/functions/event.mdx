@@ -6,7 +6,7 @@ title: "事件函数"
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 事件函数：响应系统事件
+# 事件函数：响应系统事件 {#event-function-react-to-system-events}
 
 <ThemedImage
   alt="事件函数响应系统事件：auth.signup、chat.deleted、system.startup 和 config.updated 流入 Open WebUI 事件函数"
@@ -31,7 +31,7 @@ Event 函数是 Open WebUI **0.10.0** 中引入的新插件原语。
 
 ---
 
-## 基本结构
+## 基本结构 {#basic-structure}
 
 类型从顶层的 `class Event` 自动检测：
 
@@ -68,7 +68,7 @@ class Event:
 
 你的 `event()` 处理程序会被**每个**系统事件调用。你通过检查 `__event_name__` 来决定对什么做出响应。
 
-### `event()` 处理程序参数
+### `event()` 处理程序参数 {#the-event-handler-arguments}
 
 | 参数 | 描述 |
 | :--- | :--- |
@@ -79,7 +79,7 @@ class Event:
 | `__app__` | Open WebUI FastAPI 应用实例。这让你可以注册新的 API 路由、读取或更新应用状态以及调用内部服务（参见[注册端点](#注册端点和自安装插件)）。 |
 | `__request__` | 当前请求（如果事件是由请求触发的）。 |
 
-### 按事件过滤
+### 按事件过滤 {#filtering-by-event}
 
 ```python
 async def event(self, event: dict, __event_name__: str = None, **kwargs):
@@ -91,7 +91,7 @@ async def event(self, event: dict, __event_name__: str = None, **kwargs):
 
 ---
 
-## 事件目录
+## 事件目录 {#the-event-catalog}
 
 Open WebUI 发出 **170+ 事件**，涵盖每个子系统。每个名称以 `<区域>.<操作>` 命名空间组织。代表性选择：
 
@@ -111,7 +111,7 @@ Open WebUI 发出 **170+ 事件**，涵盖每个子系统。每个名称以 `<�
 
 ---
 
-## 生命周期钩子（启动与关闭）
+## 生命周期钩子（启动与关闭） {#lifecycle-hooks-startup--shutdown}
 
 `system.startup.completed` 事件在服务器就绪时触发一次，`system.shutdown.started` 在服务器开始停止时触发。用于设置和清理：
 
@@ -129,7 +129,42 @@ async def event(self, event: dict, __event_name__: str = None, __app__=None, **k
 
 ---
 
-## 并发、多副本和精确一次执行
+### 被启用与停用 {#being-switched-on-and-off}
+
+启动和关闭只覆盖服务器的生命周期。函数也可以在服务器持续运行期间被切换，另外两个事件覆盖这种情况：
+
+| 事件 | 触发时机 |
+| :--- | :--- |
+| `function.enable_started` | 某个函数即将被启用 |
+| `function.disable_started` | 某个函数即将被停用 |
+
+两者都在改动写入**之前**触发，这正是 `_started` 后缀所标示的。在处理函数内部，函数之前的状态仍然有效，因此 `function.disable_started` 是函数在仍然活跃的情况下完成收尾工作的最后时机。
+
+每个活跃的事件函数都会获知每一次切换，包括其它插件的切换，因此在动作之前请先检查事件主体。事件的 `subject` 持有 `{"type": "function", "id": ...}`，而 `__id__` 是你自己函数的 ID：
+
+```python
+async def event(self, event: dict, __event_name__: str = None, __id__: str = None, **kwargs):
+    about_me = (event.get("subject") or {}).get("id") == __id__
+
+    if __event_name__ == "function.enable_started" and about_me:
+        # Register routes, open connections, apply Valves.
+        ...
+    elif __event_name__ == "function.disable_started" and about_me:
+        # Still active here: flush state, close connections, deregister.
+        ...
+```
+
+事件的 `data` 会连同该函数的 `type` 和 `name` 一起携带。
+
+函数即使在那一刻还并不活跃，也会收到属于它**自己**的 `function.enable_started`——这是非活跃函数唯一会收到事件的情况。其余情况仍然遵循“只有活跃的事件函数才会收到派发”这一惯例。
+
+:::warning 启用并不等同于启动
+
+切换启用某个函数不会重放 `system.startup.completed`，而服务器重启也不会重放 `function.enable_started`。只在启动时完成自身初始化的插件，在被启用后会一直闲置，直到下一次重启。如果你的初始化在两种情况下都必须运行，请同时处理这两个事件，并确保该初始化可以安全地运行两次，因为没有什么能阻止启用发生在启动之后。
+
+:::
+
+## 并发、多副本和精确一次执行 {#concurrency-multiple-replicas-and-exactly-once}
 
 :::danger 你负责去重
 Open WebUI **在处理活动的实例上进程内**分发事件，即发即弃：失败的处理程序会被记录但不会重试，并且**没有精确一次执行的保证，也没有跨副本的协调**。如果你的处理程序有必须执行一次的副作用，你必须自己强制执行。
@@ -196,7 +231,7 @@ class Event:
 
 ---
 
-## 示例用例
+## 示例用例 {#example-use-cases}
 
 Event 函数将一次性管理任务和外部粘合脚本转换为存在于 Open WebUI 内部的配置。因为它们接收 `__app__`，它们可以读写应用状态、调用内部服务、注册路由和运行定时工作，全部通过[阀门](#使用阀门进行配置)门控。
 
@@ -204,7 +239,7 @@ Event 函数将一次性管理任务和外部粘合脚本转换为存在于 Open
 Event 函数在它所响应的活动**之后**运行（用户已创建、消息已存在）。它可以响应、补救或通知，但不能在带内阻塞或重写触发操作。要验证或转换正在流转的聊天请求，请使用 [Filter](./filter)；要对注册进行门控，将新创建的账户保持为 `pending` 状态，而不是试图阻止请求。
 :::
 
-### 入职和预配
+### 入职和预配 {#onboarding-and-provisioning}
 
 在 `auth.signup` / `user.created` 时触发，塑造新用户的头五分钟；在 `system.startup.completed` 时触发，预配实例本身。
 
@@ -216,7 +251,7 @@ Event 函数在它所响应的活动**之后**运行（用户已创建、消息�
 - **渐进式入职培育。** 根据每个用户的账户年龄发送计划系列（第 1 天欢迎、第 3 天提示、第 7 天进阶）。
 - **功能发布公告。** 当推出新功能时，向所有现有用户推送一次性公告聊天或通知。
 
-### 访问控制和注册门控
+### 访问控制和注册门控 {#access-control-and-signup-gating}
 
 因为事件触发时账户已经存在，门控意味着*持有或移除*它，而不是拒绝请求。
 
@@ -224,7 +259,7 @@ Event 函数在它所响应的活动**之后**运行（用户已创建、消息�
 - **突发防御。** 在注册激增期间自动持有新账户（机器人防御）。
 - **审批队列。** 将"用户 X 请求访问 [批准] / [拒绝]"发布到 Slack 或 Discord，从手机上批准。
 
-### 生命周期和日常维护
+### 生命周期和日常维护 {#lifecycle-and-housekeeping}
 
 在 `system.startup.completed` 上注册周期性后台任务（参见[生成后台任务](/features/extensibility/plugin/development/under-the-hood#patterns)），让它按计划运行。
 
@@ -232,21 +267,21 @@ Event 函数在它所响应的活动**之后**运行（用户已创建、消息�
 - **孤立知识垃圾回收。** 定期清理不再被任何模型引用的知识文件。
 - **离职级联。** 在 `user.deleted` 时，撤销 API 密钥、清除共享资源、禁用自动化。干净地清理。
 
-### 合规和审计
+### 合规和审计 {#compliance-and-audit}
 
 - **事件驱动的告警。** 在高信号事件上发出多接收方告警（频道 + 邮件 + SIEM）。旗舰场景：当有人成为**管理员**时发出告警；`config.*` 变更同理。
 - **不可变审计接收器。** 将每个事件发送到仅追加存储或 SIEM。免费获得防篡改审计日志。
 - **内容标记。** 扫描 `message.created` 中的密钥和 PII 并进行标记。（要在线阻断，请使用 [Filter](./filter)。）
 - **访问重新认证。** 定期要求资源所有者重新批准谁能访问他们的资源。自动化访问审查。
 
-### 实例即代码和集群运维
+### 实例即代码和集群运维 {#instance-as-code-and-fleet-ops}
 
 - **从清单启动。** 从阀门清单按规格预配整个实例。新部署，粘贴清单，完成。
 - **GitOps 同步。** 从中央 git 仓库拉取提示词、模型、组和配置，使集群保持同步。
 - **变更时备份。** 在每次 `config.updated` 时将配置快照到外部存储或持久化的 `/data` 目录。
 - **模型退役与重新分配。** 将退役模型指向目标，并自动重写所有引用它的模型和自动化。
 
-### 运维和集成
+### 运维和集成 {#operations-and-integrations}
 
 - **自愈连接器。** 健康检查连接器，自动禁用一个失效的连接器并告警，使模型选择器保持干净。
 - **通知一切桥接。** 将选定的事件转发到外部服务，使 Open WebUI 成为自动化图中的一个节点。
@@ -254,12 +289,12 @@ Event 函数在它所响应的活动**之后**运行（用户已创建、消息�
 - **蜜罐/入侵检测。** 注册诱饵管理路由，然后记录并自动停用任何探测它们的人。
 
 :::warning 一次性工作每副本运行一次
-其中几个（预配、欢迎聊天、定时作业）必须全局发生一次，但 `system.startup.completed` 在**每个**副本上触发，请求范围的处理程序可以并发运行。使用分布式锁保护至多一次的副作用，参见[并发、多副本和精确一次执行](#并发多副本和精确一次执行)。
+其中几个（预配、欢迎聊天、定时作业）必须全局发生一次，但 `system.startup.completed` 在**每个**副本上触发，请求范围的处理程序可以并发运行。使用分布式锁保护至多一次的副作用，参见[并发、多副本和精确一次执行](#concurrency-multiple-replicas-and-exactly-once)。
 :::
 
 ---
 
-## Event 函数与 Event Webhook 的对比
+## Event 函数与 Event Webhook 的对比 {#event-functions-vs-event-webhooks}
 
 有两种方式响应事件，满足不同需求：
 

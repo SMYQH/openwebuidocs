@@ -3,7 +3,7 @@ title: 工作区中的 AI
 sidebar_position: 1
 ---
 
-# 工作区中的 AI
+# 工作区中的 AI {#ai-in-your-workspace}
 
 有两种方式为 Open WebUI Computer 聊天添加 AI：
 
@@ -18,7 +18,7 @@ sidebar_position: 1
 | 谁执行工具 | Computer 的内置工具（文件、命令、浏览器、搜索） | 代理自己的 CLI，在你的机器上运行 |
 | 会话恢复 | 聊天持久化在每个工作区中，可在任何地方重新打开 | 同上，另外后端的自己的会话在每次轮次中自动恢复 |
 
-## AI 能在你的机器上做什么
+## AI 能在你的机器上做什么 {#what-the-ai-can-do-on-your-machine}
 
 无论选择哪种方式，AI 都在你文件实际所在的位置工作。它可以：
 
@@ -30,11 +30,11 @@ sidebar_position: 1
 
 你可以控制其中有多少在未经你许可的情况下发生：参见[审批、计划模式和审查](./approvals-and-plan-mode)。
 
-## AI 是可选的
+## AI 是可选的 {#ai-is-optional}
 
 Computer 中的其他所有功能（文件、编辑器、终端、git、远程访问）无需配置模型也能工作。在你想要的时候添加 AI，而不是在此之前。
 
-## 本节内容
+## 本节内容 {#in-this-section}
 
 - [连接模型（API 密钥和 Ollama）](./connect-a-model)
 - [使用你的编码代理订阅](./coding-agents)

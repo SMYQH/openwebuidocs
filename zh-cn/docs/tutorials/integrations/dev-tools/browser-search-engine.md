@@ -3,7 +3,7 @@ sidebar_position: 50
 title: "浏览器搜索引擎"
 ---
 
-# 浏览器搜索引擎集成
+# 浏览器搜索引擎集成 {#browser-search-engine-integration}
 
 :::warning
 
@@ -13,20 +13,20 @@ title: "浏览器搜索引擎"
 
 Open WebUI 支持直接集成到浏览器。本教程将指导你把 Open WebUI 配置为自定义搜索引擎，让你可以直接在地址栏中发起查询。
 
-## 将 Open WebUI 配置为搜索引擎
+## 将 Open WebUI 配置为搜索引擎 {#setting-up-open-webui-as-a-search-engine}
 
-### 前置条件
+### 前置条件 {#prerequisites}
 
 开始前请确认：
 
 - 你已安装 Chrome 或其他受支持浏览器。
 - `WEBUI_URL` 环境变量已正确设置，可通过 Docker 环境变量或 `.env` 文件配置，参见[环境变量指南](/reference/env-configuration)。
 
-### 第 1 步：设置 WEBUI_URL 环境变量
+### 第 1 步：设置 WEBUI_URL 环境变量 {#step-1-set-the-webui_url-environment-variable}
 
 设置 `WEBUI_URL` 能让浏览器知道查询请求应发送到哪里。
 
-#### 使用 Docker 环境变量
+#### 使用 Docker 环境变量 {#using-docker-environment-variables}
 
 如果你通过 Docker 运行 Open WebUI，可在 `docker run` 命令中设置该环境变量：
 
@@ -47,9 +47,9 @@ docker run -d \
 WEBUI_URL=https://<your-open-webui-url>
 ```
 
-### 第 2 步：将 Open WebUI 添加为自定义搜索引擎
+### 第 2 步：将 Open WebUI 添加为自定义搜索引擎 {#step-2-add-open-webui-as-a-custom-search-engine}
 
-### 在 Chrome 中配置
+### 在 Chrome 中配置 {#for-chrome}
 
 1. 打开 Chrome 并进入 **Settings**。
 2. 在侧栏选择 **Search engine**，点击 **Manage search engines**。
@@ -65,7 +65,7 @@ WEBUI_URL=https://<your-open-webui-url>
 
 5. 点击 **Add** 保存配置。
 
-### 在 Firefox 中配置
+### 在 Firefox 中配置 {#for-firefox}
 
 1. 在 Firefox 中打开 Open WebUI。
 2. 点击地址栏展开搜索区域。
@@ -77,7 +77,7 @@ WEBUI_URL=https://<your-open-webui-url>
 2. 右键地址栏。
 3. 在菜单中选择 “Add Open WebUI”（或类似选项）。
 
-### 可选：指定模型
+### 可选：指定模型 {#optional-using-specific-models}
 
 如果你希望搜索时使用指定模型，可将模型 ID 加入 URL：
 
@@ -91,7 +91,7 @@ https://<your-open-webui-url>/?models=<model_id>&q=%s
 
 :::
 
-## 使用示例
+## 使用示例 {#example-usage}
 
 配置完成后，你可以直接在地址栏发起搜索。输入你设置的关键词，再加查询内容：
 
@@ -101,7 +101,7 @@ webui your search query
 
 该命令会跳转到 Open WebUI 并显示对应搜索结果。
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
 如果遇到问题，请检查：
 

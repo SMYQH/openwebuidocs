@@ -3,9 +3,9 @@ sidebar_position: 3
 title: "HTTPS using Tailscale"
 ---
 
-# 使用 Tailscale 的 HTTPS
+# 使用 Tailscale 的 HTTPS {#https-using-tailscale}
 
-## 使用 Tailscale 的 HTTPS
+## 使用 Tailscale 的 HTTPS {#prerequisites}
 
 **在你的私有网络中，从任意位置安全访问 Open WebUI。无需开放端口、无需自己管理证书，也无需公网暴露。**
 
@@ -21,7 +21,7 @@ Tailscale 会在你的设备之间建立一个加密 mesh VPN（即 “tailnet�
 
 ---
 
-## 前提条件
+## 前提条件 {#1-install-tailscale}
 
 | 要求 | 详情 |
 | :--- | :--- |
@@ -31,7 +31,7 @@ Tailscale 会在你的设备之间建立一个加密 mesh VPN（即 “tailnet�
 
 ---
 
-## 1. 安装 Tailscale
+## 1. 安装 Tailscale {#2-connect-the-server}
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -60,7 +60,7 @@ curl -fsSL https://tailscale.com/install.sh | sh
   </TabItem>
 </Tabs>
 
-## 2. 连接服务器
+## 2. 连接服务器 {#3-access-open-webui}
 
 在运行 Open WebUI 的机器上执行：
 
@@ -74,7 +74,7 @@ sudo tailscale up
 tailscale status
 ```
 
-## 3. 访问 Open WebUI
+## 3. 访问 Open WebUI {#enable-https-with-tailscale-certificates}
 
 在同一 tailnet 上的任意设备中打开：
 
@@ -90,11 +90,11 @@ http://my-server.tail1234.ts.net:8080
 
 Tailscale 可以为你的 tailnet 主机名自动申请受信任的 Let's Encrypt 证书。
 
-### 1. 在管理后台启用 HTTPS
+### 1. 在管理后台启用 HTTPS {#1-enable-https-in-the-admin-console}
 
 前往 [**Tailscale Admin → DNS**](https://login.tailscale.com/admin/dns)，打开 **HTTPS Certificates**。
 
-### 2. 生成证书
+### 2. 生成证书 {#2-generate-a-certificate}
 
 ```bash
 sudo tailscale cert my-server.tail1234.ts.net
@@ -105,7 +105,7 @@ sudo tailscale cert my-server.tail1234.ts.net
 - `my-server.tail1234.ts.net.crt`（证书）
 - `my-server.tail1234.ts.net.key`（私钥）
 
-### 3. 通过 HTTPS 提供 Open WebUI
+### 3. 通过 HTTPS 提供 Open WebUI {#3-serve-open-webui-over-https}
 
 使用 `tailscale serve` 把 HTTPS 流量直接代理到 Open WebUI，而无需额外反向代理：
 
@@ -123,7 +123,7 @@ https://my-server.tail1234.ts.net
 
 ---
 
-## 配置 Open WebUI
+## 配置 Open WebUI {#configure-open-webui}
 
 设置 `WEBUI_URL`，确保 OAuth 回调和内部链接正确解析：
 
@@ -138,7 +138,7 @@ docker run -d \
 
 ---
 
-## Tailscale Funnel（可选的公网访问）
+## Tailscale Funnel（可选的公网访问） {#tailscale-funnel-optional-public-access}
 
 如果你想在**客户端无需安装 Tailscale** 的情况下把 Open WebUI 公网开放出去，可以使用 Tailscale Funnel，把 `tailscale serve` 暴露到互联网：
 
@@ -154,7 +154,7 @@ Funnel 会让你的 Open WebUI 对互联网中的所有人开放。启用前，�
 
 ---
 
-## 快速参考
+## 快速参考 {#quick-reference}
 
 | 操作 | 命令 / 值 |
 | :--- | :--- |

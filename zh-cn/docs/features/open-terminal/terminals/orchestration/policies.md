@@ -3,13 +3,13 @@ sidebar_position: 1
 title: "策略"
 ---
 
-# 策略
+# 策略 {#policies}
 
 策略描述用户 Open Terminal 容器应该是什么样子。它控制镜像、资源、存储、环境变量和空闲超时。
 
 在 Open WebUI 中，进入**管理面板 → 设置 → 集成 → Open Terminal**，添加编排器连接，验证它，然后编辑策略字段。
 
-## 策略字段
+## 策略字段 {#policy-fields}
 
 | 策略字段 | 示例 | 控制内容 |
 | :--- | :--- | :--- |

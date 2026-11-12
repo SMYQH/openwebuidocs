@@ -5,9 +5,9 @@ title: "SSO 与 OAuth"
 
 OAuth 和 Single Sign-On（SSO）为 Open WebUI 提供安全认证。当登录出现问题时，通常都能在下面这些常见原因中找到答案。
 
-## 常见 OAuth/SSO 问题
+## 常见 OAuth/SSO 问题 {#common-oauthsso-issues}
 
-### 1. WebUI URL 未配置
+### 1. WebUI URL 未配置 {#1-webui-url-not-configured}
 
 大多数 OAuth 流程都需要应用的外部 URL（redirect URI），这样提供商才能在登录后把用户重定向回来。如果缺失，OAuth 无法完成。
 
@@ -21,13 +21,13 @@ OAuth 和 Single Sign-On（SSO）为 Open WebUI 提供安全认证。当登录�
 
 ---
 
-### 2. 环境变量配置错误
+### 2. 环境变量配置错误 {#2-incorrect-environment-variable-configuration}
 
 这是 OAuth 失效的**最常见原因**。环境变量拼写错误、缺失，或使用了错误名称，都会让认证无法工作。
 
 **常见环境变量错误：**
 
-#### ❌ 人们经常误用的不存在变量：
+#### ❌ 人们经常误用的不存在变量： {#non-existent-variables-people-often-use}
 - `OIDC_CONFIG` → 应使用 `OPENID_PROVIDER_URL`
 - `WEBUI_OIDC_CLIENT_ID` → 应使用 `OAUTH_CLIENT_ID`
 - `WEBUI_ENABLE_SSO` → 应使用 `ENABLE_OAUTH_SIGNUP`
@@ -35,7 +35,7 @@ OAuth 和 Single Sign-On（SSO）为 Open WebUI 提供安全认证。当登录�
 - `OPENID_CLIENT_ID` → 应使用 `OAUTH_CLIENT_ID`
 - `OPENID_CLIENT_SECRET` → 应使用 `OAUTH_CLIENT_SECRET`
 
-#### ✅ 正确的 OIDC 变量：
+#### ✅ 正确的 OIDC 变量： {#correct-oidc-variables}
 ```bash
 # OIDC 必需
 OAUTH_CLIENT_ID=your_client_id
@@ -52,12 +52,12 @@ OPENID_REDIRECT_URI=https://your-domain/oauth/oidc/callback
 OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com"}
 ```
 
-#### ✅ Google 特有的可选 authorize 参数：
+#### ✅ Google 特有的可选 authorize 参数： {#google-specific-optional-authorize-params}
 ```bash
 GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com","hd":"example.com"}
 ```
 
-#### ✅ 正确的 Microsoft 变量：
+#### ✅ 正确的 Microsoft 变量： {#correct-microsoft-variables}
 ```bash
 MICROSOFT_CLIENT_ID=your_client_id
 MICROSOFT_CLIENT_SECRET=your_client_secret
@@ -99,9 +99,9 @@ ENABLE_OAUTH_SIGNUP=true
 
 ---
 
-### 3. 缺少必需变量
+### 3. 缺少必需变量 {#3-missing-required-variables}
 
-#### OPENID_PROVIDER_URL 对 OIDC 是必需的
+#### OPENID_PROVIDER_URL 对 OIDC 是必需的 {#openid_provider_url-is-mandatory-for-oidc}
 很多用户会忘记这个关键变量。缺少它时，OIDC 无法工作。
 
 ✅ **Microsoft Entra ID：**
@@ -119,7 +119,7 @@ OPENID_PROVIDER_URL=https://accounts.google.com/.well-known/openid-configuration
 OPENID_PROVIDER_URL=https://your-authentik-domain/application/o/your-app-name/.well-known/openid-configuration
 ```
 
-#### 按提供商分类的其他必需变量：
+#### 按提供商分类的其他必需变量： {#other-required-variables-by-provider}
 - **所有 OAuth 提供商：** `WEBUI_URL`、`ENABLE_OAUTH_SIGNUP=true`
 - **Microsoft：** `MICROSOFT_CLIENT_ID`、`MICROSOFT_CLIENT_SECRET`、`MICROSOFT_CLIENT_TENANT_ID`
 - **Google：** `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`
@@ -127,7 +127,7 @@ OPENID_PROVIDER_URL=https://your-authentik-domain/application/o/your-app-name/.w
 
 ---
 
-### 4. 持久化配置冲突
+### 4. 持久化配置冲突 {#4-persistent-configuration-conflicts}
 
 **重要：** Open WebUI 中有**两个**与 OAuth 相关的持久化设置：
 
@@ -136,7 +136,7 @@ OPENID_PROVIDER_URL=https://your-authentik-domain/application/o/your-app-name/.w
 
 默认情况下，因为 `ENABLE_OAUTH_PERSISTENT_CONFIG=false`，OAuth 环境变量**会优先于数据库值**。但如果你之前通过 Admin Panel 配过 OAuth，而后面又把 `ENABLE_OAUTH_PERSISTENT_CONFIG` 设为 `true`，那么数据库里的旧值就会重新接管。
 
-#### 症状：
+#### 症状： {#symptoms}
 - 修改环境变量后，重启仍然不生效
 - 之前能登录，改了配置后突然失效
 - 重新配置后出现 “No token found in localStorage”
@@ -159,7 +159,7 @@ environment:
 
 ---
 
-### 5. 提供商侧 OAuth 配置错误
+### 5. 提供商侧 OAuth 配置错误 {#5-oauth-misconfiguration-on-the-provider-side}
 
 有时问题不在 Open WebUI，而在身份提供商（如 Google、Okta、Auth0、Azure AD）的应用注册与 Open WebUI 配置不一致。
 
@@ -186,7 +186,7 @@ environment:
 
 ---
 
-### 6. 服务端缓存问题
+### 6. 服务端缓存问题 {#6-server-side-caching-issues}
 
 如果你在使用 Nginx（或其他反向代理）时启用了服务端缓存，OAuth endpoint 可能会出现随机、间歇性的登录问题，而且通常很难排查。
 
@@ -222,7 +222,7 @@ location ~* ^/(api|oauth|callback|login|ws|websocket) {
 
 ---
 
-### 7. Cookie 配置问题
+### 7. Cookie 配置问题 {#7-cookie-configuration-issues}
 
 **常见问题：** 反向代理里的 cookie 设置，尤其是 `HttpOnly` 与 `SameSite`，可能会干扰 OAuth 认证流程。
 
@@ -233,7 +233,7 @@ location ~* ^/(api|oauth|callback|login|ws|websocket) {
 
 **解决方法：**
 
-#### 对于 NGINX Proxy Manager：
+#### 对于 NGINX Proxy Manager： {#for-nginx-proxy-manager}
 ```nginx
 # 删除或调整有问题的 cookie 设置
 
@@ -245,7 +245,7 @@ proxy_cookie_flags ~ secure samesite=lax;
 # 或者彻底移除 cookie 篡改逻辑
 ```
 
-#### 环境变量中的 cookie 设置：
+#### 环境变量中的 cookie 设置： {#environment-variable-cookie-settings}
 ```bash
 WEBUI_SESSION_COOKIE_SAME_SITE=lax
 WEBUI_AUTH_COOKIE_SAME_SITE=lax
@@ -255,7 +255,7 @@ WEBUI_AUTH_COOKIE_SECURE=true     # 如果你使用 HTTP，请改为 false
 
 ---
 
-### 8. 网络超时问题
+### 8. 网络超时问题 {#8-network-timeout-issues}
 
 OAuth 提供商有时响应较慢，导致认证握手阶段超时。
 
@@ -297,11 +297,11 @@ OAUTH_SESSION_TOKEN_ENCRYPTION_KEY=another_secure_key_here
 
 ---
 
-### 10. 负载均衡器与多实例问题
+### 10. 负载均衡器与多实例问题 {#10-load-balancer-and-multi-instance-issues}
 
 在多实例部署中，如果 OAuth 会话没有正确同步，就会失败。
 
-#### 集群部署所需配置：
+#### 集群部署所需配置： {#required-configuration-for-clusters}
 ```bash
 REDIS_URL=redis://your-redis:6379/0
 WEBSOCKET_REDIS_URL=redis://your-redis:6379/0
@@ -313,9 +313,9 @@ WEBSOCKET_MANAGER=redis
 
 ---
 
-### 11. 提供商特定配置问题
+### 11. 提供商特定配置问题 {#11-provider-specific-configuration-issues}
 
-#### Microsoft Entra ID 常见问题：
+#### Microsoft Entra ID 常见问题： {#microsoft-entra-id-common-issues}
 
 **问题：** 错把通用 OIDC 变量当成 Microsoft 专属配置使用。
 
@@ -330,7 +330,7 @@ OPENID_PROVIDER_URL=https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0/.well-
 ENABLE_OAUTH_SIGNUP=true
 ```
 
-#### Authentik 常见问题：
+#### Authentik 常见问题： {#authentik-common-issues}
 
 **问题：** provider URL 格式错误。
 
@@ -345,9 +345,39 @@ OAUTH_SCOPES=openid email profile
 
 ---
 
-## 高级排查建议
+#### 在 ID 令牌中添加自有参数的服务商： {#providers-that-add-their-own-parameters-to-the-id-token}
 
-### 检查 token 存储方式
+**问题：** 登录在回调阶段失败。浏览器显示 `The email or password provided is incorrect`，而日志记录了真正的原因：
+
+```
+OAuth callback failed: Unsupported {'app_id'} in header
+```
+
+某些服务商会在 ID 令牌头部添加厂商特有的参数，旧版本会拒绝它们。参数名称因服务商而异。
+
+**解决方案：** 更新 Open WebUI。无法识别的参数会被忽略，因此服务商一侧无需改动。签名和签名算法仍会照常校验。
+
+---
+
+#### 12. 长时间未升级后已有账户无法登录 {#12-existing-accounts-cannot-sign-in-after-a-long-delayed-upgrade}
+
+**问题：** 把一个停留在 v0.6.41 之前旧版本的实例升级之后，所有曾通过 SSO 登录过的账户都无法再登录，这些账户的密码登录也会失败。从未使用过 SSO 的账户不受影响。日志记录如下：
+
+```
+ERROR - Error during OAuth process: 1 validation error for UserModel
+oauth
+  Input should be a valid dictionary [type=dict_type, input_value='{"oidc": {"sub": "..."}}', input_type=str]
+```
+
+把账户的身份提供商 subject 迁移到当前字段的升级步骤把该值编码了两次，因此它保存的是 JSON 对象的文本而不是对象本身。只有在升级那一刻仍早于 v0.6.41 的数据库会受影响，而且只影响当时已存储 subject 的账户。
+
+**解决方案：** 更新 Open WebUI。启动时会运行一个修复迁移，重写受影响的行，其他行一律不动。不需要手工操作数据库，不需要重新绑定，也不需要在服务商一侧做任何改动。`OAUTH_MERGE_ACCOUNTS_BY_EMAIL` 无法绕过这个问题，因为回退查找读取的是同一个账户，同样会失败。
+
+---
+
+## 高级排查建议 {#advanced-troubleshooting-tips}
+
+### 检查 token 存储方式 {#check-token-storage-method}
 
 较新的 Open WebUI 已从基于 URL 的 token 方案迁移到基于 cookie 的方案。如果你遇到认证问题：
 
@@ -357,7 +387,7 @@ OAUTH_SCOPES=openid email profile
    - 是否还残留 `oauth_id_token` cookie（旧方式）
    - cookie 的 domain 与 path 是否正确
 
-### 调试 OAuth 流程
+### 调试 OAuth 流程 {#debugging-oauth-flow}
 
 开启 debug 日志，并按流程逐步跟踪：
 
@@ -371,7 +401,7 @@ GLOBAL_LOG_LEVEL=DEBUG
 # 4. 用户最终进入已登录状态
 ```
 
-### 数据库调试
+### 数据库调试 {#database-debugging}
 
 检查用户账号是否真的被创建：
 
@@ -383,7 +413,7 @@ docker exec -it your-openwebui-container sh
 ls -la /app/backend/data/
 ```
 
-### 不经过反向代理直接测试
+### 不经过反向代理直接测试 {#test-without-reverse-proxy}
 
 如果你使用了反向代理，请临时绕过它直接测试 OAuth：
 
@@ -394,12 +424,12 @@ ls -la /app/backend/data/
 
 ---
 
-## 小提示：先看日志
+## 小提示：先看日志 {#pro-tip-check-the-logs}
 
 - 先看后端日志和浏览器网络错误。第一条错误通常就最接近根因。
 - 如果你不确定到底是哪一侧有问题，可以用浏览器隐私窗口重新登录，并观察哪些请求被拦截或失败。
 
-### 需要重点关注的日志信息：
+### 需要重点关注的日志信息： {#key-log-messages-to-watch-for}
 - `OAuth callback error: mismatching_state` → Session/cookie 问题
 - `httpcore.ReadTimeout` → 网络超时问题
 - `The email or password provided is incorrect` → 往往说明 OAuth 已完成，但 session 没有建立成功
@@ -407,7 +437,7 @@ ls -la /app/backend/data/
 
 ---
 
-## 总结清单 ✅
+## 总结清单 ✅ {#summary-checklist}
 
 | 问题 | 修复方式 |
 |-------------------------------|------------------------------------------------------------|

@@ -9,7 +9,7 @@ Terminals 可以在 OpenShift 上作为受限的每用户终端沙箱运行。
 
 OpenShift 受限 SCC 不支持完整的 rootful agent 开发箱模型。使用预构建的终端镜像，让 OpenShift 通过每用户一个 Pod 提供隔离边界。
 
-## 支持的模式
+## 支持的模式 {#supported-model}
 
 - 每个用户和策略一个 Open Terminal Pod。
 - 通过 PVC 提供持久化用户文件。
@@ -17,7 +17,7 @@ OpenShift 受限 SCC 不支持完整的 rootful agent 开发箱模型。使用�
 - 持久化终端文件的刷新和定时重置。
 - 镜像中已安装的文件浏览器、命令执行、笔记本和工具。
 
-## 受限 SCC 限制
+## 受限 SCC 限制 {#restricted-scc-limits}
 
 以下功能在受限 OpenShift 路径中不可用：
 
@@ -29,13 +29,13 @@ OpenShift 受限 SCC 不支持完整的 rootful agent 开发箱模型。使用�
 
 当用户需要额外工具时，构建自定义 Open Terminal 镜像。
 
-## 数据库
+## 数据库 {#database}
 
 PostgreSQL 不是必需的。Terminals 默认使用 SQLite，并将其存储在 Terminals 数据目录下。
 
 如果你使用默认的 SQLite 数据库，在 `/app/data` 挂载终端服务的持久化存储。仅当你想要外部数据库时才使用 `TERMINALS_DATABASE_URL`。
 
-## 部署
+## 部署 {#deployment}
 
 安装 CRD 和操作员：
 

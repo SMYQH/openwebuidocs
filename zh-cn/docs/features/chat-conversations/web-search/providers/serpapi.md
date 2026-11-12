@@ -25,7 +25,7 @@ title: "SerpApi"
 
 [SerpApi](https://serpapi.com/) 提供快速、易用且完整的 Google 及其他搜索引擎抓取 API。任何当前或未来会返回 `organic_results` 的 SERP engine 都可被支持。默认 web search engine 是 `google`，但也可以改为 `bing`、`baidu`、`google_news`、`google_scholar`、`google_patents` 等。
 
-### 设置
+### 设置 {#setup}
 
 1. 前往 [SerpApi](https://serpapi.com/) 并登录或创建账号
 2. 进入 `Dashboard`（控制台），复制 API key
@@ -37,7 +37,7 @@ title: "SerpApi"
 
 ![Open WebUI 管理面板](/images/tutorial_serpapi_search.png)
 
-#### 注意
+#### 注意 {#note}
 
 你还需要在提示词输入框中启用 `Web search`，才能通过 [SerpApi](https://serpapi.com/) 引擎搜索网页。
 

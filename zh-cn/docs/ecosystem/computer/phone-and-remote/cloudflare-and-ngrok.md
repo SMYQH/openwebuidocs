@@ -3,7 +3,7 @@ title: "Cloudflare Tunnel 和 ngrok"
 sidebar_position: 3
 ---
 
-# Cloudflare Tunnel 和 ngrok
+# Cloudflare Tunnel 和 ngrok {#cloudflare-tunnel-and-ngrok}
 
 两者都给你一个转发到 `localhost:8000` 的公共 URL：无需端口转发，默认的 `cptr run` 绑定按原样工作。公开意味着任何找到该 URL 的人都能到达你的登录页面，而 Computer 的密码此时是互联网和你的 shell 之间的唯一屏障。因此，使用提供商的认证层作为第二道门。两个提供商都传递 WebSocket，Computer 的终端和流式传输需要它。
 
@@ -36,7 +36,7 @@ ngrok http 8000 --basic-auth "you:a-long-password"
 
 或通过 `--oauth` 使用 OAuth（Google、GitHub 等）。参见 [ngrok 文档](https://ngrok.com/docs)了解当前标志和仪表板管理的边缘。
 
-## 选择哪一个？
+## 选择哪一个？ {#which-one}
 
 - **Cloudflare Tunnel**：如果你在 Cloudflare 上有一个域名，并希望拥有带有真实访问策略的永久 URL。
 - **ngrok**：如果你现在就想用一个命令获得一个 URL。

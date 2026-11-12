@@ -17,11 +17,11 @@ title: "SearXNG"
 
 本指南说明如何在 Docker 中使用 SearXNG 为 Open WebUI 配置 web search。
 
-## SearXNG（Docker）
+## SearXNG（Docker） {#searxng-docker}
 
 > "**SearXNG 是一个免费的互联网元搜索引擎，会汇总来自各种搜索服务和数据库的结果。用户不会被跟踪，也不会被画像。**"
 
-## 1. 配置 SearXNG
+## 1. 配置 SearXNG {#1-searxng-configuration}
 
 若要让 SearXNG 更适合 Open WebUI 使用，请按以下步骤配置：
 
@@ -199,11 +199,11 @@ docker compose up -d
 
 此时 searXNG 会运行在 `http://localhost:8080`（或你之前指定的端口）。
 
-## 2. 另一种简化配置方式
+## 2. 另一种简化配置方式 {#2-alternative-setup}
 
 如果你不想修改默认配置，也可以创建一个空的 `searxng-docker` 文件夹，然后继续后续配置步骤。
 
-### Docker Compose 设置
+### Docker Compose 设置 {#docker-compose-setup}
 
 将以下环境变量加入你的 Open WebUI `docker-compose.yaml`：
 
@@ -215,7 +215,7 @@ services:
       WEB_SEARCH_ENGINE: "searxng"
       WEB_SEARCH_RESULT_COUNT: 3
       WEB_SEARCH_CONCURRENT_REQUESTS: 10
-      SEARXNG_QUERY_URL: "http://searxng:8080/search?q=<query>"
+      SEARXNG_QUERY_URL: "http://searxng:8080/search"
 ```
 
 为 SearXNG 创建一个 `.env` 文件：
@@ -317,7 +317,7 @@ docker compose up -d
 docker run --name searxng --env-file .env -v ./searxng:/etc/searxng:rw -p 8080:8080 --restart unless-stopped --cap-drop ALL --cap-add CHOWN --cap-add SETGID --cap-add SETUID --cap-add DAC_OVERRIDE --log-driver json-file --log-opt max-size=1m --log-opt max-file=1 searxng/searxng:latest
 ```
 
-## 3. 确认连通性
+## 3. 确认连通性 {#3-confirm-connectivity}
 
 在命令行中，从 Open WebUI 容器实例验证它是否能访问 SearXNG：
 
@@ -325,23 +325,36 @@ docker run --name searxng --env-file .env -v ./searxng:/etc/searxng:rw -p 8080:8
 docker exec -it open-webui curl http://host.docker.internal:8080/search?q=this+is+a+test+query&format=json
 ```
 
-## 4. 图形界面配置
+## 4. 图形界面配置 {#4-gui-configuration}
 
-1. 前往：`管理面板` -> `Settings` -> `Web Search`
+1. 前往：`Settings` -> `Admin` -> `Web Search`
 2. 打开 `启用 Web Search`
 3. 将 `Web Search 引擎` 从下拉框设为 `searxng`
 4. 将 `SearXNG 查询 URL` 设为以下格式之一：
 
-- `http://localhost:8080/search?q=<query>`（使用宿主机与宿主机端口，适用于 Docker 部署）
-- `http://searxng:8080/search?q=<query>`（使用容器名与暴露端口，适用于 Docker 部署）
-- `http://host.docker.internal:8080/search?q=<query>`（使用 `host.docker.internal` DNS 名称与宿主机端口，适用于 Docker 部署）
-- `http://<searxng.local>/search?q=<query>`（使用本地域名，适用于局域网访问）
-- `https://<search.domain.com>/search?q=<query>`（使用自定义域名，适用于公网或私有部署）
+- `http://localhost:8080/search`（使用宿主机与宿主机端口，适用于 Docker 部署）
+- `http://searxng:8080/search`（使用容器名与暴露端口，适用于 Docker 部署）
+- `http://host.docker.internal:8080/search`（使用 `host.docker.internal` DNS 名称与宿主机端口，适用于 Docker 部署）
+- `http://<searxng.local>/search`（使用本地域名，适用于局域网访问）
+- `https://<search.domain.com>/search`（使用自定义域名，适用于公网或私有部署）
 
-**请注意，`/search?q=<query>` 这一部分是必需的。**
+请将 URL 指向 `/search` 端点。Open WebUI 会自行添加查询参数（`q`、`format=json`、`language` 等）。旧式的 `/search?q=<query>` 写法仍然可用，因为 Open WebUI 在看到 `<query>` 时会去掉查询字符串，但这并非必需。
+
+**Searxng search language** 字段（`SEARXNG_LANGUAGE`，默认 `all`）会作为 SearXNG 的 `language` 参数发送。
 
 5. 根据需要调整 `搜索结果数量` 与 `并发请求数`
 6. 保存更改
+
+### 双向 TLS {#mutual-tls}
+
+如果你的 SearXNG 实例位于需要客户端证书的代理之后，请用以下环境变量让 Open WebUI 使用该证书：
+
+```bash
+SEARXNG_CLIENT_CERT_FILE=/certs/searxng-client.pem
+SEARXNG_CLIENT_KEY_FILE=/certs/searxng-client.key
+```
+
+如果证书文件中已经包含私钥，可以省略 `SEARXNG_CLIENT_KEY_FILE`。请把这两个文件挂载进容器（`-v /path/to/certs:/certs:ro`），使路径在容器内能够解析。只有发往 SearXNG 的请求会使用该证书；其他所有对外连接仍保持各自的正常 TLS 设置。证书只在首次使用时读取一次，因此在磁盘上替换证书后需要重启服务。
 
 ![SearXNG 图形界面配置](/images/tutorial_searxng_config.png)
 
@@ -351,17 +364,15 @@ docker exec -it open-webui curl http://host.docker.internal:8080/search?q=this+i
 
 :::
 
-## 5. 在聊天中使用 Web Search
+## 5. 在聊天中使用 Web Search {#5-using-web-search-in-a-chat}
 
-若要访问 Web Search，请点击 + 图标旁边的集成按钮。
-
-在那里你可以切换 Web Search 的开 / 关。
+若要使用 Web Search，打开 **+** 菜单并开启 **Web Search**。
 
 ![Web Search 切换按钮](/images/web_search_toggle.png)
 
 完成以上步骤后，你就成功为 Open WebUI 配置好了 SearXNG，并能够在聊天中使用 SearXNG 引擎进行网页搜索。
 
-#### 注意
+#### 注意 {#note}
 
 你需要在聊天中手动显式打开 / 关闭该功能。
 

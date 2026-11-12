@@ -25,11 +25,11 @@ title: "You.com"
 
 [You.com](https://you.com/) 提供 YDC Index API，这是一套会返回结构化搜索结果的 web search API，包括标题、URL、描述和 snippets。
 
-### 前提条件
+### 前提条件 {#prerequisites}
 
 - 拥有来自 [You.com API](https://you.com/api) 的 You.com API key
 
-### Docker Compose 设置
+### Docker Compose 设置 {#docker-compose-setup}
 
 将以下环境变量加入你的 Open WebUI `docker-compose.yaml`：
 
@@ -44,7 +44,7 @@ services:
       WEB_SEARCH_CONCURRENT_REQUESTS: 10
 ```
 
-### Admin Panel 设置
+### Admin Panel 设置 {#admin-panel-setup}
 
 1. 使用管理员账号登录 Open WebUI
 2. 前往 **Admin Panel** → **Settings** → **Web Search**

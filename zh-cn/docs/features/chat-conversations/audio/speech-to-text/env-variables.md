@@ -3,7 +3,7 @@ sidebar_position: 2
 title: "环境变量"
 ---
 
-## 环境变量清单
+## 环境变量清单 {#environment-variables-list}
 
 :::info
 
@@ -17,15 +17,15 @@ title: "环境变量"
 其中大多数设置也可以在 **管理面板 → 设置 → 音频** 中配置。环境变量会在启动时优先生效，但之后仍可在 UI 中覆盖。
 :::
 
-## 语音转文本（STT）环境变量
+## 语音转文本（STT）环境变量 {#speech-to-text-stt-environment-variables}
 
-### 预处理
+### 预处理 {#preprocessing}
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
 | `BYPASS_PYDUB_PREPROCESSING` | 在将音频发送到 STT 引擎前，跳过基于 pydub 的预处理（MP3 转换、压缩、分块切分）。适用于所有引擎。当上游提供商已处理这些步骤，或主机上没有 ffmpeg 时很有用。 | `false` |
 
-### 本地 Whisper
+### 本地 Whisper {#local-whisper}
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
@@ -46,7 +46,7 @@ title: "环境变量"
 如果你使用 `:cuda` Docker 镜像且 GPU 较旧，请设置 `WHISPER_COMPUTE_TYPE=float16` 以避免报错。
 :::
 
-### OpenAI 兼容 STT
+### OpenAI 兼容 STT {#openai-compatible-stt}
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
@@ -80,9 +80,9 @@ title: "环境变量"
 | `AUDIO_STT_MISTRAL_API_BASE_URL` | Mistral API 基础 URL | `https://api.mistral.ai/v1` |
 | `AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS` | 使用 chat completions 端点 | `false` |
 
-## 文本转语音（TTS）环境变量
+## 文本转语音（TTS）环境变量 {#text-to-speech-tts-environment-variables}
 
-### 通用 TTS
+### 通用 TTS {#general-tts}
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
@@ -92,7 +92,7 @@ title: "环境变量"
 | `AUDIO_TTS_SPLIT_ON` | 文本切分方式：`punctuation`、`paragraphs` 或 `none` | `punctuation` |
 | `AUDIO_TTS_API_KEY` | ElevenLabs 或 Azure TTS 使用的 API 密钥 | empty |
 
-### OpenAI 兼容 TTS
+### OpenAI 兼容 TTS {#openai-compatible-tts}
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
@@ -119,9 +119,11 @@ title: "环境变量"
 | `AUDIO_TTS_AZURE_SPEECH_BASE_URL` | 自定义 Azure Speech 基础 URL（可选） | empty |
 | `AUDIO_TTS_AZURE_SPEECH_OUTPUT_FORMAT` | 音频输出格式 | `audio-24khz-160kbitrate-mono-mp3` |
 
-## 音频配置提示
+## 音频配置提示 {#realtime-voice-calls-environment-variables}
 
-### 使用本地 Whisper STT
+## 配置音频的提示 {#tips-for-configuring-audio}
+
+### 使用本地 Whisper STT {#using-local-whisper-stt}
 
 如果你遇到 GPU 加速问题或使用较旧 GPU，可以尝试设置：
 ```yaml
@@ -129,7 +131,7 @@ environment:
   - WHISPER_COMPUTE_TYPE=float16
 ```
 
-### 使用外部 TTS 服务
+### 使用外部 TTS 服务 {#using-external-tts-services}
 
 如果你在 Docker 中运行 Open WebUI 并接入外部 TTS 服务：
 

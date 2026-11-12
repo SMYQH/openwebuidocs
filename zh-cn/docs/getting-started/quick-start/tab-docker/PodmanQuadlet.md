@@ -1,8 +1,8 @@
-# Podman Quadlet（systemd）
+# Podman Quadlet（systemd） {#podman-quadlets-systemd}
 
 Podman Quadlet 允许你把容器作为原生 systemd 服务进行管理。这是在使用 systemd 的 Linux 发行版（如 Fedora、RHEL、Ubuntu 等）上运行生产容器的推荐方式。
 
-## 🛠️ 配置
+## 🛠️ 配置 {#setup}
 
 1. **创建配置目录：**
    如果是 rootless 用户部署：
@@ -46,7 +46,7 @@ Podman Quadlet 允许你把容器作为原生 systemd 服务进行管理。这�
    systemctl --user enable open-webui
    ```
 
-## 📊 管理
+## 📊 管理 {#management}
 
 - **查看状态：**
   ```bash

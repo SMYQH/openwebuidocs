@@ -21,15 +21,19 @@ title: "Exa AI"
 
 :::
 
-## Exa AI Web Search 集成
+# Exa AI 网页搜索集成 {#exa-ai-web-search-integration}
+
+本指南介绍如何将 [Exa AI](https://exa.ai/)——一个现代的 AI 驱动搜索引擎——与 Open WebUI 集成以获得网页搜索能力。
+
+## Exa AI Web Search 集成 {#overview}
 
 本指南说明如何将 [Exa AI](https://exa.ai/)——一个现代化、AI 驱动的搜索引擎——集成到 Open WebUI 中，以提供 web search 能力。
 
-## 概览
+## 概览 {#pricing-model}
 
 Exa AI 是一个面向 AI 应用设计的搜索引擎，它通过 API 提供一整套能力，包括网页搜索、网站抓取与深度研究等。将 Exa AI 集成到 Open WebUI 后，你就可以直接在聊天界面中利用其强大的搜索能力。
 
-## 计费模式
+## 计费模式 {#configuration-steps}
 
 Exa AI 采用按 credit 计费、按量付费模式。它不是永久免费服务，但会为新用户提供试用额度以便评估 API。
 
@@ -40,7 +44,7 @@ Exa AI 采用按 credit 计费、按量付费模式。它不是永久免费服�
 
 ## 配置步骤
 
-### 1. 获取 Exa AI API 密钥
+### 1. 获取 Exa AI API 密钥 {#1-obtain-an-exa-ai-api-key}
 
 首先，你需要注册一个 Exa AI 账号并获取 API 密钥。
 
@@ -48,23 +52,23 @@ Exa AI 采用按 credit 计费、按量付费模式。它不是永久免费服�
 2. **进入 API 密钥页面：** 注册并登录后，在用户控制台中进入 **API 密钥** 页面
 3. **复制你的 API 密钥：** 在 API 密钥页面中，你会看到自己的专属 API 密钥。复制它，稍后配置 Open WebUI 时会用到
 
-### 2. 配置 Open WebUI
+### 2. 配置 Open WebUI {#2-configure-open-webui}
 
 接下来，在 Open WebUI 的管理员设置中配置 Exa AI 集成。
 
 1. **使用管理员账号登录：** 进入你的 Open WebUI 实例，并以管理员账号登录
-2. **进入网页搜索设置：** 前往 **管理面板**，然后点击 **设置** > **网页搜索**
+2. **进入网页搜索设置：** 前往 **Settings > Admin > Web Search**
 3. **将搜索引擎设为 Exa：** 在 “网页搜索引擎” 下拉菜单中选择 **Exa**
-4. **填写 API 密钥：** 在出现的 **Exa API 密钥** 输入框中，粘贴你从 Exa AI 控制台复制的 API 密钥
+4. **填写 API 密钥：** 在出现的 **Exa API Key** 输入框中，粘贴你从 Exa AI 控制台复制的 API 密钥。可选的 **Max Content Length** 字段（`EXA_MAX_CONTENT_LENGTH`，默认不设置）用于限制每条结果返回的字符数
 5. **保存更改：** 向下滚动并点击 **保存**
 
-### 3.（可选）使用环境变量配置
+### 3.（可选）使用环境变量配置 {#3-optional-environment-variable-configuration}
 
 你也可以使用环境变量配置 Exa AI 集成。这在 Docker 部署中尤其方便。
 
 为你的 Open WebUI 实例设置以下环境变量：
 
-- `EXA_API_KEY`：你的 Exa AI API 密钥
+- [`EXA_API_KEY`](/reference/env-configuration#exa_api_key)：你的 Exa AI API 密钥
 
 设置后，管理员设置中的 “Exa API 密钥” 字段会自动填充。
 
@@ -78,6 +82,16 @@ docker run -d \\
   ghcr.io/open-webui/open-webui:main
 ```
 
-## 验证集成
+### 4.（可选）使用 Exa 读取页面 {#4-optional-use-exa-to-read-pages}
+
+Exa 也可以充当 [web loader](/features/chat-conversations/web-search#search-engine-vs-web-loader)，即负责读取搜索结果背后的页面，以及你在聊天中分享的链接。Exa 会抓取每个页面，并返回其文本和标题。
+
+1. 在 **Settings > Admin > Web Search** 中，将 **Web Loader Engine** 设为 `exa`，或设置 `WEB_LOADER_ENGINE=exa`
+2. 如果 Exa 同时也是你的搜索引擎，loader 会使用你上面输入的 API 密钥；若选择了其他搜索引擎，则会在 web loader 设置下出现 **Exa API Key** 字段，它设置的是同一个 `EXA_API_KEY`
+3. **Timeout** 字段（[`WEB_LOADER_TIMEOUT`](/reference/env-configuration#web_loader_timeout)）设置每次对 Exa 的请求最多可以耗时多少秒；该字段为空时，限制为 60 秒
+
+loader 返回完整的页面文本。**Max Content Length** 仅作用于搜索结果；若要限制 `fetch_url` 工具读取的页面内容长度，请设置 [`WEB_FETCH_MAX_CONTENT_LENGTH`](/reference/env-configuration#web_fetch_max_content_length)。
+
+## 验证集成 {#verify-the-integration}
 
 配置好 API 密钥后，你可以在聊天中启用网页搜索，并提出一个需要最新网页信息的问题来测试。如果集成成功，Open WebUI 就会使用 Exa AI 获取搜索结果，并据此返回更有依据的回答。

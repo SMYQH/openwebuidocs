@@ -13,7 +13,7 @@ title: "Intel GPU (IPEX-LLM)"
 
 :::
 
-## 在 Intel GPU 上使用 IPEX-LLM 进行本地 LLM 设置
+## 在 Intel GPU 上使用 IPEX-LLM 进行本地 LLM 设置 {#local-llm-setup-with-ipex-llm-on-intel-gpu}
 
 :::info
 
@@ -23,7 +23,7 @@ title: "Intel GPU (IPEX-LLM)"
 
 本教程演示如何将 Open WebUI 与**在 Intel GPU 上运行的 IPEX-LLM 加速 Ollama 后端**配合使用。按照本指南，您甚至可以在低成本 PC（即仅有集成显卡）上流畅地设置 Open WebUI。
 
-## 在 Intel GPU 上启动 Ollama 服务
+## 在 Intel GPU 上启动 Ollama 服务 {#start-ollama-serve-on-intel-gpu}
 
 请参阅 IPEX-LLM 官方文档中的[此指南](https://ipex-llm.readthedocs.io/en/latest/doc/LLM/Quickstart/ollama_quickstart.html)，了解如何在 Intel GPU 上安装和运行由 IPEX-LLM 加速的 Ollama 服务。
 
@@ -33,7 +33,7 @@ title: "Intel GPU (IPEX-LLM)"
 
 :::
 
-## 配置 Open WebUI
+## 配置 Open WebUI {#configure-open-webui}
 
 通过菜单中的 **Settings -> Connections** 访问 Ollama 设置。默认情况下，**Ollama Base URL** 预设为 `https://localhost:11434`，如下图所示。要验证 Ollama 服务连接状态，点击文本框旁边的**刷新按钮**。如果 WebUI 无法与 Ollama 服务器建立连接，您将看到错误消息 `WebUI could not connect to Ollama`。
 

@@ -29,7 +29,7 @@ Bing Search APIs 将于 2025 年 8 月 11 日停用，不再支持新的部署�
 
 ## Bing API
 
-### 设置
+### 设置 {#setup}
 
 1. 前往 [AzurePortal](https://portal.azure.com/#create/Microsoft.BingSearch) 并创建一个新资源。创建完成后，你会被重定向到资源概览页。在那里选择 “manage keys”。![manage keys](https://github.com/user-attachments/assets/dd2a3c67-d6a7-4198-ba54-67a3c8acff6d)
 2. 在密钥管理页面中，找到 Key1 或 Key2，并复制你想使用的 key

@@ -23,7 +23,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## LM Studio 的优势
+## LM Studio 的优势 {#what-lm-studio-does-well}
 
 - **模型浏览器**，用于从 Hugging Face 通过 GUI 发现、下载和管理模型
 - **模型搜索和过滤**，可按大小、架构或量化方式找到完全合适的模型
@@ -39,18 +39,19 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## Open WebUI 的优势
+## Open WebUI 的优势 {#what-open-webui-does-well}
 
-- **完整的 Web 平台**，具有多用户聊天、笔记、频道、自动化、开放终端等功能
-- **任何提供商**，因此您可以将 LM Studio 的本地模型与 OpenAI、Anthropic、Google 等一起使用
-- **深度 RAG 与知识**，拥有 9 个向量数据库、5 个提取引擎以及混合搜索和重新排名
-- **Python 扩展性**，支持自定义工具、管道、MCP 和 OpenAPI 集成
-- **团队功能**，包括 RBAC、SSO/OIDC/LDAP、SCIM 2.0、分析和评估竞技场
-- **从一扩展到数千**，通过 Docker、Kubernetes 和 pip
+- **完整的 Agentic 平台**：模型可自行调用[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)，并支持 [MCP](/features/extensibility/mcp) 服务器、[子智能体](/features/chat-conversations/chat-features/subagents)、[计时器](/features/chat-conversations/chat-features/timers) 和[自动化](/features/chat-conversations/chat-features/automations)，驱动 LM Studio 提供的模型
+- **几乎一切都可以定制**：从按模型的提示词、工具、知识库和参数，到可以改变管道任意环节行为的[过滤器、管道、动作和事件函数](/features/extensibility/plugin/functions)，再加上主题、横幅和按群组的权限
+- **完整的 Web 平台**：包含多用户聊天、笔记、频道、自动化、Open Terminal 等
+- **任何提供商**：可以将 LM Studio 的本地模型与 OpenAI、Anthropic、Google 等一起使用
+- **深度 RAG 与知识**：13 个向量数据库、8 个提取引擎，以及带重排序的混合搜索
+- **团队功能**：包含 RBAC、SSO/OIDC/LDAP、SCIM 2.0、分析和评估竞技场
+- **从一扩展到数千**：通过 Docker、Kubernetes 和 pip
 
 ---
 
-## 一览表
+## 一览表 {#at-a-glance}
 
 | | Open WebUI | LM Studio |
 | :--- | :--- | :--- |
@@ -65,7 +66,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## 何时选择各个平台
+## 何时选择各个平台 {#when-to-use-each}
 
 **选择 LM Studio**（如果）您想要在桌面上发现和运行本地模型的最佳体验。模型浏览器使您可以轻松探索 Hugging Face 上可用的内容、比较量化并快速上手。
 
@@ -75,7 +76,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## 一起使用它们
+## 一起使用它们 {#use-them-together}
 
 LM Studio 的 OpenAI 兼容 API 服务器可以很好地充当 Open WebUI 的后端。您可以使用 LM Studio 来管理和提供本地模型，然后将 Open WebUI 连接到 LM Studio 的 API。
 
@@ -96,7 +97,7 @@ LM Studio 的 OpenAI 兼容 API 服务器可以很好地充当 Open WebUI 的后
 
 ---
 
-## 常见问题
+## 常见问题 {#frequently-asked-questions}
 
 **我可以将 LM Studio 与 Open WebUI 一起使用吗？**
 是的。启动 LM Studio 的本地 API 服务器并在 Open WebUI 中添加 `http://localhost:1234/v1` 作为连接。

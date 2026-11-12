@@ -3,7 +3,7 @@ sidebar_position: 1
 title: "使用 Entra ID 的 Azure OpenAI"
 ---
 
-# 使用 Entra ID 的 Azure OpenAI
+# 使用 Entra ID 的 Azure OpenAI {#azure-openai-with-entraid}
 
 :::warning
 
@@ -17,7 +17,7 @@ title: "使用 Entra ID 的 Azure OpenAI"
 要使用该能力，Open WebUI 版本必须为 0.6.30 或更高。
 :::
 
-## 概览
+## 概览 {#overview}
 
 Open WebUI 支持通过 **Entra ID 认证** 集成 Azure OpenAI，这使你无需存储 API key 即可完成认证，带来以下优势：
 
@@ -26,7 +26,7 @@ Open WebUI 支持通过 **Entra ID 认证** 集成 Azure OpenAI，这使你无�
 - **审计追踪**：所有访问都会进入 Azure 审计系统
 - **自动 Token 管理**：Token 生命周期由 Azure 自动处理
 
-## 认证方式
+## 认证方式 {#authentication-methods}
 
 Open WebUI 支持 [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python) 所支持的全部 Azure OpenAI 认证方式。
 
@@ -53,7 +53,7 @@ _这样它就只会使用你选定的 credential 类型。_
 - `dev`：表示只尝试 `SharedTokenCacheCredential`、`AzureCliCredential`、`AzurePowershellCredential`、`AzureDeveloperCliCredential`
 :::
 
-### Azure CLI 认证
+### Azure CLI 认证 {#azure-cli-authentication}
 
 **最适合：** 本地开发
 
@@ -68,7 +68,7 @@ Azure CLI 认证使用你本机上的 Azure 凭证来访问 Azure OpenAI。
 
 [**→ 查看如何配置 Azure CLI 认证**](./azure-cli-auth.mdx)
 
-### Workload Identity 认证
+### Workload Identity 认证 {#2-workload-identity-authentication}
 
 **最适合：** Azure Kubernetes Service（AKS）生产部署，以及多租户环境
 
@@ -83,7 +83,7 @@ Azure CLI 认证使用你本机上的 Azure 凭证来访问 Azure OpenAI。
 
 [**→ 查看如何配置 Workload Identity 认证**](./workload-identity-auth.mdx)
 
-## 前提条件
+## 前提条件 {#prerequisites}
 
 无论你选择哪种认证方式，都需要以下条件：
 
@@ -92,7 +92,7 @@ Azure CLI 认证使用你本机上的 Azure 凭证来访问 Azure OpenAI。
 - **Azure RBAC 角色**：你的身份需要被分配 `Cognitive Services OpenAI User` 角色
 - **Azure OpenAI 资源**：已经部署好的 Azure OpenAI 实例
 
-## 快速对比
+## 快速对比 {#quick-comparison}
 
 |                        | Azure CLI 认证           | Workload Identity 认证                            |
 |------------------------|--------------------------|---------------------------------------------------|
@@ -102,7 +102,7 @@ Azure CLI 认证使用你本机上的 Azure 凭证来访问 Azure OpenAI。
 | **最适合**             | 开发与测试               | 生产部署                                          |
 | **凭证存储**           | 本地 `.azure` 目录       | 无（federated tokens）                            |
 
-## 下一步
+## 下一步 {#next-steps}
 
 请选择与你部署环境最匹配的认证方式：
 

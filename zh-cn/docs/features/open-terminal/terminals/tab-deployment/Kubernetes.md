@@ -1,11 +1,11 @@
-## 前置条件
+## 前置条件 {#prerequisites}
 
 - 一个正在运行的 Kubernetes 集群 (v1.24+)
 - 已安装 [Helm](https://helm.sh/docs/intro/install/) v3
 - 已配置 `kubectl` 以访问你的集群
 - [Open WebUI 企业版许可证](https://openwebui.com/enterprise)（生产环境使用必须）
 
-## 使用 Helm 部署
+## 使用 Helm 部署 {#deploy-with-helm}
 
 Open WebUI Helm chart 包含 Terminals 作为可选子 chart。在你的 values 文件中添加 `terminals` 部分：
 
@@ -44,7 +44,7 @@ helm upgrade --install open-webui open-webui/open-webui \
 当 `terminals.enabled` 为 `true` 时，chart 会自动设置 `TERMINAL_SERVER_CONNECTIONS` 指向集群内的编排器。不需要手动配置连接。
 :::
 
-### 验证
+### 验证 {#verify}
 
 ```bash
 # 检查所有 pod 是否正在运行
@@ -56,7 +56,7 @@ kubectl get crd terminals.openwebui.com
 
 ---
 
-## 部署了什么
+## 部署了什么 {#what-gets-deployed}
 
 当 `terminals.enabled: true` 时，chart 将创建：
 
@@ -71,7 +71,7 @@ kubectl get crd terminals.openwebui.com
 
 ---
 
-## 生命周期
+## 生命周期 {#lifecycle}
 
 当用户激活终端时，编排器会创建一个 `Terminal` CR。Operator 会配置一个带有 Service、Secret 和可选 PVC 的 Pod。一旦 Pod 通过就绪检查，编排器就会将流量代理到它。
 
@@ -90,7 +90,7 @@ kubectl delete terminal <name> -n open-webui
 
 ---
 
-## 监控
+## 监控 {#monitoring}
 
 ```bash
 # Operator 日志
@@ -105,7 +105,7 @@ kubectl logs -n open-webui deployment/<release>-terminals-orchestrator --tail=50
 <details>
 <summary>Terminal CRD 参考</summary>
 
-### Spec 字段
+### Spec 字段 {#spec-fields}
 
 | 字段 | 类型 | 默认值 | 描述 |
 | :--- | :--- | :--- | :--- |
@@ -122,7 +122,7 @@ kubectl logs -n open-webui deployment/<release>-terminals-orchestrator --tail=50
 | `persistence.size` | 字符串 | `1Gi` | PVC 大小 |
 | `persistence.storageClass` | 字符串 | *(集群默认)* | 存储类 |
 
-### Status 字段
+### Status 字段 {#status-fields}
 
 | 字段 | 描述 |
 | :--- | :--- |

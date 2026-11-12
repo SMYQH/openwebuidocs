@@ -32,7 +32,7 @@ Open WebUI 内置了两个由 Brave 提供支持的搜索引擎，它们共用�
 
 如果你希望减少往返、获得更高保真度的段落且不需要抓取步骤，就选 `brave_llm_context`；如果你依赖经典的“先摘要后抓取”流程（例如抓取步骤会在你的管线中做有用的归一化），就选 `brave`。两个引擎在收到 HTTP 429 后都会自动重试一次，并退避 1 秒。
 
-### Docker Compose 设置
+### Docker Compose 设置 {#docker-compose-setup}
 
 将以下环境变量加入你的 Open WebUI `docker-compose.yaml`：
 
@@ -48,7 +48,7 @@ services:
       WEB_SEARCH_CONCURRENT_REQUESTS: 1
 ```
 
-### 限速说明（免费层）
+### 限速说明（免费层） {#rate-limiting-free-tier}
 
 Brave 的免费 API 层有严格限制：**每秒仅允许 1 次请求**。如果你的 LLM 生成了多条搜索查询（这很常见），你可能会遇到 HTTP 429 “Too Many Requests” 错误。
 

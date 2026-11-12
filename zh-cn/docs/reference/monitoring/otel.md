@@ -17,7 +17,7 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 
 :::
 
-## 🚀 使用 Docker Compose 快速开始
+## 🚀 使用 Docker Compose 快速开始 {#quick-start-with-docker-compose}
 
 启用可观测性的最快方式是下载示例 Compose 文件并启动一个本地 Grafana LGTM 栈与 Open WebUI：
 
@@ -39,7 +39,7 @@ docker compose -f docker-compose.otel.yaml up -d
 - Grafana 可以在 [http://localhost:3000](http://localhost:3000) 访问，默认账号 `admin` / `admin`
 - Open WebUI 在 Compose 网络内通过 `http://lgtm:4317` 发送 OTLP 数据
 
-## ⚙️ 环境变量
+## ⚙️ 环境变量 {#environment-variables}
 
 你可以使用下面这些环境变量（与 Compose 文件中的配置一致）在 Open WebUI 中配置 OpenTelemetry：
 
@@ -78,9 +78,9 @@ docker compose -f docker-compose.otel.yaml up -d
       # 如有需要，可在此设置 OTEL_BASIC_AUTH_USERNAME/PASSWORD
 ```
 
-## 📊 数据收集
+## 📊 数据收集 {#data-collection}
 
-### 分布式追踪
+### 分布式追踪 {#distributed-tracing}
 
 Open WebUI 后端自动检测：
 
@@ -95,7 +95,7 @@ Open WebUI 后端自动检测：
 - `http.url`, `http.method`, `http.status_code`
 - 异常时的错误详情 (`error.message`, `error.kind`)
 
-### 指标收集
+### 指标收集 {#metrics-collection}
 
 WebUI 通过 OpenTelemetry 导出以下指标：
 
@@ -106,7 +106,7 @@ WebUI 通过 OpenTelemetry 导出以下指标：
 
 指标会通过 OTLP 发送（默认每 10 秒一次，可通过 `OTEL_METRICS_EXPORT_INTERVAL_MILLIS` 配置），并可以在 **Grafana** 中通过 Prometheus/Mimir 进行可视化。
 
-## 🔧 自定义收集器设置
+## 🔧 自定义收集器设置 {#custom-collector-setup}
 
 如果你想使用不同的（外部）OpenTelemetry 收集器或技术栈：
 
@@ -125,7 +125,7 @@ docker run -d --name open-webui \
   ghcr.io/open-webui/open-webui:main
 ```
 
-## 🚨 故障排除
+## 🚨 故障排除 {#troubleshooting}
 
 **追踪/指标没有显示在 Grafana 中？**
 

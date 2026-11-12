@@ -19,7 +19,7 @@ title: "Hermes Agent"
 
 ---
 
-## 第 1 步：安装 Hermes Agent
+## 第 1 步：安装 Hermes Agent {#step-1-install-hermes-agent}
 
 如果你还没有安装 Hermes Agent，请先按照[官方快速开始](https://hermes-agent.nousresearch.com/docs/getting-started/quickstart)完成安装。安装后先验证：
 
@@ -29,7 +29,7 @@ hermes --version
 
 ---
 
-## 第 2 步：启用 API 服务
+## 第 2 步：启用 API 服务 {#step-2-enable-the-api-server}
 
 把以下内容加入 Hermes Agent 的环境变量文件：
 
@@ -50,7 +50,7 @@ API_SERVER_KEY=your-secret-key
 
 ---
 
-## 第 3 步：启动 Gateway
+## 第 3 步：启动 Gateway {#step-3-start-the-gateway}
 
 ```bash
 hermes gateway
@@ -68,7 +68,7 @@ Open WebUI 需要依赖该 gateway 与你的 Agent 通信。对于长期部署�
 
 ---
 
-## 第 4 步：在 Open WebUI 中添加连接
+## 第 4 步：在 Open WebUI 中添加连接 {#step-4-add-the-connection-in-open-webui}
 
 1. 在浏览器中打开 Open WebUI。
 2. 进入 ⚙️ **管理面板** → **连接** → **OpenAI**。
@@ -90,7 +90,7 @@ http://host.docker.internal:8642/v1
 :::
 
 ---
-## 第 5 步：开始聊天！
+## 第 5 步：开始聊天！ {#step-5-start-chatting}
 
 现在，`hermes-agent` 模型应该已经出现在模型下拉框中。选中它即可开始聊天。你的 Agent 将通过 Open WebUI 界面直接获得其完整工具集（终端、文件操作、网页搜索、记忆、技能）的能力。
 
@@ -98,7 +98,7 @@ http://host.docker.internal:8642/v1
 
 ---
 
-## Docker Compose 配置
+## Docker Compose 配置 {#docker-compose-setup}
 
 如果你想要更稳定的长期部署，可以直接运行一个已预配置好连接 Hermes Agent 的 Open WebUI：
 
@@ -129,27 +129,27 @@ docker compose up -d
 :::note
 环境变量只会在 Open WebUI **首次启动**时生效。之后，连接设置会存储在其内部数据库中。若之后要修改，请使用管理界面，或删除 Docker 卷后重新开始。
 :::
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 下拉框中没有模型
+### 下拉框中没有模型 {#no-models-appear-in-the-dropdown}
 
 - 确认 URL 包含 `/v1`：`http://localhost:8642/v1`（而不只是 `:8642`）
 - 检查 gateway 是否在运行：`curl http://localhost:8642/health` → `{"status": "ok"}`
 - 检查模型列表：`curl http://localhost:8642/v1/models` → 应返回 `hermes-agent`
 
-### 连接测试通过，但模型仍未加载
+### 连接测试通过，但模型仍未加载 {#connection-test-passes-but-no-models-load}
 
 几乎总是因为缺少 `/v1` 后缀。Open WebUI 的连接测试只检查基础连通性，不会验证模型发现是否正常。
 
-### 出现 “无效的 API 密钥” 错误
+### 出现 “无效的 API 密钥” 错误 {#invalid-api-key-errors}
 
 请确认 Open WebUI 中填写的 **API 密钥** 与 `~/.hermes/.env` 中的 `API_SERVER_KEY` 完全一致。
 
-### 响应耗时较长
+### 响应耗时较长 {#response-takes-a-long-time}
 
 Hermes Agent 可能在回复前执行了多个工具调用。对于复杂查询，这很正常——因为 Agent 的确在代表你完成真实工作。
 
-### Linux Docker（无 Docker Desktop）
+### Linux Docker（无 Docker Desktop） {#linux-docker-no-docker-desktop}
 
 在不带 Docker Desktop 的 Linux 上，`host.docker.internal` 默认不会解析：
 
@@ -166,7 +166,7 @@ docker run -e OPENAI_API_BASE_URL=http://172.17.0.1:8642/v1 ...
 
 ---
 
-## 了解更多
+## 了解更多 {#learn-more}
 
 - [Hermes Agent 文档](https://hermes-agent.nousresearch.com/docs/) - 完整文档、技能与集成
 - [GitHub](https://github.com/NousResearch/hermes-agent) - 源码与问题反馈

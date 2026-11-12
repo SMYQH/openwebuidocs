@@ -3,13 +3,13 @@ title: "向你报告的早间检查"
 sidebar_position: 12
 ---
 
-# 向你报告的早间检查
+# 向你报告的早间检查 {#a-morning-check-that-reports-to-you}
 
 每天早上上班前你在副项目上运行测试套件，浏览输出，然后忘掉它。这是一个适合定时任务的工作：在 7:30 运行测试，只有在有红色时才发出通知。
 
 **你需要：** 完成快速入门，已连接[模型](/ecosystem/computer/ai/)，以及主机机器[在 7:30 保持唤醒](/ecosystem/computer/phone-and-remote/keep-it-running)。
 
-## 操作步骤
+## 操作步骤 {#the-walkthrough}
 
 1. **给它一个联系你的方式。** 一次性设置：在**设置 → 通知**中，添加一个目标：一个 webhook（Slack、Discord、Google Chat 和 Teams URL 会自动格式化）或你的一个[消息机器人](/ecosystem/computer/automate/messaging-bots)。点击测试按钮一次。
 
@@ -25,7 +25,7 @@ sidebar_position: 12
 
 定时任务页面也是你暂停任务、使用频率构建器调整计划，或者如果你更喜欢表单而不是句子，手动编写计划的地方。
 
-## 为什么这样有效
+## 为什么这样有效 {#what-makes-this-work}
 
 定时运行以完全工具审批执行，没有人在看，这正是为什么提示词应该狭窄、只读且可验证，以及为什么运行的链接聊天很重要：你从不相信一个绿色勾选，你阅读实际发生了什么。一旦模式感觉安全，同样的方法可以涵盖依赖审计、备份检查，或每晚的"总结此仓库中的更改"。
 

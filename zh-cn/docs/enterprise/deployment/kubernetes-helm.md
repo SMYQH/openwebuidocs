@@ -3,7 +3,7 @@ sidebar_position: 3
 title: "使用 Helm 的 Kubernetes"
 ---
 
-# 使用 Helm 的 Kubernetes
+# 使用 Helm 的 Kubernetes {#kubernetes-with-helm}
 
 可在任意 Kubernetes 发行版（EKS、AKS、GKE、OpenShift、Rancher、自建集群）上，使用官方 Open WebUI Helm Chart 进行部署。
 
@@ -11,14 +11,14 @@ title: "使用 Helm 的 Kubernetes"
 继续之前，请先确认你已经配置好了[共享基础设施要求](/enterprise/deployment#shared-infrastructure-requirements)——包括 PostgreSQL、Redis、向量数据库、共享存储和内容提取服务。
 :::
 
-## 何时选择这种模式
+## 何时选择这种模式 {#when-to-choose-this-pattern}
 
 - 你的组织已经在运行 Kubernetes，并具备平台工程能力
 - 你需要声明式 IaC 与 GitOps 工作流
 - 你需要更高级的扩缩容（HPA）、滚动更新和 Pod Disruption Budget
 - 你正在为数百到数千用户的关键任务环境部署
 
-## 架构
+## 架构 {#architecture}
 
 ```mermaid
 flowchart LR
@@ -51,7 +51,7 @@ flowchart LR
     Deploy --> data
 ```
 
-## Helm Chart 配置
+## Helm Chart 配置 {#helm-chart-setup}
 
 ```bash
 # 添加仓库
@@ -139,13 +139,13 @@ extraEnvVars:
     value: "openai"
 ```
 
-## 扩展策略
+## 扩展策略 {#scaling-strategy}
 
 - **Horizontal Pod Autoscaler (HPA)**：基于 CPU 或内存利用率扩缩容。每个 Pod 保持 `UVICORN_WORKERS=1`，由 Kubernetes 管理副本数。
 - **资源请求与限制**：设置合理的 CPU / 内存 request 和 limit，确保调度器正确放置 Pod，并使 HPA 获取准确指标。
 - **Pod Disruption Budget**：配置 PDB，确保在自愿性中断（节点驱逐、集群升级）期间仍有最少数量的 Pod 保持可用。
 
-## 更新流程
+## 更新流程 {#update-procedure}
 
 :::danger 关键更新流程
 在多副本场景下，每次更新时你**必须**遵循以下流程：
@@ -158,7 +158,7 @@ extraEnvVars:
 跳过该流程会带来并发迁移导致数据库损坏的风险。
 :::
 
-## 关键注意事项
+## 关键注意事项 {#key-considerations}
 
 | 注意事项 | 说明 |
 | :--- | :--- |

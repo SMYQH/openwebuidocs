@@ -3,7 +3,7 @@ sidebar_position: 0
 title: "认证与 SSO"
 ---
 
-# 🔐 认证与 SSO 教程
+# 🔐 认证与 SSO 教程 {#authentication--sso-tutorials}
 
 **将 Open WebUI 连接到身份提供商，实现单点登录、LDAP 与组同步。**
 

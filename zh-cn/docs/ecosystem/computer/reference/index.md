@@ -3,7 +3,7 @@ title: 参考
 sidebar_position: 1
 ---
 
-# 参考
+# 参考 {#reference}
 
 精确的标志、变量、配置键和 API 行为，供你确切知道要查找什么时使用。
 

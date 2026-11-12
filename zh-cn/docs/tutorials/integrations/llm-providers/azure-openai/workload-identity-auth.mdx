@@ -9,15 +9,15 @@ title: "Workload Identity 认证"
 :::
 
 
-## 概览
+## 概览 {#overview}
 
 本指南说明如何在 Azure Kubernetes Service（AKS）上配置 Open WebUI，并使用 Workload Identity 认证访问 Azure OpenAI。
 
 Workload Identity 允许 AKS Pod 通过 Azure Entra ID（原 Azure AD）访问 Azure 服务，而无需在集群中存储任何凭证。这是一种安全、托管式的身份方案，可用于访问 Azure OpenAI。
 
-## 前提条件
+## 前提条件 {#prerequisites}
 
-### Open WebUI
+### Open WebUI {#openwebui}
 
 - **Open WebUI**：版本为 0.6.30 或更高
 - **AKS 集群配置**：你的 AKS 集群必须启用以下能力
@@ -28,11 +28,11 @@ Workload Identity 允许 AKS Pod 通过 Azure Entra ID（原 Azure AD）访问 A
     - 参考 [Microsoft Learn - Use Microsoft Entra Workload ID with Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=dotnet)
     - AzureRM Terraform: [`azurerm_kubernetes_cluster.workload_identity_enabled`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster#workload_identity_enabled-1)
 
-## Terraform 配置
+## Terraform 配置 {#terraform-configuration}
 
 下面是一份完整的 Terraform 配置示例，用于配置 Workload Identity 认证：
 
-### 1. 创建 Kubernetes 命名空间
+### 1. 创建 Kubernetes 命名空间 {#1-create-a-kubernetes-namespace}
 
 首先需要创建一个 Kubernetes 命名空间，这样后续就能把它统一用于 Helm 部署，也能在后续步骤中赋给用户分配身份和联合身份凭据。
 
@@ -44,7 +44,7 @@ resource "kubernetes_namespace" "this" {
 }
 ```
 
-### 2. 创建用户分配身份（User Assigned Identity）
+### 2. 创建用户分配身份（User Assigned Identity） {#2-create-a-user-assigned-identity}
 
 首先创建一个 Azure 用户分配身份（User Assigned Identity），后续 Open WebUI Pod 将使用它来访问 Azure 服务。
 
@@ -56,7 +56,7 @@ resource "azurerm_user_assigned_identity" "uai" {
 }
 ```
 
-### 3. 创建联合身份凭据（Federated Identity Credential）
+### 3. 创建联合身份凭据（Federated Identity Credential） {#3-create-federated-identity-credential}
 
 联合身份凭据（Federated Identity Credential）会在 Kubernetes service account 与 Azure 用户分配身份之间建立信任关系，从而允许 Pod 使用 Kubernetes token 交换 Azure token。
 
@@ -71,7 +71,7 @@ resource "azurerm_federated_identity_credential" "federated_identity" {
 }
 ```
 
-### 4. 为 Azure OpenAI 访问分配 RBAC 角色
+### 4. 为 Azure OpenAI 访问分配 RBAC 角色 {#4-assign-rbac-role-for-azure-openai-access}
 
 在 Azure 与用户分配身份建立信任关系后，你就可以为这个身份分配角色。这里我们赋予它 `Cognitive Services OpenAI User` 角色；如果将来你还需要访问其他 Azure 能力，也可以继续添加更多角色分配。
 
@@ -91,7 +91,7 @@ resource "azurerm_role_assignment" "workload_identity_azure_openai" {
 }
 ```
 
-### 5. 通过 Helm 部署 Open WebUI
+### 5. 通过 Helm 部署 Open WebUI {#5-deploy-open-webui-via-helm}
 
 下面会把 Open WebUI 部署到 AKS 集群中，并配置好所需的 Service Account 注解与 Pod 标签，以启用 Workload Identity 认证。
 
@@ -125,7 +125,7 @@ resource "helm_release" "openwebui" {
 }
 ```
 
-### 6. UI 配置
+### 6. UI 配置 {#6-ui-configuration}
 
 当 Open WebUI 部署完成后，可以按以下步骤配置 Azure OpenAI 连接：
 
@@ -140,9 +140,9 @@ resource "helm_release" "openwebui" {
 如果你的 Azure OpenAI 部署在私有终结点、API 网关或其他自定义域之后（即 Base URL **不是**标准的 `*.openai.azure.com` / `*.cognitiveservices.azure.com` 主机名——这在 AKS/企业部署中很常见），仅选择 **Azure OpenAI** 提供商即可：Open WebUI 的 Azure 请求处理是基于所选提供商，而不是基于主机名模式匹配。旧版本只能通过 `azure.*` 主机名识别 Azure 连接，因此自定义域名的 Azure 连接会**验证连接**和模型列表都会失败——如果遇到这种情况，请升级到 v0.9.6 或更高。
 :::
 
-## 关键组件说明
+## 关键组件说明 {#key-components-explained}
 
-### Service Account 注解
+### Service Account 注解 {#service-account-annotations}
 
 Service Account 必须带上如下注解，才能与 Azure 用户分配身份关联：
 
@@ -150,7 +150,7 @@ Service Account 必须带上如下注解，才能与 Azure 用户分配身份关
 azure.workload.identity/client-id: <USER_ASSIGNED_IDENTITY_CLIENT_ID>
 ```
 
-### Pod 标签
+### Pod 标签 {#pod-labels}
 
 Pod 必须包含以下标签，才能启用 Workload Identity：
 
@@ -158,7 +158,7 @@ Pod 必须包含以下标签，才能启用 Workload Identity：
 azure.workload.identity/use: "true"
 ```
 
-### 联合身份凭据（Federated Identity Credential）
+### 联合身份凭据（Federated Identity Credential） {#federated-identity-credential}
 
 联合身份凭据会在以下三者之间建立信任关系：
 - 你的 AKS 集群 OIDC issuer
@@ -170,9 +170,9 @@ azure.workload.identity/use: "true"
 system:serviceaccount:<namespace>:<service-account-name>
 ```
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 常见问题
+### 常见问题 {#common-issues}
 
 1. **认证失败**
    - 确认 AKS 集群已启用 OIDC issuer
@@ -188,7 +188,7 @@ system:serviceaccount:<namespace>:<service-account-name>
    - 确认 Service Account 带有正确的 `azure.workload.identity/client-id` 注解
    - 确认 Service Account 名称与联合凭据配置一致
 
-### 验证命令
+### 验证命令 {#verification-commands}
 
 检查 Service Account 注解：
 ```bash
@@ -205,7 +205,7 @@ kubectl get pod <pod-name> -n <namespace> -o yaml
 kubectl get mutatingwebhookconfiguration azure-wi-webhook-controller-manager-mutating-webhook-configuration
 ```
 
-## 更多资源
+## 更多资源 {#additional-resources}
 
 - [Azure Workload Identity 文档](https://azure.github.io/azure-workload-identity/)
 - [AKS Workload Identity 概览](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview)

@@ -20,7 +20,7 @@ cptr run
 
 首次运行时（尚无用户账户），服务器打印一个一次性设置 URL，格式为 `http://<host>:<port>/?token=<64-hex>`。打开它以创建第一个用户作为管理员。一旦用户存在，令牌立即失效。
 
-## 安装额外包
+## 安装额外包 {#install-extras}
 
 `pip install cptr` 需要 Python 3.10+。可选功能组：
 
@@ -38,7 +38,7 @@ cptr run
 uvx cptr@latest run
 ```
 
-## CLI 没有的功能
+## CLI 没有的功能 {#what-the-cli-doesnt-have}
 
 - **没有其他子命令。** 没有 `cptr user`、`cptr migrate` 或类似命令；数据库迁移在启动时自动运行。
 - **没有 TLS 标志。** HTTPS 来自 Computer 前面的反向代理或隧道，而非来自 CLI。

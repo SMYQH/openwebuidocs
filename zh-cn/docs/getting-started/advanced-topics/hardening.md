@@ -33,6 +33,18 @@ DDoS 防护和暴力破解防护（限速、连接节流、fail2ban）应由代�
 
 ---
 
+### 请求不存在的路径 {#requests-for-paths-that-do-not-exist}
+
+Open WebUI 提供的是单页应用，因此请求应用不认识的路径时，返回的是应用外壳且状态为 200，而不是 404。对 JavaScript 文件的请求是例外，它们会返回 404，因为缺失的脚本必须失败，而不能被塞给浏览器一页 HTML。
+
+看得见的后果出现在访问日志中。自动化扫描器会对它们发现的每个主机探测同样的一批路径——`/wp-admin/`、`/phpmyadmin`、`.env` 之类——而每一次这样的探测都会得到一个 200 的响应。什么都没有被发现，也没有什么被暴露，因为每个访客收到的都是同一个外壳，但日志给人的印象却是这些请求成功了。
+
+过滤这类流量应该交给反向代理，与上面的限流和暴力破解防护放在一起。代理可以在这些路径到达应用之前就回应或丢弃它们，这样它们根本不会进入日志，也不会给应用带来任何开销。如果在 Open WebUI 内部拦截它们，就意味着要维护一份扫描器当前使用的路径清单，而这份清单需要永远更新下去。
+
+如果你是第一次部署 Open WebUI，可以先看本页底部的[速查表](#quick-reference)以获得一份按优先级排序的摘要，再阅读与你的部署相关的小节。
+
+---
+
 ## 密钥 {#secret-key}
 
 `WEBUI_SECRET_KEY` 用于签发 JWT（登录 token），并派生 OAuth 会话数据的加密密钥。
@@ -74,7 +86,7 @@ PASSWORD_VALIDATION_HINT='Minimum 8 characters with uppercase, lowercase, number
 
 密码在存储前会使用 bcrypt 哈希。由于 bcrypt 会在 72 字节处截断输入，Open WebUI 也会强制这一限制。
 
-### 通过环境变量创建管理员账户
+### 通过环境变量创建管理员账户 {#admin-account-from-environment-variables}
 
 对于自动化部署，你可以在启动时直接创建管理员账户：
 
@@ -86,7 +98,7 @@ WEBUI_ADMIN_NAME=Admin
 
 这只会在数据库中还没有任何用户时生效。管理员创建完成后，注册会自动关闭。
 
-### 仅使用 SSO 的环境
+### 仅使用 SSO 的环境 {#sso-only-environments}
 
 如果所有认证都交由 OAuth/OIDC 提供商处理，你可以完全隐藏本地登录表单：
 
@@ -110,6 +122,18 @@ ENABLE_PASSWORD_CHANGE_FORM=false
 
 ---
 
+### 双因素登录 {#two-factor-sign-in}
+
+Open WebUI 可以要求所有用户在每次登录后提供来自身份验证器应用的验证码：
+
+```bash
+ENABLE_MFA=true
+```
+
+同一个开关在 **设置 > 管理 > 认证** 的 **多因素身份验证** 部分中名为 **要求所有用户使用身份验证器**。当你的身份提供商或代理已经强制要求第二因素时，OAuth 和受信任请求头登录可以被豁免（`MFA_ALLOW_OAUTH_BYPASS`、`MFA_ALLOW_TRUSTED_HEADER_BYPASS`）。更改其中任何一项设置都会让所有用户退出登录。启用 MFA 期间，登录尝试还会按账户和按客户端地址进行限制。有关注册、恢复和这些限制，请参阅[双因素登录（MFA）](/features/authentication-access/mfa)。
+
+---
+
 ## 会话与 Cookie 安全 {#session-and-cookie-security}
 
 ### Cookie 设置 {#cookie-settings}
@@ -128,7 +152,7 @@ WEBUI_SESSION_COOKIE_SAME_SITE=strict
 
 除非分别用 `WEBUI_AUTH_COOKIE_SECURE` 和 `WEBUI_AUTH_COOKIE_SAME_SITE` 覆盖，否则这些设置同样会作用于 OAuth Cookie。
 
-### Token 过期时间
+### Token 过期时间 {#token-expiry}
 
 JWT 决定用户能保持登录多久。默认值是 `4w`（4 周）。你可以缩短它：
 
@@ -251,7 +275,7 @@ WEBUI_SESSION_COOKIE_SECURE=true
 HSTS=max-age=31536000;includeSubDomains
 ```
 
-### 可信代理 IP
+### 可信代理 IP {#trusted-proxy-ips}
 
 Open WebUI 使用 `--forwarded-allow-ips` 判断哪些代理被信任，可以发送 `X-Forwarded-For` 头。默认值是 `*`（信任全部），这在 Open WebUI 位于隔离网络、且前面只有单个反向代理时通常是合理的。如果你的网络拓扑更复杂，请限制为代理自身的 IP：
 
@@ -275,7 +299,7 @@ OAUTH_ALLOWED_DOMAINS=yourcompany.com
 OAUTH_BLOCKED_GROUPS='["contractors-external", "temp-accounts"]'
 ```
 
-### 角色映射
+### 角色映射 {#role-mapping}
 
 将 IdP 角色映射到 Open WebUI 角色，让访问控制由身份提供商统一管理：
 
@@ -286,7 +310,7 @@ OAUTH_ADMIN_ROLES=admin,superadmin
 OAUTH_ALLOWED_ROLES=user,admin,superadmin
 ```
 
-### 账户合并
+### 账户合并 {#account-merging}
 
 ```bash
 OAUTH_MERGE_ACCOUNTS_BY_EMAIL=false
@@ -294,7 +318,7 @@ OAUTH_MERGE_ACCOUNTS_BY_EMAIL=false
 
 如果启用，当 OAuth 登录邮箱与已有本地账户一致时，系统会自动合并两者。**不建议启用。** 它依赖你的 OAuth 提供商可靠验证邮箱所有权。如果提供商无法保证邮箱已验证，那么控制同一邮箱的用户就可能接管已有账户。除非你已确认提供商强制执行邮箱验证，否则请保持 `false`。
 
-### 会话限制
+### 会话限制 {#session-limits}
 
 ```bash
 # 每个用户、每个提供商允许的最大并发 OAuth 会话数（默认：10）
@@ -306,7 +330,7 @@ ENABLE_OAUTH_BACKCHANNEL_LOGOUT=true
 
 ---
 
-## 可信请求头认证
+## 可信请求头认证 {#trusted-header-authentication}
 
 如果你的反向代理本身负责认证（如 Authelia、Authentik、oauth2-proxy），它可以通过 HTTP 头把已认证用户身份传给 Open WebUI。**这种方式可行，但风险很大，具体取决于配置是否严谨**——配置错误会让任意客户端通过伪造请求头冒充任意用户：
 
@@ -323,7 +347,7 @@ WEBUI_AUTH_TRUSTED_NAME_HEADER=X-Forwarded-Name
 
 ---
 
-## LDAP 认证
+## LDAP 认证 {#ldap}
 
 如果你通过 LDAP 做认证，请启用 TLS 来保护传输中的凭据：
 
@@ -348,7 +372,7 @@ LDAP_CA_CERT_FILE=/path/to/ca-cert.pem
 DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
 ```
 
-迁移步骤见[扩展指南](/getting-started/advanced-topics/scaling#step-1--switch-to-postgresql)。请使用强且唯一的凭据，并将数据库放在内部网络中。
+迁移步骤见[扩展指南](/getting-started/advanced-topics/scaling#step-1-switch-to-postgresql)。请使用强且唯一的凭据，并将数据库放在内部网络中。
 
 ### SQLCipher {#sqlcipher}
 
@@ -358,7 +382,7 @@ DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
 DATABASE_TYPE=sqlite+sqlcipher
 ```
 
-### 连接池调优
+### 连接池调优 {#connection-pool-tuning}
 
 对于 PostgreSQL，请根据使用规模调整连接池：
 
@@ -373,7 +397,7 @@ DATABASE_POOL_RECYCLE=3600
 
 ---
 
-## API 密钥
+## API 密钥 {#api-keys}
 
 API 密钥允许以创建者本人的权限，以编程方式访问 Open WebUI。
 
@@ -393,7 +417,7 @@ API_KEYS_ALLOWED_ENDPOINTS=/api/chat/completions,/api/v1/models
 
 当你把 key 分发给外部服务或自动化系统时，这很有用——即使 key 泄露，也能降低它可访问的范围。
 
-### 用户权限
+### 用户权限 {#user-permissions}
 
 默认只有管理员可以创建 API 密钥。要允许普通用户创建：
 
@@ -407,7 +431,7 @@ USER_PERMISSIONS_FEATURES_API_KEYS=true
 
 Open WebUI 使用分层权限模型：角色、用户组以及资源级访问授权共同生效。
 
-### 角色
+### 角色 {#roles}
 
 | 角色 | 能力 |
 |---|---|
@@ -415,7 +439,7 @@ Open WebUI 使用分层权限模型：角色、用户组以及资源级访问授
 | `user` | 聊天访问、已授权模型与资源 |
 | `pending` | 在管理员批准前无访问权限 |
 
-### 关键设置
+### 关键设置 {#key-settings}
 
 ```bash
 # 新用户默认角色（默认：pending）
@@ -459,7 +483,7 @@ ENABLE_DIRECT_CONNECTIONS=false
 
 `ENABLE_DIRECT_CONNECTIONS` 启用后，用户可以在浏览器中配置自己的 API 密钥和模型端点。注意这些连接仍由后端发起，因此用户的 API 密钥会传到 Open WebUI 服务器。默认关闭。
 
-### Workspace 权限
+### Workspace 权限 {#workspace-permissions}
 
 这些设置控制普通用户在共享工作区中的可操作范围：
 
@@ -489,7 +513,7 @@ AUDIT_LOG_LEVEL=METADATA
 | `REQUEST` | 元数据 + 请求体 |
 | `REQUEST_RESPONSE` | 元数据 + 请求体和响应体 |
 
-### 输出配置
+### 输出配置 {#output-configuration}
 
 ```bash
 # 写入文件（默认路径：/app/backend/data/audit.log）
@@ -504,7 +528,7 @@ ENABLE_AUDIT_STDOUT=true
 MAX_BODY_LOG_SIZE=2048
 ```
 
-### 路径过滤
+### 路径过滤 {#path-filtering}
 
 ```bash
 # 仅审计特定路径（白名单模式）
@@ -565,13 +589,13 @@ WEB_FETCH_FILTER_LIST=!internal.yourcompany.com,!10.0.0.0/8
 AIOHTTP_CLIENT_ALLOW_REDIRECTS=false
 ```
 
-### Playwright 加载器（v0.9.6+）
+### Playwright 加载器（v0.9.6+） {#profile-image-url-forwarding}
 
 :::note
 早期版本只对默认的网页加载器应用 URL 校验和重定向拦截；而基于 Playwright 的加载器（`WEB_LOADER_ENGINE=playwright` / `playwright` Docker 变体）可以不受限制地导航并跟随重定向到内部或被列入黑名单的 URL。从 v0.9.6 起，Playwright 路径会与默认加载器一样强制执行 `validate_url()` 和重定向规则，因此上述 SSRF 防护措施对任意网页加载器引擎都生效。如果你使用了 Playwright，请确认你的版本是 v0.9.6 或更新。
 :::
 
-### 头像图片 URL 转发
+### 头像图片 URL 转发 {#iframe-content-security-policy}
 
 用户和模型的头像图片端点可以发出 `302 Found` 重定向到 `profile_image_url` 中存储的任意来源，以便在 UI 中显示外部托管的头像（例如通过上游身份提供商的 Gravatar）。该重定向会导致用户的浏览器直接向外部来源发起请求，从而泄露客户端 IP、User-Agent 和 Referer 头。如果某个账户的 `profile_image_url` 被设置为攻击者控制的主机，就可以利用这一点对任何渲染其头像的人进行去匿名化。
 
@@ -624,7 +648,7 @@ Tools 和 Functions 会在你的服务器上执行任意 Python 代码，权限�
 
 由于 Tools 和 Functions 会执行服务端代码，因此任何拥有创建或导入权限的用户，实际上都等同于拥有 Open WebUI 进程级别的权限。这是扩展机制的天然属性。默认情况下，只有管理员可以创建和导入 Tools / Functions。下面这些设置用于控制相关权限。
 
-### 完全禁用此功能
+### 完全禁用此功能 {#disabling-the-feature-entirely}
 
 如果你的部署根本不使用 Tools 或 Functions，可以完全移除这个攻击面：
 
@@ -635,7 +659,7 @@ ENABLE_PLUGINS=false
 
 这比[安全模式](#safe-mode)更强。安全模式会停用所有 Functions 但保留功能入口；`ENABLE_PLUGINS=false` 会隐藏工作区的 **Tools** 和管理员的 **Functions** 页面，使其端点返回空结果，并跳过所有插件执行路径（filters、actions、pipe 函数、内置原生工具调用和代码解释器检测）。通过连接配置的 OpenAPI 和 MCP 工具服务器不受影响。关闭此设置即可消除这些功能带来的任意代码执行攻击面，因此在不需要此功能时应始终使用。
 
-### 代码执行
+### 代码执行 {#code-execution}
 
 Open WebUI 默认启用了两个代码执行相关能力：
 
@@ -672,7 +696,7 @@ ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false
 
 关闭后，上传的 Tools 就不能在运行时自动拉取任意包。对于生产部署，尤其是那些允许非管理员创建 Tools 的环境，建议设为 `false`。
 
-### Workspace 访问
+### Workspace 访问 {#workspace-access}
 
 控制谁可以创建、导入与共享 Tools / Functions：
 
@@ -688,7 +712,7 @@ USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS=false
 
 ## 容器加固 {#container-hardening}
 
-### 基础镜像
+### 基础镜像 {#base-image}
 
 默认 Dockerfile 使用 `python:3.11-slim-bookworm`。如果你的组织要求使用加固过或已审批的基础镜像，可以通过修改 Dockerfile 中的 `FROM` 行来替换它。这在要求最小化、已做漏洞扫描的企业基础镜像环境中很常见。
 
@@ -700,7 +724,7 @@ Dockerfile 支持以非 root 用户运行：
 docker build --build-arg UID=1000 --build-arg GID=1000 .
 ```
 
-### OpenShift 兼容性
+### OpenShift 兼容性 {#openshift-compatibility}
 
 对于会以任意 UID 运行容器的环境（如 OpenShift）：
 
@@ -712,7 +736,7 @@ docker build --build-arg USE_PERMISSION_HARDENING=true .
 
 数据目录（`/app/backend/data`）包含数据库、上传文件、缓存插件以及自动生成的密钥。请使用合适的文件系统权限保护该目录，并将它纳入你的备份策略。
 
-### 开发功能
+### 开发功能 {#development-features}
 
 Docker 镜像默认设置 `ENV=prod`，因此会禁用 `/docs` 上的 Swagger/OpenAPI 文档界面。如果你手动运行，请确保设置 `ENV=prod`，避免这些端点暴露出来。
 
@@ -741,7 +765,7 @@ OTEL_SERVICE_NAME=open-webui
 
 ---
 
-## SCIM 预配
+## SCIM 预配 {#scim-provisioning}
 
 SCIM 2.0 允许你的身份提供商自动管理用户账户：
 
@@ -803,13 +827,13 @@ docker pull ghcr.io/open-webui/open-webui:main
 
 对于把安全放在首位的组织，以下做法构成推荐部署基线。每一项都覆盖部署中的不同层面，组合起来可以形成纵深防御。括号中的链接可跳转到上文对应配置章节。
 
-### 网络与传输
+### 网络与传输 {#network-and-transport}
 
 1. **将 Open WebUI 放在 VPN、反向代理或 zero-trust 访问层之后，并启用限速与 IP allowlist。** Open WebUI 适合运行在私有、可信网络中。不要在没有额外访问控制层的情况下直接暴露到公网。请在代理上配置连接速率限制、重复认证尝试限制、已知 IP 范围访问限制，并使用 fail2ban 等工具阻断恶意来源。将 `--forwarded-allow-ips` 限制为代理自身 IP，避免头部伪造。[详情](#network-placement)
 
 2. **所有流量都使用 HTTPS，并启用完整安全头。** 使用能够终止 TLS 的反向代理。把会话 Cookie 配置为 `Secure=true` 与 `SameSite=strict`。生产环境不要通过明文 HTTP 提供 Open WebUI。启用 HSTS、Content Security Policy、X-Frame-Options、X-Content-Type-Options、Referrer-Policy 和 Permissions-Policy。不要把 CORS 保持为 `*`；只允许确实需要访问的域名。[详情](#https-and-tls)
 
-### 认证与访问控制
+### 认证与访问控制 {#authentication-and-access-control}
 
 3. **保持注册关闭。** Open WebUI 会在第一个用户注册后自动关闭注册。任何新账户默认角色都是 `pending`，必须经过管理员明确批准后才能访问功能。对可信网络之外可访问的实例，不要重新开启开放注册。[详情](#registration)
 
@@ -819,33 +843,33 @@ docker pull ghcr.io/open-webui/open-webui:main
 
 6. **定期审查用户账户和权限。** 清理不活跃账户，审计组成员关系，并确认工作区权限仍符合预期。可使用 SCIM 预配，通过身份提供商自动化账户生命周期管理。[详情](#access-control)
 
-### Tools、Functions 与扩展
+### Tools、Functions 与扩展 {#tools-functions-and-extensions}
 
 7. **将 Tool 和 Function 的创建权限严格限制给管理员，导入前审查所有代码。** 默认只有管理员可以创建、导入和管理 Tools / Functions。不要给不可信用户开放工作区权限。把第三方 Tool 看作与你基础设施上运行的其他代码一样进行审查。未经查看源码，不要导入任何 Tool。[详情](#tools-functions-and-pipelines)
 
 8. **如果不需要，就关闭自动依赖安装和代码执行。** 设置 `ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false`，阻止 Tool 在运行时拉取任意包。如果部署不需要聊天中执行代码，直接全部关闭；如果需要，请保持默认 `pyodide` 引擎，因为它运行在浏览器端而不是服务器端。在没有额外保护 Jupyter 实例的情况下，不要切换到 Jupyter 引擎。保持 direct connections 与 direct tool servers 关闭。[详情](#dependency-installation)
 
-### 数据保护
+### 数据保护 {#data-protection}
 
 9. **限制数据共享、文件上传和 API 密钥访问。** 设置最大文件大小、文件数量和允许的文件扩展名。若业务上不需要，可关闭社区共享（`ENABLE_COMMUNITY_SHARING=false`）和管理员批量导出（`ENABLE_ADMIN_EXPORT=false`）。将 API 密钥创建权限限制在管理员范围，并启用端点限制，让每个密钥只能访问特定路由。[详情](#data-sharing-and-export)
 
 10. **对静态数据进行加密，并保持定期备份。** 对 SQLite 使用 SQLCipher；对 PostgreSQL 使用磁盘级加密或透明数据加密。定期备份，并将备份存放在独立安全域中，同时定期演练恢复流程。[详情](#sqlcipher)
 
-### 外发网络控制
+### 外发网络控制 {#outbound-network-controls}
 
 11. **保持 SSRF 防护、外发 TLS 校验和网络限制开启。** 不要启用本地网页抓取。默认配置会阻止访问私有 IP 范围和云厂商元数据端点；你应继续将自身内部域名加入黑名单。不要关闭外发连接的证书校验。对于隔离网络环境，请启用离线模式以禁用所有外发调用。[详情](#ssrf-prevention)
 
-### 供应链与变更管理
+### 供应链与变更管理 {#supply-chain-and-change-management}
 
 12. **使用官方容器镜像，或直接从源码构建。** 从 `ghcr.io/open-webui/open-webui` 或 Docker Hub 上的 `openwebui/open-webui` 拉取镜像。若要完全掌控供应链，可使用官方 Dockerfile 从[源码](https://github.com/open-webui/open-webui)构建。不要使用非官方或第三方镜像。[详情](#container-hardening)
 
 13. **固定到具体版本，并在部署前验证更新。** 使用带标签的发行版，而不是 `:main` 或 `:latest`。升级前查看变更日志，先在预发布环境验证，再推广到生产，并确保具备回滚能力。生产环境不要自动更新。[详情](#keeping-open-webui-updated)
 
-### 容器与基础设施
+### 容器与基础设施 {#container-and-infrastructure}
 
 14. **以非 root 身份运行，并在分段网络中使用最小权限。** 使用非 root UID/GID，尽量采用只读文件系统挂载，移除不必要的 Linux capabilities，并设置 `--security-opt=no-new-privileges`。对数据目录应用严格权限（如 `0700`）。将 PostgreSQL 部署在独立网络段，并使用强凭据，避免直接暴露到公网。[详情](#non-root-execution)
 
-### 可观测性与事件响应
+### 可观测性与事件响应 {#observability-and-incident-response}
 
 15. **将审计日志至少开启到 METADATA 级别，并转发到你的 SIEM。** 始终记录认证端点。配置保留策略，并将日志转发到组织现有的日志基础设施。使用 JSON 日志格式，如果条件允许，还可以启用 OpenTelemetry 做分布式追踪。[详情](#audit-logging)
 

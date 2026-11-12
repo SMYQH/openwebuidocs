@@ -3,7 +3,7 @@ sidebar_position: 50
 title: "Tailscale"
 ---
 
-# Tailscale 集成
+# Tailscale 集成 {#tailscale-integration}
 
 **从任意设备私密、加密地访问 Open WebUI——无需开放端口，也无需手动管理证书。**
 
@@ -15,7 +15,7 @@ title: "Tailscale"
 
 ---
 
-## 前提条件
+## 前提条件 {#prerequisites}
 
 | 要求 | 详情 |
 | :--- | :--- |
@@ -25,9 +25,9 @@ title: "Tailscale"
 
 ---
 
-## 快速开始
+## 快速开始 {#quick-start}
 
-### 1. 安装 Tailscale
+### 1. 安装 Tailscale {#1-install-tailscale}
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -56,7 +56,7 @@ curl -fsSL https://tailscale.com/install.sh | sh
   </TabItem>
 </Tabs>
 
-### 2. 连接服务器
+### 2. 连接服务器 {#2-connect-the-server}
 
 在运行 Open WebUI 的机器上执行：
 
@@ -70,7 +70,7 @@ sudo tailscale up
 tailscale status
 ```
 
-### 3. 访问 Open WebUI
+### 3. 访问 Open WebUI {#3-access-open-webui}
 
 在同一 tailnet 上的任意设备中打开：
 
@@ -82,7 +82,7 @@ http://my-server.tail1234.ts.net:8080
 
 ---
 
-## 使用 Tailscale 启用 HTTPS
+## 使用 Tailscale 启用 HTTPS {#https-with-tailscale}
 
 Tailscale 可以为你的 tailnet 主机名自动配置受信任的 Let's Encrypt 证书，而无需反向代理。
 
@@ -101,18 +101,18 @@ sudo tailscale serve https / http://localhost:8080
 
 ---
 
-## 通过 Tailscale 实现认证（SSO）
+## 通过 Tailscale 实现认证（SSO） {#authentication-via-tailscale-sso}
 
 [Tailscale Serve](https://tailscale.com/kb/1242/tailscale-serve) 可以充当一个带认证能力的反向代理。当请求经过 `tailscale serve` 时，Tailscale 会自动写入 `Tailscale-User-Login` header，其值为当前已认证用户的邮箱地址。Open WebUI 可以把这个 header 作为单点登录信任来源，因此同一 tailnet 中的用户无需再单独输入 Open WebUI 密码即可登录。
 
-### 工作原理
+### 工作原理 {#how-it-works}
 
 1. 一个 Tailscale sidecar container 与 Open WebUI 一起运行
 2. Tailscale Serve 把 HTTPS 流量代理到 Open WebUI，并注入身份 headers
 3. Open WebUI 读取 `Tailscale-User-Login` 和 `Tailscale-User-Name` 来识别用户
 4. 用户首次访问时会被自动注册并自动登录
 
-### Docker Compose 配置
+### Docker Compose 配置 {#docker-compose-setup}
 
 先创建一个 `tailscale/serve.json` 文件，用于配置 Tailscale Serve 把流量代理到 Open WebUI：
 
@@ -183,7 +183,7 @@ volumes:
 
 ---
 
-## Tailscale Funnel（可选的公网访问）
+## Tailscale Funnel（可选的公网访问） {#tailscale-funnel-optional-public-access}
 
 如果你想在客户端**无需安装 Tailscale** 的情况下对外公开 Open WebUI，可使用 [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) 将 `tailscale serve` 暴露到公网：
 
@@ -199,7 +199,7 @@ Funnel 会让你的 Open WebUI 对**整个互联网**开放。启用前，请务
 
 ---
 
-## 快速参考
+## 快速参考 {#quick-reference}
 
 | 操作 | 命令 / 值 |
 | :--- | :--- |
@@ -215,7 +215,7 @@ Funnel 会让你的 Open WebUI 对**整个互联网**开放。启用前，请务
 
 ---
 
-## 相关页面
+## 相关页面 {#related-pages}
 
 - [HTTPS using Tailscale](/reference/https/tailscale) —— 专注于 HTTPS / TLS 的参考页
 - [SSO (Trusted Header)](/features/authentication-access/auth/sso#tailscale-serve) —— 通用 trusted header 配置

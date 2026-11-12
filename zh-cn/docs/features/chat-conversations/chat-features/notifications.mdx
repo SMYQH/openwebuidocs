@@ -1,0 +1,92 @@
+---
+sidebar_position: 15
+title: "Notifications"
+---
+
+# Notifications
+
+当 Open WebUI 中发生你在意的事情时，通知会把 webhook 发送到你真正会看的地方，比如 Slack、Discord 或你自己的端点。每个用户自行配置自己的**目标**，并选择哪些事件会送达它们，于是一个漫长的回答、一条频道消息或一次日历提醒，都能在你转去做别的事之后仍然找到你。
+
+Webhook 通知**默认关闭**，而且需要两次主动开启：管理员启用该功能，然后每个用户添加自己的目标。
+
+侧边栏中的[收件箱](#inbox)无需任何设置。同一设置页面上的 **Browser Notifications** 与 **Notification Sound** 两个开关是独立的、互不相关，并且由你的浏览器处理。开启 **Notification Sound** 后，**Notification sound style** 用来选择提示音（**Chime** 为默认值，另有 **Soft**、**Bell** 或 **Tap**），旁边的播放按钮可以试听。点击浏览器通知会聚焦 Open WebUI 并打开对应的聊天、频道或日历。
+
+:::note "Always Play Notification Sound" 没有开关
+如果你的账户开启了 **Always Play Notification Sound**，那么即使你正处于活跃状态也会播放提示音，而界面上并没有可以将其关闭的控件。
+:::
+
+## 收件箱 {#inbox}
+
+侧边栏顶部的铃铛按钮会打开你的收件箱，并显示一个徽标，标注自你上次打开以来新到的条目数量。它会列出：针对你条目的评论、对你评论的回复以及评论中的提及；频道中的提及与回复；失败的自动化运行（点击可打开该次运行）；以及你的日历提醒。被静音的频道只会送来提及。只有在你仍能打开其所指向的条目时，该条目才会显示。
+
+收件箱默认对所有用户开启。管理员可以在 **Admin Settings > General > Notifications** 中关闭它，或通过 [`ENABLE_NOTIFICATIONS`](/reference/env-configuration#enable_notifications) 关闭。
+
+## 启用通知 {#enabling-notifications}
+
+| 要求 | 位置 |
+|---|---|
+| 已启用 [`ENABLE_USER_WEBHOOKS`](/reference/env-configuration#enable_user_webhooks)（默认：关闭） | **Settings > Admin > General** 中的 **User Webhooks** 开关 |
+| `features.webhooks` 权限（[`USER_PERMISSIONS_FEATURES_USER_WEBHOOKS`](/reference/env-configuration#user_permissions_features_user_webhooks)，默认：关闭） | **Admin Panel > Users > Groups > Permissions** |
+
+管理员始终拥有该权限。在功能关闭期间，通知端点会返回 `404 Not Found`，因此看起来就像该功能并不存在。
+
+## 目标 {#targets}
+
+一个目标由一个 webhook URL 以及它应当接收的事件构成。可在 **Settings > Notifications** 中配置。你可以设置多个，例如一个用于频道消息的工作 Slack，以及一个用于聊天完成的个人端点，其中一个会被标记为默认。
+
+每个目标包含：
+
+- **一个 URL**，保存时会进行校验。读取时它会被**掩码**，只显示协议、主机和末尾几个字符，因此已存储的 webhook 密钥不会被 API 再次交出，也不会在界面中完整显示。原样保存一个被掩码的 URL 会保留已存储的那个。
+- 它订阅的**事件**。
+- **是否启用**，用于在不删除目标的情况下暂停它。
+- **自动投递方式**，取 `away` 或 `always`。
+- **用于 notify 的目标 ID**，即 `notify` 工具用来挑选该目标的名字。留空时会使用该 webhook 的主机名。保存时会转为小写。每一段由字母、数字、`_` 和 `-` 以外的字符构成的连续内容都会变成一个 `-`，因此 `Work/Slack` 会保存为 `work-slack`。
+
+使用 **Send Test** 触发一条测试通知，确认端点可用。
+
+### 事件 {#events}
+
+可以订阅五个事件：
+
+| 事件 | 触发时机 |
+|---|---|
+| `chat.finished` | 一次聊天回复生成完毕。 |
+| `chat.failed` | 一次聊天回复以错误结束，包括模型提供方返回错误状态或无法访问的情况。通知会带上错误文本和一个指向该聊天的链接。 |
+| `channel.message` | 某个人或某个机器人账号在你所属的频道中发布了消息，包括群组频道和私信。你只要打开过或发布过消息，就视为已加入该标准频道。 |
+| `calendar.alert` | 某个日历事件提醒被触发。 |
+| `automation.run_failed` | 你的某个[自动化任务](/features/chat-conversations/chat-features/automations)失败了，无论是按计划触发还是手动运行。通知会带上该自动化任务的名称和错误信息。 |
+
+### 投递方式：away 还是 always {#delivery-away-or-always}
+
+- **`away`**（默认）只在你**当前不活跃**时发送，因此不会就你正在看着的事情打扰你。如果你在最近大约三分钟内使用过 Open WebUI，就视为活跃。
+- **`always`** 无视状态一律发送。
+
+`channel.message` 是例外：它忽略投递模式，只有当你没有打开任何 Open WebUI 标签页时才会发送。在设置为[**仅提及**](/features/channels#muting-a-channel)的频道中，只有 @提及你的消息会被发送。
+
+## `notify` 工具 {#the-notify-tool}
+
+当模型上启用了 **Notifications** 内置工具分类时，模型可以通过调用 `notify` 自行给你发送通知，参数包括一条消息、可选的标题以及可选的目标 id。目标留空即使用你的默认目标。
+
+这与事件订阅是有意分开的：
+
+:::info `notify` 不理会事件与投递模式
+模型发出的通知会送往一个已启用的目标，无论该目标是否订阅了任何事件，也无论你当前是否活跃。事件订阅和 `away` 投递只管**自动**通知。如果你不想让模型通知你，请禁用该目标，或关闭模型上的 **Notifications** 分类。
+:::
+
+把它与[定时器](/features/chat-conversations/chat-features/timers)搭配，是日后得知某件事的常见做法：定时器把提示词触发回聊天中，模型在有了答案后调用 `notify`。
+
+## 在聊天中管理通知 {#managing-notifications-from-chat}
+
+### 可用工具 {#available-tools}
+
+| 工具 | 用途 |
+|---|---|
+| `notify` | 向你配置好的某个目标发送一条通知。 |
+
+### 使用要求 {#requirements}
+
+- 已启用 [`ENABLE_USER_WEBHOOKS`](/reference/env-configuration#enable_user_webhooks)。
+- 拥有 `features.webhooks` 权限（管理员始终满足）。
+- 在模型上启用了 **Notifications** 内置工具分类。
+- 原生函数调用，且聊天从界面发起。
+- 至少有一个已启用的目标。

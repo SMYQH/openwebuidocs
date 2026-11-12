@@ -15,14 +15,14 @@ Ollama 上唯一真正的 **DeepSeek-R1** 模型是此处提供的 **671B 版本
 
 ---
 
-## 第 1 步：安装 Llama.cpp
+## 第 1 步：安装 Llama.cpp {#step-1-install-llamacpp}
 
 您可以选择：
 
 - [下载预编译二进制文件](https://github.com/ggerganov/llama.cpp/releases)
 - **或自行构建**：按照 [Llama.cpp 构建指南](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md)中的说明操作
 
-## 第 2 步：下载 UnslothAI 提供的模型
+## 第 2 步：下载 UnslothAI 提供的模型 {#step-2-download-the-model-provided-by-unslothai}
 
 前往 [Unsloth 的 Hugging Face 页面](https://huggingface.co/unsloth/DeepSeek-R1-GGUF)下载适合的 DeepSeek-R1 **动态量化版本**。本教程使用 **1.58 位（131GB）** 版本，该版本高度优化且出乎意料地功能完整。
 
@@ -68,11 +68,11 @@ DeepSeek-R1-GGUF/
 
 :::
 
-## 第 3 步：确保 Open WebUI 已安装并运行
+## 第 3 步：确保 Open WebUI 已安装并运行 {#step-3-make-sure-open-webui-is-installed-and-running}
 
 如果您尚未安装 **Open WebUI**，不用担心！设置非常简单。只需按照 [Open WebUI 文档](/)操作。安装完成后，启动应用程序——我们将在后续步骤中连接它以与 DeepSeek-R1 模型交互。
 
-## 第 4 步：使用 Llama.cpp 服务模型
+## 第 4 步：使用 Llama.cpp 服务模型 {#step-4-serve-the-model-using-llamacpp}
 
 模型下载完成后，下一步是使用 **Llama.cpp 的服务器模式**运行它。开始之前：
 
@@ -141,7 +141,7 @@ http://127.0.0.1:10000
 
 请**保持此终端会话运行**，因为它为后续所有步骤提供模型服务。
 
-## 第 5 步：将 Llama.cpp 连接到 Open WebUI
+## 第 5 步：将 Llama.cpp 连接到 Open WebUI {#step-5-connect-llamacpp-to-open-webui}
 
 1. 进入 Open WebUI 中的 **Admin Settings**。
 2. 导航至 **Connections > OpenAI Connections**。
@@ -163,7 +163,7 @@ http://127.0.0.1:10000
 
 ---
 
-## 示例：生成响应
+## 示例：生成响应 {#example-generating-responses}
 
 现在您可以使用 Open WebUI 的聊天界面与 **DeepSeek-R1 动态 1.58 位模型**交互。
 
@@ -171,7 +171,7 @@ http://127.0.0.1:10000
 
 ---
 
-## 注意事项
+## 注意事项 {#notes-and-considerations}
 
 - **性能：**
   在个人硬件上运行像 DeepSeek-R1 这样的 131GB 超大模型将会**很慢**。即使使用 M4 Max（128GB RAM），推理速度也相当有限。但它能正常工作这一事实本身就证明了 UnslothAI 优化工作的价值。

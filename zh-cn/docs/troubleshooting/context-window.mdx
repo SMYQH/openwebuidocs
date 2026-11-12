@@ -3,9 +3,9 @@ sidebar_position: 17
 title: "上下文窗口 / 提示过长"
 ---
 
-# “The prompt is too long” / 模型上下文长度超限
+# “The prompt is too long” / 模型上下文长度超限 {#the-prompt-is-too-long-model-context-length-exceeded}
 
-## 你看到的现象
+## 你看到的现象 {#what-youre-seeing}
 
 常见错误包括：
 
@@ -14,9 +14,9 @@ title: "上下文窗口 / 提示过长"
 - `Input is too long for the model`
 - `context length exceeded`
 
-这些错误来自**模型提供商**（OpenAI、Anthropic、Google、你的 Ollama 服务器、GLM-4/5.x 等），**不是 Open WebUI 本身报出的**。提供商会统计你发送的全部 token，一旦超过模型上下文窗口，就会拒绝请求。
+这些错误来自**模型提供商**（OpenAI、Anthropic、Google、你的 Ollama 服务器、GLM-5.x 等），**不是 Open WebUI 本身报出的**。提供商会统计你发送的全部 token，一旦超过模型上下文窗口，就会拒绝请求。
 
-## 为什么会发生
+## 为什么会发生 {#why-it-happens}
 
 模型看到的 “prompt” 是**整个对话**，不是你刚输入的那条消息。每次发送新消息时，Open WebUI 都会一并转发：
 
@@ -29,11 +29,11 @@ title: "上下文窗口 / 提示过长"
 
 聊天越长，历史越长。大型附件或很长的工具输出，也可能在单轮内就把整个上下文窗口吃满。一旦这些内容总和超过模型支持范围，请求就会被提供商拒绝。
 
-## 为什么 Open WebUI 不会自动帮你截断
+## 为什么 Open WebUI 不会自动帮你截断 {#why-open-webui-doesnt-auto-truncate-for-you}
 
 Open WebUI 并**不会**静默截断你的对话。它提供了一个可选且默认关闭的机制——**上下文压缩**（下文会介绍）——它会对较旧的消息做*摘要*而不是直接丢弃。除这个可选项外，Open WebUI 默认不做任何自动上下文裁剪，这是有意设计的。以下是为什么盲目裁剪不是内置默认功能的原因：
 
-1. **每个模型使用的 tokenizer 都不同。** 同一段文本在 OpenAI（tiktoken）、Anthropic、Gemini、GLM、Llama 系列、Mistral、Qwen 等模型里的 token 数都不一样。真正精确的裁剪器必须为每个现有的提供商适配每个模型的 tokenizer。搞错了就是静默的数据损坏。
+1. **每个模型使用的 tokenizer 都不同。** 同一段文本在 OpenAI（tiktoken）、Anthropic、Gemini、GLM、Qwen、Mistral 等模型里的 token 数都不一样。真正精确的裁剪器必须为每个现有的提供商适配每个模型的 tokenizer。搞错了就是静默的数据损坏。
 2. **每个模型的上下文窗口都不同。** 8k、32k、128k、200k、1M——还不包括预留的输出 token、提供商侧额外开销以及多模态内容。
 3. **所有人都需要不同的截断策略。** 我们见过的合理诉求包括：
    - 按 **token 数** 裁剪
@@ -48,7 +48,7 @@ Open WebUI 并**不会**静默截断你的对话。它提供了一个可选且�
 
 并不存在一个对所有部署、所有用户、所有模型都正确的统一策略。这就是为什么上下文管理是**可选加入**的：内置的上下文压缩涵盖了常见的摘要替换场景，而对于其他需求，filter hook 让你可以选择完全符合自己需求的策略。
 
-## 内置选项：上下文压缩（Context Compaction）
+## 内置选项：上下文压缩（Context Compaction） {#the-built-in-option-context-compaction}
 
 Open WebUI 提供了一个可选的**上下文压缩**功能，帮你处理最常见的场景。当聊天的预估上下文超过 token 阈值时，它会请求一个模型对较旧的消息进行摘要，然后将对话从摘要加上最近的消息继续下去，让长聊天在不溢出窗口的情况下持续进行。
 
@@ -60,7 +60,7 @@ Open WebUI 提供了一个可选的**上下文压缩**功能，帮你处理最�
 
 这是摘要替换策略（上述第 4 种），内置于系统中。如果你需要不同的策略（硬上限、优先裁剪附件、按模型窗口），请改用 filter Function。
 
-### 工作原理
+### 工作原理 {#how-it-works}
 
 - **它在服务端运行，每次请求触发一次，在聊天中不可见。** 你的完整对话仍会存储并在 UI 中显示；压缩只改变在给定轮次发送给模型的内容。没有徽章或标记指示发生过压缩。
 - **它保留滚动检查点，不会抹除历史。** 当超过阈值时，活动窗口中最旧的约 60% 会被摘要，最近的约 40%（至少两条消息）保持原样，切分点不会将助手的工具调用与其结果分开。摘要作为检查点保存到消息上。后续轮次从该检查点（摘要及其后面的消息）恢复，如果窗口再次超过阈值，它会再次压缩，将之前的摘要合并到新摘要中并向前移动检查点。
@@ -68,7 +68,7 @@ Open WebUI 提供了一个可选的**上下文压缩**功能，帮你处理最�
 - **你的 system prompt、工具和技能得以保留。** 压缩仅摘要对话消息。模型、工作区和文件夹的系统提示词、可用工具及其指令、技能以及任何 RAG、网络搜索或记忆上下文，都在每次请求时在压缩之后重新组装，因此它们永远不会被摘要掉。唯一的例外是聊天历史中较旧的**工具调用结果**：被压缩块中的过往工具结果会被精简到摘要中，但模型仍然可以调用的内容不受影响。
 - **失败安全。** 如果摘要器没有返回任何内容，Open WebUI 会回退到一个简短的机械摘要（之前的摘要加上被丢弃消息的截断片段）。如果压缩完全出错，则记录日志，请求会以完整的、未压缩的历史继续处理。
 
-## 官方支持的方式：使用 filter Function
+## 官方支持的方式：使用 filter Function {#the-supported-way-use-a-filter-function}
 
 在 Open WebUI 中，上下文管理通过 [**过滤器函数**](/features/extensibility/plugin/functions/filter) 完成。`inlet()` 会在每次请求发送给模型之前运行，它会收到完整的 `body`（包括 `body["messages"]`），你可以在这里自由修改内容。这就是正确的扩展点。
 
@@ -82,7 +82,7 @@ Open WebUI 提供了一个可选的**上下文压缩**功能，帮你处理最�
 
 上述多数策略都已有社区过滤器可用，发布在 [Open WebUI 社区](https://openwebui.com/) 上。安装一个、配置阀门参数，就能直接使用。如果没有完全满足你的策略，再把最接近的那个复制到 **Functions** 管理页里修改即可——过滤器就是纯 Python，通常很容易调。
 
-### 最小示例：“保留最新 N 条”过滤器
+### 最小示例：“保留最新 N 条”过滤器 {#minimal-example-newest-n-turns-filter}
 
 <details>
 <summary>显示完整过滤器代码（保留最近 N 条非 system 消息）</summary>
@@ -156,7 +156,7 @@ class Filter:
 从 v0.9.6 起，Open WebUI 在重建会话时会做一次对账：未配对的 `tool_use` / `tool_result` 条目在请求发出前就会被丢弃，因此恢复一个中途被打断的 tool call 不会再硬性失败。结构良好的历史不会受到影响。这与上面的过滤器是独立的——过滤器仍然重要，因为**裁剪**过程会在重建之后产生新的孤立条目，而服务端那次对账（更早跑，针对的是已存储的输出）看不到这些。如果仍然遇到该错误，请确认你的版本是 v0.9.6 或更高。
 :::
 
-### 稍复杂一些：按模型做 token 预算
+### 稍复杂一些：按模型做 token 预算 {#slightly-more-involved-per-model-token-budget}
 
 按轮数裁剪容易理解，但在真实场景中往往不够准确——40 轮单句对话也许能放进 8k token，而附带一个 200 页 PDF 的 5 轮对话就不行。更实用的策略是：“尽量保留全部内容，直到快超出模型窗口时，再从最旧的非 system 消息开始删除”。
 
@@ -365,7 +365,7 @@ Open WebUI 传给 `body["model"]` 的，不一定是提供商原始 id。如果�
 
 本示例已经使用 `tiktoken`（通过 `encoding_for_model(model_id)` 以及一个带缓存的回退编码）来计数，对 tiktoken 认识的 OpenAI 模型是精确的，对其他模型也是一个不错的近似。如果你需要为非 OpenAI 提供商做更高精度的统计，可以把 `_estimate_tokens` 替换为该提供商自己的 tokenizer（Anthropic 的、Gemini 的，或本地模型使用的 `transformers` tokenizer）。对于带 headroom 的裁剪预算而言，tiktoken 近似已经足够保证你留在限制之内，*前提是你为上述 RAG / 工具追加内容预留了足够 headroom*。
 
-## 你大概率更需要社区过滤器，而不是直接用这里的示例
+## 你大概率更需要社区过滤器，而不是直接用这里的示例 {#you-almost-certainly-want-a-community-filter-not-this-one}
 
 本页的两个示例故意保持最小化——它们主要用于说明 `inlet()` 钩子的基本形态，以及那个不太显眼但非常重要的细节（tool-call 修复）。在真实部署里，**不要从零自己写一个**，也不要直接把这里的示例原样投入生产。先去 [Open WebUI 社区](https://openwebui.com/) 找一个已经经过实战验证的上下文管理过滤器。
 
@@ -388,14 +388,14 @@ Open WebUI 传给 `body["model"]` 的，不一定是提供商原始 id。如果�
 在挑选上下文管理过滤器时，可以搜这些关键词：*context window*、*trim*、*summarize*、*conversation length*、*token budget*、*history limiter*，以及你正在使用的模型提供商名称。并按社区站点中的热度排序——下载量最高的那些，往往已经帮你踩过不少坑。
 :::
 
-## 用户最终会体验到什么
+## 用户最终会体验到什么 {#what-users-will-experience}
 
 - **有过滤器时**：旧轮次会在请求到达模型前被静默删除 / 摘要 / 替换。用户仍会像平常一样继续聊天；模型只是按照你的策略“忘记”一部分旧历史。
 - **没有过滤器时**：长对话最终一定会撞到提供商的上下文上限，并返回 “prompt is too long” 错误。用户届时只能新开一个聊天。
 
 这两种用户体验都合理。选择与你部署目标相符的那一种即可。
 
-## 相关内容
+## 相关内容 {#related}
 
 - [过滤器函数](/features/extensibility/plugin/functions/filter) —— `inlet()` / `stream()` / `outlet()` 的完整参考
 - [Open WebUI 社区](https://openwebui.com/) —— 浏览并安装社区过滤器，包括上下文管理类

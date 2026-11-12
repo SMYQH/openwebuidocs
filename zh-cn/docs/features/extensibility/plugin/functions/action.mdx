@@ -3,7 +3,7 @@ sidebar_position: 2
 title: "Action Function"
 ---
 
-# 🎬 Action Function：自定义交互按钮
+# 🎬 Action Function：自定义交互按钮 {#action-function-custom-interactive-buttons}
 
 :::danger ⚠️ 关键安全警告
 **Action Functions 会在你的服务器上执行任意 Python 代码。** 只有管理员才能创建 Function。请只从可信来源安装，并在导入前审查代码。恶意 Function 可能访问文件系统、窃取数据，甚至危及整套系统。完整说明请参阅 [Plugin Security Warning](/features/extensibility/plugin/)。
@@ -30,7 +30,7 @@ Actions 是由管理员管理的函数，用于为聊天界面增加自定义交
 	</a>
 </div>
 
-## Action Function 架构
+## Action Function 架构 {#action-function-architecture}
 
 Actions 是基于 Python 的函数，可直接集成到聊天消息工具栏中。它们在服务端执行，并能通过实时事件与用户交互、修改消息内容，以及访问完整的 Open WebUI 上下文。
 
@@ -53,7 +53,7 @@ class Action:
         return {"content": "Modified message content"}
 ```
 
-### Action 方法参数
+### Action 方法参数 {#action-method-parameters}
 
 `action` 方法会收到多个参数，用于提供执行上下文：
 
@@ -65,11 +65,15 @@ class Action:
 - **`__request__`** —— FastAPI request 对象，可访问 headers 等
 - **`__id__`** —— Action ID（适用于 multi-action functions）
 
-## 事件系统集成
+### 返回值 {#return-value}
+
+若要改变对话中显示的内容，请返回 `{"messages": [...]}`，其中每一项都携带某条已有消息的 `id` 以及要覆盖到它上面的字段。其它任何返回值都会交还给调用方并被丢弃，因此单独写一个 `{"content": "..."}` 什么也不会发生。唯一的例外是带有 `Content-Disposition: inline` 的 `HTMLResponse`，它会变成一个[富 UI 嵌入](/features/extensibility/plugin/development/rich-ui)。对于只负责产生副作用或更新事件发射器的操作，什么都不返回也没有问题。
+
+## 事件系统集成 {#event-system-integration}
 
 Actions 可以使用 Open WebUI 的实时事件系统构建交互体验：
 
-### 事件发射器（`__event_emitter__`）
+### 事件发射器（`__event_emitter__`） {#event-emitter-\_\_event_emitter\_\_}
 
 **有关 Events 与 Event emitters 的完整说明，请参阅 [Events and Event Emitters](/features/extensibility/plugin/development/events/)。**
 
@@ -90,7 +94,7 @@ async def action(self, body: dict, __event_emitter__=None):
     })
 ```
 
-### 事件调用（`__event_call__`）
+### 事件调用（`__event_call__`） {#event-call-\_\_event_call\_\_}
 
 在执行过程中请求用户输入或确认：
 
@@ -116,9 +120,9 @@ async def action(self, body: dict, __event_call__=None):
     })
 ```
 
-## Action 类型与配置方式
+## Action 类型与配置方式 {#action-types-and-configurations}
 
-### 单一 Action
+### 单一 Action {#single-actions}
 
 标准 action 只有一个 `action` 方法：
 
@@ -128,7 +132,7 @@ async def action(self, body: dict, **kwargs):
     return {"content": "Action result"}
 ```
 
-### 多重 Action
+### 多重 Action {#multi-actions}
 
 Functions 可以通过 `actions` 数组定义多个子 action：
 
@@ -155,12 +159,12 @@ async def action(self, body: dict, __id__=None, **kwargs):
         return {"content": "Translation: ..."}
 ```
 
-### 全局 Action 与模型级 Action
+### 全局 Action 与模型级 Action {#global-vs-model-specific-actions}
 
 - **全局 Action** —— 在 Action 设置中打开全局开关后，它会对所有用户与所有模型生效
 - **模型专属 Action** —— 也可以在模型设置中仅为特定模型启用
 
-### 按钮显示顺序（Priority）
+### 按钮显示顺序（Priority） {#button-display-order-priority}
 
 助手消息下方的 action 按钮会根据 `priority` valve 值按**升序**排序——值越小越靠前（最左侧），值越大越靠后（最右侧）。默认值是 `0`。
 
@@ -173,9 +177,9 @@ class Valves(BaseModel):
 
 这与 [filter functions](/features/extensibility/plugin/functions/filter) 使用的是同一套优先级机制，因此整个插件系统的行为保持一致。若未定义 `priority` valve，则默认值为 `0`，同优先级之间按 **function ID 字母序** 排序。
 
-## 高级能力
+## 高级能力 {#advanced-capabilities}
 
-### 后台任务执行
+### 后台任务执行 {#long-running-actions}
 
 对于耗时较长的操作，actions 可以与任务系统结合：
 
@@ -193,7 +197,7 @@ async def action(self, body: dict, __event_emitter__=None):
     return {"content": f"Processing completed: {result}"}
 ```
 
-### 文件与媒体处理
+### 文件与媒体处理 {#file-and-media-handling}
 
 Actions 可以处理上传文件并生成新的媒体内容：
 
@@ -222,7 +226,7 @@ async def action(self, body: dict):
     }
 ```
 
-### 用户上下文与权限
+### 用户上下文与权限 {#user-context-and-permissions}
 
 Actions 可以读取用户信息并遵循权限控制：
 
@@ -235,7 +239,7 @@ async def action(self, body: dict, __user__=None):
     return {"content": f"Hello {user_name}, admin action completed"}
 ```
 
-## 示例：指定 Action Frontmatter {#example---specifying-action-frontmatter}
+## 示例：指定 Action Frontmatter {#example-specifying-action-frontmatter}
 
 每个 Action function 都可以在顶部 docstring 中写入元数据，用于自定义其在 Open WebUI 中的显示和行为。
 
@@ -316,9 +320,9 @@ class Action:
 
 </details>
 
-## 最佳实践
+## 最佳实践 {#best-practices}
 
-### 错误处理
+### 错误处理 {#error-handling}
 
 始终在 action 中做好错误处理：
 
@@ -336,20 +340,20 @@ async def action(self, body: dict, __event_emitter__=None):
         return {"content": "Action encountered an error"}
 ```
 
-### 性能注意事项
+### 性能注意事项 {#performance-considerations}
 
 - 对 I/O 操作使用 async / await
 - 为外部 API 调用设置超时
 - 对长时间任务提供进度反馈
 - 对重型处理考虑使用后台任务
 
-### 用户体验
+### 用户体验 {#user-experience}
 
 - 始终通过 event emitters 提供清晰反馈
 - 对破坏性操作使用确认对话框
 - 提供有帮助的错误消息
 
-## 与 Open WebUI 其他能力的集成
+## 与 Open WebUI 其他能力的集成 {#integration-with-open-webui-features}
 
 Actions 可以与其他 Open WebUI 能力无缝协作：
 - **Models** —— Actions 可按模型启用，也可全局启用

@@ -5,7 +5,7 @@ title: "🛡️ 安全"
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 安全
+# 安全 {#security}
 <ThemedImage
   alt="Open WebUI 安全：策略、隐私控制、供应商处置以及映射为信任边界的已接受风险"
   sources={{
@@ -20,7 +20,7 @@ Open WebUI 认真对待用户数据的安全和机密性。我们的技术架构
 
 ---
 
-## 📋 安全策略
+## 📋 安全策略 {#security-policy}
 
 **漏洞报告、披露和解决的交战规则。**
 
@@ -38,7 +38,7 @@ Open WebUI 认真对待用户数据的安全和机密性。我们的技术架构
 
 ---
 
-## 📄 供应商处置
+## 📄 供应商处置 {#supply-chain-and-security-scanners}
 
 **我们对外部报告的 CVE 和安全声明的正式评估。**
 
@@ -54,7 +54,13 @@ Open WebUI 认真对待用户数据的安全和机密性。我们的技术架构
 
 ---
 
-## 📦 供应链与安全扫描器
+### 漏洞数据库中被驳回的 CVE {#rejected-cves-in-vulnerability-databases}
+
+若干漏洞数据库和终端安全产品不会重新处理 CVE 的撤回，因此那些已被发布 CNA 正式驳回的标识符，仍会在针对 Open WebUI 的活动发现中持续显示。本页记录了哪些数据库受到影响、我们每一次联系尝试及其结果，以及如何在几秒内把任意记录与 cve.org 上的权威状态进行核对。
+
+[**阅读漏洞数据库中被驳回的 CVE →**](/security/supply-chain-security/vulnerability-databases)
+
+## 📦 供应链与安全扫描器 {#chat-data-privacy--encryption}
 
 **我们对自动化供应链扫描器标志（socket.dev 及类似工具）的官方立场。**
 
@@ -66,11 +72,11 @@ Open WebUI 认真对待用户数据的安全和机密性。我们的技术架构
 | 🧪 **未经证实的分类** | "潜在恶意软件"横幅的解释 |
 | 🧰 **默认沙箱化** | Pyodide WASM 默认；服务器端执行为可选加入 |
 
-[**阅读供应链与安全扫描器 →**](./supply-chain-security)
+[**阅读供应链与安全扫描器 →**](/security/supply-chain-security)
 
 ---
 
-## 🔐 聊天数据隐私与加密
+## 🔐 聊天数据隐私与加密 {#vendor-dispositions}
 
 **Open WebUI 如何存储聊天数据以及哪些控制可以减少暴露。**
 
@@ -87,7 +93,7 @@ Open WebUI 认真对待用户数据的安全和机密性。我们的技术架构
 
 ---
 
-## ⚖️ 已知与已接受风险
+## ⚖️ 已知与已接受风险 {#known-amp-accepted-risks}
 
 **我们已尽可能在技术上缓解、然后正式接受的残余风险。**
 

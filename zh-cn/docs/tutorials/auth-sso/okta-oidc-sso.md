@@ -3,27 +3,27 @@ sidebar_position: 10
 title: "Okta SSO（OIDC）"
 ---
 
-# 🔗 Okta OIDC SSO 集成
+# 🔗 Okta OIDC SSO 集成 {#okta-oidc-sso-integration}
 
 :::warning
 本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
-## 概述
+## 概述 {#overview}
 
 本文档介绍将 Okta OIDC 单点登录（SSO）与 Open WebUI 集成所需的步骤。同时涵盖基于 Okta 群组成员资格管理 Open WebUI 用户群组的**可选**功能，包括**即时（JIT）群组创建**。按照这些步骤操作后，用户可以使用其 Okta 凭据登录 Open WebUI。如果您选择启用群组同步（`ENABLE_OAUTH_GROUP_MANAGEMENT`），用户在登录时将根据其 Okta 群组自动分配到 Open WebUI 中的相关群组。如果同时启用了 JIT 群组创建（`ENABLE_OAUTH_GROUP_CREATION`），Okta 声明中存在但 Open WebUI 中缺失的群组将在登录过程中自动创建。
 
-### 前提条件
+### 前提条件 {#prerequisites}
 
 *   一个新的或现有的 Open WebUI 实例。
 *   具有创建和配置应用程序管理员权限的 Okta 账户。
 *   对 OIDC、Okta 应用程序配置和 Open WebUI 环境变量有基本了解。
 
-## 配置 Okta
+## 配置 Okta {#setting-up-okta}
 
 首先，需要在您的 Okta 组织内配置一个 OIDC 应用程序，并设置群组声明以将群组信息传递给 Open WebUI。
 
-### 1. 在 Okta 中创建/配置 OIDC 应用程序
+### 1. 在 Okta 中创建/配置 OIDC 应用程序 {#1-createconfigure-oidc-application-in-okta}
 
 1.  登录 Okta 管理控制台。
 2.  导航至 **Applications > Applications**。
@@ -38,7 +38,7 @@ title: "Okta SSO（OIDC）"
 
 6.  确保在 **Assignments** 标签下将正确的用户或群组分配给该应用程序。
 
-### 2. 向 ID 令牌添加群组声明
+### 2. 向 ID 令牌添加群组声明 {#2-add-a-groups-claim-to-the-id-token}
 
 **（可选）** 要在 Open WebUI 中根据 Okta 群组启用自动群组管理，需要将 Okta 配置为在 ID 令牌中发送用户的群组成员资格。如果您只需要 SSO 登录并希望在 Open WebUI 中手动管理群组，可以跳过本节。
 
@@ -55,7 +55,7 @@ title: "Okta SSO（OIDC）"
 
 *有关更高级的群组声明配置，请参阅 Okta 文档中的[自定义令牌](https://developer.okta.com/docs/guides/customize-tokens-returned-from-okta/main/)和[群组函数](https://developer.okta.com/docs/reference/okta-expression-language/#group-functions)。*
 
-### 3. 应用 MFA（例如 Google Authenticator）
+### 3. 应用 MFA（例如 Google Authenticator） {#3-applying-mfa-eg-google-authenticator}
 
 为增强安全性，您可以为通过 Okta 登录 Open WebUI 的用户强制执行多因素认证（MFA）。以下示例演示如何将 Google Authenticator 设置为附加因素。
 
@@ -84,7 +84,7 @@ title: "Okta SSO（OIDC）"
 
 :::
 
-## 配置 Open WebUI
+## 配置 Open WebUI {#configuring-open-webui}
 
 要在 Open WebUI 中启用 Okta OIDC SSO，需要设置以下核心环境变量。如果希望启用可选的群组管理功能，还需要额外的变量。
 
@@ -198,7 +198,7 @@ ENABLE_LOGIN_FORM="false"
 
 设置这些环境变量后，重启你的 Open WebUI 实例。
 
-## 验证
+## 验证 {#verification}
 
 1.  访问你的 Open WebUI 登录页面，你应该能看到一个标有"Login with Okta"的按钮（或者你为 `OAUTH_PROVIDER_NAME` 设置的任何名称）。
 2.  点击该按钮，并通过 Okta 登录流程完成身份验证。
@@ -206,7 +206,7 @@ ENABLE_LOGIN_FORM="false"
 4.  如果 `ENABLE_OAUTH_GROUP_MANAGEMENT` 为 true，请以非管理员用户身份登录。他们在 Open WebUI 中的群组现在应严格反映其在 Okta 中的当前群组成员资格（任何位于 *不在* Okta 声明中的群组的成员资格将被移除）。如果同时启用了 `ENABLE_OAUTH_GROUP_CREATION`，用户 Okta 声明中存在但此前在 Open WebUI 中并不存在的群组应已自动创建。请注意，管理员用户的群组不会通过 SSO 自动更新。
 5.  如果遇到问题，请查看 Open WebUI 服务器日志中与 OIDC 或群组相关的错误。
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
 *   **400 Bad Request / 重定向 URI 不匹配：** 仔细检查 Okta 应用程序中的 **Sign-in redirect URI** 是否与 `<your-open-webui-url>/oauth/oidc/callback` 完全一致。
 *   **群组未同步：** 确认 `OAUTH_GROUP_CLAIM` 环境变量与 Okta ID 令牌设置中配置的声明名称一致。确保用户在群组变更后已退出并重新登录——更新 OIDC 需要重新走一次登录流程。请记住管理员群组不会被同步。

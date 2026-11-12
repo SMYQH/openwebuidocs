@@ -3,13 +3,13 @@ sidebar_position: 50
 title: "Redis WebSocket 支持"
 ---
 
-# 🔗 Redis WebSocket 支持
+# 🔗 Redis WebSocket 支持 {#redis-websocket-support}
 
 :::warning
 本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
-## 概述
+## 概述 {#overview}
 
 本文介绍将 Redis 与 Open WebUI 集成以支持 WebSocket 所需的步骤。按照这些步骤操作，您将能够在 Open WebUI 实例中启用 WebSocket 功能，实现客户端与应用之间的实时通信和更新。
 
@@ -17,7 +17,7 @@ title: "Redis WebSocket 支持"
 
 Redis 在 Open WebUI 中服务于两个不同的目的，了解何时需要它对于正确部署至关重要。有关所有扩展要求（PostgreSQL、Redis、向量数据库、存储）的高层概述，请参阅 [扩展 Open WebUI](/getting-started/advanced-topics/scaling) 指南。
 
-### 单实例部署
+### 单实例部署 {#prerequisites}
 
 如果您以**单实例**模式运行 Open WebUI，`UVICORN_WORKERS=1`（默认值），则**基本功能不需要 Redis**。大多数操作不依赖 Redis 就能正常运行。
 
@@ -60,14 +60,6 @@ Redis 在 Open WebUI 中服务于两个不同的目的，了解何时需要它�
 - 实时聊天更新丢失
 
 :::
-
-### 前提条件
-
-- 一个有效的 Open WebUI 实例（运行 1.0 或更高版本）
-- 一个 Redis 容器（本示例使用 `redis:7-alpine`）
-- 系统上已安装 Docker Compose（版本 2.0 或更高）
-- 用于 Open WebUI 和 Redis 通信的 Docker 网络
-- 对 Docker、Redis 和 Open WebUI 有基本了解
 
 ### 关键：Redis 服务器配置 {#critical-redis-server-configuration}
 
@@ -156,7 +148,15 @@ appendfsync everysec
 
 :::
 
-## 设置 Redis
+### 前提条件 {#critical-memory-eviction-policy}
+
+- 一个有效的 Open WebUI 实例（运行 1.0 或更高版本）
+- 一个 Redis 容器（本示例使用 `redis:7-alpine`）
+- 系统上已安装 Docker Compose（版本 2.0 或更高）
+- 用于 Open WebUI 和 Redis 通信的 Docker 网络
+- 对 Docker、Redis 和 Open WebUI 有基本了解
+
+## 设置 Redis {#setting-up-redis}
 
 要为 WebSocket 支持配置 Redis，需要创建一个包含以下内容的 `docker-compose.yml` 文件：
 
@@ -252,7 +252,7 @@ docker network create openwebui-network
 
 要在 Open WebUI 中启用 Redis 支持，需要根据部署类型配置不同的环境变量。
 
-### 基本配置（所有部署）
+### 基本配置（所有部署） {#basic-configuration-all-deployments}
 
 对于使用 Redis 的**所有部署**（单实例或多实例），设置以下基本环境变量：
 
@@ -262,7 +262,7 @@ REDIS_URL="redis://redis:6379/0"
 
 此变量配置用于应用状态管理、会话存储和实例间协调的主要 Redis 连接。
 
-### WebSocket 配置
+### WebSocket 配置 {#websocket-configuration}
 
 要专门启用 WebSocket 支持，添加以下额外的环境变量：
 
@@ -302,7 +302,7 @@ CORS_ALLOW_ORIGIN="https://my-open-webui.com"
 
 :::
 
-### 可选配置
+### 可选配置 {#optional-configuration}
 
 ```bash
 REDIS_KEY_PREFIX="open-webui"
@@ -310,7 +310,7 @@ REDIS_KEY_PREFIX="open-webui"
 
 `REDIS_KEY_PREFIX` 允许多个 Open WebUI 实例共享同一个 Redis 实例而不会发生键冲突。在 Redis 集群模式中，前缀格式为 `{prefix}:`（例如 `{open-webui}:config:*`），以确保配置键的多键操作在同一哈希槽内执行。
 
-### Sentinel 故障转移配置
+### Sentinel 故障转移配置 {#sentinel-failover-configuration}
 
 :::danger 关键：Sentinel 部署的套接字超时
 
@@ -342,14 +342,14 @@ WEBSOCKET_REDIS_OPTIONS='{"socket_connect_timeout": 5}'
 
 :::
 
-#### 重试和重连逻辑
+#### 重试和重连逻辑 {#retry-and-reconnect-logic}
 
 为了增强 Sentinel 故障转移期间的弹性——即新主节点正在选举和提升的时间窗口——您可以配置重试行为，防止应用程序过快耗尽重连尝试次数。
 
 - **`REDIS_SENTINEL_MAX_RETRY_COUNT`**：设置使用 Sentinel 时 Redis 操作的最大重试次数（默认：`2`）。
 - **`REDIS_RECONNECT_DELAY`**：在重试尝试之间添加可选延迟（以**毫秒**为单位）（例如 `REDIS_RECONNECT_DELAY=500`）。这可以防止紧密的重试循环，否则可能在新主节点就绪之前压垮事件循环或阻塞应用程序。
 
-#### 连接健康检查
+#### 连接健康检查 {#connection-health-checks}
 
 如果您的 Redis 服务器配置了 `timeout`（推荐——见上文），空闲时间超过该超时的连接池连接将被服务器端回收。没有健康检查时，下一个获取这些死连接的请求将因 `ConnectionError: Connection reset by peer` 而失败。
 
@@ -372,7 +372,7 @@ WEBSOCKET_REDIS_OPTIONS='{"socket_connect_timeout": 5}'
 
 :::
 
-### Redis 集群模式
+### Redis 集群模式 {#redis-cluster-mode}
 
 对于使用 Redis 集群（包括 **AWS Elasticache Serverless** 等托管服务）的部署，使用以下配置启用集群模式：
 
@@ -403,11 +403,11 @@ REDIS_CLUSTER="true"
 
 注意 `rediss://` 方案（双 's'），它启用 TLS，这是 Elasticache Serverless 所必需的。
 
-#### OpenTelemetry 支持
+#### OpenTelemetry 支持 {#opentelemetry-support}
 
 Redis 集群模式与 OpenTelemetry 仪表完全兼容。启用 `ENABLE_OTEL` 后，无论使用单 Redis 实例、Redis Sentinel 还是 Redis 集群模式，Redis 操作都会被正确追踪。
 
-### 完整配置示例
+### 完整配置示例 {#complete-example-configuration}
 
 以下是显示所有 Redis 相关环境变量的完整示例：
 ```bash
@@ -436,7 +436,7 @@ REDIS_KEY_PREFIX="open-webui"
 
 对于 Redis Sentinel 部署，请确保设置 `REDIS_SOCKET_CONNECT_TIMEOUT` 以防止主节点故障转移期间应用程序挂起。
 
-#### Redis 集群模式示例
+#### Redis 集群模式示例 {#redis-cluster-mode-example}
 
 对于 Redis 集群部署（包括 AWS Elasticache Serverless）：
 
@@ -455,7 +455,7 @@ WEBSOCKET_REDIS_CLUSTER="true"
 REDIS_KEY_PREFIX="open-webui"
 ```
 
-### Docker 运行示例
+### Docker 运行示例 {#docker-run-example}
 
 使用 Docker 运行 Open WebUI 时，将其连接到同一 Docker 网络并包含所有必要的 Redis 变量：
 
@@ -523,9 +523,9 @@ REDIS_URL="redis://redis:6379/0"  # UVICORN_WORKERS > 1 时必须
 
 :::
 
-## 验证
+## 验证 {#verification}
 
-### 验证 Redis 连接
+### 验证 Redis 连接 {#verify-redis-connection}
 
 首先，确认 Redis 实例正在运行并接受连接：
 
@@ -535,11 +535,11 @@ docker exec -it redis redis-cli -p 6379 ping
 
 如果 Redis 实例运行正常，此命令应输出 `PONG`。
 
-### 验证 Open WebUI 配置
+### 验证 Open WebUI 配置 {#verify-open-webui-configuration}
 
 使用正确的 Redis 配置启动 Open WebUI 实例后，检查日志以确认集成成功：
 
-#### 检查通用 Redis 连接
+#### 检查通用 Redis 连接 {#check-for-general-redis-connection}
 
 查找表明 Redis 正在用于应用程序状态的日志消息：
 
@@ -547,7 +547,7 @@ docker exec -it redis redis-cli -p 6379 ping
 docker logs open-webui 2>&1 | grep -i redis
 ```
 
-#### 检查 WebSocket Redis 连接
+#### 检查 WebSocket Redis 连接 {#check-for-websocket-redis-connection}
 
 如果已启用 WebSocket 支持，您应看到此特定日志消息：
 
@@ -561,7 +561,7 @@ DEBUG:open_webui.socket.main:Using Redis to manage websockets.
 docker logs open-webui 2>&1 | grep "Using Redis to manage websockets"
 ```
 
-### 验证 Redis 键
+### 验证 Redis 键 {#verify-redis-keys}
 
 您还可以验证 Open WebUI 实际上正在向 Redis 写入数据：
 
@@ -587,9 +587,9 @@ docker exec -it redis redis-cli --scan --pattern "open-webui*"
 
 ## 故障排除 {#troubleshooting}
 
-### 常见问题与解决方案
+### 常见问题与解决方案 {#common-issues-and-solutions}
 
-#### 问题："Connection to Redis failed"
+#### 问题："Connection to Redis failed" {#issue-connection-to-redis-failed}
 
 **症状：**
 
@@ -605,7 +605,7 @@ docker exec -it redis redis-cli --scan --pattern "open-webui*"
 4. 确保 `REDIS_URL` 使用正确的容器名称，而非 `127.0.0.1` 或 `localhost`
 5. 检查两个容器是否在同一 Docker 网络上
 
-#### 问题：页面刷新后"会话丢失"（使用 UVICORN_WORKERS > 1 时）
+#### 问题：页面刷新后"会话丢失"（使用 UVICORN_WORKERS > 1 时） {#issue-websockets-not-working}
 
 **症状：**
 
@@ -622,7 +622,7 @@ docker exec -it redis redis-cli --scan --pattern "open-webui*"
 REDIS_URL="redis://redis:6379/0"
 ```
 
-#### 问题："WebSocket 不工作"
+#### 问题："WebSocket 不工作" {#issue-multiple-open-webui-instances-interfering-with-each-other}
 
 **症状：**
 
@@ -639,7 +639,7 @@ REDIS_URL="redis://redis:6379/0"
 2. 检查日志中是否有：`DEBUG:open_webui.socket.main:Using Redis to manage websockets.`
 3. 验证 Redis 可从 Open WebUI 容器访问
 
-#### 问题："多个 Open WebUI 实例互相干扰"
+#### 问题："多个 Open WebUI 实例互相干扰" {#issue-redis-memory-usage-growing-continuously}
 
 **症状：**
 
@@ -658,7 +658,7 @@ REDIS_KEY_PREFIX="openwebui-prod"
 REDIS_KEY_PREFIX="openwebui-dev"
 ```
 
-#### 问题："Redis 内存使用持续增长"
+#### 问题："Redis 内存使用持续增长" {#issue-max-number-of-clients-reached-after-daysweeks-of-operation}
 
 **症状：**
 
@@ -692,7 +692,7 @@ REDIS_KEY_PREFIX="openwebui-dev"
 
 4. 不要对正在运行的实例执行 `FLUSHDB`/`FLUSHALL`：这会清除活动会话、撤销列表和锁。如果需要清理累积的状态，请在维护窗口重启 Redis 容器。
 
-#### 问题：运行数天/数周后出现 "max number of clients reached"
+#### 问题：运行数天/数周后出现 "max number of clients reached" {#issue-connection-reset-by-peer-errors-on-first-request-after-idle-period}
 
 **症状：**
 
@@ -774,7 +774,7 @@ REDIS_HEALTH_CHECK_INTERVAL=60
 
 健康检查间隔还应短于应用程序与 Redis 之间任何防火墙或负载均衡器的空闲超时。
 
-### 其他资源
+### 其他资源 {#additional-resources}
 
 - [Redis 文档](https://redis.io/docs)
 - [使用 Valkey](/tutorials/integrations/valkey)：开源、兼容 Redis 的即插即用替代方案
@@ -782,7 +782,7 @@ REDIS_HEALTH_CHECK_INTERVAL=60
 - [Open WebUI 环境变量](/reference/env-configuration/)
 - [sysctl 文档](https://man7.org/linux/man-pages/man8/sysctl.8.html)
 
-### 获取帮助
+### 获取帮助 {#getting-help}
 
 如果按照本指南操作后仍遇到问题：
 

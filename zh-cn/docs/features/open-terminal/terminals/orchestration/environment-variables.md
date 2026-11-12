@@ -3,7 +3,7 @@ sidebar_position: 2
 title: "环境变量"
 ---
 
-# 环境变量
+# 环境变量 {#environment-variables}
 
 策略环境变量被传递到每用户的 Open Terminal 容器中。它们是原始字符串，不是 shell 命令。
 
@@ -18,7 +18,7 @@ title: "环境变量"
 
 不要在值周围添加 `'` 或 `"`，除非引号字符是你希望容器看到的值的一部分。
 
-## 转发行为
+## 转发行为 {#forwarding-behavior}
 
 使用策略 `env` 放置应出现在每用户 Open Terminal 容器中的值。编排器进程环境变量配置编排器本身。
 
@@ -28,7 +28,7 @@ title: "环境变量"
 策略环境变量对用户在其终端内是可见的。除非允许用户查看和使用它们，否则不要将机密放在策略中。
 :::
 
-## 常见的 Open Terminal 环境变量
+## 常见的 Open Terminal 环境变量 {#common-open-terminal-env-vars}
 
 | 变量 | 用途 |
 | :--- | :--- |
@@ -42,7 +42,7 @@ title: "环境变量"
 | `OPEN_TERMINAL_PIP_PACKAGES` | 容器启动时安装的空格分隔的 Python 包 |
 | `OPEN_TERMINAL_NPM_PACKAGES` | 容器启动时全局安装的空格分隔的 npm 包 |
 
-## 自动注入的资源变量
+## 自动注入的资源变量 {#automatically-injected-resource-vars}
 
 这些由编排器根据策略的 `cpu_limit` 和 `memory_limit` 自动设置，以便系统提示词或工具可以读取容器的资源预算。它们不是用户配置的。
 

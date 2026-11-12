@@ -5,14 +5,14 @@ title: "💾 导入与导出"
 
 Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平台迁移对话。
 
-## 进入导入与导出
+## 进入导入与导出 {#accessing-import--export}
 
 1. 点击侧边栏左下角的**用户名**或头像
 2. 在菜单中选择 **Settings**
 3. 进入 **Data Controls** 标签
 4. 使用 **Import Chats** 或 **Export Chats** 按钮
 
-## 导出聊天
+## 导出聊天 {#exporting-chats}
 
 点击 **Export Chats** 按钮后，系统会将你的所有对话导出为一个 JSON 文件。该备份包含：
 
@@ -24,7 +24,7 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 建议你定期导出聊天，尤其是在进行重大更新或迁移之前。
 :::
 
-## 导入聊天
+## 导入聊天 {#importing-chats}
 
 点击 **Import Chats** 按钮并选择一个 JSON 文件，即可恢复对话。Open WebUI 支持导入以下来源：
 
@@ -32,17 +32,17 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 - **ChatGPT 导出文件**：来自 OpenAI ChatGPT 的导出对话（会自动识别并转换）
 - **自定义 JSON 文件**：任何遵循下文预期结构的 JSON 文件
 
-### 导入行为
+### 导入行为 {#import-behavior}
 
 - 导入的聊天会追加到现有对话中（不会覆盖已有数据）
 - 每个导入聊天都会分配新的唯一 ID，因此重复导入同一文件会产生重复聊天
 - 如果是 ChatGPT 导出文件，系统会自动检测格式并完成转换
 
-## 聊天导入 JSON Schema
+## 聊天导入 JSON Schema {#chat-import-json-schema}
 
 导入文件必须是一个**JSON 数组**，其中每个元素都是聊天对象。系统接受两种格式：**标准格式**（Open WebUI 导出使用）与**旧格式**。
 
-### 标准格式（推荐）
+### 标准格式（推荐） {#standard-format-recommended}
 
 数组中的每个对象都应包含一个 `chat` 键，用于承载对话数据：
 
@@ -87,7 +87,7 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 ]
 ```
 
-### 旧格式
+### 旧格式 {#legacy-format}
 
 如果数组中的对象**没有** `chat` 键，那么整个对象会被直接视为聊天数据本身（也就是系统会自动将其包装为 `{ "chat": <object> }`）：
 
@@ -121,9 +121,9 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 ]
 ```
 
-### 字段说明
+### 字段说明 {#field-reference}
 
-#### 顶层聊天对象（标准格式）
+#### 顶层聊天对象（标准格式） {#top-level-chat-object-standard-format}
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
@@ -134,7 +134,7 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 | `created_at` | integer \| null | ❌ | 聊天创建时间的 Unix 时间戳（秒） |
 | `updated_at` | integer \| null | ❌ | 聊天最后更新时间的 Unix 时间戳（秒） |
 
-#### Chat Data 对象
+#### Chat Data 对象 {#chat-data-object}
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
@@ -143,14 +143,14 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 | `history` | object | ✅ | 包含消息树（见下方 History） |
 | `options` | object | ❌ | 聊天级选项 / 参数 |
 
-#### History 对象
+#### History 对象 {#history-object}
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `currentId` | string | ✅ | 当前活动对话分支中最后一条消息的 ID |
 | `messages` | object | ✅ | 消息 ID → 消息对象的映射（见下方 Message） |
 
-#### Message 对象
+#### Message 对象 {#message-object}
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
@@ -168,11 +168,11 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 消息采用的是**树形结构**，而非扁平列表。每条消息通过 `parentId` 指向父消息，通过 `childrenIds` 指向子消息。这让 Open WebUI 能支持分支式对话（例如编辑一条消息后得到不同回复）。`history.currentId` 字段指向当前活动分支中的最后一条消息。
 :::
 
-### ChatGPT 导出格式
+### ChatGPT 导出格式 {#chatgpt-export-format}
 
 当数组中的第一个对象包含 `mapping` 键时，系统会自动识别其为 ChatGPT 导出格式。你无需手动转换 ChatGPT 导出文件——直接导入即可，Open WebUI 会自动完成转换。
 
-### 最小可用示例
+### 最小可用示例 {#minimal-working-example}
 
 最小有效导入文件如下：
 

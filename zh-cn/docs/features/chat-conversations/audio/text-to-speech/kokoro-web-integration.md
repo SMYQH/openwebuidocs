@@ -9,13 +9,13 @@ title: "Kokoro Web - Open WebUI 的轻量 TTS 集成"
 
 :::
 
-## 什么是 `Kokoro Web`？
+## 什么是 `Kokoro Web`？ {#what-is-kokoro-web}
 
 [Kokoro Web](https://github.com/eduardolat/kokoro-web) 为强大的 [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) 文本转语音模型提供了一个轻量、兼容 OpenAI 的 API，可与 Open WebUI 无缝集成，为 AI 对话带来自然流畅的语音。
 
-## 🚀 两步完成集成
+## 🚀 两步完成集成 {#two-step-integration}
 
-### 1. 部署 Kokoro Web API（一个命令）
+### 1. 部署 Kokoro Web API（一个命令） {#1-deploy-kokoro-web-api-one-command}
 
 ```yaml
 services:
@@ -33,7 +33,7 @@ services:
 
 运行：`docker compose up -d`
 
-### 2. 连接 Open WebUI（30 秒）
+### 2. 连接 Open WebUI（30 秒） {#2-connect-openwebui-30-seconds}
 
 1. 在 Open WebUI 中进入 `管理面板` → `设置` → `音频`
 2. 按如下方式配置：
@@ -47,7 +47,7 @@ services:
 
 **完成！你的 Open WebUI 现在已经具备 AI 语音能力。**
 
-## 🌍 支持的语言
+## 🌍 支持的语言 {#supported-languages}
 
 Kokoro Web 支持 8 种语言，并为每种语言提供优化语音：
 
@@ -62,7 +62,7 @@ Kokoro Web 支持 8 种语言，并为每种语言提供优化语音：
 
 每种语言都有专门语音，以获得更好的发音和自然度。完整语言专属语音列表请查看 [GitHub 仓库](https://github.com/eduardolat/kokoro-web)，或直接使用 [Kokoro Web Demo](https://voice-generator.pages.dev) 试听并创建自定义语音。
 
-## 💾 针对不同硬件优化的模型
+## 💾 针对不同硬件优化的模型 {#optimized-models-for-any-hardware}
 
 你可以根据硬件条件选择合适模型：
 
@@ -77,7 +77,7 @@ Kokoro Web 支持 8 种语言，并为每种语言提供优化语音：
 | model_q4 | 4-bit matmul | 305 MB | 高质量方案 |
 | model | fp32 | 326 MB | 最高质量（更慢） |
 
-## ✨ 安装前先试听
+## ✨ 安装前先试听 {#try-before-you-install}
 
 访问 [**Kokoro Web Demo**](https://voice-generator.pages.dev) 可立即试听全部语音。这个 Demo：
 
@@ -86,13 +86,13 @@ Kokoro Web 支持 8 种语言，并为每种语言提供优化语音：
 - **零安装** —— 打开网页即可开始
 - **包含全部功能** —— 可立即测试任意语音或语言
 
-## 还需要更多帮助？
+## 还需要更多帮助？ {#need-more-help}
 
 如需更多选项、语音定制指南或高级设置，请访问 [GitHub repository](https://github.com/eduardolat/kokoro-web)。
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 连接问题
+### 连接问题 {#connection-issues}
 
 如果 Open WebUI 无法访问 Kokoro Web：
 
@@ -100,7 +100,7 @@ Kokoro Web 支持 8 种语言，并为每种语言提供优化语音：
 - **Docker Compose（同一网络）：** 使用 `http://kokoro-web:3000/api/v1`
 - **Linux Docker：** 使用宿主机 IP 地址
 
-### 语音无法工作
+### 语音无法工作 {#voice-not-working}
 
 1. 确认 Kokoro Web 配置和 Open WebUI 设置中的 secret API 密钥一致
 2. 直接测试 API：

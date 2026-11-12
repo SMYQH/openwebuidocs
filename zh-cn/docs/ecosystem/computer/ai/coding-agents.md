@@ -3,13 +3,13 @@ title: 使用你的编码代理订阅
 sidebar_position: 3
 ---
 
-# 使用你的编码代理订阅
+# 使用你的编码代理订阅 {#use-your-coding-agent-subscription}
 
 已经在为 Codex、Claude Code、Cursor、Grok、OpenCode、Cline 或 Pi 付费？将该订阅用作原生聊天后端；无需 API 密钥。在运行 Computer 的机器上安装并登录代理的 CLI，然后前往**设置 → 管理 → 代理**添加一个配置文件。它的模型会像其他提供商一样出现在模型选择器中，ID 格式为 `agent:<profile-id>/<model>`。
 
 一个配置文件包含：**名称**、**类型**（哪个代理）、**配置文件 ID**（用于模型 ID 的标识符）、**命令**（名称或绝对路径；支持 `~`）和可选的**主目录**（见下文）。某些类型会添加额外字段：Claude Code 有**启动参数**，Cursor 有**API 端点**，OpenCode 有**服务器 URL** 和密码。
 
-## 各代理设置
+## 各代理设置 {#per-agent-setup}
 
 CLI 必须安装在**运行 Computer 的主机上**并登录，而不是在你浏览用的手机或笔记本电脑上。
 
@@ -47,7 +47,7 @@ pip install claude-agent-sdk
 
 命令：`pi`。模型命名空间为 `provider/id`。
 
-## 检测状态
+## 检测状态 {#detection-statuses}
 
 每个配置文件显示一个实时状态（结果缓存约 30 秒）：
 
@@ -60,12 +60,12 @@ pip install claude-agent-sdk
 
 配置文件模式：**auto**（仅在就绪时可选择）、**enabled**（强制）或 **disabled**。
 
-## 模型、会话和主目录字段
+## 模型、会话和主目录字段 {#models-sessions-and-the-home-field}
 
 - **模型：** 将配置文件中的模型列表留空以从 CLI 自动检测，或手动固定列表。模型 ID 格式如 `agent:claude/claude-sonnet-4-5`。
 - **会话自动恢复。** 每个后端返回一个会话或线程 ID，存储在聊天中并在下一个轮次传回（Claude Code SDK 会话、Codex 线程恢复、Cursor/Grok/Cline 会话加载）。关闭标签页，在手机上打开聊天，代理会从它离开的地方继续。
 - **主目录：** 将配置文件指向替代的代理配置/登录目录。这对于第二个账户或与你默认的 `~` 配置分开的独立登录很有用。
 
-## 任何其他代理仍然可以工作
+## 任何其他代理仍然可以工作 {#any-other-agent-still-works}
 
 Gemini CLI、Kilo Code 或任何其他终端代理可以在[终端标签页](/ecosystem/computer/workspace/terminals)中正常运行；只是它不会成为具有模型选择和会话恢复功能的原生聊天后端。

@@ -26,35 +26,34 @@ volumes:
   open-webui:
 ```
 
-### 使用 Slim 镜像
+### 运行预发布镜像 {#running-the-pre-release-image}
 
-如果你的环境存储空间或带宽有限，可以使用不预打包模型的 slim 镜像：
+`:dev` 是 Open WebUI 的预发布通道，实际上就是每夜构建：每项改动都会先进入 `dev` 分支，然后才会进入其他地方，而发布当天的 `dev` 就是即将发布的版本。在第二个实例上运行它可以让你提前看到那个版本，你反馈的问题也会在正式发布之前而不是之后得到修复。
+
+更改标签，并且重要的是，给它一个**独立的数据卷和独立的端口**：
 
 ```yaml
 services:
-  openwebui:
-    image: ghcr.io/open-webui/open-webui:main-slim
+  openwebui-dev:
+    image: ghcr.io/open-webui/open-webui:dev
     ports:
-      - "3000:8080"
+      - "3001:8080"
     volumes:
-      - open-webui:/app/backend/data
+      - open-webui-dev:/app/backend/data
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - WEBUI_SECRET_KEY=your-dev-secret-key
+    restart: unless-stopped
 volumes:
-  open-webui:
+  open-webui-dev:
 ```
 
-:::note
-
-**说明：** slim 镜像会在首次使用时下载所需模型（whisper、embedding 模型），因此第一次启动可能更慢，但镜像体积会明显更小。
-
+:::warning 绝不要让 dev 指向你的生产数据卷
+开发构建可能包含发布镜像无法回读的数据库迁移，因此共用数据卷可能让你无法再退回 `:main`。请像上面那样，让 `open-webui-dev` 使用自己的数据卷。
 :::
 
-## 启动服务
-
-运行以下命令启动服务：
-
-```bash
-docker compose up -d
-```
+把它作为第二个服务与你的常规服务并列添加，两者就会同时运行，分别占用 3000 和 3001 端口。若发现任何看起来不对的地方，请在 [GitHub](https://github.com/open-webui/open-webui/issues) 上反馈。预发布的测试充分程度取决于有多少人选择安装它，因此这是运维人员能够贡献的最有价值的一件事。
 
 ## 辅助脚本
 
@@ -110,3 +109,33 @@ deploy:
     ```bash
     docker rmi ghcr.io/open-webui/open-webui:main
     ```
+
+### 使用 Slim 镜像 {#helper-scripts}
+
+如果你的环境存储空间或带宽有限，可以使用不预打包模型的 slim 镜像：
+
+```yaml
+services:
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main-slim
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui:/app/backend/data
+volumes:
+  open-webui:
+```
+
+:::note
+
+**说明：** slim 镜像会在首次使用时下载所需模型（whisper、embedding 模型），因此第一次启动可能更慢，但镜像体积会明显更小。
+
+:::
+
+## 启动服务 {#uninstall}
+
+运行以下命令启动服务：
+
+```bash
+docker compose up -d
+```

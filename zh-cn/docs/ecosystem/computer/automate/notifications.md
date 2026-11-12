@@ -3,11 +3,11 @@ title: 通知和 webhook
 sidebar_position: 4
 ---
 
-# 通知和 webhook
+# 通知和 webhook {#notifications-and-webhooks}
 
 无需保持标签页打开即可收到通知。在**设置 → 通知**中设置一个目标（一个 webhook 或你的一个消息机器人），有两种方式让消息到达它：代理自行决定，或事件自动触发。浏览器推送通知也可以工作。
 
-## 代理可以自己通知你
+## 代理可以自己通知你 {#the-agent-can-notify-you-itself}
 
 代理有一个 **notify** 工具，使通知成为指令的一部分，而不是管道：
 
@@ -15,7 +15,7 @@ sidebar_position: 4
 
 代理会编写消息，仅在你描述的条件满足时发送到你的默认目标。这在普通聊天中有效（"构建完成时通知我"），尤其在[定时任务](./scheduled-tasks)中，它将每日运行变成一个零噪音的警报，只在有消息时触发。
 
-## 事件通知
+## 事件通知 {#event-notifications}
 
 对于全面覆盖，存在两个自动事件：
 
@@ -24,7 +24,7 @@ sidebar_position: 4
 
 定时任务运行也由这些相同的事件覆盖，因为每次运行都会创建一个真实的聊天。每个目标有自己的事件过滤器，所以一个 webhook 可以只接收失败事件，而另一个接收所有事件。
 
-## 目标类型
+## 目标类型 {#target-types}
 
 **Webhook**：一个 URL，为每个事件接收一个 POST。如果 URL 是 Slack、Discord、Google Chat 或 Microsoft Teams 的 webhook URL，有效负载会自动格式化为该服务；粘贴传入的 webhook URL 即可。任何其他 URL 都会收到通用 JSON：
 
@@ -42,7 +42,7 @@ sidebar_position: 4
 
 **机器人**：通过你的一个[消息机器人](./messaging-bots)传递到你选择的聊天。当你已经在 Telegram 或 Slack 上给你的电脑发消息，并希望完成通知出现在同一个线程应用中时很有用。
 
-## 传递模式
+## 传递模式 {#delivery-mode}
 
 每个目标可选择：
 

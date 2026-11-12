@@ -6,7 +6,7 @@ title: 🎨 品牌指南
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# Open WebUI 设计指南
+# Open WebUI 设计指南 {#open-webui-design-guidelines}
 
 <ThemedImage
   alt="Open WebUI 品牌指南：官方资产、正确命名、留白空间及使用规则"
@@ -19,42 +19,110 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 欢迎阅读 Open WebUI 设计指南。本文档提供了基本规则和建议，以确保 Open WebUI 品牌资产的使用保持一致和清晰。
 
-## 品牌资产
+## 品牌资产 {#brand-assets}
 
 以下是官方的 Open WebUI 品牌资产。提供这些资产是为了在经过批准的文档、集成和社区材料中使用。
 
-### 徽标
+### 图标 {#icon}
 
-![Open WebUI 徽标](/images/open-webui-logo.png)
+<div
+  style={{
+    background: '#fff',
+    border: '1px solid var(--ifm-color-emphasis-200)',
+    borderRadius: '8px',
+    display: 'flex',
+    justifyContent: 'center',
+    margin: '1rem 0',
+    padding: '2rem',
+  }}
+>
+  <img
+    alt="Open WebUI 图标"
+    src={useBaseUrl('/images/open-webui-icon.png')}
+    style={{ maxWidth: '100%', width: '180px' }}
+  />
+</div>
 
-- 官方 Open WebUI 徽标
-- 请在干净的浅色背景上使用，以获得最佳的辨识度
-- 在徽标周围保留足够的留白空间
+- Open WebUI 主图标
+- 推荐用于应用图标、favicon、头像、社交资料、启动器、集成以及紧凑的品牌展示场景
+- 当 Open WebUI 名称出现在周围的文字或界面中时，请使用图标
+- 在图标周围保留足够的留白空间
 - 请勿修改、重新着色、裁剪、拉伸或添加特效
-
-[下载透明徽标](/images/open-webui-logo-transparent.png)
-
-### 图标
-
-![Open WebUI 图标](/images/open-webui-icon.png)
 
 [下载图标](/images/open-webui-icon.png)
 
-### 资产来源
+### 横向 Logo {#horizontal-logo}
 
-- 官方品牌资产可在项目仓库中获取
-- 始终使用我们提供的文件，而不是手动重新制作资产
-- 如果缺少某项资产或需要不同的格式，请通过官方项目渠道联系 Open WebUI 团队
+<div
+  style={{
+    background: '#fff',
+    border: '1px solid var(--ifm-color-emphasis-200)',
+    borderRadius: '8px',
+    display: 'flex',
+    justifyContent: 'center',
+    margin: '1rem 0',
+    padding: '2rem',
+  }}
+>
+  <img
+    alt="Open WebUI 横向徽标"
+    src={useBaseUrl('/images/open-webui-wordmark.png')}
+    style={{ maxWidth: '100%', width: '560px' }}
+  />
+</div>
 
-## 品牌名称使用
+- Open WebUI 官方横向徽标
+- 当徽标需要与 Open WebUI 名称同时出现在同一个素材中时使用
+- 建议在浅色、简洁的背景上使用，以获得最佳可读性
+- 在徽标周围保留足够的留白空间
+- 请勿修改、重新着色、裁剪、拉伸或添加特效
+
+[下载横向徽标](/images/open-webui-wordmark.png)
+
+### 徽标资源 {#logo-asset}
+
+<div
+  style={{
+    background: '#fff',
+    border: '1px solid var(--ifm-color-emphasis-200)',
+    borderRadius: '8px',
+    display: 'flex',
+    justifyContent: 'center',
+    margin: '1rem 0',
+    padding: '1.5rem',
+  }}
+>
+  <img
+    alt="Open WebUI 徽标资源"
+    src={useBaseUrl('/images/open-webui-logo.png')}
+    style={{ maxWidth: '100%', width: '96px' }}
+  />
+</div>
+
+- Open WebUI 官方徽标资源
+- 用于已经依赖该徽标文件的现有素材和展示位
+- 新的品牌展示位请优先使用图标或横向徽标
+- 请勿修改、重新着色、裁剪、拉伸或添加特效
+
+[下载徽标资源](/images/open-webui-logo.png)
+
+[下载透明背景徽标资源](/images/open-webui-logo-transparent.png)
+
+### 资源来源 {#asset-source}
+
+- 官方品牌资源可在项目仓库中获取
+- 请始终使用提供的文件，而不是手动重新制作资源
+- 如果缺少某项资源或需要其他格式，请通过官方项目渠道联系 Open WebUI 团队
+
+## 品牌名称使用 {#brand-name-usage}
 
 官方名称为 **Open WebUI**。
 
-### 正确用法：
+### 正确用法： {#correct-usage}
 - Open WebUI (在提及品牌或产品时)
 - open-webui (通常用于代码仓库或包名称)
 
-### 错误变体 (请勿使用)：
+### 错误变体 (请勿使用)： {#incorrect-variations-do-not-use}
 
 - OpenWeb UI
 - OpenWebUI
@@ -72,7 +140,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 在提及代码仓库、包或代码库时，请使用小写并带连字符的 **open-webui**。
 
-## 徽标与视觉识别
+## 徽标与视觉识别 {#logo-and-visual-identity}
 
 - 必须直接使用提供的 Open WebUI 徽标，不得进行修改。
 - **请勿**拉伸、裁剪或扭曲徽标。
@@ -80,20 +148,20 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 - 在徽标周围留出清晰的空间，以保持其可见性。
 - 在干净、不杂乱的背景上使用徽标，以确保其清晰易读。
 
-## 排版
+## 排版 {#typography}
 
 - 使用符合 Web 标准、简单且易读的字体。
 - 在所有 Open WebUI 相关材料中保持一致的字体大小和样式。
 - 避免使用会降低可读性的装饰性字体。
 
-## 使用规则
+## 使用规则 {#usage-rules}
 
 - 除非得到明确许可，否则**请勿**以任何暗示背书的方式使用 Open WebUI 的徽标或名称。
 - **请勿**将 Open WebUI 品牌整合到你自己的产品或公司品牌中。
-- 当 Open WebUI 视觉元素与其他品牌徽标并排使用时，请保持清晰且成比例的间距。
+- 严禁以任何形式对 Open WebUI 部署进行联合品牌展示，包括在页脚或管理通知中放置独立的或从属的组织徽标。间距或尺寸都不构成例外。通过平台内置设置更新模型图标或聊天背景是允许的。允许的管理通知和公司链接必须是纯文本，并且字号严格小于 `text-xs`。详情和适用的品牌例外参见[许可指引](/license/#branding-attribution-and-customization-guidelines-whats-allowed-and-whats-not)。
 - 始终尊重品牌完整性，并按要求使用提供的资产。
 
-## 联系我们
+## 联系我们 {#contact}
 
 如有关于品牌资产使用方面的问题，或想申请用于其他用途的许可，请通过官方仓库或项目沟通渠道联系 Open WebUI 团队。
 

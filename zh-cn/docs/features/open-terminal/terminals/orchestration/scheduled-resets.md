@@ -3,7 +3,7 @@ sidebar_position: 5
 title: "定时重置"
 ---
 
-# 定时重置
+# 定时重置 {#scheduled-resets}
 
 每个编排的终端可以在空闲清理和容器重新创建之间保持持久化文件。
 
@@ -25,7 +25,7 @@ curl -X PUT http://terminals-orchestrator:3000/api/v1/policies/training-lab/life
   }'
 ```
 
-## 重置计划
+## 重置计划 {#reset-schedules}
 
 支持的调度格式：
 
@@ -38,7 +38,7 @@ curl -X PUT http://terminals-orchestrator:3000/api/v1/policies/training-lab/life
 
 设置 `reset.timezone` 来控制类似 cron 的调度。除非你的重置策略与本地运营时间相关，否则使用 `UTC`。
 
-## 重置何时发生
+## 重置何时发生 {#when-reset-happens}
 
 重置是空闲安全的。
 
@@ -51,7 +51,7 @@ curl -X PUT http://terminals-orchestrator:3000/api/v1/policies/training-lab/life
 - 用户账户
 - 终端镜像
 
-## 刷新时手动重置
+## 刷新时手动重置 {#manual-reset-during-refresh}
 
 你也可以在刷新时重置持久化终端文件：
 

@@ -1,13 +1,15 @@
 ---
 sidebar_position: 4
 title: "网页搜索"
+sidebar_label: "网络搜索"
+description: "修复 Open WebUI 中的网络搜索连接失败、页面内容为空、代理错误以及搜索工具调用缺失等问题。"
 ---
 
 Open WebUI 中的 Web Search 让语言模型能够访问互联网中的实时信息。当它没有按预期工作时，本指南可以帮助你诊断并解决常见问题。
 
-## 常见 Web Search 问题
+## 常见 Web Search 问题 {#common-web-search-issues}
 
-### 1. Web Search 在 HTTP 代理后失效
+### 1. Web Search 在 HTTP 代理后失效 {#1-web-search-fails-behind-http-proxy}
 
 如果你把 Open WebUI 部署在 HTTP 代理后，可能会发现搜索查询本身可以成功（例如 SearXNG 能返回结果），但后续内容抓取会失败，并出现类似错误：
 
@@ -37,7 +39,7 @@ WEB_SEARCH_TRUST_ENV=True
 
 ---
 
-### 2. 来自 SearXNG 的 403 Forbidden 错误
+### 2. 来自 SearXNG 的 403 Forbidden 错误 {#2-403-forbidden-errors-from-searxng}
 
 如果你使用的是 SearXNG，并在日志中看到 `403 Client Error: Forbidden`，通常说明没有启用 JSON 格式。
 
@@ -56,7 +58,7 @@ search:
 
 ---
 
-### 3. 内容为空或结果质量差
+### 3. 内容为空或结果质量差 {#3-empty-content-or-poor-results}
 
 如果 Web Search 返回空内容或结果质量很差，问题通常与上下文窗口大小或内容提取有关。
 
@@ -76,7 +78,7 @@ search:
 
 ---
 
-### 4. 连接超时
+### 4. 连接超时 {#4-web-search-is-enabled-but-the-model-does-not-call-search_web}
 
 如果 Web Search 经常超时：
 
@@ -90,7 +92,7 @@ search:
 
 ---
 
-## 环境变量参考
+## 环境变量参考 {#environment-variables-reference}
 
 完整的 Web Search 环境变量列表，请参阅 [环境变量配置文档](/reference/env-configuration#web-search)。
 

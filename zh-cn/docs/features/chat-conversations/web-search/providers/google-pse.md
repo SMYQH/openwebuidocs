@@ -29,7 +29,7 @@ title: "Google PSE"
 
 ## Google PSE API
 
-### 设置
+### 设置 {#setup}
 
 1. 前往 Google Developers，使用 [Programmable Search Engine](https://developers.google.com/custom-search)，登录或创建账号
 2. 前往 [control panel](https://programmablesearchengine.google.com/controlpanel/all)，点击 `添加`
@@ -42,7 +42,7 @@ title: "Google PSE"
 
 ![Open WebUI 管理面板](/images/tutorial_google_pse1.png)
 
-#### 注意
+#### 注意 {#note}
 
 你还需要在提示词输入框中通过加号（`+`）按钮启用 `网页搜索`。
 然后就可以开始搜索网页了 ;-)

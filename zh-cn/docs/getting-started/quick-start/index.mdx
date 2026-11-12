@@ -23,7 +23,7 @@ import Conda from './tab-python/Conda.md';
 import PythonUpdating from './tab-python/PythonUpdating.md';
 import PythonCompat from './tab-python/_PythonCompat.md';
 
-# 快速开始
+# 快速开始 {#quick-start}
 
 让 Open WebUI 在你的机器上跑起来。请选择你偏好的安装方式。
 
@@ -131,7 +131,7 @@ Open WebUI 支持 **macOS、Linux**（x86_64 和 ARM64，包括 Raspberry Pi 与
 
   <TabItem value="desktop" label="桌面端">
 
-### 桌面应用
+### 桌面应用 {#desktop-app}
 
 从 [**github.com/open-webui/desktop**](https://github.com/open-webui/desktop) 下载桌面应用。它可在你的系统上原生运行 Open WebUI，无需 Docker 或手动配置。
 
@@ -158,7 +158,7 @@ Open WebUI 支持 **macOS、Linux**（x86_64 和 ARM64，包括 Raspberry Pi 与
 
 ---
 
-## 安装完成后
+## 安装完成后 {#open-it}
 
 :::tip 首次登录
 
@@ -166,6 +166,16 @@ Open WebUI 支持 **macOS、Linux**（x86_64 和 ARM64，包括 Raspberry Pi 与
 - **新注册用户：** 后续注册的账户会以 **待审核** 状态开始，需要管理员批准。
 - **隐私：** 默认情况下，所有数据（包括登录信息）都存储在你的本地设备上。Open WebUI 默认不会发起外部请求。所有模型默认都是私有的，只有显式共享后其他人才能访问。
 
+:::
+
+### 创建管理员账户 {#create-the-admin-account}
+
+第一个界面显示 **开始使用 Open WebUI**，并提供 **创建管理员账户**。这个首个账户就是管理员：它管理用户以及所有实例级设置。所有内容（包括这次登录）都保存在你自己的数据卷中。
+
+管理员账户创建之后，注册会自动关闭。若要让他人加入，请在头像 > **设置 > 管理 > 认证** 下开启 **允许新注册**；新账户会以 **待批准** 状态等待，你在管理面板中批准它们。请记下管理员密码：一旦丢失就无法进入实例设置，参见[重置管理员密码](/troubleshooting/password-reset)。
+
+:::note 两个设置区域
+你头像下的 **设置** 只属于你自己（主题、语言）。其中的 **管理** 部分则作用于整个实例。[理解设置](/getting-started/quick-start/settings)解释了这一划分。
 :::
 
 ### 连接模型提供商
@@ -206,7 +216,17 @@ Open WebUI 对 [Open Responses](https://www.openresponses.org/) 规范提供实�
 
 ---
 
-## 社区
+### 发送你的第一条消息 {#send-your-first-message}
+
+点击 **新建对话**，在消息框内的选择器中挑选一个模型，输入内容并按 Enter。把文件拖进对话中即可就它提问。
+
+![一个带有模型选择器和提示词建议的新对话](/images/features/chat/new-chat-placeholder.png)
+
+选择器中没有模型：回到第 4 步。回复一直为空，或对话卡在反向代理后面：[WebSocket 排查](/troubleshooting/connection-error#websocket-troubleshooting)。
+
+安装到此为止。下面的一切都是可选的。
+
+## 社区 {#where-to-go-next}
 
 - [**GitHub Issues**](https://github.com/open-webui/open-webui/issues) —— 提交 bug 和功能请求
 - **想帮忙？** 欢迎测试[开发分支](/contributing)并反馈问题，无需写代码。

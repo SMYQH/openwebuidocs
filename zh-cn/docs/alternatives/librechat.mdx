@@ -23,7 +23,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## LibreChat 的优势
+## LibreChat 的优势 {#what-librechat-does-well}
 
 - **多提供商聊天**，为 OpenAI、Anthropic、Google、Azure、Ollama 和任何 OpenAI 兼容 API 提供统一界面
 - **模型比较**，在单个对话中并排查看来自不同模型的响应
@@ -38,18 +38,19 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## Open WebUI 的优势
+## Open WebUI 的优势 {#what-open-webui-does-well}
 
-- **超越聊天的平台**，包括笔记、频道、自动化、开放终端、语音/视频通话、图像生成和日历
-- **知识与 RAG**，包含 9 个向量数据库、5 个提取引擎、混合搜索和重新排名以及智能体检索
-- **Python 扩展性**，支持自定义工具、MCP 服务器、管道、OpenAPI 集成和社区市场
-- **模型智能体**，为任何模型添加自定义说明、工具、知识和参数
-- **企业功能**，包括 RBAC、SSO/OIDC/LDAP、SCIM 2.0、分析仪表板和评估竞技场
-- **灵活的部署**，通过 Docker、Kubernetes、pip 或桌面应用，具有水平扩展和 OpenTelemetry
+- **完整的 Agentic 平台**：模型可自行调用[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)，并支持 [MCP](/features/extensibility/mcp) 服务器、[子智能体](/features/chat-conversations/chat-features/subagents)、[计时器](/features/chat-conversations/chat-features/timers) 和[自动化](/features/chat-conversations/chat-features/automations)，用于委派任务和定时工作
+- **几乎一切都可以定制**：从按模型的提示词、工具、知识库和参数，到可以改变管道任意环节行为的[过滤器、管道、动作和事件函数](/features/extensibility/plugin/functions)，再加上主题、横幅和按群组的权限
+- **超越聊天的平台**：包含笔记、频道、自动化、Open Terminal、语音/视频通话、图像生成和日历
+- **知识库与 RAG**：13 个向量数据库、8 个提取引擎、带重排序的混合搜索和智能体检索
+- **模型代理**：为任何模型加上自定义指令、工具、知识和参数
+- **企业功能**：包含 RBAC、SSO/OIDC/LDAP、SCIM 2.0、分析仪表板和评估竞技场
+- **灵活部署**：通过 Docker、Kubernetes、pip 或桌面应用，支持水平扩展和 OpenTelemetry
 
 ---
 
-## 一览表
+## 一览表 {#at-a-glance}
 
 | | Open WebUI | LibreChat |
 | :--- | :--- | :--- |
@@ -64,7 +65,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## 何时选择各个平台
+## 何时选择各个平台 {#when-to-use-each}
 
 **选择 LibreChat**（如果）您想要一个干净、专注的多提供商聊天界面，具有强大的模型比较功能。预设系统使在配置之间轻松切换成为可能，MIT 许可证为您提供最大的灵活性。
 
@@ -74,7 +75,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## 一起使用它们
+## 一起使用它们 {#use-them-together}
 
 两个项目都连接到相同的后端（Ollama、OpenAI 等），因此您可以并排运行两者。一些团队使用 LibreChat 进行快速个人聊天，使用 Open WebUI 进行团队协作和知识工作。
 
@@ -88,7 +89,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## 常见问题
+## 常见问题 {#frequently-asked-questions}
 
 **LibreChat 和 Open WebUI 如何比较？**
 LibreChat 在多提供商聊天界面方面表现非常好。Open WebUI 还包括知识库、团队协作、扩展性和企业功能。范围不同，两者都值得关注。

@@ -3,9 +3,9 @@ sidebar_position: 40
 title: "Firefox 侧栏"
 ---
 
-## 🦊 Firefox AI 聊天机器人侧栏
+## 🦊 Firefox AI 聊天机器人侧栏 {#firefox-ai-chatbot-sidebar}
 
-# 在 Mozilla Firefox 中将 Open WebUI 集成为本地 AI 浏览器助手
+# 在 Mozilla Firefox 中将 Open WebUI 集成为本地 AI 浏览器助手 {#integrating-open-webui-as-a-local-ai-chatbot-browser-assistant-in-mozilla-firefox}
 
 :::warning
 
@@ -13,14 +13,14 @@ title: "Firefox 侧栏"
 
 :::
 
-## 前置条件
+## 前置条件 {#prerequisites}
 
 在 Firefox 中把 Open WebUI 集成为 AI 聊天机器人助手前，请先确认：
 
 - 已准备 Open WebUI 实例 URL（本地或域名均可）
 - 已安装 Firefox 浏览器
 
-## 在 Firefox 中启用 AI Chatbot
+## 在 Firefox 中启用 AI Chatbot {#enabling-ai-chatbot-in-firefox}
 
 1. 点击右上角汉堡菜单按钮（三条横线，位于 `X` 按钮下方）
 2. 打开 Firefox 设置
@@ -29,7 +29,7 @@ title: "Firefox 侧栏"
 
 你也可以通过 `about:config` 页面启用 AI Chatbot（见下节）。
 
-## 配置 about:config 选项
+## 配置 about:config 选项 {#configuring-aboutconfig-settings}
 
 1. 在 Firefox 地址栏输入 `about:config`
 2. 点击 `Accept the Risk and Continue`
@@ -50,16 +50,16 @@ title: "Firefox 侧栏"
 1. 搜索 `browser.ml.chat.provider`
 2. 填入你的 Open WebUI 实例 URL，并可附带可选参数（例如 `https://my-open-webui-instance.com/?model=browser-productivity-assistant&temporary-chat=true&tools=jina_web_scrape`）
 
-## Open WebUI URL 参数
+## Open WebUI URL 参数 {#url-parameters-for-open-webui}
 
 你可以使用以下 URL 参数来自定义 Open WebUI：
 
-### 模型与模型选择
+### 模型与模型选择 {#models-and-model-selection}
 
 - `models`：为会话指定多个模型（逗号分隔），例如 `/?models=model1,model2`
 - `model`：为会话指定单个模型，例如 `/?model=model1`
 
-### YouTube 转录
+### YouTube 转录 {#youtube-transcription}
 
 - `youtube`：提供 YouTube 视频 ID，在聊天中转录该视频（例如 `/?youtube=VIDEO_ID`）
 
@@ -67,26 +67,26 @@ title: "Firefox 侧栏"
 
 - `web-search`：将此参数设为 `true` 以启用网页搜索（例如 `/?web-search=true`）
 
-### 工具选择
+### 工具选择 {#tool-selection}
 
 - `tools` 或 `tool-ids`：指定要在聊天中启用的工具 ID 列表（逗号分隔），例如 `/?tools=tool1,tool2` 或 `/?tool-ids=tool1,tool2`
 
-### 通话叠加层
+### 通话叠加层 {#call-overlay}
 
 - `call`：将此参数设为 `true` 可在聊天界面启用视频/通话叠加层（例如 `/?call=true`）
 
-### 初始查询
+### 初始查询 {#initial-query-prompt}
 
 - `q`：设置聊天初始问题或提示词（例如 `/?q=Hello%20there`）
 
-### 临时聊天会话
+### 临时聊天会话 {#temporary-chat-sessions}
 
 - `temporary-chat`：将此参数设为 `true` 可标记为临时会话（例如 `/?temporary-chat=true`）
   - *注意：临时聊天中的文档处理仅在前端执行。需要后端解析的复杂文件可能无法工作。*
 
 更多 URL 参数及用法请见 [url-params](/features/chat-conversations/chat-features/url-params)。
 
-## 其他 about:config 设置
+## 其他 about:config 设置 {#additional-aboutconfig-settings}
 
 以下 `about:config` 项可进一步自定义：
 
@@ -107,7 +107,7 @@ title: "Firefox 侧栏"
 - `browser.ml.queueWaitInterval`：设置队列等待间隔
 - `browser.ml.queueWaitTimeout`：设置队列等待超时
 
-## 打开 AI Chatbot 侧栏
+## 打开 AI Chatbot 侧栏 {#accessing-the-ai-chatbot-sidebar}
 
 可使用以下方式打开 AI Chatbot 侧栏：
 

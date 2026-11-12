@@ -1,8 +1,8 @@
-## 更新
+## 更新 {#updating}
 
 要把本地 Docker 安装更新到最新版本，你可以使用 **Watchtower**，或手动更新容器。
 
-### 方案 1：使用 Watchtower
+### 方案 1：使用 Watchtower {#option-1-using-watchtower}
 
 借助 [Watchtower](https://github.com/nicholas-fedor/watchtower)，你可以自动化更新流程：
 
@@ -12,7 +12,7 @@ docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock nickfedor/wat
 
 *（如果你的容器名称不是 `open-webui`，请将其替换成实际名称。）*
 
-### 方案 2：手动更新
+### 方案 2：手动更新 {#option-2-manual-update}
 
 1. 停止并删除当前容器：
 

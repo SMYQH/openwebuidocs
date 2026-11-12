@@ -3,7 +3,7 @@ sidebar_position: 40
 title: "S3 存储"
 ---
 
-# 🪣 切换到 S3 存储
+# 🪣 切换到 S3 存储 {#switching-to-s3-storage}
 
 :::warning
 本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
@@ -11,7 +11,7 @@ title: "S3 存储"
 
 本指南介绍如何将 Open WebUI 配置中默认的 `local` 存储切换为 Amazon S3。
 
-## 前提条件
+## 前提条件 {#prerequisites}
 
 在学习本教程之前，您需要具备以下条件：
 
@@ -20,7 +20,7 @@ title: "S3 存储"
 - 在 AWS 中具有创建 S3 存储桶并上传对象的 IAM 权限
 - 已在系统上安装 Docker
 
-## 什么是 Amazon S3
+## 什么是 Amazon S3 {#what-is-amazon-s3}
 
 直接引用 AWS 官网的说明：
 
@@ -28,9 +28,9 @@ title: "S3 存储"
 
 了解更多关于 S3 的信息，请访问：[Amazon S3 官方页面](https://aws.amazon.com/s3/)
 
-# 配置方法
+# 配置方法 {#how-to-set-up}
 
-## 1. 所需环境变量
+## 1. 所需环境变量 {#1-s3-environment-variables}
 
 要配置此选项，需要收集以下环境变量：
 
@@ -52,7 +52,7 @@ title: "S3 存储"
 
 有关所有 `云存储` 配置选项，请参阅 [Open-WebUI 云存储配置](/reference/env-configuration#cloud-storage) 文档。
 
-## 2. 运行 Open-WebUI
+## 2. 运行 Open-WebUI {#2-run-open-webui}
 
 在启动 Open-WebUI 实例之前，还需要设置一个名为 `STORAGE_PROVIDER` 的环境变量。该变量告知 Open-WebUI 您要使用的存储提供商。默认情况下，`STORAGE_PROVIDER` 为空，即 Open-WebUI 使用本地存储。
 
@@ -81,7 +81,7 @@ docker run -d \
   ghcr.io/open-webui/open-webui:main
 ```
 
-## 3. 测试配置
+## 3. 测试配置 {#3-test-the-set-up}
 
 现在 Open-WebUI 已经运行，让我们上传一个简单的 `Hello, World` 文本文件来测试配置。
 

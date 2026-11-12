@@ -15,13 +15,13 @@ keywords: [notion, mcp, model context protocol, integration, productivity, tools
 Notion 在 `https://mcp.notion.com/mcp` 托管了一个远程 MCP 服务器，Open WebUI 通过 **Streamable HTTP** 原生连接。身份验证通过 Notion 的 OAuth 流程处理——无需 API 令牌、无需代理、无需额外容器。
 
 
-## 设置
+## 设置 {#setup}
 
 :::danger 前置条件：WEBUI_SECRET_KEY
 您**必须**将 `WEBUI_SECRET_KEY` 环境变量设置为持久值。若不设置，每次容器重启后 OAuth 会话将中断，强制重新进行身份验证。详情请参见 [MCP 功能文档](/features/extensibility/mcp)。
 :::
 
-### 1. 添加工具
+### 1. 添加工具 {#1-add-the-tool}
 
 进入 **Admin Panel → Settings → External Tools**，点击 **+** 添加新连接。填写以下信息：
 
@@ -63,7 +63,7 @@ Notion 在 `https://mcp.notion.com/mcp` 托管了一个远程 MCP 服务器，Op
 
 ![已导入 Notion MCP 配置的外部工具弹窗。](/images/mcp-notion/notion-setup-step5.png)
 
-### 2. 授权
+### 2. 授权 {#2-authorize}
 
 在任意聊天中，打开 **+ → Integrations → Tools** 并开启 **Notion**。您将被重定向到 Notion 的 OAuth 流程——选择您的工作区并授权访问。
 
@@ -80,14 +80,14 @@ Notion 的 OAuth 会话可能在空闲或容器重启后过期。如果出现 `F
 :::
 
 
-## 速率限制
+## 速率限制 {#rate-limits}
 
 标准 [Notion API 限制](https://developers.notion.com/reference/request-limits)适用：
 
 - **常规：** 每分钟 180 次请求
 - **搜索：** 每分钟 30 次请求
 
-## 故障排除
+## 故障排除 {#troubleshooting}
 
 ### `Failed to connect to MCP server 'ntn'`
 
@@ -95,7 +95,7 @@ OAuth 会话已过期。在任意聊天中重新切换 Notion 工具（**+** →
 
 ![聊天中 MCP 服务器连接失败错误。](/images/mcp-notion/notion-setup-step12.png)
 
-### `OAuth callback failed: mismatching_state`
+### `OAuth callback failed: mismatching_state` {#oauth-callback-failed-oauth-callback-state-is-invalid-or-expired}
 
 您正在通过 `localhost` 访问 Open WebUI，但 `WEBUI_URL` 设置为公共域名。请使用 `WEBUI_URL` 中的**确切 URL** 访问实例并重新授权。
 
@@ -105,6 +105,6 @@ OAuth 会话已过期。在任意聊天中重新切换 Notion 工具（**+** →
 
 该页面尚未与集成共享。在 OAuth 流程中，Notion 会询问授权访问哪些页面——请确保选择了相关页面。您可以随时通过 [Notion 集成设置](https://www.notion.so/profile/integrations)更新访问权限。
 
-### 创建页面时出现 `missing_property`
+### 创建页面时出现 `missing_property` {#missing_property-when-creating-a-page}
 
 Notion 需要父页面或数据库。请告知模型：*"先搜索我的'Notes'页面，然后在其中创建新页面。"*

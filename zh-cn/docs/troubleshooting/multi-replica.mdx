@@ -3,7 +3,7 @@ sidebar_position: 10
 title: "扩缩容与高可用"
 ---
 
-# 多副本、高可用与并发故障排查
+# 多副本、高可用与并发故障排查 {#multi-replica-high-availability--concurrency-troubleshooting}
 
 本指南针对在**多副本**环境（如 Kubernetes、Docker Swarm）部署 Open WebUI，或通过 **多个 worker**（`UVICORN_WORKERS > 1`）提升并发时常见的问题进行说明。
 
@@ -25,7 +25,7 @@ title: "扩缩容与高可用"
 
 ---
 
-## 常见问题
+## 常见问题 {#common-issues}
 
 <span id="1-login-loops--401-unauthorized-errors"></span>
 ### 1. 登录循环 / 401 Unauthorized 错误 {#1-login-loops--401-unauthorized-errors}
@@ -118,7 +118,7 @@ REDIS_URL=redis://your-redis-host:6379/0
    ```bash
    DATABASE_URL=postgresql+asyncpg://user:password@postgres-host:5432/openwebui
    ```
-   对 Kubernetes / Docker Swarm 来说，这几乎是强制要求。Postgres 负责管理自己的本地存储 I/O，因此网络 `fsync` 病理会彻底消失。完整迁移步骤见 [Scaling → Step 1](/getting-started/advanced-topics/scaling#step-1--switch-to-postgresql)。
+   对 Kubernetes / Docker Swarm 来说，这几乎是强制要求。Postgres 负责管理自己的本地存储 I/O，因此网络 `fsync` 病理会彻底消失。完整迁移步骤见 [Scaling → Step 1](/getting-started/advanced-topics/scaling#step-1-switch-to-postgresql)。
 2. **如果你是单实例并且可以移动数据库：** 把 `webui.db` 放到本地直连 SSD/NVMe（宿主机 bind mount、本地卷、临时盘），**不要** 与上传文件和 RAG 文件共用同一块 NFS/Ceph/EFS 网络盘。
 3. **不要只增加 `DATABASE_POOL_SIZE`。** 更大的连接池并不能解决慢 `fsync`，只会让更多慢 `fsync` 并发堆积在同一份慢存储上，把崩溃点往后推几秒而已。
 4. **只作为临时止损手段：**
@@ -183,7 +183,7 @@ CHROMA_HTTP_PORT=8000
 UVICORN_WORKERS=4
 ```
 
-### 7. 云环境 Kubernetes 比本地明显更慢
+### 7. 云环境 Kubernetes 比本地明显更慢 {#7-slow-performance-in-cloud-vs-local-kubernetes}
 
 **症状：**
 - 本地运行良好，但部署到 AKS、EKS、GKE 后性能明显下降甚至超时
@@ -193,11 +193,11 @@ UVICORN_WORKERS=4
 这通常是基础设施延迟（数据库网络延迟或 SQLite 的磁盘 I/O 延迟）造成的。云环境天然比本地 NVMe/SSD 和本地网络更慢。
 
 **解决方法：**
-请参阅性能指南中的 **[Cloud Infrastructure Latency](/troubleshooting/performance#%EF%B8%8F-cloud-infrastructure-latency)**，那里有更完整的诊断与缓解思路。
+请参阅性能指南中的 **[Cloud Infrastructure Latency](/troubleshooting/performance#cloud-infrastructure-latency)**，那里有更完整的诊断与缓解思路。
 
 若需要更多性能建议，请继续阅读完整的 [性能优化指南](/troubleshooting/performance)。
 
-### 8. 优化数据库性能
+### 8. 优化数据库性能 {#8-optimizing-database-performance}
 
 对于资源充足的 PostgreSQL 部署，可考虑以下优化：
 
@@ -262,7 +262,7 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 
 ---
 
-## 部署最佳实践
+## 部署最佳实践 {#deployment-best-practices}
 
 <span id="updates-and-migrations"></span>
 ### 更新与迁移 {#updates-and-migrations}
@@ -277,19 +277,19 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 
 在多副本环境中，建议通过以下两种方式之一安全处理迁移：
 
-#### 方案 1：指定一个主迁移 Pod（推荐）
+#### 方案 1：指定一个主迁移 Pod（推荐） {#option-1-designate-a-master-migration-pod-recommended}
 1. 指定一个 pod/副本作为迁移“主节点”
 2. 在主节点上保持 `ENABLE_DB_MIGRATIONS=True`（默认）
 3. 在其他所有节点上设置 `ENABLE_DB_MIGRATIONS=False`
 4. 升级时由主节点负责 schema 更新，其他节点跳过迁移步骤
 
-#### 方案 2：更新时先缩容
+#### 方案 2：更新时先缩容 {#option-2-scale-down-during-update}
 1. **缩容：** 将副本数降到 `1`（并确保 `UVICORN_WORKERS=1`）
 2. **更新镜像：** 升级镜像或版本
 3. **等待健康检查通过：** 确保单实例完全启动并完成迁移
 4. **再扩容：** 将副本数恢复到目标值
 
-### 会话亲和性（Sticky Sessions）
+### 会话亲和性（Sticky Sessions） {#session-affinity-sticky-sessions}
 虽然在正确配置 Redis 后，Open WebUI 设计上是无状态的，但在负载均衡器 / Ingress 层启用 **Session Affinity**（Sticky Sessions）仍然可以提升性能，并减少 WebSocket 连接偶发抖动。
 
 - **Nginx Ingress：** `nginx.ingress.kubernetes.io/affinity: "cookie"`
@@ -297,7 +297,22 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 
 ---
 
-## 相关文档
+### 使用更快的 JSON 编码器 {#use-the-faster-json-encoder}
+
+```bash
+ENABLE_ORJSON=True
+```
+
+在多副本部署中，每个 Socket.IO 事件都会通过 Redis 发布，在发出时编码、在接收时解码，这使得 JSON 编码成为处理实时更新的副本上最大的开销之一。[`ENABLE_ORJSON`](/reference/env-configuration#enable_orjson)（默认 `True`）在整个应用中改用快得多的 [orjson](https://pypi.org/project/orjson/) 这个 Rust 实现。它随 Open WebUI 一同提供，因此无需安装任何东西。在小型单实例上，差异主要体现在保存和打开非常长的对话时。
+
+orjson 无法处理的载荷（非字符串字典键、超出 64 位的整数）会自动回退到标准库，因此可用的载荷绝不会变成错误。仍然存在两处差异：
+
+- **响应体中的 `NaN` 和 `Infinity` 浮点数会变成 `null`。** 使用标准库时，这样的响应会失败。只有自定义工具或管道输出这些值时才相关。
+- **编码后的输出使用原始 UTF-8，而不是 `\uXXXX` 转义。** 两者解析结果完全相同；只有对编码后 JSON 做校验和的东西才会受影响。行分隔符字符仍会被转义，因此流式回复不会被拆开。切换该设置无需迁移。
+
+---
+
+## 相关文档 {#related-documentation}
 
 - [扩展 Open WebUI](/getting-started/advanced-topics/scaling) —— 从单实例扩展到生产环境的完整步骤
 - [环境变量配置](/reference/env-configuration)

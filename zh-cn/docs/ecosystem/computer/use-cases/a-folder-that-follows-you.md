@@ -3,13 +3,13 @@ title: "跟随你的项目文件夹"
 sidebar_position: 3
 ---
 
-# 跟随你的项目文件夹
+# 跟随你的项目文件夹 {#a-project-folder-that-follows-you}
 
 一个论文章节、一个研究项目、一本杂志：十二个 PDF、一堆笔记、手机上的截图，以及在公交车上冒出的想法。这些都不需要终端或 git。它需要一个真实的文件夹，无论你拿着哪个设备，它都是同一个文件夹。
 
 **你需要：** 将项目文件夹作为工作区完成快速入门，如果需要在家以外访问则设置远程访问（[Tailscale](/ecosystem/computer/phone-and-remote/tailscale)），以及在手机上[安装 PWA](/ecosystem/computer/phone-and-remote/phone-app)。
 
-## 操作步骤
+## 操作步骤 {#the-walkthrough}
 
 1. **给项目一个结构。** 在文件浏览器中，创建 `sources/`、`notes/` 和 `drafts/`。将 PDF 拖入 `sources/`；拖放上传有效，PDF、图片和 Office 文件可以直接在编辑器中预览。
 
@@ -25,7 +25,7 @@ sidebar_position: 3
 
 5. **以后找到它。** **Cmd+K** 搜索工作区中的文件名、内容和聊天历史。"第二篇论文关于样本量说的那件事"即使你记不起是哪篇论文也能找到。
 
-## 为什么这样有效
+## 为什么这样有效 {#what-makes-this-work}
 
 一切都在你机器上的一个文件夹中，作为普通文件：来源、笔记、备忘录，甚至 AI 对话。没有应用孤岛，没有同步服务，没有导出锁定。备份文件夹就备份了项目。如果敏感文档不应离开机器，不要连接托管模型；文件夹、预览、笔记和搜索在完全没有 AI 的情况下也能工作。
 

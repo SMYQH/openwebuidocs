@@ -3,13 +3,13 @@ title: "在 git worktrees 上运行并行代理"
 sidebar_position: 14
 ---
 
-# 在 git worktrees 上运行并行代理
+# 在 git worktrees 上运行并行代理 {#run-parallel-agents-on-git-worktrees}
 
 你在一个仓库上有三个独立的任务排队：一个修复不稳定的测试、一个具有 API 影响的依赖升级、以及一个文档更新。一个代理顺序执行浪费了并行性；三个代理在一个工作树中会互相践踏文件。干净的答案是每个任务一个 worktree，每个 worktree 一个工作区，每个工作区一个代理，全部从单个浏览器标签页监督。
 
 **你需要：** 已配置[编码代理](/ecosystem/computer/ai/coding-agents)或 API 模型，以及三个任务确实不共享文件的仓库。原生代理后端独立恢复每个聊天的会话，这使得监督变得合理。
 
-## 操作步骤
+## 操作步骤 {#the-walkthrough}
 
 1. **创建 worktrees。** 在仓库的工作区中，打开 git 面板中的 worktree 选择器，为每个任务创建一个分支支持的 worktree（`fix/flaky-upload-test`、`chore/bump-sdk`、`docs/cli-reference`）。每个都是磁盘上的单独检出。如果你喜欢，终端等效命令：`git worktree add ../repo-flaky fix/flaky-upload-test`。
 
@@ -25,7 +25,7 @@ sidebar_position: 14
 
 6. **如果需要，中途离开。** 所有三个任务在服务器端运行，会话按聊天恢复，待处理的审批等待你。从手机上检查就是同样的三个聊天，更小的屏幕。
 
-## 为什么这样有效
+## 为什么这样有效 {#what-makes-this-work}
 
 隔离是真正的工作所在：worktrees 给每个代理一个私有的文件系统现实，工作区给每个代理一个私有的上下文，所以并行性不会损失正确性。审批模式是按聊天设置的，所以你可以让文档代理以 **full** 模式运行，而依赖升级保持在 **auto**。瓶颈诚实地变成了你的审查带宽；三个是一个舒适的上限，而 git 面板，而不是代理的乐观主义，始终是真相的来源。
 

@@ -3,11 +3,11 @@ sidebar_position: 1
 title: "文档提取"
 ---
 
-## Open WebUI 中的文档提取
+## Open WebUI 中的文档提取 {#document-extraction-in-open-webui}
 
 Open WebUI 提供强大的文档提取能力，使你可以在 RAG（Retrieval Augmented Generation）工作流中处理并分析多种类型的文档。文档提取是把非结构化文档内容转换为结构化数据的关键步骤，从而让语言模型更有效地使用这些内容。
 
-## 什么是文档提取？
+## 什么是文档提取？ {#what-is-document-extraction}
 
 文档提取指的是自动识别并提取各种文件格式中的文本与数据的过程，其中包括：
 
@@ -27,7 +27,7 @@ Open WebUI 提供强大的文档提取能力，使你可以在 RAG（Retrieval A
 在 **临时聊天** 模式下，文档提取会**仅在浏览器中执行**，以防止数据在后端被存储或处理。由于这一严格隐私策略，某些依赖后端解析器的复杂文件格式（例如部分 DOCX 文件）可能无法被正确处理。
 :::
 
-## 可用提取方式
+## 可用提取方式 {#available-extraction-methods}
 
 Open WebUI 支持多种文档提取引擎，以适配不同需求与文档类型。每种提取方式都有各自优势，适合不同场景。
 

@@ -3,7 +3,7 @@ title: "一个主动给你发消息的助手"
 sidebar_position: 8
 ---
 
-# 一个主动给你发消息的助手
+# 一个主动给你发消息的助手 {#an-assistant-that-texts-you-first}
 
 星期二早上 7:45。你的手机震动，收到你自己电脑发来的 Telegram 消息：
 
@@ -13,7 +13,7 @@ sidebar_position: 8
 
 **你需要：** 已连接[模型](/ecosystem/computer/ai/connect-a-model)、已设置 [Telegram 机器人](/ecosystem/computer/use-cases/message-your-computer)，以及主机[早上保持唤醒](/ecosystem/computer/phone-and-remote/keep-it-running)。网络搜索开箱即用（DuckDuckGo 不需要密钥）。
 
-## 操作步骤
+## 操作步骤 {#the-walkthrough}
 
 1. **给它一个总部。** 创建一个像 `assistant/` 这样的文件夹，将其作为工作区打开，并在其根目录下放置 `.cptr/system.md` 文件，给助手常设指令。该文件成为该工作区中每个聊天的系统提示：
 
@@ -37,7 +37,7 @@ sidebar_position: 8
 
    现在助手不仅在 7:40 给你简报；它在凌晨 3 点进行调查，并通过短信给你诊断结果，而不仅仅是警报。
 
-## 为什么这样有效
+## 为什么这样有效 {#what-makes-this-work}
 
 主动性就是"定时加传递路径"，两个部分都是可见的：每次简报都是一个真实的聊天，带有完整的工具日志，所以当它说测试通过了，你可以打开运行并看到命令。个性文件和记忆是让它感觉像*你的*而不是一个 cron 作业的原因；你写入 `.cptr/system.md` 的诚实规则是保持每日无人值守摘要可信赖的关键。从一个你可以验证的简报开始，只有当它赢得了你的信任时才扩大授权范围。
 

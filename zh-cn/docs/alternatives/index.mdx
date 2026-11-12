@@ -13,8 +13,10 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 <script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Open WebUI 免费吗？", "acceptedAnswer": {"@type": "Answer", "text": "免费。社区版对无限用户免费。也提供企业计划。"}}, {"@type": "Question", "name": "我能自托管 Open WebUI 吗？", "acceptedAnswer": {"@type": "Answer", "text": "能。Open WebUI 可以通过 Docker、Kubernetes、pip 或桌面应用在您自己的基础设施上运行。"}}, {"@type": "Question", "name": "Open WebUI 支持哪些模型？", "acceptedAnswer": {"@type": "Answer", "text": "Open WebUI 连接任何与 OpenAI 兼容的 API，加上原生 Ollama 集成。这包括 OpenAI、Anthropic、Google、Azure、AWS Bedrock、llama.cpp、LM Studio 和数百个其他提供商。"}}]})}</script>
 </Head>
 
+# Open WebUI 替代方案 {#alternatives-to-open-webui}
+
 <ThemedImage
-  alt="Open WebUI 替代方案：将本地模型、桌面应用、RAG 工具和云端 AI 选项与 Open WebUI 对比"
+  alt="Open WebUI 替代方案：三个高度不同的方块，最高的那个被标记出来"
   sources={{
     light: useBaseUrl('/images/banners/alternatives-light.svg'),
     dark: useBaseUrl('/images/banners/alternatives-dark.svg'),
@@ -22,39 +24,41 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
 />
 
-# Open WebUI 替代方案
-
 AI 领域充满了伟大的项目，我们为此感到高兴。更多工具意味着更多人可以以适合自己的方式获得 AI。
 
-我们经常被问及"还有什么其他选择？"，所以我们编制了这个列表。如果 Open WebUI 不完全适合您的用例，这些是我们会推荐给您的工具。我们实际上已经使用过它们、与它们一起构建，或认为它们在某些方面做得非常好。此列表中列出的所有内容都是免费开始的。
+我们经常被问及"还有什么其他选择？"，所以我们编制了这个列表。如果 Open WebUI 不完全适合您的用例，这些是我们会毫不犹豫向您推荐的工具。我们实际上已经使用过它们、与它们一起构建，或认为它们在某些方面做得非常好。此列表中列出的所有内容都是免费开始的。
 
-## 如何选择
+## 如何选择 {#how-to-choose}
 
 - **运行本地模型？** 从 [Ollama](/alternatives/ollama) 或 [llama.cpp](/alternatives/llama-cpp) 开始，两者都与 Open WebUI 原生集成
 - **想要桌面应用？** [LM Studio](/alternatives/lm-studio) 或 [Jan](/alternatives/jan) 是优秀的独立选项
 - **需要文档问答？** [AnythingLLM](/alternatives/anythingllm) 使私有 RAG 变得简单
 - **多供应商聊天？** [LibreChat](/alternatives/librechat) 在这方面做得很好
 - **构建 AI 工作流？** [Dify](/alternatives/dify) 有可视化工作流设计器
-- **只想要前沿 AI？** [ChatGPT](/alternatives/chatgpt)、[Claude](/alternatives/claude) 和 [Gemini](/alternatives/gemini) 都可以通过 API 在 Open WebUI 中使用
+- **想要开箱即用的 AI？** [ChatGPT](/alternatives/chatgpt)、[Claude](/alternatives/claude) 和 [Gemini](/alternatives/gemini) 是世界上最好的 AI 产品之一：前沿模型、精致界面、快速迭代，且几乎无需配置。它们对应的模型也可以通过 API 在 Open WebUI 中使用。
 
 ---
 
-## 所有替代方案
+## 所有替代方案 {#all-alternatives}
+
+<div className="responsive-table">
 
 | 工具 | 优势 | 许可证 | 与 Open WebUI 兼容 | |
 | :--- | :--- | :--- | :--- | :--- |
-| **Ollama** | 运行本地模型最流行的方式 | 开源 (MIT) | 原生集成 | [了解更多 →](/alternatives/ollama) |
-| **llama.cpp** | 使本地 AI 成为可能的引擎 | 开源 (MIT) | 通过 API | [了解更多 →](/alternatives/llama-cpp) |
-| **LM Studio** | 美观的本地模型管理桌面应用 | 专有 (免费) | 通过 API | [了解更多 →](/alternatives/lm-studio) |
-| **Jan** | 简洁、隐私优先的本地 AI 桌面应用 | 开源 (Apache 2.0) | 通过 API | [了解更多 →](/alternatives/jan) |
-| **AnythingLLM** | 正确实现私有文档问答 | 开源 (MIT) | | [了解更多 →](/alternatives/anythingllm) |
-| **LibreChat** | 可靠的自托管多供应商聊天 | 开源 (MIT) | | [了解更多 →](/alternatives/librechat) |
-| **Msty** | 本地和云模型精细桌面中心 | 专有 (免费层) | | [了解更多 →](/alternatives/msty) |
-| **Onyx** | 具有 40+ 连接器的企业搜索 | 源可用 (MIT 核心 + 企业许可证) | | [了解更多 →](/alternatives/onyx) |
-| **Dify** | LLM 应用的可视化工作流构建器 | 源可用 (修改 Apache 2.0) | 通过 API | [了解更多 →](/alternatives/dify) |
-| **ChatGPT / OpenAI** | 开启一切的那个，我们每天都在用 | 商用 (免费层) | 通过 OpenAI API | [了解更多 →](/alternatives/chatgpt) |
-| **Claude / Anthropic** | 出色的写作和推理，我们每天都在用 | 商用 (免费层) | 通过 Anthropic API | [了解更多 →](/alternatives/claude) |
-| **Gemini / Google** | 具有 Google 生态系统集成的多模态 AI | 商用 (免费层) | 通过 Google AI API | [了解更多 →](/alternatives/gemini) |
+| **Ollama** | 让自托管 AI 变得平易近人的本地模型运行器 | 开源 (MIT) | 原生集成 | [了解更多 →](/alternatives/ollama) |
+| **llama.cpp** | 为整个生态系统打开大门的基础性本地推理工作 | 开源 (MIT) | 通过 API | [了解更多 →](/alternatives/llama-cpp) |
+| **LM Studio** | 用于发现、下载和运行本地模型的精致桌面体验 | 专有 (免费) | 通过 API | [了解更多 →](/alternatives/lm-studio) |
+| **Jan** | 深思熟虑、隐私优先的本地 AI 桌面应用 | 开源 (Apache 2.0) | 通过 API | [了解更多 →](/alternatives/jan) |
+| **AnythingLLM** | 专注且实用的文档问答工作区 | 开源 (MIT) | | [了解更多 →](/alternatives/anythingllm) |
+| **LibreChat** | 拥有活跃社区的自托管多供应商聊天界面 | 开源 (MIT) | | [了解更多 →](/alternatives/librechat) |
+| **Msty** | 用于跨本地与云模型工作的精致桌面中心 | 专有 (免费层) | | [了解更多 →](/alternatives/msty) |
+| **Onyx** | 拥有丰富连接器目录的企业级搜索与知识接入 | 源可用 (MIT 核心 + 企业许可证) | | [了解更多 →](/alternatives/onyx) |
+| **Dify** | 面向 LLM 应用交付团队的强大可视化工作流构建器 | 源可用 (修改 Apache 2.0) | 通过 API | [了解更多 →](/alternatives/dify) |
+| **ChatGPT / OpenAI** | 让现代 AI 走进日常生活的产品与团队 | 商用 (免费层) | 通过 OpenAI API | [了解更多 →](/alternatives/chatgpt) |
+| **Claude / Anthropic** | 出色的写作、长上下文推理与开发者工具 | 商用 (免费层) | 通过 Anthropic API | [了解更多 →](/alternatives/claude) |
+| **Gemini / Google** | 深度整合 Google 生态系统的强大多模态 AI | 商用 (免费层) | 通过 Google AI API | [了解更多 →](/alternatives/gemini) |
+
+</div>
 
 Open WebUI 本身包含基于 [多种许可证](/license) 的代码。最新组件遵循 Open WebUI 许可证，其中包含品牌标识保留要求；而此前的贡献仍保留各自原有的许可证条款。
 
@@ -62,7 +66,7 @@ Open WebUI 本身包含基于 [多种许可证](/license) 的代码。最新组�
 
 ---
 
-## 常见问题
+## 常见问题 {#frequently-asked-questions}
 
 **Open WebUI 免费吗？**
 免费。社区版对无限用户免费。也提供企业计划。
@@ -73,4 +77,4 @@ Open WebUI 本身包含基于 [多种许可证](/license) 的代码。最新组�
 **Open WebUI 支持哪些模型？**
 Open WebUI 连接任何与 OpenAI 兼容的 API，加上原生 Ollama 集成。这包括 OpenAI、Anthropic、Google、Azure、AWS Bedrock、llama.cpp、LM Studio 和数百个其他提供商。
 
-*最后更新：2026 年 5 月*
+*最后更新：2026 年 8 月*

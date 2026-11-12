@@ -1,11 +1,13 @@
 ---
 sidebar_position: 1
 title: "使用方式"
+sidebar_label: "用法"
+description: "在对话中启用图像生成、根据提示词创建图像，并在 Open WebUI 中编辑或合成已上传的图片。"
 ---
 
 在使用图像生成功能前，请先确保已在 **Admin Panel** > **Settings** > **Images** 中启用 **图像生成** 开关。
 
-## 使用图像生成
+## 使用图像生成 {#using-image-generation}
 
 1. 打开 `图像生成` 开关
 2. 输入你的图像生成提示词
@@ -13,11 +15,11 @@ title: "使用方式"
 
 ![Image Generation Tutorial](/images/tutorial_image_generation_2.png)
 
-## 基于原生工具的生成（Agentic）
+## 基于原生工具的生成（Agentic） {#native-tool-based-generation-agentic}
 
 如果你的模型配置了 **原生函数调用**（参见 [**工具调用指南**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)），它就可以直接把图像生成功能当作工具调用。
 
-### 工作方式：
+### 工作方式： {#how-it-works}
 
 - **要求：**
   - 必须已在 **Admin Panel → Settings → Images** 中全局启用 **图像生成**
@@ -41,7 +43,7 @@ title: "使用方式"
 自 Open WebUI v0.7.0 起，原生的 “Generate Image” 按钮（允许直接从消息内容生成图像）已被移除。如果你想恢复该功能，可以使用社区构建的 **[Generate Image Action](https://openwebui.com/posts/3fadc3ca-c955-4c9e-9582-7438f0911b62)**。
 :::
 
-## 恢复 “Generate Image” 按钮
+## 恢复 “Generate Image” 按钮 {#restoring-the-generate-image-button}
 
 如果你更喜欢“点击任意消息上的按钮，就从该消息内容生成图像”的工作流，可以轻松恢复：
 
@@ -55,7 +57,7 @@ title: "使用方式"
 **要求：** 若要使用 **图像编辑** 或 **图像 + 图像生成**，你必须在管理员设置中配置一个支持这些能力的 **图像生成模型**（例如 OpenAI DALL-E，或具备相应 inpainting / img2img 能力的 ComfyUI / Automatic1111 模型）。
 :::
 
-## 图像编辑（Inpainting）
+## 图像编辑（Inpainting） {#image-editing-inpainting}
 
 你可以在聊天中直接通过“图像 + 文本提示词”的方式编辑图片。
 
@@ -63,7 +65,7 @@ title: "使用方式"
 2. **输入提示词** 描述你想要的改动（例如 “把背景改成日落” 或 “加一顶帽子”）
 3. 模型会根据你的提示词生成该图片的新版本。
 
-## 图像合成（多图融合）
+## 图像合成（多图融合） {#image-compositing-multi-image-fusion}
 
 你可以将多张图片无缝融合成一个统一场景——这在专业上通常称为 **图像合成** 或 **多图融合**。你可以把不同来源中的元素（例如一张图中的主体和另一张图中的背景）组合起来，同时协调光照、透视和风格。
 

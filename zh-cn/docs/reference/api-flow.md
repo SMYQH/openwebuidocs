@@ -3,11 +3,11 @@ sidebar_position: 40
 title: "后端控制的 API 流程"
 ---
 
-# 后端控制、兼容前端的 API 流程
+# 后端控制、兼容前端的 API 流程 {#backend-controlled-ui-compatible-api-flow}
 
 ---
 
-## 后端控制、兼容前端的 API 流程
+## 后端控制、兼容前端的 API 流程 {#prerequisites}
 
 :::warning
 
@@ -18,7 +18,7 @@ title: "后端控制的 API 流程"
 本教程展示如何实现对 Open WebUI 对话的服务器端编排，并确保助手回复能在前端 UI 中正常显示。这种方法不需前端任何介入，并允许完全的后端控制聊天流程。
 本教程已验证适用于 Open WebUI 版本 v0.6.15。未来版本可能会展开行为或 API 结构的变化。
 
-## 前置条件
+## 前置条件 {#overview}
 
 在实践本教程之前，请确保你有：
 
@@ -32,7 +32,7 @@ title: "后端控制的 API 流程"
 
 本教程描述了一个包含 6 个步骤的完整流程，能够实现对 Open WebUI 对话的服务器端编排，同时确保助手回复能在前端 UI 中正常显示。
 
-### 流程步骤
+### 流程步骤 {#process-flow}
 
 核心步骤如下：
 
@@ -43,9 +43,9 @@ title: "后端控制的 API 流程"
 
 这将实现服务器端编排，同时使回复在前端 UI 中显示，完全如同通过正常用户交互生成一样。
 
-## 重要概念
+## 重要概念 {#important-concepts}
 
-### 消息 ID 由调用方生成
+### 消息 ID 由调用方生成 {#message-ids-are-caller-generated}
 
 所有消息 ID（`user-msg-id`、`assistant-msg-id`）必须在**发起 API 调用之前**由**调用方以有效的 UUID 生成**。Open WebUI 不会为你分配消息 ID。使用任何 UUID v4 生成器即可。
 
@@ -56,20 +56,20 @@ USER_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 ASSISTANT_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 ```
 
-### `childrenIds` 字段
+### `childrenIds` 字段 {#the-childrenids-field}
 
 Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须包含 `childrenIds` 数组，列出其直接子消息的 ID。没有这个字段，前端无法遍历消息树，**消息将无法显示**，即使它们已存在于数据库中。
 
 - **用户消息**必须在 `childrenIds` 中列出其对应的助手回复 ID
 - **助手消息**通常使用 `childrenIds: []`（空数组），除非后面还有继续对话的消息
 
-### `currentId` 字段
+### `currentId` 字段 {#the-currentid-field}
 
 `history` 对象必须使用 `currentId`（**camelCase**，不是 `current_id`）。这个字段告诉前端当前活动对话线程最后一条消息是哪一条。
 
-## 实现指南
+## 实现指南 {#implementation-guide}
 
-### 关键步骤：在聊天响应中补充助手消息
+### 关键步骤：在聊天响应中补充助手消息 {#critical-step-enrich-chat-response-with-assistant-message}
 
 在触发补全之前，助手消息必须作为关键前提先存在于聊天数据中。这个步骤至关重要，因为 Open WebUI 前端期望助手消息具有特定的结构。
 
@@ -97,9 +97,9 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 
 如果不做这一步补充，即使补全成功，助手的回复也不会出现在前端界面中。
 
-## 分步实现
+## 分步实现 {#step-by-step-implementation}
 
-### 第 1 步：创建包含用户和助手消息的对话
+### 第 1 步：创建包含用户和助手消息的对话 {#step-1-create-chat-with-user-and-assistant-messages}
 
 这一步会在一次请求中同时创建用户消息和一个空的助手占位符。响应会返回一个 `chatId`（位于 `id` 字段），后续请求会使用它。
 
@@ -180,7 +180,7 @@ curl -X POST https://<host>/api/v1/chats/new \
 
 :::
 
-### 第 2 步：触发助手补全
+### 第 2 步：触发助手补全 {#step-2-trigger-assistant-completion}
 
 使用补全端点生成实际的 AI 响应。请使用第 1 步得到的 `chatId`：
 
@@ -226,7 +226,7 @@ curl -X POST https://<host>/api/chat/completions \
 
 :::
 
-#### 第 2.1 步：结合知识集成（RAG）触发助手补全
+#### 第 2.1 步：结合知识集成（RAG）触发助手补全 {#step-21-trigger-assistant-completion-with-knowledge-integration-rag}
 
 对于涉及知识库或文档集合的高级用例，可以在补全请求中包含知识文件：
 
@@ -273,15 +273,15 @@ curl -X POST https://<host>/api/chat/completions \
   }'
 ```
 
-### 第 3 步：等待助手响应完成
+### 第 3 步：等待助手响应完成 {#step-3-wait-for-assistant-response-completion}
 
 根据你的实现需求，助手响应可以通过两种方式处理：
 
-#### 选项 A：流式处理（推荐）
+#### 选项 A：流式处理（推荐） {#option-a-stream-processing-recommended}
 
 如果在补全请求中使用 `stream: true`，你就可以实时处理流式响应，并等待流结束。这是 OpenWebUI Web 界面采用的方式，能提供即时反馈。
 
-#### 选项 B：轮询方式
+#### 选项 B：轮询方式 {#option-b-polling-approach}
 
 对于无法处理流式响应的实现，可以轮询聊天端点，直到响应准备好。请使用带指数退避的重试机制：
 
@@ -305,7 +305,7 @@ while true; do
 done
 ```
 
-### 第 4 步：获取最终对话
+### 第 4 步：获取最终对话 {#step-4-fetch-final-chat}
 
 获取已完成的对话：
 
@@ -314,9 +314,9 @@ curl -X GET https://<host>/api/v1/chats/<chatId> \
   -H "Authorization: Bearer <token>"
 ```
 
-## 其他 API 端点
+## 其他 API 端点 {#additional-api-endpoints}
 
-### 获取知识集合
+### 获取知识集合 {#fetch-knowledge-collection}
 
 获取用于 RAG 集成的知识库信息：
 
@@ -325,7 +325,7 @@ curl -X GET https://<host>/api/v1/knowledge/<knowledge-id> \
   -H "Authorization: Bearer <token>"
 ```
 
-### 获取模型信息
+### 获取模型信息 {#fetch-model-information}
 
 获取某个特定模型的详细信息：
 
@@ -334,7 +334,7 @@ curl -X GET https://<host>/api/v1/models/model?id=<model-name> \
   -H "Authorization: Bearer <token>"
 ```
 
-### 向现有对话发送更多消息
+### 向现有对话发送更多消息 {#send-additional-messages-to-an-existing-chat}
 
 对于多轮对话，你可以向现有聊天中追加新消息。你必须提供完整更新后的消息树，并正确维护 `parentId` 和 `childrenIds` 的关联：
 
@@ -405,9 +405,9 @@ curl -X POST https://<host>/api/chat/completions \
 
 :::
 
-## 响应处理
+## 响应处理 {#response-processing}
 
-### 解析助手回复
+### 解析助手回复 {#parsing-assistant-responses}
 
 助手回复有时会被包裹在 Markdown 代码块中。可以按以下方式清理：
 

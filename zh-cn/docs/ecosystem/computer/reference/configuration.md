@@ -20,7 +20,7 @@ trusted_sources = []        # trusted_header 模式：可选的代理 IP 白名�
 # 存储在数据库中的应用配置镜像
 ```
 
-## `[server]`：密钥
+## `[server]`：密钥 {#server-the-secret}
 
 `secret` 签署会话 JWT。轮换它并重启会使所有设备上的所有会话登出；这就是"让所有人立即登出"的杠杆。
 
@@ -28,7 +28,7 @@ trusted_sources = []        # trusted_header 模式：可选的代理 IP 白名�
 Computer 加密存储的值（前缀为 `encrypted:`），例如提供商 API 密钥和机器人令牌，都是基于服务器密钥的。轮换后，在设置中重新输入这些密钥。
 :::
 
-## `[auth]`：用户登录方式
+## `[auth]`：用户登录方式 {#auth-how-users-sign-in}
 
 | 模式 | 行为 |
 | --- | --- |
@@ -38,7 +38,7 @@ Computer 加密存储的值（前缀为 `encrypted:`），例如提供商 API �
 
 任何模式下都没有 localhost 绕过；每个请求都需要认证。更多关于整体模型的信息：[安全](/ecosystem/computer/phone-and-remote/security)。
 
-## `[app_config]`：镜像
+## `[app_config]`：镜像 {#app_config-the-mirror}
 
 你在 UI 中更改的设置会存储在数据库*中并*镜像到此部分。启动时，文件会重新写入数据库：**文件优先**。两个后果：
 

@@ -3,13 +3,13 @@ sidebar_position: 6
 title: "系统提示词"
 ---
 
-# 系统提示词
+# 系统提示词 {#system-prompts}
 
 Open Terminal 默认提供生成的系统提示词。它包括运行时详细信息，如操作系统、内核、架构、主机名、用户、shell 和 Python 版本。
 
 设置 `OPEN_TERMINAL_SYSTEM_PROMPT` 以用自己的模板替换生成的提示词。
 
-## 占位符
+## 占位符 {#placeholders}
 
 这些占位符会在 `OPEN_TERMINAL_SYSTEM_PROMPT` 中展开：
 

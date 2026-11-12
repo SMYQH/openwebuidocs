@@ -4,7 +4,7 @@
  * Brutal minimalism theme for Open WebUI docs.
  * Inspired by benji.app — typography-first, zero chrome.
  */
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
 
 /* Tailwind base styles */
 @tailwind base;
@@ -31,6 +31,9 @@
 	--ifm-font-family-base:
 		"IBM Plex Sans", -apple-system, blinkmacsystemfont, "Segoe UI", roboto,
 		"Helvetica Neue", arial, sans-serif;
+	--ifm-font-family-monospace:
+		"IBM Plex Mono", ui-monospace, "SFMono-Regular", "Menlo", "Monaco", "Consolas",
+		monospace;
 	--ifm-heading-font-family: var(--ifm-font-family-base);
 	--ifm-font-size-base: 15px;
 	--ifm-line-height-base: 1.65;
@@ -207,6 +210,22 @@ code {
 	margin-bottom: var(--ifm-leading);
 	border-radius: 16px;
 	overflow: hidden;
+}
+
+.shiki-code-block pre {
+	margin: 0;
+	padding: 14px 16px;
+	line-height: 1.35;
+}
+
+.shiki-code-block code {
+	display: block;
+	vertical-align: baseline;
+}
+
+.shiki-code-block .line {
+	display: inline;
+	line-height: 1.35;
 }
 
 /* stylelint-disable no-descending-specificity */
@@ -620,7 +639,8 @@ article p a {
 	letter-spacing: 0.04em;
 	line-height: 1.35;
 	text-transform: uppercase;
-	white-space: nowrap;
+	white-space: normal;
+	overflow-wrap: anywhere;
 }
 
 [data-theme="light"] .markdown th {
@@ -683,6 +703,16 @@ div.special_table + table tr th,
 div.special_table + table tr td {
 	padding-top: 0.45rem;
 	padding-bottom: 0.45rem;
+}
+
+@media screen and (width <= 996px) {
+	.responsive-table {
+		overflow-x: auto;
+	}
+
+	.responsive-table > table {
+		min-width: 48rem;
+	}
 }
 /* stylelint-enable no-descending-specificity */
 
@@ -1062,3 +1092,88 @@ html[data-theme="dark"] .navbar {
 	text-decoration-color: #333;
 }
 /* stylelint-enable no-descending-specificity */
+
+/* Timeline row marking the event where a CVE was officially rejected. */
+/* stylelint-disable-next-line no-descending-specificity */
+table tr:has(.cve-rejected) {
+	background-color: rgb(0 164 78 / 12%);
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+[data-theme="dark"] table tr:has(.cve-rejected) {
+	background-color: rgb(0 164 78 / 18%);
+}
+
+/* The default warning badge is white on amber, which fails contrast in both
+   themes. Used only on the disposition timelines, so restyle it as tinted
+   background plus same-hue text instead. */
+.badge--warning {
+	background-color: rgb(255 186 0 / 16%);
+	border-color: rgb(184 122 0 / 45%);
+	color: #78530a;
+}
+
+[data-theme="dark"] .badge--warning {
+	background-color: rgb(255 186 0 / 18%);
+	border-color: rgb(255 186 0 / 38%);
+	color: #ffc861;
+}
+
+/* Headline refutation block at the top of a disputed-CVE page. Deliberately
+   louder than a normal admonition: it is the page's whole argument in one box. */
+.cve-refutation .theme-admonition {
+	border: 1px solid rgb(220 53 69 / 40%);
+	border-left-width: 6px;
+	border-radius: 6px;
+	background-color: rgb(220 53 69 / 6%);
+	box-shadow: none;
+}
+
+.cve-refutation [class*="admonitionHeading"] {
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+}
+
+.cve-refutation [class*="admonitionContent"] > :last-child {
+	margin-bottom: 0;
+	padding-top: 0.85rem;
+	border-top: 1px solid rgb(220 53 69 / 25%);
+}
+
+[data-theme="dark"] .cve-refutation .theme-admonition {
+	border-color: rgb(220 53 69 / 55%);
+	background-color: rgb(220 53 69 / 10%);
+}
+
+[data-theme="dark"] .cve-refutation [class*="admonitionContent"] > :last-child {
+	border-top-color: rgb(220 53 69 / 35%);
+}
+
+/* Counterpart to .cve-refutation: the CVE is withdrawn and the record agrees
+   with us. Same weight, opposite colour, so the outcome reads at a glance. */
+/* stylelint-disable-next-line no-descending-specificity */
+.cve-resolved .theme-admonition {
+	border: 1px solid rgb(0 164 78 / 40%);
+	border-left-width: 6px;
+	border-radius: 6px;
+	background-color: rgb(0 164 78 / 6%);
+	box-shadow: none;
+}
+
+.cve-resolved [class*="admonitionHeading"] {
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+}
+
+.cve-resolved [class*="admonitionContent"] > :last-child {
+	margin-bottom: 0;
+}
+
+[data-theme="dark"] .cve-resolved .theme-admonition {
+	border-color: rgb(0 164 78 / 55%);
+	background-color: rgb(0 164 78 / 10%);
+}

@@ -6,7 +6,7 @@ title: "🛠️ 故障排查"
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 故障排查
+# 故障排查 {#troubleshooting}
 
 <ThemedImage
   alt="Open WebUI 故障排查：症状引导至正确的指南和修复方案"
@@ -19,15 +19,15 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 使用本页可以快速找到与你问题对应的指南。如果不确定从哪里开始，请先在下表中按症状定位。
 
-## 快速症状索引
+## 快速症状索引 {#quick-symptom-lookup}
 
 | 你看到的问题 | 跳转到 |
 | :--- | :--- |
-| 聊天返回空的 `"{}"`、Markdown 乱码、控制台出现 CORS 错误 | [连接错误 → HTTPS/CORS/WebSocket](./connection-error#-https-tls-cors--websocket-issues) |
+| 聊天返回空的 `"{}"`、Markdown 乱码、控制台出现 CORS 错误 | [连接错误 → HTTPS/CORS/WebSocket](./connection-error#https-tls-cors--websocket-issues) |
 | `WebSocket connection failed: 403` 或聊天卡住 | [连接错误 → WebSocket](./connection-error#websocket-troubleshooting) |
 | Open WebUI 无法连接 Ollama | [连接错误 → Ollama](./connection-error#connection-to-ollama-server) |
-| 模型列表加载极慢 / `/api/models` 返回 `500` | [连接错误 → 模型列表加载](./connection-error#%EF%B8%8F-model-list-loading-issues-slow-ui--unreachable-endpoints) |
-| `[SSL: CERTIFICATE_VERIFY_FAILED]` | [连接错误 → SSL](./connection-error#-ssl-certificate-issues-with-internal-tools) |
+| 模型列表加载极慢 / `/api/models` 返回 `500` | [连接错误 → 模型列表加载](./connection-error#model-list-loading-issues-slow-ui--unreachable-endpoints) |
+| `[SSL: CERTIFICATE_VERIFY_FAILED]` | [连接错误 → SSL](./connection-error#ssl-certificate-issues-with-internal-tools) |
 | 多副本场景下登录循环、401 Unauthorized、跨副本 token 错误 | [扩缩容与高可用 → 登录循环](./multi-replica#1-login-loops--401-unauthorized-errors) |
 | `database is locked`、不同实例之间数据忽隐忽现 | [扩缩容与高可用 → 数据库](./multi-replica#4-database-corruption--locked-errors) |
 | 上传时 worker 崩溃：`Child process [pid] died` | [RAG → Worker 崩溃](./rag#12-worker-dies-during-document-upload) |
@@ -43,14 +43,14 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | 图像无法生成、ComfyUI workflow 报错 | [图像生成](./image-generation) |
 | Web Search 返回空内容或代理错误 | [Web Search](./web-search) |
 | 性能慢、RAM 占用高、OOM 崩溃 | [性能与内存](./performance) |
-| 编辑模型/知识库权限时容器被 OOM kill（SQLite） | [性能与内存 → SQLite 在受限容器中的内存占用](./performance#4-sqlite-在受限容器中的内存占用) |
+| 编辑模型/知识库权限时容器被 OOM kill（SQLite） | [性能与内存 → SQLite 在受限容器中的内存占用](./performance#5-sqlite-memory-footprint-on-constrained-containers) |
 | "The prompt is too long" / context length exceeded | [上下文窗口 / Prompt Too Long](./context-window) |
 | 忘记管理员密码 | [重置管理员密码](./password-reset) |
 | 启动时出现 `no such table` 或 `table already exists` | [数据库迁移](./manual-database-migration) |
 | Apple Silicon (M1/M2/M3) 上容器启动时在 CORS 警告之后卡住 | [启动 → Apple Silicon 卡住](./startup#container-hangs-at-startup-on-apple-silicon-m1m2m3) |
 | 启动时 `OFFLINE_MODE` 下出现 `No embedding model is loaded` | [启动 → 离线嵌入](./startup#valueerror-no-embedding-model-is-loaded-with-offline-mode-on-a-fresh-install) |
 
-## 全部故障排查指南
+## 全部故障排查指南 {#all-troubleshooting-guides}
 
 | 指南 | 涵盖内容 |
 | :--- | :--- |
@@ -67,12 +67,12 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | [重置管理员密码](./password-reset) | Docker 与本地安装的密码重置 |
 | [数据库迁移](./manual-database-migration) | 手动 Alembic 迁移、升级失败后的恢复 |
 
-## 开始之前
+## 开始之前 {#before-you-start}
 
 - **先更新。** 很多问题会在较新的版本中修复。请先确认你正在使用最新版本。
 - **检查 ConfigVar。** Open WebUI 会把部分设置存到数据库中，并且这些设置优先级高于环境变量。如果你发现修改 env var 后似乎没有生效，请参阅 [环境变量配置](/reference/env-configuration#important-note-on-configvar-environment-variables)。
 
-## 浏览器兼容性
+## 浏览器兼容性 {#browser-compatibility}
 
 Open WebUI 需要现代浏览器。最低支持版本：
 
@@ -82,7 +82,7 @@ Open WebUI 需要现代浏览器。最低支持版本：
 
 如果你遇到渲染或功能问题，请先确认浏览器满足这些要求。
 
-## 社区支持
+## 社区支持 {#community-support}
 
 如果按照对应指南排查后仍然卡住：
 

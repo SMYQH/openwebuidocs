@@ -3,7 +3,7 @@ sidebar_position: 2
 title: "配置"
 ---
 
-# 配置参考
+# 配置参考 {#configuration-reference}
 Open Terminal 开箱即用，提供合理的默认值。本页面涵盖所有可自定义的设置。
 
 设置按以下顺序应用（后者覆盖前者）：
@@ -16,7 +16,7 @@ Open Terminal 开箱即用，提供合理的默认值。本页面涵盖所有可
 
 ---
 
-## 所有设置
+## 所有设置 {#all-settings}
 
 | 设置 | 默认值 | 环境变量 | 说明 |
 | :--- | :--- | :--- | :--- |
@@ -48,7 +48,7 @@ Open Terminal 开箱即用，提供合理的默认值。本页面涵盖所有可
 
 ---
 
-## 仅限 Docker 的设置
+## 仅限 Docker 的设置 {#docker-only-settings}
 
 以下设置仅在 Docker 镜像中有效：
 
@@ -96,7 +96,7 @@ execute_description = "This terminal has ffmpeg and ImageMagick installed."
 open-terminal run --config /path/to/my-config.toml
 ```
 
-### 系统提示词占位符
+### 系统提示词占位符 {#system-prompt-placeholders}
 
 设置 `OPEN_TERMINAL_SYSTEM_PROMPT` 时，Open Terminal 会展开以下占位符：
 
@@ -137,7 +137,7 @@ secrets:
 
 ---
 
-## 镜像变体
+## 镜像变体 {#image-variants}
 
 Open Terminal 提供三种大小的镜像：
 
@@ -153,7 +153,7 @@ Open Terminal 提供三种大小的镜像：
 
 <!-- TODO：截图——三种镜像变体相对大小和能力的可视化对比。 -->
 
-## 相关链接
+## 相关链接 {#related}
 
 - [安全最佳实践 →](./security)
 - [多用户配置 →](./multi-user)

@@ -3,11 +3,11 @@ title: 在 Open WebUI 中使用工作区
 sidebar_position: 5
 ---
 
-# 在 Open WebUI 中使用工作区
+# 在 Open WebUI 中使用工作区 {#use-a-workspace-from-open-webui}
 
 Computer 的网关将每个工作区暴露为一个 OpenAI 兼容的模型，因此你可以在 Open WebUI 的模型选择器中选择 `cptr/<workspace>`，并从你已经在使用的 Open WebUI 界面与真实的机器（文件、终端、git、工具）聊天。
 
-## 连接
+## 连接 {#connect-it}
 
 1. 在 Computer 中，打开**设置 → 管理 → 网关**并创建一个网关 API 密钥。立即复制它；它只显示一次并以哈希形式存储。
 2. 在 Open WebUI 中，前往**管理设置 → 连接**添加一个 **OpenAI API** 连接：
@@ -34,7 +34,7 @@ Computer 的网关将每个工作区暴露为一个 OpenAI 兼容的模型，因
 网关任务运行完整的代理循环（文件编辑、shell 命令、网络、工具），具有完全工具审批。Open WebUI 无法暂停等待逐操作确认。将其用于你愿意让代理操作的工作区，并保持密钥私有。
 :::
 
-## 这些标头带来的好处
+## 这些标头带来的好处 {#what-the-headers-buy-you}
 
 - **对话连续性**：后续消息落在同一个 Computer 聊天中，而不是创建一个新的。
 - **分支镜像**：Open WebUI 中的编辑和重新生成显示为 Computer 中相应聊天的分支。
@@ -42,11 +42,11 @@ Computer 的网关将每个工作区暴露为一个 OpenAI 兼容的模型，因
 
 每个网关对话都是 Computer 侧边栏中的真实聊天，因此你可以打开 Computer 并精确查看代理做了什么。
 
-## 不会转移的内容
+## 不会转移的内容 {#what-does-not-carry-over}
 
 网关是一个模型端点，而不是同步。Open WebUI 的知识库、工具、提示词、系统提示和用户不会转发到 Computer；如果工作区需要，在 Computer 中配置等效的能力。
 
-## 如果它不工作
+## 如果它不工作 {#if-it-doesnt-work}
 
 使用相同的 bearer 密钥调用 `GET /v1/models` 以区分连接/认证问题和模型选择。检查基础 URL 以 `/v1` 结尾，密钥属于正确的 Computer 用户，并且工作区存在。如果聊天可以工作但分支不行，重新复制标头并检查你的 Open WebUI 版本。
 

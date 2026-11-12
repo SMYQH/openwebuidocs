@@ -3,7 +3,7 @@ title: "Helicone"
 sidebar_position: 10
 ---
 
-# 在 Open WebUI 中集成 Helicone
+# 在 Open WebUI 中集成 Helicone {#helicone-integration-with-open-webui}
 
 :::warning
 
@@ -23,7 +23,7 @@ Helicone 是一个开源 LLM 可观测性平台，帮助开发者监控、调试
 - **调试能力**：排查模型响应问题
 - **成本跟踪**：统计跨提供商的 LLM 使用成本
 
-## 如何将 Helicone 集成到 OpenWebUI
+## 如何将 Helicone 集成到 OpenWebUI {#how-to-integrate-helicone-with-openwebui}
 
 <iframe
   width="560"
@@ -35,17 +35,17 @@ Helicone 是一个开源 LLM 可观测性平台，帮助开发者监控、调试
   allowfullscreen>
 </iframe>
 
-### 第 1 步：创建 Helicone 账号并生成 API key
+### 第 1 步：创建 Helicone 账号并生成 API key {#step-1-create-a-helicone-account-and-generate-your-api-key}
 
 创建 [Helicone 账号](https://www.helicone.ai/)并登录，生成 [API key](https://us.helicone.ai/settings/api-keys)。
 
 *— 请务必生成 [write only API key](https://docs.helicone.ai/helicone-headers/helicone-auth)。这样可只允许写入日志数据到 Helicone，而不会授予读取你私有数据的权限。*
 
-### 第 2 步：创建 OpenAI 账号并生成 API key
+### 第 2 步：创建 OpenAI 账号并生成 API key {#step-2-create-an-openai-account-and-generate-your-api-key}
 
  创建 OpenAI 账号，并登录 [OpenAI Developer Portal](https://platform.openai.com/account/api-keys) 生成 API key。
 
-### 第 3 步：使用 Helicone 的 base URL 运行 Open WebUI
+### 第 3 步：使用 Helicone 的 base URL 运行 Open WebUI {#step-3-run-your-open-webui-application-using-helicones-base-url}
 
 首次启动 Open WebUI 时，可参考 [Open WebUI 文档](/)中的命令，并加入 Helicone 的 API BASE URL，以便自动接入查询与监控。
 
@@ -69,7 +69,7 @@ Helicone 是一个开源 LLM 可观测性平台，帮助开发者监控、调试
 
 ![Open WebUI Helicone Setup](https://res.cloudinary.com/dacofvu8m/image/upload/v1745272273/openwebui-helicone-setup_y4ssca.gif)
 
-### 第 4 步：确认监控正常工作
+### 第 4 步：确认监控正常工作 {#step-4-make-sure-monitoring-is-working}
 
 为确认集成成功，请登录 Helicone 控制台并查看 “Requests” 标签页。
 
@@ -77,6 +77,6 @@ Helicone 是一个开源 LLM 可观测性平台，帮助开发者监控、调试
 
 ![Example Helicone Trace](https://res.cloudinary.com/dacofvu8m/image/upload/v1745272747/CleanShot_2025-04-21_at_17.57.46_2x_wpkpyf.png)
 
-## 了解更多
+## 了解更多 {#learn-more}
 
 如需更完整的 Helicone 指南，可参考 [Helicone 官方文档](https://docs.helicone.ai/getting-started/quick-start)。

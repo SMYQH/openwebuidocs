@@ -1,4 +1,4 @@
-# 使用 Python 更新
+# 使用 Python 更新 {#updating-with-python}
 
 如果你是通过 `pip` 在本地安装的 **Open WebUI**，可按以下方式升级到最新版本：
 

@@ -3,14 +3,14 @@ sidebar_position: 7
 title: "图像处理"
 ---
 
-# 📸 批量处理图像
+# 📸 批量处理图像 {#batch-process-images}
 
 对一个文件夹的图像进行调整大小、添加水印、格式转换或生成缩略图。
 
 > **你：** $Image Processor <br/>
 > /photos 中有产品图片。将它们调整到 800x800，添加水印，并制作缩略图。
 
-## AI 的工作流程
+## AI 的工作流程 {#what-the-ai-does}
 
 1. 使用 PIL/Pillow（预装）处理所有图像
 2. 创建带水印的原始大小版本
@@ -20,7 +20,7 @@ title: "图像处理"
 
 {/* TODO: Screenshot — File browser showing three output folders: processed/ (watermarked), thumbnails/ (200x200), plus a contact_sheet.png previewed as a grid of product images. */}
 
-## 技能内容
+## 技能内容 {#skill-content}
 
 将下面的内容复制到**工作区 → 技能 → 创建**：
 

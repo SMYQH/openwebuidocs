@@ -3,7 +3,7 @@ sidebar_position: 40
 title: "Entra ID 群组名称同步"
 ---
 
-# Microsoft Entra ID 群组名称同步
+# Microsoft Entra ID 群组名称同步 {#microsoft-entra-id-group-name-sync}
 
 :::warning
 本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
@@ -13,14 +13,14 @@ title: "Entra ID 群组名称同步"
 
 本教程说明如何配置 Microsoft Entra ID 以返回群组**名称**而非 ID，从而在 Open WebUI 中使用群组时获得更好的用户体验。
 
-## 前提条件
+## 前提条件 {#prerequisites}
 
 - 已配置 [Microsoft OAuth](/features/authentication-access/auth/sso#microsoft) 的 Open WebUI 实例
 - 具有修改应用注册权限的 Azure 账户
 - 可访问 Microsoft Entra 管理中心
 - 对 Microsoft Entra ID 应用程序配置有基本了解
 
-## 概述
+## 概述 {#overview}
 
 要在 Open WebUI 中获取人类可读的群组名称，需要：
 
@@ -36,7 +36,7 @@ title: "Entra ID 群组名称同步"
 
 :::
 
-## 步骤 1：在应用注册中配置令牌声明
+## 步骤 1：在应用注册中配置令牌声明 {#step-1-configure-token-claims-in-app-registration}
 
 1. 导航至 **Microsoft Entra 管理中心** > **App registrations（应用注册）**
 2. 选择您的 Open WebUI 应用程序
@@ -48,7 +48,7 @@ title: "Entra ID 群组名称同步"
    - 访问令牌
 7. 点击 **Add（添加）**
 
-## 步骤 2：修改应用程序清单
+## 步骤 2：修改应用程序清单 {#step-2-modify-the-application-manifest}
 
 这是启用群组名称而非 ID 的关键步骤。
 
@@ -107,7 +107,7 @@ title: "Entra ID 群组名称同步"
 
 5. 点击 **Save（保存）**
 
-## 步骤 3：将群组分配给企业应用程序
+## 步骤 3：将群组分配给企业应用程序 {#step-3-assign-groups-to-the-enterprise-application}
 
 使用 `ApplicationGroup` 时，只有明确分配给企业应用程序的群组才会包含在令牌中。
 
@@ -124,7 +124,7 @@ title: "Entra ID 群组名称同步"
 
 :::
 
-## 步骤 4：配置 API 权限
+## 步骤 4：配置 API 权限 {#step-4-configure-api-permissions}
 
 确保您的应用注册具有所需的 Microsoft Graph 权限：
 
@@ -136,7 +136,7 @@ title: "Entra ID 群组名称同步"
    - `profile`
 4. 点击 **Grant admin consent for [your organization]（为 [您的组织] 授予管理员同意）**
 
-## 步骤 5：配置 Open WebUI 环境变量
+## 步骤 5：配置 Open WebUI 环境变量 {#step-5-configure-open-webui-environment-variables}
 
 为您的 Open WebUI 部署配置以下环境变量。有关每个变量的更多详情，请参阅[环境变量文档](/reference/env-configuration)。
 
@@ -165,7 +165,7 @@ ENABLE_OAUTH_GROUP_CREATION=true
 WEBUI_SECRET_KEY=your_secure_secret_key
 ```
 
-### 环境变量参考
+### 环境变量参考 {#environment-variable-reference}
 
 | 变量 | 默认值 | 描述 |
 | ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -182,7 +182,7 @@ WEBUI_SECRET_KEY=your_secure_secret_key
 
 :::
 
-## 验证
+## 验证 {#verification}
 
 完成配置后：
 
@@ -197,13 +197,13 @@ WEBUI_SECRET_KEY=your_secure_secret_key
 :::
 
 
-## 混合 AD 群组（本地 Active Directory）
+## 混合 AD 群组（本地 Active Directory） {#hybrid-ad-groups-on-premises-active-directory}
 
 上面描述的 `cloud_displayname` 方法适用于**云原生**的 Entra ID 安全组。但如果你所在组织将群组从**本地 Active Directory** 同步到 Entra ID，那么即使按上面的步骤配置，这些同步过来的群组在 Open WebUI 中仍可能以 GUID 的形式显示。
 
 这是因为 `cloud_displayname` 只能解析源自 Entra ID 的群组名称。从本地 AD 同步过来的群组需要不同的令牌配置。
 
-### 解决方法：对混合群组使用 sAMAccountName
+### 解决方法：对混合群组使用 sAMAccountName {#fix-use-samaccountname-for-hybrid-groups}
 
 1. 在 **Azure 门户**中，导航到你的 **App Registration**
 2. 进入 **Token configuration**
@@ -219,7 +219,7 @@ WEBUI_SECRET_KEY=your_secure_secret_key
 
 :::
 
-## 其他资源
+## 其他资源 {#additional-resources}
 
 - [SSO（OAuth、OIDC、Trusted Header）](/features/authentication-access/auth/sso) - OAuth 配置概览
 - [OAuth 群组管理](/features/authentication-access/auth/sso#oauth-group-management) - 群组同步详情

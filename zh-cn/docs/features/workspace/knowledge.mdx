@@ -1,9 +1,11 @@
 ---
 sidebar_position: 4
 title: "知识库"
+sidebar_label: "知识库"
+description: "向知识库上传文档、就其内容提问，并在 Open WebUI 中选择检索与共享方式。"
 ---
 
-# 📚 知识库
+# 📚 知识库 {#knowledge}
 
 **让您的 AI 访问文档，并找到最相关的内容。**
 
@@ -13,17 +15,33 @@ title: "知识库"
 
 ---
 
-## 为什么使用知识库？
+## 为什么使用知识库？ {#ask-your-first-document-question}
 
-### 您的文档变得可由 AI 搜索
+### 选择如何处理文件 {#choose-how-to-work-with-files}
+
+| 需求 | 使用 |
+| :--- | :--- |
+| 在一次对话中询问某一个文件 | [把文件上传到对话](/features/chat-conversations/data-controls/files#using-files-in-open-webui) |
+| 在多次对话中复用一个文档集合 | 知识库，按照上面的步骤操作 |
+| 分析电子表格或通过代码创建文件 | [开放终端的文件分析指南](/features/open-terminal/use-cases/file-analysis) |
+
+与[笔记](/features/notes)（它会把完整内容注入每一条消息）不同，知识库可以按需检索相关段落。这使它适合那些如果完整发送就会超出模型上下文窗口的文档集合。若要纯本地地进行文档对话，请同时遵循[离线运行 Open WebUI](/tutorials/maintenance/offline-mode)。
+
+---
+
+### 为什么使用知识库？ {#why-knowledge}
+
+---
+
+### 您的文档变得可由 AI 搜索 {#your-documents-become-searchable-by-ai}
 
 上传一批合同、技术规格或研究论文。AI 按语义而非仅仅关键词搜索它们，并引用答案的来源。
 
-### 满足不同需求的两种检索模式
+### 满足不同需求的两种检索模式 {#two-retrieval-modes-for-different-needs}
 
 选择**专注检索**（RAG）让 AI 高效搜索大型集合，或选择**全文上下文**在精度重要时逐字注入整个文档。
 
-### 通过原生函数调用自主探索
+### 通过原生函数调用自主探索 {#autonomous-exploration-with-native-function-calling}
 
 启用[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)后，模型不只是搜索。它们可以浏览您的知识库、逐页阅读文件，并在没有手动提示的情况下跨多个文档综合内容。
 
@@ -33,7 +51,7 @@ title: "知识库"
 
 ---
 
-## 主要功能
+## 主要功能 {#key-features}
 
 | | |
 | :--- | :--- |
@@ -52,13 +70,13 @@ title: "知识库"
 
 将文件或知识库附加到模型时，点击已附加项在两种模式之间切换：
 
-### 🔍 专注检索（默认）
+### 🔍 专注检索（默认） {#focused-retrieval-default}
 
 使用 RAG 根据用户查询找到并注入最相关的片段。当启用混合搜索（`ENABLE_RAG_HYBRID_SEARCH`）时，检索结合了 BM25 关键词搜索和向量搜索，以及用于准确性的重排序。
 
 最适合只有特定部分相关的大型文档集。
 
-### 📄 全文上下文
+### 📄 全文上下文 {#full-context}
 
 将文件的完整内容注入每条消息。无分块，无语义搜索。无论原生函数调用设置如何，始终注入，因此模型无需调用任何工具来访问它。
 
@@ -99,7 +117,7 @@ title: "知识库"
 
 在智能体流程中，典型的模式是：用 `query_knowledge_files` 定位相关文档，然后用 `grep_knowledge_files` 精确定位具体行，再用 `view_file`（下方行号范围模式）阅读周边上下文。
 
-#### 用 `view_file` 读取
+#### 用 `view_file` 读取 {#reading-with-view_file}
 
 `view_file` 支持两种寻址模式：
 
@@ -167,7 +185,7 @@ find docs/ "*.md" | head -10
 
 自主探索在能够智能链接搜索、浏览和综合的前沿模型上效果最佳。较小的模型可能难以处理多步检索。管理员可以在**工作区 > 模型 > 编辑 > 内置工具**中按模型禁用**知识库**工具类别。
 
-#### 在混合知识库之间引导工具选择
+#### 在混合知识库之间引导工具选择 {#guiding-tool-choice-across-mixed-knowledge-bases}
 
 启用 `kb_exec` 后，模型需要在两个互补的工具间选择。最简单的做法是写一段简短的**系统提示词**，按知识库指明应优先使用哪个工具：
 
@@ -193,14 +211,14 @@ find docs/ "*.md" | head -10
 
 ---
 
-## 设置知识库
+## 设置知识库 {#setting-up-a-knowledge-base}
 
 1. 点击侧边栏中的**工作区**，然后选择**知识库**。
 2. 点击 **+ 新建知识库**，输入名称和描述。
 3. 上传文件或添加现有文档。
 4. 在**工作区 > 模型 > 编辑**中将知识库附加到模型，或在对话中用 `#` 引用它。
 
-### 组织为目录
+### 组织为目录 {#file-limits}
 
 知识库支持嵌套的**目录**，让大型文档集保持可导航。从**添加内容**菜单（**+ 新建目录**）创建，然后自由重组。
 
@@ -231,9 +249,13 @@ find docs/ "*.md" | head -10
   - `kb_exec`（启用时）把子目录当作文件系统：`ls docs/`、`tree`、`grep "x" docs/`、以及路径式引用（`docs/api/auth.md`）都可用——参见下方的[类文件系统访问（`kb_exec`）](#filesystem-style-access-kb_exec)。
   - 其他知识工具（`query_knowledge_files`、`grep_knowledge_files`、`search_knowledge_files`）忽略目录边界，从整个知识库返回匹配结果。
 
-### 重命名文件
+### 重命名文件 {#browsing-and-previewing-files}
 
 单个文件可以在工作区中通过文件项菜单原地重命名——无需重新上传。新名称会在所有引用该文件的地方（知识库列表、智能体工具输出、引用）反映出来。
+
+### 导出 {#renaming-files}
+
+管理员可以通过项目菜单（三点）> **导出**将整个知识库导出为 zip 文件。文件转换为 `.txt` 以确保通用兼容性。普通用户不会看到导出选项。
 
 ### 同步本地目录 {#syncing-a-local-directory}
 
@@ -256,9 +278,9 @@ find docs/ "*.md" | head -10
 应用内的**同步目录**操作处理的是你机器上的本地文件夹。要镜像**远程**源（GitHub 仓库、Confluence 空间、S3 桶以及[更多](/ecosystem/knowledge-base-sync#sources-and-connectors)），或按计划/在每次推送时**自动**保持知识库最新，请使用官方的 [**Knowledge Base Sync (oikb)**](/ecosystem/knowledge-base-sync) 配套工具。它会驱动这些相同的端点来完成任务。
 :::
 
-### 导出
+### 导出 {#exporting}
 
-管理员可以通过项目菜单（三点）> **导出**将整个知识库导出为 zip 文件。文件转换为 `.txt` 以确保通用兼容性。普通用户不会看到导出选项。
+管理员可以通过条目菜单（三点）> **导出** 把整个知识库导出为 zip 文件。文件会被转换为 `.txt` 以保证通用兼容性。普通用户看不到导出选项。
 
 ### API 访问 {#api-access}
 
@@ -284,36 +306,36 @@ find docs/ "*.md" | head -10
 - 在按 diff 操作后（创建 `mkdir` 路径，通过 `POST /api/v1/files/` 上传 `added` + `modified` 文件并附带哈希），调用：
 - `POST /api/v1/knowledge/{id}/sync/cleanup` — body：`{file_ids: [...], dir_ids: [...]}`。移除陈旧的文件（从知识库、向量存储和每文件集合中）以及 `sync/diff` 返回的现已为空的目录。请最后运行，避免删除赶在上传之前。
 
-文件处理是异步的。在将文件添加到知识库之前，必须轮询状态端点直到处理完成，否则会收到“内容为空”错误。有关工作流示例，请参阅 [API 端点](/reference/api-endpoints#-retrieval-augmented-generation-rag)。
+文件处理是异步的。在将文件添加到知识库之前，必须轮询状态端点直到处理完成，否则会收到“内容为空”错误。有关工作流示例，请参阅 [API 端点](/reference/api-endpoints#retrieval-augmented-generation-rag)。
 
 ---
 
-## 使用场景
+## 使用场景 {#use-cases}
 
-### 项目文档
+### 项目文档 {#project-documentation}
 
 将团队的技术规格、架构文档和操作手册上传到知识库。将其附加到“项目助手”模型。AI 根据您的实际文档回答问题，而不是通用的训练数据。
 
-### 法律和合规审查
+### 法律和合规审查 {#legal-and-compliance-review}
 
 加载合同、政策和监管文件。让 AI 查找特定条款、比较协议间的条款，或标记不一致之处。
 
-### 研究综合
+### 研究综合 {#research-synthesis}
 
 将数十篇论文添加到知识库。AI 在所有论文中搜索以回答问题、找到支持证据，或识别研究之间的矛盾。
 
 ---
 
-## 局限性
+## 局限性 {#limitations}
 
-### 全文上下文模式的上下文窗口
+### 全文上下文模式的上下文窗口 {#context-window-with-full-context-mode}
 
 “使用整个文档”会注入全文。将大型文档附加到上下文窗口较小的模型，将会挤占对话历史。
 
-### API 上传的处理延迟
+### API 上传的处理延迟 {#processing-delay-for-api-uploads}
 
 通过 API 上传的文件是异步处理的。在处理完成之前尝试使用文件将会静默失败或返回空结果。请注意，使用 `knowledge_id` 上传（见上）只是让关联在服务端完成、且对客户端断开更具鲁棒性，但并**不**意味着内容可以即时查询——提取和嵌入仍在后台运行，所以在依赖检索之前请轮询 `GET /api/v1/files/{id}/process/status`。
 
-### 原生函数调用改变行为
+### 原生函数调用改变行为 {#native-function-calling-changes-behavior}
 
 启用原生函数调用会改变知识库的工作方式。如果你的知识库突然停止产出结果，请检查全局模型默认值中是否设置了 `function_calling: native`。详情请参阅[知识库故障排查](/troubleshooting/rag#13-knowledge-base-attached-to-model-not-working)。

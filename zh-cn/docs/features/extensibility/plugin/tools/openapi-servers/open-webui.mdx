@@ -3,7 +3,7 @@ sidebar_position: 1
 title: "Open WebUI 集成"
 ---
 
-## 概览
+## 概览 {#overview}
 
 Open WebUI v0.6+ 支持通过 OpenAPI servers 无缝集成外部工具——这意味着你可以非常方便地使用自定义或社区提供的工具服务器来扩展自己的 LLM 工作流 🧰。
 
@@ -11,7 +11,7 @@ Open WebUI v0.6+ 支持通过 OpenAPI servers 无缝集成外部工具——这�
 
 ---
 
-## 第 1 步：启动一个 OpenAPI 工具服务器
+## 第 1 步：启动一个 OpenAPI 工具服务器 {#step-1-launch-an-openapi-tool-server}
 
 首先，你需要启动 [openapi-servers repo](https://github.com/open-webui/openapi-servers) 中提供的某个参考工具服务器。为了便于测试，这里以 time 工具服务器为例。
 
@@ -37,7 +37,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ---
 
-## 第 2 步：在 Open WebUI 中连接工具服务器
+## 第 2 步：在 Open WebUI 中连接工具服务器 {#step-2-connect-tool-server-in-open-webui}
 
 接下来，把正在运行的工具服务器连接到 Open WebUI：
 
@@ -49,17 +49,17 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ![设置页面](/images/openapi-servers/open-webui/settings.png)
 
-### 🧑‍💻 用户级工具服务器 vs. 🛠️ 全局工具服务器
+### 🧑‍💻 用户级工具服务器 vs. 🛠️ 全局工具服务器 {#user-tool-servers-vs-global-tool-servers}
 
 在 Open WebUI 中，有两种注册工具服务器的方式：
 
-#### 1. 用户级工具服务器（通过普通设置添加）
+#### 1. 用户级工具服务器（通过普通设置添加） {#1-user-tool-servers-added-via-regular-settings}
 
 - 仅对注册该工具服务器的用户可见
 - 连接由用户浏览器直接发起（client-side）
 - 非常适合个人工作流，或测试自定义 / 本地工具
 
-#### 2. 全局工具服务器（通过管理员设置添加）
+#### 2. 全局工具服务器（通过管理员设置添加） {#2-global-tool-servers-added-via-admin-settings}
 
 管理员可以把共享工具服务器配置给整个部署中的所有用户或部分用户：
 
@@ -95,7 +95,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 :::
 
-### 👉 可选：结合 mcpo 使用配置文件
+### 👉 可选：结合 mcpo 使用配置文件 {#optional-using-a-config-file-with-mcpo}
 
 如果你通过 mcpo 配置文件同时运行多个工具，需要注意：
 
@@ -127,7 +127,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ---
 
-## 第 3 步：确认工具服务器已连接成功 ✅
+## 第 3 步：确认工具服务器已连接成功 ✅ {#step-3-confirm-your-tool-server-is-connected}
 
 当工具服务器成功连接后，Open WebUI 会在消息输入区域直接显示一个 👇 工具服务器指示器：
 
@@ -145,7 +145,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ![工具信息弹窗展开](/images/openapi-servers/open-webui/info-modal.png)
 
-### 🛠️ 全局工具服务器的显示方式不同——而且默认隐藏！
+### 🛠️ 全局工具服务器的显示方式不同——而且默认隐藏！ {#global-tool-servers-look-different-and-are-hidden-by-default}
 
 如果你连接的是全局工具服务器（也就是管理员配置的工具），它不会像用户级工具服务器一样自动出现在输入区域。
 
@@ -169,7 +169,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ---
 
-## （可选）第 4 步：启用 “Native” Function Calling（ReACT 风格）🧠
+## （可选）第 4 步：启用 “Native” Function Calling（ReACT 风格）🧠 {#optional-step-4-choosing-the-function-calling-mode}
 
 :::info
 
@@ -189,7 +189,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ---
 
-## 需要更多工具？继续探索与扩展！🧱
+## 需要更多工具？继续探索与扩展！🧱 {#need-more-tools-explore--expand}
 
 [openapi-servers repo](https://github.com/open-webui/openapi-servers) 中还提供了多种有用的参考服务器：
 
@@ -203,15 +203,15 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ---
 
-## 故障排查与建议 🧩
+## 故障排查与建议 🧩 {#troubleshooting--tips}
 
-### 添加 URL 后立刻连接失败
+### 添加 URL 后立刻连接失败 {#tools-are-enabled-but-the-model-does-not-use-them-correctly}
 
 **先检查协议（HTTP vs HTTPS）。** “添加工具服务器” 弹窗可能会默认填入 `https://`。但大多数本地工具服务器并未启用 TLS，因此你需要改成普通的 `http://`。例如改为 `http://localhost:8000`（或你的实际端口）。
 
 **再检查端口号。** 默认端口取决于 server 实现。例如 uvicorn 默认是 `8000`，而 Open Terminal 默认是 `8888`。请确认你填入的 URL 中端口与实际监听端口一致。
 
-### 明明 server 在运行，但依然连接失败
+### 明明 server 在运行，但依然连接失败 {#connection-fails-immediately-after-adding-the-url}
 
 **理解 “localhost” 指向的是哪台机器。** 这是最常见的问题，而且会随工具服务器类型不同而变化：
 
@@ -228,11 +228,11 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 :::
 
-### 浏览器控制台出现 CORS 错误
+### 浏览器控制台出现 CORS 错误 {#connection-fails-even-though-the-server-is-running}
 
 如果你看到了 CORS 报错，说明工具服务器需要允许来自 Open WebUI origin 的请求。你可以查看 [FAQ 中关于 CORS 的条目](/features/extensibility/plugin/tools/openapi-servers/faq)，其中提供了 FastAPI 示例。
 
-### 通用建议
+### 通用建议 {#cors-errors-in-the-browser-console}
 
 - 🔒 如果你使用远程服务器，请检查防火墙与 HTTPS 配置
 - 📝 如果你希望服务器在重启后仍保持运行，建议用 Docker 或系统服务来部署

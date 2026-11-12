@@ -3,9 +3,9 @@ sidebar_position: 6
 title: "监控"
 ---
 
-# 监控
+# 监控 {#monitoring}
 
-## 📊 监控
+## 📊 监控 {#why-monitor}
 
 <a id="authentication-setup-for-api-key-"></a>
 
@@ -17,21 +17,21 @@ Open WebUI 提供健康检查和模型接口，便于与你现有的监控系统
 
 ## 为什么要监控？
 
-### 快速发现故障
+### 快速发现故障 {#catch-outages-quickly}
 
 每 60 秒运行一次健康检查，意味着你可以在一分钟内发现服务中断，而不是等用户来反馈。
 
-### 验证模型连通性
+### 验证模型连通性 {#verify-model-connectivity}
 
 Open WebUI 可能运行正常，而你的模型提供商却已经离线。监控 `/api/models` 接口就能发现这类情况。
 
-### 端到端信心
+### 端到端信心 {#end-to-end-confidence}
 
 最深度的检查会发送真实提示并验证响应。如果检查通过，就说明整条链路都正常：API、后端、模型提供商以及推理本身。
 
 ---
 
-## 主要功能
+## 主要功能 {#key-features}
 
 | | |
 | :--- | :--- |
@@ -42,7 +42,7 @@ Open WebUI 可能运行正常，而你的模型提供商却已经离线。监控
 
 ---
 
-## 第一级：基础健康检查
+## 第一级：基础健康检查 {#level-1-basic-health-check}
 
 `/health` 接口公开可访问（无需认证），服务运行时返回 `200 OK`。
 
@@ -52,7 +52,7 @@ curl http://your-open-webui-instance:8080/health
 
 这验证 Web 服务器可用性、应用程序初始化和基本数据库连通性。
 
-### Uptime Kuma 配置（健康检查）
+### Uptime Kuma 配置（健康检查） {#uptime-kuma-setup}
 
 1. **Add New Monitor**，类型选择 **HTTP(s)**
 2. **URL:** `http://your-open-webui-instance:8080/health`
@@ -61,7 +61,7 @@ curl http://your-open-webui-instance:8080/health
 
 ---
 
-## 第二级：模型连通性检查
+## 第二级：模型连通性检查 {#level-2-model-connectivity-check}
 
 `/api/models` 端点**需要认证**，它能确认 Open WebUI 可以访问你的模型提供商并列出可用模型。
 
@@ -98,7 +98,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 ---
 
-## 第三级：深度健康检查
+## 第三级：深度健康检查 {#level-3-deep-health-check}
 
 发送一条真实的聊天补全请求，以端到端验证整条推理链路。
 
@@ -121,7 +121,7 @@ curl -X POST http://your-open-webui-instance:8080/api/chat/completions \
 
 ---
 
-## 下一步
+## 下一步 {#next-steps}
 
 - **[OpenTelemetry](/reference/monitoring/otel)** - 使用 Grafana、Prometheus、Jaeger 等实现分布式追踪、指标和日志
 - **[API 密钥](/features/authentication-access/api-keys)** - 启用和生成用于程序化访问的 API key 完整指南

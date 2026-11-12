@@ -9,11 +9,11 @@ title: "使用 Docker 部署 Kokoro-FastAPI"
 
 :::
 
-## 什么是 `Kokoro-FastAPI`？
+## 什么是 `Kokoro-FastAPI`？ {#what-is-kokoro-fastapi}
 
 [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) 是 [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) 文本转语音模型的 Docker 化 FastAPI 封装，实现了 OpenAI API 端点规范，并提供高性能的文本转语音能力。
 
-## 主要特性
+## 主要特性 {#key-features}
 
 - 兼容 OpenAI Speech 端点，支持内联语音组合
 - 支持 NVIDIA GPU 加速或 CPU ONNX 推理
@@ -22,7 +22,7 @@ title: "使用 Docker 部署 Kokoro-FastAPI"
 - 集成 Web 界面，默认位于 localhost:8880/web（仓库中也提供了额外 gradio 容器）
 - 提供音素转换与生成功能端点
 
-## 语音
+## 语音 {#voices}
 
 - af
 - af_bella
@@ -38,23 +38,23 @@ title: "使用 Docker 部署 Kokoro-FastAPI"
 - bm_george
 - bm_lewis
 
-## 语言
+## 语言 {#languages}
 
 - en_us
 - en_uk
 
-## 前置要求
+## 前置要求 {#requirements}
 
 - 系统已安装 Docker
 - Open WebUI 正在运行
 - 若使用 GPU：需要支持 CUDA 12.3 的 NVIDIA GPU
 - 若仅 CPU：无特殊要求
 
-## ⚡️ 快速开始
+## ⚡️ 快速开始 {#quick-start}
 
-### 你可以选择 GPU 或 CPU 版本
+### 你可以选择 GPU 或 CPU 版本 {#you-can-choose-between-gpu-or-cpu-versions}
 
-### GPU 版本（需要支持 CUDA 12.8 的 NVIDIA GPU）
+### GPU 版本（需要支持 CUDA 12.8 的 NVIDIA GPU） {#gpu-version-requires-nvidia-gpu-with-cuda-128}
 
 使用 docker run：
 
@@ -88,7 +88,7 @@ services:
 
 :::
 
-### CPU 版本（ONNX 优化推理）
+### CPU 版本（ONNX 优化推理） {#cpu-version-onnx-optimized-inference}
 
 使用 docker run：
 
@@ -108,7 +108,7 @@ services:
         restart: always
 ```
 
-## 配置 Open WebUI 使用 `Kokoro-FastAPI`
+## 配置 Open WebUI 使用 `Kokoro-FastAPI` {#setting-up-open-webui-to-use-kokoro-fastapi}
 
 按照以下步骤让 Open WebUI 使用 Kokoro-FastAPI：
 
@@ -126,7 +126,7 @@ services:
 
 :::
 
-## 构建 Docker 容器
+## 构建 Docker 容器 {#building-the-docker-container}
 
 ```bash
 git clone https://github.com/remsky/Kokoro-FastAPI.git
@@ -139,9 +139,9 @@ docker compose up --build
 
 如需了解构建容器、修改端口等更多信息，请参阅 [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) 仓库。
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 未检测到 NVIDIA GPU
+### 未检测到 NVIDIA GPU {#nvidia-gpu-not-detected}
 
 如果 GPU 版本没有使用到你的显卡：
 
@@ -160,7 +160,7 @@ docker compose up --build
    docker run --rm --gpus all nvidia/cuda:12.2.0-base nvidia-smi
    ```
 
-### 从 Open WebUI 连接失败
+### 从 Open WebUI 连接失败 {#connection-issues-from-open-webui}
 
 如果 Open WebUI 无法访问 Kokoro，这通常是一个 Docker 网络问题。请根据你的部署情况选择对应方式：
 

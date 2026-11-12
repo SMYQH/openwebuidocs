@@ -16,11 +16,11 @@ title: "数据库 Schema"
 > [!WARNING]
 > 本文档反映了截至 Open WebUI v0.10.0 的 schema 更改。
 
-## Open-WebUI 内部 SQLite 数据库
+## Open-WebUI 内部 SQLite 数据库 {#open-webui-internal-sqlite-database}
 
 对于 Open-WebUI，SQLite 数据库充当用户管理、聊天历史、文件存储和各种其他核心功能的骨干。了解此结构对于任何希望有效地做出贡献或维护该项目的人来说都是必不可少的。
 
-## 内部 SQLite 位置
+## 内部 SQLite 位置 {#internal-sqlite-location}
 
 你可以在 `root` -> `data` -> `webui.db` 找到 SQLite 数据库
 
@@ -38,7 +38,7 @@ title: "数据库 Schema"
 └── 📄 start_windows.bat
 ```
 
-## 本地复制数据库
+## 本地复制数据库 {#copy-database-locally}
 
 如果你想将容器中运行的 Open-WebUI SQLite 数据库复制到本地机器，可以使用：
 
@@ -52,7 +52,7 @@ docker cp open-webui:/app/backend/data/webui.db ./webui.db
 docker exec -it open-webui /bin/sh
 ```
 
-## 表概览
+## 表概览 {#table-overview}
 
 以下是 Open-WebUI SQLite 数据库中所有表的完整列表。为方便起见，各表按字母顺序排列并编号。
 
@@ -105,7 +105,7 @@ docker exec -it open-webui /bin/sh
 
 现在我们有了所有的表，让我们了解每个表的结构。
 
-## Access Grant 表
+## Access Grant 表 {#access-grant-table}
 
 | **列名** | **数据类型** | **约束**         | **描述**                                        |
 | --------------- | ------------- | ----------------------- | ------------------------------------------------------ |
@@ -125,7 +125,50 @@ docker exec -it open-webui /bin/sh
 - `principal_type` 为 `user` 且 `principal_id` 为 `*` 表示公共（开放）访问权限
 - 支持组级别和个人用户级别的访问授权
 
-## Auth 表
+## API Key 表 {#api-key-table}
+
+| **Column Name** | **Data Type** | **Constraints**                        | **Description**                       |
+| --------------- | ------------- | -------------------------------------- | ------------------------------------- |
+| id              | Text          | PRIMARY KEY, UNIQUE                    | 唯一标识符                     |
+| user_id         | Text          | FOREIGN KEY(user.id) CASCADE           | 密钥的所有者                      |
+| key             | Text          | UNIQUE, NOT NULL                       | API 密钥本身                    |
+| data            | JSON          | nullable                               | 可扩展的数据载荷               |
+| expires_at      | BigInteger    | nullable                               | 过期时间戳                      |
+| last_used_at    | BigInteger    | nullable                               | 密钥最后使用的时间戳       |
+| created_at      | BigInteger    | NOT NULL                               | 创建时间戳                    |
+| updated_at      | BigInteger    | NOT NULL                               | 最后更新时间戳                 |
+
+关于 api_key 表的注意事项：
+
+- 删除用户会级联删除其密钥。
+- 生成密钥时会先删除该账户已有的行，因此一个账户最多持有一个密钥。行使用固定的 id `key_{user_id}`。
+- 密钥的生成、获取和删除都通过 `/api/v1/auths/api_key` 进行。除非 `auth.enable_api_keys` 配置键已开启，否则三者都会被拒绝；非管理员还需要 `features.api_keys` 权限。
+- `data`、`expires_at` 和 `last_used_at` 存在于结构中，但没有任何代码路径写入它们。密钥查找仅按 `key` 进行连接，不会参考 `expires_at`。
+
+## App 表 {#app-table}
+
+由迁移 `c92da83b017f` 为 [Apps](/features/channels/apps) 引入。
+
+| **Column Name** | **Data Type** | **Constraints**              | **Description**                                    |
+| --------------- | ------------- | ---------------------------- | -------------------------------------------------- |
+| id              | Text          | PRIMARY KEY                  | 唯一标识符 (UUID)，即发送给应用的 `app_id` |
+| slug            | Text          | UNIQUE, NOT NULL             | 安装时选择的应用标识                     |
+| name            | Text          | NOT NULL                     | 显示名称                                       |
+| user_id         | Text          | nullable                     | 安装该应用的管理员                        |
+| is_active       | Boolean       | NOT NULL, server_default=false | 应用是否已启用                       |
+| data            | JSON          | NOT NULL                     | 应用 URL、清单、已授予的作用域、设置、安装 ID 以及加密后的连接凭据 |
+| api_key         | Text          | nullable                     | 该应用的 API 密钥，已加密                       |
+| created_at      | BigInteger    | NOT NULL                     | 创建时间戳（纳秒）                   |
+| updated_at      | BigInteger    | NOT NULL                     | 最后更新时间戳（纳秒）                |
+
+关于 app 表的注意事项：
+
+- `api_key` 以及 `data` 中的连接凭据使用由 `WEBUI_SECRET_KEY` 派生的密钥加密。
+- 卸载应用会保留该行及其 `slug`：它会清空 `api_key`、连接凭据和安装 ID，把 `is_active` 设为 false，并停用该应用的频道成员关系。
+- 谁可以使用某个应用，记录在 `access_grant` 表中，`resource_type = 'app'`。
+- 只要 `message` 表中有任何一行带有 `app_id`，回退到 `c92da83b017f` 之前的版本就会被拒绝。
+
+## Auth 表 {#auth-table}
 
 | **列名** | **数据类型** | **约束** | **描述**   |
 | --------------- | ------------- | --------------- | ----------------- |
@@ -139,7 +182,26 @@ docker exec -it open-webui /bin/sh
 - 使用 UUID 作为主键
 - 与 `users` 表一对一关系（共享 id）
 
-## Channel 表
+## Auth Session 表 {#auth-session-table}
+
+| **Column Name** | **Data Type** | **Constraints** | **Description**                                                                    |
+| --------------- | ------------- | --------------- | ---------------------------------------------------------------------------------- |
+| id              | Text          | PRIMARY KEY     | 唯一会话标识符 (UUID)                                                   |
+| user_id         | Text          | nullable        | 已登录用户；在浏览器登录请求等待批准期间为空       |
+| refresh_token_id | Text         | nullable        | 当前刷新令牌的标识；在登录完成前为空      |
+| data            | JSON          | NOT NULL        | 应用名称以及待处理登录请求的状态                          |
+| created_at      | BigInteger    | NOT NULL        | 会话创建时间戳                                                         |
+| updated_at      | BigInteger    | NOT NULL        | 会话最后更新时间戳                                                      |
+| expires_at      | BigInteger    | NOT NULL        | 会话过期时间戳                                                         |
+
+关于 auth_session 表的注意事项：
+
+- 该表由迁移 `c92da83b017f` 引入，用于为 Tether 之类的原生应用提供可续期的登录会话。
+- `user_id` 在登录完成前为空；流程完成后该行会绑定到对应用户。
+- `expires_at` 决定会话何时过期；刷新会把它向后延长。
+- 删除用户会级联删除其会话行。
+
+## Channel 表 {#channel-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**                     |
 | --------------- | ------------- | --------------- | ----------------------------------- |
@@ -159,7 +221,7 @@ docker exec -it open-webui /bin/sh
 - 使用 UUID 作为主键
 - 频道名称不区分大小写（以小写存储）
 
-## Channel Member 表
+## Channel Member 表 {#channel-member-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**                              |
 | --------------- | ------------- | --------------- | -------------------------------------------- |
@@ -168,7 +230,29 @@ docker exec -it open-webui /bin/sh
 | user_id         | TEXT          | NOT NULL        | 对用户的引用                        |
 | created_at      | BIGINT        | -               | 创建成员资格的时间戳        |
 
-## Channel File 表
+## Channel Webhook 表 {#channel-webhook-table}
+
+| **Column Name** | **Data Type** | **Constraints**                              | **Description**                     |
+| --------------- | ------------- | -------------------------------------------- | ----------------------------------- |
+| id              | Text          | PRIMARY KEY                                  | 唯一标识符                 |
+| channel_id      | Text          | FOREIGN KEY(channel.id) CASCADE, NOT NULL   | webhook 发布到的频道     |
+| user_id         | Text          | NOT NULL                                    | 创建该 webhook 的用户       |
+| name            | Text          | NOT NULL                                    | 显示在其消息上的名称 |
+| profile_image_url | Text        | nullable                                    | 显示在其消息上的头像       |
+| token           | Text          | NOT NULL                                    | 用于授权发布的密钥   |
+| last_used_at    | BigInteger    | nullable                                    | 最后一次发布的时间戳         |
+| created_at      | BigInteger    | NOT NULL                                    | 创建时间戳                 |
+| updated_at      | BigInteger    | NOT NULL                                    | 最后更新时间戳              |
+
+关于 channel_webhook 表的注意事项：
+
+- 删除频道会级联删除其 webhook。
+- `token` 是一个 URL 安全的随机令牌，包含 32 字节熵，由 `secrets.token_urlsafe(32)` 生成，以明文存储，并携带在请求路径中。`POST /api/v1/channels/webhooks/{webhook_id}/{token}` 不做任何认证，只把 `id` 与 `token` 这一对值与本表比对，因此任何持有该组合的人都可以向频道发布消息。
+- 每次被接受的消息都会更新 `last_used_at`。
+- 列出和创建 webhook 要求调用者是实例管理员或该频道的创建者。关于为什么基于成员身份的分支永远不会命中，参见 [Channel Member 表](#channel-member-table) 中关于 `role` 的说明。
+- webhook 的 `id` 和 `name` 会被复制到所发布消息的 `meta.webhook` 中，界面用它来代替作者账户进行渲染。
+
+## Channel File 表 {#channel-file-table}
 
 | **列名** | **数据类型** | **约束**                    | **描述**                   |
 | --------------- | ------------- | ---------------------------------- | --------------------------------- |
@@ -186,7 +270,7 @@ docker exec -it open-webui /bin/sh
 - 带有 CASCADE 删除的外键关系
 - 在 `channel_id`, `file_id` 和 `user_id` 上建立索引以提高性能
 
-## Chat 表
+## Chat 表 {#chat-table}
 
 | **Column Name** | **Data Type** | **Constraints**         | **Description**          |
 | --------------- | ------------- | ----------------------- | ------------------------ |
@@ -211,7 +295,7 @@ docker exec -it open-webui /bin/sh
 - `last_read_at` 由侧边栏未读状态逻辑使用（与 `updated_at` 比较）。
 - 当聊天具有活动的分享链接时，`share_id` 引用 `shared_chat.id` 令牌。
 
-## Shared Chat 表
+## Shared Chat 表 {#shared-chat-table}
 
 | **列名** | **数据类型** | **约束**                  | **描述**                    |
 | --------------- | ------------- | -------------------------------- | ---------------------------------- |
@@ -230,146 +314,7 @@ docker exec -it open-webui /bin/sh
 - 删除原始聊天会级联删除共享快照。
 - 共享聊天的访问控制通过 `access_grant` 表（`resource_type = 'shared_chat'`）进行管理。
 
-## Automation 表
-
-| **Column Name** | **Data Type** | **Constraints**         | **Description** |
-| --------------- | ------------- | ----------------------- | --------------- |
-| id              | Text          | PRIMARY KEY             | Unique identifier (UUID) |
-| user_id         | Text          | NOT NULL                | Owner of the automation |
-| name            | Text          | NOT NULL                | 自动化的显示名称 |
-| data            | JSON          | NOT NULL                | 自动化有效负载 (`prompt`, `model_id`, `rrule`, 可选终端配置) |
-| meta            | JSON          | nullable                | 可选元数据 |
-| is_active       | Boolean       | NOT NULL, default=True  | 激活/暂停状态 |
-| last_run_at     | BigInteger    | nullable                | 上次执行时间 |
-| next_run_at     | BigInteger    | nullable                | 下一次计划执行时间 |
-| created_at      | BigInteger    | NOT NULL                | Creation timestamp |
-| updated_at      | BigInteger    | NOT NULL                | Last update timestamp |
-
-关于 automation 表的注意事项：
-
-- `next_run_at` 已建立索引以便进行高效的到期运行轮询。
-- `data.rrule` 定义了重复发生频率并驱动调度器计算。
-
-## Automation Run 表
-
-| **Column Name** | **Data Type** | **Constraints** | **Description** |
-| --------------- | ------------- | --------------- | --------------- |
-| id              | Text          | PRIMARY KEY     | Unique identifier (UUID) |
-| automation_id   | Text          | NOT NULL        | 对自动化的引用 |
-| chat_id         | Text          | nullable        | 此次运行创建的聊天（如果可用） |
-| status          | Text          | NOT NULL        | 运行状态 (`success` / `error`) |
-| error           | Text          | nullable        | 当状态为 `error` 时的错误详情 |
-| created_at      | BigInteger    | NOT NULL        | 执行记录时间戳 |
-
-关于 automation_run 表的注意事项：
-
-- 在 `automation_id` 上建立索引以快速查询每个自动化的运行历史。
-- 删除自动化时删除关联行。
-
-## Calendar 表
-
-| **Column Name** | **Data Type** | **Constraints**         | **Description**                    |
-| --------------- | ------------- | ----------------------- | ---------------------------------- |
-| id              | Text          | PRIMARY KEY             | Unique identifier (UUID)           |
-| user_id         | Text          | NOT NULL                | Owner of the calendar              |
-| name            | Text          | NOT NULL                | 日历显示名称              |
-| color           | Text          | nullable                | 显示颜色（十六进制，例如 `#3b82f6`） |
-| is_default      | Boolean       | NOT NULL, default=False | 这是否是用户的默认日历 |
-| data            | JSON          | nullable                | 可扩展的数据有效负载            |
-| meta            | JSON          | nullable                | Optional metadata                  |
-| created_at      | BigInteger    | NOT NULL                | Creation timestamp                 |
-| updated_at      | BigInteger    | NOT NULL                | Last update timestamp              |
-
-关于 calendar 表的注意事项：
-
-- 在 `user_id` 上建立索引以高效列出每个用户的日历。
-- 在首次访问时自动创建一个默认的“Personal”（个人）日历。
-- “Scheduled Tasks”（计划任务）日历是**虚拟的** — 它不存储在此表中。相反，对于具有自动化访问权限的用户，API 在响应时（使用恒定 ID `__scheduled_tasks__`）综合出它。自动化 RRULE 的未来运行和过去的执行记录都会作为该日历上的虚拟事件呈现。
-- 访问控制通过 `access_grant` 表（`resource_type = 'calendar'`）进行管理，从而实现用户和组之间的日历共享。
-- 用户只能删除非默认日历。删除日历会级联到其所有事件、参与者和访问授权。
-
-## Calendar Event 表
-
-| **Column Name** | **Data Type** | **Constraints**         | **Description**                    |
-| --------------- | ------------- | ----------------------- | ---------------------------------- |
-| id              | Text          | PRIMARY KEY             | Unique identifier (UUID)           |
-| calendar_id     | Text          | NOT NULL                | 对父日历的引用       |
-| user_id         | Text          | NOT NULL                | 创建事件的用户         |
-| title           | Text          | NOT NULL                | 事件标题                        |
-| description     | Text          | nullable                | 事件描述                  |
-| start_at        | BigInteger    | NOT NULL                | 开始时间（纪元纳秒）     |
-| end_at          | BigInteger    | nullable                | 结束时间（纪元纳秒）       |
-| all_day         | Boolean       | NOT NULL, default=False | 这是否是一个全天事件   |
-| rrule           | Text          | nullable                | 用于重复发生的 iCalendar RRULE     |
-| color           | Text          | nullable                | 每个事件颜色覆盖           |
-| location        | Text          | nullable                | 事件位置                     |
-| data            | JSON          | nullable                | 可扩展的数据有效负载            |
-| meta            | JSON          | nullable                | 可选元数据（例如 `automation_id`） |
-| is_cancelled    | Boolean       | NOT NULL, default=False | 软取消标志                   |
-| created_at      | BigInteger    | NOT NULL                | Creation timestamp                 |
-| updated_at      | BigInteger    | NOT NULL                | Last update timestamp              |
-
-关于 calendar_event 表的注意事项：
-
-- 在 (`calendar_id`, `start_at`) 上建立复合索引，以便在一个日历内进行高效的范围查询。
-- 在 (`user_id`, `start_at`) 上建立复合索引，以便每个用户进行高效的日期范围查询。
-- 重复事件存储 `rrule` 字符串，并在查询时扩展为单独的实例（使用 `dateutil` 进行服务器端 Python 扩展）。
-- 取消的事件（`is_cancelled = True`）被排除在范围查询之外，但保留在数据库中。
-
-## Calendar Event Attendee 表
-
-| **Column Name** | **Data Type** | **Constraints**                    | **Description**                    |
-| --------------- | ------------- | ---------------------------------- | ---------------------------------- |
-| id              | Text          | PRIMARY KEY                        | Unique identifier (UUID)           |
-| event_id        | Text          | NOT NULL                           | 对日历事件的引用    |
-| user_id         | Text          | NOT NULL                           | 被邀请参加事件的用户          |
-| status          | Text          | NOT NULL, default='pending'        | RSVP 状态：`pending`（待定）、`accepted`（已接受）、`declined`（已拒绝）、`tentative`（暂定） |
-| meta            | JSON          | nullable                           | Optional metadata                  |
-| created_at      | BigInteger    | NOT NULL                           | Creation timestamp                 |
-| updated_at      | BigInteger    | NOT NULL                           | Last update timestamp              |
-
-关于 calendar_event_attendee 表的注意事项：
-
-- 在 (`event_id`, `user_id`) 上的唯一约束以防止重复的参与者条目。
-- 在 (`user_id`, `status`) 上建立索引以高效查找邀请用户的事件。
-- 当使用新参与者列表更新事件时，将批量替换参与者。
-- 删除事件会级联删除所有参与者记录。
-
-## Chat File 表
-
-| **Column Name** | **Data Type** | **Constraints**                  | **Description**                   |
-| --------------- | ------------- | -------------------------------- | --------------------------------- |
-| id              | Text          | PRIMARY KEY                      | Unique identifier (UUID)          |
-| user_id         | Text          | NOT NULL                         | User associated with the file     |
-| chat_id         | Text          | FOREIGN KEY(chat.id), NOT NULL   | Reference to the chat             |
-| file_id         | Text          | FOREIGN KEY(file.id), NOT NULL   | Reference to the file             |
-| message_id      | Text          | nullable                         | Reference to associated message   |
-| created_at      | BigInteger    | NOT NULL                         | Creation timestamp                |
-| updated_at      | BigInteger    | NOT NULL                         | Last update timestamp             |
-
-关于 chat_file 表的注意事项：
-
-- Unique constraint on (`chat_id`, `file_id`) to prevent duplicate entries
-- 带有 CASCADE 删除的外键关系
-- Indexed on `chat_id`, `file_id`, `message_id`, and `user_id` for performance
-
-**为何添加此表：**
-
-- **Query Efficiency**: Before this, files were embedded in message objects. This table allows direct indexed lookups for finding all files in a chat without iterating through every message.
-- **Data Consistency**: Acts as a single source of truth for file associations. In multi-node deployments, all nodes query this table instead of relying on potentially inconsistent embedded data.
-- **Deduplication**: The database-level unique constraint prevents duplicate file associations, which is more reliable than application-level checks.
-
-## Chat ID Tag 表
-
-| **Column Name** | **Data Type** | **Constraints** | **Description**    |
-| --------------- | ------------- | --------------- | ------------------ |
-| id              | VARCHAR(255)  | NOT NULL        | Unique identifier  |
-| tag_name        | VARCHAR(255)  | NOT NULL        | 标签名称    |
-| chat_id         | VARCHAR(255)  | NOT NULL        | 聊天引用  |
-| user_id         | VARCHAR(255)  | NOT NULL        | 用户引用  |
-| timestamp       | INTEGER       | NOT NULL        | 创建时间戳 |
-
-## Chat Message 表
+## Chat Message 表 {#chat-message-table}
 
 `chat_message` 表是聊天会话的**标准化逐条消息存储**：每条消息一行，独立于 `chat.chat` 中的 JSON 历史 blob，并且与频道 [Message 表](#message-table)（保存频道/线程消息，而非聊天模型轮次）不同。
 
@@ -400,7 +345,200 @@ docker exec -it open-webui /bin/sh
 - 复合索引支持常见的访问模式：(`chat_id`, `parent_id`)、(`model_id`, `created_at`) 和 (`user_id`, `created_at`)。
 - `context_summary` 在 v0.10.0 中添加（迁移 `4c5ce3d2f27f`），用于存储消息上下文的摘要。
 
-## Config 表
+## Chat View State 表 {#chat-view-state-table}
+
+| **Column Name** | **Data Type** | **Constraints** | **Description**                                              |
+| --------------- | ------------- | --------------- | ------------------------------------------------------------ |
+| user_id         | Text          | PRIMARY KEY     | 该视图所属的用户                                     |
+| chat_id         | Text          | PRIMARY KEY, indexed | 该视图所属的聊天                                |
+| state           | JSON          | NOT NULL        | 打开的标签页、分栏布局以及选中的终端                |
+| updated_at      | BigInteger    | NOT NULL        | 最后更新时间戳（秒）                              |
+
+关于 chat_view_state 表的注意事项：
+
+- 由迁移 `6a23bd107e54` 创建。主键为 (`user_id`, `chat_id`)，并在 `chat_id` 上建有索引 (`ix_chat_view_state_chat_id`)。
+- 它保存用户在某个聊天中打开过的标签页，因此在任何设备上重新打开该聊天时都会恢复。`GET` 与 `POST /api/v1/chats/{id}/view` 会为任何有权读取该聊天的用户读取和保存它。
+- 每一行都只对其所属用户可见，即使对于共享聊天也是如此：这些端点只读写当前登录用户自己的行。保存的视图上限为 1 MiB。
+- 删除聊天会删除其相关行，删除用户会删除该用户的行。
+
+## Automation 表 {#automation-table}
+
+| **Column Name** | **Data Type** | **Constraints**         | **Description** |
+| --------------- | ------------- | ----------------------- | --------------- |
+| id              | Text          | PRIMARY KEY             | Unique identifier (UUID) |
+| user_id         | Text          | NOT NULL                | Owner of the automation |
+| name            | Text          | NOT NULL                | 自动化的显示名称 |
+| data            | JSON          | NOT NULL                | 自动化有效负载 (`prompt`, `model_id`, `rrule`, 可选终端配置) |
+| meta            | JSON          | nullable                | 可选元数据 |
+| is_active       | Boolean       | NOT NULL, default=True  | 激活/暂停状态 |
+| last_run_at     | BigInteger    | nullable                | 上次执行时间 |
+| next_run_at     | BigInteger    | nullable                | 下一次计划执行时间 |
+| created_at      | BigInteger    | NOT NULL                | Creation timestamp |
+| updated_at      | BigInteger    | NOT NULL                | Last update timestamp |
+
+关于 automation 表的注意事项：
+
+- `next_run_at` 已建立索引以便进行高效的到期运行轮询。
+- `data.rrule` 定义了重复发生频率并驱动调度器计算。
+
+## Automation Run 表 {#automation-run-table}
+
+| **Column Name** | **Data Type** | **Constraints** | **Description** |
+| --------------- | ------------- | --------------- | --------------- |
+| id              | Text          | PRIMARY KEY     | Unique identifier (UUID) |
+| automation_id   | Text          | NOT NULL        | 对自动化的引用 |
+| chat_id         | Text          | nullable        | 此次运行创建的聊天（如果可用） |
+| status          | Text          | NOT NULL        | 运行状态 (`success` / `error`) |
+| error           | Text          | nullable        | 当状态为 `error` 时的错误详情 |
+| created_at      | BigInteger    | NOT NULL        | 执行记录时间戳 |
+
+关于 automation_run 表的注意事项：
+
+- 在 `automation_id` 上建立索引以快速查询每个自动化的运行历史。
+- 删除自动化时删除关联行。
+
+## Calendar 表 {#calendar-table}
+
+| **Column Name** | **Data Type** | **Constraints**         | **Description**                    |
+| --------------- | ------------- | ----------------------- | ---------------------------------- |
+| id              | Text          | PRIMARY KEY             | Unique identifier (UUID)           |
+| user_id         | Text          | NOT NULL                | Owner of the calendar              |
+| name            | Text          | NOT NULL                | 日历显示名称              |
+| color           | Text          | nullable                | 显示颜色（十六进制，例如 `#3b82f6`） |
+| is_default      | Boolean       | NOT NULL, default=False | 这是否是用户的默认日历 |
+| data            | JSON          | nullable                | 可扩展的数据有效负载            |
+| meta            | JSON          | nullable                | Optional metadata                  |
+| created_at      | BigInteger    | NOT NULL                | Creation timestamp                 |
+| updated_at      | BigInteger    | NOT NULL                | Last update timestamp              |
+
+关于 calendar 表的注意事项：
+
+- 在 `user_id` 上建立索引以高效列出每个用户的日历。
+- 在首次访问时自动创建一个默认的“Personal”（个人）日历。
+- “Scheduled Tasks”（计划任务）日历是**虚拟的** — 它不存储在此表中。相反，对于具有自动化访问权限的用户，API 在响应时（使用恒定 ID `__scheduled_tasks__`）综合出它。自动化 RRULE 的未来运行和过去的执行记录都会作为该日历上的虚拟事件呈现。
+- 访问控制通过 `access_grant` 表（`resource_type = 'calendar'`）进行管理，从而实现用户和组之间的日历共享。
+- 用户只能删除非默认日历。删除日历会级联到其所有事件、参与者和访问授权。
+
+## Calendar Event 表 {#calendar-event-table}
+
+| **Column Name** | **Data Type** | **Constraints**         | **Description**                    |
+| --------------- | ------------- | ----------------------- | ---------------------------------- |
+| id              | Text          | PRIMARY KEY             | Unique identifier (UUID)           |
+| calendar_id     | Text          | NOT NULL                | 对父日历的引用       |
+| user_id         | Text          | NOT NULL                | 创建事件的用户         |
+| title           | Text          | NOT NULL                | 事件标题                        |
+| description     | Text          | nullable                | 事件描述                  |
+| start_at        | BigInteger    | NOT NULL                | 开始时间（纪元纳秒）     |
+| end_at          | BigInteger    | nullable                | 结束时间（纪元纳秒）       |
+| all_day         | Boolean       | NOT NULL, default=False | 这是否是一个全天事件   |
+| rrule           | Text          | nullable                | 用于重复发生的 iCalendar RRULE     |
+| color           | Text          | nullable                | 每个事件颜色覆盖           |
+| location        | Text          | nullable                | 事件位置                     |
+| data            | JSON          | nullable                | 可扩展的数据有效负载            |
+| meta            | JSON          | nullable                | 可选元数据（例如 `automation_id`） |
+| is_cancelled    | Boolean       | NOT NULL, default=False | 软取消标志                   |
+| created_at      | BigInteger    | NOT NULL                | Creation timestamp                 |
+| updated_at      | BigInteger    | NOT NULL                | Last update timestamp              |
+
+关于 calendar_event 表的注意事项：
+
+- 在 (`calendar_id`, `start_at`) 上建立复合索引，以便在一个日历内进行高效的范围查询。
+- 在 (`user_id`, `start_at`) 上建立复合索引，以便每个用户进行高效的日期范围查询。
+- 重复事件存储 `rrule` 字符串，并在查询时扩展为单独的实例（使用 `dateutil` 进行服务器端 Python 扩展）。
+- 取消的事件（`is_cancelled = True`）被排除在范围查询之外，但保留在数据库中。
+
+## Calendar Event Attendee 表 {#calendar-event-attendee-table}
+
+| **Column Name** | **Data Type** | **Constraints**                    | **Description**                    |
+| --------------- | ------------- | ---------------------------------- | ---------------------------------- |
+| id              | Text          | PRIMARY KEY                        | Unique identifier (UUID)           |
+| event_id        | Text          | NOT NULL                           | 对日历事件的引用    |
+| user_id         | Text          | NOT NULL                           | 被邀请参加事件的用户          |
+| status          | Text          | NOT NULL, default='pending'        | RSVP 状态：`pending`（待定）、`accepted`（已接受）、`declined`（已拒绝）、`tentative`（暂定） |
+| meta            | JSON          | nullable                           | Optional metadata                  |
+| created_at      | BigInteger    | NOT NULL                           | Creation timestamp                 |
+| updated_at      | BigInteger    | NOT NULL                           | Last update timestamp              |
+
+关于 calendar_event_attendee 表的注意事项：
+
+- 在 (`event_id`, `user_id`) 上的唯一约束以防止重复的参与者条目。
+- 在 (`user_id`, `status`) 上建立索引以高效查找邀请用户的事件。
+- 当使用新参与者列表更新事件时，将批量替换参与者。
+- 删除事件会级联删除所有参与者记录。
+
+## Chat File 表 {#chat-file-table}
+
+| **Column Name** | **Data Type** | **Constraints**                  | **Description**                   |
+| --------------- | ------------- | -------------------------------- | --------------------------------- |
+| id              | Text          | PRIMARY KEY                      | Unique identifier (UUID)          |
+| user_id         | Text          | NOT NULL                         | User associated with the file     |
+| chat_id         | Text          | FOREIGN KEY(chat.id), NOT NULL   | Reference to the chat             |
+| file_id         | Text          | FOREIGN KEY(file.id), NOT NULL   | Reference to the file             |
+| message_id      | Text          | nullable                         | Reference to associated message   |
+| created_at      | BigInteger    | NOT NULL                         | Creation timestamp                |
+| updated_at      | BigInteger    | NOT NULL                         | Last update timestamp             |
+
+关于 chat_file 表的注意事项：
+
+- Unique constraint on (`chat_id`, `file_id`) to prevent duplicate entries
+- 带有 CASCADE 删除的外键关系
+- Indexed on `chat_id`, `file_id`, `message_id`, and `user_id` for performance
+
+**为何添加此表：**
+
+- **Query Efficiency**: Before this, files were embedded in message objects. This table allows direct indexed lookups for finding all files in a chat without iterating through every message.
+- **Data Consistency**: Acts as a single source of truth for file associations. In multi-node deployments, all nodes query this table instead of relying on potentially inconsistent embedded data.
+- **Deduplication**: The database-level unique constraint prevents duplicate file associations, which is more reliable than application-level checks.
+
+## Chat ID Tag 表 {#chat-id-tag-table}
+
+| **Column Name** | **Data Type** | **Constraints** | **Description**    |
+| --------------- | ------------- | --------------- | ------------------ |
+| id              | VARCHAR(255)  | NOT NULL        | Unique identifier  |
+| tag_name        | VARCHAR(255)  | NOT NULL        | 标签名称    |
+| chat_id         | VARCHAR(255)  | NOT NULL        | 聊天引用  |
+| user_id         | VARCHAR(255)  | NOT NULL        | 用户引用  |
+| timestamp       | INTEGER       | NOT NULL        | 创建时间戳 |
+
+## Comment 表 {#comment-table}
+
+| **列名** | **数据类型** | **约束** | **描述** |
+| --------------- | ------------- | --------------- | ------------------------------------------------------------------------ |
+| id              | Text          | PRIMARY KEY     | 唯一标识符 (UUID)                                                 |
+| user_id         | Text          | nullable        | 作者；评论被删除后置空                                |
+| resource_type   | Text          | NOT NULL        | 被评论对象的类型：`model`、`knowledge`、`prompt`、`skill`、`tool`、`note` 或 `chat` |
+| resource_id     | Text          | NOT NULL        | 被评论对象的 ID                                                 |
+| parent_id       | Text          | nullable        | 主题的顶层评论；顶层评论为空            |
+| reply_to_id     | Text          | nullable        | 此回复所答复的评论                                               |
+| content         | Text          | NOT NULL        | 评论文本                                                             |
+| target_type     | Text          | nullable        | 评论所指向对象的部分：`note_page` 或 `chat_message`    |
+| target_id       | Text          | nullable        | 该部分的 ID                                                          |
+| meta            | JSON          | nullable        | 评论在所选文本上的引用范围（`anchor`）           |
+| created_at      | BigInteger    | NOT NULL        | 创建时间戳（纳秒）                                         |
+| updated_at      | BigInteger    | nullable        | 最后更新时间戳（纳秒）                                         |
+| deleted_at      | BigInteger    | nullable        | 删除时间戳（纳秒）                                         |
+
+关于 comment 表的注意事项：
+
+- 在 (`resource_type`, `resource_id`, `parent_id`, `created_at`, `id`)、(`parent_id`, `created_at`, `id`) 以及 (`resource_type`, `resource_id`, `target_type`, `target_id`) 上建立索引。
+- 删除评论时会保留其行，以便主题和被引用的回复保持完整：`content` 会被清空，`user_id` 与 `meta` 会被清除，并设置 `deleted_at`。
+- 删除被评论的对象会同时删除其评论及其反应。
+
+## Comment Reaction 表 {#comment-reaction-table}
+
+| **Column Name** | **Data Type** | **Constraints**              | **Description**              |
+| --------------- | ------------- | ---------------------------- | ---------------------------- |
+| id              | Text          | PRIMARY KEY                  | 唯一标识符 (UUID)     |
+| user_id         | Text          | NOT NULL                     | 作出反应的用户             |
+| comment_id      | Text          | NOT NULL, INDEX              | 评论的引用             |
+| name            | Text          | NOT NULL                     | 反应（表情）名称        |
+| created_at      | BigInteger    | NOT NULL                     | 创建时间戳           |
+
+关于 comment_reaction 表的注意事项：
+
+- 在 (`comment_id`, `user_id`, `name`) 上有唯一约束：一个用户对同一条评论只能添加一次相同的反应。
+
+## Config 表 {#config}
 
 自 v0.10.0 起，config 表采用**每键一行**格式：每个设置都在自己的行中，以点号路径为键，取代了以前的单行 JSON blob。
 
@@ -416,7 +554,7 @@ docker exec -it open-webui /bin/sh
 - 迁移前的表被保留为 **`config_old`**（重命名，未删除），因此更改是可逆的；它在运行时不被使用。
 - 读写通过各个键进行，这避免了每次更改时重写整个配置 blob。
 
-## Feedback 表
+## Feedback 表 {#feedback-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**                 |
 | --------------- | ------------- | --------------- | ------------------------------- |
@@ -430,7 +568,7 @@ docker exec -it open-webui /bin/sh
 | created_at      | BigInteger    | -               | Creation timestamp              |
 | updated_at      | BigInteger    | -               | Last update timestamp           |
 
-## File 表
+## File 表 {#file-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**       |
 | --------------- | ------------- | --------------- | --------------------- |
@@ -456,7 +594,7 @@ docker exec -it open-webui /bin/sh
 }
 ```
 
-## Folder 表
+## Folder 表 {#folder-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**                |
 | --------------- | ------------- | --------------- | ------------------------------ |
@@ -478,7 +616,7 @@ docker exec -it open-webui /bin/sh
 - 根文件夹的 `parent_id` 为 null
 - 在同一父级文件夹内，文件夹名称必须唯一
 
-## Function 表
+## Function 表 {#function-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**           |
 | --------------- | ------------- | --------------- | ------------------------- |
@@ -498,7 +636,24 @@ docker exec -it open-webui /bin/sh
 
 - `type` 只能是：["filter", "action"]
 
-## Group 表
+## Function History 表 {#function-history-table}
+
+| **Column Name** | **Data Type** | **Constraints** | **Description**                        |
+| --------------- | ------------- | --------------- | -------------------------------------- |
+| id              | Text          | PRIMARY KEY     | 唯一标识符 (UUID)               |
+| function_id     | Text          | NOT NULL, INDEX | 该版本所属的函数        |
+| parent_id       | Text          | nullable        | 保存此版本时所基于的版本   |
+| snapshot        | JSON          | NOT NULL        | 保存的名称、源代码和元数据   |
+| user_id         | Text          | NOT NULL        | 保存该版本的用户             |
+| commit_message  | Text          | nullable        | 保存时填写的描述        |
+| created_at      | BigInteger    | NOT NULL        | 创建时间戳                     |
+
+关于 function history 表的注意事项：
+
+- 快照保存 `name`、`content` 和 `meta`。启用开关和访问授权仍保留在实时函数上。
+- 迁移 `e7b9d4a023bc` 创建了该表，并为每个已有函数提供了一个起始版本。
+
+## Group 表 {#group-table}
 
 | **Column Name** | **Data Type** | **Constraints**     | **Description**          |
 | --------------- | ------------- | ------------------- | ------------------------ |
@@ -514,7 +669,7 @@ docker exec -it open-webui /bin/sh
 
 注意：`user_ids` 列已迁移到 `group_member` 表。
 
-## Group Member 表
+## Group Member 表 {#group-member-table}
 
 | **Column Name** | **Data Type** | **Constraints**                  | **Description**                   |
 | --------------- | ------------- | -------------------------------- | --------------------------------- |
@@ -529,7 +684,7 @@ docker exec -it open-webui /bin/sh
 - 在 (`group_id`, `user_id`) 上的唯一约束以防止重复的成员资格
 - 带有 CASCADE 删除的外键关系 to group and user tables
 
-## Knowledge 表
+## Knowledge 表 {#knowledge-table}
 
 | **Column Name** | **Data Type** | **Constraints**     | **Description**            |
 | --------------- | ------------- | ------------------- | -------------------------- |
@@ -543,7 +698,24 @@ docker exec -it open-webui /bin/sh
 | created_at      | BigInteger    | -                   | Creation timestamp         |
 | updated_at      | BigInteger    | -                   | Last update timestamp      |
 
-## Knowledge File 表
+## Knowledge Directory 表 {#knowledge-directory-table}
+
+| **Column Name** | **Data Type** | **Constraints** | **Description**                        |
+| --------------- | ------------- | --------------- | -------------------------------------- |
+| id              | Text          | PRIMARY KEY     | 唯一标识符 (UUID)               |
+| knowledge_id    | Text          | NOT NULL, INDEX | 所属的知识库                |
+| parent_id       | Text          | nullable, INDEX | 父目录；顶级目录为空 |
+| name            | Text          | NOT NULL        | 目录名称                          |
+| created_at      | BigInteger    | NOT NULL        | 创建时间戳                     |
+| updated_at      | BigInteger    | NOT NULL        | 最后更新时间戳               |
+
+关于 knowledge_directory 表的注意事项：
+
+- 在 (`knowledge_id`, `parent_id`, `name`) 上有唯一约束 (`uq_knowledge_directory_knowledge_parent_name`)，因此同一个知识库内的同级目录名称必须唯一。
+- 在 `knowledge_id` 和 `parent_id` 上建有索引 (`ix_knowledge_directory_knowledge_id`、`ix_knowledge_directory_parent_id`)。
+- 删除知识库会级联删除其目录。删除目录会级联删除其中嵌套的目录。
+
+## Knowledge File 表 {#knowledge-file-table}
 
 | **Column Name** | **Data Type** | **Constraints**                      | **Description**                   |
 | --------------- | ------------- | ------------------------------------ | --------------------------------- |
@@ -560,17 +732,26 @@ docker exec -it open-webui /bin/sh
 - 带有 CASCADE 删除的外键关系
 - Indexed on `knowledge_id`, `file_id`, and `user_id` for performance
 
-资源（模型、知识库、工具、提示词、笔记、文件、频道）的访问控制通过 `access_grant` 表进行管理，而不是嵌入式 JSON。每个授权条目指定一个资源、一个主体（用户或组）和一个权限级别（读取或写入）。详见上文的 [Access Grant 表](#access-grant-表)部分。
+资源（模型、知识库、工具、提示词、笔记、文件、频道）的访问控制通过 `access_grant` 表进行管理，而不是嵌入式 JSON。每个授权条目指定一个资源、一个主体（用户或组）和一个权限级别（读取或写入）。详见上文的 [Access Grant 表](#access-grant-table)部分。
 
-## Memory 表
+## Memory 表 {#memory-table}
 
-| **Column Name** | **Data Type** | **Constraints** | **Description**          |
-| --------------- | ------------- | --------------- | ------------------------ |
-| id              | String        | PRIMARY KEY     | Unique identifier (UUID) |
-| user_id         | String        | -               | Memory owner             |
-| content         | Text          | -               | Memory content           |
-| created_at      | BigInteger    | -               | Creation timestamp       |
-| updated_at      | BigInteger    | -               | Last update timestamp    |
+| **列名** | **数据类型** | **约束** | **描述** |
+| --------------- | ------------- | -------------------------- | ------------------------ |
+| id              | String        | PRIMARY KEY                | 唯一标识符 (UUID) |
+| user_id         | String        | indexed                    | 记忆所有者             |
+| type            | String        | default `context`, indexed | 记忆类型：`user` 或 `context` |
+| path            | Text          | nullable                   | 可选路径，用于将记忆组织成层级结构 |
+| content         | Text          | -                          | 记忆内容           |
+| meta            | JSON          | nullable                   | 可选元数据 |
+| created_at      | BigInteger    | -                          | 创建时间戳       |
+| updated_at      | BigInteger    | -                          | 最后更新时间戳    |
+
+关于 memory 表的注意事项：
+
+- `type` 用于区分 `user` 记忆（显式、由用户整理的事实）与 `context` 记忆（从对话中学习得到）；该列已建立索引，以便按类型查询。由迁移 `7b3f2a9c1d4e` 添加（随后还有一次索引修正迁移）。
+- `path` 与 `meta` 支撑了扩展的内置记忆工具，模型可以按路径组织记忆并附加结构化元数据。
+- 迁移 `55f1302ac17c` 在 (`id`, `user_id`) 上添加了覆盖索引，以加快按用户查询记忆的速度。
 
 ## Message 表 {#message-table}
 
@@ -586,7 +767,7 @@ docker exec -it open-webui /bin/sh
 | created_at      | BigInteger    | -               | 创建时间戳（纳秒）    |
 | updated_at      | BigInteger    | -               | 最后更新时间戳（纳秒） |
 
-## Message Reaction 表
+## Message Reaction 表 {#message-reaction-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**          |
 | --------------- | ------------- | --------------- | ------------------------ |
@@ -596,7 +777,7 @@ docker exec -it open-webui /bin/sh
 | name            | Text          | -               | 反应名称/表情符号      |
 | created_at      | BigInteger    | -               | Reaction timestamp       |
 
-## Model 表
+## Model 表 {#model-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**        |
 | --------------- | ------------- | --------------- | ---------------------- |
@@ -611,7 +792,24 @@ docker exec -it open-webui /bin/sh
 | created_at      | BigInteger    | -               | Creation timestamp     |
 | updated_at      | BigInteger    | -               | Last update timestamp  |
 
-## Note 表
+## Model History 表 {#model-history-table}
+
+| **Column Name** | **Data Type** | **Constraints** | **Description**                        |
+| --------------- | ------------- | --------------- | -------------------------------------- |
+| id              | Text          | PRIMARY KEY     | 唯一标识符 (UUID)               |
+| model_id        | Text          | NOT NULL, INDEX | 该版本所属的模型           |
+| parent_id       | Text          | nullable        | 保存此版本时所基于的版本   |
+| snapshot        | JSON          | NOT NULL        | 保存的名称、基础模型、参数和元数据 |
+| user_id         | Text          | NOT NULL        | 保存该版本的用户             |
+| commit_message  | Text          | nullable        | 保存时填写的描述        |
+| created_at      | BigInteger    | NOT NULL        | 创建时间戳                     |
+
+关于 model history 表的注意事项：
+
+- 快照保存 `name`、`base_model_id`、`params` 和 `meta`。隐藏标志、启用开关和访问授权仍保留在实时模型上。
+- 迁移 `e7b9d4a023bc` 创建了该表，并为每个已有模型提供了一个起始版本。
+
+## Note 表 {#note-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**            |
 | --------------- | ------------- | --------------- | -------------------------- |
@@ -625,7 +823,7 @@ docker exec -it open-webui /bin/sh
 | created_at      | BigInteger    | nullable        | Creation timestamp         |
 | updated_at      | BigInteger    | nullable        | Last update timestamp      |
 
-## Pinned Note 表
+## Pinned Note 表 {#pinned-note-table}
 
 每位用户的笔记置顶记录。每一行表示某个用户为侧边栏置顶了某条笔记——置顶是私有的，不会影响能够访问同一笔记的其他用户。
 
@@ -638,7 +836,34 @@ docker exec -it open-webui /bin/sh
 
 `UNIQUE(user_id, note_id)` 约束用于防止同一用户/笔记对的重复置顶。置顶笔记列表按每个用户的 `created_at DESC` 排序，因此最近置顶的笔记排在最前面。删除笔记时会级联清理本表；但切换置顶状态**不会**修改 `note.updated_at`。
 
-## OAuth Session 表
+## Notification 表 {#notification-table}
+
+| **Column Name** | **Data Type** | **Constraints** | **Description**                                                   |
+| --------------- | ------------- | --------------- | ----------------------------------------------------------------- |
+| id              | Text          | PRIMARY KEY     | 唯一标识符 (UUID)                                          |
+| user_id         | Text          | NOT NULL        | 接收者                                                         |
+| event_type      | Text          | NOT NULL        | 通知的种类，例如 `comment.replied`、`channel.mentioned`、`calendar.alert`、`automation.run_failed` 或 `system.announcement` |
+| event_key       | Text          | NOT NULL        | 引发该通知的事件的标识                       |
+| actor_type      | Text          | NOT NULL        | `user` 或 `system`                                                |
+| actor_id        | Text          | nullable        | 引发通知的用户；`system` 时为空                            |
+| resource_type   | Text          | nullable        | 其所属条目的类型                                    |
+| resource_id     | Text          | nullable        | 该条目的 ID                                                   |
+| object_type     | Text          | nullable        | 具体对象的类型，例如 `comment`                    |
+| object_id       | Text          | nullable        | 该对象的 ID                                                 |
+| data            | JSON          | NOT NULL        | 在收件箱中显示的事件详情                                  |
+| seen_at         | BigInteger    | nullable        | 用户在收件箱中看到它的时间（纳秒）                   |
+| read_at         | BigInteger    | nullable        | 用户阅读它的时间（纳秒）                               |
+| created_at      | BigInteger    | NOT NULL        | 创建时间戳（纳秒）                                  |
+| updated_at      | BigInteger    | NOT NULL        | 最后更新时间戳（纳秒）                               |
+
+关于 notification 表的注意事项：
+
+- 在 (`user_id`, `event_key`) 上有唯一约束，因此同一事件只会通知用户一次。
+- `resource_type` 与 `resource_id` 要么都设置，要么都为空；`object_type` 与 `object_id` 同理。
+- 只有在通知设置开启时才会创建行。
+- 在 (`user_id`, `created_at`, `id`) 上建有索引，对未读行使用相同列另建索引，并在 (`resource_type`, `resource_id`) 和 (`object_type`, `object_id`) 上建有索引。
+
+## OAuth Session 表 {#oauth-session-table}
 
 | **Column Name** | **Data Type** | **Constraints**      | **Description**                   |
 | --------------- | ------------- | -------------------- | --------------------------------- |
@@ -650,7 +875,7 @@ docker exec -it open-webui /bin/sh
 | created_at      | BigInteger    | -                    | Session creation timestamp        |
 | updated_at      | BigInteger    | -                    | Session last update timestamp     |
 
-## Prompt 表
+## Prompt 表 {#prompt-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**                     |
 | --------------- | ------------- | --------------- | ----------------------------------- |
@@ -668,7 +893,7 @@ docker exec -it open-webui /bin/sh
 | created_at      | BigInteger    | NOT NULL        | Creation timestamp                  |
 | updated_at      | BigInteger    | NOT NULL        | Last update timestamp               |
 
-## Prompt History 表
+## Prompt History 表 {#prompt-history-table}
 
 | **Column Name** | **Data Type** | **Constraints**                | **Description**                   |
 | --------------- | ------------- | ------------------------------ | --------------------------------- |
@@ -680,7 +905,7 @@ docker exec -it open-webui /bin/sh
 | commit_message  | Text          | nullable                       | 版本提交信息            |
 | created_at      | BigInteger    | NOT NULL                       | Creation timestamp                |
 
-## Skill 表
+## Skill 表 {#skill-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**                    |
 | --------------- | ------------- | --------------- | ---------------------------------- |
@@ -701,7 +926,24 @@ docker exec -it open-webui /bin/sh
 - 访问控制通过 `access_grant` 表（resource_type 为 `skill`）管理
 - `description` 作为清单的一部分被注入系统提示词；`content` 是通过 `view_skill` 内置工具按需加载的
 
-## Tag 表
+## Skill History 表 {#skill-history-table}
+
+| **Column Name** | **Data Type** | **Constraints** | **Description**                        |
+| --------------- | ------------- | --------------- | -------------------------------------- |
+| id              | Text          | PRIMARY KEY     | 唯一标识符 (UUID)               |
+| skill_id        | Text          | NOT NULL, INDEX | 该版本所属的技能           |
+| parent_id       | Text          | nullable        | 保存此版本时所基于的版本   |
+| snapshot        | JSON          | NOT NULL        | 保存的技能内容及其文件      |
+| user_id         | Text          | NOT NULL        | 保存该版本的用户             |
+| commit_message  | Text          | nullable        | 保存时填写的描述        |
+| created_at      | BigInteger    | NOT NULL        | 创建时间戳                     |
+
+关于 skill history 表的注意事项：
+
+- 快照保存技能内容及其关联文件。
+- 迁移 `e7b9d4a023bc` 创建了该表，并为每个已有技能提供了一个起始版本。
+
+## Tag 表 {#tag-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**           |
 | --------------- | ------------- | --------------- | ------------------------- |
@@ -714,7 +956,7 @@ Things to know about the tag table:
 
 - Primary key is composite (id, user_id)
 
-## Tool 表
+## Tool 表 {#tool-table}
 
 | **Column Name** | **Data Type** | **Constraints** | **Description**       |
 | --------------- | ------------- | --------------- | --------------------- |
@@ -729,7 +971,24 @@ Things to know about the tag table:
 | created_at      | BigInteger    | -               | Creation timestamp    |
 | updated_at      | BigInteger    | -               | Last update timestamp |
 
-## User 表
+## Tool History 表 {#tool-history-table}
+
+| **Column Name** | **Data Type** | **Constraints** | **Description**                        |
+| --------------- | ------------- | --------------- | -------------------------------------- |
+| id              | Text          | PRIMARY KEY     | 唯一标识符 (UUID)               |
+| tool_id         | Text          | NOT NULL, INDEX | 该版本所属的工具           |
+| parent_id       | Text          | nullable        | 保存此版本时所基于的版本   |
+| snapshot        | JSON          | NOT NULL        | 保存的名称、源代码和元数据   |
+| user_id         | Text          | NOT NULL        | 保存该版本的用户             |
+| commit_message  | Text          | nullable        | 保存时填写的描述        |
+| created_at      | BigInteger    | NOT NULL        | 创建时间戳                     |
+
+关于 tool history 表的注意事项：
+
+- 快照保存 `name`、`content` 和 `meta`。启用开关和访问授权仍保留在实时工具上。
+- 迁移 `e7b9d4a023bc` 创建了该表，并为每个已有工具提供了一个起始版本。
+
+## User 表 {#user-table}
 
 | **Column Name**   | **Data Type** | **Constraints**  | **Description**            |
 | ----------------- | ------------- | ---------------- | -------------------------- |
@@ -777,7 +1036,7 @@ Things to know about the tag table:
 - **多提供商支持**：按提供商的密钥结构允许单个用户同时由多个身份提供商配置，每个提供商存储其自己的 `externalId`。
 - **OAuth 后备**：通过 `externalId` 查找用户时，如果未找到 `scim` 条目，系统将回退到与 `oauth_sub` 匹配，从而实现 SCIM 配置账户与 OAuth 认证账户的无缝链接。
 
-## 实体关系图 (ERD)
+## 实体关系图 (ERD) {#entity-relationship-diagram}
 
 为帮助可视化表之间的关系，请参考下面使用 Mermaid 生成的实体关系图（ERD）。
 
@@ -1111,7 +1370,7 @@ erDiagram
 
 为了增强安全性，Open WebUI 支持使用 SQLCipher 对其主 SQLite 数据库进行静态加密。对于处理敏感数据且不需要使用更大数据库（如 PostgreSQL）的部署，建议使用此功能。
 
-### 前置条件
+### 前置条件 {#upgrading-an-existing-sqlcipher-database}
 
 SQLCipher 加密需要一些**默认未包含**的额外依赖项。在使用此功能之前，你必须安装：
 
@@ -1120,7 +1379,7 @@ SQLCipher 加密需要一些**默认未包含**的额外依赖项。在使用此
 
 对于 Docker 用户，这意味着需要构建一个包含这些依赖项的自定义镜像。
 
-### 配置
+### 配置 {#related-database-environment-variables}
 
 要启用加密，请设置以下环境变量：
 

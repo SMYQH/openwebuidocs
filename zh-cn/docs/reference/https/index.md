@@ -3,7 +3,7 @@ sidebar_position: 6
 title: "HTTPS 与反向代理"
 ---
 
-# HTTPS 与反向代理
+# HTTPS 与反向代理 {#https--reverse-proxies}
 
 **使用 TLS 加密、反向代理或托管隔道保护你的 Open WebUI 部署。**
 
@@ -15,29 +15,29 @@ HTTPS 对用户与 Open WebUI 之间的所有流量进行加密，保护聊天�
 
 ---
 
-## 选择你的方式
+## 选择你的方式 {#choose-your-approach}
 
 | 方式 | 适用场景 | TLS 管理 |
 | :--- | :--- | :--- |
-| [**Cloudflare Tunnel**](./cloudflare-tunnel) | 无需开放端口的生产环境 | 自动（Cloudflare 边缘） |
-| [**ngrok**](./ngrok) | 开发和测试 | 自动（ngrok 边缘） |
-| [**Tailscale**](./tailscale) | 跨设备私有访问 | 自动（tailscale serve） |
-| [**Nginx**](./nginx) | 完全控制的自托管生产环境 | 手动或 Let's Encrypt |
-| [**Caddy**](./caddy) | 最简配置的自托管生产环境 | 自动（Let's Encrypt） |
-| [**HAProxy**](./haproxy) | 高可用/负载均衡 | 手动或 Let's Encrypt |
+| [**Cloudflare Tunnel**](/reference/https/cloudflare-tunnel) | 无需开放端口的生产环境 | 自动（Cloudflare 边缘） |
+| [**ngrok**](/reference/https/ngrok) | 开发和测试 | 自动（ngrok 边缘） |
+| [**Tailscale**](/reference/https/tailscale) | 跨设备私有访问 | 自动（tailscale serve） |
+| [**Nginx**](/reference/https/nginx) | 完全控制的自托管生产环境 | 手动或 Let's Encrypt |
+| [**Caddy**](/reference/https/caddy) | 最简配置的自托管生产环境 | 自动（Let's Encrypt） |
+| [**HAProxy**](/reference/https/haproxy) | 高可用/负载均衡 | 手动或 Let's Encrypt |
 | **云负载均衡** | AWS ALB、GCP LB、Azure 应用网关 | 由云提供商管理 |
 
 ---
 
-## 快速建议
+## 快速建议 {#quick-recommendations}
 
-- **只想尽快启用 HTTPS？** 使用 [Cloudflare Tunnel](./cloudflare-tunnel)（生产环境）或 [ngrok](./ngrok)（开发环境）。无需管理证书，无需开放端口。
-- **已经在运行反向代理？** 添加 [Caddy](./caddy)（自动证书）或 [Nginx](./nginx)（最大控制权）。
-- **需要负载均衡？** 使用 [HAProxy](./haproxy) 或你的云提供商的负载均衡器。
+- **只想尽快启用 HTTPS？** 使用 [Cloudflare Tunnel](/reference/https/cloudflare-tunnel)（生产环境）或 [ngrok](/reference/https/ngrok)（开发环境）。无需管理证书，无需开放端口。
+- **已经在运行反向代理？** 添加 [Caddy](/reference/https/caddy)（自动证书）或 [Nginx](/reference/https/nginx)（最大控制权）。
+- **需要负载均衡？** 使用 [HAProxy](/reference/https/haproxy) 或你的云提供商的负载均衡器。
 
 ---
 
-## 关键配置注意事项
+## 关键配置注意事项 {#key-configuration-notes}
 
 无论选择哪种方式，请记住以下要点：
 

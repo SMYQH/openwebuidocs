@@ -14,7 +14,7 @@ title: "导出与导入数据库"
 
 ---
 
-### 导出数据库
+### 导出数据库 {#exporting-database}
 
 从当前 Open WebUI 实例中导出数据库：
 
@@ -33,7 +33,7 @@ title: "导出与导入数据库"
 
 ---
 
-### 导入数据库
+### 导入数据库 {#importing-database}
 
 将 `webui.db` 文件移动到新服务器后，按照以下步骤操作：
 
@@ -59,14 +59,14 @@ title: "导出与导入数据库"
 
 ---
 
-### 注意事项
+### 注意事项 {#notes}
 
 - 此导出/导入过程**仅适用于使用内置 SQLite 数据库（`webui.db`）的情况**。
 - 如果您使用的是外部 PostgreSQL 数据库，此方法不适用，因为数据库是在容器外部管理的。对于 PostgreSQL，需要使用 PostgreSQL 专用工具和流程来备份和恢复数据库。
 
 ---
 
-### 为什么这很重要
+### 为什么这很重要 {#why-its-important}
 
 以下情况特别适合使用此方法：
 
@@ -95,7 +95,7 @@ docker start open-webui
 
 ---
 
-## 相关指南
+## 相关指南 {#related-guides}
 
 - [SQLite 数据库概览](/reference/database-schema) — 详细的数据库 schema 与 SQLCipher 加密配置
 - [备份](/tutorials/maintenance/backups) — 实例的全面备份策略

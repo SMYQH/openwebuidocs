@@ -9,14 +9,14 @@ Open WebUI 提供一个集中式面板，用于管理你分享出去的所有聊
 本页记录的是共享聊天的**管理面板**。如果你想了解如何分享聊天，请参阅 [聊天分享](/features/chat-conversations/chat-features/chatshare)。
 :::
 
-## 进入管理面板
+## 进入管理面板 {#accessing-the-management-dashboard}
 
 1. 点击侧边栏左下角的**用户名**或头像
 2. 在菜单中选择 **设置**
 3. 进入 **数据控制** 标签
 4. 找到 **共享聊天** 这一行并点击 **管理** 按钮
 
-## 面板功能
+## 面板功能 {#dashboard-features}
 
 **共享聊天** 弹窗为你的公开内容提供统一管理界面：
 

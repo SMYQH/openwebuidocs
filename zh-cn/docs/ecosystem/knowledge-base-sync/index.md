@@ -7,7 +7,7 @@ slug: /ecosystem/knowledge-base-sync
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 知识库同步 (oikb)
+# 知识库同步 (oikb) {#knowledge-base-sync-oikb}
 
 <ThemedImage
   alt="知识库同步：多种不同的源连接器通过 oikb 同步枢纽流入 Open WebUI 知识库"
@@ -32,31 +32,31 @@ oikb 驱动了 **v0.9.6** 中新增的增量同步端点（`/sync/diff` 和 `/sy
 
 ---
 
-## 为什么要使用知识库同步？
+## 为什么要使用知识库同步？ {#why-knowledge-base-sync}
 
-### 仅传输变更内容
+### 仅传输变更内容 {#only-the-changes-move}
 
 每个文件都会计算哈希值（SHA-256）并与服务器已有的内容进行比较，因此只有新增和修改过的文件会上传，删除操作也会被同步移除。一个包含 10,000 个文件且未发生变化的仓库，重新同步只需几秒钟，因为没有任何内容需要重新上传或重新嵌入。频繁运行几乎没有成本。
 
-### 专为大型库设计
+### 专为大型库设计 {#built-for-large-libraries}
 
 应用内的**同步目录**操作在浏览器中运行，因此对于大型集合（数千个文件或数 GB 的库），它会变得缓慢且进度显示不明显。oikb 原生运行，带有进度条、并行上传和重试机制，因此数万个文件的库也能可靠同步。**如果你的语料库很大，这是推荐的加载方式。**
 
-### 一个工具，覆盖所有来源
+### 一个工具，覆盖所有来源 {#one-tool-every-source}
 
 将其指向本地文件夹、Git 仓库、Confluence 或 Notion 空间、S3 存储桶、Jira 项目、Slack 频道以及 30 多种其他来源。相同的命令和相同的增量引擎适用于所有来源。
 
-### 自动保持最新
+### 自动保持最新 {#stays-fresh-on-its-own}
 
 手动同步一次，或者交给[守护进程](/ecosystem/knowledge-base-sync/daemon)按时间间隔、cron 或有人推送时立即运行。一个与动态源连接的知识库再也不会悄悄过时。
 
-### 模型也能驱动它
+### 模型也能驱动它 {#the-model-can-drive-it}
 
 守护进程还充当 [OpenAPI 工具服务器](/ecosystem/knowledge-base-sync/daemon#let-the-model-trigger-syncs)，因此模型可以在对话中触发重新同步并报告结果，无需任何人接触命令行。
 
 ---
 
-## 主要功能
+## 主要功能 {#key-features}
 
 | | |
 | :--- | :--- |
@@ -71,7 +71,7 @@ oikb 驱动了 **v0.9.6** 中新增的增量同步端点（`/sync/diff` 和 `/sy
 
 ---
 
-## 安装
+## 安装 {#install}
 
 ```bash
 pip install oikb
@@ -94,7 +94,7 @@ pip install oikb[all]      # 一次性安装所有可选连接器
 
 ---
 
-## 快速开始
+## 快速开始 {#quick-start}
 
 ```bash
 export OPEN_WEBUI_URL=http://localhost:3000
@@ -112,7 +112,7 @@ oikb sync ./docs --kb-id your-kb-id --dry-run
 
 `--kb-id` 是知识库的 ID，即工作区中 URL 的 UUID（`.../knowledge/<kb-id>`）。重复运行相同的命令两次，第二次运行将不执行任何操作：只有内容发生变化的文件才会被处理。
 
-### 同步过程示例
+### 同步过程示例 {#what-a-sync-looks-like}
 
 第一次运行上传所有内容；之后的每次运行只传输发生变化的部分：
 
@@ -130,7 +130,7 @@ Sync complete: 3 added, 1 modified, 2 deleted, 1198 unchanged
 API 密钥以**你**的用户身份进行身份验证。oikb 只能读取和写入该用户已有权限的知识库。它不是管理员后门，也不会绕过[访问控制](/features/authentication-access/rbac)。
 :::
 
-### 保存凭据
+### 保存凭据 {#saving-credentials}
 
 这样你就不必在每次命令时重复输入 URL 和密钥：
 
@@ -148,7 +148,7 @@ oikb config get                    # 显示已保存的内容（令牌会被掩�
 
 ---
 
-## 增量同步的工作原理
+## 增量同步的工作原理 {#how-incremental-sync-works}
 
 1. oikb 扫描源并为每个文件计算 **SHA-256** 校验和。
 2. 它将这个清单（路径、文件名和校验和，**不是**文件内容）发送到 Open WebUI 的 `/sync/diff`，服务器回复确切**新增**、**修改**和**删除**的内容，以及需要创建或移除的目录。此调用是只读的，不会更改知识库。
@@ -223,7 +223,7 @@ oikb config get                    # 显示已保存的内容（令牌会被掩�
 
 ---
 
-## 过滤同步内容
+## 过滤同步内容 {#filtering-what-gets-synced}
 
 使用包含/排除 glob 模式和大小的限制来缩小来源范围。这些配置位于 [`.oikb.yaml`](/ecosystem/knowledge-base-sync/daemon#the-oikbyaml-config-file) 的 `filter:` 下：
 
@@ -254,7 +254,7 @@ sources:
     filter: { include: ["api/**"] }
 ```
 
-### 跳过的文件和 `.oikbignore`
+### 跳过的文件和 `.oikbignore` {#skipped-files-and-oikbignore}
 
 同步**本地目录**时，oikb 始终跳过隐藏条目（任何以 `.` 开头的）以及内置列表：`.git`、`.svn`、`.hg`、`.DS_Store`、`Thumbs.db`、`__pycache__`、`.pytest_cache`、`node_modules`、`.oikb`、`.env`。
 
@@ -262,7 +262,7 @@ sources:
 
 ---
 
-## 监听模式
+## 监听模式 {#watch-mode}
 
 对于你正在积极编辑的本地目录，`watch` 会在文件发生变化的瞬间重新同步：
 
@@ -290,7 +290,7 @@ Docker 镜像可以作为一次性命令运行，使其成为[GitHub Actions](/e
 
 ---
 
-## CLI 参考
+## CLI 参考 {#cli-reference}
 
 | 命令 | 功能 |
 |---|---|
@@ -318,47 +318,47 @@ Docker 镜像可以作为一次性命令运行，使其成为[GitHub Actions](/e
 
 ---
 
-## 使用场景
+## 使用场景 {#use-cases}
 
-### 始终保持最新的产品文档
+### 始终保持最新的产品文档 {#always-current-product-docs}
 
 将你的文档仓库（`github:acme/docs`）连接到知识库，并在 CI 中每次合并时或在 webhook 触发时进行同步。支持人员和客户查询的文档永远不会超过一次提交的滞后。
 
-### 大型个人或家庭文档库
+### 大型个人或家庭文档库 {#a-large-personal-or-family-vault}
 
 数以千计的混合文档（PDF、Markdown、扫描件、记录）存放在一个组织良好的文件夹中。将 oikb 指向该文档库的顶层，它会同步整个树（包括所有子目录）到单个知识库中，这样家庭成员就可以提问，而无需知道答案在哪个子文件夹中。应用内同步在这种规模下表现不佳；oikb 正是为此而构建的。
 
-### 来自 Wiki 的公司手册
+### 来自 Wiki 的公司手册 {#company-handbook-from-the-wiki}
 
 通过早晨的 cron 任务将 Confluence 空间或 Notion 工作区镜像到知识库。一个"HR 问答"模型会从当前手册中回答，而 Wiki 中的编辑会在第二天自动显示，无需任何人重新上传。
 
-### 来自工单的支持知识
+### 来自工单的支持知识 {#support-knowledge-from-tickets}
 
 将已解决的 Zendesk 或 Jira 工单同步到知识库中，这样分类模型可以查找类似问题之前是如何处理的，基于你自己的历史数据而非通用训练数据。
 
-### 代码感知助手
+### 代码感知助手 {#code-aware-assistant}
 
 使用过滤器将一个仓库拆分为两个知识库：`docs/**` 下的文档放入"文档"知识库，`src/**` 下的源代码放入"代码"知识库。根据需要附加相应的知识库，两者都通过单个配置保持同步。
 
 ---
 
-## 限制
+## 限制 {#limitations}
 
-### 需要 Open WebUI 0.9.6+
+### 需要 Open WebUI 0.9.6+ {#requires-open-webui-096}
 
 增量同步端点在 v0.9.6 中引入。如果服务器版本更旧，oikb 将无法调用任何接口。
 
-### 守护进程以单进程运行
+### 守护进程以单进程运行 {#the-daemon-runs-as-one-process}
 
 定时调度和每个知识库的锁位于单个进程中，因此[守护进程](/ecosystem/knowledge-base-sync/daemon#deployment)应以**一个副本**的形式运行。要覆盖更多来源，请在一个守护进程中添加条目，而不是运行多个副本。
 
-### 索引仍在服务端进行
+### 索引仍在服务端进行 {#indexing-still-happens-server-side}
 
 oikb 上传很快，但 Open WebUI 会异步提取和嵌入每个新文件。刚刚同步的文件已在知识库中，但可能需要片刻才能被查询到。
 
 ---
 
-## 故障排除
+## 故障排除 {#troubleshooting}
 
 **`Connection refused` 或 `401 Unauthorized`**：URL 或密钥错误或未设置。使用 `oikb config get` 检查，或运行 `echo $OPEN_WEBUI_URL` 和 `echo $OPEN_WEBUI_API_KEY`。密钥必须是有效的 Open WebUI API 密钥（设置 → 账户）。
 
@@ -372,7 +372,7 @@ oikb 上传很快，但 Open WebUI 会异步提取和嵌入每个新文件。刚
 
 ---
 
-## 另请参阅
+## 另请参阅 {#see-also}
 
 - **[运行守护进程 →](/ecosystem/knowledge-base-sync/daemon)**：定时同步、webhook、HTTP API、可观测性、部署以及让模型触发同步。
 - **[知识库](/features/workspace/knowledge)**：oikb 所对接的知识库功能，包括服务端[同步端点](/features/workspace/knowledge#api-access)。

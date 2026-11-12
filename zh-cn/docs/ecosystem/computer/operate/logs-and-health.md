@@ -3,7 +3,7 @@ title: 日志、健康和诊断
 sidebar_position: 3
 ---
 
-# 日志、健康和诊断
+# 日志、健康和诊断 {#logs-health-and-diagnostics}
 
 服务器是否在运行？
 
@@ -13,7 +13,7 @@ curl http://127.0.0.1:8000/api/health
 
 返回包含 `status`、`uptime_seconds` 和 `pid` 的 JSON。无需认证，因此你可以将 uptime 监控、systemd 健康检查或 Docker 健康检查指向它。
 
-## 服务器日志
+## 服务器日志 {#server-logs}
 
 Computer 输出日志到 stdout。两个变量控制它（重启以应用更改，与所有环境变量一样）：
 
@@ -22,7 +22,7 @@ Computer 输出日志到 stdout。两个变量控制它（重启以应用更改�
 | `CPTR_LOG_LEVEL` | `INFO` | 设置为 `DEBUG` 以获取更多细节。 |
 | `CPTR_LOG_FORMAT` | `text` | 设置为 `json` 以获取结构化输出，便于日志收集器解析。 |
 
-## 审计日志
+## 审计日志 {#audit-logging}
 
 默认关闭。当你需要谁更改了什么的持久记录时开启：
 
@@ -40,7 +40,7 @@ CPTR_AUDIT_LOG_LEVEL=METADATA cptr run
 
 它捕获的内容：HTTP 变异（设置更改、用户更改、上传等），敏感值经过编辑。它不捕获的内容：终端输入/输出不是 HTTP 流量，永远不会出现在这里，聊天路由默认被排除。要获取代理实际做了什么证据，请阅读聊天本身及其终端输出。
 
-## 上游请求日志
+## 上游请求日志 {#upstream-request-logging}
 
 当模型行为异常，你想精确查看 Computer 发送给提供商的内容时：
 

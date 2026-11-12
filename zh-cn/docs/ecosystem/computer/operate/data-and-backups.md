@@ -3,11 +3,11 @@ title: 数据和备份
 sidebar_position: 2
 ---
 
-# 数据和备份
+# 数据和备份 {#data-and-backups}
 
 Computer 需要生存下来的一切都在一个数据目录中：默认为 `~/.cptr`，Docker 中为 `/data`，或者 `CPTR_DATA_DIR` 指向的任何位置。唯一的例外是聊天：它们位于每个工作区文件夹内，随项目一起移动。
 
-## 各数据位置
+## 各数据位置 {#what-lives-where}
 
 数据目录内部：
 
@@ -30,7 +30,7 @@ Computer 需要生存下来的一切都在一个数据目录中：默认为 `~/.
 
 数据目录备份**不包含**你的工作区。项目文件夹需要自己的备份（git 远程、Time Machine，或你已经在使用的任何方式），因为聊天位于 `<workspace>/.cptr/` 中，所以该备份也涵盖了它们。
 
-## 备份数据目录
+## 备份数据目录 {#back-up-the-data-directory}
 
 :::warning 先停止服务器
 `app.db` 使用 SQLite WAL 模式。在服务器写入时复制它可能会产生损坏或不一致的备份。停止 Computer，复制，然后重新启动。
@@ -57,7 +57,7 @@ docker run --rm \
 tar -tzf cptr-data-backup.tgz | grep -E '(^|/)app\.db$|(^|/)config\.toml$'
 ```
 
-## 测试恢复
+## 测试恢复 {#test-a-restore}
 
 不要等到灾难发生才发现备份是否有效。解压到一个新目录，并使用 `CPTR_DATA_DIR` 指向它以另一个端口启动第二个实例：
 

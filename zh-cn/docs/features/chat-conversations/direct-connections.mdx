@@ -9,19 +9,19 @@ title: "直接连接"
 
 **直接连接** 允许用户将自己的 Open WebUI 客户端直接连接到兼容 OpenAI 的 API endpoint，从而绕过 Open WebUI 后端发起推理请求。
 
-## 概览
+## 概览 {#overview}
 
 在标准部署中，Open WebUI 充当代理：浏览器把提示词发送给 Open WebUI 后端，再由后端转发给 LLM 提供商（如 Ollama、OpenAI 等）。
 
 而使用 **直接连接** 后，浏览器会直接与 API 提供商通信。
 
-## 优势
+## 优势 {#benefits}
 
 *   **隐私与控制**：用户可以使用自己的个人 API key，而不必把 key 存储在 Open WebUI 服务器上（这些 key 保存在浏览器的本地存储中）
 *   **更低延迟**：去掉了 Open WebUI 后端这一“中间跳转”，理论上可加快响应速度
 *   **降低服务器负载**：将网络流量和连接管理从 Open WebUI 服务器转移到各个用户浏览器
 
-## 前提条件
+## 前提条件 {#prerequisites}
 
 1.  **管理员启用**：管理员必须全局开启该功能
     *   **Admin Panel > Settings > Connections > Direct Connections**：切换为 **On**
@@ -35,7 +35,7 @@ title: "直接连接"
 如果你的提供商支持 scoped keys，日常使用时请优先选择只具备 inference 权限的 key，不要把管理 / 主密钥用于日常用户流量。
 :::
 
-## 用户配置
+## 用户配置 {#user-configuration}
 
 管理员启用该功能后，用户就可以配置自己的直连：
 

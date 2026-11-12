@@ -3,11 +3,11 @@ sidebar_position: 3
 title: "SCIM 2.0"
 ---
 
-# SCIM 2.0 支持
+# SCIM 2.0 支持 {#scim-20-support}
 
 Open WebUI 支持 SCIM 2.0（跨域身份管理系统），用于从 Okta、Azure AD 和 Google Workspace 等身份提供商自动化用户和用户组预配。
 
-## 概述
+## 概述 {#overview}
 
 SCIM 是一个允许自动化用户预配的开放标准。启用后，您的身份提供商可以自动：
 - 在将用户添加到您的组织时在 Open WebUI 中创建用户
@@ -15,11 +15,11 @@ SCIM 是一个允许自动化用户预配的开放标准。启用后，您的身
 - 在用户从您的组织中移除时停用用户
 - 管理用户组成员资格
 
-## 配置
+## 配置 {#configuration}
 
 SCIM 完全通过环境变量进行配置。SCIM 设置没有 UI 配置选项。
 
-### 环境变量
+### 环境变量 {#environment-variables}
 
 通过设置以下环境变量配置 SCIM：
 
@@ -38,7 +38,7 @@ openssl rand -base64 32
 
 :::
 
-### 配置示例
+### 配置示例 {#example-configuration}
 
 ```bash
 # 启用 SCIM
@@ -51,7 +51,7 @@ export SCIM_TOKEN="your-secure-token-here"
 export SCIM_AUTH_PROVIDER="microsoft"
 ```
 
-## SCIM API 配置
+## SCIM API 配置 {#scim-api-configuration}
 
 配置您的身份提供商时，请使用以下设置：
 
@@ -59,7 +59,7 @@ export SCIM_AUTH_PROVIDER="microsoft"
 - **身份认证**：Bearer Token
 - **Token**：`Bearer <your-scim-token>`
 
-### 主流身份提供商配置示例
+### 主流身份提供商配置示例 {#example-for-popular-identity-providers}
 
 #### Okta
 1. 在 Okta 中添加 SCIM 应用
@@ -67,27 +67,27 @@ export SCIM_AUTH_PROVIDER="microsoft"
 3. 将身份认证设置为"HTTP Header"
 4. 添加值为 `Bearer your-scim-token` 的 Authorization 请求头
 
-## 支持的 SCIM 操作
+## 支持的 SCIM 操作 {#supported-scim-operations}
 
 Open WebUI 的 SCIM 实现支持以下操作：
 
-### 用户操作
+### 用户操作 {#user-operations}
 - **创建用户**（`POST /Users`）：创建新用户账户
 - **获取用户**（`GET /Users/{id}`）：检索用户信息
 - **更新用户**（`PUT /Users/{id}`、`PATCH /Users/{id}`）：更新用户属性
 - **删除用户**（`DELETE /Users/{id}`）：停用用户账户
 - **列出用户**（`GET /Users`）：列出所有用户（支持过滤）
 
-### 用户组操作
+### 用户组操作 {#group-operations}
 - **创建用户组**（`POST /Groups`）：创建新用户组
 - **获取用户组**（`GET /Groups/{id}`）：检索用户组信息
 - **更新用户组**（`PUT /Groups/{id}`、`PATCH /Groups/{id}`）：更新用户组成员
 - **删除用户组**（`DELETE /Groups/{id}`）：移除用户组
 - **列出用户组**（`GET /Groups`）：列出所有用户组（支持过滤）
 
-### 支持的属性
+### 支持的属性 {#supported-attributes}
 
-#### 用户属性
+#### 用户属性 {#user-attributes}
 - `userName`：用户的邮箱地址（必填，唯一）
 - `name.givenName`：名
 - `name.familyName`：姓
@@ -95,12 +95,12 @@ Open WebUI 的 SCIM 实现支持以下操作：
 - `active`：用户状态（活跃/非活跃）
 - `externalId`：来自身份提供商的外部标识符（按提供商存储在用户的 `scim` JSON 字段中，参见 [externalId 与账户关联](#externalid-与账户关联)）
 
-#### 用户组属性
+#### 用户组属性 {#group-attributes}
 - `displayName`：用户组名称（必填）
 - `members`：用户成员数组
 - `externalId`：来自身份提供商的外部标识符
 
-## 过滤支持
+## 过滤支持 {#filtering-support}
 
 SCIM API 支持对用户和用户组进行过滤：
 
@@ -145,9 +145,9 @@ GET /api/v1/scim/v2/Groups?filter=displayName eq "Engineering"
 
 :::
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 常见问题
+### 常见问题 {#common-issues}
 
 1. **401 未授权错误**
    - 验证 `SCIM_ENABLED` 是否设置为 `true`
@@ -165,7 +165,7 @@ GET /api/v1/scim/v2/Groups?filter=displayName eq "Engineering"
 4. **externalId 操作返回 500 错误**
    - 验证 `SCIM_AUTH_PROVIDER` 是否设置为正确的 OAuth 提供商名称
 
-### 测试 SCIM 端点
+### 测试 SCIM 端点 {#testing-scim-endpoints}
 
 您可以使用 curl 测试 SCIM 端点：
 
@@ -200,20 +200,20 @@ curl -X POST \
   https://your-domain.com/api/v1/scim/v2/Users
 ```
 
-## 安全注意事项
+## 安全注意事项 {#security-considerations}
 
 1. **使用 HTTPS**：在生产环境中始终使用 HTTPS 来保护 Bearer token
 2. **安全 Token 存储**：安全地存储 SCIM token 并定期轮换
 3. **IP 白名单**：考虑将 SCIM API 访问限制到您身份提供商的 IP 地址
 4. **审计日志**：SCIM 操作会被记录以供安全审计
 
-## 局限性
+## 局限性 {#limitations}
 
 - 目前不支持自定义 Schema 扩展
 - 未实现批量操作
 - 不支持用于资源版本控制的 ETag
 
-## 与 SSO 集成
+## 与 SSO 集成 {#integration-with-sso}
 
 SCIM 与 SSO（单点登录）结合使用效果最佳。典型设置包括：
 1. SCIM 用于自动化用户预配

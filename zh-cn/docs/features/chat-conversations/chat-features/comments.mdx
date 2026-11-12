@@ -1,0 +1,31 @@
+---
+sidebar_position: 18
+title: "Comments"
+---
+
+# Comments
+
+评论功能让人们可以直接在模型、知识库、提示、技能、工具、笔记或聊天旁边展开讨论。管理员可以在 **Admin Settings > General** 中的 **Comments** 里开启它，也可以通过 [`ENABLE_COMMENTS`](/reference/env-configuration#enable_comments) 环境变量开启。它默认是关闭的。
+
+## 谁能发表评论 {#who-can-comment}
+
+任何能读取某个条目的人都能阅读它的评论并发表自己的评论。对笔记发表评论还需要启用[笔记功能](/features/notes)。临时聊天没有评论。直接来自某个连接、且从未以自身设置保存过的模型，只能由管理员发表评论。
+
+## 在哪里找到它们 {#where-to-find-them}
+
+- **聊天**：**Comments** [标签页](/features/chat-conversations/chat-features/#tabs-side-panel)，或顶栏聊天菜单中的 **Comments**。
+- **笔记**：笔记的 **More (...)** 菜单中的 **Comments** 会在笔记旁打开它们。
+- **模型**：模型选择器中某个模型的菜单里的 **Comments**。
+- **工作区**：条目菜单中的 **Comments**、条目页面与模型编辑器中的侧边面板，以及每个列表中的评论计数。
+
+## 发表评论 {#writing-comments}
+
+回复评论、用表情回应，或者用 `@` 提及某人。提及列表只会列出能看到该条目的人。他们也会收到你的[收件箱](./notifications.mdx#inbox)通知。
+
+要对某一段具体内容发表评论，请在聊天消息或笔记页面中选中它，然后点击 **Comment**。该段落会保持高亮，悬停其上即可预览相关评论。如果文本在此期间发生了变化，请重新选中该段落。
+
+你可以编辑自己的评论。评论可以由其作者、条目的所有者或管理员删除。
+
+删除条目会同时删除它的评论。删除用户账户时，其评论会保留正文，但失去作者。
+
+相关 API 位于 `/api/v1/comments`。

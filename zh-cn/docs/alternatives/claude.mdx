@@ -13,7 +13,7 @@ import Head from '@docusaurus/Head';
 </Head>
 
 
-# Open WebUI 与 Claude
+# Open WebUI 与 Claude {#open-webui--claude}
 
 *最后更新：2026 年 5 月*
 
@@ -23,7 +23,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## Claude 擅长的领域
+## Claude 擅长的领域 {#what-claude-does-well}
 
 - **写作和推理**，具有周到、细致的回应和仔细的分析
 - **扩展思考**，在实时展示复杂问题的分步推理
@@ -38,19 +38,20 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## Open WebUI 擅长的领域
+## Open WebUI 擅长的领域 {#what-open-webui-does-well}
 
-- **任何模型、一个界面**，所以您可以在 Claude *旁边* 使用 GPT-5.5、Gemini、Llama 和本地模型
-- **自托管**，所以平台本身在您的基础设施上运行
-- **知识库和 RAG** 用于具有高级检索的持久知识库
-- **Python 可扩展性**，具有自定义工具、MCP 服务器、管道和社区扩展
-- **团队平台**，包括频道、笔记、自动化、RBAC、SSO/OIDC/LDAP 和 SCIM 2.0
-- **Open Terminal** 提供完整的沙盒计算环境
-- **免费社区版**，在您自己的基础设施上无限用户
+- **完整的 Agentic 平台**：模型可自行调用[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)，并支持 [MCP](/features/extensibility/mcp) 服务器、[子智能体](/features/chat-conversations/chat-features/subagents)、[计时器](/features/chat-conversations/chat-features/timers) 和[自动化](/features/chat-conversations/chat-features/automations)，以同样的方式驱动 Claude 和其他所有模型
+- **几乎一切都可以定制**：从按模型的提示词、工具、知识库和参数，到可以改变管道任意环节行为的[过滤器、管道、动作和事件函数](/features/extensibility/plugin/functions)，再加上主题、横幅和按群组的权限
+- **任何模型，一个界面**：可以*同时*使用 Claude、GPT-5.6、Gemini 和本地模型
+- **自托管**，平台本身运行在你自己的基础设施上
+- **知识库与 RAG**：用先进检索构建持久知识库
+- **团队平台**：包含频道、笔记、自动化、RBAC、SSO/OIDC/LDAP 和 SCIM 2.0
+- **Open Terminal**：提供完整的沙箱计算环境
+- **免费社区版**：在你自己的基础设施上支持无限用户
 
 ---
 
-## 一览表
+## 一览表 {#at-a-glance}
 
 | | Open WebUI | Claude |
 | :--- | :--- | :--- |
@@ -64,7 +65,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## 何时使用每一个
+## 何时使用每一个 {#when-to-use-each}
 
 **选择 Claude** 如果您想要最好的写作和推理体验，特别是对于长上下文工作、代码审查或细致的分析。扩展思考模式对于复杂问题特别强大。Claude Code 和计算机使用推进了 AI 可以自主做什么的边界。
 
@@ -74,7 +75,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## 通过 Open WebUI 使用 Claude
+## 通过 Open WebUI 使用 Claude {#use-claude-through-open-webui}
 
 Claude 模型通过 Anthropic API 在 Open WebUI 中可用。许多 Open WebUI 用户将 Claude 作为他们的主要模型，在 Open WebUI 的知识库、工具和团队功能旁边使用 Claude 的推理。
 
@@ -95,7 +96,7 @@ Claude 模型通过 Anthropic API 在 Open WebUI 中可用。许多 Open WebUI �
 
 ---
 
-## 常见问题
+## 常见问题 {#frequently-asked-questions}
 
 **我可以自托管 Claude 吗？**
 Claude 本身不能，但您可以通过 Anthropic API 在 Open WebUI 中使用 Claude 模型。Open WebUI 本身在您的基础设施上运行，尽管 API 调用仍然去 Anthropic。

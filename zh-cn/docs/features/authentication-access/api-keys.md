@@ -3,7 +3,7 @@ sidebar_position: 500
 title: "API Keys"
 ---
 
-# 🔑 API Keys
+# 🔑 API Keys {#api-keys}
 
 **Open WebUI 的程序化访问——适用于脚本、机器人和集成。**
 
@@ -11,23 +11,23 @@ API Keys 是个人访问令牌，允许外部代码调用 Web 界面使用的相
 
 ---
 
-## 为什么使用 API Keys？
+## 为什么使用 API Keys？ {#why-api-keys}
 
-### 无需浏览器的自动化
+### 无需浏览器的自动化 {#automation-without-a-browser}
 
 脚本、CI/CD 流水线、监控机器人和第三方工具都需要程序化访问。API Keys 为它们提供了稳定的凭证，不会随浏览器会话过期。
 
-### 相同权限，不同接口
+### 相同权限，不同接口 {#same-permissions-different-interface}
 
 API Key 代表您行事。它继承您的角色和用户组权限——管理 Web 界面的相同访问控制也适用于每个 API 请求。
 
-### 可撤销且可审计
+### 可撤销且可审计 {#revocable-and-auditable}
 
 为每个密钥起一个描述性名称（例如"CI 流水线"、"监控机器人"）以跟踪使用情况。如果密钥泄露，立即删除——无需重置密码、无需使会话失效，只需单击一次。
 
 ---
 
-## 主要功能
+## 主要功能 {#key-features}
 
 | | |
 | :--- | :--- |
@@ -38,9 +38,9 @@ API Key 代表您行事。它继承您的角色和用户组权限——管理 We
 
 ---
 
-## 入门指南
+## 入门指南 {#getting-started}
 
-### 第一步：全局启用 API Keys（管理员操作）
+### 第一步：全局启用 API Keys（管理员操作） {#step-1-enable-api-keys-globally-admin}
 
 1. 以**管理员**身份登录
 2. 打开 **管理面板 > 设置 > 通用**
@@ -56,11 +56,11 @@ API Key 代表您行事。它继承您的角色和用户组权限——管理 We
 
 *（可选）* 启用 **API Key 端点限制**，以限制 API Keys 可调用的路由。将允许的端点指定为逗号分隔的列表（例如 `/api/v1/models,/api/v1/chat/completions`）。
 
-### 第二步：向非管理员用户授予权限（管理员操作）
+### 第二步：向非管理员用户授予权限（管理员操作） {#step-2-grant-permission-to-non-admin-users-admin}
 
 非管理员用户需要 **API Keys** 功能权限。使用以下任一方式授予：
 
-#### 方式 A：默认权限（所有用户）
+#### 方式 A：默认权限（所有用户） {#option-a-default-permissions-all-users}
 
 1. **管理面板 > 用户 > 用户组 > 默认权限**
 2. 在 **功能权限** 下，切换 **API Keys** 为开
@@ -70,7 +70,7 @@ API Key 代表您行事。它继承您的角色和用户组权限——管理 We
 这会授予所有具有"user"角色的用户生成 API Keys 的能力。要进行更严格的控制，请使用方式 B。
 :::
 
-#### 方式 B：用户组（特定用户）
+#### 方式 B：用户组（特定用户） {#option-b-user-groups-specific-users}
 
 1. **管理面板 > 用户 > 用户组**
 2. 选择或创建一个用户组（例如"API 用户"）
@@ -81,7 +81,7 @@ API Key 代表您行事。它继承您的角色和用户组权限——管理 We
 创建一个专用的"API 用户"或"监控"用户组，只将需要程序化访问的账户添加进去。这遵循最小权限原则。
 :::
 
-### 第三步：生成密钥
+### 第三步：生成密钥 {#step-3-generate-a-key}
 
 1. 点击**个人资料图标**（左下角侧边栏）
 2. 选择 **设置 > 账户**
@@ -95,7 +95,19 @@ API Key 代表您行事。它继承您的角色和用户组权限——管理 We
 
 ---
 
-## 使用您的 API Key
+### 管理用户的密钥（管理员） {#managing-a-users-key-admin}
+
+管理员可以替换或删除任意用户的密钥。在**管理面板 > 用户**中打开该用户，在编辑对话框中 **API Key** 旁使用**轮换**或**删除**。
+
+- **轮换**会签发新密钥并只显示一次，请在关闭对话框前复制它。它需要全局的 **API Keys** 开关已开启，且该用户被允许拥有密钥。
+- **删除**会移除密钥，即使 API 密钥功能处于关闭状态也可以使用。
+- 只有[主管理员](/features/authentication-access/rbac/roles#the-primary-administrator)才能更改主管理员的密钥。
+
+脚本可以使用管理员的 API 密钥做同样的事：`POST /api/v1/users/{user_id}/api_key/rotate` 返回新密钥，`DELETE /api/v1/users/{user_id}/api_key` 则将其移除。
+
+---
+
+## 使用您的 API Key {#using-your-api-key}
 
 在 `Authorization` 请求头中将密钥作为 Bearer token 传递：
 
@@ -134,23 +146,23 @@ CUSTOM_API_KEY_HEADER=X-OpenWebUI-Key
 
 ---
 
-## 最佳实践
+## 最佳实践 {#best-practices}
 
-### 专用服务账户
+### 专用服务账户 {#dedicated-service-accounts}
 
 专门为自动化创建一个**非管理员用户**（例如 `monitoring-bot`、`ci-pipeline`），从该账户生成密钥。如果密钥泄露，攻击者只能获得该用户的权限——而不是管理员访问权限。
 
-### 端点限制
+### 端点限制 {#endpoint-restrictions}
 
 启用 **API Key 端点限制**，只将您的集成实际需要的路由加入白名单。监控机器人只需要 `/api/models` 和 `/api/chat/completions`——不要给它访问 `/api/v1/files/` 或管理员端点的权限。
 
-### 密钥轮换
+### 密钥轮换 {#key-rotation}
 
 定期删除旧密钥并生成新密钥，特别是对于长期运行的集成。为密钥起名时加上日期或版本以跟踪轮换（"监控机器人 - 2025-Q1"）。
 
 ---
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
 **在设置 > 账户中看不到 API Keys 部分？**
 
@@ -161,17 +173,29 @@ CUSTOM_API_KEY_HEADER=X-OpenWebUI-Key
 
 - 验证密钥格式是否正确：`Authorization: Bearer sk-...`
 - 检查密钥是否已被删除
+- 检查该密钥是否已被同一账户上的更新密钥替换
+- 确认该账户仍然存在且不处于待审批状态
+- 如果启用了端点限制，确认您调用的路由在允许列表中
+
+**收到 `403 Forbidden` 响应？**
+
+- 全局的 **API Keys** 开关可能已被关闭，这会使已有密钥失效
+- 密钥所有者可能已失去 **API Keys** 功能权限
 - 如果启用了端点限制，确认您调用的路由在允许列表中
 
 ---
 
-## 限制
+## 限制 {#limitations}
 
-### 创建后无法再次查看
+### 创建后无法再次查看 {#one-key-per-account}
 
 API Keys 在创建后无法再次查看。如果丢失了密钥，请删除并生成新的。
 
-### 不支持按密钥设置权限
+### 每个账户一个密钥 {#no-per-key-permissions}
+
+一个账户只持有一个没有名称的密钥。无法为同一用户并行运行两个密钥，创建密钥总会覆盖已有的那个。请为每个集成使用独立的账户。
+
+### 不支持按密钥设置权限 {#no-automatic-expiration}
 
 密钥会继承创建者的完整权限。除了端点限制之外，您无法把某个密钥限制为其所有者权限的子集。
 

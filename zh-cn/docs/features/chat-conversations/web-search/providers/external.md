@@ -21,7 +21,7 @@ title: "外部"
 
 :::
 
-## 外部 Web Search API
+## 外部 Web Search API {#external-web-search-api}
 
 这个选项允许你把 Open WebUI 连接到你自己托管的 web search API 端点。适用场景包括：
 
@@ -29,7 +29,7 @@ title: "外部"
 - 实现自定义搜索逻辑、过滤规则或结果处理流程
 - 使用私有或内部搜索索引
 
-### Open WebUI 配置
+### Open WebUI 配置 {#open-webui-setup}
 
 1. 进入 Open WebUI `管理面板`
 2. 打开 `设置` 标签，再进入 `网页搜索`
@@ -41,7 +41,7 @@ title: "外部"
 
 ![Open WebUI 管理面板中的 External Search 配置](/images/tutorial_external_search.png)
 
-### API 规范
+### API 规范 {#api-specification}
 
 Open WebUI 会按如下方式与你的 `External Search URL` 交互：
 
@@ -86,7 +86,7 @@ Open WebUI 会按如下方式与你的 `External Search URL` 交互：
 
     如果发生错误，或未找到结果，建议你的端点返回空数组 `[]`
 
-### 示例实现（Python/FastAPI）
+### 示例实现（Python/FastAPI） {#example-implementation-pythonfastapi}
 
 以下示例演示如何使用 Python + FastAPI + `duckduckgo-search` 库实现一个自托管搜索 API。
 

@@ -3,7 +3,7 @@ sidebar_position: 3
 title: "Llama.cpp"
 ---
 
-## 概览
+## 概览 {#overview}
 
 Open WebUI 可以简单灵活地连接并管理本地 Llama.cpp 服务器，以运行高效的量化语言模型。无论你是自行编译 Llama.cpp，还是使用预编译二进制，本指南都会带你完成以下内容：
 
@@ -15,7 +15,7 @@ Open WebUI 可以简单灵活地连接并管理本地 Llama.cpp 服务器，以�
 
 ---
 
-## 第 1 步：安装 Llama.cpp
+## 第 1 步：安装 Llama.cpp {#step-1-install-llamacpp}
 
 要用 Llama.cpp 运行模型，首先需要在本地安装 Llama.cpp 服务器。
 
@@ -28,7 +28,7 @@ Open WebUI 可以简单灵活地连接并管理本地 Llama.cpp 服务器，以�
 
 ---
 
-## 第 2 步：下载受支持的模型
+## 第 2 步：下载受支持的模型 {#step-2-download-a-supported-model}
 
 你可以用 Llama.cpp 加载并运行多种 GGUF 格式的量化 LLM。其中一个很有代表性的例子，是由 UnslothAI 优化的 DeepSeek-R1 1.58-bit 模型。下载方式如下：
 
@@ -63,7 +63,7 @@ DeepSeek-R1-GGUF/
 
 ---
 
-## 第 3 步：使用 Llama.cpp 提供模型服务
+## 第 3 步：使用 Llama.cpp 提供模型服务 {#step-3-serve-the-model-with-llamacpp}
 
 使用 `llama-server` 启动模型服务。进入你的 llama.cpp 目录（例如 build/bin）后运行：
 
@@ -94,7 +94,7 @@ http://127.0.0.1:10000
 
 ---
 
-## 第 4 步：把 Llama.cpp 连接到 Open WebUI
+## 第 4 步：把 Llama.cpp 连接到 Open WebUI {#step-4-connect-llamacpp-to-open-webui}
 
 要在 Open WebUI 中直接控制并调用本地运行的模型：
 
@@ -118,7 +118,7 @@ http://127.0.0.1:10000
 AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 ```
 
-如果你保存了一个不可达 URL，导致界面卡住，请查看 [模型列表加载问题](/troubleshooting/connection-error#️-model-list-loading-issues-slow-ui--unreachable-endpoints) 故障排查页面。
+如果你保存了一个不可达 URL，导致界面卡住，请查看 [模型列表加载问题](/troubleshooting/connection-error#model-list-loading-issues-slow-ui--unreachable-endpoints) 故障排查页面。
 
 :::
 
@@ -134,7 +134,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 
 ---
 
-## 小提示：在聊天界面直接试用模型
+## 小提示：在聊天界面直接试用模型 {#quick-tip-try-out-the-model-via-chat-interface}
 
 连接完成后，只需在 Open WebUI 聊天菜单中选择该模型，然后开始互动！
 
@@ -142,7 +142,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 
 ---
 
-## 现在可以开始了！
+## 现在可以开始了！ {#youre-ready-to-go}
 
 完成配置后，Open WebUI 能让你轻松：
 

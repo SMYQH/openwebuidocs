@@ -3,9 +3,9 @@ sidebar_position: 2
 title: "Functions"
 ---
 
-# 🧩 Functions
+# 🧩 Functions {#functions}
 
-:::danger ⚠️ 重要安全警告
+:::danger 重要安全警告
 **Functions 在你的服务器上执行任意 Python 代码。** Function 创建仅限管理员。只从受信任的来源安装，导入前审查代码。恶意 Function 可能访问你的文件系统、泄露数据或危害整个系统。详情参见[插件安全警告](/features/extensibility/plugin/)。
 :::
 
@@ -17,7 +17,7 @@ Functions 以 Python 源代码的形式存储在数据库中，在运行时动�
 
 ---
 
-## Function 类型
+## Function 类型 {#function-types}
 
 Open WebUI 支持四种类型的 Functions。类型根据你 Python 代码中的类名**自动检测**，因此你无需手动配置。
 
@@ -37,9 +37,9 @@ Pipe 将自己注册为 Open WebUI 中的新"模型"。当用户选择它并发�
 - **非 LLM 界面**：创建智能家居控制器、数据库查询工具、搜索引擎、计算器或代码执行器。任何接受用户输入并返回响应的东西。
 - **代理和路由器**：通过你自己的逻辑路由请求，添加缓存、负载均衡或成本追踪。
 
-单个 Pipe 还可以通过定义返回模型标识符列表的 `pipes()` 方法暴露**多个模型**（称为"manifold"）。
+单个 Pipe 还可以通过定义返回 `{"id": ..., "name": ...}` 字典列表的 `pipes()` 方法暴露**多个模型**（称为"manifold"），每个字典对应一个模型。
 
-→ **[Pipe Function 指南](./pipe)**
+→ **[Pipe Function 指南](/features/extensibility/plugin/functions/pipe)**
 
 ### Filter Functions
 
@@ -53,7 +53,7 @@ Filters 支持强大的横切关注点，如实时翻译、内容审核、提示
 
 Filters 可以全局应用（到所有模型）或附加到特定模型。可切换的过滤器让用户按对话启用/禁用它们。
 
-→ **[Filter Function 指南](./filter)**
+→ **[Filter Function 指南](/features/extensibility/plugin/functions/filter)**
 
 ### Action Functions
 
@@ -61,7 +61,7 @@ Action 向对话消息工具栏添加自定义按钮。当用户点击它时，`
 
 Actions 可以做 Python 能做的任何事情：摘要或翻译消息、复制格式化输出、固定重要消息、将对话导出到外部系统、触发 CI/CD 管道、发送 Slack 通知、生成 PDF 报告、运行代码片段或启动外部工作流。
 
-→ **[Action Function 指南](./action)**
+→ **[Action Function 指南](/features/extensibility/plugin/functions/action)**
 
 ### Event Functions
 
@@ -69,13 +69,13 @@ Actions 可以做 Python 能做的任何事情：摘要或翻译消息、复制�
 
 Event Function 针对**系统事件**（用户注册、聊天删除、服务器启动、配置变更）运行自定义 Python。其 `event()` 方法针对每个事件被调用，并根据事件名称进行过滤。Event Function 可以注册自己的 API 端点并调用内部服务，这使其适用于生命周期自动化、审计日志、注册门控、资源预置和自安装插件。
 
-→ **[Event Function 指南](./event)**
+→ **[Event Function 指南](/features/extensibility/plugin/functions/event)**
 
 ---
 
-## Functions 的工作原理
+## Functions 的工作原理 {#how-functions-work}
 
-### 类型检测
+### 类型检测 {#type-detection}
 
 保存 Function 时，Open WebUI 扫描 Python 源代码中名为 `Pipe`、`Filter`、`Action` 或 `Event` 的顶级类。第一个匹配项确定函数类型。你永远不需要手动设置类型，因为它是从代码推断出来的。
 
@@ -91,11 +91,18 @@ class Filter:
         return body
 ```
 
-### 模块加载和缓存
+### 模块加载和缓存 {#module-loading--caching}
 
-Python 源代码通过 `exec()` 加载到临时模块命名空间中。一旦加载，模块就会缓存在内存中（`request.app.state.FUNCTIONS`），只有在源代码更改时才重新加载。你代码中的 import 语句会自动重写以在 Open WebUI 包命名空间内解析。
+Python 源代码通过 `exec()` 加载到临时模块命名空间中。一旦加载，模块就会缓存在内存中（`request.app.state.FUNCTIONS`），只有在源代码更改时才重新加载。在载入时会有四个旧前缀被重写：`from utils`、`from apps`、`from main` 和 `from config`，每个都会加上 `open_webui.` 前缀。这个重写是对整个文件做的纯文本替换，因此这些字符串在 docstring 和提示词文本中同样会被改写。创建或保存函数时存储的是重写后的源码。加载函数时，重写只作用于它实际运行的代码，已存储的源码保持原样。
 
-### Frontmatter（前置信息）
+### 函数加载失败时 {#when-a-function-fails-to-load}
+
+当函数代码在执行期间抛出异常时，该函数加载失败：语法错误、`import` 失败、构造类时抛出异常，或者文件中根本没有 `Pipe`、`Filter`、`Action` 或 `Event` 类。
+
+- **在编辑器中保存**时，会先执行新代码再存储。加载失败的代码会被拒绝：Python 错误会显示在编辑器中，新源码不会被写入，已经保存的版本仍然保持启用并继续运行。修好代码后再次保存即可。`requirements` 安装失败同样会被拒绝。
+- **在编辑器之外**，每次加载模块时都会再次执行代码，例如重启之后。此时若失败，Open WebUI 会把该函数切换为**未启用**，以免它在每次请求时都失败，并记录 `Error loading module: <function id>: <the error>`。最常见的原因是某个包被手动装进容器、却从未写进 `requirements`——重启后它就不存在了。修好代码后，在 **Admin Panel > Functions** 中把该函数重新打开。
+
+### Frontmatter（前置信息） {#frontmatter}
 
 文件顶部的三引号文档字符串被解析为元数据的 YAML 前置信息：
 
@@ -121,14 +128,14 @@ requirements: requests, beautifulsoup4
 | `requirements` | 自动安装的 pip 包列表，使用逗号分隔 |
 
 :::tip 自动依赖安装
-当在前置信息中指定 `requirements` 时，Open WebUI 在函数第一次加载时通过 `pip` 自动安装列出的包。这由 `PIP_INSTALL_FRONTMATTER_REQUIREMENTS` 环境变量控制（默认启用）。
+当在前置信息中指定 `requirements` 时，Open WebUI 在函数第一次加载时通过 `pip` 自动安装列出的包。这由 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS`](/reference/env-configuration#enable_pip_install_frontmatter_requirements) 环境变量控制（默认启用）。
 :::
 
 ---
 
-## 安装 Functions
+## 安装 Functions {#installing-functions}
 
-### 从社区库
+### 从社区库 {#from-the-community-library}
 
 1. 浏览[社区 Function 库](https://openwebui.com/search)。
 2. 点击你想要的 Function 上的 **Get**。
@@ -140,14 +147,14 @@ requirements: requests, beautifulsoup4
 导入前务必审查源代码。社区 Functions 是用户贡献的，**直接在你的服务器上运行**。
 :::
 
-### 从 URL
+### 从 URL {#from-a-url}
 
 1. 前往**管理面板 → Functions**。
 2. 点击**从 URL 导入**，粘贴 Python 文件的链接。
    - GitHub URL 会自动转换为原始文件 URL。
 3. 审查并保存。
 
-### 手动创建
+### 手动创建 {#create-manually}
 
 1. 前往**管理面板 → Functions**。
 2. 点击**创建**。
@@ -157,20 +164,34 @@ requirements: requests, beautifulsoup4
 
 ---
 
-## 管理 Functions
+## 管理 Functions {#managing-functions}
 
-### 管理员控制
+### 管理员控制 {#admin-controls}
 
-Functions 从**管理面板 → Functions** 管理。每个 Function 具有以下控制：
+Functions 从 **Admin Panel > Functions** 管理。当 [`ENABLE_FUNCTIONS`](/reference/env-configuration#enable_functions) 设为 `False` 时该页面会被隐藏。每个 Function 具有以下控制：
 
 | 控件 | 说明 |
 |:--------|:-----------|
 | **Active 开关** | 启用或禁用该函数。禁用后不会被加载或执行。 |
 | **Global 开关** | 启用后，函数会自动应用到**所有模型**。适用于 Filters 和 Actions。 |
-| **Valves**（⚙️ 齿轮图标） | 打开该函数可由管理员配置的设置界面。 |
+| **Valves**（齿轮图标） | 打开该函数可由管理员配置的设置界面。 |
 | **导出 / 删除** | 将函数导出为文件，或将其移除。 |
 
-### 将 Functions 分配给特定模型
+### 版本历史 {#version-history}
+
+Functions 保留一份版本历史，其工作方式与 Tools 的版本历史相同：位于 **Back**、**Compare to current**、**Set as Production** 和 **Delete** 旁边的版本选择器。详情参见[版本历史](/features/extensibility/plugin/tools#version-history)。对 Functions 而言：
+
+- 只有管理员可以打开和切换版本。
+- **Production** 是正在运行的版本。
+- Valves 以及 **Active** 和 **Global** 开关属于函数本身，切换版本时会保持当前值。当当前的 Valves 与旧版本的代码不兼容时，将其设为 Production 会被拒绝，并提示 **Current Valves are incompatible with this code**，正在运行的版本保持不变。
+
+同样的操作也可以通过 API 使用，仅限管理员：`GET /api/v1/functions/id/{id}/history`（可用 `?page=` 分页）、`GET /api/v1/functions/id/{id}/history/{history_id}`、`GET /api/v1/functions/id/{id}/history/diff?from_id=...&to_id=...`、`DELETE /api/v1/functions/id/{id}/history/{history_id}` 以及 `POST /api/v1/functions/id/{id}/update/version`（请求体为 `{"version_id": "..."}`）。通过 `POST /api/v1/functions/id/{id}/update` 保存时，可以附带可选的 `commit_message`。
+
+### 翻译 Function {#translating-a-function}
+
+函数编辑器中的地球图标选择器会为每种语言分别保存名称、描述、阀门标签和每个操作的标签，因此回复下方的操作按钮可以用用户自己的语言显示。参见[翻译](/features/administration/translations)。
+
+### 将 Functions 分配给特定模型 {#assigning-functions-to-specific-models}
 
 除了将 Filter 或 Action 设为全局，你也可以将其附加到特定模型：
 
@@ -180,30 +201,30 @@ Functions 从**管理面板 → Functions** 管理。每个 Function 具有以�
 
 这允许不同模型使用不同的过滤器。例如，你可能只在面向公众的模型上应用内容审核过滤器。
 
-### 可切换的 Filters
+### 可切换的 Filters {#toggleable-filters}
 
 通过在 `__init__` 中设置 `self.toggle = True`，可以使 Filters 用户可切换。可切换时，用户在对话输入区域看到开/关开关，可以按对话启用或禁用过滤器。没有 `self.toggle` 的 Filters 在激活时始终开启。
 
 ---
 
-## Valves 与 UserValves
+## Valves 与 UserValves {#valves--uservalves}
 
 Functions 支持基于 [Pydantic](https://docs.pydantic.dev/) 的双层配置系统：
 
 | 层级 | 类名 | 谁来配置 | 配置位置 |
 |:------|:-----------|:---------------|:------|
-| **管理员层** | `Valves` | 仅管理员 | Admin Panel → Functions → ⚙️ |
+| **管理员层** | `Valves` | 仅管理员 | Admin Panel > Functions > |
 | **用户层** | `UserValves` | 任意用户 | 聊天界面，按函数单独配置 |
 
 **Valves** 适合存放 API key、模型端点和全局行为设置。**UserValves** 则允许用户自行定制行为（例如偏好语言、输出格式或个人 API key）。
 
-两者都定义为你 `Pipe`、`Filter` 或 `Action` 类中的嵌套 Pydantic `BaseModel`。管理员配置的值会存储到数据库中，并在运行时自动加载。
+两者都定义为你 `Pipe`、`Filter` 或 `Action` 类中的嵌套 Pydantic `BaseModel`。`Event` 类也可以携带 `Valves`，但绝不能携带 `UserValves`，因为事件处理器在没有用户的情况下运行。管理员配置的值会存储到数据库中，并在运行时自动加载。
 
 → **[Valves Development Guide](/features/extensibility/plugin/development/valves)**
 
 ---
 
-## Functions vs Tools：何时使用哪个
+## Functions vs Tools：何时使用哪个 {#functions-vs-tools-when-to-use-which}
 
 | 使用场景 | 应该使用…… | 原因 |
 |:---------|:---------|:----|
@@ -219,13 +240,13 @@ Functions 支持基于 [Pydantic](https://docs.pydantic.dev/) 的双层配置系
 
 ---
 
-## 开发资源
+## 开发资源 {#development-resources}
 
 | 指南 | 说明 |
 |:------|:-----------|
-| [Pipe Function Guide](./pipe) | 构建自定义模型、智能体和非 LLM 界面 |
-| [Filter Function Guide](./filter) | 拦截、翻译、审核并记录消息 |
-| [Action Function Guide](./action) | 添加用于导出、工作流和交互任务的按钮 |
+| [Pipe Function Guide](/features/extensibility/plugin/functions/pipe) | 构建自定义模型、智能体和非 LLM 界面 |
+| [Filter Function Guide](/features/extensibility/plugin/functions/filter) | 拦截、翻译、审核并记录消息 |
+| [Action Function Guide](/features/extensibility/plugin/functions/action) | 添加用于导出、工作流和交互任务的按钮 |
 | [Valves](/features/extensibility/plugin/development/valves) | 使用管理员和用户设置来配置函数 |
 | [Events](/features/extensibility/plugin/development/events) | 向 UI 发送实时更新 |
 | [Reserved Arguments](/features/extensibility/plugin/development/reserved-args) | `__user__`、`__event_emitter__`、`__metadata__` 等 |

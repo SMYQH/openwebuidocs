@@ -13,7 +13,7 @@ import Head from '@docusaurus/Head';
 </Head>
 
 
-# Open WebUI 与 llama.cpp
+# Open WebUI 与 llama.cpp {#open-webui--llamacpp}
 
 *最后更新：2026 年 5 月*
 
@@ -23,7 +23,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## llama.cpp 擅长的领域
+## llama.cpp 擅长的领域 {#what-llamacpp-does-well}
 
 - **最先进的推理性能**，在消费级硬件上，不断推动可能性的边界
 - **内置网络界面**，通过 `llama-server`，开箱即用
@@ -40,19 +40,20 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## Open WebUI 擅长的领域
+## Open WebUI 擅长的领域 {#what-open-webui-does-well}
 
-- **丰富的网络平台**，具有完整聊天、对话、历史、组织和搜索
-- **知识库和 RAG**，9 个向量数据库、5 个提取引擎和混合搜索与重排
-- **Python 可扩展性**，包括自定义工具、MCP 服务器、管道和社区扩展
-- **多供应商支持**，以便在 llama.cpp 模型旁边使用 OpenAI、Anthropic、Google 等
-- **团队平台**，包括频道、笔记、自动化、RBAC、SSO/OIDC/LDAP 和 SCIM 2.0
-- **Open Terminal**，提供用于代码执行的完整计算环境
-- **多用户支持**，从一个人到数千人
+- **完整的 Agentic 平台**：运行在 llama.cpp 提供的模型之上，模型可自行调用[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)，并支持 [MCP](/features/extensibility/mcp) 服务器、[子智能体](/features/chat-conversations/chat-features/subagents)、[计时器](/features/chat-conversations/chat-features/timers) 和[自动化](/features/chat-conversations/chat-features/automations)
+- **几乎一切都可以定制**：从按模型的提示词、工具、知识库和参数，到可以改变管道任意环节行为的[过滤器、管道、动作和事件函数](/features/extensibility/plugin/functions)，再加上主题、横幅和按群组的权限
+- **丰富的 Web 平台**：包含完整聊天、对话、历史、组织和搜索
+- **知识库与 RAG**：13 个向量数据库、8 个提取引擎，以及带重排序的混合搜索
+- **多提供商支持**：可以将 llama.cpp 模型与 OpenAI、Anthropic、Google 等一起使用
+- **团队平台**：包含频道、笔记、自动化、RBAC、SSO/OIDC/LDAP 和 SCIM 2.0
+- **Open Terminal**：提供用于代码执行的完整计算环境
+- **多用户支持**：从一个人到数千人
 
 ---
 
-## 何时使用每一个
+## 何时使用每一个 {#when-to-use-each}
 
 **直接使用 llama.cpp** 如果您想要最大的推理控制。它为您提供量化、上下文大小、批处理和硬件利用的微调，任何包装器都无法比拟。内置网络 UI 适合单独使用。
 
@@ -62,7 +63,7 @@ import Head from '@docusaurus/Head';
 
 ---
 
-## 将它们一起使用
+## 将它们一起使用 {#use-them-together}
 
 llama.cpp 的 `llama-server` 公开与 OpenAI 兼容的 API，这意味着 Open WebUI 可以直接连接到它。使用 llama.cpp 进行高性能推理，使用 Open WebUI 处理平台层。
 
@@ -85,7 +86,7 @@ llama-server -m your-model.gguf --port 8081
 
 ---
 
-## 常见问题
+## 常见问题 {#frequently-asked-questions}
 
 **我可以将 llama-server 连接到 Open WebUI 吗？**
 可以。llama-server 公开与 OpenAI 兼容的 API。在 Open WebUI 中添加 `http://localhost:8081/v1` 作为连接，您的模型将自动出现。

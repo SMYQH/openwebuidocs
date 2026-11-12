@@ -3,7 +3,7 @@ sidebar_position: 5
 title: "Open WebUI 日志"
 ---
 
-# Open WebUI 日志
+# Open WebUI 日志 {#logging-open-webui}
 
 **控制 Open WebUI 记录什么、输出到哪里、采用什么格式——从快速调试到生产日志管道都适用。**
 
@@ -11,7 +11,7 @@ Open WebUI 有两个日志面：前端调试用的**浏览器控制台**，以�
 
 ---
 
-## 前端日志
+## 前端日志 {#frontend-logging}
 
 前端使用标准浏览器 `console.log()` 调用。打开浏览器开发者工具（**F12**，或 macOS 上的 **Cmd+Option+I**），切换到 **控制台** 标签页，即可看到客户端应用输出的信息、警告与错误。
 
@@ -23,11 +23,11 @@ Open WebUI 有两个日志面：前端调试用的**浏览器控制台**，以�
 
 ---
 
-## 后端日志
+## 后端日志 {#backend-logging}
 
 后端使用 Python 内置的 `logging` 模块。默认情况下，日志以 `INFO` 级别输出到 **标准输出（stdout）**，因此你可以直接在终端或容器日志中看到它们。
 
-### 日志级别
+### 日志级别 {#log-levels}
 
 | 级别 | 数值 | 适用场景 |
 |---|---|---|
@@ -39,7 +39,7 @@ Open WebUI 有两个日志面：前端调试用的**浏览器控制台**，以�
 
 ---
 
-### 设置全局日志级别
+### 设置全局日志级别 {#setting-the-global-log-level}
 
 设置 `GLOBAL_LOG_LEVEL` 即可调整整个后端的日志详细程度。它会通过 `logging.basicConfig(force=True)` 配置 Python 根 logger，从而影响所有 Open WebUI logger 以及大多数第三方库。
 
@@ -59,6 +59,12 @@ environment:
 :::tip
 `DEBUG` 适合开发和故障排查。生产环境建议保持在 `INFO` 或 `WARNING`，以免日志量过大。
 :::
+
+---
+
+### 日志级别的代价 {#what-the-log-level-costs}
+
+提高日志级别不仅能减少日志量，也能省下处理开销，因为被该级别过滤掉的消息根本不会被构造出来。`WARNING` 还会省掉每次读取知识库的聊天请求所写入的检索结果。`DEBUG` 是运行代价最高的级别，整个聊天请求负载都会被记录其中，所以在排查完当初开启它的那个问题后，记得把它调回去。
 
 ---
 

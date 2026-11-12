@@ -3,14 +3,14 @@ sidebar_position: 10
 title: "代码审查"
 ---
 
-# 🔍 自动化代码审查
+# 🔍 自动化代码审查 {#automated-code-review}
 
 让 AI 审查拉取请求、分支变更或文件，获得详细的代码审查报告——包括安全漏洞、性能问题、风格问题和改进建议。
 
 > **你：** $Code Reviewer <br/>
 > 审查 `feature/auth-refactor` 分支相对于 `main` 的变更。
 
-## AI 的工作流程
+## AI 的工作流程 {#what-the-ai-does}
 
 1. 运行 `git diff main..feature/auth-refactor` 查看所有变更
 2. 在完整上下文中读取每个修改的文件（不仅仅是 diff——它理解周围代码）
@@ -23,7 +23,7 @@ title: "代码审查"
 
 <!-- TODO: 截图——文件浏览器中的生成审查报告：一个 Markdown 文件，包含每个被审查文件的章节、带行号的发现以及附带代码块的修复建议。 -->
 
-## 技能内容
+## 技能内容 {#skill-content}
 
 将下面的内容复制到**工作区 → 技能 → 创建**：
 

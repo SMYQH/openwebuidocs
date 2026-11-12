@@ -3,7 +3,7 @@ sidebar_position: 1510
 title: "🔐 聊天数据隐私与加密"
 ---
 
-# 聊天数据隐私与加密
+# 聊天数据隐私与加密 {#chat-data-privacy--encryption}
 
 Open WebUI 是自托管软件。您的组织控制服务器、数据库、存储、模型连接、日志、备份和网络部署。
 
@@ -11,7 +11,7 @@ Open WebUI 可以通过数据库加密、HTTPS/TLS、SSO/RBAC、管理员访问�
 
 Open WebUI 的标准体验旨在提供自托管控制、可审计性、历史记录、搜索、RAG、工具和管理治理。以下控制帮助组织决定聊天数据存储的位置、谁可以通过产品访问、哪些模型端点接收提示以及数据保留多长时间。
 
-## 按关注领域划分的控制
+## 按关注领域划分的控制 {#controls-by-concern}
 
 | 关注领域 | 最佳可用措施 |
 | :--- | :--- |
@@ -28,9 +28,9 @@ Open WebUI 的标准体验旨在提供自托管控制、可审计性、历史记
 | 共享控制 | 默认关闭社区共享，并审查聊天共享权限 |
 | 不同团队需要不同的信任边界 | 使用独立的 Open WebUI 实例，配备独立的数据库、备份、凭证、操作员和模型提供商 |
 
-## 推荐基线
+## 推荐基线 {#recommended-baseline}
 
-### 使用 PostgreSQL 配合加密存储
+### 使用 PostgreSQL 配合加密存储 {#use-postgresql-with-encrypted-storage}
 
 对于生产部署，请使用 PostgreSQL 并在 PostgreSQL 或存储层配置加密。使用加密卷、提供商管理的加密、TDE（如可用）、TLS 用于数据库连接、加密备份和网络隔离。
 
@@ -47,7 +47,7 @@ DATABASE_TYPE=sqlite+sqlcipher
 DATABASE_PASSWORD=your-secure-password
 ```
 
-### 限制管理员聊天和导出表面
+### 限制管理员聊天和导出表面 {#limit-admin-chat-and-export-surfaces}
 
 ```bash
 ENABLE_ADMIN_CHAT_ACCESS=false
@@ -57,7 +57,7 @@ BYPASS_ADMIN_ACCESS_CONTROL=false
 
 这些设置减少了管理员通过 Open WebUI 可访问的内容。数据库、主机、备份和应用密钥的直接访问应限于您批准的信任边界内的操作员。
 
-### 使用 SSO 并限制账户
+### 使用 SSO 并限制账户 {#use-sso-and-restrict-accounts}
 
 ```bash
 ENABLE_LOGIN_FORM=false
@@ -68,7 +68,7 @@ DEFAULT_USER_ROLE=pending
 
 使用您的身份提供商进行 MFA、条件访问、设备状态、组成员资格和用户生命周期管理。尽可能使用 SCIM。
 
-### 在不需要历史记录时使用临时聊天
+### 在不需要历史记录时使用临时聊天 {#use-temporary-chat-where-history-is-not-needed}
 
 临时聊天减少保存的聊天历史。强制临时聊天可以要求用户默认使用此行为，而不是让其可选。
 
@@ -91,11 +91,11 @@ USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true
 
 临时聊天是保存历史记录的数据最小化控制。活跃提示仍由 Open WebUI 和配置的模型端点处理。
 
-### 将敏感提示保留在私有模型上
+### 将敏感提示保留在私有模型上 {#keep-sensitive-prompts-on-private-models}
 
 对于敏感数据，优先选择由您的组织控制的本地或私有模型端点。按组限制外部模型，并按数据类别批准提供商。
 
-### 限制高级功能
+### 限制高级功能 {#restrict-advanced-capabilities}
 
 ```bash
 USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS=false
@@ -108,7 +108,7 @@ ENABLE_API_KEYS=false
 
 仅向批准的组授予高级功能。
 
-### 默认保持日志仅为元数据
+### 默认保持日志仅为元数据 {#keep-logs-metadata-only-by-default}
 
 ```bash
 AUDIT_LOG_LEVEL=METADATA
@@ -120,25 +120,25 @@ LOG_FORMAT=json
 
 ## 谁可以阅读聊天数据？ {#who-can-read-chat-data}
 
-### 普通用户
+### 普通用户 {#regular-users}
 
 普通用户可以阅读自己的聊天记录以及明确与他们共享的聊天记录。访问权限由角色、组、权限和资源级访问授予控制。
 
-### 管理员用户
+### 管理员用户 {#admin-users}
 
 管理员按设计拥有广泛的控制权限。`ENABLE_ADMIN_CHAT_ACCESS=false` 和 `ENABLE_ADMIN_EXPORT=false` 可防止通过 Open WebUI 产品表面的随意访问。基础设施级别的访问应通过操作员信任、访问审查和职责分离来处理。
 
-### 数据库、主机和备份操作员
+### 数据库、主机和备份操作员 {#database-host-and-backup-operators}
 
 有权访问数据库、主机、持久卷、应用密钥或未加密备份的操作员属于聊天数据信任边界的一部分。
 
 对于需要独立操作员信任边界的组，请使用具有独立基础设施和操作员的独立 Open WebUI 实例。
 
-### 模型提供商
+### 模型提供商 {#model-providers}
 
 如果配置了外部模型提供商，发送用于推理的提示和上下文可能对该提供商可见。对于应保留在您基础设施内部的数据，请使用私有/本地模型。
 
-## 加密保护什么
+## 加密保护什么 {#what-encryption-protects}
 
 静态加密有助于防止以下情况：
 
@@ -156,7 +156,7 @@ LOG_FORMAT=json
 - 包含聊天数据的导出、日志、跟踪和备份。
 - 接收提示进行推理的模型提供商。
 
-## 实际部署模式
+## 实际部署模式 {#practical-deployment-patterns}
 
 对于一般内部用途：
 
@@ -181,7 +181,7 @@ LOG_FORMAT=json
 - 仅将那些提示路由到批准的模型提供商。
 - 明确说明谁管理系统以及保留什么内容。
 
-## 相关文档
+## 相关文档 {#related-documentation}
 
 - [加固 Open WebUI](/getting-started/advanced-topics/hardening)
 - [HTTPS 参考](/reference/https)

@@ -3,12 +3,6 @@ sidebar_position: 4
 title: "DDGS"
 ---
 
-:::warning
-
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
-
-:::
-
 :::tip
 
 若要查看所有与 Web Search 相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
@@ -21,17 +15,23 @@ title: "DDGS"
 
 :::
 
-## DDGS（Dux Distributed Global Search）
+## DDGS（Dux Distributed Global Search） {#ddgs-dux-distributed-global-search}
 
 DDGS 是一个元搜索引擎，允许你通过统一接口搜索多个提供商。
 
-### 设置
+:::info 无需安装，也无需账号
+DDGS 随 Open WebUI 一起提供，并在其中运行。没有需要额外部署的服务，没有需要连接的容器，没有需要填写的 URL，也没有需要获取的 API 密钥。下面的三步就是全部的配置。
+
+它通过各提供商的公开页面而非付费 API 来访问每一个搜索提供商。如果你想要某个提供商的官方 API，以及随之而来的可靠性与配额，请改用 Web Search Engine 列表中该提供商自己的条目，例如 Brave、Google PSE 或 SerpApi，它们都需要密钥。
+:::
+
+### 设置 {#setup}
 
 1.  在管理员设置中启用 **Web Search**
-2.  将 **Web Search Engine** 设为 **DDGS**
+2.  将 **Web Search Engine** 设为 **DDGS**。该条目对应的引擎值是 `duckduckgo`，因此通过环境变量配置时应设置 `WEB_SEARCH_ENGINE=duckduckgo`。`ddgs` 匹配不到任何内容。在 slim 镜像上该条目是禁用的，因为那里没有 DDGS。
 3.  从下拉菜单中选择你想使用的 **DDGS 后端**
 
-#### DDGS 后端选项
+#### DDGS 后端选项 {#ddgs-backend-options}
 - **Auto (Random)**：从可用提供商中随机选择
 - **Bing**
 - **Brave**
@@ -43,10 +43,22 @@ DDGS 是一个元搜索引擎，允许你通过统一接口搜索多个提供商
 - **Yahoo**
 - **Yandex**
 
-#### 环境变量
+#### 环境变量 {#environment-variable}
 
 你也可以通过 `DDGS_BACKEND` 环境变量配置后端。
 
 ```bash
 DDGS_BACKEND="google"
 ```
+
+#### 如何选择后端 {#choosing-a-backend}
+
+**Auto (Random)** 是默认选项，也是最可靠的选择。由于每次搜索都会随机挑选一个提供商，某个提供商拒绝请求并不会让整个搜索随之失效。
+
+固定为单一后端会让每次搜索都依赖那一个提供商继续为自动化请求提供服务。各提供商对自动化请求的处理方式不尽相同，有些返回的是一个不含结果的页面而不是报错，因此固定后端可能在其他一切正常的情况下什么都返回不了。同一个提供商也可能在正常使用一段时间后开始拒绝请求，而共享 IP 或数据中心 IP 比家庭宽带更容易被拒绝。
+
+如果在固定后端下搜索没有返回任何结果，请先切回 Auto，再去排查其他设置。
+
+:::warning 模型提示搜索工具不可用
+这通常与搜索引擎无关。只有当管理员设置中启用了网页搜索、在该模型自己的编辑器中为它启用了网页搜索、为当前聊天启用了网页搜索、用户拥有相应权限，并且模型没有被设置为 Legacy function calling 时，该工具才会提供给模型。一个在自己编辑器中关闭了网页搜索能力的模型，会提示工具不可用，而此时其他地方的搜索一切正常。
+:::

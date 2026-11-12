@@ -9,19 +9,19 @@ title: "Docling 文档提取"
 
 :::
 
-## 🐤 Docling 文档提取
+## Docling 文档提取 {#docling-document-extraction}
 
 本文提供一个逐步指南，说明如何将 Docling 集成到 Open WebUI 中。Docling 是一个文档处理库，可将多种文件格式——包括 PDF、Word、电子表格、HTML 与图片——转换为 JSON 或 Markdown 等结构化数据。它内置版面检测、表格解析和语言感知处理能力，可通过统一且可扩展的接口，为搜索、总结与检索增强生成等 AI 场景简化文档准备流程。
 
-## 前提条件
+## 前提条件 {#prerequisites}
 
 - Open WebUI 实例
 - 已在系统中安装 Docker
 - 已为 Open WebUI 准备 Docker 网络
 
-## 集成步骤
+## 集成步骤 {#integration-steps}
 
-### 第 1 步：运行 Docling-Serve 容器
+### 第 1 步：运行 Docling-Serve 容器 {#step-1-run-docling-serve-container}
 
 **基础 CPU 部署：**
 
@@ -81,22 +81,21 @@ services:
 
 :::
 
-### 第 2 步：配置 Open WebUI
+### 第 2 步：配置 Open WebUI {#step-2-configure-open-webui}
 
 1. 登录你的 Open WebUI 实例
-2. 前往 **管理面板** → **设置** → **文档**
-3. 将 **默认** 内容提取引擎下拉框切换为 **Docling**
-4. 将提取引擎 URL 设置为 `http://host.docker.internal:5001`（Docker）或 `http://localhost:5001`（原生部署）
-5. 保存更改
+2. 前往 **设置** → **管理** → **文档**
+3. 将 **Content Extraction Engine** 设置为 **Docling**
+4. 将 **Docling Server URL** 设置为 `http://host.docker.internal:5001`（Docker）或 `http://localhost:5001`（原生部署）。默认值为 `http://docling:5001`。
+5. 可选：设置 **API Key**（`DOCLING_API_KEY`），它会作为 `X-Api-Key` 请求头发送给 docling-serve
+6. 保存更改
 
-### 第 3 步：配置图片描述（可选）
+### 第 3 步：配置图片描述（可选） {#step-3-configure-picture-description-optional}
 
-若要启用文档中的 AI 图片描述：
+若要启用文档中的 AI 图片描述，请在 **文档** 标签中 Docling 设置的 **Parameters** JSON 字段中加入图片描述选项。共有两种模式：
 
-1. 在 **文档** 标签中启用 **文档中的图片描述**
-2. 选择描述模式：`local` 或 `API`
-   - **local**：Vision 模型在 Docling 容器内部运行
-   - **API**：Docling 调用外部服务（如 Ollama 或兼容 OpenAI 的 endpoint）
+- **local**：Vision 模型在 Docling 容器内部运行，通过 `picture_description_local` 配置
+- **API**：Docling 调用外部服务（如 Ollama 或兼容 OpenAI 的 endpoint），通过 `picture_description_api` 配置
 
 :::danger API 模式的必要条件
 
@@ -110,20 +109,22 @@ DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true
 
 :::
 
-#### JSON 配置示例
+#### JSON 配置示例 {#json-configuration-examples}
 
 请确保你的配置是**合法 JSON**！
+
+:::warning 嵌套对象必须写成 JSON 字符串
+
+Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表单字段转发给 docling-serve，不做重新编码。Docling 从 JSON **字符串** 中解析其嵌套选项（`picture_description_local`、`picture_description_api`、`picture_description_custom_config`），因此内联写出的对象无法被正确传输，上传会在 docling-serve 端报 `Invalid JSON for field ...` 错误。请像下面这样把这些值写成转义后的 JSON 字符串。普通值、布尔值和列表不需要转义。
+
+:::
 
 **本地模型配置：**
 
 ```json
 {
-  "repo_id": "HuggingFaceTB/SmolVLM-256M-Instruct",
-  "generation_config": {
-    "max_new_tokens": 200,
-    "do_sample": false
-  },
-  "prompt": "Describe this image in a few sentences."
+  "do_picture_description": true,
+  "picture_description_local": "{\"repo_id\": \"HuggingFaceTB/SmolVLM-256M-Instruct\", \"generation_config\": {\"max_new_tokens\": 200, \"do_sample\": false}, \"prompt\": \"Describe this image in a few sentences.\"}"
 }
 ```
 
@@ -131,16 +132,12 @@ DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true
 
 ```json
 {
-  "url": "http://host.docker.internal:11434/v1/chat/completions",
-  "params": {
-    "model": "llava:7b"
-  },
-  "timeout": 60,
-  "prompt": "Describe this image in great detail."
+  "do_picture_description": true,
+  "picture_description_api": "{\"url\": \"http://host.docker.internal:11434/v1/chat/completions\", \"params\": {\"model\": \"llava:7b\"}, \"timeout\": 60, \"prompt\": \"Describe this image in great detail.\"}"
 }
 ```
 
-## Docling-Serve 环境变量参考
+## Docling-Serve 环境变量参考 {#docling-serve-environment-variables-reference}
 
 | 变量 | 默认值 | 说明 |
 | -------- | ------- | ---- |
@@ -153,9 +150,9 @@ DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true
 | `OMP_NUM_THREADS` | `4` | CPU 处理时的 OpenMP 线程数 |
 | `MKL_NUM_THREADS` | `4` | Intel MKL 线程数 |
 
-## Docling 参数参考（Open WebUI）
+## Docling 参数参考（Open WebUI） {#docling-parameters-reference-open-webui}
 
-可通过 **管理面板 > 文档** 中的 `DOCLING_PARAMS` JSON，或通过环境变量进行配置。
+可通过 **设置 > 管理 > 文档** 中的 `DOCLING_PARAMS` JSON，或通过环境变量进行配置。
 
 | 参数 | 类型 | 说明 | 允许值 |
 | ----------- | ---- | ---- | ---------------- |
@@ -185,13 +182,13 @@ DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true
 }
 ```
 
-## 验证集成
+## 验证集成 {#verifying-the-integration}
 
 1. 访问 Docling UI：`http://127.0.0.1:5001/ui`
 2. 上传一个测试文档，确认它能返回 markdown 输出
 3. 在 Open WebUI 中向知识库上传一个文件，确认处理流程可成功完成
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
 ### "Task result not found. Please wait for a completion status."
 
@@ -205,7 +202,7 @@ DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true
 
 **解决方案：** 在 docling-serve 环境变量中加入 `DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true`。
 
-### `/v1alpha/convert/file` 返回 404 Not Found
+### `/v1alpha/convert/file` 返回 404 Not Found {#404-not-found-on-v1alphaconvertfile}
 
 **原因：** 使用了过旧版本的 docling-serve 或 Open WebUI。
 
@@ -214,13 +211,13 @@ DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true
 - 将 Open WebUI 更新到最新版（新版使用 `/v1/convert/file`）
 - 将 docling-serve 更新到 v1.0+（新版使用 `/v1` API）
 
-### 大文档出现超时错误
+### 大文档出现超时错误 {#invalid-json-for-field--in-the-docling-serve-logs}
 
 **原因：** `DOCLING_SERVE_MAX_SYNC_WAIT` 对文档处理时间来说太低。
 
 **解决方案：** 提高 `DOCLING_SERVE_MAX_SYNC_WAIT`（例如设为 `600`，即 10 分钟）。
 
-### OCR 不工作或语言识别错误
+### OCR 不工作或语言识别错误 {#timeout-errors-on-large-documents}
 
 **原因：** 针对当前 OCR engine，`ocr_lang` 使用了错误格式。
 
@@ -229,7 +226,7 @@ DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true
 - Tesseract 使用 3 位代码：`["eng", "deu"]`
 - EasyOCR 使用 2 位代码：`["en", "de"]`
 
-### "Error calling Docling" 但没有具体细节
+### "Error calling Docling" 但没有具体细节 {#ocr-not-working-or-incorrect-language-detection}
 
 **排查步骤：**
 
@@ -237,7 +234,13 @@ DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true
 2. 直接通过 `http://localhost:5001/ui` 测试 Docling
 3. 验证 Open WebUI 与 docling-serve 容器之间的网络连通性
 
-## 结论
+#### 引用指向错误的页码 {#citations-point-to-the-wrong-page}
+
+**原因**：Docling 在其 Markdown 输出中只标记页码变化，因此空白页不会留下分页符。以这些分页符计数得到的页码会使空白页之后的每条引用都显示更早的页码。Open WebUI 从 Docling 与 Markdown 一同返回的 JSON 输出中获取页码。
+
+**解决方案**：在 **设置 > 管理 > 文档** 中运行 **重建知识库与记忆向量索引**，它会重新提取每个知识库文件；对于不在知识库中的受影响文件，请重新上传一次。页码是在 Docling 提取文件时确定的。
+
+## 结论 {#conclusion}
 
 将 Docling 集成到 Open WebUI 后，文档处理能力会明显增强。需要牢记的关键点包括：
 

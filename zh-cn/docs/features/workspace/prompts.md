@@ -6,7 +6,7 @@ title: "提示词"
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 提示词
+# 提示词 {#prompts}
 
 <ThemedImage
   alt="工作区地图，提示词模块高亮：模型、知识、提示词、技能和工具围绕 Open WebUI 核心"
@@ -25,27 +25,27 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ---
 
-## 为什么使用提示词？
+## 为什么使用提示词？ {#why-prompts}
 
-### 停止重复输入相同的指令
+### 停止重复输入相同的指令 {#stop-retyping-the-same-instructions}
 
 保存一次提示词，用 `/command` 使用它。Bug 报告模板、会议记录、代码审查、内容简报：任何您输入超过两次的内容都应该成为提示词。
 
-### 将提示词转变为交互式表单
+### 将提示词转变为交互式表单 {#turn-prompts-into-interactive-forms}
 
 添加类型化输入变量（下拉菜单、日期选择器、数字字段、复选框），用户会看到一个清晰的表单而不是编辑原始文本。非技术用户无需理解语法就能运行复杂的提示词。
 
-### 带回滚的版本历史
+### 带回滚的版本历史 {#version-history-with-rollback}
 
 每次更改都创建一个新版本。并排比较版本、将之前的版本恢复为生产版本、跟踪谁做了什么更改。
 
-### 受控共享
+### 受控共享 {#controlled-sharing}
 
 与特定用户或用户组共享提示词。公开提示词出现在所有人的 `/` 建议中。私有提示词留在您自己的工作区中。
 
 ---
 
-## 主要功能
+## 主要功能 {#key-features}
 
 | | |
 | :--- | :--- |
@@ -59,7 +59,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ---
 
-## 创建提示词
+## 创建提示词 {#creating-a-prompt}
 
 导航到**工作区 > 提示词**，点击 **+ 新建提示词**。
 
@@ -76,9 +76,9 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ---
 
-## 变量
+## 变量 {#variables}
 
-### 系统变量
+### 系统变量 {#system-variables}
 
 在运行时自动替换为对应的值：
 
@@ -100,7 +100,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | `{{USER_LOCATION}}` | 您的位置（需要 HTTPS + 设置 > 界面开关） |
 | `{{USER_GROUPS}}` | 您所在用户组的逗号分隔列表（若不属于任何用户组则为空）。仅当提示词中实际引用该占位符时才会从数据库解析。 |
 
-### 自定义输入变量
+### 自定义输入变量 {#custom-input-variables}
 
 在提示词内容中添加变量，用户使用斜杠命令时会看到弹出表单。
 
@@ -120,7 +120,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 {{notes | textarea:placeholder="附加上下文（可选）"}}
 ```
 
-### 可用输入类型
+### 可用输入类型 {#available-input-types}
 
 | 类型 | 说明 | 示例 |
 | :--- | :--- | :--- |
@@ -142,11 +142,11 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ---
 
-## 消息和提示词修饰符
+## 消息和提示词修饰符 {#message-and-prompt-modifiers}
 
 这些修饰符对任务模型提示词特别有用（标题生成、标签生成、后续建议），其中对话包含粘贴的文档或代码等长消息。
 
-### 提示词截断
+### 提示词截断 {#prompt-truncation}
 
 `{{prompt}}` 变量支持基于字符的截断：
 
@@ -156,7 +156,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | `{{prompt:end:N}}` | 后 N 个字符 |
 | `{{prompt:middletruncate:N}}` | 前半部分 + 后半部分，共 N 个字符 |
 
-### 消息选择器与管道过滤器
+### 消息选择器与管道过滤器 {#message-selectors-vs-pipe-filters}
 
 `{{MESSAGES}}` 变量有两种不同的修饰符类型，在不同层面工作：
 
@@ -192,7 +192,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ---
 
-## 版本历史
+## 版本历史 {#version-history}
 
 每次保存都会创建一个新版本。编辑提示词时，**历史侧边栏**显示所有版本，包括提交信息、作者、时间戳，以及当前生产版本上的"使用中"标识。
 
@@ -204,9 +204,9 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ---
 
-## 示例
+## 示例 {#examples}
 
-### Bug 报告生成器（`/bug_report`）
+### Bug 报告生成器（`/bug_report`） {#bug-report-generator-bug_report}
 
 带有必填摘要、优先级下拉菜单和重现步骤的结构化表单，以及可选上下文字段：
 
@@ -224,7 +224,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 请将以上内容格式化为清晰完整的 Bug 报告文档。
 ```
 
-### 会议记录（`/meeting_minutes`）
+### 会议记录（`/meeting_minutes`） {#meeting-minutes-meeting_minutes}
 
 日期和时间选择器、必填参与者和议程、可选决定和行动项：
 
@@ -252,7 +252,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 请将以上内容格式化为清晰专业的会议摘要。
 ```
 
-### 标题生成（任务模型模板）
+### 标题生成（任务模型模板） {#title-generation-task-model-template}
 
 使用消息选择器 + 管道过滤器保持上下文小：
 
@@ -269,12 +269,12 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ---
 
-## 局限性
+## 局限性 {#limitations}
 
-### 斜杠命令命名空间
+### 斜杠命令命名空间 {#slash-command-namespace}
 
 公开提示词出现在每个用户的 `/` 建议中。过多公开提示词会使菜单杂乱。使用启用/禁用切换将不活跃的提示词从建议中排除。
 
-### 默认为可选
+### 默认为可选 {#optional-by-default}
 
 所有自定义输入变量除非标记为 `:required`，否则默认为可选。如果您的提示词依赖某个字段，请明确添加 `:required`。

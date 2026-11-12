@@ -4,7 +4,7 @@ title: "OpenAI"
 
 ---
 
-## 概览
+## 概览 {#overview}
 
 Open WebUI 可以轻松连接 **OpenAI** 和 **Azure OpenAI**。本指南会带你完成 API key 配置、正确端点填写与模型选择，让你马上开始聊天。
 
@@ -12,7 +12,7 @@ Open WebUI 可以轻松连接 **OpenAI** 和 **Azure OpenAI**。本指南会带�
 
 ---
 
-## 重要：我们支持的是协议，而不是厂商私有实现
+## 重要：我们支持的是协议，而不是厂商私有实现 {#important-protocols-not-providers}
 
 Open WebUI 是一个**以协议为中心**的平台。虽然我们为 OpenAI 模型提供了一流支持，但本质上主要还是通过 **OpenAI 聊天补全 API 协议**来实现。
 
@@ -23,14 +23,14 @@ Open WebUI 是一个**以协议为中心**的平台。虽然我们为 OpenAI 模
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-## 第 1 步：获取你的 OpenAI API key
+## 第 1 步：获取你的 OpenAI API key {#step-1-get-your-openai-api-key}
 
 - **OpenAI：** 在 [platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys) 获取
 - **Azure OpenAI：** 在 [Azure Portal](https://portal.azure.com/) 中获取
 
 ---
 
-## 第 2 步：在 Open WebUI 中添加 API 连接
+## 第 2 步：在 Open WebUI 中添加 API 连接 {#step-2-add-the-api-connection-in-open-webui}
 
 当 Open WebUI 已经运行后：
 
@@ -59,7 +59,7 @@ import TabItem from '@theme/TabItem';
   </TabItem>
 </Tabs>
 
-### 高级配置
+### 高级配置 {#advanced-configuration}
 
 *   **Model IDs (Filter)**：
     *   *默认（留空）*：自动检测提供商中的全部可用模型。
@@ -81,7 +81,7 @@ import TabItem from '@theme/TabItem';
 AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=15
 ```
 
-如果你保存了一个不可达 URL，导致界面卡住，请参见 [模型列表加载问题](/troubleshooting/connection-error#️-model-list-loading-issues-slow-ui--unreachable-endpoints) 故障排查页面。
+如果你保存了一个不可达 URL，导致界面卡住，请参见 [模型列表加载问题](/troubleshooting/connection-error#model-list-loading-issues-slow-ui--unreachable-endpoints) 故障排查页面。
 
 :::
 
@@ -89,7 +89,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=15
 
 ---
 
-## 第 3 步：开始使用模型
+## 第 3 步：开始使用模型 {#step-3-start-using-models}
 
 保存连接后，你就可以直接在 Open WebUI 内使用模型。
 
@@ -103,7 +103,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=15
 
 ---
 
-## 一切就绪！
+## 一切就绪！ {#all-set}
 
 就是这样！你的 OpenAI API 连接已经可以使用了。
 

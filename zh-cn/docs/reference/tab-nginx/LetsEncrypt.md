@@ -1,11 +1,20 @@
 # 使用 Let's Encrypt
 
-Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常适合保护生产环境。🔐
+Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常适合保护生产环境。
 
 本指南采用两阶段流程：
 
 1. **第一阶段：** 临时运行 Nginx，证明你拥有该域名，并从 Let's Encrypt 获取证书。
 2. **第二阶段：** 重新配置 Nginx，使用新证书提供安全的 HTTPS 连接。
+
+### Let''s Encrypt {#lets-encrypt}
+
+Let's Encrypt 提供免费的 SSL 证书，被大多数浏览器信任，非常适合为你的生产环境提供保护。
+
+本指南采用两阶段方案：
+
+1.  **阶段 1：** 临时运行 Nginx，证明你拥有该域名，并从 Let's Encrypt 获取证书。
+2.  **阶段 2：** 重新配置 Nginx，使用新证书建立安全的 HTTPS 连接。
 
 ## 前提条件 {#prerequisites}
 
@@ -19,7 +28,7 @@ Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常�
 
 -----
 
-### 第 1 步：为证书验证准备初始配置
+### 第 1 步：为证书验证准备初始配置 {#step-1-initial-setup-for-certificate-validation}
 
 首先创建所需文件，并准备一个临时的 Nginx 配置，让 Let's Encrypt 的服务器可以验证你的域名。
 
@@ -37,7 +46,7 @@ Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常�
 
    创建文件 `nginx/conf.d/open-webui.conf`。这个初始配置只监听 80 端口，并为 Certbot 提供验证文件。
 
-   ⚠️ **记得把 `<YOUR_DOMAIN_NAME>` 替换成你的真实域名。**
+   **记得把 `<YOUR_DOMAIN_NAME>` 替换成你的真实域名。**
 
    ```nginx
    # nginx/conf.d/open-webui.conf
@@ -100,7 +109,7 @@ Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常�
 
 -----
 
-### 第 2 步：获取 SSL 证书
+### 第 2 步：获取 SSL 证书 {#step-2-obtain-the-ssl-certificate}
 
 接下来我们将运行一个脚本，借助 Docker 获取证书。
 
@@ -108,7 +117,7 @@ Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常�
 
    在项目根目录创建一个名为 `enable_letsencrypt.sh` 的可执行脚本。
 
-   ⚠️ **记得把 `<YOUR_DOMAIN_NAME>` 和 `<YOUR_EMAIL_ADDRESS>` 替换成你的真实信息。**
+   **记得把 `<YOUR_DOMAIN_NAME>` 和 `<YOUR_EMAIL_ADDRESS>` 替换成你的真实信息。**
 
    ```bash
    #!/bin/bash
@@ -162,7 +171,7 @@ Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常�
 
 -----
 
-### 重要：缓存配置
+### 重要：缓存配置 {#important-caching-configuration}
 
 在 Open WebUI 中使用 NGINX 时，正确的缓存配置对性能至关重要，同时还要确保认证保持安全。下面的配置包含：
 
@@ -172,7 +181,7 @@ Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常�
 
 下面的配置会自动落实这些规则。
 
-### 第 3 步：完成用于 HTTPS 的 Nginx 配置
+### 第 3 步：完成用于 HTTPS 的 Nginx 配置 {#step-3-finalize-nginx-configuration-for-https}
 
 证书保存到 `ssl` 目录后，现在可以更新 Nginx 配置以启用 HTTPS。
 
@@ -180,7 +189,7 @@ Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常�
 
    **将** `nginx/conf.d/open-webui.conf` **的全部内容替换为下面的最终配置。**
 
-   ⚠️ **把 `<YOUR_DOMAIN_NAME>` 的 4 处都替换成你的域名。**
+   **把 `<YOUR_DOMAIN_NAME>` 的 4 处都替换成你的域名。**
 
    ```nginx
    # nginx/conf.d/open-webui.conf
@@ -295,15 +304,15 @@ Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常�
 
 -----
 
-### 第 4 步：访问你的安全 WebUI
+### 第 4 步：访问你的安全 WebUI {#step-4-access-your-secure-webui}
 
 现在你可以通过 HTTPS 安全访问 Open WebUI 实例了。
 
-➡️ **`https://<YOUR_DOMAIN_NAME>`**
+→ **`https://<YOUR_DOMAIN_NAME>`**
 
 -----
 
-### （可选）第 5 步：设置自动续期
+### （可选）第 5 步：设置自动续期 {#optional-step-5-setting-up-automatic-renewal}
 
 Let's Encrypt 证书会在 90 天后过期。你应该设置一个 `cron` 任务来自动续期。
 

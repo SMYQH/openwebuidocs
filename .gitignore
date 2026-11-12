@@ -1,3 +1,5 @@
 .omo/
 node_modules/
 .DS_Store
+.tmpwork/
+.tmp_changed_docs.txt

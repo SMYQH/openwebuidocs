@@ -3,7 +3,7 @@ sidebar_position: 3
 title: "Chatterbox TTS —— 声音克隆"
 ---
 
-# Chatterbox TTS —— 声音克隆
+# Chatterbox TTS —— 声音克隆 {#chatterbox-tts-voice-cloning}
 
 :::warning
 
@@ -11,13 +11,13 @@ title: "Chatterbox TTS —— 声音克隆"
 
 :::
 
-## 什么是 `Chatterbox TTS API`？
+## 什么是 `Chatterbox TTS API`？ {#what-is-chatterbox-tts-api}
 
 [Chatterbox TTS API](https://github.com/travisvn/chatterbox-tts-api) 是一个 API 封装层，支持声音克隆与文本转语音，可直接替代 OpenAI Speech API 端点。
 
 [![Link to Resemble AI voice samples](https://img.shields.io/badge/listen-demo_samples-blue)](https://resemble-ai.github.io/chatterbox_demopage/)
 
-## 主要特性
+## 主要特性 {#key-features}
 
 - 零样本声音克隆 —— 只需约 10 秒语音样本
 - [表现优于 ElevenLabs](https://podonos.com/resembleai/chatterbox)
@@ -28,7 +28,7 @@ title: "Chatterbox TTS —— 声音克隆"
 - 具备高级内存管理与自动清理
 - 可选前端界面，便于管理和使用
 
-### 硬件建议
+### 硬件建议 {#hardware-recommendations}
 
 - 内存：至少 4GB，推荐 8GB+
 - GPU：CUDA（Nvidia）或 Apple M 系列（MPS）
@@ -40,11 +40,11 @@ Chatterbox 可能会占用较多内存，其硬件要求也可能高于你熟悉
 
 :::
 
-## ⚡️ 快速开始
+## ⚡️ 快速开始 {#quick-start}
 
-### 🐍 使用 Python
+### 🐍 使用 Python {#using-python}
 
-#### 方案 A：使用 uv（推荐 —— 更快、依赖处理更好）
+#### 方案 A：使用 uv（推荐 —— 更快、依赖处理更好） {#option-a-using-uv-recommended-faster--better-dependencies}
 
 ```bash
 
@@ -70,7 +70,7 @@ uv run main.py
 
 > 💡 **为什么选 uv？** 用户普遍反馈它对 `chatterbox-tts` 兼容性更好、安装速度提升 25-40%，并且依赖解析更稳定。[查看迁移指南 →](https://github.com/travisvn/chatterbox-tts-api/blob/main/docs/UV_MIGRATION.md)
 
-#### 方案 B：使用 pip（传统方式）
+#### 方案 B：使用 pip（传统方式） {#option-b-using-pip-traditional}
 
 ```bash
 
@@ -101,7 +101,7 @@ python main.py
 
 > 遇到问题？请查看 [故障排查部分](https://github.com/travisvn/chatterbox-tts-api?tab=readme-ov-file#common-issues)
 
-### 🐳 Docker（推荐）
+### 🐳 Docker（推荐） {#docker-recommended}
 
 ```bash
 
@@ -145,7 +145,7 @@ curl -X POST http://localhost:4123/v1/audio/speech \
 
 该项目包含一个可选的 React Web UI。你可以通过 Docker Compose profile 方便地选择是否启用前端：
 
-### 使用 Docker Compose Profiles
+### 使用 Docker Compose Profiles {#with-docker-compose-profiles}
 
 ```bash
 
@@ -164,7 +164,7 @@ docker compose -f docker/docker-compose.uv.yml --profile frontend up -d     # uv
 docker compose -f docker/docker-compose.cpu.yml --profile frontend up -d    # CPU + Frontend
 ```
 
-### 本地开发
+### 本地开发 {#local-development}
 
 本地开发时，你可以分别运行 API 和前端：
 
@@ -180,7 +180,7 @@ cd frontend && npm install && npm run dev
 
 根据 Vite 输出的链接打开 Web UI 即可。
 
-### 生产构建
+### 生产构建 {#build-for-production}
 
 为生产部署构建前端：
 
@@ -192,7 +192,7 @@ cd frontend && npm install && npm run build
 
 构建完成后可直接通过本地文件系统中的 `/dist/index.html` 访问。
 
-### 端口说明
+### 端口说明 {#port-configuration}
 
 - **仅 API**：通过 `http://localhost:4123` 访问
 - **带前端**：Web UI 位于 `http://localhost:4321`，API 请求通过反向代理转发
@@ -201,7 +201,7 @@ cd frontend && npm install && npm run build
 
 </details>
 
-## 配置 Open WebUI 使用 `Chatterbox TTS API`
+## 配置 Open WebUI 使用 `Chatterbox TTS API` {#setting-up-open-webui-to-use-chatterbox-tts-api}
 
 我们建议你先带前端界面运行，这样可以先上传想克隆的声音文件，再去配置 Open WebUI。如果已按上文正确启动，可访问 `http://localhost:4321` 打开前端。
 
@@ -224,9 +224,9 @@ cd frontend && npm install && npm run build
 
 ![Open WebUI 音频管理员设置截图，展示此项目所需的正确端点](https://lm17s1uz51.ufs.sh/f/EsgO8cDHBTOUjUe3QjHytHQ0xqn2CishmXgGfeJ4o983TUMO)
 
-## 如果觉得这个项目有帮助，请为 [GitHub 仓库](https://github.com/travisvn/chatterbox-tts-api) 点个 ⭐️
+## 如果觉得这个项目有帮助，请为 [GitHub 仓库](https://github.com/travisvn/chatterbox-tts-api) 点个 ⭐️ {#please-star-the-repo-on-githubhttpsgithubcomtravisvnchatterbox-tts-api-to-support-development}
 
-## 需要帮助？
+## 需要帮助？ {#need-help}
 
 Chatterbox 初次启动时可能比较折腾，如果某种安装方式不顺利，你可以尝试切换到其他安装路径。
 
@@ -234,9 +234,9 @@ Chatterbox 初次启动时可能比较折腾，如果某种安装方式不顺利
 
 - 📖 **文档**：参见 [API 文档](https://github.com/travisvn/chatterbox-tts-api/blob/main/docs/API_README.md) 和 [Docker 指南](https://github.com/travisvn/chatterbox-tts-api/blob/main/docs/DOCKER_README.md)
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 内存要求
+### 内存要求 {#memory-requirements}
 
 Chatterbox 的内存要求高于其他 TTS 方案：
 - **最低：** 4GB RAM
@@ -245,7 +245,7 @@ Chatterbox 的内存要求高于其他 TTS 方案：
 
 如果你有内存问题，可考虑改用更轻量的方案，例如 [OpenAI Edge TTS](/features/chat-conversations/audio/text-to-speech/openai-edge-tts-integration) 或 [Kokoro-FastAPI](/features/chat-conversations/audio/text-to-speech/Kokoro-FastAPI-integration)。
 
-### Docker 网络
+### Docker 网络 {#docker-networking}
 
 如果 Open WebUI 无法连接 Chatterbox：
 
@@ -253,7 +253,7 @@ Chatterbox 的内存要求高于其他 TTS 方案：
 - **Docker Compose：** 使用 `http://chatterbox-tts-api:4123/v1`
 - **Linux：** 使用宿主机 IP 地址
 
-### 首次启动
+### 首次启动 {#first-time-startup}
 
 第一次 TTS 请求通常会更慢，因为模型需要先加载。可使用以下命令查看日志：
 

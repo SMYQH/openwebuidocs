@@ -1,0 +1,121 @@
+---
+sidebar_position: 16
+title: "Keyboard Shortcuts"
+---
+
+# Keyboard Shortcuts
+
+Open WebUI 自带一组针对高频操作的键盘快捷键，其中大多数都可以**重新绑定到你偏好的按键**。快捷键按用户区分，与你的设置一起保存。
+
+可在 **Settings > Keyboard** 中管理它们。点击某个快捷键的按键组合即可录制新的按键。快捷键旁边的小 **x** 用于取消绑定。**Reset Defaults** 会恢复全部默认绑定。
+
+## 关闭快捷键 {#turning-shortcuts-off}
+
+**Settings > Keyboard** 顶部的 **Enable Keyboard Shortcuts** 开关可以一次性关闭全部快捷键。它默认开启。
+
+当 Open WebUI 的快捷键与你浏览器或操作系统已在使用的快捷键冲突时，可以把它关掉，常见例子是浏览器开发者工具常用的 `Cmd+Shift+C`。关闭期间，下面那些可配置的快捷键不会触发，按键组合原封不动地传递给浏览器或操作系统（包括语音输入），界面中的快捷键提示也会停止显示。
+
+要停用单个快捷键，只需取消它的绑定，其按键组合随后就会像普通按键一样传到浏览器。这通常是解决 **Regenerate Response** 与浏览器刷新快捷键冲突的办法——它默认就绑定在浏览器用于刷新页面的按键上。
+
+这不会把你锁在门外：快捷键禁用期间 **Settings > Keyboard** 标签页依然可用，你随时可以重新绑定或重新开启它们。聊天输入框的触发符（`/`、`@`、`#`）、用于接受自动补全建议的 `Tab`，以及用于停止回复或关闭对话框的 `Esc` 都不受影响，因为它们并不是全局快捷键。
+
+下文的 `Cmd` 在 Windows 和 Linux 上表示 `Ctrl` 键。在 macOS 上它专指 `Command` 键：`Ctrl` 在那里被当作独立的修饰键，不能代替 `Cmd`，因此在 Mac 上 `Ctrl+K` 不会打开搜索，只有 `Cmd+K` 才可以。
+
+## 可配置的快捷键 {#configurable-shortcuts}
+
+这些快捷键可以重新绑定。标签页快捷键列在下方单独的表格中。两张表都未列出的快捷键是固定的，无法重新分配。
+
+| 操作 | 默认按键 |
+|---|---|
+| 新建聊天 | `Cmd+Shift+O` |
+| 新建临时聊天 | `Cmd+Shift+'` |
+| 删除聊天 | `Cmd+Shift+Backspace` |
+| 打开模型选择器 | `Cmd+Shift+M` |
+| 切换语音输入 | `Cmd+Shift+L` |
+| 跳转到上一个聊天 | *（未绑定）* |
+| 跳转到下一个聊天 | *（未绑定）* |
+| 搜索 | `Cmd+K` |
+| 打开设置 | `Cmd+.` |
+| 显示快捷键 | `Cmd+/` |
+| 切换侧边栏 | `Cmd+Shift+S` |
+| 切换控件面板 | *（未绑定）* |
+| 关闭弹窗 | `Escape` |
+| 聚焦聊天输入框 | `Shift+Escape` |
+| 清空输入框中的选择 | `Escape` |
+| 生成消息对 | `Cmd+Shift+Enter` |
+| 重新生成回复 | `Cmd+R` |
+| 允许工具调用 | `Cmd+Alt+Enter` |
+| 拒绝工具调用 | `Cmd+Alt+Backspace` |
+| 复制最后一个代码块 | `Cmd+Shift+;` |
+| 复制最后一条回复 | `Cmd+Shift+C` |
+
+**Generate Message Pair** 会把聊天输入框中的文字作为你的消息发出，并为每个选中的模型生成一条占位回复，你随后可以手动编辑这些回复。
+
+**Clear Input Selections** 会重置聊天输入框中的各项选择：移除模型覆盖、取消选中工具与筛选器，并关闭 Web 搜索、图像生成和代码解释器。它只在聊天输入框获得焦点时触发。
+
+**Close Modal** 只关闭最上层的对话框，因此在 **Settings** 之上打开的确认框会关闭，而 **Settings** 保持打开。`Escape` 始终会关闭对话框，因此你在这里分配的按键是与 `Escape` 并存，而不是取代它。
+
+### 标签页快捷键 {#tab-shortcuts}
+
+这些位于 **Settings > Keyboard** 的 **Tabs** 之下，在[工作区标签页](/features/chat-conversations/chat-features/#tabs-side-panel)中生效。如上所述，`Cmd` 在非 Mac 上表示 `Ctrl`，但 **New Terminal** 在所有系统上都使用 `Ctrl`。当对应标签页不可用时，快捷键不会有任何作用，例如在没有选中支持终端的终端时，那些终端相关的快捷键就无效。
+
+| 操作 | 默认按键 |
+|---|---|
+| 文件 | `Cmd+Shift+E` |
+| 桌面 | `Cmd+Alt+D` |
+| 新建聊天标签页 | `Cmd+Alt+O` |
+| 评论 | `Cmd+Shift+Y` |
+| 新建文件 | `Cmd+Alt+N` |
+| 新建终端 | `Ctrl+backtick` |
+| 新建浏览器 | `Cmd+Shift+B` |
+| 关闭标签页 | `Cmd+W` |
+| 下一个标签页 | `Cmd+Shift+]` |
+| 上一个标签页 | `Cmd+Shift+[` |
+| 切换分屏 | `Cmd+\` |
+| 快速打开 | `Cmd+P` |
+| 语音笔记 | `Cmd+Alt+M` |
+
+**Quick Open** 按名称搜索所选终端中的文件。**Voice Note** 从你的麦克风录音。随后 **Transcribe** 会使用 **Admin Settings > Audio** 中设置的语音转文字引擎把录音转成文本，仅对拥有 **Allow Speech to Text** [权限](/features/authentication-access/rbac/permissions#3-chat-permissions)的用户可用。当引擎为浏览器内置引擎时不可用。**Save** 会把转写文本和音频链接写成一个 Markdown 笔记，并把音频文件一并写入终端的当前文件夹。
+
+## 固定快捷键 {#fixed-shortcuts}
+
+以下八个是内置的，无法重新绑定。**Settings > Keyboard** 中会列出它们供参考。
+
+| 操作 | 按键 | 生效条件 |
+|---|---|---|
+| 接受自动补全生成、跳转到提示变量 | `Tab` | 聊天输入框获得焦点时 |
+| 阻止创建文件 | `Cmd+Shift+V` | 在聊天或频道中粘贴内容，且 **Paste Large Text as File** 已开启时 |
+| 从知识库附加文件 | `#` | 在聊天输入框中键入时 |
+| 添加自定义提示 | `/` | 在聊天输入框中键入时 |
+| 与模型对话 | `@` | 在聊天输入框中键入时 |
+| 停止生成 | `Escape` | 聊天输入框获得焦点且正在生成回复时 |
+| 编辑上一条消息 | `ArrowUp` | 聊天输入框获得焦点时 |
+| 切换静音 | `M` | 语音模式下 |
+
+**Allow Tool Call** 与 **Deny Tool Call** 作用于正在等待批准的回复，这只会在启用 [Tool Permissions](/features/extensibility/plugin/tools#tool-approval) 且聊天设置为"先询问"时发生。它们作用于最近一个仍在等待的调用，因此有多个待处理项时，你会一次按键处理一个。在其他任何时刻它们都不起作用，按键会直接传递出去。
+
+其中三个默认是**未绑定**的，在你在 **Settings > Keyboard** 中为它们指定按键之前不会有任何作用。**Navigate to Previous Chat** 与 **Navigate to Next Chat** 会按顺序在侧边栏的聊天列表中移动，跳到当前聊天上方或下方的那个；若当前聊天不在列表中，则从列表顶部开始。**Toggle Controls** 在小屏幕上打开或关闭[标签页面板](/features/chat-conversations/chat-features/#tabs-side-panel)。它们保持未绑定，是为了避免初次启用时与已有绑定冲突；请自行挑选合适的按键。
+
+**Delete Chat** 受[聊天删除权限](/features/authentication-access/rbac/permissions#3-chat-permissions)约束。如果管理员收走了该权限，该快捷键不会出现在 **Settings > Keyboard** 中，也不会起作用，这与侧边栏和菜单中隐藏删除操作的做法保持一致。**New Temporary Chat** 同样在缺少 **Allow Temporary Chat** 权限时不会列出。管理员始终不受限制。
+
+## 聊天输入框触发符 {#chat-input-triggers}
+
+与快捷键不同，在聊天输入框中键入下列字符之一会打开一个建议菜单。完整列表参见[聊天功能](/features/chat-conversations/chat-features/)。
+
+| 触发符 | 提供的内容 |
+|---|---|
+| `/` | 命令、提示和技能 |
+| `@` | 模型、知识库、文件、文件夹和 URL |
+| `#` | 知识库和文件 |
+| `$` | 技能 |
+| `:` | 表情符号 |
+
+`/` 菜单中包含一个 **Model** 条目，它会打开模型选择器并把焦点放在搜索框上，因此你无需离开键盘、也无需绑定任何快捷键就能更换模型。键入 `/model` 再跟上一个模型 id，即可直接切换过去。
+
+## 键盘导航 {#keyboard-navigation}
+
+与上面的快捷键不同，用 `Tab` 和 `Shift+Tab` 在界面中逐项移动在任何地方都有效，且不受 **Enable Keyboard Shortcuts** 开关的影响。当前焦点所在元素会用一个清晰的轮廓标出，因此你始终能看到自己在哪。通常只在指针悬停时出现的按钮（例如消息下方的操作），用 `Tab` 移动到它们时同样会显示。
+
+在页面上第一次按 `Tab` 会到达 **Skip to main content** 链接。工具提示也会在键盘聚焦时显示，`Escape` 可将其关闭。用键盘打开菜单时，焦点会移到菜单的第一项，方向键可在其中移动。
+
+屏幕阅读器会为图标按钮读出名称，并在回复状态、通知和通话状态变化时进行播报。

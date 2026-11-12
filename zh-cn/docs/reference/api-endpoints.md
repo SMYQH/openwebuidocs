@@ -5,7 +5,7 @@ title: "API 接口"
 
 本指南提供了有效使用 API 接口所需的关键信息，帮助你实现与模型的无缝集成和自动化。请注意，该配置目前处于实验阶段，未来可能会有更新和改进。
 
-## 认证
+## 认证 {#authentication}
 
 为确保 API 的安全访问，需要进行身份认证 🛡️。你可以使用 Bearer Token 机制对 API 请求进行认证。在 Open WebUI 的**设置 > 账户**中获取你的 API Key，或者使用 JWT（JSON Web Token）进行认证。有关启用和生成 API Key 的完整说明（包括管理员开关和非管理员用户所需的群组权限），请参阅 [API 密钥](/features/authentication-access/api-keys)。
 
@@ -13,7 +13,7 @@ title: "API 接口"
 当 Open WebUI 位于已使用 `Authorization` 头进行自身认证的反向代理之后时，你可以通过自定义头（默认为 `x-api-key`）传递 API 密钥。管理员可以通过 [`CUSTOM_API_KEY_HEADER`](/reference/env-configuration#custom_api_key_header) 环境变量重命名该头以避免冲突。详见[在反向代理后使用 `Authorization`？](/features/authentication-access/api-keys#behind-a-reverse-proxy-that-consumes-authorization) 的完整模式。
 :::
 
-## Swagger 文档链接
+## Swagger 文档链接 {#swagger-documentation-links}
 
 :::important
 
@@ -27,9 +27,9 @@ title: "API 接口"
 |-------------|-------------------------|
 | 主应用 | `/docs` |
 
-## 主要 API 接口
+## 主要 API 接口 {#notable-api-endpoints}
 
-### 📜 获取所有模型
+### 📜 获取所有模型 {#retrieve-all-models}
 
 - **接口**：`GET /api/models`
 - **说明**：获取通过 Open WebUI 创建或添加的所有模型。
@@ -39,7 +39,7 @@ title: "API 接口"
   curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3000/api/models
   ```
 
-### �️ 程序化模型管理（导出 / 导入 / 同步）
+### �️ 程序化模型管理（导出 / 导入 / 同步） {#programmatic-model-management-export--import--sync}
 
 自定义模型本质上是纯 JSON，因此你可以以声明式方式（在 Git 中、通过脚本或从 AI Agent）管理它们，而无需 UI。这些接口位于 `/api/v1/models` 下：
 
@@ -71,12 +71,12 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
 
 这样就得到了可重现、受版本控制的模型定义。使用 `/import` 替代 `/sync` 进行仅增加且从不删除现有模型的更新。在部署、CI 或容器启动时运行同步步骤，以自动加载你的模型。
 
-### �💬 聊天补全
+### �💬 聊天补全 {#chat-completions}
 
 - **接口**：`POST /api/chat/completions`
 - **说明**：作为兼容 OpenAI API 的聊天补全接口，支持 Open WebUI 上的所有模型，包括 Ollama 模型、OpenAI 模型和 Open WebUI Function 模型。
 
-#### 通过 API 使用 Open WebUI 工具（包括 MCP）
+#### 通过 API 使用 Open WebUI 工具（包括 MCP） {#using-open-webui-tools-including-mcp-from-the-api}
 
 `/api/chat/completions` 接口可以在请求体中传入 Open WebUI 工具 ID 时，服务端执行这些工具——包括已配置并启用的原生 Python 工具、OpenAPI 工具服务器和 MCP 工具服务器。
 
@@ -142,7 +142,7 @@ Open WebUI 会在解析工具之前检查调用者对每个所选工具服务器
       return response.json()
   ```
 
-### 🔮 Anthropic 消息 API
+### 🔮 Anthropic 消息 API {#anthropic-messages-api}
 
 Open WebUI 提供兼容 Anthropic 消息 API 的接口。这允许为 Anthropic API 构建的工具、SDK 和应用程序直接与 Open WebUI 配合工作——通过所有已配置的模型、过滤器和流水线路由请求。
 
@@ -244,7 +244,46 @@ Open WebUI 中配置的所有模型都可以通过此接口访问——包括 Ol
 **工具使用：** Anthropic 消息接口支持工具使用（`tools` 和 `tool_choice` 参数）。来自上游模型的工具调用会被转换为流式和非流式响应中的 Anthropic 格式 `tool_use` 内容块。
 :::
 
-### 🔧 API 请求中的过滤器和 Function 行为
+#### Token 计数 {#counting-tokens}
+
+Messages API 的配套接口，用于报告某个请求会消耗多少输入 token，而不会真正执行该请求。它与 Anthropic 自带的 token 计数端点保持一致，因此那些会预先估算请求以便做预算或上下文适配的 SDK 无需改动即可使用。
+
+- **端点**：`POST /api/v1/messages/count_tokens`、`POST /api/message/count_tokens`
+- **认证**：与 Messages API 相同
+- **返回**：`{"input_tokens": <int>}`
+
+```bash
+curl -X POST http://localhost:3000/api/v1/messages/count_tokens \
+-H "x-api-key: YOUR_API_KEY" \
+-H "Content-Type: application/json" \
+-d '{
+      "model": "gpt-5.6-sol",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Why is the sky blue?"
+        }
+      ]
+    }'
+```
+
+计数结果来自解析出的连接背后的上游提供商，因此提供商必须实现 token 计数。如果没有实现，或返回了意料之外的结果，请求会失败并返回 `502`。
+
+:::info 报告的 `input_tokens` 现在是真实值
+Messages API 此前在流式响应的 `message_start` 块中总是报告 `input_tokens: 0`。现在输入 token 会被预先计数，并在流式和非流式响应中一并报告。若计数失败，请求仍然会成功，因此客户端应将该值视为尽力而为的结果，而非绝对保证。
+:::
+
+### `POST /api/v1/users/user/settings/update` 是补丁而非替换 {#post-apiv1usersusersettingsupdate-patches-it-does-not-replace}
+
+该请求中的 `ui` 对象会按字段逐一应用。你略去的字段会保留当前值，而以 `null` 发送的字段会被清空，从而使该项回退到实例默认值。因此，发送局部对象是修改单个设置的常规做法。
+
+读取设置、修改其中一个键后再把整个对象提交回去的脚本仍然可用。但如果某个脚本提交的是手写对象并期望其余内容被清空，那就不再生效了，因为凡是被它略去的字段都不会再被删除。
+
+### 已移除：`POST /api/v1/utils/pdf` {#removed-post-apiv1utilspdf}
+
+那个在服务端把对话渲染为 PDF 的端点连同其字体和 PDF 库一起被移除了。对使用 Open WebUI 的人来说没有任何变化：**对话 > 下载 > PDF** 仍然可用，并且始终在浏览器中渲染。只有直接调用该端点的脚本会受到影响，并且没有替代端点。
+
+### 🔧 API 请求中的过滤器和 Function 行为 {#filter-and-function-behavior-with-api-requests}
 
 直接使用 API 接口时，过滤器（Functions）的行为与通过 Web 界面发出请求时有所不同。
 
@@ -252,7 +291,7 @@ Open WebUI 中配置的所有模型都可以通过此接口访问——包括 Ol
 Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** 进行 API 认证。这是有意为之的——Web 界面在内部对相同的 API 接口使用 JWT Token。两种认证方式提供同等的 API 访问权限。
 :::
 
-#### 过滤器执行
+#### 过滤器执行 {#filter-execution}
 
 | 过滤器 Function | WebUI 请求 | 直接 API — 稳定版（`main`） | 直接 API — 预发布版（`dev`） |
 |----------------|--------------|------------------------------|-----------------------------------|
@@ -281,7 +320,7 @@ Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** �
 **实用建议**：如果你是纯 API 消费者（Continue.dev、Claude Code、自定义脚本、Langfuse 流水线等），请将 `/api/chat/completed` 作为当前运行 `outlet()` 的受支持方式。`dev` 上的内联执行主要面向已在 WebSocket 上监听的 WebUI 形态客户端。
 :::
 
-#### 旧版/API 支持接口：`/api/chat/completed`
+#### 旧版/API 支持接口：`/api/chat/completed` {#legacy--supported-for-api-endpoint-apichatcompleted}
 
 `POST /api/chat/completed` 是为直接 API 集成可靠运行 `outlet()` 的接口。在 `dev` 版本中，它被标记为已弃用，以支持内联执行，但如上所述，内联执行目前不会向纯 API 调用者返回过滤后的响应体——因此在实践中，`/api/chat/completed` 仍是当今大多数 API 集成的正确选择。
 
@@ -338,14 +377,14 @@ Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** �
 如果你今天需要通过 HTTP 获取 `outlet()` 的输出，请先调用 `/api/chat/completions`，再调用 `/api/chat/completed`。`dev` 版本上的内联执行主要面向从 WebSocket 读取数据的 WebUI 形态客户端。有关过滤器行为的更多详情，请参阅[过滤器 Function 文档](/features/extensibility/plugin/functions/filter#filter-behavior-with-api-requests)。
 :::
 
-### 🦙 Ollama API 代理支持
+### 🦙 Ollama API 代理支持 {#ollama-api-proxy-support}
 
 如果你想直接与 Ollama 模型交互——包括生成嵌入向量或原始提示词流式传输——Open WebUI 通过代理路由提供对原生 Ollama API 的透明直通。
 
 - **基础 URL**：`/ollama/<api>`
 - **参考**：[Ollama API 文档](https://github.com/ollama/ollama/blob/main/docs/api.md)
 
-#### 🔁 生成补全（流式）
+#### 🔁 生成补全（流式） {#generate-completion-streaming}
 
 ```bash
 curl http://localhost:3000/ollama/api/generate \
@@ -357,14 +396,14 @@ curl http://localhost:3000/ollama/api/generate \
 }'
 ```
 
-#### 📦 列出可用模型
+#### 📦 列出可用模型 {#list-available-models}
 
 ```bash
 curl http://localhost:3000/ollama/api/tags \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
-#### 🧠 生成嵌入向量
+#### 🧠 生成嵌入向量 {#generate-embeddings}
 
 ```bash
 curl -X POST http://localhost:3000/ollama/api/embed \
@@ -380,7 +419,7 @@ curl -X POST http://localhost:3000/ollama/api/embed \
 使用 Ollama 代理接口时，POST 请求**必须**包含 `Content-Type: application/json` 头部，否则 API 可能无法解析请求体。如果实例已配置安全认证，还需要包含授权头部。
 :::
 
-#### 🔮 Responses API（兼容 OpenAI）
+#### 🔮 Responses API（兼容 OpenAI） {#responses-api-openai-compatible}
 
 Ollama 支持 OpenAI Responses API 格式。Open WebUI 通过 Ollama 路由器代理路由，使用与聊天补全相同的模型解析、访问控制和前缀处理。
 
@@ -389,7 +428,7 @@ curl -X POST http://localhost:3000/ollama/v1/responses \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-  "model": "llama3.2",
+  "model": "qwen3.6:27b",
   "input": "Why is the sky blue?"
 }'
 ```
@@ -398,12 +437,29 @@ curl -X POST http://localhost:3000/ollama/v1/responses \
 
 这非常适合使用 Ollama 模型在 Open WebUI 后端构建搜索索引、检索系统或自定义流水线。
 
+#### 嵌入（兼容 OpenAI） {#embeddings-openai-compatible}
+
+除了上面原生的 `/ollama/api/embed` 路由之外，Open WebUI 还代理了一个兼容 OpenAI 的嵌入端点，因此已经使用 OpenAI 嵌入格式的客户端无需配置单独的连接即可使用 Ollama 托管的嵌入模型。它与其他被代理的路由采用相同的模型解析、访问控制和前缀处理。
+
+```bash
+curl -X POST http://localhost:3000/ollama/v1/embeddings \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "qwen3.6:27b",
+  "input": "Open WebUI is great!"
+}'
+```
+
+可以用 `/ollama/v1/embeddings/{url_idx}` 指定某个具体后端。如果 Ollama 集成被禁用，该端点会返回 `503`。
+
+
 <a id="-retrieval-augmented-generation-rag"></a>
-### 🧩 检索增强生成（RAG） {#-retrieval-augmented-generation-rag}
+### 🧩 检索增强生成（RAG） {#retrieval-augmented-generation-rag}
 
 检索增强生成（RAG）功能允许你将外部数据源内容融入到响应中。以下介绍如何通过 API 管理文件和知识库集合，以及如何在聊天补全中有效使用它们。
 
-#### 上传文件
+#### 上传文件 {#uploading-files}
 
 要在 RAG 响应中使用外部数据，首先需要上传文件。上传文件的内容会自动提取并存储到向量数据库中。
 
@@ -524,7 +580,7 @@ The content provided is empty. Please ensure that there is text or data present 
       raise Exception("Stream ended unexpectedly")
   ```
 
-#### 将文件添加到知识库集合
+#### 将文件添加到知识库集合 {#adding-files-to-knowledge-collections}
 
 上传完成后，你可以将文件分组到知识库集合中，或在聊天中单独引用。
 
@@ -559,7 +615,7 @@ The content provided is empty. Please ensure that there is text or data present 
   ```
 
 
-#### 将网页 URL 处理入知识库集合
+#### 将网页 URL 处理入知识库集合 {#processing-web-urls-into-knowledge-collections}
 
 使用此接口获取网页、提取内容，并将生成的块存入知识库集合中。
 
@@ -617,7 +673,7 @@ The content provided is empty. Please ensure that there is text or data present 
 如果启用了 `ENV=dev`，此接口的 schema（包括 `overwrite` 等查询参数）也可在 Swagger 的 `/docs` 中查看。
 :::
 
-#### 完整工作流程示例
+#### 完整工作流程示例 {#complete-workflow-example}
 
 以下是一个完整示例，展示如何上传文件、等待处理并将其添加到知识库：
 
@@ -692,11 +748,11 @@ def upload_and_add_to_knowledge(file_path, knowledge_id, timeout=300):
 result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id')
 ```
 
-#### 在聊天补全中使用文件和集合
+#### 在聊天补全中使用文件和集合 {#using-files-and-collections-in-chat-completions}
 
 你可以在 RAG 查询中引用单个文件或整个集合，以丰富响应内容。
 
-##### 在聊天补全中使用单个文件
+##### 在聊天补全中使用单个文件 {#using-an-individual-file-in-chat-completions}
 
 当你希望肊天模型的响应聚焦在特定文件的内容上时，此方法非常适用。
 
@@ -738,7 +794,7 @@ result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id
       return response.json()
   ```
 
-##### 在聊天补全中使用知识库集合
+##### 在聊天补全中使用知识库集合 {#using-a-knowledge-collection-in-chat-completions}
 
 当查询可能需要更广泛的上下文或多个文档时，利用知识库集合来增强响应。
 
@@ -782,7 +838,7 @@ result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id
 
 这些方法可以通过上传的文件和粿展的知识库集合有效利用外部知识，增强聊天应用的能力。无论是单独使用文件还是将其纳入集合，你都可以根据具体需要自定义集成方式。
 
-## 将 Open WebUI 作为统一 LLM 提供商的优势
+## 将 Open WebUI 作为统一 LLM 提供商的优势 {#advantages-of-using-open-webui-as-a-unified-llm-provider}
 
 Open WebUI 提供了许多优势，使其成为开发者和企业的重要工具：
 

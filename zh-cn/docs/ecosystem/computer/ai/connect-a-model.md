@@ -3,11 +3,11 @@ title: 连接模型（API 密钥和 Ollama）
 sidebar_position: 2
 ---
 
-# 连接模型（API 密钥和 Ollama）
+# 连接模型（API 密钥和 Ollama） {#connect-a-model-api-keys-and-ollama}
 
 前往**设置 → 管理 → 连接**并添加一个连接。有两种提供商类型：**OpenAI** 和 **Anthropic**。没有单独的"Ollama"或"OpenAI 兼容"类型：任何使用 OpenAI API 的服务（Ollama、OpenRouter、vLLM、LM Studio、Groq……）都以提供商 **OpenAI** 添加，并带有自定义基础 URL。
 
-## 连接字段
+## 连接字段 {#connection-fields}
 
 | 字段 | 作用 |
 | --- | --- |
@@ -41,7 +41,7 @@ OpenRouter 暴露许多模型；设置一个**前缀 ID** 如 `openrouter`，使
 - **基础 URL：** `https://api.anthropic.com/v1`
 - **API 密钥：** 你的 Anthropic 密钥
 
-## 模型发现、默认值、启用
+## 模型发现、默认值、启用 {#model-discovery-defaults-enabling}
 
 - **自动发现：** 模型字段留空时，Computer 查询提供商的 `/models` 端点并列出返回的所有内容。
 - **手动列表：** 在模型字段中输入逗号分隔的列表，仅暴露这些模型。这对于拥有庞大目录或没有 `/models` 路由的端点很有用。

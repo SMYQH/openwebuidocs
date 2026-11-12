@@ -9,9 +9,9 @@ title: "使用 Docker 部署 Edge TTS"
 
 :::
 
-# 将 `openai-edge-tts` 🗣️ 集成到 Open WebUI
+# 将 `openai-edge-tts` 🗣️ 集成到 Open WebUI {#integrating-openai-edge-tts-with-open-webui}
 
-## 什么是 `openai-edge-tts`？
+## 什么是 `openai-edge-tts`？ {#what-is-openai-edge-tts}
 
 [OpenAI Edge TTS](https://github.com/travisvn/openai-edge-tts) 是一个模拟 OpenAI API 端点的文本转语音 API。在像 Open WebUI 这样可自定义端点 URL 的场景中，它可以作为直接替代方案。
 
@@ -32,12 +32,12 @@ title: "使用 Docker 部署 Edge TTS"
 
 </details>
 
-## 前置要求
+## 前置要求 {#requirements}
 
 - 系统已安装 Docker
 - Open WebUI 正在运行
 
-## ⚡️ 快速开始
+## ⚡️ 快速开始 {#quick-start}
 
 如果你想最快上手、无需额外配置，可直接运行下面命令：
 
@@ -47,7 +47,7 @@ docker run -d -p 5050:5050 travisvn/openai-edge-tts:latest
 
 这会以默认配置在 5050 端口启动服务。
 
-## 配置 Open WebUI 使用 `openai-edge-tts`
+## 配置 Open WebUI 使用 `openai-edge-tts` {#setting-up-open-webui-to-use-openai-edge-tts}
 
 - 打开管理面板并进入 `设置` -> `音频`
 - 按下图所示配置你的 TTS 设置
@@ -63,25 +63,25 @@ docker run -d -p 5050:5050 travisvn/openai-edge-tts:latest
 
 **到这里就已经能用了！**
 
-## 如果你觉得 [OpenAI Edge TTS](https://github.com/travisvn/openai-edge-tts) 有用，请在 GitHub 上点个 ⭐️
+## 如果你觉得 [OpenAI Edge TTS](https://github.com/travisvn/openai-edge-tts) 有用，请在 GitHub 上点个 ⭐️ {#please-star-the-repo-on-github-if-you-find-openai-edge-ttshttpsgithubcomtravisvnopenai-edge-tts-useful}
 
 <!-- markdownlint-disable-next-line MD033 -->
 <details>
   <!-- markdownlint-disable-next-line MD033 -->
   <summary>使用 Python 运行</summary>
 
-### 🐍 使用 Python 运行
+### 🐍 使用 Python 运行 {#running-with-python}
 
 如果你更喜欢直接用 Python 运行项目，请按以下步骤创建虚拟环境、安装依赖并启动服务。
 
-#### 1. 克隆仓库
+#### 1. 克隆仓库 {#1-clone-the-repository}
 
 ```bash
 git clone https://github.com/travisvn/openai-edge-tts.git
 cd openai-edge-tts
 ```
 
-#### 2. 创建虚拟环境
+#### 2. 创建虚拟环境 {#2-set-up-a-virtual-environment}
 
 创建并激活虚拟环境，以隔离依赖：
 
@@ -95,7 +95,7 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-#### 3. 安装依赖
+#### 3. 安装依赖 {#3-install-dependencies}
 
 使用 `pip` 安装 `requirements.txt` 中列出的依赖：
 
@@ -103,7 +103,7 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-#### 4. 配置环境变量
+#### 4. 配置环境变量 {#4-configure-environment-variables}
 
 在项目根目录创建 `.env` 文件，并设置以下变量：
 
@@ -122,7 +122,7 @@ REMOVE_FILTER=False
 EXPAND_API=True
 ```
 
-#### 5. 启动服务
+#### 5. 启动服务 {#5-run-the-server}
 
 配置完成后，通过以下命令启动：
 
@@ -132,7 +132,7 @@ python app/server.py
 
 服务将在 `http://localhost:5050` 上运行。
 
-#### 6. 测试 API
+#### 6. 测试 API {#6-test-the-api}
 
 现在你可以访问 `http://localhost:5050/v1/audio/speech` 以及其他可用端点。请求示例可参考下方“使用详情”部分。
 
@@ -143,7 +143,7 @@ python app/server.py
   <!-- markdownlint-disable-next-line MD033 -->
   <summary>使用详情</summary>
 
-##### 端点：`/v1/audio/speech`（也可使用 `/audio/speech`）
+##### 端点：`/v1/audio/speech`（也可使用 `/audio/speech`） {#endpoint-v1audiospeech-aliased-with-audiospeech}
 
 该接口用于将输入文本转换为音频。支持以下参数：
 
@@ -207,7 +207,7 @@ curl -X POST http://localhost:5050/v1/audio/speech \
   --output speech.mp3
 ```
 
-##### 其他端点
+##### 其他端点 {#additional-endpoints}
 
 - **POST/GET /v1/models**：列出可用 TTS 模型。
 - **POST/GET /v1/voices**：列出指定语言 / locale 下的 `edge-tts` 语音。
@@ -225,7 +225,7 @@ curl -X POST http://localhost:5050/v1/audio/speech \
 
 </details>
 
-## 🐳 Docker 快速配置
+## 🐳 Docker 快速配置 {#quick-config-for-docker}
 
 你也可以直接在运行命令中配置环境变量：
 
@@ -251,21 +251,21 @@ docker run -d -p 5050:5050 \
 
 :::
 
-## 其他资源
+## 其他资源 {#additional-resources}
 
 如需了解更多 `openai-edge-tts` 信息，可查看其 [GitHub 仓库](https://github.com/travisvn/openai-edge-tts)。
 
 如需直接支持，可访问 Voice AI & TTS Discord。
 
-## 🎙️ 语音样本
+## 🎙️ 语音样本 {#voice-samples}
 
 [播放语音样本并查看全部可用 Edge TTS 语音](https://tts.travisvn.com/)
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 连接问题
+### 连接问题 {#connection-issues}
 
-#### Docker 中 `localhost` 不生效
+#### Docker 中 `localhost` 不生效 {#localhost-not-working-from-docker}
 
 如果 Open WebUI 运行在 Docker 中，且无法访问 `localhost:5050` 上的 TTS 服务：
 
@@ -301,7 +301,7 @@ networks:
     driver: bridge
 ```
 
-#### 测试 TTS 服务
+#### 测试 TTS 服务 {#testing-the-tts-service}
 
 先单独验证 TTS 服务是否工作：
 
@@ -315,7 +315,7 @@ curl -X POST http://localhost:5050/v1/audio/speech \
 
 如果这个请求成功，但 Open WebUI 仍然连接失败，那么问题通常出在容器间网络。
 
-### Open WebUI 中没有音频输出
+### Open WebUI 中没有音频输出 {#no-audio-output-in-open-webui}
 
 1. 检查 API 基础 URL 是否以 `/v1` 结尾
 2. 确认两个服务中的 API 密钥一致（或关闭其要求）

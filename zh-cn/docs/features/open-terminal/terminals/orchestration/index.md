@@ -3,7 +3,7 @@ sidebar_position: 0
 title: "编排"
 ---
 
-# 编排
+# 编排 {#orchestration}
 
 Terminals 编排器为每个 Open WebUI 用户提供一个专用的 Open Terminal 容器。Open WebUI 存储连接信息，编排器解析策略，Open Terminal 在每个用户容器中运行。
 
@@ -17,7 +17,7 @@ flowchart LR
 
 当用户打开终端时，Open WebUI 通过 `/p/{policy_id}/...` 路由。编排器为该用户在选定策略下预配或复用其容器。
 
-## 阅读本节
+## 阅读本节 {#read-this-section}
 
 - [策略](/features/open-terminal/terminals/orchestration/policies)：镜像选择、资源、存储、环境变量和空闲超时。
 - [环境变量](/features/open-terminal/terminals/orchestration/environment-variables)：原始环境值、引号处理、转发行为和保留键。
@@ -29,7 +29,7 @@ flowchart LR
 - [文件浏览器根目录](/features/open-terminal/terminals/orchestration/file-browser-home-boundary)：Open Terminal 如何为客户端暴露可视根目录以渲染和限制导航。
 - [API 和故障排除](/features/open-terminal/terminals/orchestration/api-troubleshooting)：策略 API、刷新 API 和精确支持答案。
 
-## 职责划分
+## 职责划分 {#responsibilities}
 
 | 层 | 职责 |
 | :--- | :--- |
@@ -39,7 +39,7 @@ flowchart LR
 | 策略生命周期 | 定义随时间推移的维护行为，例如终端持久化文件的定时重置 |
 | Open Terminal 容器 | 执行命令、提供文件服务、暴露 OpenAPI 工具、报告文件浏览器根元数据 |
 
-## 编排器环境变量
+## 编排器环境变量 {#orchestrator-environment-variables}
 
 这些配置编排器服务本身，以 `TERMINALS_` 为前缀（或在 `.env` 文件中设置）。它们与[环境变量](/features/open-terminal/terminals/orchestration/environment-variables)中介绍的每容器 `OPEN_TERMINAL_*` 策略变量不同，后者会被转发到每个用户的容器中。
 
@@ -78,7 +78,7 @@ flowchart LR
 
 任何此处省略的值都回退到显示的默认值。请参阅 [`config.py`](https://github.com/open-webui/terminals/blob/main/terminals/config.py) 获取权威列表。
 
-## 重要行为
+## 重要行为 {#important-behavior}
 
 策略变更适用于新预配的终端。正在运行的现有终端保留其当前镜像和环境，直到它们被停止、刷新或被空闲超时清理。
 

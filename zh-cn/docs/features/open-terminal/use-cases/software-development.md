@@ -3,7 +3,7 @@ sidebar_position: 2
 title: "软件开发"
 ---
 
-# 软件开发
+# 软件开发 {#software-development}
 
 Open Terminal 使 AI 能够与真实的代码库交互：克隆仓库、运行测试、读取错误、安装依赖以及迭代修复。
 
@@ -13,7 +13,7 @@ Open Terminal 使 AI 能够与真实的代码库交互：克隆仓库、运行�
 
 ---
 
-## 克隆和探索仓库
+## 克隆和探索仓库 {#clone-and-explore-a-repo}
 
 > **你：** 克隆 https://github.com/user/project 并给我一个代码库概览。架构是什么样的？入口点在哪里？
 
@@ -27,7 +27,7 @@ AI：
 
 ---
 
-## 运行测试套件并修复失败
+## 运行测试套件并修复失败 {#run-the-test-suite-and-fix-failures}
 
 > **你：** 运行测试。如果有任何失败，找出原因并修复。
 
@@ -46,7 +46,7 @@ AI 看到的是开发者会看到的相同终端输出：堆栈跟踪、断言�
 
 ---
 
-## 设置开发环境
+## 设置开发环境 {#set-up-a-development-environment}
 
 > **你：** 设置这个项目，以便我可以在上面进行开发。安装所有依赖，创建数据库，然后运行开发服务器。
 
@@ -61,7 +61,7 @@ AI：
 
 ---
 
-## 自信地重构
+## 自信地重构 {#refactor-with-confidence}
 
 > **你：** 将 `users.py` 中的数据库查询重构为使用 async/await。确保测试仍然通过。
 
@@ -76,7 +76,7 @@ AI：
 
 ---
 
-## Git 工作流
+## Git 工作流 {#git-workflows}
 
 > **你：** 显示自上一个发布标签以来的更改。总结提交信息。
 
@@ -92,7 +92,7 @@ AI 直接使用 Git 工作：
 
 ---
 
-## 编写和运行测试
+## 编写和运行测试 {#write-and-run-tests}
 
 > **你：** 为 `orders.py` 中的 `calculate_shipping()` 函数编写单元测试。覆盖边界情况。
 
@@ -107,7 +107,7 @@ AI：
 
 ---
 
-## 调试特定问题
+## 调试特定问题 {#debug-a-specific-issue}
 
 > **你：** 用户报告登录端点有时返回 500。这是来自日志的错误：`KeyError: 'session_token'`。找到并修复它。
 
@@ -123,7 +123,7 @@ AI：
 
 ---
 
-## 构建和验证 API
+## 构建和验证 API {#build-and-verify-an-api}
 
 > **你：** 创建一个用于管理书店的 REST API。我需要书籍、作者和分类的 CRUD 操作。使用 FastAPI 和 SQLite。
 
@@ -139,7 +139,7 @@ AI：
 
 ---
 
-## 支持哪些语言和工具？
+## 支持哪些语言和工具？ {#what-languages-and-tools-are-available}
 
 Docker 镜像预装了常见的开发工具：
 
@@ -153,7 +153,7 @@ Docker 镜像预装了常见的开发工具：
 
 AI 可以即时安装其他工具：Rust、Go、Java、Docker CLI、数据库客户端以及通过 `apt` 或语言特定包管理器可用的任何其他工具。
 
-## 相关
+## 相关 {#related}
 
 - **[代码执行 →](./code-execution)**：快速脚本和一次性任务
 - **[Web 开发 →](./web-development)**：构建和预览网站

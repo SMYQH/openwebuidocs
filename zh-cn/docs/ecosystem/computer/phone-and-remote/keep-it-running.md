@@ -3,11 +3,11 @@ title: "保持运行"
 sidebar_position: 6
 ---
 
-# 保持运行
+# 保持运行 {#keep-it-running}
 
 两件不同的事情可能停止你的工作：关闭浏览器标签页（无害）和 `cptr` 进程死亡（有害）。以下是让第二件事不再发生的方法。
 
-## 什么在什么情况下幸存
+## 什么在什么情况下幸存 {#what-survives-what}
 
 | 事件 | 会发生什么 |
 |---|---|
@@ -16,11 +16,11 @@ sidebar_position: 6
 
 所以任务是：在启动时启动 `cptr`，如果崩溃则重新启动，并阻止机器休眠。
 
-## 开机启动
+## 开机启动 {#start-at-boot}
 
 在你的虚拟环境中使用 `cptr` 的绝对路径（在 venv 激活时使用 `which cptr` 查找）；启动时的服务没有你的 shell 的 PATH。
 
-### macOS（launchd）
+### macOS（launchd） {#macos-launchd}
 
 创建 `~/Library/LaunchAgents/com.openwebui.cptr.plist`：
 
@@ -53,7 +53,7 @@ launchctl load ~/Library/LaunchAgents/com.openwebui.cptr.plist
 
 `--headless` 阻止 `cptr` 尝试打开浏览器窗口。
 
-### Linux（systemd 用户服务）
+### Linux（systemd 用户服务） {#linux-systemd-user-service}
 
 创建 `~/.config/systemd/user/cptr.service`：
 
@@ -74,7 +74,7 @@ systemctl --user enable --now cptr
 loginctl enable-linger $USER   # 即使未登录也保持运行
 ```
 
-### Windows（任务计划程序）
+### Windows（任务计划程序） {#windows-task-scheduler}
 
 任务计划程序 → **创建任务**：触发器**登录时**，操作**启动程序**，使用 `cptr.exe` 的完整路径（例如 `C:\Users\you\venvs\cptr\Scripts\cptr.exe`）和参数 `run --headless`。在设置下，启用"如果任务失败，每隔……重新启动"。
 
@@ -91,7 +91,7 @@ services:
 
 （或 `docker run --restart unless-stopped ...`）。完整设置：[Docker 安装](/ecosystem/computer/install/docker)。
 
-## 阻止机器休眠
+## 阻止机器休眠 {#stop-the-machine-from-sleeping}
 
 休眠的主机无法提供任何服务。
 
@@ -100,6 +100,6 @@ services:
 - **Windows：** **设置 → 系统 → 电源** → 将"插入电源时，让设备进入睡眠状态"设置为**从不**。
 - **合上盖子的笔记本电脑：** 合上盖子会使机器休眠，与上述设置无关。保持插电状态，并将合上盖子设置为"不执行任何操作"（macOS 需要上述防止休眠设置；Linux：`logind.conf` 中的 `HandleLidSwitch=ignore`；Windows：电源设置中的合盖动作）。
 
-## 验证
+## 验证 {#verify}
 
 重启机器，不要碰它，然后从你的手机打开 Computer。如果加载成功，你就完成了：主机上的 `curl http://127.0.0.1:8000/api/health` 确认服务已启动。如果出了问题，检查[故障排除](/ecosystem/computer/troubleshooting)。

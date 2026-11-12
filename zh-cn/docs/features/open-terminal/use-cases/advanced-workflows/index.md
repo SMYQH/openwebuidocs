@@ -3,19 +3,19 @@ sidebar_position: 0
 title: "高级工作流"
 ---
 
-# 使用技能的高级工作流
+# 使用技能的高级工作流 {#advanced-workflows-with-skills}
 
 这些工作流将多种 Open Terminal 能力组合成强大的多步骤流水线。每个工作流都包含一个**技能（Skill）**——你在 Open WebUI 中创建的可复用指令集，它告诉 AI 如何处理特定类型的任务。
 
 ---
 
-## 什么是技能？
+## 什么是技能？ {#what-are-skills}
 
 **技能**是一组你保存在 Open WebUI 中的可复用 Markdown 指令。当你调用某个技能时，其指令会注入到该对话的 AI 系统提示中，使 AI 成为该特定任务的专家。
 
 就像在让人做某件工作前给他一份详细的 SOP（标准操作流程）——只是 AI 可以在不同对话中始终如一地参考这份流程。
 
-### 创建技能
+### 创建技能 {#creating-a-skill}
 
 1. 点击左侧边栏的**工作区**
 2. 点击**技能**
@@ -41,7 +41,7 @@ When asked to analyze data:
 ```
 :::
 
-### 使用技能
+### 使用技能 {#using-a-skill}
 
 有两种方式使用技能：
 
@@ -69,7 +69,7 @@ When asked to analyze data:
 将多个技能附加到单个模型，使其成为多用途专家。上传电子表格 → 加载数据分析技能。说"调研电动汽车电池" → 加载研究技能。构建着陆页 → 加载 Web 开发技能。全部自动完成。
 :::
 
-### 分享技能
+### 分享技能 {#sharing-skills}
 
 技能有访问控制。你可以：
 - 保持**私有**（仅自己可用）
@@ -82,7 +82,7 @@ When asked to analyze data:
 
 ---
 
-## 工作流库
+## 工作流库 {#workflow-library}
 
 以下每个页面都是一个完整工作流，包含可直接粘贴的技能：
 
@@ -101,20 +101,20 @@ When asked to analyze data:
 
 ---
 
-## 编写优质技能的技巧
+## 编写优质技能的技巧 {#tips-for-writing-great-skills}
 
-### 让指令具体
+### 让指令具体 {#keep-instructions-specific}
 差：「分析数据」
 好：「读取文件，统计行数，识别列，检查缺失值，然后按类别计算平均值」
 
-### 对步骤编号
+### 对步骤编号 {#number-your-steps}
 LLM 遵循编号指令比遵循散文段落更可靠。
 
-### 包含输出预期
+### 包含输出预期 {#include-output-expectations}
 告诉技能最终交付物应该是什么样：「创建一个包含封面和 3 个部分的 PDF」比「做一份报告」更好。
 
-### 测试并迭代
+### 测试并迭代 {#test-and-iterate}
 创建技能，在真实任务上试用，并根据 AI 做对做错的地方完善指令。
 
-### 与 Open Terminal 能力结合
+### 与 Open Terminal 能力结合 {#combine-with-open-terminal-capabilities}
 真正的力量来自于将技能与 Open Terminal 的工具结合：文件读取、代码执行、网页预览和文件浏览器。指令中写「读取电子表格，用 Python 生成图表，并保存为 PNG」可以充分发挥所有这些功能。

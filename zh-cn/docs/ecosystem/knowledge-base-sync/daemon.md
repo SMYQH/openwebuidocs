@@ -3,7 +3,7 @@ sidebar_position: 2
 title: "守护进程、Webhook 与部署"
 ---
 
-# 运行守护进程
+# 运行守护进程 {#running-the-daemon}
 
 [主页](/ecosystem/knowledge-base-sync)上的 CLI 介绍了一次性和监听式同步。对于无人值守、定时或由外部事件驱动的同步，请将 oikb 作为长期运行的**守护进程**来使用。它会读取你的 [`.oikb.yaml`](#the-oikbyaml-config-file)，按各自的时间表同步每个来源，并提供一个小型 HTTP API，用于健康检查、指标、历史记录和按需触发。
 
@@ -72,7 +72,7 @@ sources:
 
 ---
 
-## 定时调度
+## 定时调度 {#scheduling}
 
 每个条目的 `interval` 可以是简单的持续时间或 cron 表达式。oikb 通过计数字段自动检测，因此无需标志：
 
@@ -101,7 +101,7 @@ interval: "0 */6 * * *"     # cron：每 6 小时
 
 触发的同步在后台运行并立即返回；轮询 `/health` 以了解进度。`dry_run=true` 触发器同步运行并返回新增/修改/删除的计数。
 
-### 身份验证
+### 身份验证 {#authentication}
 
 设置 `OIKB_API_KEY` 以保护守护进程。健康检查、就绪探针、指标和仪表板端点保持公开（以便探针和采集器继续工作）；`/history` 和 `/sync` 则需要 bearer 令牌：
 
@@ -141,15 +141,15 @@ sources:
 
 如果你不设置密钥，签名检查将被跳过，因此在这种情况下，请仅在受信任的网络中暴露守护进程。
 
-### 同步锁定
+### 同步锁定 {#sync-locking}
 
 每个知识库都有自己的锁。如果一个 webhook 在同一个知识库的定时同步仍在运行时触发，重复的同步将被跳过（并记录日志），而不是与第一个同步竞争。这是自动的，无需配置。
 
 ---
 
-## 可观测性
+## 可观测性 {#observability}
 
-### Prometheus 指标
+### Prometheus 指标 {#prometheus-metrics}
 
 `GET /metrics` 导出计数器和持续时间直方图，所有指标都按来源标记：
 
@@ -169,7 +169,7 @@ scrape_configs:
       - targets: ["oikb:8080"]
 ```
 
-### 结构化 JSON 日志
+### 结构化 JSON 日志 {#structured-json-logging}
 
 对于日志聚合器（Datadog、Splunk、ELK、CloudWatch、Loki），每行输出一个 JSON 对象：
 
@@ -177,7 +177,7 @@ scrape_configs:
 oikb daemon --log-format json     # 或 LOG_FORMAT=json
 ```
 
-### 失败通知
+### 失败通知 {#failure-notifications}
 
 为条目添加 `notify`，可在同步失败（或始终）时向任意 HTTP 端点 POST 一个 JSON 负载。负载包含一个 `text` 字段，因此 Slack 的 incoming webhook 可以直接渲染它：
 
@@ -189,7 +189,7 @@ notify:
 
 同样的格式也适用于 PagerDuty、Opsgenie 或你自己的接收器。除了 `text` 字段外，它还包含结构化的字段（`source`、`status`、`error`、`duration_ms`、文件计数）。
 
-### 同步历史记录
+### 同步历史记录 {#sync-history}
 
 每次运行都会记录在本地 SQLite 数据库中。通过 API（`GET /history`）或 CLI 查询：
 
@@ -335,7 +335,7 @@ spec:
 
 ---
 
-## 另请参阅
+## 另请参阅 {#see-also}
 
 - **[知识库同步 (oikb)](/ecosystem/knowledge-base-sync)**：安装、来源、连接器、过滤和 CLI。
 - **[知识库](/features/workspace/knowledge)**：oikb 所保持同步的知识库功能。

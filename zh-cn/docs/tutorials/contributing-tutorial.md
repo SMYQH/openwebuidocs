@@ -3,7 +3,7 @@ sidebar_position: 900
 title: "参与文档贡献"
 ---
 
-# 文档贡献指南
+# 文档贡献指南 {#contributing-to-documentation}
 
 :::warning
 
@@ -13,7 +13,7 @@ title: "参与文档贡献"
 
 感谢你对 Open WebUI 文档教程贡献的兴趣。请按照以下步骤完成环境准备并提交你的教程。
 
-## 贡献步骤
+## 贡献步骤 {#contributing-steps}
 
 1. **Fork `open-webui/docs` GitHub 仓库**
 
@@ -38,7 +38,7 @@ title: "参与文档贡献"
      - `BASE_URL` 设置为 `/docs`（或你为 Fork 站点选择的 base URL）。
      - `SITE_URL` 设置为 `https://<your-github-username>.github.io/`。
 
-### 📝 更新 GitHub Pages 工作流与配置文件
+### 📝 更新 GitHub Pages 工作流与配置文件 {#updating-the-github-pages-workflow-and-config-file}
 
 如果你需要按自定义部署方式调整设置，可按以下步骤处理：
 
@@ -94,7 +94,7 @@ b. **修改 `docusaurus.config.ts` 以使用环境变量**
    - 为 PR 填写清晰的标题与说明。
    - 提交 Pull Request 等待审核。
 
-## 重要说明
+## 重要说明 {#important}
 
 社区贡献教程必须包含以下内容：
 

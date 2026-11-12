@@ -3,7 +3,7 @@ title: 运维
 sidebar_position: 1
 ---
 
-# 运维
+# 运维 {#operate}
 
 保持长时间运行的 Computer 实例健康：了解其数据在哪里，备份它，并在出现问题时检查日志。
 

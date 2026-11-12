@@ -4,7 +4,11 @@ title: "Open WebUI Computer (cptr)"
 sidebar_label: "Open WebUI Computer (cptr)"
 ---
 
-# Open WebUI Computer (cptr)
+# Open WebUI Computer (cptr) {#open-webui-computer}
+
+:::info 推荐配置
+Open WebUI Computer 正在逐步弃用。对于新的部署，请使用 [Open WebUI](/getting-started) 搭配 [Open Terminal](/features/open-terminal)。这些 Computer 指南仍会为现有安装保留。
+:::
 
 **Open WebUI Computer。把 `cptr` 接入 Open WebUI。**
 
@@ -20,7 +24,7 @@ cptr 提供一个**兼容 OpenAI 的网关 API**（`/v1/chat/completions`）。�
 
 ---
 
-## 第 1 步：安装并启动 cptr
+## 第 1 步：安装并启动 cptr {#step-1-install-and-start-open-webui-computer}
 
 如果你还没有安装 cptr：
 
@@ -45,7 +49,7 @@ cptr run --host 0.0.0.0
 
 ---
 
-## 第 2 步：创建 API 密钥
+## 第 2 步：创建 API 密钥 {#step-2-create-an-api-key}
 
 1. 在浏览器中打开 cptr。
 2. 进入 **Settings > Gateway**。
@@ -56,7 +60,7 @@ Gateway 设置页面还会显示你的实例的 **Base URL**（例如 `http://lo
 
 ---
 
-## 第 3 步：在 Open WebUI 中添加连接
+## 第 3 步：在 Open WebUI 中添加连接 {#step-3-add-the-connection-in-open-webui}
 
 1. 在浏览器中打开 Open WebUI。
 2. 进入 ⚙️ **Admin Settings** > **Connections** > **OpenAI**。
@@ -80,7 +84,7 @@ http://host.docker.internal:8000/v1
 
 ---
 
-## 第 4 步：配置自定义请求头（推荐）
+## 第 4 步：配置自定义请求头（推荐） {#step-4-configure-custom-headers-recommended}
 
 为了获得最佳体验，建议设置自定义请求头，让 Open WebUI 把会话元数据传递给 cptr。这可以实现正确的会话映射（让两个界面之间的对话保持同步），并确保标题生成等后台任务被高效处理。
 
@@ -104,7 +108,7 @@ http://host.docker.internal:8000/v1
 
 ---
 
-## 第 5 步：开始聊天
+## 第 5 步：开始聊天 {#step-5-start-chatting}
 
 你的 cptr 工作区现在应该已经以 `cptr/<workspace-name>` 的形式出现在模型下拉框中。选中一个即可开始聊天。该 AI 拥有对该工作区的完整访问能力：文件、终端、网页搜索以及任何已配置的工具。
 
@@ -112,7 +116,7 @@ http://host.docker.internal:8000/v1
 
 ---
 
-## 选择网关模型
+## 选择网关模型 {#choosing-a-gateway-model}
 
 默认情况下，cptr 使用第一个可用的模型连接来处理网关请求。如果要指定一个特定模型：
 
@@ -128,19 +132,19 @@ echo "anthropic/claude-sonnet-4-20250514" > /path/to/workspace/.cptr/model
 
 ---
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### 下拉框中没有模型
+### 下拉框中没有模型 {#no-models-appear-in-the-dropdown}
 
 - 确认 URL 包含 `/v1`：`http://localhost:8000/v1`（而不只是 `:8000`）
 - 检查 cptr 是否正在运行且可访问
 - 确认 API 密钥是否正确
 
-### 连接测试通过，但模型仍未加载
+### 连接测试通过，但模型仍未加载 {#connection-test-passes-but-no-models-load}
 
-几乎总是因为缺少 `/v1` 后缀。Open WebUI 的连接测试只检查基础连通性，不会验证模型发现。
+Open WebUI 的连接测试会带上你的密钥请求 `GET <URL>/models`，因此缺少 `/v1` 后缀的 URL 通常会在测试阶段就失败。如果测试通过但模型仍未加载，说明 `/models` 的响应不是带 `data` 列表的 JSON（也不是裸列表），或者该连接已被关闭。如果你填写了模型 ID，则只会列出这些 ID，而不会去查询 `/models`。
 
-### Docker 网络问题
+### Docker 网络问题 {#docker-networking-issues}
 
 如果 Open WebUI 运行在 Docker 中，`localhost` 指向的是容器本身。请改用 `host.docker.internal`。在没有 Docker Desktop 的 Linux 上：
 
@@ -148,13 +152,13 @@ echo "anthropic/claude-sonnet-4-20250514" > /path/to/workspace/.cptr/model
 docker run --add-host=host.docker.internal:host-gateway ...
 ```
 
-### 对话没有同步
+### 对话没有同步 {#conversations-not-syncing}
 
 请确认第 4 步中的自定义请求头已正确配置。缺少这些请求头时，cptr 会为每次请求都新建一个聊天，而不是继续已有的对话。
 
 ---
 
-## 了解更多
+## 了解更多 {#learn-more}
 
 - [cptr GitHub](https://github.com/open-webui/computer)
 - [Open WebUI 连接](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)

@@ -3,7 +3,7 @@ title: 更新
 sidebar_position: 5
 ---
 
-# 更新
+# 更新 {#updating}
 
 使用与安装时相同的工具升级，然后重启：
 
@@ -18,11 +18,11 @@ uvx cptr@latest run
 
 对于 Docker，拉取新镜像并使用相同的 `/data` 卷重新创建容器；参见 [Docker](./docker#upgrading)。
 
-## 迁移是自动的
+## 迁移是自动的 {#migrations-are-automatic}
 
 数据库迁移在启动时自动运行。没有手动迁移步骤，也没有迁移命令：启动新版本，它会自动更新数据库。
 
-## 升级后
+## 升级后 {#after-the-upgrade}
 
 - 升级后应用内会显示更新说明，总结更改内容。
 - 管理 UI 可以检查 GitHub 上的最新发布版本。这仅供信息参考；它从不自行更新应用。

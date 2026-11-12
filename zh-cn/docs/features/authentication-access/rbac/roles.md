@@ -12,9 +12,9 @@ Open WebUI 定义了三种主要的**系统角色**，用于确定用户账户�
 | **用户** | `user` | **标准用户**。受 RBAC 权限约束。 |
 | **待审批** | `pending` | **受限**。在获得批准之前无法访问。 |
 
-## 角色详情
+## 角色详情 {#role-details}
 
-### 管理员（`admin`）
+### 管理员（`admin`） {#administrator-admin}
 管理员角色专为系统维护人员设计。
 *   **完全访问**：默认访问所有资源和设置。
 *   **管理权限**：可以管理用户、用户组和全局配置。
@@ -29,12 +29,12 @@ Open WebUI 定义了三种主要的**系统角色**，用于确定用户账户�
 为获得稳健的安全态势，我们建议通过用户组将管理员纳入您的权限体系，而不仅仅依赖角色的隐式绕过。这确保了在启用绕过限制时能保持一致的访问。
 :::
 
-### 标准用户（`user`）
+### 标准用户（`user`） {#standard-user-user}
 这是团队成员的默认功能角色。
 *   **受权限约束**：没有隐式访问权限。所有能力必须通过**全局默认权限**或**用户组成员资格**来授予。
 *   **累加权限**：如[权限](./permissions.md)部分所述，其有效权限是所有授予的总和。
 
-### 待审批用户（`pending`）
+### 待审批用户（`pending`） {#pending-user-pending}
 新注册用户（如果已配置）或已停用用户的默认状态。
 *   **零访问**：无法执行任何操作或查看任何内容。
 *   **需要审批**：必须由现有管理员提升为 `user` 或 `admin`。
@@ -43,14 +43,20 @@ Open WebUI 定义了三种主要的**系统角色**，用于确定用户账户�
 `admin` 角色对所有内容实际上都有 `check_permission() == True`。细粒度权限（如禁用"网络搜索"）通常**不**适用于管理员。
 :::
 
-## 角色分配
+## 角色分配 {#role-assignment}
 
 ### 初始设置
 *   **第一个用户：** 在全新安装中创建的第一个账户会自动被分配**管理员**角色。
 *   **无头管理员创建：** 对于自动化/容器化部署，可以使用环境变量自动创建管理员账户（见下文）。
 *   **后续用户：** 新注册用户被分配**默认用户角色**。
 
-### 配置
+### 初始设置 {#initial-setup}
+
+*   **首个用户：** 在全新安装中创建的第一个账户会自动被赋予 **Admin** 角色。
+*   **无头创建管理员：** 对于自动化/容器化部署，你可以通过环境变量自动创建管理员账户（见下文）。
+*   **后续用户：** 新注册的用户会被赋予 **Default User Role**。
+
+### 配置 {#configuration}
 可以通过 `DEFAULT_USER_ROLE` 环境变量控制新用户的默认角色：
 
 ```bash
@@ -61,12 +67,43 @@ DEFAULT_USER_ROLE=pending
 *   **user：** 新用户以默认权限立即获得访问权限。
 *   **admin：**（谨慎使用）新用户成为完全管理员。
 
-## 更改角色
+## 更改角色 {#changing-roles}
 管理员可以随时通过**管理面板 > 用户**更改用户的角色。
 *   将用户提升为 `admin` 会授予其完全控制权。
 *   将管理员降级为 `user` 会使其再次受到权限系统约束。
 
-## 主管理员
+### 角色变更何时生效 {#when-a-role-change-takes-effect}
+
+无论变更通过哪条途径到达，角色变更都会立即终止该账户的实时 WebSocket 连接：
+
+*   **管理面板 > 用户**，或其后端的用户更新 API。
+*   SCIM 目录同步，包括映射到 `user` 和 `pending` 角色的 `active` 标志（参见 [SCIM 2.0](/features/authentication-access/auth/scim)）。
+*   启用了 [OAuth 角色管理](/features/authentication-access/auth/sso#oauth-role-management)的 OAuth 或 OIDC 登录。
+*   携带[受信任角色请求头](/features/authentication-access/auth/sso#role-management)的登录。
+
+删除账户会以同样的方式终止其实时连接。
+
+在多副本部署中，如果使用 [`WEBSOCKET_MANAGER=redis`](/reference/env-configuration#websocket_manager)，连接会通过共享会话池找到，并在持有它们的任意副本上被断开，而不只是处理变更的那个副本。
+
+浏览器会自行重连并重新认证，因此在该连接之上运行的功能（频道、协作式笔记编辑）会按新角色而非连接建立时缓存的角色生效。REST API 调用每次请求都会从数据库读取账户，因此被降级的管理员从下一次调用起就会失去仅管理员可用的端点。
+
+:::note 角色变更不会吊销该用户的令牌
+他们仍保持登录状态，并以新角色继续浏览。降级为 `pending` 确实会将其锁定，因为 `pending` 账户在每次 API 请求和 WebSocket 握手时都会被拒绝。若要同时结束其会话，请使用[退出所有设备](#signing-a-user-out-of-every-device)。
+:::
+
+## 将用户登出所有设备 {#signing-a-user-out-of-every-device}
+
+在**管理面板 > 用户**中打开该用户，点击编辑对话框底部的**登出所有设备**，然后确认。该用户的每个会话都会结束：使用该账户登录的浏览器标签页和应用在下一次请求时会被拒绝，必须重新登录，它们的实时连接也会被关闭。该用户正在进行的自动化和子智能体运行同样会失去访问权限。当设备丢失、账户可能已被入侵或有人离职时，请使用该功能。
+
+![登出所有设备？确认对话框，说明用户需要在每台设备上重新登录，并且 API 密钥仍然有效](/images/features/auth/sign-out-all-devices.webp)
+
+- **API 密钥仍然有效。** 请[删除或轮换该用户的密钥](/features/authentication-access/api-keys#managing-a-users-key-admin)以切断脚本和集成。
+- **无需 Redis 也能工作。** 登出记录保存在数据库中，因此对每个 worker 和每个副本都生效。
+- **主管理员**只能由其本人以这种方式登出。
+
+在同一对话框中为该用户设置新密码，也会使其在所有设备上登出。该操作会记录为 `auth.sessions_revoked` [事件](/features/extensibility/plugin/functions/event)。脚本可以使用管理员的 API 密钥，通过 `POST /api/v1/users/{user_id}/sessions/revoke` 触发它。所有会让账户登出的操作参见[令牌吊销](/getting-started/advanced-topics/hardening#token-revocation)。
+
+## 主管理员 {#the-primary-administrator}
 
 实例上创建的第一个账户（参见[初始设置](#初始设置)）是**主管理员**。它没有特殊标记：内部仅根据创建时间戳判断，即最早创建的账户。
 
@@ -74,17 +111,17 @@ DEFAULT_USER_ROLE=pending
 
 这是一项便利性保护措施，而非安全边界。所有管理员共享系统的完全控制权，因此任何管理员仍然可以在数据层更改或删除任何账户，包括主管理员账户。
 
-### 交换主管理员
+### 交换主管理员 {#swapping-the-primary-administrator}
 
 有时主管理员确实需要变更，例如首次部署的人员离开了组织。由于该角色纯粹由创建时间戳决定，主管理员即最旧的管理员账户，因此在数据库层面重组或删除账户会改变哪个账户被视为主管理员。
 
 这被设计为数据层操作而非一键按钮，以确保变更创始账户始终是一个有意的、经过深思熟虑的操作。在进行更改之前备份数据库，并在实例空闲时执行。此处不列出确切的查询语句，因为数据库架构在不同版本之间会有所变化；请根据当前架构操作，如需针对你的版本的指导，请通过社区渠道联系我们。
 
-## 无头管理员账户创建
+## 无头管理员账户创建 {#headless-admin-account-creation}
 
 对于**自动化部署**（Docker、Kubernetes、云平台），手动交互不切实际时，Open WebUI 支持在首次启动时使用环境变量自动创建管理员账户。
 
-### 工作原理
+### 工作原理 {#how-it-works}
 
 配置以下环境变量时：
 - `WEBUI_ADMIN_EMAIL`：管理员账户的邮箱地址
@@ -97,7 +134,7 @@ Open WebUI 将自动：
 3. 安全地对密码进行哈希处理并存储
 4. 自动禁用注册（`ENABLE_SIGNUP=False`）以防止未经授权的账户创建
 
-### 使用场景
+### 使用场景 {#use-cases}
 
 此功能在以下场景特别有用：
 - **CI/CD 流水线**：使用密钥管理系统中的凭据自动预配 Open WebUI 实例
@@ -105,7 +142,7 @@ Open WebUI 将自动：
 - **自动化测试**：创建具有预配置管理员账户的可重现测试环境
 - **无头服务器**：部署无法通过 UI 手动创建账户的实例
 
-### 配置示例
+### 配置示例 {#example-configuration}
 
 #### Docker Compose
 ```yaml
@@ -157,7 +194,7 @@ spec:
           key: admin-name
 ```
 
-### 重要说明
+### 重要说明 {#important-notes}
 
 :::warning 安全注意事项
 - **使用密钥管理**：切勿在 Docker Compose 文件或 Dockerfile 中硬编码 `WEBUI_ADMIN_PASSWORD`。请使用 Docker secrets、Kubernetes secrets 或环境变量注入。

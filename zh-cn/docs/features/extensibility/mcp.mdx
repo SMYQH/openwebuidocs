@@ -13,7 +13,7 @@ Open WebUI 从 **v0.6.31** 起原生支持 **MCP（Model Context Protocol）**�
 在 Docker 配置中，你**必须**设置 `WEBUI_SECRET_KEY` 环境变量。若未设置，每次重启或重建容器后，**通过 OAuth 连接的 MCP 工具（如 Notion）**都会**失效**（错误：`Error decrypting tokens`），迫使你重新进行身份验证。
 :::
 
-## 🚀 快速开始 
+## 🚀 快速开始 {#quick-start}
 
 1. 打开 **⚙️ 管理员设置 → 外部工具**。
 2. 点击 **+（添加服务器）**。
@@ -42,7 +42,7 @@ MCP 服务器只能由**管理员**在**管理员设置 → 外部工具**下添
 
 若想在不让用户拥有服务器配置权限的前提下，让用户使用由 MCP 支持的能力，可以由管理员添加一次服务器，然后通过**访问控制**将其限定给指定用户或用户组。
 
-## 🧭 何时使用 MCP vs OpenAPI
+## 🧭 何时使用 MCP vs OpenAPI {#when-to-use-mcp-vs-openapi}
 
 :::tip 
 对于大多数部署，**OpenAPI** 仍是**首选**集成路径。
@@ -65,9 +65,9 @@ MCP 服务器只能由**管理员**在**管理员设置 → 外部工具**下添
 基于浏览器的多用户部署会扩大攻击面（CORS/CSRF、用户间隔离、重连等）。在将 MCP 对外暴露之前，请先审查贵组织的认证、代理和限流策略。
 :::
 
-## ⚙️ 配置最佳实践
+## ⚙️ 配置最佳实践 {#configuration-best-practices}
 
-### 身份验证模式
+### 身份验证模式 {#authentication-modes}
 
 *   **None**：适用于**本地 MCP 服务器**或不需要令牌的内网。
     *   **⚠️ 重要**：除非服务器严格要求令牌，否则默认选择 "None"。在未提供密鑰的情况下选择 "Bearer" 会发送空的 Authorization 标头（`Authorization: Bearer`），导致许多服务器立即拒绝连接。
@@ -103,7 +103,7 @@ MCP 服务器只能由**管理员**在**管理员设置 → 外部工具**下添
 
 :::
 
-### OAuth 2.1（静态）设置
+### OAuth 2.1（静态）设置 {#connecting-an-account}
 
 当你已经有来自身份提供商的客户端 ID/客户端密钥时使用。
 
@@ -146,12 +146,12 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 **变通方案：** 用户应通过聊天输入区的 **➕** 按钮按每个对话手动启用 OAuth 2.1 工具。这样会在工具被调用前触发认证流程。一旦完成初次认证，令牌刷新会自动进行。
 :::
 
-### 连接 URL
+### 连接 URL {#oauth-21-static-setup}
 
 如果你在 **Docker** 中运行 Open WebUI，而 MCP 服务器在**宿主机**上：
 *   使用 `http://host.docker.internal:<port>`（如 `http://host.docker.internal:3000/sse`）而不是 `localhost`。
 
-### 自定义标头
+### 自定义标头 {#connection-urls}
 
 无论是 MCP 还是 OpenAPI 工具服务器连接，都支持一个自由格式的 **Headers** 字段（JSON 对象），其内容会被合并进每一次出站请求。Header 值支持一小套模板变量，会在请求发起时由服务器端展开，因此你无需为每个用户、每个聊天或每条消息单独配置连接，就能让同一条连接路由到不同的后端逻辑：
 
@@ -170,13 +170,50 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 `{{USER_EMAIL}}` 和 `{{USER_ROLE}}` 是在 v0.9.6 中加入的。同一版本也修复了 MCP 服务器连接中自定义标头模板此前只被存储、但在请求时**没有**展开的问题——现在它们与之前在直接连接和 OpenAPI 工具服务器中的行为一致，会按预期展开。
 :::
 
-### 函数名称过滤列表
+### 函数名称过滤列表 {#custom-headers}
 
 此字段限制哪些工具暴露给 LLM。
 *   **默认**：大多数情况下留空以暴露所有工具。
 *   **解决方法**：如果列表为空时遇到连接错误，尝试在此字段添加一个逗号（`,`）。这会强制系统将其视为有效（但为空）的过滤器，可能绕过某些解析问题。
 
-## 故障排除
+### 函数名过滤列表 {#function-name-filter-list}
+
+该字段用于限制向 LLM 暴露哪些工具。
+*   **默认值**：留空即暴露全部工具（大多数情况下）。
+*   **变通办法**：如果列表为空时遇到连接错误，可以尝试在该字段中添加一个逗号（`,`）。这会强制系统将其视为有效的（但为空的）过滤器，从而可能绕过某些解析问题。
+
+### 模型看到的工具名称 {#tool-names-the-model-sees}
+
+Open WebUI 会以 `<服务器 ID>_<工具名>` 的形式向模型提供每个 MCP 工具。某些提供商（例如 OpenAI API 和 AWS Bedrock）会拒绝工具名超过 64 个字符的请求，因此较长的名称会被缩短为其前 55 个字符、一个下划线以及 8 位哈希。同一个工具总会得到相同的缩短名称，而调用 MCP 服务器时仍使用原始工具名。
+
+启用大量 MCP 工具后，[工具搜索](/features/extensibility/plugin/tools#tool-search) 会把庞大的工具定义排除在每次请求之外，直到模型主动查找。它的 **始终加载的工具** 模式正是针对这些名称，因此 `github_*` 会让 ID 为 `github` 的服务器的所有工具保持加载。
+
+### 结构化工具结果 {#structured-tool-results}
+
+MCP 工具可以在常规内容之外返回结构化数据（`structuredContent`）。Open WebUI 会把这些数据以 JSON 文本的形式添加到模型看到的工具结果中。当工具的某个文本结果已经包含同样的 JSON 时，结果会原样发送给模型，因此数据只出现一次。当结构化数据只是一个 `result` 字段、且其取值与文本结果一一对应时也是如此——使用官方 MCP Python SDK 构建的服务器就是这样返回普通值和列表的。
+
+### 服务器指令 {#server-instructions}
+
+MCP 服务器可以在 Open WebUI 连接时发送指令。Open WebUI 会把它们追加到系统提示词中，标题行为 `MCP server "<服务器 ID>" instructions:`，这样模型就能了解该服务器期望如何使用它的工具。
+
+### 请求你的输入 {#requests-for-your-input}
+
+MCP 服务器可以在工具调用过程中向你征询输入（MCP elicitation）。Open WebUI 会显示一个对话框，其中包含服务器 ID 和服务器的消息：
+
+- **表单请求** 会显示一个表单，其中包含服务器所请求的字段。点击 **提交** 会发送你的答案。Open WebUI 会依据服务器的 schema 校验这些答案，并且只发送与之匹配的答案。
+- **链接请求** 会显示一个需要打开的链接。打开它即等于告诉服务器你已经照做。不以 `http://` 或 `https://` 开头的链接，或包含用户名与密码的链接，会在对话框出现之前被取消。
+
+**拒绝** 会回绝该请求，**取消** 则关闭对话框，之后如何继续由服务器决定。对话框最多等待 120 秒，若 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout) 设置得更低则以该值为准，之后请求会被取消。只有当该对话正是浏览器标签页中打开的那个对话框时才会出现；否则请求会立即被取消。
+
+### MCP 应用 {#mcp-apps}
+
+MCP 工具可以附带交互式应用（[MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview)）。当工具的 `_meta.ui.resourceUri` 指向一个类型为 `text/html;profile=mcp-app` 的 `ui://` 资源（最大 5 MB）时，Open WebUI 会在工具运行后于对话中内嵌展示该应用。
+
+该应用运行在沙箱化的 iframe 中，可以执行脚本、下载文件并打开弹窗，但没有权限访问 Open WebUI 的源。其内容安全策略来自资源的 `csp` 元数据（`resourceDomains`、`connectDomains`、`frameDomains`、`baseUriDomains`），并且在此之上还会应用 [`IFRAME_CSP`](/reference/env-configuration#iframe_csp)。该应用可以读取并列出服务器的资源，在新标签页中打开 `http` 和 `https` 链接，调用服务器的工具并向对话发送消息。应用发起的每次工具调用都会先在 **工具调用** 对话框中请你确认。来自应用的消息会在 **确认来自嵌入的提示** 对话框中显示其文本，确认后作为你的下一条对话消息发送。应用只能发送文本，因此消息中的图片和文件会被忽略。
+
+工具的 `_meta.ui.visibility` 决定谁可以使用它：没有 `model` 的工具对模型隐藏，没有 `app` 的工具无法被应用调用。MCP 应用需要稳定的 [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key)。
+
+## 故障排除 {#troubleshooting}
 
 ### "Failed to connect to MCP server"
 
@@ -189,7 +226,7 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 3.  **OAuth 2.1 默认工具**：如果失败的工具使用 OAuth 2.1 并被设置为模型的默认工具，这是已知限制。从模型的默认工具中删除它，让用户每次对话手动启用。
 4.  **握手缓慢**：如果服务器冷启动较慢，或暴露了大量工具，`session.initialize()` 握手可能超过其超时时间。可以提高 [`MCP_INITIALIZE_TIMEOUT`](/reference/env-configuration#mcp_initialize_timeout)（默认 `10` 秒）。
 
-### 添加外部工具后出现无限加载界面
+### 添加外部工具后出现无限加载界面 {#infinite-loading-screen-after-adding-external-tool}
 
 **现象**：
 添加外部工具连接后，前端停留在加载旋转图标上。浏览器控制台显示类似 `Cannot convert undefined or null to object at Object.entries` 的错误。
@@ -203,7 +240,7 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 3.  刷新页面（Ctrl+F5）
 4.  使用正确的**类型**（设置为 **MCP（Streamable HTTP）**）重新添加连接
 
-## ❓ 常见问题
+## ❓ 常见问题 {#faq}
 
 **是否支持 stdio 或 SSE 传输？**
 

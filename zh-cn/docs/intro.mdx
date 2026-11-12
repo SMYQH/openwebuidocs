@@ -6,8 +6,10 @@ hide_title: true
 ---
 
 import { SponsorList } from "@site/src/components/SponsorList";
+import ThemedImage from '@theme/ThemedImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 :::tip[🌐 中文翻译 Beta 版]
 
@@ -17,32 +19,32 @@ import TabItem from '@theme/TabItem';
 
 # Open WebUI
 
-**Open WebUI 是一个[可扩展](/features/extensibility/plugin/)、功能丰富且易于使用的自托管 AI 平台，专为完全离线运行而设计。** 它支持 **Ollama** 和 **兼容 OpenAI 的 API**，无论是本地模型还是云端模型，都是一套强大且与提供商无关的解决方案。
+**Open WebUI 是一个 AI 的家**——一个自托管的 AI 平台，**[可扩展](https://docs.openwebui.com/features/extensibility/plugin/)**、**[功能丰富](https://docs.openwebui.com/features/)**、易于使用，并且被设计为能够**[完全离线运行](https://openwebui.com/sovereign-ai)**。它支持 **Ollama** 和**兼容 OpenAI 的 API**，无论是本地模型还是云端模型，都能为你提供一套强大且与提供商无关的界面。
 
-![Open WebUI Demo](/images/demo.png)
+<ThemedImage
+  alt="Open WebUI：一方块堆叠，其中一角被取出"
+  sources={{
+    light: useBaseUrl('/images/banners/home-light.svg'),
+    dark: useBaseUrl('/images/banners/home-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
 
 ![GitHub stars](https://img.shields.io/github/stars/open-webui/open-webui?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/open-webui/open-webui?style=social)
 
 ---
 
-## 快速开始
+## 快速开始 {#quick-start}
 
 <Tabs>
-  <TabItem value="docker" label="Docker" default>
+  <TabItem value="python" label="Python" default>
 
 ```bash
-docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
-```
+# 已安装 uv（macOS/Linux）
+DATA_DIR=~/.open-webui uvx --python 3.12 open-webui@latest serve
 
-然后打开 [http://localhost:3000](http://localhost:3000)。
-
-如需 GPU 支持、Docker Compose 等更多内容 → [完整 Docker 指南](/getting-started/quick-start)
-
-  </TabItem>
-  <TabItem value="pip" label="pip">
-
-```bash
+# 或者用 pip 安装并运行
 pip install open-webui
 open-webui serve
 ```
@@ -50,46 +52,67 @@ open-webui serve
 然后打开 [http://localhost:8080](http://localhost:8080)。
 
   </TabItem>
-  <TabItem value="uv" label="uv">
+  <TabItem value="docker" label="Docker">
+
+:::tip 选对镜像
+使用 `:main` 以获得内置的嵌入、文档提取和语音识别。若追求**精简、内存高效、可扩展**的部署，请选择 `:slim`：**下载体积 197 MB**（小 88%），在我们的[测试](/getting-started/quick-start#slim-memory-usage)中**空闲时仅占约 300 MiB 内存**。你将获得完全相同的聊天体验，**开销极小**、**占用极低**，嵌入、文档提取和语音则交由外部服务处理。[为什么选择 slim？](/getting-started/quick-start#what-slim-leaves-out)
+:::
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-DATA_DIR=~/.open-webui uvx --python 3.11 open-webui@latest serve
+docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data -e WEBUI_SECRET_KEY=your-secret-key --name open-webui --restart always ghcr.io/open-webui/open-webui:main
 ```
 
-然后打开 [http://localhost:8080](http://localhost:8080)。
+如需 GPU 支持、Docker Compose 等更多内容 → [快速开始](/getting-started/quick-start) 和 [Docker 镜像与标签](/getting-started/quick-start#image-variants)
+
+然后打开 [http://localhost:3000](http://localhost:3000)。
 
   </TabItem>
   <TabItem value="desktop" label="桌面端">
-
-从 [**github.com/open-webui/desktop**](https://github.com/open-webui/desktop) 下载桌面应用。它可在你的系统上原生运行 Open WebUI，无需 Docker 或手动配置。
 
 :::info
 用于生产环境时，请通过 **Docker** 或 **Python** 安装。
 :::
 
+从 [**github.com/open-webui/desktop**](https://github.com/open-webui/desktop) 下载桌面应用。它可在你的系统上原生运行 Open WebUI，无需 Docker 或手动配置。
+
   </TabItem>
 </Tabs>
 
+<video
+  autoPlay
+  muted
+  loop
+  playsInline
+  poster={useBaseUrl('/images/landing/hero.png')}
+  aria-label="Open WebUI 正在执行一次实时分析：一个本地模型通过 Open Terminal 读取电子表格，用 Python 求和，并在内置浏览器中构建营收仪表板"
+  style={{ display: 'block', width: '100%', borderRadius: 12, margin: '0.75rem 0 0.5rem' }}
+>
+  <source src={useBaseUrl('/images/landing/hero.mp4')} type="video/mp4" />
+</video>
+
+<p style={{ fontSize: '0.85rem', opacity: 0.7, margin: '0 0 1rem' }}>
+  由 <a href="/features/open-terminal">Open Terminal</a> 以及我们一些<a href="/features/extensibility/community">社区贡献的插件</a>提供支持。
+</p>
+
 :::tip 已经跑起来了？接着看这里
-已经安装好 Open WebUI，但不知道下一步该做什么？[**新用户必读**](/getting-started/essentials) 会在一页内带你了解每位新用户迟早都会用到的六件事：插件、工具调用、任务模型、上下文管理、RAG 和 Open Terminal。
+已经安装好 Open WebUI，但不知道下一步该做什么？[**新用户必读**](/getting-started/essentials) 会在一页内带你了解每位新用户迟早都会用到的内容：插件、工具调用、任务模型、上下文管理、RAG、网络搜索和 Open Terminal。
 :::
 
 ---
 
-## 入门指南
+## 入门指南 {#getting-started}
 
-- [**快速开始**](/getting-started/quick-start) — Docker、Python、Kubernetes 安装方式
+- [**快速开始**](/getting-started/quick-start) — Docker、Python、Kubernetes 和桌面端安装方式
 - [**连接提供商**](/getting-started/quick-start/connect-a-provider) — Ollama、OpenAI、Anthropic、vLLM 等
-- [**新用户必读**](/getting-started/essentials) — 首次安装后从这里开始。插件、工具调用、任务模型、上下文管理、RAG、Open Terminal。
-- [**连接 Agent**](/getting-started/quick-start/connect-an-agent) — Open WebUI Computer（`cptr`）、Hermes Agent、OpenClaw 等自主 AI Agent
+- [**新用户必读**](/getting-started/essentials) — 首次安装后从这里开始。插件、工具调用、任务模型、上下文管理、RAG、网络搜索、Open Terminal。
+- [**连接 Agent**](/getting-started/quick-start/connect-an-agent) — Hermes Agent、OpenClaw 等自主 AI Agent
 - [**更新**](/getting-started/updating) — 让你的实例保持最新
-- [**开发分支**](/getting-started/quick-start) — 在稳定版发布前帮助测试最新变更
+- [**开发分支**](/getting-started/quick-start#using-the-dev-branch) — 在稳定版发布前帮助测试最新变更
 - [**高级主题**](/getting-started/advanced-topics) — 扩展、日志与高级配置
 
 ---
 
-## 探索
+## 探索 {#explore}
 
 - [**功能特性**](/features) — 了解 Open WebUI 能做什么
 - [**教程**](/tutorials) — 分步指南
@@ -99,36 +122,33 @@ DATA_DIR=~/.open-webui uvx --python 3.11 open-webui@latest serve
 
 ---
 
-## Open WebUI Computer
+## 用 Open Terminal 实现代理式执行 {#agentic-execution-with-open-terminal}
 
-[**Open WebUI Computer**](/ecosystem/computer) 是一个在你的真实机器上运行的代理框架。安装一个应用，加入 AI（API 密钥、本地模型，或你已有的 Claude Code、Codex 等编码代理订阅），它就能处理你真实的文件和项目——从研究、写作到编码，附带审批和计划模式。它不会启动一次性的沙箱然后丢给你一个 diff。代理编辑的文件就是你磁盘上的文件。
+[**Open Terminal**](/features/open-terminal) 让代理获得真正的终端和文件系统，因此它能真正完成多步工作，而不只是描述这些工作：分析数据、运行脚本、修复自己的错误，并把它生成的文件交给你——全部在聊天内完成。对话旁边的[文件浏览器](/features/open-terminal/file-browser)会展示它创建的一切。
 
-因为它是你的整台机器，其他功能也随之免费获得：从任何浏览器（桌面或手机）访问文件、编辑器、终端和 git；一个你可以通过 Telegram 或 WhatsApp 联系它的助手；定时代理向你报告。一切都在你拥有的硬件上本地运行，无需托管在别处。
-
-Computer 和 Open WebUI 是一个生态系统，按设计以两种速度运行。**Open WebUI** 是稳定平台：企业级、多用户，是团队和组织部署和信赖的平台。**Computer** 迭代更快：新能力优先在此构建和发布，经过日常使用打磨后，再融入 Open WebUI 中。如果你想要我们正在构建的最前沿功能，它会先登陆 Computer。
-
-- 刚接触？[什么是 Computer？](/ecosystem/computer/what-is-computer) · [快速开始](/ecosystem/computer/quickstart) · [使用场景](/ecosystem/computer/use-cases/)
-- 已经在用 Open WebUI？[将 Computer 工作空间作为模型接入 Open WebUI](/ecosystem/computer/automate/open-webui)
+对于团队，[**Terminals**](/features/open-terminal/terminals) 是其上的企业层，为每位用户提供隔离的环境，并配有资源限制和自动生命周期管理。
 
 ---
 
-## 其他 Open WebUI 项目
+## 其他 Open WebUI 项目 {#also-by-open-webui}
 
-- [**open-terminal**](https://github.com/open-webui/open-terminal) — 给你的 AI 一台真正的电脑。为 Open WebUI 提供沙箱化的终端、文件浏览器和代码执行能力。
+- [**open-terminal**](https://github.com/open-webui/open-terminal) — 把 Open WebUI 变成完整的代理框架，配上真实的行动运行时：沙箱化的文件、shell、代码执行、预览和产物。
 - [**oikb**](https://github.com/open-webui/oikb) — 让你的 Open WebUI 知识库保持同步。可监控本地文件夹、GitHub 仓库、S3 存储桶、Confluence 以及其他 40+ 种数据源。
 - [**mcpo**](https://github.com/open-webui/mcpo) — MCP 转 OpenAPI 代理。在 Open WebUI（或任何 OpenAPI 客户端）中使用任意 MCP 工具服务器，无需自写胶水代码。
 
 
 ---
 
-## 企业版
+## 企业版 {#enterprise}
+
+面向团队和组织打造的 Open WebUI，在让你完全掌控数据与基础设施的同时，采用无状态架构，能够[从试点扩展到全组织部署](/getting-started/advanced-topics/scaling)。
 
 需要 **自定义品牌**、**SLA 支持** 或 **长期支持版（LTS）**？
 → [了解企业版方案](/enterprise)
 
 ---
 
-## 面向 LLM 与编码代理
+## 面向 LLM 与编码代理 {#get-involved}
 
 本文档的机器可读入口点：
 
@@ -141,7 +161,7 @@ Computer 和 Open WebUI 是一个生态系统，按设计以两种速度运行�
 
 ---
 
-## 参与进来
+## 参与进来 {#sponsors}
 
 - [**贡献指南**](/contributing) — 一起建设 Open WebUI
 - [**开发环境搭建**](/getting-started/advanced-topics/development) — 从源码在本地运行项目
@@ -150,13 +170,13 @@ Computer 和 Open WebUI 是一个生态系统，按设计以两种速度运行�
 
 ---
 
-## 赞助商
+## 赞助商 {#acknowledgements}
 
 <SponsorList />
 
 ---
 
-## 致谢
+## 致谢 {#for-llms-and-coding-agents}
 
 <div className="grid gap-4 items-start grid-cols-1 md:grid-cols-3">
 
@@ -182,4 +202,3 @@ Computer 和 Open WebUI 是一个生态系统，按设计以两种速度运行�
   </a>
 
 </div>
-

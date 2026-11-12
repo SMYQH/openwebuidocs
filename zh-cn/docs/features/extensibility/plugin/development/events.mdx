@@ -3,7 +3,7 @@ sidebar_position: 3
 title: "事件"
 ---
 
-# 🔔 事件：在 Open WebUI 中使用 `__event_emitter__` 和 `__event_call__`
+# 🔔 事件：在 Open WebUI 中使用 `__event_emitter__` 和 `__event_call__` {#events-using-\_\_event_emitter\_\_-and-\_\_event_call\_\_-in-open-webui}
 
 Open WebUI 的插件架构不仅仅是处理输入和产生输出——**它还涉及与 UI 和用户的实时交互式通信**。为了使你的 Tools、Functions 和 Pipes 更具动态性，Open WebUI 通过 `__event_emitter__` 和 `__event_call__` 辅助函数提供了内置事件系统。
 
@@ -11,7 +11,7 @@ Open WebUI 的插件架构不仅仅是处理输入和产生输出——**它还�
 
 ---
 
-## 🌊 什么是事件？
+## 🌊 什么是事件？ {#what-are-events}
 
 **事件**是从你的后端代码（Tool 或 Function）发送到 Web UI 的实时通知或交互式请求。它们允许你更新对话、显示通知、请求确认、运行 UI 流程等。
 
@@ -22,34 +22,34 @@ Open WebUI 的插件架构不仅仅是处理输入和产生输出——**它还�
 
 ---
 
-## 🏁 可用性
+## 🏁 可用性 {#availability}
 
-### 原生 Python Tools & Functions
+### 原生 Python Tools & Functions {#native-python-tools--functions}
 
 对于直接在 Open WebUI 中使用 `__event_emitter__` 和 `__event_call__` 辅助函数定义的原生 Python Tools 和 Functions，事件**完全可用**。
 
-### 外部工具（OpenAPI & MCP） {#external-tools-events}
+### 外部工具（OpenAPI 与 MCP） {#external-tools-openapi--mcp}
 
-外部工具可以通过**专用 REST 端点**发出事件。当设置 `ENABLE_FORWARD_USER_INFO_HEADERS=True` 时，Open WebUI 将以下标头传递给所有外部工具请求：
+外部工具可以通过一个**专用的 REST 端点**发出事件。当设置 `ENABLE_FORWARD_USER_INFO_HEADERS=True` 时，Open WebUI 会在所有外部工具请求中传递以下请求头：
 
-| 标头 | 说明 |
+| 请求头 | 说明 |
 |--------|-------------|
-| `X-Open-WebUI-Chat-Id` | 触发该工具调用的聊天 ID |
-| `X-Open-WebUI-Message-Id` | 与本次工具调用关联的消息 ID |
+| `X-OpenWebUI-Chat-Id` | 调用该工具的对话 ID |
+| `X-OpenWebUI-Message-Id` | 与该工具调用关联的消息 ID |
 
-你的外部工具可以使用这些标头通过以下方式将事件发送回 UI：
+你的外部工具可以使用这些请求头，通过以下方式把事件发回界面：
 
 ```
 POST /api/v1/chats/{chat_id}/messages/{message_id}/event
 ```
 
-详情参见下方的[外部工具事件](#external-tools-events)。
+详见下文的[外部工具事件](#external-tool-events)。
 
 ---
 
-## 🧰 基本用法
+## 🧰 基本用法 {#basic-usage}
 
-### 发送事件
+### 发送事件 {#sending-an-event}
 
 你可以通过调用以下代码在 Tool 或 Function 的任何位置触发事件：
 
@@ -68,7 +68,7 @@ await __event_emitter__(
 
 你**不需要**手动添加 `chat_id` 或 `message_id` 等字段——这些由 Open WebUI 自动处理。
 
-### 交互式事件
+### 交互式事件 {#interactive-events}
 
 当你需要暂停执行直到用户响应时（如确认/取消对话框、代码执行或输入），使用 `__event_call__`：
 
@@ -93,7 +93,7 @@ result = await __event_call__(
 
 ---
 
-## 📜 事件载荷结构
+## 📜 事件载荷结构 {#event-payload-structure}
 
 当你发送或调用事件时，其基础结构如下：
 
@@ -108,7 +108,7 @@ result = await __event_call__(
 
 ---
 
-## 🗂 完整事件类型列表
+## 🗂 完整事件类型列表 {#full-list-of-event-types}
 
 下表汇总了事件**所有受支持的 `type` 值**，以及它们的用途和数据载荷结构。（基于对 Open WebUI 当前事件处理逻辑的最新分析。）
 
@@ -133,7 +133,7 @@ result = await __event_call__(
 
 - 你可以自定义自己的类型，并在 UI 层处理它们（或者使用未来即将提供的事件扩展机制）。
 
-### ❗ 各事件类型的详细说明
+### ❗ 各事件类型的详细说明 {#details-on-specific-event-types}
 
 ### `status`
 
@@ -152,7 +152,7 @@ await __event_emitter__(
 )
 ```
 
-#### `done` 字段
+#### `done` 字段 {#the-done-field}
 
 `done` 字段控制 UI 中状态文本的 **闪烁动画**：
 
@@ -178,11 +178,17 @@ await __event_emitter__({"type": "status", "data": {"description": "Fetching dat
 ```
 :::
 
-#### `hidden` 字段
+#### `hidden` 字段 {#the-hidden-field}
 
 当 `hidden` 为 `true` 时，该状态会保存到 `statusHistory`，但 **不会** 显示在当前状态区域。这适合用于不希望用户看到的内部状态跟踪。
 
 另外，当 `message.content` 为空且最后一个状态是 `hidden: true`（或者根本没有状态）时，前端会显示 skeleton loader 而不是状态栏——因此 hidden 状态不会替代加载指示器。
+
+---
+
+#### 较长的状态文本 {#long-status-text}
+
+回复上方的状态行会被截断为一行。用户点击它即可阅读全文。当一条消息包含多个状态时，点击会打开状态历史，其中完整显示每一条记录。这样一来，较长的摘要（例如 token 用量报告）也能保持可读，即使多个模型的回复并排显示也是如此。
 
 ---
 
@@ -213,7 +219,7 @@ await __event_emitter__(
 
 ---
 
-### `chat:message` 或 `replace`
+### `chat:message` 或 `replace` {#chatmessage-or-replace}
 
 **设置（或替换）整条消息内容：**
 
@@ -230,7 +236,7 @@ await __event_emitter__(
 
 ---
 
-### `files` 或 `chat:message:files`
+### `files` 或 `chat:message:files` {#files-or-chatmessagefiles}
 
 **附加或更新文件：**
 
@@ -270,7 +276,7 @@ await __event_emitter__(
 )
 ```
 
-#### 追加 vs. 替换
+#### 追加 vs. 替换 {#append-vs-replace}
 
 默认情况下，新条目会**追加**到消息上已有的内容——多次发送会叠加。如果你想原地更新一个 widget，请设置 `data.replace: True`；消息上的整个 `embeds` 数组会被载荷中的数组覆盖。（传入空列表并设置 `replace: True` 可清除该消息的所有 embeds。）
 
@@ -281,7 +287,7 @@ await __event_emitter__(
 
 添加 `replace` 标志是为了避免用户重新加载时看到过时的 embeds 叠加在对话中——只有最新版本会被持久化。
 
-#### 示例：在工具结束时追加单个 embed
+#### 示例：在工具结束时追加单个 embed {#example-append-a-single-embed-at-the-end-of-a-tool}
 
 ```python
 async def get_weather_dashboard(self, city: str, __event_emitter__) -> str:
@@ -295,7 +301,7 @@ async def get_weather_dashboard(self, city: str, __event_emitter__) -> str:
     return f"Rendered weather dashboard for {city}."
 ```
 
-#### 示例：从 pipe 替换实时进度 widget
+#### 示例：从 pipe 替换实时进度 widget {#example-replace-a-live-progress-widget-from-a-pipe}
 
 ```python
 async def pipe(self, body: dict, __event_emitter__):
@@ -330,7 +336,7 @@ async def pipe(self, body: dict, __event_emitter__):
 
 用户重新加载聊天时，`message.embeds` 只包含一条最新记录，而不是五个叠加的进度卡。
 
-#### 示例：清除所有 embeds
+#### 示例：清除所有 embeds {#example-clear-all-embeds}
 
 ```python
 await __event_emitter__(
@@ -341,11 +347,11 @@ await __event_emitter__(
 )
 ```
 
-#### 注意事项
+#### 注意事项 {#notes}
 
 - **持久化需使用短名称。** 发送 `"embeds"`（或 `"chat:message:embeds"`），但请注意只有短名称 `"embeds"` 才会持久化到数据库——参见下方的[持久化表格](#which-event-types-are-persisted-to-the-database)。`replace` 标志对未持久化的别名无效。
 - **沙箱与尺寸。** 每个 embed 都在沙箱化的 iframe 中渲染，默认启用 `allow-scripts`、`allow-popups` 和 `allow-downloads`。同源和表单提交由用户切换。自动调整大小、高度报告以及 Chart.js / Alpine 自动注入等详情，参见 [Rich UI 嵌入 → 沙箱与安全性](/features/extensibility/plugin/development/rich-ui#sandbox-and-security)。
-- **外部工具。** 外部工具调用者可以将同样的 `embeds` 载荷（包括 `replace: true`）发送至 `/api/v1/chats/{chatId}/messages/{messageId}/event`——参见下方的[外部工具](#external-tools-events)。
+- **外部工具。** 外部工具调用者可以将同样的 `embeds` 载荷（包括 `replace: true`）发送至 `/api/v1/chats/{chatId}/messages/{messageId}/event`——参见下方的[外部工具](#external-tool-events)。
 
 ---
 
@@ -457,12 +463,12 @@ await __event_emitter__(
 *   **消息工具栏**：当设为 `True` 时，消息下方的“心形”图标会填充，表示它已被收藏。
 *   **聊天概览**：被收藏的消息（置顶）会在会话概览中高亮，便于用户之后定位关键信息。
 
-#### 示例：“Pin Message” Action
+#### 示例：“Pin Message” Action {#example-pin-message-action}
 如果你想看这个事件在真实插件中的实用实现，请查看 **[Open WebUI 社区中的 Pin Message Action](https://openwebui.com/posts/143594d1-0838-4f9a-9af2-b94d2952f7ba)**。这个 Action 展示了如何切换数据库中的收藏状态，并立即使用 `chat:message:favorite` 事件同步 UI。
 
 ---
 
-### `confirmation`（**需要** `__event_call__`）
+### `confirmation`（**需要** `__event_call__`） {#confirmation-requires-\_\_event_call\_\_}
 
 **显示确认对话框并获取用户响应：**
 
@@ -491,7 +497,7 @@ else:
 
 ---
 
-### `input`（**需要** `__event_call__`）
+### `input`（**需要** `__event_call__`） {#input-requires-\_\_event_call\_\_}
 
 **提示用户输入文本：**
 
@@ -516,7 +522,7 @@ await __event_emitter__(
 )
 ```
 
-#### 掩码 / 密码输入
+#### 掩码 / 密码输入 {#masked--password-input}
 
 若要隐藏敏感输入（例如 API key、密码），请在数据载荷中将 `type` 设为 `"password"`。输入框会以带显示/隐藏切换的掩码密码框形式渲染：
 
@@ -540,7 +546,11 @@ result = await __event_call__(
 
 ---
 
-### `execute`（同时适用于 `__event_call__` 和 `__event_emitter__`） {#execute-event}
+#### 选择输入 {#select-input}
+
+若想提供一组固定选项而不是自由文本，请在数据载荷中传入 `"input": {"type": "select", "options": ["a", "b"]}`。取消对话框时返回的是 `false` 而不是字符串，因此使用该值之前请先判断。
+
+### `execute`（同时适用于 `__event_call__` 和 `__event_emitter__`） {#execute-works-with-both-\_\_event_call\_\_-and-\_\_event_emitter\_\_}
 
 **直接在用户浏览器中运行 JavaScript。**
 
@@ -551,7 +561,7 @@ result = await __event_call__(
 | `__event_call__` | 运行 JS 并 **等待返回值**（双向） | 你需要在 Python 里拿到结果（例如读取 `localStorage`、检测浏览器状态） |
 | `__event_emitter__` | 运行 JS，**只发出不等待**（单向） | 你不需要结果（例如触发文件下载、操作 DOM） |
 
-#### 双向示例（使用 `__event_call__`）
+#### 双向示例（使用 `__event_call__`） {#two-way-example-with-\_\_event_call\_\_}
 
 ```python
 result = await __event_call__(
@@ -574,7 +584,7 @@ await __event_emitter__(
 )
 ```
 
-#### 只发不等示例（使用 `__event_emitter__`）
+#### 只发不等示例（使用 `__event_emitter__`） {#fire-and-forget-example-with-\_\_event_emitter\_\_}
 
 ```python
 # Trigger a blob download — no return value needed
@@ -609,7 +619,7 @@ except Exception:
 如果你的 `execute` 代码会触发文件下载，而且你并不需要返回值，那么为了获得最高的跨平台兼容性，请优先使用 `__event_emitter__`。
 :::
 
-#### 它是如何工作的
+#### 它是如何工作的 {#how-it-works}
 
 `execute` 事件会使用 `new Function()` **直接在主页面上下文中**运行 JavaScript。这意味着：
 
@@ -622,7 +632,7 @@ except Exception:
 因为 `execute` 会在主页面上下文中运行并拥有完整 DOM 访问权限，所以你可以用它来 **自动化几乎所有 Open WebUI 前端操作**：点击按钮、填写输入框、在页面间导航、读取页面状态、触发下载、与模型选择器交互、代表用户提交消息等等。你可以把它看作浏览器 UI 的遥控器——只要用户手动能做的事，你的函数就能通过 `execute` 程序化完成。
 :::
 
-#### 示例：显示自定义表单
+#### 示例：显示自定义表单 {#example-display-a-custom-form}
 
 ```python
 result = await __event_call__(
@@ -656,7 +666,7 @@ result = await __event_call__(
 # result will be {"name": "...", "email": "..."}
 ```
 
-#### `execute` 与 Rich UI 嵌入的对比
+#### `execute` 与 Rich UI 嵌入的对比 {#execute-vs-rich-ui-embeds}
 
 `execute` 事件和 [Rich UI 嵌入](/features/extensibility/plugin/development/rich-ui) 是创建交互体验的两种互补方式：
 
@@ -676,7 +686,7 @@ result = await __event_call__(
 
 ---
 
-## 🏗️ 何时以及在何处使用事件
+## 🏗️ 何时以及在何处使用事件 {#when--where-to-use-events}
 
 - **Open WebUI 中的任意 Tool 或 Function** 都可以使用事件。
 - 事件适用于**流式输出**、展示进度、请求用户数据、更新 UI，或显示补充信息/文件。
@@ -715,7 +725,7 @@ async def pipe(self, body: dict, __event_emitter__=None):
 
 ---
 
-## 💡 提示与高级说明
+## 💡 提示与高级说明 {#tips--advanced-notes}
 
 - **一条消息可包含多种类型：** 你可以为同一条消息发出多种不同类型的事件——例如先显示 `status` 更新，再用 `chat:message:delta` 流式输出，最后用 `chat:message` 完成。
 - **自定义事件类型：** 上面的列表是标准类型，但你也可以使用自己的类型，并在自定义 UI 代码中检测/处理它们。
@@ -723,9 +733,9 @@ async def pipe(self, body: dict, __event_emitter__=None):
 
 ---
 
-## 🧐 常见问题
+## 🧐 常见问题 {#faq}
 
-### 问：如何为用户触发通知？
+### 问：如何为用户触发通知？ {#q-how-do-i-trigger-a-notification-for-the-user}
 使用 `notification` 类型：
 ```python
 await __event_emitter__({
@@ -734,7 +744,7 @@ await __event_emitter__({
 })
 ```
 
-### 问：如何提示用户输入并获取答案？
+### 问：如何提示用户输入并获取答案？ {#q-how-do-i-prompt-the-user-for-input-and-get-their-answer}
 使用：
 ```python
 response = await __event_call__({
@@ -749,27 +759,46 @@ response = await __event_call__({
 # response will be: {"value": "user's answer"}
 ```
 
-### 问：`__event_call__` 可用哪些事件类型？
+### 问：`__event_call__` 可用哪些事件类型？ {#q-what-event-types-are-available-for-\_\_event_call\_\_}
 - `"input"`：输入框对话框
 - `"confirmation"`：是/否、确定/取消对话框
-- `"execute"`：在客户端运行提供的代码并返回结果（也可与 `__event_emitter__` 配合用于发出即忘——见上方 [execute](#execute-event)）
+- `"execute"`：在客户端运行提供的代码并返回结果（也可与 `__event_emitter__` 配合用于发出即忘——见上方 [execute](#execute-works-with-both-__event_call__-and-__event_emitter__)）
 
-### 问：我可以更新附加在消息上的文件吗？
+### 问：我可以更新附加在消息上的文件吗？ {#q-can-i-update-files-attached-to-a-message}
 可以——使用 `"files"` 或 `"chat:message:files"` 事件类型，并传入 `{files: [...]}` 载荷。
 
-### 问：我可以更新会话标题或标签吗？
+### 问：我可以更新会话标题或标签吗？ {#q-can-i-update-the-conversation-title-or-tags}
 当然可以：分别使用 `"chat:title"` 或 `"chat:tags"`。
 
-### 问：我可以把响应（部分 token）流式传给用户吗？
+### 问：我可以把响应（部分 token）流式传给用户吗？ {#q-can-i-stream-responses-partial-tokens-to-the-user}
 可以——循环发出 `"chat:message:delta"` 事件，最后再用 `"chat:message"` 收尾。
 
 ---
 
-## 🌐 外部工具事件 {#external-tools-events}
+## 🌐 外部工具事件 {#external-tool-events}
 
 外部工具（OpenAPI 和 MCP 服务器）可以通过 REST 端点向 Open WebUI UI 发出事件。这使得运行在外部服务器上的工具也能实现状态更新、通知和流式内容等功能。
 
-### 前提条件
+### 外部工具（OpenAPI & MCP） {#external-tool-events}
+
+外部工具可以通过**专用 REST 端点**发出事件。当设置 `ENABLE_FORWARD_USER_INFO_HEADERS=True` 时，Open WebUI 将以下标头传递给所有外部工具请求：
+
+| 标头 | 说明 |
+|--------|-------------|
+| `X-Open-WebUI-Chat-Id` | 触发该工具调用的聊天 ID |
+| `X-Open-WebUI-Message-Id` | 与本次工具调用关联的消息 ID |
+
+你的外部工具可以使用这些标头通过以下方式将事件发送回 UI：
+
+```
+POST /api/v1/chats/{chat_id}/messages/{message_id}/event
+```
+
+详情参见下方的[外部工具事件](#external-tool-events)。
+
+---
+
+### 前提条件 {#prerequisites}
 
 要接收聊天 ID 和消息 ID 的标头，你必须在 Open WebUI 实例上启用标头转发，并设置以下环境变量：
 
@@ -779,7 +808,7 @@ ENABLE_FORWARD_USER_INFO_HEADERS=True
 
 否则，Open WebUI 不会在请求外部工具时包含这些识别标头，事件发射也就无法工作。
 
-### Open WebUI 提供的标头
+### Open WebUI 提供的标头 {#headers-provided-by-open-webui}
 
 当 Open WebUI 调用你的外部工具（且已启用标头转发）时，它会带上以下标头：
 
@@ -788,7 +817,7 @@ ENABLE_FORWARD_USER_INFO_HEADERS=True
 | `X-Open-WebUI-Chat-Id` | 调用该工具时所处的聊天 ID | `FORWARD_SESSION_INFO_HEADER_CHAT_ID` |
 | `X-Open-WebUI-Message-Id` | 与该工具调用关联的消息 ID | `FORWARD_SESSION_INFO_HEADER_MESSAGE_ID` |
 
-### 事件端点
+### 事件端点 {#event-endpoint}
 
 **端点：** `POST /api/v1/chats/{chat_id}/messages/{message_id}/event`
 
@@ -819,7 +848,7 @@ ENABLE_FORWARD_USER_INFO_HEADERS=True
 }
 ```
 
-### 支持的事件类型
+### 支持的事件类型 {#supported-event-types}
 
 外部工具可以发出与原生工具相同的事件类型：
 - `status` —— 显示进度/状态更新
@@ -833,7 +862,7 @@ ENABLE_FORWARD_USER_INFO_HEADERS=True
 交互式事件（`input`、`confirmation`）需要 `__event_call__`，由于它们需要双向 WebSocket 通信，因此 **不支持** 外部工具。通过 `__event_call__` 执行的 `execute` 对外部工具也同样不受支持；不过，使用 `__event_emitter__` 的只发不等式 `execute` 不需要返回通道，并且可能会根据你的配置正常工作。
 :::
 
-### 示例：Python 外部工具
+### 示例：Python 外部工具 {#example-python-external-tool}
 
 ```python
 import httpx
@@ -869,7 +898,7 @@ def my_tool_handler(request):
     return {"result": "success"}
 ```
 
-### 示例：JavaScript/Node.js 外部工具
+### 示例：JavaScript/Node.js 外部工具 {#example-javascriptnodejs-external-tool}
 
 ```javascript
 async function myToolHandler(req) {
@@ -899,11 +928,11 @@ async function myToolHandler(req) {
 
 ---
 
-## 🔒 持久性与浏览器断开
+## 🔒 持久性与浏览器断开 {#persistence--browser-disconnection}
 
 一个常见问题是：**如果在工具、Action 或 Pipe 仍在运行时关闭浏览器标签页，会发生什么？**
 
-### 服务端执行会继续
+### 服务端执行会继续 {#server-side-execution-continues}
 
 当你发送聊天请求时，Open WebUI 会创建一个后台 `asyncio` 任务，它 **不会绑定到你的 HTTP 连接或 Socket.IO 会话**。如果你关闭了标签页：
 
@@ -925,7 +954,7 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 
 事件发射器会直接把某些事件类型写入数据库，**不管当前是否连接着浏览器**。这些写入与 `ENABLE_REALTIME_CHAT_SAVE` 设置无关。
 
-#### ✅ 会持久化（关闭标签页后仍保留）
+#### ✅ 会持久化（关闭标签页后仍保留） {#persisted-survive-tab-close}
 
 | 类型 | 保存了什么 |
 |------|-------------|
@@ -950,7 +979,7 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 **Pipe 的结论**：消息内容请用 return/yield，事件则用于状态更新、来源、文件、嵌入和通知。
 :::
 
-#### ❌ 不会持久化（关闭标签页后丢失）
+#### ❌ 不会持久化（关闭标签页后丢失） {#not-persisted-lost-on-tab-close}
 
 | 类型 | 为什么会丢失 |
 |------|--------------|
@@ -970,7 +999,7 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 如果你的 pipe 或 tool 需要调用 LLM，并且希望即使浏览器关闭结果也能持久化，你可以从 Open WebUI 的内部实现中导入并使用 `generate_chat_completion`，而不是发出 `chat:completion` 事件。这个 completion 会走正常的聊天管线，其结果会像其他 assistant 消息一样被保存到数据库。
 :::
 
-#### ⚠️ 需要在线连接（关闭标签页会报错）
+#### ⚠️ 需要在线连接（关闭标签页会报错） {#requires-live-connection-errors-on-tab-close}
 
 | 类型 | 原因 |
 |------|-----|
@@ -983,7 +1012,7 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 
 `execute` 更灵活：当它通过 `__event_emitter__` 使用时，它会在不等待响应的情况下发出，所以关闭标签页时不会报错（不过如果没有浏览器在监听，JS 也不会执行）。因此，在你不需要返回值的 `execute` 调用里，`__event_emitter__` 更安全——尤其是在 iOS PWA 的文件下载场景中，双向通道可能会报 `"TypeError: Load failed"`。
 
-### 返回值持久化
+### 返回值持久化 {#return-value-persistence}
 
 无论浏览器状态如何，当任务完成时，你的函数最终返回值都会 **始终** 保存到数据库。
 
@@ -1022,7 +1051,7 @@ Actions 与 tools 使用相同的返回值处理方式。相同的持久化规�
 
 Filters 会在管线中转换 `form_data`——它们不会直接向用户返回结果。不过，Filters **确实会收到 `__event_emitter__`**，并且可以发出像 `"status"`、`"embeds"`、`"message"` 等可持久化的事件类型。
 
-### 函数类型能力矩阵
+### 函数类型能力矩阵 {#function-type-capabilities-matrix}
 
 | 能力 | Tools | Actions | Pipes | Filters |
 |-----------|-------|---------|-------|---------|
@@ -1031,7 +1060,7 @@ Filters 会在管线中转换 `form_data`——它们不会直接向用户返回
 | 返回值 → 用户响应 | ✅ | ✅ | ✅ | ❌（修改 `form_data`） |
 | `HTMLResponse` → Rich UI 嵌入 | ✅ | ✅ | ❌ | ❌ |
 
-### 实用总结
+### 实用总结 {#practical-summary}
 
 如果你希望函数输出能够**在浏览器标签页关闭后仍然保留**，请遵循下面这些规则：
 
@@ -1042,7 +1071,7 @@ Filters 会在管线中转换 `form_data`——它们不会直接向用户返回
 
 ---
 
-## 📝 结语
+## 📝 结语 {#conclusion}
 
 **事件** 让你在 Open WebUI 里拥有实时、交互式的超能力。它们可以让你的代码更新内容、触发通知、请求用户输入、流式返回结果、处理代码，以及更多更多——把你的后端智能无缝接入聊天 UI。
 

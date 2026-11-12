@@ -3,11 +3,11 @@ title: 环境变量
 sidebar_position: 3
 ---
 
-# 环境变量
+# 环境变量 {#environment-variables}
 
 所有变量在启动时读取一次；重启服务器以应用更改。
 
-## 核心
+## 核心 {#core}
 
 | 变量 | 默认值 | 作用 |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ sidebar_position: 3
 | `CPTR_UPSTREAM_REQUEST_LOG_PATH` | `<data>/logs/upstream-requests.jsonl` | 上游请求日志位置。 |
 | `CPTR_UPSTREAM_REQUEST_LOG_ROTATION` | `50 MB` | 上游请求日志轮转大小。 |
 
-## 聊天和代理调优
+## 聊天和代理调优 {#chat-and-agent-tuning}
 
 | 变量 | 默认值 | 作用 |
 | --- | --- | --- |
@@ -38,19 +38,19 @@ sidebar_position: 3
 | `CPTR_STREAM_READ_TIMEOUT` | `300` | 等待模型流下一个数据块的秒数。 |
 | `CPTR_STREAM_WRITE_TIMEOUT` | `600` | 写入模型流时等待的秒数。 |
 
-## 调度器
+## 调度器 {#scheduler}
 
 | 变量 | 默认值 | 作用 |
 | --- | --- | --- |
 | `AUTOMATION_POLL_INTERVAL` | `10` | 调度器检查到期自动任务的频率（秒）。 |
 
-## 网络
+## 网络 {#network}
 
 | 变量 | 默认值 | 作用 |
 | --- | --- | --- |
 | `CPTR_CORS_ALLOWED_ORIGINS` | `*` | 允许调用 API 的浏览器来源的逗号分隔列表。 |
 
-## 网络搜索提供商
+## 网络搜索提供商 {#web-search-providers}
 
 在此设置的密钥优先于在设置中输入的密钥。完全没有密钥时，网络搜索回退到 DuckDuckGo；否则按此顺序第一个配置的提供商获胜：Exa → Perplexity → Tavily → Brave → Firecrawl → SearXNG → DuckDuckGo。
 

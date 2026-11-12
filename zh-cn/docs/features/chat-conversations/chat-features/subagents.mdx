@@ -1,0 +1,110 @@
+---
+sidebar_position: 13
+title: "Sub-agents"
+---
+
+# Sub-agents
+
+子智能体让模型可以把一项聚焦的工作交给并行运行的第二个智能体，再用其结果继续推进。模型通过调用 `delegate_task` 内置工具自行决定何时委派；你不需要手动驱动。
+
+子智能体本身就是一次完整的聊天补全。它使用与派生它的聊天相同的工具、技能和筛选器，运行在当前模型或为它设置的某个[子智能体模型](/features/workspace/models#capabilities-and-bindings)上，独立完成任务，并把最终答案作为工具结果交回。相关工作发生在一个单独的聊天中，该聊天不会出现在你的聊天列表里，因此父对话保持可读。
+
+子智能体默认关闭。管理员可以通过 [`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents) 环境变量或 **Settings > Admin > Sub-agents** 开关来启用。它们之所以默认关闭，是因为每一次委派都意味着额外一次模型调用，而一条回复就可能同时启动好几个。
+
+## 子智能体会收到什么指令 {#what-a-sub-agent-is-told}
+
+子智能体构建指令的方式与一条新的聊天消息相同，从父聊天的初始配置出发：聊天自身的系统提示（来自 **Model controls > Controls** 或你的 **Settings**）、模型的系统提示、聊天的变量，以及消息中提到的任何技能的完整文本。文件夹的系统提示、工具服务器与终端指令会应用于子智能体自己的这次运行，此外还有[子智能体系统提示](#admin-limits)。
+
+后台子智能体的结果会以同样的方式构建指令，继续父聊天的对话。
+
+## 为什么要委派 {#why-delegate}
+
+委派带来的是聚焦与并行：
+
+![子智能体设置](/images/admin/admin-subagents.png)
+
+- **每个任务都有干净的上下文。** 子智能体拿到的是任务本身以及交给它的那份上下文，而不是整段对话，因此冗长的聊天不会稀释这项工作。
+- **真正的并行。** 当模型在一条回复中请求多次委派时，它们会同时运行，而不是一个接一个。
+- **只带回一段简短的答案。** 只有子智能体的最终结果会返回父聊天。中间的工具调用、搜索和死胡同都留在子智能体自己的聊天中。
+
+典型的用途包括同时调研若干问题、推进一项需要大量工具调用的任务，以及完成一项中间步骤不属于主线的自成一体的工作。
+
+## 前台与后台 {#foreground-and-background}
+
+**前台（Foreground）** 是默认方式。父聊天会等待子智能体，并把它的答案作为工具结果接收，与其他任何工具调用一样。
+
+**后台（Background）** 必须单独启用，可通过 [`SUBAGENTS_BACKGROUND_ENABLED`](/reference/env-configuration#subagents_background_enabled) 或 **Settings > Admin > Sub-agents** 中的 **Enable background sub-agents**。模型会立刻拿到一个句柄而不是答案，然后继续往下走。子智能体完成后，其结果会被发回父聊天，**聊天会自行继续，无需你发送任何内容**。结果以一行可折叠的"Background sub-agent finished"呈现。如果父聊天此刻正忙，结果会等待，等聊天空闲后再送达。
+
+在后台未启用期间，工具定义中的 `background` 选项会被完全移除，因此模型无法请求它。
+
+## 移交文件 {#handing-over-files}
+
+子智能体启动时不带任何附件。父聊天上传的内容不会自行随任务传递，因此委派不会悄悄地把一段冗长对话中的每个文件都拖进第二次模型调用。
+
+要传递文件，模型需要在 `delegate_task` 的 `file_ids` 参数中点名它们。这些文件会像你自己附加时那样挂到子智能体的开场消息上：图片以图片的形式交给模型，因此视觉模型确实能看它；文档对子智能体的可用方式与普通聊天中完全一致——开启 **Preload files** 时会被注入，关闭时则通过 **Files** 内置工具读取。
+
+只有父聊天中已经附加的文件才能被传递，而且每个 ID 都会在任何动作开始前被校验。若其中某个未知或已不可用，调用会返回 `Error: file_ids not attached or unavailable: <ids>`，并且不会启动任何子智能体。
+
+写进 `context` 的文件 ID 只是文本。子智能体收到的是 ID 而非文件，因此任何它需要打开的东西都应放进 `file_ids`。
+
+## 启用子智能体 {#enable-sub-agents}
+
+子智能体需要三件事同时到位：
+
+1. **全局启用**：[`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents)，或 **Settings > Admin > Sub-agents**。
+2. **为模型启用**：**Workspace > Models > Edit** 中 **Builtin Tools** 下的 **Sub-agents** 分类，功能开启后默认启用。
+3. **已保存聊天中的原生函数调用**：`delegate_task` 是内置工具，因此需要 Native 模式，以及像界面发起的每个聊天那样携带 `session_id` 的请求。在旧式函数调用和临时聊天中不会提供它。
+
+子智能体没有按用户划分的权限。一旦为某个模型启用，任何能使用该模型的人都可以通过它触发委派。
+
+## 管理员限制 {#admin-limits}
+
+可在 **Settings > Admin > Sub-agents** 中配置这些项，或使用对应的环境变量：
+
+| 设置项 | 环境变量 | 默认值 | 用途 |
+|---|---|---|---|
+| 最大并发数 | [`SUBAGENTS_MAX_CONCURRENT`](/reference/env-configuration#subagents_max_concurrent) | 空（不限制） | 同时运行的前台子智能体数量。超出部分会等待空位。 |
+| 最大后台数 | [`SUBAGENTS_MAX_ASYNC`](/reference/env-configuration#subagents_max_async) | 空（不限制） | 同时运行的后台子智能体数量。超出部分会被立即拒绝。 |
+| 最大迭代次数 | [`SUBAGENTS_MAX_ITERATIONS`](/reference/env-configuration#subagents_max_iterations) | 空（不限制） | 单个子智能体可运行的工具调用轮数。达到上限后它不再使用工具，直接给出最终答案，该答案会返回父级。 |
+| 最大输出 | [`SUBAGENTS_MAX_OUTPUT`](/reference/env-configuration#subagents_max_output) | 空（不限制） | 返回给父级的字符数。更长的结果会被截断。 |
+| 系统提示 | [`SUBAGENTS_SYSTEM_PROMPT`](/reference/env-configuration#subagents_system_prompt) | 内置 | 追加在模型自身系统提示之上。 |
+
+在改动之前，有三个限制值得先理解：
+
+- **它们按工作进程计数，而不是按部署计数。** 在多工作进程或多副本的情况下，实际的上限是该限制乘以进程数量。
+- **最大并发数只在启动时生效。** 它在第一次委派运行时被读取，此后不会重新读取，因此修改后需要重启。最大后台数则立即生效。
+- **限制值必须是正整数。** 留空或 `0` 表示不限制。请用 [`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents) 来关闭该功能。
+
+## 子智能体不能做什么 {#what-a-sub-agent-cannot-do}
+
+子智能体的权限比派生它们的聊天更窄：
+
+- **不能递归。** 子智能体不能再次委派，因此委派不会无界扩散。
+- **不能写入记忆。** 它可以读取记忆，但不能新增、修改或删除记忆，从而避免被委派的工作悄悄改写你的个性化设置。
+- **不能使用直连。** 通过直连提供的模型无法进行委派。
+- **后台模式下不能使用代码解释器**，除非引擎是 Jupyter，因为基于浏览器的 Pyodide 引擎需要一个存活的会话。
+- **后台模式下不能使用用户工具服务器。** 前台子智能体会继承用户在自身设置中添加的、从浏览器运行的工具服务器，后台子智能体则不会。管理员添加的工具服务器（OpenAPI 与 MCP）对两者都可用。如果被委派的任务依赖某个[用户工具服务器](/features/extensibility/plugin/tools/openapi-servers/open-webui)，请把它放在前台运行。
+
+每个子智能体都运行在自己的聊天中。这些聊天在聊天列表和搜索中都不可见，并会随父聊天一同删除。即使 [`ENABLE_ADMIN_CHAT_ACCESS`](/reference/env-configuration#enable_admin_chat_access) 关闭，管理员仍可通过 id 读取它们。
+
+## 成本 {#cost}
+
+每一次委派都是又一次使用相同工具的完整聊天补全，并且可能循环直到迭代上限。一条回复可以同时启动多个委派，而每个后台结果都会让父聊天重新启动去处理它，这又是一个轮次。
+
+默认不设置任何限制，因此只有模型决定运行多少个子智能体、循环多久。在按量计费的 API 上，请设置[管理员限制](#admin-limits)。
+
+委派的成本会和其他一切一起显示在[分析](/features/administration/analytics)中。
+
+## 在聊天中管理子智能体 {#managing-sub-agents-from-chat}
+
+### 可用工具 {#available-tools}
+
+| 工具 | 用途 |
+|---|---|
+| `delegate_task` | 把任务委派给一个并行子智能体并返回其结果。 |
+
+`delegate_task` 接受要执行的 `task`、可选的 `context`（需要带过去的决定、文件路径、调查结果）、可选的 `file_ids`（列出子智能体必须打开的附件，参见[移交文件](#handing-over-files)）、用于挑选某个子智能体模型的 `model_id`，以及在启用后台子智能体时的 `background`。
+
+:::info Sub-agents 分类同时控制定时器
+`timer` 工具由同一个分类、同一个 [`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents) 开关注入。关闭子智能体同样会移除定时器。
+:::

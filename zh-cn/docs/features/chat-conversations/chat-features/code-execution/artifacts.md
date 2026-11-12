@@ -3,11 +3,11 @@ sidebar_position: 2
 title: "Artifacts"
 ---
 
-## 什么是 Artifacts？如何在 Open WebUI 中使用它们？
+## 什么是 Artifacts？如何在 Open WebUI 中使用它们？ {#what-are-artifacts-and-how-do-i-use-them-in-open-webui}
 
 Open WebUI 中的 Artifacts 是一项受 Claude.AI Artifacts 启发的创新功能，它允许你在聊天中直接与 LLM 生成的、较大且独立的内容进行交互。通过 Artifacts，你可以将重要内容与主对话分离地查看、修改、迭代、构建或引用，从而更容易处理复杂输出，也能在之后再次访问关键信息。
 
-## Open WebUI 何时会使用 Artifacts？
+## Open WebUI 何时会使用 Artifacts？ {#when-does-open-webui-use-artifacts}
 
 当生成内容满足本平台特定条件时，Open WebUI 就会创建 Artifact：
 
@@ -20,17 +20,32 @@ Open WebUI 中的 Artifacts 是一项受 Claude.AI Artifacts 启发的创新功�
 
 其他内容类型，例如文档（Markdown 或纯文本）、代码片段和 React 组件，不会在 Open WebUI 中被渲染为 Artifact。
 
-## Open WebUI 的模型如何创建 Artifacts？
+## Open WebUI 的模型如何创建 Artifacts？ {#how-does-open-webuis-model-create-artifacts}
 
 若要在 Open WebUI 中使用 Artifacts，模型必须生成会触发渲染流程的内容。这通常意味着模型要生成有效的 HTML、SVG 或其他受支持的 Artifact 渲染格式。当生成内容满足上述条件时，Open WebUI 就会将其显示为可交互的 Artifact。
 
-## 如何在 Open WebUI 中使用 Artifacts？
+## 如何在 Open WebUI 中使用 Artifacts？ {#how-do-i-use-artifacts-in-open-webui}
 
 当 Open WebUI 创建 Artifact 后，你会在主聊天右侧看到一个专门的 Artifacts 窗口。你可以这样与它交互：
 
 - **编辑与迭代**：直接在聊天中要求 LLM 修改或迭代该内容，更新结果会立即显示在 Artifact 窗口中。你可通过 Artifact 左下角的版本选择器切换不同版本。每次编辑都会生成一个新版本，方便追踪变化
 - **自动更新**：Open WebUI 可能会根据你的后续消息更新现有 Artifact，窗口会显示最新内容
 - **操作按钮**：在 Artifact 右下角可以使用更多操作，例如复制内容或全屏打开 Artifact
+
+## 预览被允许做什么 {#what-a-preview-is-allowed-to-do}
+
+预览 iframe 上的沙箱由 **设置 > 界面** 下的四项设置组合而成，因此你无需改动 CSP，就能收紧或放宽生成的 HTML 可以做什么。
+
+| 设置项 | 默认值 | 允许什么 |
+| :--- | :--- | :--- |
+| **iframe Sandbox Allow Scripts** | 开启 | JavaScript 在预览内运行。大多数 Artifact 都需要它，关掉之后任何交互都会失效。 |
+| **iframe Sandbox Allow Forms** | 开启 | 预览内的表单可以被提交。 |
+| **iframe Sandbox Allow Downloads** | 开启 | 预览可以发起文件下载。 |
+| **iframe Sandbox Allow Same Origin** | 关闭 | 预览会被视为与你的 Open WebUI 同源。 |
+
+除非确有功能需要，否则请保持 **Allow Same Origin** 关闭。开启它之后，预览内的脚本与应用同源，也就是说它可以访问你的会话，而不再被限制在框架内。下方的[故障排查章节](#artifacts-preview-not-working-uncaught-securityerror)介绍了一个确实需要开启它的错误。
+
+另外三项关系到内容在自己的框架内能做什么，把它们关掉，是一种既渲染你并不信任的内容、又不给它任何行动能力的方式。
 
 ## 编辑 Artifacts
 
@@ -50,7 +65,7 @@ Open WebUI 中的 Artifacts 是一项受 Claude.AI Artifacts 启发的创新功�
 - 对于定向更新，可引用目标附近的唯一文本作为定位依据
 - 根据你的需求判断：是小范围修改更合适，还是整体重写更合适
 
-## 使用场景
+## 使用场景 {#editing-artifacts}
 
 Open WebUI 中的 Artifacts 能帮助不同团队快速高效地产出高质量工作成果。以下是一些适合本平台的例子：
 
@@ -62,7 +77,7 @@ Open WebUI 中的 Artifacts 能帮助不同团队快速高效地产出高质量�
   - 设计带效果指标的活动落地页
   - 创建用于广告创意或社交媒体发布的 SVG 图形
 
-## 你可以用 Open WebUI Artifacts 创建哪些项目
+## 你可以用 Open WebUI Artifacts 创建哪些项目 {#use-cases}
 
 Open WebUI 中的 Artifacts 让不同团队和个人能够快速高效地创建高质量成果。以下示例展示了它的多样性，也希望能激发你探索其潜力：
 
@@ -101,19 +116,21 @@ Open WebUI 中的 Artifacts 让不同团队和个人能够快速高效地创建�
 
 示例项目：制作一个讲述公司发展历史的交互式故事，使用滚动效果和动画增强阅读体验，并通过定向更新优化叙事内容，再利用版本选择器测试不同故事版本。
 
-## 故障排查
+## 故障排查 {#examples-of-projects-you-can-create-with-open-webuis-artifacts}
 
-### Artifacts 预览无法工作（Uncaught SecurityError）
+## 排查问题 {#troubleshooting}
+
+### Artifacts 预览无法工作（Uncaught SecurityError） {#artifacts-preview-not-working-uncaught-securityerror}
 
 如果你遇到聊天界面中代码预览不显示，并在浏览器控制台中看到类似 `Artifacts.svelte:40 Uncaught SecurityError` 的报错，这通常是某些环境配置下的跨域 iframe 限制造成的。
 
 **解决方案：**
 
 1. 前往 **Settings > Interface**
-2. 开启 **Allow Iframe Sandbox Same-Origin Access**
+2. 开启 **iframe Sandbox Allow Same Origin**
 3. 保存设置
 
-### 设置 CSP 后 Artifact 预览无法显示
+### 设置 CSP 后 Artifact 预览无法显示 {#artifact-preview-is-blank-after-setting-a-csp}
 
 如果你设置 [`IFRAME_CSP`](/reference/env-configuration#iframe_csp) 后预览停止渲染，可能是安全策略阻止了生成的 HTML 所需的内容。
 

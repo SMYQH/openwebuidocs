@@ -3,14 +3,14 @@ sidebar_position: 2
 title: "数据库分析"
 ---
 
-# 🗄️ 连接数据库并进行分析
+# 🗄️ 连接数据库并进行分析 {#connect-to-a-database-and-analyze-it}
 
 直接连接你的 PostgreSQL、MySQL 或 SQLite 数据库，让 AI 探索数据库结构、运行查询并产出洞察——无需自己编写 SQL。
 
 > **你：** $Database Analyst <br/>
 > 连接到 `db.example.com` 的 PostgreSQL 数据库，分析 `orders` 表。本季度我们销售最好的产品是什么？有什么趋势需要特别关注？
 
-## AI 的工作流程
+## AI 的工作流程 {#what-the-ai-does}
 
 1. 如需安装数据库驱动（`pip install psycopg2-binary` 或 `pymysql`）
 2. 使用你的凭据连接数据库
@@ -39,7 +39,7 @@ docker run -d --name open-terminal \
 然后在技能中设置从环境变量读取凭据。
 :::
 
-## 支持的数据库
+## 支持的数据库 {#supported-databases}
 
 | 数据库 | Python 驱动 | 安装命令 |
 | :--- | :--- | :--- |
@@ -49,7 +49,7 @@ docker run -d --name open-terminal \
 | Microsoft SQL Server | pymssql | `pip install pymssql` |
 | MongoDB | pymongo | `pip install pymongo` |
 
-## 技能内容
+## 技能内容 {#skill-content}
 
 将下面的内容复制到**工作区 → 技能 → 创建**：
 

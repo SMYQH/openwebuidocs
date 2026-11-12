@@ -3,7 +3,7 @@ sidebar_position: 0
 title: "多用户配置"
 ---
 
-# 为团队配置 Open Terminal
+# 为团队配置 Open Terminal {#setting-up-open-terminal-for-a-team}
 
 当你团队中的多人需要通过 Open WebUI 访问终端时，你有两种选择。
 
@@ -23,7 +23,7 @@ title: "多用户配置"
 
 ---
 
-## 方式 1：内置多用户模式
+## 方式 1：内置多用户模式 {#option-1-built-in-multi-user-mode}
 
 最简单的方式。添加一个设置，每个人会自动获得独立的工作区。
 
@@ -37,7 +37,7 @@ docker run -d --name open-terminal -p 8000:8000 \
 
 <!-- TODO: 截图——终端中的 Docker run 命令，并高亮 MULTI_USER=true 标志。 -->
 
-### 工作原理
+### 工作原理 {#what-happens}
 
 当有人通过 Open WebUI 使用终端时，Open Terminal 会自动：
 
@@ -50,7 +50,7 @@ docker run -d --name open-terminal -p 8000:8000 \
 
 <!-- TODO: 截图——并排显示两个视图：用户 A 的文件浏览器展示 /home/user-a/ 及其文件，用户 B 的文件浏览器展示 /home/user-b/ 及完全不同的文件。 -->
 
-### 独立与共享的内容
+### 独立与共享的内容 {#whats-shared-vs-separate}
 
 | | 每用户独立 | 共享 |
 | :--- | :--- | :--- |
@@ -90,7 +90,7 @@ flowchart LR
 
 ---
 
-## 方式 2：使用 Terminals 实现每用户独立容器
+## 方式 2：使用 Terminals 实现每用户独立容器 {#option-2-per-user-containers-with-terminals}
 
 对于较大规模部署或需要真正隔离的场景，[**Terminals**](../terminals/) 为每个用户提供完全独立于其他人的容器。
 
@@ -125,7 +125,7 @@ flowchart LR
 Terminals 需要 [Open WebUI 企业许可证](https://openwebui.com/enterprise)。许可证详情请参阅 [Terminals 仓库](https://github.com/open-webui/terminals)。
 :::
 
-## 相关链接
+## 相关链接 {#related}
 
 - [Terminals 概述 →](../terminals/)
 - [Terminals：Docker 后端 →](../terminals/)

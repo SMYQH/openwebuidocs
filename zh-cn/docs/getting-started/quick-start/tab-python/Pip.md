@@ -22,7 +22,7 @@ Open WebUI 现在运行在 [http://localhost:8080](http://localhost:8080)。
 3. 如果你想把数据存到指定位置：`DATA_DIR=./data open-webui serve`
 :::
 
-## 卸载
+## 卸载 {#uninstall}
 
 1. **卸载包：**
     ```bash

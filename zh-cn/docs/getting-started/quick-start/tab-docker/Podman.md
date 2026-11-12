@@ -1,8 +1,8 @@
-# 使用 Podman
+# 使用 Podman {#using-podman}
 
 Podman 是一个无守护进程的容器引擎，可用于开发、管理和运行 OCI 容器。
 
-## 基础命令
+## 基础命令 {#basic-commands}
 
 - **运行容器：**
 
@@ -16,7 +16,7 @@ Podman 是一个无守护进程的容器引擎，可用于开发、管理和运�
   podman ps
   ```
 
-## Podman 网络
+## Podman 网络 {#networking-with-podman}
 
 如果出现网络问题（尤其是在 rootless Podman 下），你可能需要调整网络桥接设置。
 
@@ -26,14 +26,14 @@ Podman 是一个无守护进程的容器引擎，可用于开发、管理和运�
 现代替代方案是 **[pasta](https://passt.top/passt/about/)**，它已成为 Podman 5.0+ 的默认方案。
 :::
 
-### 访问宿主机（本地服务）
+### 访问宿主机（本地服务） {#accessing-the-host-local-services}
 
 如果你把 Ollama 或其他服务直接运行在宿主机上，请使用特殊 DNS 名称 **`host.containers.internal`** 指向你的电脑。
 
-#### 现代方式（Pasta - Podman 5+ 默认）
+#### 现代方式（Pasta - Podman 5+ 默认） {#modern-approach-pasta---default-in-podman-5}
 通常无需额外参数，就可以通过 `host.containers.internal` 访问宿主机。
 
-#### 旧方式（Slirp4netns）
+#### 旧方式（Slirp4netns） {#legacy-approach-slirp4netns}
 如果你的 Podman 版本较旧，且不支持 `pasta`：
 1. 请先确认已安装 [slirp4netns](https://github.com/rootless-containers/slirp4netns)。
 2. 使用以下参数启动容器，以允许访问宿主回环地址：
@@ -42,13 +42,13 @@ Podman 是一个无守护进程的容器引擎，可用于开发、管理和运�
 podman run -d --network=slirp4netns:allow_host_loopback=true --name openwebui -p 3000:8080 -v open-webui:/app/backend/data ghcr.io/open-webui/open-webui:main
 ```
 
-### 连接配置
+### 连接配置 {#connection-configuration}
 进入 Open WebUI 后，打开 **设置 > 管理设置 > 连接**，将你的 Ollama API 连接设为：
 `http://host.containers.internal:11434`
 
 更多高级配置请参阅 Podman [官方文档](https://podman.io/)。
 
-## 卸载
+## 卸载 {#uninstall}
 
 如需卸载通过 Podman 运行的 Open WebUI，请执行以下步骤：
 

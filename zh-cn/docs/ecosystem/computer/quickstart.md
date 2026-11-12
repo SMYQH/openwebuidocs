@@ -3,11 +3,15 @@ title: "快速入门"
 sidebar_position: 3
 ---
 
-# 快速入门
+# 快速入门 {#quickstart}
+
+:::info 推荐配置
+Open WebUI Computer 正在逐步弃用。对于新的部署，请使用 [Open WebUI](/getting-started) 搭配 [Open Terminal](/features/open-terminal)。这些 Computer 指南仍会为现有安装保留。
+:::
 
 从零到在浏览器中看到真实文件，大约两分钟。你需要在存有工作的机器上有 Python 3.10+（macOS、Linux 或 Windows）。不需要 AI 密钥，不需要任何人的账户，不需要云服务。
 
-## 1. 安装并运行
+## 1. 安装并运行 {#1-install-and-run}
 
 ```bash
 pip install cptr
@@ -18,11 +22,11 @@ cptr run
 
 `cptr run` 在 `http://127.0.0.1:8000` 启动服务器，并在浏览器中打开一个一次性设置链接（`/?token=...`）。在无头机器上使用 `cptr run --headless`，然后手动打开打印的 URL。
 
-## 2. 创建账户
+## 2. 创建账户 {#2-create-your-account}
 
 设置页面要求输入用户名和密码。这是管理员账户，存储在本地机器上。一次性令牌仅在尚不存在账户时有效，所以其他人无法抢先注册。
 
-## 3. 打开一个文件夹
+## 3. 打开一个文件夹 {#3-open-a-folder}
 
 选择**打开文件夹**并选择机器上的任意文件夹：一个代码仓库、你的文档、一个项目目录。该文件夹现在成为一个**工作区**。Computer 显示文件夹本身，而非上传的副本。你可以在设置过程中跳过可选的 AI 连接，并在以后随时添加。
 
@@ -35,7 +39,7 @@ cptr run
 
 随时从工作区选择器添加更多文件夹。参见[工作区](/ecosystem/computer/workspace/workspaces)。
 
-## 4. 现在让它成为你的
+## 4. 现在让它成为你的 {#4-now-make-it-yours}
 
 几乎每个人都想要的两个升级：
 
@@ -44,7 +48,7 @@ cptr run
 
 如果机器是笔记本电脑或偶尔重启，设置[保持运行](/ecosystem/computer/phone-and-remote/keep-it-running)，这样服务器、终端和代理都能在你离开后继续工作。
 
-## 如果出了什么问题
+## 如果出了什么问题 {#if-something-didnt-work}
 
 - `cptr: command not found`：你的 shell 找不到 pip 的脚本目录。在你想要的 Python 环境中运行 `python -m pip install cptr`，或者重新打开终端。
 - 端口被占用：运行 `cptr run --port 8001`。

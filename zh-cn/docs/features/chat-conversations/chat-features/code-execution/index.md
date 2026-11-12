@@ -5,7 +5,7 @@ title: "代码执行"
 
 Open WebUI 直接在聊天界面中提供强大的代码执行能力，让你无需离开平台，就能把想法转化为可执行结果。
 
-## 主要特性
+## 主要特性 {#key-features}
 
 - **代码解释器能力**：允许模型在回复过程中自主编写并执行 Python 代码。通过 Native（Agentic）Mode 下的 `execute_code` 工具运行——这是唯一受支持的工具调用模式。旧版 Default Mode 仍保留基于 XML 的历史集成，但已不再支持；新部署应使用 Native Mode。
 
@@ -19,7 +19,7 @@ Open WebUI 直接在聊天界面中提供强大的代码执行能力，让你无
 
 这些执行能力连接了“对话”和“实现”之间的鸿沟，让你可以在与 AI 模型聊天时无缝探索思路、分析数据并创建可视内容。
 
-## 如何选择代码执行后端
+## 如何选择代码执行后端 {#choosing-a-code-execution-backend}
 
 Open WebUI 支持多种代码执行后端，适用于不同场景。选择哪一种，取决于你是需要轻量的浏览器端执行、完整 Python 环境，还是不受限制的 shell 访问。
 
@@ -27,7 +27,7 @@ Open WebUI 支持多种代码执行后端，适用于不同场景。选择哪一
 **[Open Terminal](#open-terminal)** 是推荐的生产级代码执行后端：完整的原生 Python、任意包、任意语言和 shell 访问，在 Docker 容器中隔离运行。**Pyodide** 和 **Jupyter** 现在是**旧版**引擎，保留用于零配置的聊天内使用，并非面向严肃工作负载的未来之选。
 :::
 
-### Pyodide（默认/旧版）
+### Pyodide（默认/旧版） {#pyodide-legacy}
 
 :::caution 旧版引擎
 Pyodide 是一个**旧版**代码执行引擎。它仍然是聊天内代码解释器的内置、零配置默认选项，是一个安全的浏览器沙箱，但已不再是推荐路径：超出基本分析范围的任何任务，请使用 **[Open Terminal](#open-terminal)**，它提供完整的原生 Python、任意包和 shell 访问。Pyodide 可能在未来版本中被弃用。
@@ -55,7 +55,7 @@ Pyodide 通过 WebAssembly 在浏览器内运行 Python。AI **无法安装额�
 Code Interpreter 开关与 Open Terminal 开关不能同时启用。启用其中一个会自动关闭另一个——它们目的相近，但后端不同。
 :::
 
-### Jupyter（旧版）
+### Jupyter（旧版） {#jupyter-legacy}
 
 :::caution 旧版引擎
 Jupyter 现在被视为**旧版**代码执行引擎。大多数场景推荐使用 Pyodide；若需要完整服务端执行能力，则推荐 Open Terminal。未来版本中，Jupyter 支持可能会被弃用。
@@ -83,7 +83,7 @@ Jupyter 提供完整 Python 环境，几乎能处理任何任务——创建文�
 
 完整文档请参阅 [Open Terminal 集成指南](/features/open-terminal)。
 
-### Terminals（多租户编排器）
+### Terminals（多租户编排器） {#terminals-multi-tenant-orchestrator}
 
 [Terminals](https://github.com/open-webui/terminals) 是一个多租户编排层，可为**每个用户**动态创建并管理独立的 Open Terminal 容器。Open Terminal 是单实例工具，而 Terminals 则是其上层扩展，负责完整生命周期：创建、路由、空闲清理和销毁。它需要 [企业许可证](/enterprise)。
 
@@ -102,7 +102,7 @@ Terminals 仍在积极开发中，尚未准备好用于生产环境。API、配�
 Terminals 使用 [Open WebUI 企业许可证](/enterprise) 授权，而不是 MIT。
 :::
 
-### 对比
+### 对比 {#comparison}
 
 | 考量项 | Pyodide | Jupyter（旧版） | Open Terminal | Terminals |
 | :--- | :--- | :--- | :--- | :--- |

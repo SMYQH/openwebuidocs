@@ -3,7 +3,7 @@ title: 自动化和集成
 sidebar_position: 1
 ---
 
-# 自动化和集成
+# 自动化和集成 {#automation-and-integrations}
 
 Open WebUI Computer 在浏览器标签页关闭后仍在继续工作。你可以从 Telegram 或 Slack 给它发消息，按计划运行任务，通过 webhook 从其他系统触发任务，将工作区暴露为 OpenAI 兼容的模型，以及通过 MCP 或 OpenAPI 服务器为代理提供额外工具。
 

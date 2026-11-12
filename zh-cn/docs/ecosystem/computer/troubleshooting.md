@@ -3,7 +3,7 @@ title: 故障排除
 sidebar_position: 12
 ---
 
-# 故障排除
+# 故障排除 {#troubleshooting}
 
 在下面找到你的症状（使用 Ctrl+F）。首先检查是否有明显问题：`curl http://127.0.0.1:8000/api/health` 可以告诉你服务器是否正常运行。
 
@@ -27,11 +27,11 @@ cptr run --port 8001
 
 要么找到并停止占用者：`lsof -i :8000`（macOS/Linux）或 `netstat -ano | findstr :8000`（Windows）。
 
-## 设置 URL 不起作用 / 我丢失了设置令牌
+## 设置 URL 不起作用 / 我丢失了设置令牌 {#the-setup-url-doesnt-work--i-lost-the-setup-token}
 
 设置令牌在 `cptr run` 启动时打印一次，设置 URL 仅在**尚不存在账户时**有效。如果你丢失了它，只需重新启动 `cptr run`：会打印一个新的令牌。如果已经存在账户，设置 URL 按设计失效；前往 `http://localhost:8000` 正常登录。
 
-## 我忘记了密码 / 我被锁定了
+## 我忘记了密码 / 我被锁定了 {#i-forgot-my-password--im-locked-out}
 
 如果存在其他管理员，他们可以在**设置 → 管理 → 用户**中重置你的密码。有两件事可能先会让你困惑：
 
@@ -43,7 +43,7 @@ cptr run --port 8001
 1. 从密码仍有效的时期恢复 `app.db` 的备份。
 2. 最后的手段：使用 SQLite 客户端打开 `app.db`，删除用户行（account 和 auth 表），然后重新启动。首次运行设置会再次触发，你可以创建一个新的管理员。你的配置（`config.toml`）和工作区聊天（`<workspace>/.cptr/chats/`）会保留；只有账户被重新创建。
 
-## 我的手机无法访问
+## 我的手机无法访问 {#my-phone-cant-reach-it}
 
 手机上的 `localhost` 指的是手机本身。它永远无法访问你的电脑。
 
@@ -51,11 +51,11 @@ cptr run --port 8001
 - **离家在外：** 你需要 Tailscale 或隧道；参见[手机和远程访问](/ecosystem/computer/phone-and-remote/)。
 - **主机休眠：** 休眠的机器无法提供服务；参见[保持运行](/ecosystem/computer/phone-and-remote/keep-it-running)。
 
-## Windows 上终端无法打开（VCRUNTIME140.dll）
+## Windows 上终端无法打开（VCRUNTIME140.dll） {#terminal-wont-open-on-windows-vcruntime140dll}
 
 终端后端需要 Microsoft Visual C++ Redistributable。从 Microsoft 安装 x64 版本，重启机器，然后重新启动 `cptr run`。
 
-## Docker：设置向导重现 / 我的状态丢失了
+## Docker：设置向导重现 / 我的状态丢失了 {#docker-setup-wizard-reappeared--my-state-is-gone}
 
 容器启动时没有挂载 `/data` 卷，所以看起来像是全新安装。你的数据几乎肯定还在卷中；诊断时切勿删除它。使用附加的卷重新创建容器：
 
@@ -65,11 +65,11 @@ docker run -d -p 8000:8000 -v cptr-data:/data ghcr.io/open-webui/computer:latest
 
 你的账户、工作区和设置都会恢复。
 
-## Docker：SQLite 无法写入 /data
+## Docker：SQLite 无法写入 /data {#docker-sqlite-cant-write-data}
 
 你绑定挂载了一个容器用户无法写入的主机目录。修复主机目录的所有权，或者（更简单更可靠）使用命名卷（`-v cptr-data:/data`）而不是绑定挂载。不要为了走捷径而以特权模式运行容器。
 
-## 我的项目文件夹在 Docker 中不可见
+## 我的项目文件夹在 Docker 中不可见 {#my-project-folder-isnt-visible-in-docker}
 
 容器只看到你挂载到其中的内容。将你的项目添加为绑定挂载，并使用**容器**路径作为工作区路径：
 
@@ -79,7 +79,7 @@ docker run -d -p 8000:8000 -v cptr-data:/data -v ~/code/myproject:/workspace/myp
 
 然后添加 `/workspace/myproject` 作为工作区。
 
-## 代理模型在选择器中缺失 / 检测未就绪
+## 代理模型在选择器中缺失 / 检测未就绪 {#agent-model-missing-from-the-selector--detection-not-ready}
 
 在**设置 → 管理 → 代理**中检查配置文件状态；每个状态都有特定的修复方法：
 
@@ -89,7 +89,7 @@ docker run -d -p 8000:8000 -v cptr-data:/data -v ~/code/myproject:/workspace/myp
 
 检测结果会缓存约 30 秒，所以修复后稍等片刻。每个代理的完整设置：[编码代理](/ecosystem/computer/ai/coding-agents)。
 
-## 我的机器人不回复
+## 我的机器人不回复 {#my-bot-doesnt-answer}
 
 按此列表排查：
 
@@ -101,11 +101,11 @@ docker run -d -p 8000:8000 -v cptr-data:/data -v ~/code/myproject:/workspace/myp
 
 各平台完整设置：[消息机器人](/ecosystem/computer/automate/messaging-bots)。
 
-## 终端或聊天在反向代理后面断开连接
+## 终端或聊天在反向代理后面断开连接 {#terminal-or-chat-disconnects-behind-my-reverse-proxy}
 
 Computer 使用 Socket.IO：如果你的代理不转发 WebSocket 升级头（`Upgrade` / `Connection`），终端和流式传输会中断。将它们添加到你的代理配置中；参见 nginx/Caddy/Traefik 配置片段：[反向代理](/ecosystem/computer/phone-and-remote/reverse-proxy)。
 
-## 服务器是否健康？
+## 服务器是否健康？ {#is-the-server-healthy}
 
 ```bash
 curl http://127.0.0.1:8000/api/health

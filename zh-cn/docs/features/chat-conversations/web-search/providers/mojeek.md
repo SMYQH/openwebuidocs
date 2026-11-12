@@ -23,7 +23,7 @@ title: "Mojeek"
 
 ## Mojeek Search API
 
-### 设置
+### 设置 {#setup}
 
 1. 访问 [Mojeek Search API 页面](https://www.mojeek.com/services/search/web-search-api/) 获取 `API key`
 2. 拿到 `API key` 后，打开 `Open WebUI 管理面板`，点击 `Settings`，再进入 `Web Search`
@@ -31,7 +31,7 @@ title: "Mojeek"
 4. 在 `Mojeek Search API Key` 中填写该 `API key`
 5. 点击 `Save`
 
-### Docker Compose 设置
+### Docker Compose 设置 {#docker-compose-setup}
 
 将以下环境变量加入你的 Open WebUI `docker-compose.yaml`：
 

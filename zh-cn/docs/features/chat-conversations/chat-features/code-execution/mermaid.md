@@ -3,13 +3,13 @@ sidebar_position: 4
 title: "MermaidJS 渲染"
 ---
 
-## 🌊 Open WebUI 中的 MermaidJS 渲染支持
+## 🌊 Open WebUI 中的 MermaidJS 渲染支持 {#mermaidjs-rendering-support-in-open-webui}
 
-## 概览
+## 概览 {#overview}
 
 Open WebUI 支持在聊天界面中直接渲染美观的 MermaidJS 图表、流程图、饼图等内容。MermaidJS 是一个非常强大的复杂信息与思路可视化工具，而当它与大语言模型（LLM）的能力结合时，也会成为生成与探索新想法的有力助手。
 
-## 在 Open WebUI 中使用 MermaidJS
+## 在 Open WebUI 中使用 MermaidJS {#using-mermaidjs-in-open-webui}
 
 若要生成 MermaidJS 图表，你只需在任意聊天中要求 LLM 使用 MermaidJS 创建图表或流程图。例如，你可以让 LLM：
 
@@ -18,20 +18,20 @@ Open WebUI 支持在聊天界面中直接渲染美观的 MermaidJS 图表、流�
 
 请注意，若要让 LLM 的回复被正确渲染，其输出必须以 `mermaid` 开头，后面紧跟 MermaidJS 代码。你可以参考 [MermaidJS 文档](https://mermaid.js.org/intro/) 以确保语法正确，也可以给 LLM 提供更结构化的提示词，引导它生成质量更高的 MermaidJS 语法。
 
-## 在聊天中直接可视化 MermaidJS 代码
+## 在聊天中直接可视化 MermaidJS 代码 {#visualizing-mermaidjs-code-directly-in-the-chat}
 
 当你请求 MermaidJS 可视化时，大语言模型（LLM）会生成所需代码。只要代码使用了有效的 MermaidJS 语法，Open WebUI 就会自动在聊天界面中渲染出对应图形。
 
 如果模型生成了 MermaidJS 语法，但图没有成功渲染，通常说明代码里存在语法错误。别担心——回复完整生成后，系统会提示你相关错误。如果发生这种情况，请参考 [MermaidJS 文档](https://mermaid.js.org/intro/) 查找问题，并据此调整提示词。
 
-## 与可视化结果交互
+## 与可视化结果交互 {#interacting-with-your-visualization}
 
 一旦图形显示出来，你可以：
 
 - 放大或缩小，以便更仔细地查看
 - 点击显示区域右上角的复制按钮，复制生成该图形所使用的原始 MermaidJS 代码
 
-### 示例
+### 示例 {#example}
 
 ```mermaid
 graph TD;

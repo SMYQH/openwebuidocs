@@ -6,7 +6,7 @@ title: "更新 Open WebUI"
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# 更新 Open WebUI
+# 更新 Open WebUI {#updating-open-webui}
 
 **保持最新，同时不丢失你的数据。**
 
@@ -14,7 +14,7 @@ import TabItem from '@theme/TabItem';
 
 ---
 
-## 选择更新策略
+## 选择更新策略 {#choose-your-update-strategy}
 
 在执行任何命令前，先决定你想如何跟踪版本发布。最佳方案取决于你如何使用 Open WebUI。
 
@@ -24,7 +24,7 @@ import TabItem from '@theme/TabItem';
 | **共享 / 团队实例** | 固定特定版本（例如 `:vX.Y.Z`），并使用 [Diun](#diun) 接收更新通知 |
 | **生产 / 关键系统** | 固定版本，升级前查看[发布说明](https://github.com/open-webui/open-webui/releases)，先在预发布环境测试 |
 
-### `:main` 与固定版本
+### `:main` 与固定版本 {#main-vs-pinned-versions}
 
 `:main` 标签始终指向**最新构建**。它使用方便，但也可能在没有预告的情况下包含破坏性变更。
 
@@ -40,7 +40,7 @@ ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 
 ---
 
-## 更新前准备
+## 更新前准备 {#before-you-update}
 
 1. **备份数据**（见下方 [备份与恢复](#backup--restore)）。尤其在遇到包含数据库迁移的版本时更要如此，因为回滚通常不容易。
 2. **查看 [发布说明](https://github.com/open-webui/open-webui/releases)**，确认是否有破坏性变更。
@@ -52,7 +52,7 @@ ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 
 ---
 
-## 手动更新
+## 手动更新 {#manual-update}
 
 <Tabs groupId="setup-method">
   <TabItem value="docker-run" label="Docker Run" default>
@@ -120,7 +120,7 @@ open-webui serve
 如果没有持久化的 `WEBUI_SECRET_KEY`，容器每次重建都会生成新密钥，导致所有会话失效。可通过 `openssl rand -hex 32` 生成，并在后续更新中持续复用。详情见[环境变量参考](/reference/env-configuration)。
 :::
 
-### 验证更新
+### 验证更新 {#verify-the-update}
 
 更新后，请确认一切工作正常：
 
@@ -134,7 +134,7 @@ open-webui serve
 
 ---
 
-## 回滚
+## 回滚 {#rolling-back}
 
 如果更新引发问题，你可以通过固定旧版本标签回退到之前的版本。
 
@@ -183,7 +183,7 @@ open-webui serve
 
 ---
 
-## 持续接收更新通知
+## 持续接收更新通知 {#stay-notified-about-updates}
 
 与其手动反复检查，不如使用工具来监控新版本。下面按“最安全”到“最省心”的顺序列出几种选择。
 
@@ -271,7 +271,7 @@ docker run -d --name watchtower --restart unless-stopped \
 - **已上传文件**：文档、图片、知识库内容
 - **生成内容**：图片生成结果、导出数据
 
-### 备份
+### 备份 {#backup}
 
 ```bash
 docker run --rm -v open-webui:/data -v $(pwd):/backup \
@@ -280,7 +280,7 @@ docker run --rm -v open-webui:/data -v $(pwd):/backup \
 
 建议在**每次更新前**以及固定周期（按你的使用频率决定每天或每周）进行备份。
 
-### 恢复
+### 恢复 {#restore}
 
 :::caution
 恢复命令会在解压前**删除卷中的所有内容**。请确认你恢复的是正确的备份文件。
@@ -299,7 +299,7 @@ docker start open-webui
 
 ---
 
-## 相关指南
+## 相关指南 {#related-guides}
 
 - [扩展 Open WebUI](/getting-started/advanced-topics/scaling)：多 worker 与多实例部署
 - [连接错误](/troubleshooting/connection-error)：更新后连通性问题排查

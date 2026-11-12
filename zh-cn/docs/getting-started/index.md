@@ -6,7 +6,7 @@ title: "🚀 开始使用"
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 开始使用 Open WebUI
+# 开始使用 Open WebUI {#getting-started-with-open-webui}
 
 <ThemedImage
   alt="开始使用 Open WebUI：安装、连接提供商、开始聊天，然后扩展到应用安装、代理、分享和更新"
@@ -23,7 +23,7 @@ Open WebUI 几乎可以运行在任何环境中（Docker、Kubernetes、pip、�
 
 ---
 
-## ⏱️ 快速开始
+## ⏱️ 快速开始 {#quick-start}
 
 **安装 Open WebUI，连接模型，立即开聊。**
 
@@ -42,7 +42,7 @@ Open WebUI 几乎可以运行在任何环境中（Docker、Kubernetes、pip、�
 
 ---
 
-## 📱 把 Open WebUI 装成 App
+## 📱 把 Open WebUI 装成 App {#open-webui-as-an-app}
 
 **已经在跑 Open WebUI？把它安装成任意设备上的应用。**
 
@@ -58,7 +58,7 @@ Open WebUI 是一个渐进式 Web 应用（PWA）。你可以把它添加到手�
 
 ---
 
-## ✨ 新用户必读
+## ✨ 新用户必读 {#essentials-for-open-webui}
 
 **已经安装并开始聊天了——接下来呢？**
 
@@ -76,7 +76,7 @@ Open WebUI 是一个渐进式 Web 应用（PWA）。你可以把它添加到手�
 
 ---
 
-## 🤖 连接 Agent
+## 🤖 连接 Agent {#connect-an-agent}
 
 **不止连接模型提供商。还可以连接自主 AI Agent。**
 
@@ -91,7 +91,7 @@ Open WebUI 是一个渐进式 Web 应用（PWA）。你可以把它添加到手�
 
 ---
 
-## 共享 Open WebUI
+## 共享 Open WebUI {#sharing-open-webui}
 
 **一次部署，让整个组织都能使用 AI。**
 
@@ -108,7 +108,7 @@ Open WebUI 不只是本地 AI 界面，更可以作为团队的集中式 AI 操�
 
 ---
 
-## 🛠️ 高级主题
+## 🛠️ 高级主题 {#advanced-topics}
 
 **扩展、观测并自定义你的部署。**
 
@@ -124,7 +124,7 @@ Open WebUI 不只是本地 AI 界面，更可以作为团队的集中式 AI 操�
 
 ---
 
-## 🔄 更新
+## 🔄 更新 {#updating}
 
 **通过最新功能和安全修复保持版本最新。**
 

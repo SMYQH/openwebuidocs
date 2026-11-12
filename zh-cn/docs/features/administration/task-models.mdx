@@ -1,0 +1,89 @@
+---
+sidebar_position: 10
+title: "Task Models"
+---
+
+# Task Models
+
+Open WebUI 会在后台进行一些规模较小的模型调用，与用户正在等待的答案分开进行。它们用于撰写聊天标题、生成标签、建议后续消息、产出自动补全的灰色提示文字、把一条消息改写成知识检索或 Web 搜索查询、把一条消息改写成图像提示词，以及在开启[上下文压缩](/troubleshooting/context-window#the-built-in-option-context-compaction)时总结较早的消息。
+
+默认情况下，这些工作全部运行在用户正在对话的那个模型上。在昂贵的旗舰模型上，这是一笔没人预期的账单；在缓慢的本地模型上，它会让整个界面显得迟滞。把后台工作指向一个小而快的模型，是管理员在这里能做的最有价值的改动。
+
+以下设置位于 **Settings > Admin > Interface**。
+
+---
+
+## 选择任务模型 {#choosing-the-task-model}
+
+**Tasks** 区域包含两个选择器。Open WebUI 会根据聊天模型来自的连接类型在两者之间选择：
+
+| 字段 | 环境变量 | 聊天模型来自下列哪种连接时使用 |
+| :--- | :--- | :--- |
+| **Local Task Model** | [`TASK_MODEL`](/reference/env-configuration#task_model) | 类型标为 **Local** 的连接（Ollama 以及你标记为本地的一切） |
+| **External Task Model** | [`TASK_MODEL_EXTERNAL`](/reference/env-configuration#task_model_external) | 所有类型不是 **Local** 的聊天模型，包括 pipe 与 function 模型，以及没有连接类型的模型 |
+
+两者都默认为 **Current Model**，即后台工作运行在聊天自身的模型上。如果你指定的模型不可用，后台工作会回退到聊天的模型，而不是直接失败。
+
+:::tip 该选什么
+要小、要快，并且**不要用推理模型**。推理模型在给出三个词的标题之前会花上几秒思考，而那些思考 token 也要付费。
+
+- **External Task Model**：`gpt-5.4-nano`、`gemini-3.5-flash-lite`、`claude-haiku-4-5-20251001`。
+- **Local Task Model**：`qwen3.5:2b`、`gemma4:e2b`、`llama3.2:3b`。
+
+主要的聊天体验不会改变，只是后台工作不再拖后腿。
+:::
+
+---
+
+## 任务模型参数 {#task-model-parameters}
+
+同一 **Tasks** 区域中的 **Task Model Parameters > Configure** 会打开你在模型上早已熟悉的高级参数控件，并把它们应用到每一个后台请求。对应的环境变量是 [`TASK_MODEL_PARAMS`](/reference/env-configuration#task_model_params)，它接受一个 JSON 对象，例如 `{"max_tokens":4000,"temperature":0.3}`。
+
+留空则后台请求的行为与以往完全一致：任务调用在任务模型的模型编辑器中设置了 `max_tokens` 时使用该值，未设置时使用 1000 个输出 token，其他参数一概不传。上下文压缩在 **Chat** 下有自己的 **Context Compaction Model** 选择器（`CONTEXT_COMPACTION_MODEL`，默认为 Current Model），并不使用本地或外部任务模型。除非在这里设置了 `max_tokens`，否则它的摘要没有输出长度上限。
+
+在以下情况下使用它：
+
+- **返回的标题被截断。** 这是使用推理型任务模型的典型症状。思考同样计入那 1000 个 token，因此在写出任何答案之前预算可能已经耗尽。请提高 `max_tokens` 或调低 `reasoning_effort`。
+- **后台调用花费超出预期。** 标签、后续消息、查询和自动补全请求本身都不带输出上限。设置 `max_tokens` 就能一次性为它们全部设定上限。
+- **后台输出过于发散。** 调低 `temperature`，让标题和标签更稳定。
+
+:::warning 设置任何一项都会取代内置限制
+只要设置了任意一个参数，内置的 1000 token 标题上限就会被取消。如果你仍然需要上限，请在设置中包含 `max_tokens`。表情符号生成是唯一的例外：它始终请求 4 个 token，并忽略此设置。
+:::
+
+面板中有五项控件对后台请求不起作用：**Stream Chat Response**、**Stream Delta Chunk Size**、**Function Calling**、**Reasoning Tags** 和 **Context Compaction Threshold**。在这里设置它们不会改变任何东西。
+
+后台请求还会收到任务模型在其模型编辑器中设置的逐模型参数，键冲突时以 `TASK_MODEL_PARAMS` 为准。在 Ollama 连接上，`keep_alive`、`format` 和 `think` 是例外：在任务模型编辑器中设置的值会覆盖 `TASK_MODEL_PARAMS` 中的同名键。用户的按聊天和按账户[聊天参数](/features/chat-conversations/chat-features/chat-params)永远不会传到这里，全局的[模型默认值](/features/workspace/models#global-model-defaults-admin)同样不会。
+
+---
+
+## 单独关闭某项任务 {#turning-individual-tasks-off}
+
+每项后台任务在同一面板的 **Generation** 下都有一个开关，并对应一个环境变量：
+
+| 任务 | 管理员开关 | 环境变量 |
+| :--- | :--- | :--- |
+| 聊天标题生成 | **Title Generation** | [`ENABLE_TITLE_GENERATION`](/reference/env-configuration#enable_title_generation) |
+| 标签生成 | **Tags Generation** | [`ENABLE_TAGS_GENERATION`](/reference/env-configuration#enable_tags_generation) |
+| 后续消息建议 | **Follow Up Generation** | [`ENABLE_FOLLOW_UP_GENERATION`](/reference/env-configuration#enable_follow_up_generation) |
+| 自动补全*（随用户输入触发）* | **Autocomplete Generation** | [`ENABLE_AUTOCOMPLETE_GENERATION`](/reference/env-configuration#enable_autocomplete_generation) |
+| 面向知识检索的查询改写 | **Retrieval Query Generation** | [`ENABLE_RETRIEVAL_QUERY_GENERATION`](/reference/env-configuration#enable_retrieval_query_generation) |
+| 面向 Web 搜索的查询改写 | **Web Search Query Generation** | [`ENABLE_SEARCH_QUERY_GENERATION`](/reference/env-configuration#enable_search_query_generation) |
+
+关闭 **Title Generation**、**Tags Generation** 或 **Follow Up Generation**，也会在每个用户的 **Settings > Interface** 中隐藏对应的开关。
+
+**Web Search Query Generation** 只在开启 Web 搜索时才会显示。
+
+图像提示词生成改为在 **Settings > Admin > Images** 中关闭（[`ENABLE_IMAGE_PROMPT_GENERATION`](/reference/env-configuration#enable_image_prompt_generation)）。
+
+:::tip 硬件较弱时
+第一个该关掉的就是自动补全。它随用户输入而触发，因此一个迟缓的任务模型会让提示框变得像糖浆一样黏滞。
+:::
+
+---
+
+## 修改提示词 {#changing-the-prompts}
+
+大多数任务的提示词位于 **Generation** 下，默认都为空，表示使用内置提示词。知识检索与 Web 搜索共用一个 **Query Generation Prompt**；**Image Prompt Generation Prompt** 位于 Generation 下（当其开关在 Images 标签页中处于开启状态时）；**Context Compaction Prompt** 则位于 **Chat** 下。[环境变量配置参考的 Tasks 章节](/reference/env-configuration#tasks)给出了每个内置提示词的完整文本及其可用的占位符。
+
+这里值得了解[提示词修饰符](/features/workspace/prompts)，因为任务提示词常常需要应对粘贴进来的文档和长长的代码块。

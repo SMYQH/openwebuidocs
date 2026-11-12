@@ -3,7 +3,7 @@ sidebar_position: 1
 title: "数据报告"
 ---
 
-# 📊 将原始数据转化为精美报告
+# 📊 将原始数据转化为精美报告 {#turn-raw-data-into-a-polished-report}
 
 上传杂乱的数据，AI 会清洗、分析、建立图表，并生成可下载的 PDF 报告。
 
@@ -11,7 +11,7 @@ title: "数据报告"
 > *（拖拽 `survey_responses.csv` 到文件浏览器）* <br/>
 > 分析这份问卷数据，为我们的团队会议制作一份报告。
 
-## AI 的工作流程
+## AI 的工作流程 {#what-the-ai-does}
 
 1. 读取 CSV 并识别数据质量问题
 2. 清理数据（修复格式、删除重复、处理缺失值）
@@ -24,7 +24,7 @@ title: "数据报告"
 
 {/* TODO: Screenshot — A page inside the generated PDF showing a bar chart, key findings, and a summary table. */}
 
-## 技能内容
+## 技能内容 {#skill-content}
 
 将下面的内容复制到**工作区 → 技能 → 创建**：
 

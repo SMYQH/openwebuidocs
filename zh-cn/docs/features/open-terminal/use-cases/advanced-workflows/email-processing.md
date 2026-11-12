@@ -3,14 +3,14 @@ sidebar_position: 4
 title: "邮件处理"
 ---
 
-# 📧 处理一批邮件
+# 📧 处理一批邮件 {#process-a-folder-of-emails}
 
 上传一批 `.eml` 文件，获得一份包含待办事项和截止日期的结构化电子表格。
 
 > **你：** $Email Processor <br/>
 > 处理 /project-emails 文件夹，提取所有待办事项和截止日期。
 
-## AI 的工作流程
+## AI 的工作流程 {#what-the-ai-does}
 
 1. 列出文件夹中所有 `.eml` 文件
 2. 读取每封邮件：头部（发件人、收件人、主题、日期）和正文
@@ -23,7 +23,7 @@ title: "邮件处理"
 
 {/* TODO: Screenshot — The summary output listing the 5 most critical action items with their deadlines and which email they came from. */}
 
-## 技能内容
+## 技能内容 {#skill-content}
 
 将下面的内容复制到**工作区 → 技能 → 创建**：
 

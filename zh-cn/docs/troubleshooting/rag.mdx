@@ -1,6 +1,8 @@
 ---
 sidebar_position: 3
 title: "RAG"
+sidebar_label: "RAG"
+description: "排查 Open WebUI 中文档回答缺失、上传失败、上下文超限以及知识检索问题。"
 ---
 
 检索增强生成（RAG）让语言模型能够围绕外部内容——文档、知识库等——进行推理：先检索相关信息，再把它送入模型上下文。当结果不符合预期（例如模型“幻觉”或遗漏关键信息）时，问题往往并不在模型本身，而在上下文链路。
@@ -9,7 +11,7 @@ title: "RAG"
 
 ---
 
-## 按场景推荐设置
+## 按场景推荐设置 {#recommended-settings-by-scenario}
 
 RAG 性能很大程度上取决于你的模型配置。默认值较为保守以保证兼容性，但针对具体部署调优后效果会好得多。所有设置均在 **管理员面板 > 设置 > 文档** 中配置。
 
@@ -17,9 +19,32 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 如果你的模型使用 **原生函数调用**，设置 [`ENABLE_KB_EXEC=True`](/reference/env-configuration#enable_kb_exec) 会让知识库体验明显更好。它会给模型提供一套类 shell 的接口（`ls`、`tree`、`grep`、`cat`、按行读）来操作知识内容，能力强的模型会以一种比单一搜索工具更可靠的方式把它们串起来。在 Default 模式下它没有任何效果。参见 [类文件系统访问](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
 :::
 
-### 本地模型，上下文受限（≤ 8K tokens）
+### 本地模型，上下文受限（≤ 8K tokens） {#local-models-with-constrained-context--8k-tokens}
 
 适用于在消费级硬件上运行的 Ollama 模型（Llama 3.1 8B、Qwen 2.5 7B、Gemma 3 4B、Phi-3 Mini 等），上下文窗口有限。
+
+#### 14. 附加链接或 YouTube 视频失败 {#14-attaching-a-link-or-a-youtube-video-fails}
+
+附加某个网页或 YouTube 视频时返回了错误提示。消息会指出失败的具体环节：链接无法读取会指明是哪个链接，YouTube 字幕被拒绝会给出原因，而提到知识库的消息则表示内容已经读取成功，只是保存失败。
+
+`[ERROR: Could not read content from <url>]` 表示什么都没有附加成功。常见原因有：站点拦截了请求，或只有在 JavaScript 执行后才提供内容——这可以由 [`WEB_LOADER_ENGINE=playwright`](../reference/env-configuration.mdx#web_loader_engine) 处理；Open WebUI 没有被告知要使用的代理，参见 [`WEB_SEARCH_TRUST_ENV`](../reference/env-configuration.mdx#web_search_trust_env)；以及地址被有意拒绝——私有地址、回环地址、云元数据端点以及任何匹配 [`WEB_FETCH_FILTER_LIST`](../reference/env-configuration.mdx#web_fetch_filter_list) 的地址都从不会被请求。
+
+YouTube 附加项就是视频的字幕，因此没有可用字幕的视频根本无法附加。当消息显示 YouTube 阻止了来自你服务器地址的请求时（在云服务商网段中很常见），请通过 [`YOUTUBE_LOADER_PROXY_URL`](../reference/env-configuration.mdx#youtube_loader_proxy_url) 转发。当字幕存在但不是所请求的语言时，把你的语言加入 [`YOUTUBE_LOADER_LANGUAGE`](../reference/env-configuration.mdx#youtube_loader_language)。上传者关闭的字幕、年龄限制以及不可观看的视频则无法绕过。
+
+#### 15. 附加单个文件时没有返回来源 {#15-attaching-a-single-file-returns-no-sources}
+
+用 `#` 附加单个文件时检索不到任何内容，而附加包含该文件的知识库则一切正常。
+
+**问题所在**：属于某个知识库的文件会被索引两次，一次随知识库索引，一次单独索引。单独附加它只会检索它自己的那份索引，而在向量数据库迁移、部分重置或直接在向量数据库中删除之后，这份索引可能已经丢失。
+
+**解决方案：**
+
+1. 在 **设置 > 管理 > 文档 > 重建知识库与记忆向量索引** 处执行**重新索引**。这会重建每个知识库、其中每个文件的单文件索引，以及每位用户的记忆。它会重新提取并重新嵌入全部内容，因此请预留足够时间；如果使用的是付费嵌入模型，还要考虑相应费用。
+2. 如果文件不属于任何知识库，请**重新上传**，因为重新索引只覆盖知识库。
+
+---
+
+通过优化这些方面（提取、嵌入、检索和模型上下文），你可以显著提升 LLM 处理你的文档时的准确度。
 
 | 设置 | 值 | 原因 |
 |------|-----|------|
@@ -34,7 +59,7 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 分块大小为 1000 tokens、Top K 为 5 时，RAG 会注入约 5000 tokens 的检索内容。加上系统提示词和对话历史——如果模型的上下文窗口为 8K，留给对话本身的大约只有 2–3K tokens。如果后续问题被截断，请适当降低 Top K。
 :::
 
-### 云模型，大上下文（32K+ tokens）
+### 云模型，大上下文（32K+ tokens） {#cloud-models-with-large-context-32k-tokens}
 
 适用于 OpenAI（GPT-4o、GPT-5）、Anthropic（Claude）、Google（Gemini）、DeepSeek 及其他 API 提供商，上下文窗口为 32K–1M+ tokens。
 
@@ -51,7 +76,7 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 如果你使用的是单个中小型文档（不超过约 50 页）且模型上下文较大，完整上下文模式的效果通常优于分块检索，因为模型能看到全部内容而没有检索遗漏。可在聊天设置中按对话切换。
 :::
 
-### 混合环境（本地 + 云端）
+### 混合环境（本地 + 云端） {#mixed-environment-local--cloud}
 
 如果你同时使用本地和云端模型，按最低公分母配置，并在每个模型或每次对话时覆盖：
 
@@ -65,7 +90,7 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 
 ---
 
-## 嵌入模型推荐
+## 嵌入模型推荐 {#embedding-model-recommendations}
 
 嵌入模型决定检索质量。正确的选择取决于你的部署场景：
 
@@ -80,9 +105,9 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 
 ---
 
-## 常见 RAG 问题与修复方法
+## 常见 RAG 问题与修复方法 {#common-rag-issues-and-how-to-fix-them}
 
-### 1. 模型“看不到”你的内容
+### 1. 模型“看不到”你的内容 {#1-the-model-cant-see-your-content}
 
 这是最常见的问题，通常发生在内容导入阶段。模型并不是故意胡编，而是它根本没有拿到正确的内容。
 
@@ -100,7 +125,7 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 
 ---
 
-### 2. 只用了文档中的一小部分内容
+### 2. 只用了文档中的一小部分内容 {#2-only-a-small-part-of-the-document-is-being-used}
 
 Open WebUI 默认假设模型上下文窗口有限。例如很多本地模型（包括 Ollama 默认模型）只有 2048 token。正因如此，Open WebUI 会积极裁剪检索到的内容，以便把它塞进可用窗口中。
 
@@ -117,7 +142,7 @@ Open WebUI 默认假设模型上下文窗口有限。例如很多本地模型（
 
 ---
 
-### 3. Token 上限太小
+### 3. Token 上限太小 {#3-token-limit-is-too-short}
 
 即使检索正常，你的模型也可能无法真正处理收到的全部内容——因为它的上下文窗口根本装不下。
 
@@ -152,7 +177,7 @@ Open WebUI 默认假设模型上下文窗口有限。例如很多本地模型（
 
 ---
 
-### 4. 嵌入模型质量差或不匹配
+### 4. 嵌入模型质量差或不匹配 {#4-embedding-model-is-low-quality-or-mismatched}
 
 嵌入差 = 检索差。如果你的向量表示质量不够，retriever 就拿不到正确内容——无论后面的 LLM 多强都没用。
 
@@ -187,7 +212,7 @@ Open WebUI 默认假设模型上下文窗口有限。例如很多本地模型（
 
 ---
 
-### 6. 上传限制与约束
+### 6. 上传限制与约束 {#6-upload-limits-and-restrictions}
 
 Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用。不同上传方式受限方式不同：
 
@@ -207,7 +232,7 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
 
 ---
 
-### 7. Chunk 过于碎片化或太小
+### 7. Chunk 过于碎片化或太小 {#7-fragmented-or-tiny-chunks}
 
 使用 **Markdown Header Splitter** 时，文档有时会被切得很碎（例如只剩一条目录项或一个很短的小标题）。这类小 chunk 往往缺乏足够语义上下文，嵌入模型难以准确表示，最终导致 RAG 效果差，而且还带来额外开销。
 
@@ -219,7 +244,7 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
 
 ---
 
-### 8. 追问越来越慢（KV Cache 失效）
+### 8. 追问越来越慢（KV Cache 失效） {#8-slow-follow-up-responses-kv-cache-invalidation}
 
 如果首轮回答很快，但后续追问越来越慢，你大概率遇到了 **KV Cache invalidation**。
 
@@ -334,7 +359,7 @@ CUDA out of memory. Tried to allocate X MiB. GPU has a total capacity of Y GiB o
 
 ---
 
-### 10b. 嵌入阶段的 429 限流错误
+### 10b. 嵌入阶段的 429 限流错误 {#10b-429-rate-limit-errors-during-embedding}
 
 当你使用**远程/外部嵌入提供商**（OpenAI、Azure OpenAI 等），并启用了 [`ENABLE_ASYNC_EMBEDDING`](/reference/env-configuration#enable_async_embedding) 时，在批量导入文档期间可能会在日志里看到 HTTP 429 “Too Many Requests”：
 
@@ -358,7 +383,7 @@ Error generating embeddings: 429 Rate limit reached
 3. **关闭异步嵌入**：
    如果限流问题始终存在，可以把 `ENABLE_ASYNC_EMBEDDING` 设为 `False`，按顺序处理嵌入（更慢，但更稳定）。
 
-### 11. PDF OCR 没有提取出图片中的文字
+### 11. PDF OCR 没有提取出图片中的文字 {#11-pdf-ocr-not-extracting-text-from-images}
 
 如果包含图片文字的 PDF 上传后返回空内容：
 
@@ -390,55 +415,6 @@ INFO:     Child process [12] died
 
 在多 worker 场景下，这通常有**两类不同原因**：
 
-#### 原因 A：ChromaDB SQLite + Fork（瞬时崩溃）
-
-如果你使用的是**默认 ChromaDB**（本地 SQLite 支持的 `PersistentClient`），并且设置了 `UVICORN_WORKERS > 1`，那么崩溃原因就是 SQLite **不具备 fork-safe 特性**。uvicorn fork 多个 worker 后，每个进程都会继承同一个 SQLite 连接；多个 worker 同时写向量数据库时，就会导致瞬时崩溃，而不是慢慢超时。
-
-典型日志通常会在同一秒内出现：
-```
-save_docs_to_vector_db:1619 - adding to collection file-id
-INFO:     Waiting for child process [pid]
-INFO:     Child process [pid] died
-```
-
-**解决方法：** 使用多 worker 时，你**必须**停止使用默认本地 ChromaDB：
-- 将 [`VECTOR_DB`](/reference/env-configuration#vector_db) 改为 `pgvector`、`mariadb-vector`、`milvus` 或 `qdrant`
-- 或者把 ChromaDB 作为独立 HTTP 服务运行，并配置 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) / [`CHROMA_HTTP_PORT`](/reference/env-configuration#chroma_http_port)
-
-完整说明请参见 [扩缩容与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
-
-#### 原因 B：SentenceTransformers 健康检查超时（旧版本）
-
-当你使用**默认 SentenceTransformers** 嵌入引擎（本地嵌入）并启用多个 worker 时，uvicorn 会通过定期 ping 监控 worker 健康。默认健康检查超时仅有 **5 秒**。在旧版本 Open WebUI 中，embedding 调用会阻塞事件循环，worker 因而无法响应健康检查，最终被 uvicorn 判定为无响应并杀掉。
-
-:::note
-这个问题已经在 Open WebUI 中修复。现在 embedding 系统使用 `run_coroutine_threadsafe` 保持主事件循环可响应，因此无论嵌入耗时多久，worker 都不应再因为这个原因在上传期间被杀死。
-
-如果你已经使用包含该修复的版本，但仍看到 worker 死亡，请先优先检查上面的**原因 A**（ChromaDB SQLite），然后确认 Open WebUI 是否已更新到最新版本。
-:::
-
-**谁会受到影响：**
-- 仅限使用**默认 SentenceTransformers** 嵌入引擎（本地嵌入）的部署
-- 仅限启用了**多个 uvicorn worker** 的部署；单 worker 部署没有健康检查超时问题
-- 外部嵌入引擎（Ollama、OpenAI、Azure OpenAI）**不受影响**，因为它们的 API 调用不会阻塞事件循环
-
-✅ **解决方法（适用于尚未包含修复的旧版本）：**
-
-1. **升级 Open WebUI** 到包含 `run_coroutine_threadsafe` 修复的版本。
-2. **提高健康检查超时**，作为临时解决方案：
-   ```yaml
-   command: ["bash", "start.sh", "--workers", "2", "--timeout-worker-healthcheck", "120"]
-   ```
-3. **切换到外部嵌入引擎**，避免本地阻塞：
-   ```
-   RAG_EMBEDDING_ENGINE=ollama
-   RAG_EMBEDDING_MODEL=nomic-embed-text
-   ```
-4. **可选：设置安全超时**，通过 [`RAG_EMBEDDING_TIMEOUT`](/reference/env-configuration#rag_embedding_timeout) 中止异常长时间的 embedding 操作（这不会影响健康检查机制本身）。
-
----
-
-<span id="13-knowledge-base-attached-to-model-not-working"></span>
 ### 13. 模型附加的知识库不生效 {#13-knowledge-base-attached-to-model-not-working}
 
 你在 **Workspace > Models > Edit** 中把某个知识库附加到了模型上，但聊天时模型似乎完全不知道知识库里的内容。
@@ -487,7 +463,7 @@ INFO:     Child process [pid] died
 
 3. **加入系统提示词引导**（适用于 native mode）：
    - 一些模型需要更明确的工具使用提示，可加入类似内容：
-     > “When users ask questions, first use list_knowledge_bases to see what knowledge is available, then use query_knowledge_bases to search for relevant information before answering.”
+     > “当用户提问时，先使用 list_knowledge_bases 查看有哪些可用知识，再使用 query_knowledge_bases 搜索相关信息，然后作答。”
 
 4. **或者为该模型关闭 Native Function Calling：**
    - 在模型设置中关闭 Native Function Calling，恢复早期版本中经典的自动注入式 RAG 行为
@@ -500,8 +476,58 @@ INFO:     Child process [pid] died
 Open WebUI 正在转向 **agentic RAG**：由模型自主决定何时以及如何搜索知识库。相比传统 RAG，这种方式更强大，因为模型可以在第一次搜索效果不佳时改用不同查询重新尝试。但这也要求模型本身具备较好的工具使用能力。对于较小或较旧、工具调用能力不足的模型，推荐直接关闭 Native Function Calling。
 :::
 
-关于知识作用域与检索模式的完整说明，请参阅 [知识文档](/features/workspace/knowledge#agentic-knowledge-tools) 和 [文件上下文与内置工具](/features/chat-conversations/rag#file-context-vs-builtin-tools)。
+关于知识作用域与检索模式的完整说明，请参阅 [知识文档](/features/workspace/knowledge#agentic-knowledge-tools) 和 [文件上下文与内置工具](/features/chat-conversations/rag#preload-files-vs-builtin-tools)。
 
 ---
 
 把提取、嵌入、检索和模型上下文这些环节都调优好之后，你就能显著提升 LLM 处理文档时的准确性与稳定性。
+
+#### 原因 A：ChromaDB SQLite + Fork（瞬时崩溃） {#knowledge-retrieval-behavior-matrix}
+
+如果你使用的是**默认 ChromaDB**（本地 SQLite 支持的 `PersistentClient`），并且设置了 `UVICORN_WORKERS > 1`，那么崩溃原因就是 SQLite **不具备 fork-safe 特性**。uvicorn fork 多个 worker 后，每个进程都会继承同一个 SQLite 连接；多个 worker 同时写向量数据库时，就会导致瞬时崩溃，而不是慢慢超时。
+
+典型日志通常会在同一秒内出现：
+```
+save_docs_to_vector_db:1619 - adding to collection file-id
+INFO:     Waiting for child process [pid]
+INFO:     Child process [pid] died
+```
+
+**解决方法：** 使用多 worker 时，你**必须**停止使用默认本地 ChromaDB：
+- 将 [`VECTOR_DB`](/reference/env-configuration#vector_db) 改为 `pgvector`、`mariadb-vector`、`milvus` 或 `qdrant`
+- 或者把 ChromaDB 作为独立 HTTP 服务运行，并配置 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) / [`CHROMA_HTTP_PORT`](/reference/env-configuration#chroma_http_port)
+
+完整说明请参见 [扩缩容与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
+
+#### 原因 B：SentenceTransformers 健康检查超时（旧版本）
+
+当你使用**默认 SentenceTransformers** 嵌入引擎（本地嵌入）并启用多个 worker 时，uvicorn 会通过定期 ping 监控 worker 健康。默认健康检查超时仅有 **5 秒**。在旧版本 Open WebUI 中，embedding 调用会阻塞事件循环，worker 因而无法响应健康检查，最终被 uvicorn 判定为无响应并杀掉。
+
+:::note
+这个问题已经在 Open WebUI 中修复。现在 embedding 系统使用 `run_coroutine_threadsafe` 保持主事件循环可响应，因此无论嵌入耗时多久，worker 都不应再因为这个原因在上传期间被杀死。
+
+如果你已经使用包含该修复的版本，但仍看到 worker 死亡，请先优先检查上面的**原因 A**（ChromaDB SQLite），然后确认 Open WebUI 是否已更新到最新版本。
+:::
+
+**谁会受到影响：**
+- 仅限使用**默认 SentenceTransformers** 嵌入引擎（本地嵌入）的部署
+- 仅限启用了**多个 uvicorn worker** 的部署；单 worker 部署没有健康检查超时问题
+- 外部嵌入引擎（Ollama、OpenAI、Azure OpenAI）**不受影响**，因为它们的 API 调用不会阻塞事件循环
+
+✅ **解决方法（适用于尚未包含修复的旧版本）：**
+
+1. **升级 Open WebUI** 到包含 `run_coroutine_threadsafe` 修复的版本。
+2. **提高健康检查超时**，作为临时解决方案：
+   ```yaml
+   command: ["bash", "start.sh", "--workers", "2", "--timeout-worker-healthcheck", "120"]
+   ```
+3. **切换到外部嵌入引擎**，避免本地阻塞：
+   ```
+   RAG_EMBEDDING_ENGINE=ollama
+   RAG_EMBEDDING_MODEL=nomic-embed-text
+   ```
+4. **可选：设置安全超时**，通过 [`RAG_EMBEDDING_TIMEOUT`](/reference/env-configuration#rag_embedding_timeout) 中止异常长时间的 embedding 操作（这不会影响健康检查机制本身）。
+
+---
+
+<span id="13-knowledge-base-attached-to-model-not-working"></span>

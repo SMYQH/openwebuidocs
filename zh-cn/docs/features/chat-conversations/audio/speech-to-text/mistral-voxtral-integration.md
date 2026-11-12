@@ -3,7 +3,7 @@ sidebar_position: 2
 title: "Mistral Voxtral 语音转文本"
 ---
 
-# 使用 Mistral Voxtral 实现语音转文本
+# 使用 Mistral Voxtral 实现语音转文本 {#using-mistral-voxtral-for-speech-to-text}
 
 本指南介绍如何在 Open WebUI 中使用 Mistral 的 Voxtral 模型进行语音转文本。Voxtral 是 Mistral 的语音转文本模型，可提供较准确的转录结果。
 
@@ -11,12 +11,12 @@ title: "Mistral Voxtral 语音转文本"
 请查看配套指南：[使用 Mistral 实现文本转语音](/features/chat-conversations/audio/text-to-speech/mistral-tts-integration)
 :::
 
-## 前置要求
+## 前置要求 {#requirements}
 
 - 一个 Mistral API 密钥
 - Open WebUI 已安装并正常运行
 
-## 快速配置（UI）
+## 快速配置（UI） {#quick-setup-ui}
 
 1. 点击你的**头像图标**（左下角）
 2. 选择 **管理面板**
@@ -31,13 +31,13 @@ title: "Mistral Voxtral 语音转文本"
 
 5. 点击 **Save**
 
-## 可用模型
+## 可用模型 {#available-models}
 
 | 模型 | 说明 |
 |-------|-------------|
 | `voxtral-mini-latest` | 默认转录模型（推荐） |
 
-## 环境变量配置
+## 环境变量配置 {#environment-variables-setup}
 
 如果你更倾向于使用环境变量：
 
@@ -52,7 +52,7 @@ services:
     # ... 其他配置
 ```
 
-### 全部 Mistral STT 环境变量
+### 全部 Mistral STT 环境变量 {#all-mistral-stt-environment-variables}
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
@@ -62,36 +62,36 @@ services:
 | `AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS` | 使用 chat completions 端点 | `false` |
 | `AUDIO_STT_MODEL` | STT 模型 | `voxtral-mini-latest` |
 
-## 转录方式
+## 转录方式 {#transcription-methods}
 
 Mistral 支持两种转录方式：
 
-### 标准转录（默认）
+### 标准转录（默认） {#standard-transcription-default}
 
 使用专用转录端点。这是推荐方式。
 
-### Chat Completions 方式
+### Chat Completions 方式 {#chat-completions-method}
 
 将 `AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS=true` 后，可改用 Mistral 的 chat completions API 进行转录。该方式：
 - 要求音频为 mp3 或 wav 格式（系统会尝试自动转换）
 - 结果可能与标准端点有所不同
 
-## 使用 STT
+## 使用 STT {#using-stt}
 
 1. 点击聊天输入框中的**麦克风图标**
 2. 说出你的内容
 3. 再次点击麦克风，或等待静音检测结束
 4. 你的语音会被转录并显示在输入框中
 
-## 支持的音频格式
+## 支持的音频格式 {#supported-audio-formats}
 
 Voxtral 接受常见音频格式。系统默认允许 `audio/*` 和 `video/webm`。
 
 如果使用 chat completions 方式，音频会自动转换为 mp3。
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
-### API 密钥错误
+### API 密钥错误 {#api-key-errors}
 
 如果你看到 “需要 Mistral API 密钥”：
 
@@ -99,13 +99,13 @@ Voxtral 接受常见音频格式。系统默认允许 `audio/*` 和 `video/webm`
 2. 检查 API 密钥是否已过期
 3. 确认你的 Mistral 账号已开通 API 访问权限
 
-### 转录无法工作
+### 转录无法工作 {#transcription-not-working}
 
 1. 检查容器日志：`docker logs open-webui -f`
 2. 确认 STT 引擎设置为 `MistralAI`
 3. 优先尝试标准转录方式（关闭 chat completions）
 
-### 音频格式问题
+### 音频格式问题 {#audio-format-issues}
 
 如果你使用 chat completions 方式且音频转换失败：
 
@@ -115,7 +115,7 @@ Voxtral 接受常见音频格式。系统默认允许 `audio/*` 和 `video/webm`
 
 更多排查信息请参阅 [音频故障排查指南](/troubleshooting/audio)。
 
-## 与其他 STT 方案对比
+## 与其他 STT 方案对比 {#comparison-with-other-stt-options}
 
 | 特性 | Mistral Voxtral | OpenAI Whisper | 本地 Whisper |
 | --------- | ----------------- | ---------------- | --------------- |
@@ -124,7 +124,7 @@ Voxtral 接受常见音频格式。系统默认允许 `audio/*` 和 `video/webm`
 | **模型选项** | voxtral-mini-latest | whisper-1 | tiny → large |
 | **需要 GPU** | 否 | 否 | 推荐 |
 
-## 成本说明
+## 成本说明 {#cost-considerations}
 
 Mistral 的 STT 按音频分钟数计费。当前价格请查看 [Mistral 定价页](https://mistral.ai/products/la-plateforme#pricing)。
 

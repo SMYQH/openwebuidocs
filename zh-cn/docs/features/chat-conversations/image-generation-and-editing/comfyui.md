@@ -15,7 +15,7 @@ ComfyUI 是一个强大且模块化的 Stable Diffusion 节点式图形界面，
 
 ![Screenshot of the ComfyUI server startup command with the --listen flag highlighted.](/images/image-generation-and-editing/comfyui-listen-flag.png)
 
-## 将 ComfyUI 连接到 Open WebUI
+## 将 ComfyUI 连接到 Open WebUI {#connecting-comfyui-to-open-webui}
 
 由于 Open WebUI 通常运行在 Docker 中，你必须确保容器能通过 `host.docker.internal` 访问宿主机上的 ComfyUI 应用。
 
@@ -38,7 +38,7 @@ docker run -d -p 3000:8080 \
 
 当 ComfyUI 安装并运行完成后，你就可以在 Open WebUI 的管理员设置中连接它。
 
-## 图像提示词生成
+## 图像提示词生成 {#image-prompt-generation}
 
 该功能会使用语言模型，根据你的初始输入自动生成更详细、更有创意的提示词，从而提升图像生成效果。
 
@@ -48,7 +48,7 @@ docker run -d -p 3000:8080 \
 
 ![Screenshot showing the Image Prompt Generation toggle location in Images settings](/images/image-generation-and-editing/image-prompt-generation-toggle.png)
 
-## 创建图像（Image Generation）
+## 创建图像（Image Generation） {#create-image-image-generation}
 
 1. **进入图像设置：** 在 Open WebUI 中前往 **Admin Panel** > **Settings** > **Images**
 
@@ -112,7 +112,7 @@ docker run -d -p 3000:8080 \
 
 ![Screenshot of an image being generated in the chat using ComfyUI.](/images/image-generation-and-editing/comfyui-create-image-in-chat.png)
 
-## 编辑图像
+## 编辑图像 {#edit-image}
 
 Open WebUI 同样支持通过 ComfyUI 进行图像编辑，从而修改已有图片。
 
@@ -140,11 +140,11 @@ Open WebUI 同样支持通过 ComfyUI 进行图像编辑，从而修改已有图
 
 ![在对话中使用 ComfyUI 编辑图像的截图](/images/image-generation-and-editing/comfyui-edit-image-in-chat.png)
 
-### 深入了解：将 ComfyUI Nodes 映射到 Open WebUI
+### 深入了解：将 ComfyUI Nodes 映射到 Open WebUI {#deeper-dive-mapping-comfyui-nodes-to-open-webui}
 
 理解 node ID 映射，往往是将 ComfyUI 与 Open WebUI 这类外部服务集成时最容易卡住的一步。通过 API 集成 ComfyUI，本质上就是把 Open WebUI 的通用控制项（如 “Model”、“Width”、“Prompt”）映射到静态 ComfyUI workflow JSON 中的特定 node 输入。
 
-#### 将 Workflow Nodes 映射到 Open WebUI
+#### 将 Workflow Nodes 映射到 Open WebUI {#mapping-workflow-nodes-to-open-webui}
 
 Open WebUI 的 **ComfyUI Workflow Nodes** 区域允许你把通用控制项映射到静态 ComfyUI workflow JSON 中的特定 node 输入。每一行有两个字段：
 
@@ -153,7 +153,7 @@ Open WebUI 的 **ComfyUI Workflow Nodes** 区域允许你把通用控制项映�
 | **Key**（左侧） | node 的 `inputs` 块中的输入参数名 | `text`、`ckpt_name`、`seed` |
 | **Node Ids**（右侧） | 目标 node ID，可为逗号分隔 | `6` 或 `1, 2, 3` |
 
-#### 在 ComfyUI 中识别 Node ID 和 Input Key
+#### 在 ComfyUI 中识别 Node ID 和 Input Key {#identifying-node-ids-and-input-keys-in-comfyui}
 
 在配置 Open WebUI 之前，你必须先用文本编辑器直接检查导出的 workflow JSON 文件。Node ID 是 ComfyUI 在 JSON 结构中标识某个 node 的唯一编号；JSON 对象的顶层 key 通常就是这些 node ID。
 
@@ -202,7 +202,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 
 ![Screenshot of the ComfyUI interface with the KSampler node selected, highlighting the node ID and the 'seed' and 'steps' input fields.](/images/image-generation-and-editing/comfyui-unet-name-node.png)
 
-#### 按任务类型区分的默认 Key 值
+#### 按任务类型区分的默认 Key 值 {#default-key-values-by-task-type}
 
 **图像生成：**
 - Prompt: `text`
@@ -219,7 +219,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 - Width: `width`
 - Height: `height`
 
-#### 示例：映射 KSampler 的 Seed
+#### 示例：映射 KSampler 的 Seed {#example-mapping-ksampler-seed}
 
 假设你想控制 KSampler node 的 `seed`，它的 node ID 是 `3`。那么在 Open WebUI 设置中的 `Seed` 区域应填写：
 
@@ -227,7 +227,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 |-----|----------|
 | `seed` | `3` |
 
-#### 处理多个 Node ID
+#### 处理多个 Node ID {#handling-multiple-node-ids}
 
 如果多个 node 需要使用相同值（例如多个 sampler 共享同一个 seed），请填写逗号分隔的多个 ID：
 
@@ -235,7 +235,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 |-----|----------|
 | `seed` | `3, 15, 22` |
 
-#### 处理复杂 / 多模态 Nodes（Qwen 示例）
+#### 处理复杂 / 多模态 Nodes（Qwen 示例） {#handling-complexmultimodal-nodes-qwen-example}
 
 对于某些特殊 node，Key 可能不只是简单文本字段。
 
@@ -246,7 +246,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 | **Model** | `unet_name` | varies | 用于某些 workflow 中的 UNETLoader |
 | **Image Input** | `image` | `78` | 该 key 会把文件名传递给 LoadImage node |
 
-#### 排查不匹配错误
+#### 排查不匹配错误 {#troubleshooting-mismatch-errors}
 
 如果 ComfyUI 卡住或抛出校验错误，请结合日志和 JSON 结构排查：
 
@@ -257,19 +257,19 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 
 只要精确匹配 Node ID 与具体 Key，Open WebUI 就能在提交 prompt 给 ComfyUI 前，正确覆盖 workflow JSON 中的默认值。
 
-## 示例配置：Qwen 图像生成与编辑
+## 示例配置：Qwen 图像生成与编辑 {#example-setup-qwen-image-generation-and-editing}
 
 本节提供一个额外示例，演示如何为 Qwen 模型配置图像生成与编辑。
 
-### Qwen 图像生成
+### Qwen 图像生成 {#qwen-image-generation}
 
-#### 模型下载
+#### 模型下载 {#model-download}
 
 - **扩散模型**: [qwen_image_fp8_e4m3fn.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_fp8_e4m3fn.safetensors)
 - **文本编码器**: [qwen_2.5_vl_7b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors)
 - **VAE**: [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors)
 
-#### 模型存放位置
+#### 模型存放位置 {#model-storage-location}
 
 ```
 📂 ComfyUI/
@@ -282,14 +282,14 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 │       └── qwen_2.5_vl_7b_fp8_scaled.safetensors
 ```
 
-#### Qwen 生成工作流节点映射
+#### Qwen 生成工作流节点映射 {#workflow-node-mapping-for-qwen-generation}
 
 | 参数 | Key | 节点 ID |
 |-----------|-----|----------|
 | 提示词 | `prompt` | （取决于你的 workflow） |
 | 模型 | `ckpt_name` | （checkpoint loader node ID） |
 
-### Qwen 图像编辑
+### Qwen 图像编辑 {#qwen-image-editing}
 
 #### 模型下载
 
@@ -310,7 +310,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 │       └── qwen_2.5_vl_7b_fp8_scaled.safetensors
 ```
 
-#### Qwen 编辑工作流节点映射
+#### Qwen 编辑工作流节点映射 {#workflow-node-mapping-for-qwen-editing}
 
 | 参数 | Key | 节点 ID |
 |-----------|-----|----------|
@@ -318,7 +318,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 | 提示词 | `prompt` | （text encoder node ID） |
 | 模型 | `unet_name` | （UNET loader node ID） |
 
-## 示例配置：FLUX.1 图像生成
+## 示例配置：FLUX.1 图像生成 {#example-setup-flux1-image-generation}
 
 本节提供一个额外示例，说明如何为 FLUX.1 模型配置图像生成。
 
@@ -368,13 +368,13 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 │       └── t5xxl_fp8_e4m3fn.safetensors
 ```
 
-## 配置 SwarmUI
+## 配置 SwarmUI {#configuring-with-swarmui}
 
 SwarmUI 使用 ComfyUI 作为后端。若要让 Open WebUI 与 SwarmUI 协同工作，你需要在 `ComfyUI Base URL` 末尾追加 `ComfyBackendDirect`。此外，还建议为 SwarmUI 启用局域网访问。完成这些调整后，SwarmUI 在 Open WebUI 中的设置方式，与前文所述的 ComfyUI 图像生成步骤基本一致。
 
 ![启用局域网访问安装 SwarmUI。](https://github.com/user-attachments/assets/a6567e13-1ced-4743-8d8e-be526207f9f6)
 
-### SwarmUI API 地址
+### SwarmUI API 地址 {#swarmui-api-url}
 
 你在 `ComfyUI 基础 URL` 中填写的地址通常如下：
 

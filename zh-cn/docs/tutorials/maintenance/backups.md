@@ -3,7 +3,7 @@ sidebar_position: 1000
 title: "备份"
 ---
 
-# 备份您的实例
+# 备份您的实例 {#backing-up-your-instance}
 
  :::warning
 本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
@@ -17,13 +17,13 @@ title: "备份"
 
  本指南假设用户已通过 Docker 安装 Open WebUI（或计划这样做）。
 
-## 确保数据持久化
+## 确保数据持久化 {#ensuring-data-persistence}
 
 首先，在使用 Docker 部署您的应用栈之前，请确保 Docker Compose 使用了持久化数据存储。如果您使用的是 [Github 仓库中的 Docker Compose](https://github.com/open-webui/open-webui/blob/main/docker-compose.yaml)，这一点已经处理好了。但自定义配置时很容易遗漏这一验证。
 
 Docker 容器是临时性的，必须将数据持久化到宿主机文件系统以确保其存续。
 
-## 使用 Docker 卷
+## 使用 Docker 卷 {#using-docker-volumes}
 
 如果您使用的是项目仓库中的 Docker Compose，将通过 Docker 卷部署 Open Web UI。
 
@@ -49,7 +49,7 @@ open-webui:
 
 `docker volume inspect open-webui`
 
-## 使用直接宿主机绑定
+## 使用直接宿主机绑定 {#using-direct-host-binds}
 
 一些用户使用直接（固定）绑定到宿主机文件系统的方式部署 Open Web UI，如下所示：
 
@@ -69,7 +69,7 @@ services:
 
 如果您是这样部署的，需要记录根目录上的路径。
 
-## 编写备份任务脚本
+## 编写备份任务脚本 {#scripting-a-backup-job}
 
 无论您的实例如何配置，都建议检查服务器上应用的数据存储，了解需要备份的数据。您应该会看到类似如下的结构：
 
@@ -81,7 +81,7 @@ services:
 └── webui.db
 ```
 
-## 持久化数据存储中的文件
+## 持久化数据存储中的文件 {#files-in-persistent-data-store}
 
 | 文件/目录 | 描述 |
 |---|---|
@@ -91,7 +91,7 @@ services:
 | `vector_db/` | 包含 ChromaDB 向量数据库的目录。 |
 | `webui.db` | 用于持久存储其他实例数据的 SQLite 数据库。 |
 
-# 文件级备份方案
+# 文件级备份方案 {#file-level-backup-approaches}
 
 备份应用数据的第一种方式是采用文件级备份方法，确保 Open Web UI 的持久化数据得到妥善备份。
 
@@ -154,7 +154,7 @@ echo "Backup completed successfully."
 exit 0
 ```
 
-## 带容器中断的 Rsync 任务
+## 带容器中断的 Rsync 任务 {#rsync-job-with-container-interruption}
 
 为保持数据完整性，通常建议在冷文件系统上运行数据库备份。我们的默认示范备份任务可以稍作修改，在运行备份脚本之前停止应用栈，备份完成后再重新启动。
 
@@ -221,7 +221,7 @@ echo "Backup completed successfully."
 exit 0
 ```
 
-## 使用 SQLite 和 ChromaDB 备份功能备份到 B2 远程存储的脚本
+## 使用 SQLite 和 ChromaDB 备份功能备份到 B2 远程存储的脚本 {#model-backup-script-using-sqlite--chromadb-backup-functions-to-b2-remote}
 
 ```bash
 
@@ -316,7 +316,7 @@ echo "Backup completed to $DESTINATION"
 
 ---
 
-## 时间点快照
+## 时间点快照 {#point-in-time-snapshots}
 
 除了进行备份之外，用户还可能希望创建时间点快照，这些快照可以存储在本地（服务器上）、远程或两者都存储。
 
@@ -351,19 +351,19 @@ fi
 exit 0
 ```
 
-## 使用 Crontab 调度任务
+## 使用 Crontab 调度任务 {#crontab-for-scheduling}
 
 添加备份脚本并配置好备份存储后，建议对脚本进行质量检验，确保其按预期运行。强烈建议开启日志记录。
 
 使用 crontab 按所需频率设置新脚本的运行计划。
 
-# 商业工具
+# 商业工具 {#commercial-utilities}
 
 除了自编备份脚本之外，您还可以使用商业解决方案，这类工具通常通过在服务器上安装代理来抽象备份操作的复杂性。这超出了本文的讨论范围，但它们是方便的解决方案。
 
 ---
 
-# 宿主机级别备份
+# 宿主机级别备份 {#host-level-backups}
 
 您的 Open WebUI 实例可能部署在您控制的宿主机（物理机或虚拟机）上。
 
@@ -371,20 +371,20 @@ exit 0
 
 有些用户可能将其作为主要或唯一的保护手段，而另一些用户可能将其作为额外的数据保护层。
 
-# 我需要多少份备份？
+# 我需要多少份备份？ {#how-many-backups-do-i-need}
 
 备份数量取决于您个人对风险的承受程度。但请记住，最佳实践是*不要*将应用本身视为备份副本（即使它运行在云端！）。这意味着，如果您在 VPS 上部署了实例，保留两份独立备份副本仍然是合理的建议。
 
 适合许多家庭用户需求的备份方案示例：
 
-## 示范备份方案 1（主存储 + 2 份副本）
+## 示范备份方案 1（主存储 + 2 份副本） {#model-backup-plan-1-primary--2-copies}
 
 | 频率 | 目标 | 技术 | 描述 |
 |---|---|---|---|
 | 每日增量 | 云存储（S3/B2） | rsync | 每日增量备份推送到云存储桶（S3 或 B2）。 |
 | 每周增量 | 本地存储（家庭 NAS） | rsync | 每周增量备份从服务器拉取到本地存储（例如家庭 NAS）。 |
 
-## 示范备份方案 2（主存储 + 3 份副本）
+## 示范备份方案 2（主存储 + 3 份副本） {#model-backup-plan-2-primary--3-copies}
 
 这个备份方案稍微复杂，但更为全面——每日向两个云存储提供商推送，以获得额外冗余。
 
@@ -394,7 +394,7 @@ exit 0
 | 每日增量 | 云存储（B2） | rsync | 每日增量备份推送到 Backblaze B2 云存储桶。 |
 | 每周增量 | 本地存储（家庭 NAS） | rsync | 每周增量备份从服务器拉取到本地存储（例如家庭 NAS）。 |
 
-# 扩展主题
+# 扩展主题 {#additional-topics}
 
 为了使本指南保持合理的详尽程度，以下附加主题未作详细介绍，但根据您为实例数据保护计划投入的时间，这些主题可能值得关注：
 

@@ -1,9 +1,11 @@
 ---
 sidebar_position: 300
 title: "离线模式"
+sidebar_label: "离线模式"
+description: "准备本地模型与文档处理，启用离线设置，限制网络访问，并在没有互联网的情况下验证 Open WebUI。"
 ---
 
-# 在离线模式下运行 Open WebUI 🔌
+# 在离线模式下运行 Open WebUI 🔌 {#running-open-webui-in-offline-mode}
 
 :::warning
 
@@ -13,7 +15,7 @@ title: "离线模式"
 
 如果你希望以离线模式运行 Open WebUI，需要结合你的安装方式，按需调整可用功能。本指南会介绍几种实现方式，以尽量获得接近在线版本的使用体验。
 
-## “离线模式” 是什么意思？
+## “离线模式” 是什么意思？ {#what-does-offline-mode-mean}
 
 Open WebUI 的离线模式允许应用在无互联网连接时运行。这有助于为你的 LLM 和工具构建“气隙（air-gapped）”环境（完全气隙需将实例与互联网彻底隔离）。
 
@@ -35,7 +37,7 @@ Open WebUI 的离线模式允许应用在无互联网连接时运行。这有助
 
 :::
 
-## 如何启用离线模式？
+## 如何启用离线模式？ {#approach-ii}
 
 离线模式需要设置多个环境变量，以尽可能切断 Open WebUI 对外部网络的依赖。核心变量如下：
 
@@ -69,9 +71,25 @@ Open WebUI 的离线模式允许应用在无互联网连接时运行。这有助
 
 :::
 
-## 方案 I
+### 下载并测试依赖 {#running-open-webui-with-internet-connection-during-setup}
 
-### I: Speech-To-Text
+如果这台机器在准备阶段还能连接互联网，请准备好你离线运行时会使用的同一套安装：
+
+1. 安装 Open WebUI，并按照 [Ollama 指南](/getting-started/quick-start/connect-a-provider/starting-with-ollama)连接一个本地推理服务器。下载你打算使用的模型，并发送一条测试消息。
+2. 配置本地文档提取与嵌入。下载并试用你需要的可选重排序模型或语音模型。
+3. 把应用数据和模型缓存放在持久化存储中。在仍处于联网状态时重启一次，确认安装确实使用了该存储。
+
+### II: Embedding Model
+
+在 Open WebUI 中进入 `Admin Settings` > `Settings` > `Documents`，选择你要使用的嵌入模型（例如 [sentence-transformer/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)）。选择后点击其右侧下载按钮。
+
+---
+
+安装完所需功能后，根据你的 Open WebUI 部署类型设置环境变量 `OFFLINE_MODE=True`。
+
+## 方案 I {#approach-i}
+
+### I: Speech-To-Text {#i-speech-to-text}
 
 本地 `whisper` 安装默认不包含模型。若你希望使用外部模型/提供商，可部分参考此[指南](/features/chat-conversations/audio/speech-to-text/stt-config)。若要使用本地 `whisper`，需先下载你选择的模型（例如 [Hugging Face - Systran](https://huggingface.co/Systran)）。
 
@@ -90,11 +108,11 @@ WhisperModel(**faster_whisper_kwargs)
 
 下载目录中的内容必须复制到 Open WebUI 部署内的 `/app/backend/data/cache/whisper/models/`。建议通过[环境变量](/reference/env-configuration#whisper_model)直接声明 `whisper` 模型，例如：`WHISPER_MODEL=Systran/faster-whisper-large-v3`。
 
-### I: Text-To-Speech
+### I: Text-To-Speech {#i-text-to-speech}
 
 默认本地 transformer 已可满足文本转语音功能。若你偏好其他方案，可参考这些[指南](/category/text-to-speech)。
 
-### I: Embedding Model
+### I: Embedding Model {#i-embedding-model}
 
 在多种场景下你都需要嵌入模型（例如 [RAG](/features/chat-conversations/rag)）。你需要先下载所选模型（例如 [Hugging Face - sentence-transformers](https://huggingface.co/sentence-transformers)）。
 
@@ -106,21 +124,49 @@ snapshot_download(repo_id="sentence-transformers/all-MiniLM-L6-v2", cache_dir="/
 
 下载目录中的内容必须复制到 Open WebUI 部署内的 `/app/backend/data/cache/embedding/models/`。建议通过[环境变量](/reference/env-configuration#rag_embedding_model)直接声明嵌入模型，例如：`RAG_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2`。
 
-## 方案 II
+## 方案 II {#how-to-enable-offline-mode}
 
 ### 在安装阶段保留网络连接运行 Open WebUI
 
 这是最容易实现离线部署的方式，并可保留接近在线版本的大多数功能。请仅启用你部署场景真正需要的功能。
 
-### II: Embedding Model
+## 限制外部网络访问 {#sidenote}
 
-在 Open WebUI 中进入 `Admin Settings` > `Settings` > `Documents`，选择你要使用的嵌入模型（例如 [sentence-transformer/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)）。选择后点击其右侧下载按钮。
+请使用适合你的部署方式的防火墙规则、容器网络或物理网络隔离来阻止外部访问。要保证所需的本地路径依然可达：浏览器必须能访问 Open WebUI，而 Open WebUI 必须能访问它的本地推理与处理服务。
 
----
+下面的 Docker Compose 片段是**内部容器网络的一个示例**，而不是一份完整的部署方案。它假设镜像已经存在、模型缓存目录中已准备好缓存，并且你会提供一个连接到该网络的反向代理。你的本地模型服务器以及任何提取或嵌入服务也必须能从这个网络访问；一个被隔离的 Open WebUI 容器无法使用位于无关网络上的模型服务器。在依赖这个示例实现隔离之前，请先调整并测试连通性。
 
-安装完所需功能后，根据你的 Open WebUI 部署类型设置环境变量 `OFFLINE_MODE=True`。
+```yaml
+services:
+  # Requires a reverse proxy and reachable local model/processing services.
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    restart: unless-stopped
+    environment:
+      - OFFLINE_MODE=true
+      - HF_HUB_OFFLINE=1
+      - RAG_EMBEDDING_MODEL_AUTO_UPDATE=false
+      - RAG_RERANKING_MODEL_AUTO_UPDATE=false
+      - WHISPER_MODEL_AUTO_UPDATE=false
+      - RAG_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      # Optional: only needed when using local speech-to-text.
+      - WHISPER_MODEL=Systran/faster-whisper-large-v3
+    volumes:
+      - ./open-webui-data:/app/backend/data
+      - ./models/embedding-cache:/app/backend/data/cache/embedding/models/
+      # Optional: prepared Whisper cache.
+      - ./models/whisper-cache:/app/backend/data/cache/whisper/models/
+    networks:
+      - open-webui-internal
 
-## 补充说明
+networks:
+  open-webui-internal:
+    name: open-webui-internal-network
+    driver: bridge
+    internal: true
+```
+
+## 补充说明 {#verify-chat-and-document-retrieval}
 
 如前所述，要实现真正完全离线的 Open WebUI 体验，你还必须将实例与互联网断开。离线模式本身主要用于避免在无网时 Open WebUI 内部出现报错。
 

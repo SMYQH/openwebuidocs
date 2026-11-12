@@ -9,12 +9,11 @@ title: "保留参数"
 
 :::
 
-# 🪄 特殊参数
+# 🪄 特殊参数 {#special-arguments}
 
 在开发自己的 `Tools`、`Functions`（`Filters`、`Pipes`、`Actions`）、`Pipelines` 等时，你可以使用这些特殊参数来访问 Open WebUI 提供的完整上下文能力。
 
 本页会详细说明每个特殊参数的类型、结构与示例。
-
 ### `body`
 
 一个 `dict`，通常会几乎原样发送给模型。严格来说它不属于特殊参数，但因为它本身包含了一些特殊字段，所以这里也一并列出，便于查阅。
@@ -414,3 +413,16 @@ assert the_file.exists()
 `ToolUserModel` 实例的 `list`。
 
 如需了解 `ToolUserModel` 实例的属性详情，可在 [tools.py](https://github.com/open-webui/open-webui/blob/main/backend/open_webui/models/tools.py) 中查看源码。
+
+#### `__id__` {#\_\_id\_\_}
+
+插件本身的 `str` 类型 id：对工具而言是工具 id，对过滤器而言是过滤器 id，对操作而言是操作 id（点击子操作时则是子操作 id）。管道不会收到它。
+
+#### `__body__` {#\_\_body\_\_}
+
+仅过滤器可用。`stream()` 会把每个数据块作为 `event` 而非 `body` 接收，因此 `__body__` 承载的是该轮次发起时的请求体，其状态为 `inlet()` 过滤器运行之后。
+
+#### `__features__` {#\_\_features\_\_}
+
+仅工具可用。来自请求的 `features` 字典（`web_search`、`image_generation`、`code_interpreter` 以及客户端发送的其他开关），取自 `inlet()` 过滤器运行之后的请求体，因此工具可以看到用户开启了哪些开关。
+

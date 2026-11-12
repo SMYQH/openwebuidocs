@@ -31,14 +31,14 @@ title: "使用 Caddy 的 HTTPS"
 
 按照 Docker 官方指南配置 apt 仓库：[Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
 
-我在示例中也包含了 `docker-compose`，因为运行 `docker compose` 时会用到它。
+`docker-compose-plugin` 是提供 `docker compose` 命令的软件包。
 
 ### 安装 Docker {#installing-docker}
 
 下面是我在 Ubuntu 上安装 Docker 时使用的命令：
 
 ```bash
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-compose
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
 ## Open WebUI {#openwebui}

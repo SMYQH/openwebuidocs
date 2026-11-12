@@ -21,13 +21,13 @@ title: "Tavily"
 
 :::
 
-## 概览
+## 概览 {#overview}
 
 将 Tavily 集成到 Open WebUI 后，你的语言模型就可以执行实时网页搜索，从而获得最新、相关的信息。本教程将指导你把 Tavily 配置为 Open WebUI 的 web search 提供商。
 
 Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和结构化的搜索结果。按照以下步骤配置后，Open WebUI 就能在聊天界面中利用 Tavily 执行网页搜索。
 
-## 前提条件
+## 前提条件 {#prerequisites}
 
 请确保你具备：
 
@@ -37,9 +37,9 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 - **网络连接**：用于发起 Tavily API 请求
 - **WEBUI_URL 环境变量**：已正确指向你的 Open WebUI 实例。参阅 [环境变量配置](/reference/env-configuration/)
 
-## 分步配置
+## 分步配置 {#step-by-step-configuration}
 
-### 1. 获取 Tavily API Key
+### 1. 获取 Tavily API Key {#1-obtain-a-tavily-api-key}
 
 1. 在 [Tavily](https://app.tavily.com/sign-in) 注册或登录
 2. 进入 **Dashboard**（控制台）或 **API Keys** 页面
@@ -47,7 +47,7 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 
 > **注意：** 请在 [Tavily Pricing](https://tavily.com/#pricing) 页面查看你当前套餐的查询限制。
 
-### 2. 配置 Open WebUI
+### 2. 配置 Open WebUI {#2-configure-open-webui}
 
 1. 使用管理员账号登录 Open WebUI
 2. 点击左下角 **用户图标**，选择 **Settings**
@@ -59,7 +59,7 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 
 > **提示：** 请确认 API key 正确无误，以避免配置错误。
 
-### 3. 测试集成
+### 3. 测试集成 {#3-test-the-integration}
 
 1. 保存设置
 2. 开启一段新的聊天
@@ -68,7 +68,7 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 
 > **示例：** `+latest AI news` 会触发 Tavily 搜索，并将结果嵌入回复中。
 
-## 可选配置
+## 可选配置 {#optional-configurations}
 
 - **搜索参数**：更多高级选项（如域名过滤）请参阅 [Tavily API 文档](https://docs.tavily.com/docs/introduction)
 - **环境变量**：可在 `.env` 文件或 Docker 命令中设置 `TAVILY_API_KEY`：
@@ -80,7 +80,7 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
   参阅 [环境变量配置](/reference/env-configuration/)
 - **RAG 集成**：你可以将 Tavily 结果与本地数据结合，构建 Retrieval Augmented Generation 工作流。参阅 [RAG 文档](/features/chat-conversations/rag)
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
 - **API Key 无效**：确认复制的 key 没有多余空格
 - **无搜索结果**：确认已启用 web search 开关（`+`）并且网络正常
@@ -89,7 +89,7 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 
 若需进一步帮助，请访问 [Open WebUI 社区](https://openwebui.com/search) 或 [Tavily 支持](https://tavily.com/#contact)。
 
-## 额外资源
+## 额外资源 {#additional-resources}
 
 - [Tavily API 文档](https://docs.tavily.com/docs/introduction)：API 参考与高级选项
 - [Open WebUI 功能](/features)：RAG 与 web search 说明

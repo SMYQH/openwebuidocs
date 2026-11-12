@@ -3,7 +3,7 @@ sidebar_position: 4
 title: "自定义镜像"
 ---
 
-# 自定义镜像
+# 自定义镜像 {#custom-images}
 
 对于小的包变更，优先使用 `OPEN_TERMINAL_PACKAGES`、`OPEN_TERMINAL_PIP_PACKAGES` 或 `OPEN_TERMINAL_NPM_PACKAGES`。
 

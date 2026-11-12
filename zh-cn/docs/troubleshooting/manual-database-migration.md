@@ -9,7 +9,7 @@ keywords: [alembic, migration, database, troubleshooting, sqlite, postgresql, do
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-## 概览
+## 概览 {#overview}
 
 Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下都不需要手动迁移**，只有在特定的失败场景或维护情形下才应进行手动迁移。
 
@@ -35,7 +35,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
 手动迁移操作失误会直接损坏数据库。**开始前务必创建并验证备份。**
 :::
 
-## 前置检查清单
+## 前置检查清单 {#prerequisites-checklist}
 
 在开始之前，请确认：
 
@@ -51,7 +51,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
 
 ## 第 1 步：创建并验证备份 {#step-1-create-and-verify-backup}
 
-### 备份数据库
+### 备份数据库 {#backup-your-database}
 
 <Tabs groupId="database-type">
   <TabItem value="sqlite" label="SQLite（默认）" default>
@@ -70,7 +70,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
   </TabItem>
 </Tabs>
 
-### 验证备份完整性
+### 验证备份完整性 {#verify-backup-integrity}
 
 **关键：** 在继续之前，请先确认备份文件真的可读。
 
@@ -103,7 +103,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
 
 在尝试修复前，先收集数据库当前状态的信息。
 
-### 进入运行环境
+### 进入运行环境 {#access-your-environment}
 
 <Tabs groupId="install-type">
   <TabItem value="docker" label="Docker" default>
@@ -138,7 +138,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
   </TabItem>
 </Tabs>
 
-### 切换到 Alembic 目录并设置环境
+### 切换到 Alembic 目录并设置环境 {#navigate-to-alembic-directory-and-set-environment}
 
 进入包含 `alembic.ini` 的目录并配置所需环境变量：
 
@@ -227,7 +227,7 @@ echo "WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:0:10}..."
 - `sqlite:///../data/...` = 共 3 个斜杠（相对路径）
 :::
 
-### 运行诊断命令
+### 运行诊断命令 {#run-diagnostic-commands}
 
 执行以下只读诊断命令：
 
@@ -288,9 +288,9 @@ ae1027a6acf (head)
 
 </details>
 
-## 第 3 步：应用迁移
+## 第 3 步：应用迁移 {#step-3-apply-migrations}
 
-### 标准升级（最常见）
+### 标准升级（最常见） {#standard-upgrade-most-common}
 
 若诊断结果表明存在待执行的迁移（`current` < `heads`），直接升级到最新：
 
@@ -322,7 +322,7 @@ INFO  [alembic.runtime.migration] Running upgrade abc123 -> def456, add_new_colu
 对于超大数据库（千万级以上），建议安排维护窗口，并在另一个终端用 `sqlite3 /path/to/webui.db ".tables"` 监控进度。
 :::
 
-### 升级到指定版本
+### 升级到指定版本 {#upgrade-to-specific-version}
 
 如果你只想应用到某个特定版本：
 
@@ -334,7 +334,7 @@ alembic history
 alembic upgrade ae1027a6acf
 ```
 
-### 回滚（Downgrade）
+### 回滚（Downgrade） {#downgrade-rollback}
 
 :::danger 有数据丢失风险
 回滚可能会**永久性丢失数据**，特别是迁移本身删除过列或表的情况。只有在你完全理解后果时才执行。
@@ -351,7 +351,7 @@ alembic downgrade <revision_id>
 alembic downgrade base
 ```
 
-## 第 4 步：验证迁移结果
+## 第 4 步：验证迁移结果 {#step-4-verify-migration-success}
 
 迁移完成后，请确认一切正常：
 
@@ -374,7 +374,7 @@ sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM user;"
 # 应返回一个数字，而不是报错
 ```
 
-### 测试应用启动
+### 测试应用启动 {#test-application-startup}
 
 <Tabs groupId="install-type">
   <TabItem value="docker" label="Docker" default>
@@ -416,7 +416,7 @@ INFO:     [main] Open WebUI starting on http://0.0.0.0:8080
 - 能查看聊天历史
 - 浏览器控制台没有新的 JavaScript 错误
 
-## 故障排查
+## 故障排查 {#troubleshooting}
 
 ### "No such table" 错误 {#no-such-table-errors}
 
@@ -452,6 +452,42 @@ alembic upgrade head
 
 如果手动迁移过程中又遇到新错误（例如 ["table already exists"](#table-already-exists-errors)），请到对应章节查找相应错误信息的处理方式。
 
+### "Duplicate Emails" 迁移失败 {#duplicate-emails-migration-failure}
+
+**症状：** 升级过程中中断并提示：
+
+```
+RuntimeError: Cannot add unique normalized user email index because duplicate emails exist:
+someone@example.com (x2). Merge or remove the duplicate users and rerun migrations.
+```
+
+**原因：** Open WebUI 现在通过 `user` 表上小写 `email` 列的唯一索引，强制要求每个邮箱地址只能对应一个账户，比较时不区分大小写。旧版本没有这一约束，因此实例中可能同时存在 `Someone@Example.com` 和 `someone@example.com` 两个独立账户，通常是多种登录方式混用导致的。迁移不会替你挑选保留哪一个，而是直接拒绝执行，并列出所有涉及的地址。
+
+**解决方法：** 为上面列出的每个地址决定保留哪一个账户，然后把需要保留的内容迁移到该账户上，再删除其余账户。
+
+1. 列出受影响的账户，以便区分彼此：
+
+   ```sql
+   SELECT id, email, name, role, created_at, last_active_at
+   FROM "user"
+   WHERE lower(email) IN (SELECT lower(email) FROM "user" GROUP BY lower(email) HAVING count(*) > 1)
+   ORDER BY lower(email), created_at;
+   ```
+
+2. 删除重复账户之前，先检查它各自持有哪些内容，因为聊天、文件夹、笔记、文件和工作区条目都通过所有者的 `id` 进行引用：
+
+   ```sql
+   SELECT (SELECT count(*) FROM chat WHERE user_id = '<id>') AS chats,
+          (SELECT count(*) FROM folder WHERE user_id = '<id>') AS folders,
+          (SELECT count(*) FROM note WHERE user_id = '<id>') AS notes;
+   ```
+
+3. 通过更新 `user_id` 把这些内容重新归属到保留的账户上，或者接受其丢失，然后通过 **管理面板 > 用户** 列表删除重复账户——该操作会一并删除对应的 `auth` 行。
+
+4. 重新执行升级。
+
+不能只是把已清空的重复账户留在那里：该索引覆盖所有 `email` 不为空的行，因此在每个地址只剩一个账户之前，迁移会一直失败。
+
 ### "Table Already Exists" 错误 {#table-already-exists-errors}
 
 **症状：** 运行 `alembic upgrade head` 时报错：
@@ -485,11 +521,11 @@ alembic history
 
 有三种方式可选，按"从安全到有损"的顺序列出：
 
-#### 方案 1：从备份恢复（推荐）
+#### 方案 1：从备份恢复（推荐） {#option-1-restore-from-backup-recommended}
 
 从你在[第 1 步](#step-1-create-and-verify-backup)创建的备份恢复数据库，然后在恢复后的干净数据库上重新执行 `alembic upgrade head`。这能确保整个迁移——包括所有数据回填——完整执行。
 
-#### 方案 2：删表后重跑
+#### 方案 2：删表后重跑 {#option-2-drop-the-table-and-re-run}
 
 如果你没有备份，可以删掉部分创建的表，让迁移从头执行。**这样做之前必须先确认安全性：**
 
@@ -527,7 +563,7 @@ alembic upgrade head
 只有当迁移**从旧列复制**数据到新表（原始数据没被改动）时，这种方式才安全。打开迁移文件，确认它使用的是 `INSERT INTO ... SELECT FROM` 这类操作，而**不是**会修改或删除源数据的破坏性操作。不确定就用方案 1。
 :::
 
-#### 方案 3：Stamp 跳过（最后手段）
+#### 方案 3：Stamp 跳过（最后手段） {#option-3-stamp-past-it-last-resort}
 
 如果上面两种方案都不可行，可以让 Alembic 直接跳过这条卡住的迁移：
 
@@ -758,7 +794,7 @@ alembic heads
 **永远不要用 `alembic stamp head` 一次性跳过所有待执行迁移。**
 :::
 
-### 看到 "Will assume non-transactional DDL" 之后像是卡住了
+### 看到 "Will assume non-transactional DDL" 之后像是卡住了 {#process-hangs-after-will-assume-non-transactional-ddl}
 
 **理解这条消息：** 它**不是错误**，只是提示信息。SQLite 不支持事务性 DDL，所以 Alembic 提醒你迁移无法自动回滚。
 
@@ -798,7 +834,7 @@ alembic heads
   </TabItem>
 </Tabs>
 
-### Autogenerate 检测到要删除的表
+### Autogenerate 检测到要删除的表 {#autogenerate-detects-removed-tables}
 
 **症状：** 你跑了 `alembic revision --autogenerate`，它建议删除一些已存在的表。
 
@@ -823,7 +859,7 @@ git checkout /app/backend/open_webui/migrations/  # 如使用 git
 
 **技术背景：** "autogenerate 检测到要删除的表"这个问题，本质是因为 Open WebUI 的 Alembic metadata 配置没有导入所有 model 定义。autogenerate 在不完整的 metadata 上做对比，所以认为某些表应该被删除。这是开发者层面的问题，不会影响普通用户运行 `alembic upgrade`。
 
-### PostgreSQL 外键错误
+### PostgreSQL 外键错误 {#postgresql-foreign-key-errors}
 
 :::info 仅适用于 PostgreSQL
 本节仅适用于 PostgreSQL。SQLite 处理外键的方式不同。
@@ -848,7 +884,7 @@ ALTER TABLE public."user" ADD CONSTRAINT user_pk PRIMARY KEY (id);
 
 **说明：** `public.` 这个 schema 前缀和加引号的 `"user"` 标识符是 PostgreSQL 特有的。这段 SQL 在 SQLite 或 MySQL 上无法使用。
 
-### Duplicate column 错误
+### Duplicate column 错误 {#duplicate-column-errors}
 
 :::danger 关键问题
 Duplicate column 错误意味着 schema 已经损坏，通常是某次迁移失败或手工改库导致的。这种情况需要小心处理。
@@ -973,7 +1009,7 @@ EOF
   <li>仔细阅读你的版本升级路径上涉及的迁移脚本</li>
 </ul>
 
-### Peewee 到 Alembic 的过渡问题
+### Peewee 到 Alembic 的过渡问题 {#peewee-to-alembic-transition-issues}
 
 **背景：** 老版本 Open WebUI（0.4.x 之前）使用 Peewee 迁移，新版本使用 Alembic。
 
@@ -1004,9 +1040,9 @@ alembic upgrade head
 从非常老的版本升级（< 0.3.x）时，更推荐**重新安装 + 数据导出/导入**，而不是硬跨多个大版本做 schema 迁移。
 :::
 
-## 高级操作
+## 高级操作 {#advanced-operations}
 
-### 生产环境与多服务器部署
+### 生产环境与多服务器部署 {#production-and-multi-server-deployments}
 
 :::warning 滚动升级可能导致失败
 在多服务器部署中，新旧代码同时运行可能导致问题：新代码期望的 schema 还没更新；或旧代码与新 schema 不兼容。
@@ -1070,7 +1106,7 @@ docker-compose up -d
   </TabItem>
 </Tabs>
 
-### 仅生成 SQL，不直接应用
+### 仅生成 SQL，不直接应用 {#generate-sql-without-applying}
 
 如需审核或审计，可以生成迁移 SQL 而不真正执行：
 
@@ -1093,7 +1129,7 @@ cat /tmp/migration-plan.sql
 这是 DBA 或 DevOps 工程师的进阶用法。普通用户直接运行 `alembic upgrade head` 即可。
 :::
 
-### 离线迁移（无网络）
+### 离线迁移（无网络） {#offline-migration-no-network}
 
 如果你的数据库服务器是离线或隔离的：
 
@@ -1116,9 +1152,9 @@ sqlite3 /app/backend/data/webui.db \
 只有在你**确认对应迁移已经真实执行完成**的前提下，才能更新 `alembic_version`。向 Alembic 撒谎会导致永久性数据库损坏。
 :::
 
-## 恢复流程
+## 恢复流程 {#recovery-procedures}
 
-### 从失败迁移中恢复
+### 从失败迁移中恢复 {#recovery-from-failed-migration}
 
 :::danger SQLite 没有回滚
 SQLite 迁移是**非事务性的**。一旦迁移执行到一半失败，数据库就会停留在部分迁移状态。最安全的恢复方式就是从备份还原。
@@ -1153,7 +1189,7 @@ docker logs open-webui > migration-failure-logs.txt
 如果某次迁移的 schema 变更*并没有*真正应用，就不要用 `alembic stamp` 把它标记为已完成。如果迁移失败时报的是"already exists"或"duplicate column"以外的错误，那么 schema 变更就是真的缺失，stamp 过去只会让数据库陷入损坏状态。具体什么情况下 stamp *可以*使用，见[跨大版本升级后的连续失败](#multiple-failures-after-a-major-version-jump)。
 :::
 
-### 验证数据库完整性
+### 验证数据库完整性 {#validate-database-integrity}
 
 迁移前后都应该验证数据库没有损坏：
 
@@ -1177,7 +1213,7 @@ docker logs open-webui > migration-failure-logs.txt
   </TabItem>
 </Tabs>
 
-## 迁移后检查清单
+## 迁移后检查清单 {#post-migration-checklist}
 
 迁移成功后，请确认：
 
@@ -1193,7 +1229,7 @@ docker logs open-webui > migration-failure-logs.txt
 重大迁移前的备份至少保留 1-2 周。某些问题往往要在几天后某个特定业务路径中才会暴露。
 :::
 
-## 获取帮助
+## 获取帮助 {#getting-help}
 
 如果按本指南处理后迁移仍然失败：
 

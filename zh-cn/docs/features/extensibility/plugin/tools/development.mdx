@@ -3,13 +3,13 @@ sidebar_position: 2
 title: "开发"
 ---
 
-# 🔧 工具开发
+# 🔧 工具开发 {#tool-development}
 
 :::danger ⚠️ 关键安全警告
 **Workspace Tools 会在你的服务器上执行任意 Python 代码。** 只从可信来源安装，导入前先审查代码，并且只允许可信管理员访问 Workspace。赋予用户创建或导入 Tools 的能力，等同于给他们服务器的 shell 访问权。完整说明请参阅 [插件安全警告](/features/extensibility/plugin/)。
 :::
 
-## 编写自定义工具包
+## 编写自定义工具包 {#writing-a-custom-toolkit}
 
 工具包定义在一个 Python 文件中，文件顶部使用包含元数据的文档字符串，并提供一个 `Tools` 类。
 
@@ -17,7 +17,7 @@ title: "开发"
 工具方法通常应定义为 `async`，以确保与未来版本的 Open WebUI 兼容。后端正在逐步转向完全异步执行，同步函数在未来版本中可能会阻塞执行或引发问题。
 :::
 
-### 顶层文档字符串示例
+### 顶层文档字符串示例 {#example-top-level-docstring}
 
 ```python
 """
@@ -37,7 +37,7 @@ licence: MIT
 当你创建**新**工具（同样适用于 function 和 skill）时，编辑器会在你粘贴或输入代码的过程中读取 frontmatter，并在你尚未填写的情况下，从 `title` 和 `description` 自动填充 **Name**、**ID** 和 **Description** 字段。它**永远不会**覆盖你已经输入的内容，并且在编辑已有条目时也不会重新派生这些字段——你不再需要重复敲写源代码中已经声明过的元数据。
 :::
 
-### Tools 类
+### Tools 类 {#tools-class}
 
 Tools 必须定义为名为 `Tools` 的类中的方法，并可选地包含名为 `Valves` 和 `UserValves` 的子类，例如：
 
@@ -61,14 +61,14 @@ class Tools:
         return string[::-1]
 ```
 
-### 类型注解
+### 类型注解 {#method-docstrings}
 每个工具的参数都必须提供类型注解。类型也可以是嵌套的，例如 `queries_and_docs: list[tuple[str, int]]`。这些类型注解会用于生成发送给模型的 JSON Schema。没有类型注解的工具也能运行，但一致性会差很多。
 
-### Valves 和 UserValves（可选，但强烈建议）
+### Valves 和 UserValves（可选，但强烈建议） {#type-hints}
 
 Valves 和 UserValves 用于定义工具的可配置项。你可以在专门的 [Valves & UserValves 页面](/features/extensibility/plugin/development/valves) 了解更多。
 
-### 可选参数
+### 可选参数 {#return-values}
 下面是你的工具可以依赖的可选参数列表：
 - `__event_emitter__`：发出事件（见下一节）
 - `__event_call__`：与事件发射器类似，但可用于用户交互。事件调用的服务器端超时时间可通过 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout) 配置（默认：300 秒）。
@@ -83,7 +83,7 @@ Valves 和 UserValves 用于定义工具的可配置项。你可以在专门的 
 
 只需像上面示例中的 `__user__` 一样，把它们作为参数添加到你的 Tool 类任意方法中即可。
 
-#### 在工具中使用 OAuth 令牌
+#### 在工具中使用 OAuth 令牌 {#file_handler}
 
 当你构建需要代表用户与外部 API 交互的工具时，现在可以直接访问他们的 OAuth 令牌。这消除了脆弱的 cookie 抓取方式，并能确保令牌始终有效。
 
@@ -123,7 +123,46 @@ class Tools:
             return f"An unexpected error occurred: {e}"
 ```
 
-### 事件发射器
+### 在工具中使用 OAuth 令牌 {#using-the-oauth-token-in-a-tool}
+
+在构建需要代表用户与外部 API 交互的工具时，你现在可以直接访问他们的 OAuth 令牌。这消除了脆弱的 Cookie 抓取做法，并确保令牌始终有效。
+
+**示例：** 一个使用用户访问令牌调用外部 API 的工具。
+
+```python
+from typing import Optional
+
+class Tools:
+    # ... other class setup ...
+
+    async def get_user_profile_from_external_api(self, __oauth_token__: Optional[dict] = None) -> str:
+        """
+        Fetches user profile data from a secure external API using their OAuth access token.
+
+        :param __oauth_token__: Injected by Open WebUI, contains the user's token data.
+        """
+        if not __oauth_token__ or "access_token" not in __oauth_token__:
+            return "Error: User is not authenticated via OAuth or token is unavailable."
+
+        access_token = __oauth_token__["access_token"]
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get("https://api.my-service.com/v1/profile", headers=headers)
+                response.raise_for_status() # Raise an exception for bad status codes
+                return f"API Response: {response.json()}"
+        except httpx.HTTPStatusError as e:
+            return f"Error: Failed to fetch data from API. Status: {e.response.status_code}"
+        except Exception as e:
+            return f"An unexpected error occurred: {e}"
+```
+
+### 事件发射器 {#event-emitters}
 
 事件发射器用于向聊天界面补充额外信息。和 Filter 的 outlet 类似，事件发射器可以向聊天中追加内容；不同的是，它们不能移除信息。此外，发射器可以在工具执行的任意阶段启用。
 
@@ -138,7 +177,7 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 
 完整的模式策略、模型要求和配置请参阅 [**Tool Calling Modes 指南**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。简单来说：**请使用 Native Mode**；下方矩阵会告诉你哪些事件类型在该模式下可用。
 
-#### 函数调用模式配置
+#### 函数调用模式配置 {#function-calling-mode-configuration}
 
 你可以在两个位置配置函数调用模式：
 
@@ -152,7 +191,7 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 :::
 
 
-#### 完整事件类型兼容性矩阵
+#### 完整事件类型兼容性矩阵 {#detecting-the-mode-in-your-tool}
 
 下面是各个事件类型在不同函数调用模式下行为的完整说明：
 
@@ -176,7 +215,7 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 | `execute` | ✅ 完全支持 —— 动态执行代码 | ✅ **完全相同** —— 运行函数生成的代码 | **兼容** |
 | `input` | ✅ 完全支持 —— 提供完整 UI 供用户输入 | ✅ **完全相同** —— 收集函数所需输入 | **兼容** |
 
-#### 为什么原生模式会破坏某些事件类型
+#### 为什么原生模式会破坏某些事件类型 {#complete-event-type-compatibility-matrix}
 
 在 **Native Mode** 下，服务器会根据流式模型输出构造内容块，并反复发出带完整序列化内容快照的 `"chat:completion"` 事件。客户端会把这些快照视为权威数据，并彻底替换消息内容，从而实际上覆盖掉之前由工具发出的 `message`、`chat:message` 或 `replace` 更新。
 
@@ -186,7 +225,7 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 - 客户端的 `chatCompletionEventHandler` 会把快照当作完整替换：`message.content = content`
 - 这会导致工具发出的内容更新闪烁并消失
 
-#### 最佳实践与建议
+#### 最佳实践与建议 {#why-native-mode-breaks-certain-event-types}
 
 **对于需要实时 UI 更新的工具：**
 ```python
@@ -244,7 +283,7 @@ async def universal_tool(self, prompt: str, __event_emitter__=None, __metadata__
     return "工具执行已完成"
 ```
 
-#### 事件发射器问题排查
+#### 事件发射器问题排查 {#best-practices-and-recommendations}
 
 **Native 模式冲突的症状：**
 - 工具发出的消息短暂出现后又消失
@@ -300,7 +339,7 @@ async def debug_events_tool(self, __event_emitter__=None, __metadata__=None) -> 
 
 下面这些特定事件类型的行为各不相同：
 
-#### Status Events ✅ FULLY COMPATIBLE
+#### Status Events ✅ FULLY COMPATIBLE {#troubleshooting-event-emitter-issues}
 
 **Status 事件在 Default 和 Native 两种函数调用模式下行为完全一致。** 这是在工具执行期间提供实时反馈最可靠的事件类型。
 
@@ -486,7 +525,7 @@ async def batch_processor_tool(
 ```
 </details>
 
-#### Message 事件 ⚠️ 仅限 Default 模式
+#### Message 事件 ⚠️ 仅限 Default 模式 {#status-events-fully-compatible}
 
 :::warning
 
@@ -784,7 +823,7 @@ Generated content here... This content is returned as the tool result rather tha
 ```
 </details>
 
-#### Citations ✅ 完全兼容
+#### Citations ✅ 完全兼容 {#message-events-default-mode-only}
 
 **Citation 事件在 Default 与 Native 两种函数调用模式下行为完全一致。** 这种事件类型会在聊天界面中提供来源引用，用户可以点击查看原始材料。
 
@@ -1103,7 +1142,7 @@ All data sources have been properly cited for transparency and verification.
 ```
 </details>
 
-#### Additional Compatible Event Types ✅
+#### Additional Compatible Event Types ✅ {#citations-fully-compatible}
 
 以下事件类型在 Default 和 Native 两种函数调用模式下行为完全一致：
 
@@ -1143,6 +1182,10 @@ await __event_emitter__({
 ```python
 await __event_emitter__({
     "type": "chat:tags",
+### 阀门与 UserValves（可选，但强烈建议使用） {#valves-and-uservalves-optional-but-highly-encouraged}
+
+Valves 和 UserValves 用于指定工具的可自定义设置，更多内容请参阅专门的 [Valves 与 UserValves 页面](/features/extensibility/plugin/development/valves)。存放在 Valves 中的机密信息（例如 API 密钥）可以[静态加密](/features/extensibility/plugin/development/valves#encrypting-valve-values-at-rest)。
+
     "data": {"tags": ["research", "analysis", "completed"]}
 })
 ```
@@ -1183,7 +1226,7 @@ await __event_emitter__({
 })
 ```
 
-#### 函数调用模式综合指南
+#### 函数调用模式综合指南 {#additional-compatible-event-types}
 
 :::danger Write tools for Native Mode — Default Mode is unsupported
 Default Mode **属于旧版且不再支持**。新工具应编写为在 Native Mode 下工作。下面的模式对比细节仅保留给仍在维护旧版 Default-Mode 工具的人，帮助他们了解迁移时需要弥补的差距——这 **不是** 对新项目选择 Default Mode 的建议。
@@ -1487,7 +1530,7 @@ from typing import Optional, Callable, Awaitable
 ```
 </details>
 
-### 富 UI 元素嵌入
+### 富 UI 元素嵌入 {#rich-ui-element-embedding}
 
 Tools 和 Actions 可以返回 HTML 内容，并在聊天中直接渲染为可交互的 iframe。完整文档、示例、安全注意事项和 CORS 配置请参阅专门的 **[Rich UI Embedding](/features/extensibility/plugin/development/rich-ui)** 指南。
 

@@ -3,7 +3,7 @@ sidebar_position: 3
 title: "部署选项"
 ---
 
-# 可扩展的企业部署选项
+# 可扩展的企业部署选项 {#scalable-enterprise-deployment-options}
 
 Open WebUI 的**无状态、容器优先架构**意味着：无论你把它部署为虚拟机上的 Python 进程、托管容器服务中的容器，还是 Kubernetes 集群中的 Pod，本质上运行的都是同一个应用。不同部署模式之间的差异，在于你如何**编排、扩展和运维**它，而不是应用本身的行为发生改变。
 
@@ -77,25 +77,25 @@ ENABLE_DB_MIGRATIONS=false
 
 ---
 
-## 选择你的部署模式
+## 选择你的部署模式 {#choose-your-deployment-pattern}
 
 Open WebUI 支持三种生产级部署模式。每份指南都涵盖该模式对应的架构、扩展策略和关键注意事项。
 
-### [自动扩缩容虚拟机上的 Python / Pip](./python-pip)
+### [自动扩缩容虚拟机上的 Python / Pip](./python-pip) {#python--pip-on-auto-scaling-vmsenterprisedeploymentpython-pip}
 
 将 `open-webui serve` 以 systemd 管理的进程形式，部署在云自动扩缩容虚拟机组（AWS ASG、Azure VMSS、GCP MIG）中。适合已经具备 VM 基础设施和较强 Linux 运维能力的团队，或受监管要求必须进行操作系统层直接控制的场景。
 
-### [容器服务](./container-service)
+### [容器服务](./container-service) {#container-serviceenterprisedeploymentcontainer-service}
 
 在 AWS ECS/Fargate、Azure Container Apps、Google Cloud Run 等托管平台上运行官方 Open WebUI 容器镜像。适合希望获得容器优势（不可变镜像、版本化部署、无需管理操作系统），但又不想引入 Kubernetes 复杂度的团队。
 
-### [使用 Helm 的 Kubernetes](./kubernetes-helm)
+### [使用 Helm 的 Kubernetes](./kubernetes-helm) {#kubernetes-with-helmenterprisedeploymentkubernetes-helm}
 
 在任意 Kubernetes 发行版（EKS、AKS、GKE、OpenShift、Rancher、自建集群）上使用官方 Open WebUI Helm Chart 部署。适合需要声明式基础设施、进阶自动扩缩容与 GitOps 工作流的大规模关键任务级场景。
 
 ---
 
-## 部署模式对比
+## 部署模式对比 {#deployment-comparison}
 
 | | **Python / Pip（VM）** | **容器服务** | **Kubernetes（Helm）** |
 | :--- | :--- | :--- | :--- |
@@ -109,11 +109,11 @@ Open WebUI 支持三种生产级部署模式。每份指南都涵盖该模式对
 
 ---
 
-## 可观测性
+## 可观测性 {#observability}
 
 无论采用哪种部署模式，生产环境都应具备监控与可观测性。
 
-### 健康检查
+### 健康检查 {#health-checks}
 
 - **`/health`** —— 基础存活检查。应用正常运行时返回 HTTP 200。可用于负载均衡器和自动扩缩容健康检查。
 - **`/api/models`** —— 验证应用是否能连接到已配置的模型后端。需要 API key。
@@ -130,7 +130,7 @@ OTEL_SERVICE_NAME=open-webui
 
 它会自动为 FastAPI、SQLAlchemy、Redis 和 HTTP 客户端注入观测能力，从而帮助你了解请求延迟、数据库查询性能和跨服务链路。
 
-### 结构化日志
+### 结构化日志 {#structured-logging}
 
 启用 JSON 格式日志，以便接入 Datadog、Loki、CloudWatch、Splunk 等日志平台：
 
@@ -143,7 +143,7 @@ GLOBAL_LOG_LEVEL=INFO
 
 ---
 
-## 下一步
+## 下一步 {#next-steps}
 
 - **[架构与高可用性](/enterprise/architecture)** —— 深入了解 Open WebUI 的无状态设计与高可用能力。
 - **[安全](/enterprise/security)** —— 合规框架、SSO/LDAP 集成、RBAC 与审计日志。

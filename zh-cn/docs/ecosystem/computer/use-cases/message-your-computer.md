@@ -3,7 +3,7 @@ title: "从 Telegram 给你的电脑发消息"
 sidebar_position: 5
 ---
 
-# 从 Telegram 给你的电脑发消息
+# 从 Telegram 给你的电脑发消息 {#message-your-computer-from-telegram}
 
 你在外面，想知道你启动的构建是否通过了，不想打开笔记本电脑甚至浏览器标签页。所以你对你的电脑像对人一样发消息：
 
@@ -13,7 +13,7 @@ sidebar_position: 5
 
 **你需要：** 完成快速入门，已连接 [AI 模型](/ecosystem/computer/ai/)，以及五分钟设置机器人。不需要隧道或公共 URL；Telegram 向外长轮询。（Discord、Slack 和 Signal 的工作方式相同；WhatsApp 需要公共 webhook。参见[消息机器人](/ecosystem/computer/automate/messaging-bots)了解这些平台。）
 
-## 操作步骤
+## 操作步骤 {#the-walkthrough}
 
 1. **创建机器人。** 在 Telegram 上给 [@BotFather](https://t.me/BotFather) 发消息，发送 `/newbot`，命名并复制令牌。
 
@@ -31,7 +31,7 @@ sidebar_position: 5
 
 6. **稍后在浏览器中继续。** 每个机器人对话都是该工作区中的真实聊天；当你回到电脑屏幕前时，它就在侧边栏中，包含完整的历史记录。
 
-## 为什么这样有效
+## 为什么这样有效 {#what-makes-this-work}
 
 机器人不是一个通知垫片；它是 Web 聊天使用的相同代理循环，在你选择的工作区中具有文件、终端和工具访问权限。这也是为什么允许发送者列表不可协商，以及为什么固定到一个范围明确的工作区的机器人比指向你的主目录的机器人更好。从外面问只读问题；把破坏性的操作留到你能看到差异时再做。
 

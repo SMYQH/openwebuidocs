@@ -3,11 +3,11 @@ title: 网络搜索和浏览
 sidebar_position: 8
 ---
 
-# 网络搜索和浏览
+# 网络搜索和浏览 {#web-search-and-browsing}
 
 网络搜索开箱即用：无需任何配置，AI 通过 DuckDuckGo 进行搜索。浏览（AI 可以导航和点击的真实浏览器）默认关闭，按实例启用。
 
-## 网络搜索
+## 网络搜索 {#web-search}
 
 在**设置 → 管理 → 网络**中配置：一个主开关，以及一个设置为 **auto** 或特定提供商的提供商。
 
@@ -20,7 +20,7 @@ sidebar_position: 8
 
 在 **auto** 模式下，Computer 按此优先级使用第一个配置的提供商：Exa → Perplexity → Tavily → Brave → Firecrawl → SearXNG → DuckDuckGo。密钥放在 UI 或环境变量中（`EXA_API_KEY` 等；参见[环境变量](/ecosystem/computer/reference/environment-variables)）。
 
-## 浏览
+## 浏览 {#browsing}
 
 默认关闭；在同一**设置 → 管理 → 网络**页面中有一个主开关。三个提供商：
 

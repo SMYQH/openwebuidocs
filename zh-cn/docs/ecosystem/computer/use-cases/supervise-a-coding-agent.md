@@ -3,13 +3,13 @@ title: "从任何地方监督编码代理"
 sidebar_position: 11
 ---
 
-# 从任何地方监督编码代理
+# 从任何地方监督编码代理 {#supervise-a-coding-agent-from-anywhere}
 
 离开家之前，你让 Claude Code 将设置模块迁移出已弃用的 API。午餐时间左右，它到达了你担心的部分：数据库模式。你想看到它提议什么，回答它的疑问，然后让它继续，无需在办公桌前，也无需给它空白支票。
 
 **你需要：** 已连接[编码代理](/ecosystem/computer/ai/coding-agents)（Claude Code、Codex、Cursor、Grok、OpenCode、Cline 或 Pi），通过 [Tailscale](/ecosystem/computer/phone-and-remote/tailscale) 的远程访问，以及主机设置为[保持唤醒](/ecosystem/computer/phone-and-remote/keep-it-running)。
 
-## 操作步骤
+## 操作步骤 {#the-walkthrough}
 
 1. **离开前开始任务。** 在项目工作区中，在聊天中选择代理的模型，陈述目标和边界，并从 **+** 菜单设置审批模式：
 
@@ -29,7 +29,7 @@ sidebar_position: 11
 
 5. **在办公桌上落地。** 当它报告完成时，git 面板显示完整的差异。从终端标签页运行测试，然后暂存并提交。会话自动恢复，所以如果有后续工作，同一个对话可以在任何设备上继续。
 
-## 为什么这样有效
+## 为什么这样有效 {#what-makes-this-work}
 
 代理、差异和你的审批队列都在一个地方，所以"检查代理"是十秒钟的一瞥，而不是 SSH 会话加 `git status`。原生后端使用你现有的订阅和登录；无需购买新内容。而且因为审批是按操作进行的，离开并不意味着放弃控制；只是控制移到了你的口袋里。
 

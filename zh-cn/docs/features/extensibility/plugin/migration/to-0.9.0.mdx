@@ -3,13 +3,13 @@ sidebar_position: 2
 title: "迁移到 0.9.0"
 ---
 
-# 🚚 迁移指南：升级到 Open WebUI 0.9.0
+# 🚚 迁移指南：升级到 Open WebUI 0.9.0 {#migration-guide-upgrading-to-open-webui-090}
 
 本指南涵盖升级到 **Open WebUI 0.9.0** 时，Tools、Functions、Pipes、Filters 与 Actions 所涉及的破坏性变更及必要更新。
 
 ---
 
-## 🧐 发生了什么变化，为什么？
+## 🧐 发生了什么变化，为什么？ {#what-has-changed-and-why}
 
 Open WebUI 0.9.0 对内部结构进行了大规模重构：后端数据层已从上到下由**同步**切换为**异步**。Users、Chats、Files、Models、Functions、Tools、Knowledge、Memories、Groups、Folders、Messages、Feedback 等几乎所有模型类上的数据库相关方法，现在都变成了 `async def`，必须通过 `await` 调用。
 
@@ -22,7 +22,7 @@ Open WebUI 0.9.0 对内部结构进行了大规模重构：后端数据层已从
 
 ---
 
-## ⚠️ 破坏性变更
+## ⚠️ 破坏性变更 {#breaking-changes}
 
 如果你的插件会访问 Open WebUI 的数据库或模型——**或者会调用任何最终会访问它们的辅助函数**——你就需要更新代码。由于 `open_webui.utils.*` 中大量工具函数以及各种 router helper 最终都会读写模型，“异步影响范围”远比表面看到的 `Users.` / `Chats.` 调用要更广。具体来说：
 
@@ -44,13 +44,13 @@ Open WebUI 现在要求使用与你数据库匹配的异步驱动。标准部署
 
 ---
 
-## ✅ 逐步迁移
+## ✅ 逐步迁移 {#step-by-step-migration}
 
-### 🔄 1. 为每个模型方法加上 await
+### 🔄 1. 为每个模型方法加上 await {#1-await-every-model-method}
 
 这是最常见的变更。凡是插件中通过模型类读写数据的地方，都要加 `await`。
 
-#### 之前（0.8.x）
+#### 之前（0.8.x） {#before-08x}
 ```python
 from open_webui.models.users import Users
 from open_webui.models.chats import Chats
@@ -61,7 +61,7 @@ def resolve_user(user_id: str):
     return user, chats
 ```
 
-#### 之后（0.9.0）
+#### 之后（0.9.0） {#after-090}
 ```python
 from open_webui.models.users import Users
 from open_webui.models.chats import Chats
@@ -76,7 +76,7 @@ async def resolve_user(user_id: str):
 
 ---
 
-### 🗄️ 2. 用 `get_async_db_context` 替换 `get_db_context`
+### 🗄️ 2. 用 `get_async_db_context` 替换 `get_db_context` {#2-replace-get_db_context-with-get_async_db_context}
 
 如果你的插件会自己打开数据库 session（虽然不常见，但某些 Tools 会这么做），那么旧的同步 helper 已不再适用，请切换到异步版本。
 
@@ -117,11 +117,11 @@ async def count_active_users():
 
 ---
 
-### 🧩 3. Pipes、Filters 与 Actions
+### 🧩 3. Pipes、Filters 与 Actions {#3-pipes-filters-and-actions}
 
 插件入口自 0.5 起本来就是异步的，因此签名无需改变。变化点在于：你在函数体内部如何访问模型。
 
-#### 之前（0.8.x）——一个查找调用者的 Pipe
+#### 之前（0.8.x）——一个查找调用者的 Pipe {#before-08x-a-pipe-that-looks-up-the-caller}
 ```python
 from pydantic import BaseModel
 from fastapi import Request
@@ -165,11 +165,11 @@ class Pipe:
 
 ---
 
-### 🛠️ 4. Tools
+### 🛠️ 4. Tools {#4-tools}
 
 Tool 方法可以声明为 `async def`（如果它会访问数据库，也应该这么做）。如果 Tool 只调用外部 API、完全不访问 Open WebUI 数据库，则无需调整。
 
-#### 之前（0.8.x）——一个读取文件的 Tool
+#### 之前（0.8.x）——一个读取文件的 Tool {#before-08x-a-tool-that-reads-a-file}
 ```python
 from open_webui.models.files import Files
 
@@ -191,7 +191,7 @@ class Tools:
 
 ---
 
-### 🧵 5. FastAPI 依赖与 session 类型
+### 🧵 5. FastAPI 依赖与 session 类型 {#5-fastapi-dependencies-and-session-types}
 
 如果你的插件暴露了自己的 FastAPI route（少数高级 Tool 会这么做），并且声明了数据库 session 依赖，那么你还需要同时更新依赖函数与类型标注。
 
@@ -221,7 +221,7 @@ async def my_endpoint(db: AsyncSession = Depends(get_async_session)):
 
 ---
 
-### 📣 6. Event emitters 的调用方式不变
+### 📣 6. Event emitters 的调用方式不变 {#6-event-emitters-are-still-called-the-same-way}
 
 内部构造器 `get_event_emitter` / `get_event_call` 在这个版本中已经变为异步，但**插件作者不需要关心这一点**。你仍然会像以前一样，在函数签名中拿到已构建好的 `__event_emitter__` 与 `__event_call__`，并继续像以前那样 `await` 它们：
 
@@ -234,7 +234,7 @@ response = await __event_call__({"type": "input", "data": {...}})
 
 ---
 
-### 🔁 7. 第三方库还不支持 async 怎么办？
+### 🔁 7. 第三方库还不支持 async 怎么办？ {#7-third-party-libraries-that-dont-yet-support-async}
 
 如果你依赖的第三方库只提供同步 API（例如旧 HTTP 客户端，或做阻塞式 I/O 的库），请不要直接阻塞事件循环。应该把它包到线程中执行：
 
@@ -248,7 +248,7 @@ result = await anyio.to_thread.run_sync(legacy_client.fetch, url)
 
 ---
 
-## 🌟 回顾
+## 🌟 回顾 {#recap}
 
 - 给**每一个**模型方法调用加上 `await`——它们现在都返回 coroutine
 - 对所有基于数据库的 `open_webui.*` helper 也一样处理（包括大量 `utils`、retrieval、权限控制、router helper）。如果它过去是同步的，又会碰数据，那么现在基本已经异步化

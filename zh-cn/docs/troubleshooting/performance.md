@@ -3,7 +3,7 @@ sidebar_position: 15
 title: "性能与内存"
 ---
 
-# 优化、性能与内存占用
+# 优化、性能与内存占用 {#optimization-performance--ram-usage}
 
 本指南系统梳理了优化 Open WebUI 的常见思路。最合适的配置高度取决于你的部署目标。你可以先判断自己更接近哪一种场景：
 
@@ -19,7 +19,7 @@ title: "性能与内存"
 
 ---
 
-## ⚡ 性能调优（速度与响应）
+## ⚡ 性能调优（速度与响应） {#performance-tuning-speed--responsiveness}
 
 当 Open WebUI 在聊天生成或高并发下显得缓慢、卡顿时，可以优先考虑这些优化点。
 
@@ -39,11 +39,11 @@ title: "性能与内存"
 - **外部/云端**：`gpt-5-nano`、`gemini-2.5-flash-lite`、`llama-3.1-8b-instant`
 - **本地**：`qwen3:1b`、`gemma3:1b`、`llama3.2:3b`
 
-### 2. 缓存与延迟优化
+### 2. 缓存与延迟优化 {#2-caching--latency-optimization}
 
 这些设置可以减少延迟和外部 API 请求量。
 
-#### 模型缓存
+#### 模型缓存 {#model-caching}
 大幅降低启动时间，并减少向外部提供商拉取模型列表的次数。
 
 :::warning 对 OpenRouter 和多模型提供商尤其重要
@@ -56,7 +56,7 @@ title: "性能与内存"
 - **Env Var**：`MODELS_CACHE_TTL=300`
   - 说明：为外部 API 响应设置 5 分钟缓存
 
-#### 搜索查询缓存
+#### 搜索查询缓存 {#search-query-caching}
 在同一轮对话中，复用为 Web Search / RAG 生成的搜索查询，避免重复调用 LLM。
 
 - **Env Var**：`ENABLE_QUERIES_CACHE=True`
@@ -64,22 +64,22 @@ title: "性能与内存"
 - **环境变量**：`ENABLE_BASE_MODELS_CACHE=True`
 
 <span id="-database-optimization"></span>
-## 📦 数据库优化 {#-database-optimization}
+## 📦 数据库优化 {#database-optimization}
 
 对大规模部署来说，数据库配置是稳定性的核心。
 
-### PostgreSQL（大规模部署必需）
+### PostgreSQL（大规模部署必需） {#postgresql-mandatory-for-scale}
 对任何多用户或高并发部署，**PostgreSQL 都是必需的**。SQLite（默认值）不是为高并发设计的，最终会成为瓶颈，并带来锁冲突。
 
 - **Variable**：`DATABASE_URL`
 - **Example**：`postgres://user:password@localhost:5432/webui`
 
-### 聊天保存策略
+### 聊天保存策略 {#user-active-status-write-throttling-set-this-on-every-deployment}
 默认情况下，Open WebUI 会在生成完成后保存聊天。虽然也支持实时逐 token 保存，但这会带来极高的数据库写入压力，**强烈不建议**开启。
 
 - **Env Var**：`ENABLE_REALTIME_CHAT_SAVE=False`（默认）
 - **效果**：只在生成完成后（或按周期）保存聊天
-- **建议**：生产环境**不要启用** `ENABLE_REALTIME_CHAT_SAVE`。详情见 [Environment Variable Configuration](/reference/env-configuration#enable_realtime_chat_save)。
+- **建议**：生产环境**不要启用** `ENABLE_REALTIME_CHAT_SAVE`。该变量已不再受支持。
 
 ### 在线状态写入节流（每个部署都建议设置）
 
@@ -104,7 +104,7 @@ Open WebUI 通过向数据库写入每个用户的 `last_active_at` 时间戳来
 如果你在升级到 v0.7.0 后看到 Admin 页面加载变慢、API 超时或 UI 无响应，很可能就是因为启用了数据库会话共享。对 Raspberry Pi 或 CPU 配额很低的容器，请确保 `DATABASE_ENABLE_SESSION_SHARING=False`。
 :::
 
-### 连接池大小
+### 连接池大小 {#vector-database-rag}
 对高并发 PostgreSQL 部署，默认连接池可能不够用。如果你看到 `QueuePool limit reached` 或连接超时，可考虑提高连接池：
 
 - **Env Var**：`DATABASE_POOL_SIZE=15`
@@ -112,19 +112,6 @@ Open WebUI 通过向数据库写入每个用户的 `last_active_at` 时间戳来
 
 **重要：** 这两个值的总和应明显低于数据库的 `max_connections`。PostgreSQL 默认上限是 100，因此单个 Open WebUI 实例建议保持在 50-80 以下。
 
-### 向量数据库（RAG）
-在多用户场景中，Vector DB 的选择非常关键。
-
-- **ChromaDB（默认）**：**不适合** 多 worker（`UVICORN_WORKERS > 1`）或多副本部署。默认 ChromaDB 使用本地 **SQLite** 支持的 `PersistentClient`，SQLite 不具备 fork-safe 特性；uvicorn fork 多 worker 后，并发写入会直接导致 worker 崩溃（`Child process died`）或数据库损坏。详见 [扩缩容与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
-- **推荐方案：**
-  - **Milvus** 或 **Qdrant**：更适合大规模和高性能场景
-  - **PGVector**：如果你已经使用 PostgreSQL，这是很好的选择
-  - **ChromaDB HTTP mode**：若你仍想使用 ChromaDB，请将其作为[独立服务](/reference/env-configuration#chroma_http_host)运行，让 Open WebUI 通过 HTTP 访问
-- **多租户：** 如果使用 Milvus 或 Qdrant，可考虑开启多租户：
-  - `ENABLE_MILVUS_MULTITENANCY_MODE=True`
-  - `ENABLE_QDRANT_MULTITENANCY_MODE=True`
-
-<span id="content-extraction-engine"></span>
 ### 内容提取引擎 {#content-extraction-engine}
 
 :::danger 默认内容提取器会造成内存泄漏
@@ -160,18 +147,11 @@ Open WebUI 通过向数据库写入每个用户的 `last_active_at` 时间戳来
 - **Env Var**：`RAG_EMBEDDING_ENGINE=openai`
 - **效果**：嵌入模型不会再驻留于 Open WebUI 进程内，每个 worker 能释放数百 MB 内存
 
-### 优化文档切块
+### 优化文档切块 {#optimizing-document-chunking}
 
 切块方式会直接影响存储效率与检索质量：
 
-- **优先使用 Markdown Header Splitting**：这样能保留文档的语义结构
-- **设置 Chunk Min Size Target**：使用 markdown header splitter 时，可能产生极小 chunk（例如只有一个小标题）
-  - **Env Var**：`CHUNK_MIN_SIZE_TARGET=1000`
-  - **收益**：自动把小 chunk 与邻近块合并，减少向量数量并改善 RAG 效果
-
----
-
-## 📈 扩缩容基础设施（多租户与 Kubernetes）
+## 📈 扩缩容基础设施（多租户与 Kubernetes） {#scaling-infrastructure-multi-tenancy--kubernetes}
 
 如果你要支持**企业级规模**（数百用户），简单的 Docker Compose 往往不够，需要迁移到集群环境。
 
@@ -181,21 +161,110 @@ Open WebUI 通过向数据库写入每个用户的 `last_active_at` 时间戳来
 - **Redis（必需）**：当使用多个 worker 或多个副本时，**必须**使用 Redis 处理 WebSocket 与会话同步，详见 [Redis Integration](/tutorials/integrations/redis)
 - **负载均衡**：建议 Ingress 支持 **Session Affinity（Sticky Sessions）**
 - **反向代理缓存**：为静态资源（JS、CSS、图片）启用缓存，以降低应用服务器负载；参考 [Nginx Config](/reference/https/nginx) 与 [Caddy Config](/reference/https/caddy)
-- **关闭代理缓冲（流式输出关键项）**：如果使用 Nginx，**必须**关闭 `proxy_buffering`，否则会导致 Markdown 乱码和流式变慢。详见 [Streaming Troubleshooting](/troubleshooting/connection-error#-garbled-markdown--streaming-response-corruption)
+- **关闭代理缓冲（流式输出关键项）**：如果使用 Nginx，**必须**关闭 `proxy_buffering`，否则会导致 Markdown 乱码和流式变慢。详见 [Streaming Troubleshooting](/troubleshooting/connection-error#garbled-markdown--streaming-response-corruption)
 
 ---
 
-## ⚡ 高并发与网络优化 {#-high-concurrency--network-optimization}
+## ⚡ 高并发与网络优化 {#high-concurrency--network-optimization}
 
 当同时在线用户较多时，下列设置很容易成为关键瓶颈。
 
-#### 批量流式输出 token
+#### 批量流式输出 token {#batch-streaming-tokens}
 默认情况下，Open WebUI 会把 LLM 返回的**每一个 token**都立即流式推送给前端。高频推流会增加服务器网络 IO 与 CPU 开销；若你还启用了实时聊天保存（不推荐），数据库压力会更大。
 
 通过调大 chunk size，可以把这些更新打包后再发送给客户端。代价只是 UI 流式显示会稍微不那么“丝滑”，但对性能通常很有帮助。
 
 - **Env Var**：`CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE=7`
   - **建议**：高并发实例可设置为 **5-10**
+
+#### HTTP 响应压缩 {#http-response-compression}
+
+默认情况下，Open WebUI 会在应用内部使用 ZStd/Brotli/Gzip 压缩 HTTP 响应（JSON API 响应以及 Web UI 的静态 JS/CSS 资源）。这会在每个 worker 上消耗 CPU：对生产部署进行性能剖析（py-spy）显示，约有 **3–4% 的 worker CPU 时间**花在压缩中间件上。关闭它可以释放这部分 CPU，并略微降低响应延迟。
+
+*   **作用范围**：仅限大于 500 字节且内容类型可压缩的普通 HTTP 响应。WebSocket（Socket.IO）流量和流式对话响应（SSE）都未经压缩直接透传，因此对话流式传输的热路径两种情况下完全相同。
+*   **何时关闭**：你的反向代理 / 负载均衡器 / CDN 已经会压缩响应（推荐：在那里开启并关闭应用内的压缩），或者用户通过快速/本地网络访问实例，额外的传输体积无关紧要。
+*   **何时保持开启**：后端直接暴露在互联网上、前面没有任何负责压缩的组件，且用户通过慢速或移动网络连接。未压缩时，首次（未缓存）页面加载会多传输数兆字节，而长对话历史或大模型列表这类大载荷会增长 5–10 倍。
+
+- **环境变量**：`ENABLE_COMPRESSION_MIDDLEWARE=false`
+
+*   **推荐搭配**：当你改用代理来代替应用侧压缩时，也让代理**激进地缓存静态资源**。Open WebUI 的 JS/CSS 资源包位于 `/_app/immutable/` 下且文件名带内容哈希，因此可以用 `Cache-Control: public, max-age=31536000, immutable` 缓存并直接从代理缓存返回，根本不会命中 worker，这消除了除首次访问外每次访问都“首次页面加载更大”的缺点。现成的 Nginx 配置片段参见[扩展 → 在代理层配合静态资源缓存](/getting-started/advanced-topics/scaling#pair-it-with-static-asset-caching-at-the-proxy)。
+
+完整的取舍讨论参见 [`ENABLE_COMPRESSION_MIDDLEWARE`](/reference/env-configuration#enable_compression_middleware)。
+
+- **优先使用 Markdown Header Splitting**：这样能保留文档的语义结构
+- **设置 Chunk Min Size Target**：使用 markdown header splitter 时，可能产生极小 chunk（例如只有一个小标题）
+  - **Env Var**：`CHUNK_MIN_SIZE_TARGET=1000`
+  - **收益**：自动把小 chunk 与邻近块合并，减少向量数量并改善 RAG 效果
+
+---
+
+#### 流式响应组装 {#streamed-response-assembly}
+
+Open WebUI 会在每个数据块到达时重建响应的文本，每次都复制此前收到的全部内容。其开销随答案长度呈平方级增长，并且消耗在事件循环上，因此一个正在组装超长答案的 worker 会拖住它正在服务的其它所有流。改为就地扩展文本可以消除复制，并随之降低内存峰值，因为复制需要同时在内存中保存新旧两个字符串。
+
+- **环境变量**：`ENABLE_CHAT_RESPONSE_STREAM_INPLACE_APPEND=true`
+
+*   *建议*：在长答案属于常态（智能体记录、大段代码输出、超长工具输出）且同时有多个流在传输的地方开启它。普通对话答案无论哪种方式都在亚毫秒级，因此小型实例不会有明显感觉。
+*   *代价*：如果追加过程中内存耗尽，那一条消息会留空，而不是保留已经收集到的文本。容器内存限制则会直接杀死进程，因此这需要一次分配被拒绝，这种情况很少见。
+
+完整说明参见 [`ENABLE_CHAT_RESPONSE_STREAM_INPLACE_APPEND`](/reference/env-configuration#enable_chat_response_stream_inplace_append)。
+
+#### WebSocket 帧压缩 {#websocket-frame-compression}
+
+上面的 HTTP 中间件从不处理 WebSocket 流量，但 WebSocket 服务器会自行压缩帧，而这才是流式负载下值得关闭的那一项。对话响应以每个 token 一个极小帧的形式到达，因此每一帧都会被单独压缩、对每个订阅者各压缩一次，而在这个尺寸下几乎没有任何收益。在高强度流式传输下，这会表现为可测量的 worker CPU 占用。
+
+- **环境变量**：`UVICORN_WS_PER_MESSAGE_DEFLATE=false`
+
+*   *代价*：原本压缩效果好的帧是少数的大帧，例如一条完整消息或一组来源资料，而且即便是一条很长的回复，未压缩也只有几百 KB，任何网络都能无明显延迟地传输。
+*   *默认值*：开启。
+
+完整说明参见 [`UVICORN_WS_PER_MESSAGE_DEFLATE`](/reference/env-configuration#uvicorn_ws_per_message_deflate)。
+
+#### WebSocket 心跳 {#websocket-heartbeats}
+
+每个已连接的浏览器都会按固定间隔（默认 30 秒）告诉服务器自己还在。这意味着每个打开的标签页每秒都有一条小消息，因此一个挂着数千个空闲标签页的实例会花掉可观的时间去处理这些不携带任何内容的消息。
+
+- **环境变量**：`WEBSOCKET_HEARTBEAT_INTERVAL=60`
+
+*   **代价**：服务器会保留四倍间隔的时间（即 120 秒）作为在线状态记录，取两者中的较大值，因此合上笔记本离开的用户会在退出活跃用户统计之前更长时间地显示为活跃。
+*   **取值范围**：数值限定在 `5` 到 `90` 之间。该设置会发送到浏览器，因此无需重新构建前端即可生效。
+
+参见 [`WEBSOCKET_HEARTBEAT_INTERVAL`](/reference/env-configuration#websocket_heartbeat_interval)。
+
+### 向量数据库（RAG）
+在多用户场景中，Vector DB 的选择非常关键。
+
+- **ChromaDB（默认）**：**不适合** 多 worker（`UVICORN_WORKERS > 1`）或多副本部署。默认 ChromaDB 使用本地 **SQLite** 支持的 `PersistentClient`，SQLite 不具备 fork-safe 特性；uvicorn fork 多 worker 后，并发写入会直接导致 worker 崩溃（`Child process died`）或数据库损坏。详见 [扩缩容与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
+- **推荐方案：**
+  - **Milvus** 或 **Qdrant**：更适合大规模和高性能场景
+  - **PGVector**：如果你已经使用 PostgreSQL，这是很好的选择
+  - **ChromaDB HTTP mode**：若你仍想使用 ChromaDB，请将其作为[独立服务](/reference/env-configuration#chroma_http_host)运行，让 Open WebUI 通过 HTTP 访问
+- **多租户：** 如果使用 Milvus 或 Qdrant，可考虑开启多租户：
+  - `ENABLE_MILVUS_MULTITENANCY_MODE=True`
+  - `ENABLE_QDRANT_MULTITENANCY_MODE=True`
+
+<span id="content-extraction-engine"></span>
+#### JSON 编码器 {#json-encoder}
+
+Open WebUI 会为每个请求体、API 响应、保存的对话、服务商请求和流式数据块编码和解码 JSON，也会为每个 Socket.IO 事件这样做，包括在多副本下通过 Redis 发布的事件。所有这些都经过 [orjson](https://pypi.org/project/orjson/) 处理，这是一个 Rust 实现，比 Python 标准库的 `json` 模块快数倍。
+
+*   **影响最大的地方**：集群部署中的 Socket.IO 编码、流式数据块的解析，以及长对话的保存与打开。
+*   **影响不大的地方**：聊天体积普通的单用户实例。
+*   **回退**：orjson 无法编码的内容会回退到标准库。有一处差异：`NaN` 和 `Infinity` 浮点数会被序列化为 `null`，而标准库会抛出错误。
+
+- **环境变量**：`ENABLE_ORJSON=True`
+  *   *建议*：保持开启。
+
+完整说明参见[多副本 → 使用更快的 JSON 编码器](/troubleshooting/multi-replica#use-the-faster-json-encoder)，变量本身参见 [`ENABLE_ORJSON`](/reference/env-configuration#enable_orjson)。
+
+#### 日志级别 {#log-level}
+
+被该级别过滤掉的消息根本不会被构造，因此调高级别既节省 CPU 也减少日志量，在繁忙的服务器上以及从大型知识库检索的对话中尤为明显。`WARNING` 还会丢掉记录启动、关键事件和请求处理的 `INFO` 日志行，因此如果你的日志聚合依赖这些行，请保留 `INFO`。
+
+- **环境变量**：`GLOBAL_LOG_LEVEL=WARNING`
+  *   *建议*：在依赖 `INFO` 日志行的繁忙实例上试用。绝不要在生产环境保留 `DEBUG`，它是最耗性能的级别。需要重启。
+
+完整说明参见[日志级别的代价](../getting-started/advanced-topics/logging.md#what-the-log-level-costs)。
 
 #### 线程池大小
 限制 AnyIO 工作线程池中**并发**阻塞操作（同步 DB 调用、文件 I/O、通过 `run_in_threadpool` 卸载的同步路由处理器）一次能同时运行的数量。这是一个**并发上限**，而不是一组固定预生成的 OS 线程，也**不是** CPU 核心/线程数——线程是按需懒加载并复用的，因此设置一个很大的值并**不会**凭空创建这么多线程、消耗 CPU，或在空闲时带来争用。它只决定了多少阻塞操作可以同时进行，超出的必须排队。
@@ -210,14 +279,23 @@ Open WebUI 通过向数据库写入每个用户的 `last_active_at` 时间戳来
 
 详见 [`THREAD_POOL_SIZE`](/reference/env-configuration#thread_pool_size) 的完整说明。
 
-#### AIOHTTP 客户端超时
+#### AIOHTTP 客户端超时 {#aiohttp-client-timeouts}
 较长的 LLM 输出可能超过默认超时时间，请按需调大：
 
 - `AIOHTTP_CLIENT_TIMEOUT=1800`
 - `AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=15`
 - `AIOHTTP_CLIENT_TIMEOUT_OPENAI_MODEL_LIST=15`
 
-#### 容器资源限制
+#### DNS 解析器 {#dns-resolver}
+
+默认情况下，Open WebUI 会让操作系统解析主机名，而这些查找会相互排队，并排在其他后台工作之后，因此在高负载下本应只需毫秒的查找会拖慢它所属的请求。c-ares 解析器不会排队，因此许多并发查找耗时与一次查找相当。在一次发出大量出站请求的实例上收益最大，而在空闲实例上则几乎看不出来。
+
+- **环境变量**：`AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=True`
+  *   *建议*：试用一下，然后实际操作你的模型、网页搜索和各项内部服务；若查找开始失败，请把它关回去。需要重启。
+
+c-ares 读取的名称来源比操作系统少，因此保持它开启前请先阅读 [`AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER`](../reference/env-configuration.mdx#aiohttp_client_async_dns_resolver)。如果你正在排查时好时坏的查找失败，请参阅[间歇性名称查找失败](./connection-error.mdx#intermittent-name-lookup-failures-often-reported-as-model-not-found)。
+
+#### 容器资源限制 {#container-resource-limits}
 对 Docker 部署，请确保资源配额充足：
 
 ```yaml
@@ -246,11 +324,11 @@ docker exec openwebui ls -la /proc/1/fd | wc -l
 ---
 
 <span id="️-cloud-infrastructure-latency"></span>
-## ☁️ 云基础设施延迟 {#️-cloud-infrastructure-latency}
+## ☁️ 云基础设施延迟 {#cloud-infrastructure-latency}
 
 在云上 Kubernetes（AKS、EKS、GKE）部署 Open WebUI 时，即使资源配额与本地环境看起来一致，也经常会明显比本地 Kubernetes（Rancher Desktop、kind、Minikube）或裸金属部署更慢。绝大多数情况下，根因是**底层基础设施延迟**。
 
-### 网络延迟（数据库与服务）
+### 网络延迟（数据库与服务） {#network-latency-database--services}
 
 最常见的问题，是 **Open WebUI 与数据库之间的网络延迟**。
 
@@ -290,7 +368,7 @@ docker exec openwebui ls -la /proc/1/fd | wc -l
 - 任何不是本地高速盘的场景，都应改用 **PostgreSQL**
 :::
 
-#### 为什么异步后端会让网络存储上的 SQLite 问题突然变得严重
+#### 为什么异步后端会让网络存储上的 SQLite 问题突然变得严重 {#why-the-async-backend-makes-network-storage-sqlite-fail-suddenly}
 
 如果你从 0.8.x 升级到 0.9.x，部署本身没变，却突然开始出问题，核心原因通常是 `fsync()` 延迟在异步并发下被彻底放大。
 
@@ -329,7 +407,7 @@ connection timed out, timeout 30.00
 4. **云块存储建议**
    若你必须在云上使用数据卷（无论给 PostgreSQL 还是应用本身），请选择 SSD-backed 的 **Block Storage** 类别，例如 `Premium_LRS`、`gp3`、`pd-ssd`。不要对数据库工作负载使用 File-based 存储类。
 
-### 其他云端注意事项
+### 其他云端注意事项 {#other-cloud-specific-considerations}
 
 | 因素 | 影响 | 缓解方式 |
 |--------|--------|------------|
@@ -341,11 +419,35 @@ connection timed out, timeout 30.00
 
 ---
 
-## 📉 资源效率（降低内存占用）
+## 📉 资源效率（降低内存占用） {#resource-efficiency-reducing-ram}
 
 如果你部署在内存受限设备上（Raspberry Pi、小型 VPS），可以通过下面这些方式降低 OOM 风险。
 
-### 1. 卸载辅助模型（仅本地部署相关）
+### 精简镜像 {#the-slim-image}
+
+如果你的模型、嵌入、文档提取和语音都以外部服务运行，请使用精简镜像：`ghcr.io/open-webui/open-webui:slim`（也有 `:main-slim`，或用 `:<version>-slim` 固定某个版本）。它是用 `USE_SLIM=true` 构建的标准镜像，其特点是：
+
+- 安装精简的 Python 依赖集：不含 PyTorch、SentenceTransformers、Transformers 和 faster-whisper，除 pgvector 外不含任何向量数据库客户端，不含 Playwright，不含本地 PDF 与 Office 解析器，也不含 Azure 或 Google Cloud 存储 SDK
+- 跳过 pandoc、ffmpeg、git 以及编译工具链等系统包
+- 不内置任何模型（标准镜像会附带嵌入模型、辅助嵌入模型、Whisper `base` 以及 tiktoken 编码）
+- 携带代码解释器的 Pyodide 运行时，但不含其 Python 包
+
+**效果**：amd64 下载体积约为 200 MB，而标准镜像约为 1.6 GB。永远不会加载任何本地模型或机器学习库，因此无论启用哪些功能，内存都保持在应用自身的基线水平，额外副本也不会带来模型副本。实测的空闲占用参见[内存占用](/getting-started/quick-start#slim-memory-usage)。
+
+**精简镜像上需要注意的设置：**
+
+| 功能 | 设置 |
+|---|---|
+| 嵌入 | `RAG_EMBEDDING_ENGINE=openai`、`azure_openai` 或 `ollama`。本地引擎不可用 |
+| 向量数据库 | `VECTOR_DB` 默认为 `pgvector`。请设置 `PGVECTOR_DB_URL`，或使用带 pgvector 扩展的 PostgreSQL `DATABASE_URL`。其他存储在首次使用时就会失败 |
+| 文档 | `CONTENT_EXTRACTION_ENGINE` 用于 PDF 和 Office 文件。纯文本、Markdown、CSV、HTML 和 XML 在进程内读取 |
+| 重排序 | `RAG_RERANKING_ENGINE=external`，或把重排序模型留空以使用余弦打分 |
+| 语音 | 外部的 `AUDIO_STT_ENGINE`，或用 `web` 进行浏览器识别。外部的 `AUDIO_TTS_ENGINE`，或默认浏览器语音。`BYPASS_PYDUB_PREPROCESSING` 始终开启 |
+| 数据库与文件 | SQLite 或 PostgreSQL 的 `DATABASE_URL`，`STORAGE_PROVIDER=local` 或 `s3`。其他任何组合都会导致启动失败 |
+
+有两样东西改为在运行时下载而非随镜像分发：tiktoken 编码（首次使用 `token` 文本切分器时下载，缓存在 `TIKTOKEN_CACHE_DIR` 中），以及代码解释器的 Python 包（由浏览器从 `cdn.jsdelivr.net` 获取）。完整功能对照表参见[为什么选择精简版？](/getting-started/quick-start#what-slim-leaves-out)。
+
+### 1. 卸载辅助模型（仅本地部署相关） {#1-offload-auxiliary-models-local-deployments-only}
 
 Open WebUI 会为 RAG 和 STT 等功能加载本地模型。**这一节只对本地运行模型的场景有意义。**
 
@@ -357,7 +459,7 @@ Open WebUI 会为 RAG 和 STT 等功能加载本地模型。**这一节只对本
   - **Admin Panel**：`Settings > Documents > Embedding Model Engine`
   - **Env Var**：`RAG_EMBEDDING_ENGINE=openai`
 
-#### Speech-to-Text（STT）
+#### Speech-to-Text（STT） {#speech-to-text-stt}
 本地 Whisper 模型较重（约 500MB+ RAM）。
 
 - **建议**：改用 **WebAPI**（浏览器端），让用户设备承担语音识别，服务器几乎零内存负担。
@@ -367,14 +469,14 @@ Open WebUI 会为 RAG 和 STT 等功能加载本地模型。**这一节只对本
 
 - **绕过音频预处理**：如果你使用的外部 STT 提供商（OpenAI、Deepgram、Azure、Mistral）本身就能接收原始音频并完成格式转换，可以设置 `BYPASS_PYDUB_PREPROCESSING=true`，跳过 Open WebUI 内部基于 pydub 的 MP3 转码、压缩与切块，减少 CPU 开销与 ffmpeg 依赖。
 
-### 2. 关闭未使用功能
+### 2. 关闭未使用功能 {#2-disable-unused-features}
 
 避免应用去加载你根本不用的**本地**模型。
 
 - **图像生成**：`ENABLE_IMAGE_GENERATION=False`
 - **Code Interpreter**：`ENABLE_CODE_INTERPRETER=False`
 
-### 3. 关闭后台任务
+### 3. 关闭后台任务 {#3-disable-background-tasks}
 
 如果资源非常紧张，可以关闭那些会持续触发模型推理的自动功能。
 
@@ -384,7 +486,48 @@ Open WebUI 会为 RAG 和 STT 等功能加载本地模型。**这一节只对本
 3. **Title Generation**：`ENABLE_TITLE_GENERATION=False`
 4. **Tag Generation**：`ENABLE_TAGS_GENERATION=False`
 
-### 4. SQLite 在受限容器中的内存占用 {#4-sqlite-在受限容器中的内存占用}
+### 4. 把 ChromaDB 换成 Milvus Lite（小型部署） {#4-swap-chromadb-for-milvus-lite-small-deployments}
+
+在树莓派或小型 VPS 上，除模型之外，默认的本地 ChromaDB 通常是进程中占用最大的东西。Milvus Lite 与 ChromaDB 类似，是一个嵌入式数据库，不需要服务器，也不需要额外的容器，并且能用明显更少的磁盘和更少的常驻内存保存同样的内容。切换前请先阅读下面的限制，因为它排除了任何批量导入文档的部署。
+
+:::danger 不适用于批量文档导入
+
+磁盘和内存上的节省只有在知识库规模较小且基本保持不变时才有意义。如果你打算上传大规模语料，或者要持续添加文件，请继续使用 ChromaDB 或改用 Milvus 服务器。
+
+Open WebUI 在存储文件之前会查询其内容哈希，以免同一份文档被索引两次。该查询会按元数据字段过滤，而 Milvus Lite 不为元数据建立索引，因此每次都要读取整个集合。于是你已存的文件越多，新增一个文件的代价就越高，导入整个语料的时间也会随其规模的平方级增长。
+
+使用 Open WebUI 自身的集合 schema 对本地 Milvus Lite 数据库进行测量，单次哈希查询耗时如下：
+
+| 集合中的行数 | 单次查询耗时 |
+| --- | --- |
+| 500 | 0.72s |
+| 1,000 | 1.43s |
+| 2,000 | 2.94s |
+| 3,000 | 4.51s |
+| 4,000 | 7.94s |
+
+同样的查询在 ChromaDB 上无论规模多大都保持平稳（500 行时 0.024s，4,000 行时 0.002s），因为 ChromaDB 把元数据存放在带索引的 SQLite 中。
+
+在同一台机器、相同设置和相同嵌入服务商下端到端地导入 Markdown 文件，Milvus Lite 的速度为每分钟 8 个文件，并随着集合增长跌破 5 个，而 ChromaDB 为每分钟 200 到 368 个文件。按实测的每行成本外推，28,000 个文件的语料在 Milvus Lite 上大约需要 170 小时。
+
+这里讨论的是导入。检索性能并未测量，Milvus 服务器也未测量，后者与此处描述的嵌入式 Milvus Lite 属于不同的部署方式。
+
+:::
+
+节省来自多租户，因此请与切换一起启用：
+
+```
+VECTOR_DB=milvus
+ENABLE_MILVUS_MULTITENANCY_MODE=True
+```
+
+请不要设置 `MILVUS_URI`。默认值已经指向数据目录内的嵌入式数据库，把该变量设为那个路径反而会让应用无法启动。原因以及必须事先存在的目录，参见 [`MILVUS_URI`](/reference/env-configuration#milvus_uri-required)。
+
+多租户开启后，用户共享同一组集合，每个用户的向量在其中做分区。若不开启，每个用户和每个知识库都会拥有自己的集合，这正是占用空间增长远快于内容本身的原因。在存储空间紧张或按量计费的设备上，这通常是卸载嵌入模型之后可获得的最大单项缩减。
+
+这适用于单实例部署。Milvus Lite 是由单个进程持有的文件，因此要增加副本就必须改用 Milvus 服务器。
+
+### 5. SQLite 在受限容器中的内存占用 {#5-sqlite-memory-footprint-on-constrained-containers}
 
 这个问题在**快速的本地 SSD/NVMe 上也会出现**。它属于 RAM 问题，而非存储延迟问题（关于网络存储的延迟/损坏问题，请参阅[磁盘 I/O 延迟](#disk-io-latency-sqlite--storage)）。在小型部署上，“编辑模型或知识库权限时容器被 OOM 杀死” 的最常见原因正是这个。
 
@@ -412,9 +555,18 @@ DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0         # 关闭每连接的 mmap 窗口
 
 ---
 
-## 🚀 推荐配置档案
+### 6. 大型文档上传 {#6-large-document-uploads}
 
-### 档案 1：最大隐私（弱硬件 / RPi）
+处理文档时，其文本块及其嵌入向量会在写入向量数据库的过程中一直驻留在内存中。
+
+-   **环境变量**：`RAG_EMBEDDING_BUFFER_SIZE`（默认 `1000`）。文本块会按这个数量分批嵌入并保存，因此超大文档不会一次性持有全部嵌入向量。在小型设备上可以调低它以降低峰值。参见 [`RAG_EMBEDDING_BUFFER_SIZE`](/reference/env-configuration#rag_embedding_buffer_size)。
+-   **环境变量**：`RAG_FILE_MAX_SIZE`（单位 MB，默认不设置）。在提取和嵌入之前就拒绝更大的上传。参见 [`RAG_FILE_MAX_SIZE`](/reference/env-configuration#rag_file_max_size)。
+
+---
+
+## 🚀 推荐配置档案 {#recommended-configuration-profiles}
+
+### 档案 1：最大隐私（弱硬件 / RPi） {#profile-1-maximum-privacy-weak-hardwarerpi}
 *目标：100% 本地，Raspberry Pi / 小于 4GB RAM。*
 
 1. **Embeddings**：保持默认 SentenceTransformers
@@ -422,9 +574,9 @@ DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0         # 关闭每连接的 mmap 窗口
 3. **Task Model**：关闭或使用极小模型（如 `llama3.2:1b`）
 4. **Scaling**：保留默认 `THREAD_POOL_SIZE`（40）
 5. **关闭**：图像生成、Code Interpreter、Autocomplete、Follow-up
-6. **数据库**：SQLite 即可，但限制其内存：`DATABASE_POOL_SIZE=8`、`DATABASE_SQLITE_PRAGMA_CACHE_SIZE=-2000`、`DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0`。未设置时 SQLite 连接池的默认值较大（512），参见 [SQLite 在受限容器中的内存占用](#4-sqlite-在受限容器中的内存占用)
+6. **数据库**：SQLite 即可，但限制其内存：`DATABASE_POOL_SIZE=8`、`DATABASE_SQLITE_PRAGMA_CACHE_SIZE=-2000`、`DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0`。未设置时 SQLite 连接池的默认值较大（512），参见 [SQLite 在受限容器中的内存占用](#5-sqlite-memory-footprint-on-constrained-containers)
 
-### 档案 2：单用户极客
+### 档案 2：单用户极客 {#profile-2-single-user-enthusiast}
 *目标：最大质量与速度，本地 + 外部 API 混合。*
 
 1. **Embeddings**：`RAG_EMBEDDING_ENGINE=openai`（或在快速服务器上用 `ollama` + `nomic-embed-text`）
@@ -433,7 +585,7 @@ DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0         # 关闭每连接的 mmap 窗口
 4. **数据库**：保持 `ENABLE_REALTIME_CHAT_SAVE=False`
 5. **Vector DB**：PGVector（推荐）或 ChromaDB（仅小规模可接受）
 
-### 档案 3：高规模 / 企业
+### 档案 3：高规模 / 企业 {#profile-3-high-scale--enterprise}
 *目标：大量并发用户，稳定性优先。*
 
 1. **数据库**：**PostgreSQL**（必需）
@@ -448,7 +600,7 @@ DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0         # 关闭每连接的 mmap 窗口
 10. **Caching**：`ENABLE_BASE_MODELS_CACHE=True`、`MODELS_CACHE_TTL=300`、`ENABLE_QUERIES_CACHE=True`
 11. **Redis**：单实例即可，但要配置 `timeout 1800` 和较高的 `maxclients`
 
-#### Redis 调优
+#### Redis 调优 {#redis-tuning}
 
 绝大多数部署（包括成千上万用户）都只需要一个单实例 Redis。除非你有明确高可用需求，否则**几乎不需要** Redis Cluster 或 Redis Sentinel。
 
@@ -480,7 +632,7 @@ client-output-buffer-limit normal 0 0 0 replica 268435456 67108864 60 pubsub 107
 ---
 
 <span id="️-common-anti-patterns"></span>
-## ⚠️ 常见反模式 {#️-common-anti-patterns}
+## ⚠️ 常见反模式 {#common-anti-patterns}
 
 下面这些真实世界中的错误，经常会让组织为了掩盖根因而过度扩容基础设施：
 
@@ -492,12 +644,12 @@ client-output-buffer-limit normal 0 0 0 replica 268435456 67108864 60 pubsub 107
 | **靠加副本掩盖内存泄漏** | 泄漏进程 → OOM → 自动扩容 → Redis 连接更多 → Redis 被打爆 | 先修泄漏（内容提取、嵌入引擎），再做容量规划 |
 | **继续用 Default（prompt-based）tool calling** | 已过时 / 不再支持；注入式 prompt 会破坏 KV cache → 延迟更高 → 资源需求更大 | 把所有模型切到 Native Mode |
 | **没有为 Redis 配置空闲连接超时** | 连接永远不回收 → Redis OOM → 被迫上 Redis Cluster | 在 redis.conf 中加入 `timeout 1800` |
-| **在 Actions/Filters 中使用 base64 图标** | 图标数据会嵌入到 `/api/models` 响应中，前端每次为每个模型都加载一遍。20 个模型 × 3 个 Action × 500KB base64 图标 = 每次请求多 **30 MB 负载** → 前端加载慢、带宽浪费、后端内存压力 | 把图标作为静态文件托管，并用 `icon_url` / `self.icon` 引用。参见 [Action Function icon_url 警告](/features/extensibility/plugin/functions/action#example---specifying-action-frontmatter) |
-| **在小容器上使用默认 SQLite 连接池** | 未设置 `DATABASE_POOL_SIZE` 会回退到 512 连接池；每个连接自带约 64 MB 页面缓存和一个 256 MB mmap 窗口，因此一个会扇出大量连接的工作流（编辑模型/知识库权限、重新加载长长的模型列表）会让 1 GB 容器 OOM-kill | 限制 `DATABASE_POOL_SIZE`（例如 `8`），设置 `DATABASE_SQLITE_PRAGMA_CACHE_SIZE=-2000` 和 `DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0`，给容器 **≥2 GB** 内存。参见 [SQLite 内存占用](#4-sqlite-在受限容器中的内存占用) |
+| **在 Actions/Filters 中使用 base64 图标** | 图标数据会嵌入到 `/api/models` 响应中，前端每次为每个模型都加载一遍。20 个模型 × 3 个 Action × 500KB base64 图标 = 每次请求多 **30 MB 负载** → 前端加载慢、带宽浪费、后端内存压力 | 把图标作为静态文件托管，并用 `icon_url` / `self.icon` 引用。参见 [Action Function icon_url 警告](/features/extensibility/plugin/functions/action#example-specifying-action-frontmatter) |
+| **在小容器上使用默认 SQLite 连接池** | 未设置 `DATABASE_POOL_SIZE` 会回退到 512 连接池；每个连接自带约 64 MB 页面缓存和一个 256 MB mmap 窗口，因此一个会扇出大量连接的工作流（编辑模型/知识库权限、重新加载长长的模型列表）会让 1 GB 容器 OOM-kill | 限制 `DATABASE_POOL_SIZE`（例如 `8`），设置 `DATABASE_SQLITE_PRAGMA_CACHE_SIZE=-2000` 和 `DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0`，给容器 **≥2 GB** 内存。参见 [SQLite 内存占用](#5-sqlite-memory-footprint-on-constrained-containers) |
 
 ---
 
-## 🔗 环境变量参考
+## 🔗 环境变量参考 {#environment-variable-references}
 
 所有可用变量的完整说明，请参阅 [Environment Configuration](/reference/env-configuration)。
 
@@ -509,7 +661,7 @@ client-output-buffer-limit normal 0 0 0 replica 268435456 67108864 60 pubsub 107
 | `MODELS_CACHE_TTL` | [Model Cache TTL](/reference/env-configuration#models_cache_ttl) |
 | `ENABLE_QUERIES_CACHE` | [Queries Cache](/reference/env-configuration#enable_queries_cache) |
 | `DATABASE_URL` | [Database URL](/reference/env-configuration#database_url) |
-| `ENABLE_REALTIME_CHAT_SAVE` | [Realtime Chat Save](/reference/env-configuration#enable_realtime_chat_save) |
+| `ENABLE_REALTIME_CHAT_SAVE` | 实时聊天保存（该变量已不再受支持） |
 | `CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE` | [Streaming Chunk Size](/reference/env-configuration#chat_response_stream_delta_chunk_size) |
 | `THREAD_POOL_SIZE` | [Thread Pool Size](/reference/env-configuration#thread_pool_size) |
 | `RAG_EMBEDDING_ENGINE` | [Embedding Engine](/reference/env-configuration#rag_embedding_engine) |

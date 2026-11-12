@@ -6,7 +6,7 @@ title: "安装"
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# 安装
+# 安装 {#installation}
 
 根据你的需求选择安装方式：
 
@@ -23,7 +23,7 @@ import TabItem from '@theme/TabItem';
 
 需要安装 [Docker](https://www.docker.com/products/docker-desktop/)。
 
-### 1. 启动容器
+### 1. 启动容器 {#1-start-the-container}
 
 ```bash
 docker run -d \
@@ -37,7 +37,7 @@ docker run -d \
 
 将 `your-secret-key` 替换为你自己的密码。
 
-{/* TODO: Screenshot — Terminal showing the docker run command with Docker pulling the image. */}
+{/* TODO: Screenshot: Terminal showing the docker run command with Docker pulling the image. */}
 
 <details>
 <summary><b>参数说明</b></summary>
@@ -53,7 +53,7 @@ docker run -d \
 
 </details>
 
-### 2. 验证
+### 2. 验证 {#2-verify}
 
 在浏览器中打开 `http://localhost:8000/docs`，你应该能看到 Open Terminal API 页面。
 
@@ -75,7 +75,7 @@ docker logs open-terminal
 在此模式下，AI 能执行你用户账户权限范围内的任何操作，包括修改和删除文件。
 :::
 
-### 1. 运行 Open Terminal
+### 1. 运行 Open Terminal {#1-run-open-terminal}
 
 **方式 A — 免安装直接运行：**
 
@@ -92,9 +92,18 @@ pip install open-terminal
 open-terminal run --host 0.0.0.0 --port 8000 --api-key your-secret-key
 ```
 
-{/* TODO: Screenshot — Terminal showing Open Terminal starting up with server address and API key. */}
+Open Terminal 启动时会打印它的地址和密钥：
 
-### 2. 工作目录
+```
+  Local:    http://localhost:8000
+  Network:  http://<this-machine-ip>:8000
+
+  API Key:  <your key appears here>
+```
+
+当 Open WebUI 与终端运行在同一台机器上时使用 **Local** 地址；当从其他任何地方访问终端时使用 **Network** 地址。
+
+### 2. 工作目录 {#2-working-directory}
 
 Open Terminal 从当前目录提供文件服务。若要将其限定在特定项目：
 
@@ -119,7 +128,7 @@ open-terminal run --cwd /path/to/your/project
 
 在你现有的 `docker-compose.yml` 中添加 Open Terminal 服务：
 
-### 1. 更新 Compose 文件
+### 1. 更新 Compose 文件 {#1-update-your-compose-file}
 
 ```yaml title="docker-compose.yml"
 services:
@@ -144,13 +153,20 @@ volumes:
   open-terminal:
 ```
 
-### 2. 启动服务
+### 2. 启动服务 {#2-start-the-services}
 
 ```bash
 docker compose up -d
 ```
 
-{/* TODO: Screenshot — Terminal showing docker compose up -d with both containers starting. */}
+如果项目文件夹名为 `myproject`，Compose 会同时启动两个服务：
+
+```
+ Container myproject-open-terminal-1  Started
+ Container myproject-open-webui-1     Started
+```
+
+继续之前，先用 `docker compose ps` 检查两个服务是否都处于健康状态。
 
 :::tip 连接 URL
 当两个服务共享同一个 Docker Compose 网络时，使用服务名称作为主机：
@@ -165,7 +181,7 @@ http://open-terminal:8000
 
 ---
 
-## 作为 MCP 服务器运行
+## 作为 MCP 服务器运行 {#run-as-an-mcp-server}
 
 Open Terminal 也可以作为 [Model Context Protocol](https://modelcontextprotocol.io/) 服务器运行，使用 `open-terminal mcp` 将终端暴露给 MCP 兼容客户端。这需要可选的 `mcp` 额外依赖（会引入 [FastMCP](https://github.com/jlowin/fastmcp)）。
 
@@ -194,10 +210,7 @@ open-terminal mcp --transport streamable-http --host 127.0.0.1 --port 8000
 
 ---
 
-## 下一步
+## 下一步 {#next-steps}
 
-[**连接到 Open WebUI →**](./connecting)
-
-:::tip 想要一整台机器？
-[**cptr**](https://github.com/open-webui/computer)（Open WebUI Computer）将你的整台电脑放进一个浏览器标签页：文件、终端、git、编辑器和 AI 触手可及，从任何设备都能访问。它还可以通过其网关 API 连接到 Open WebUI。
-:::
+- [**连接到 Open WebUI →**](./connecting.md)
+- [**Updating →**](./updating.mdx)：如何把现有安装迁移到更新的版本。

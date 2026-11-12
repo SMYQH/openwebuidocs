@@ -25,7 +25,7 @@ title: "SearchApi"
 
 [SearchApi](https://searchapi.io) 提供一组实时 SERP API。任何当前或未来会返回 `organic_results` 的 SERP 引擎都可被支持。默认 web search engine 是 `google`，但你也可以改成 `bing`、`baidu`、`google_news`、`bing_news`、`google_scholar`、`google_patents` 等。
 
-### 设置
+### 设置 {#setup}
 
 1. 前往 [SearchApi](https://searchapi.io) 并登录或创建新账号
 2. 进入 `Dashboard`（控制台），复制 API key
@@ -37,7 +37,7 @@ title: "SearchApi"
 
 ![Open WebUI 管理面板](/images/tutorial_searchapi_search.png)
 
-#### 注意
+#### 注意 {#note}
 
 你还需要在提示词输入框中通过加号（`+`）按钮启用 `Web search`，才能使用 [SearchApi](https://www.searchapi.io/) 引擎进行网页搜索。
 

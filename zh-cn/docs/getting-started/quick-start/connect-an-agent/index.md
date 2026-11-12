@@ -3,7 +3,7 @@ sidebar_position: 0
 title: "连接 Agent"
 ---
 
-# 🤖 连接 Agent
+# 🤖 连接 Agent {#connect-an-agent}
 
 **将 Open WebUI 作为自主 AI Agent 的聊天前端。**
 
@@ -11,7 +11,7 @@ AI Agent 不只是普通模型提供商。它们可以执行终端命令、读�
 
 ---
 
-## 它与“提供商”有什么不同？
+## 它与“提供商”有什么不同？ {#how-is-this-different-from-a-provider}
 
 当你[连接提供商](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)时，你连接的是一个**模型**。它接收你的消息并返回回复，仅此而已。
 
@@ -28,17 +28,20 @@ Agent 会根据你的消息决定何时、如何使用这些工具，而 Open We
 
 ---
 
-## 可用 Agent
+## 可用 Agent {#available-agents}
+
+对于新的部署，我们推荐 **Open WebUI 搭配 [Open Terminal](/features/open-terminal)** 用于 Agent 工作流。下面的集成连接的是独立的 Agent 运行时。
 
 | Agent | 描述 | 指南 |
 |-------|-------------|-------|
-| **cptr** (Open WebUI Computer) | 由 Open WebUI 团队开发，把你的电脑装进浏览器标签页；每个工作区都通过兼容 OpenAI 的网关以模型的形式接入 Open WebUI，享有完整工具访问能力 | [设置 cptr →](./cptr) |
 | **Hermes Agent** | Nous Research 的自主 Agent，支持终端、文件操作、网页搜索、记忆和可扩展技能 | [设置 Hermes Agent →](./hermes-agent) |
 | **OpenClaw** | 开源自托管 Agent 框架，支持 shell 访问、文件操作、网页浏览和消息频道集成 | [设置 OpenClaw →](./openclaw) |
 
 ---
 
-## 工作原理
+[Open WebUI Computer](/getting-started/quick-start/connect-an-agent/cptr) 正在逐步弃用；其集成指南仍会为现有安装保留。
+
+## 工作原理 {#how-it-works}
 
 无论你连接的是哪个 Agent，整体架构都一样：
 

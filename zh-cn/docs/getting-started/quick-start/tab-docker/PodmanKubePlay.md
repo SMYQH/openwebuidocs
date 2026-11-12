@@ -1,10 +1,10 @@
-# Podman Kube Play 配置
+# Podman Kube Play 配置 {#podman-kube-play-setup}
 
 Podman 支持类似 Kubernetes 的语法来部署 Pod、卷等资源，而无需真正运行完整 Kubernetes 集群。[更多关于 Kube Play](https://docs.podman.io/en/latest/markdown/podman-kube-play.1.html)。
 
 如果你尚未安装 Podman，请查看 [Podman 官方安装说明](https://podman.io/docs/installation)。
 
-## 示例 `play.yaml`
+## 示例 `play.yaml` {#example-playyaml}
 
 下面是一个用于部署的 Podman Kube Play 示例文件：
 
@@ -41,7 +41,7 @@ spec:
       storage: 5Gi
 ```
 
-## 启动
+## 启动 {#starting}
 
 运行以下命令启动 Pod：
 
@@ -49,7 +49,7 @@ spec:
 podman kube play ./play.yaml
 ```
 
-## 使用 GPU 支持
+## 使用 GPU 支持 {#using-gpu-support}
 
 若需 Nvidia GPU 支持，请将容器镜像替换为 `ghcr.io/open-webui/open-webui:cuda`，并在 Pod 资源限制中声明所需设备（GPU）：
 

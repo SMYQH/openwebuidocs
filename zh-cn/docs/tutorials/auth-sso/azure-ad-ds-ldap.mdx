@@ -8,7 +8,7 @@ title: "Azure AD LDAP"
 
 本指南说明如何将 Open WebUI 与 Azure AD 域服务（AAD DS）集成，实现安全 LDAP（LDAPS）认证。
 
-## 1. 前提条件
+## 1. 前提条件 {#1-prerequisites}
 
 | 条目 | 描述 |
 | ------------------- | ------------------------------------------------------------------------ |
@@ -23,7 +23,7 @@ title: "Azure AD LDAP"
 
 :::
 
-## 2. 部署 Azure AD 域服务
+## 2. 部署 Azure AD 域服务 {#2-deploy-azure-ad-domain-services}
 
 1. 在 Azure 门户中，搜索并选择 **Azure AD Domain Services**。
 2. 点击 **Create（创建）**。
@@ -35,7 +35,7 @@ title: "Azure AD LDAP"
 
 6. 部署完成后，导航至 Azure AD DS 页面，记录**虚拟网络/子网**。如果您的 Open WebUI 服务器不在同一 VNet 中，则必须创建 NSG 规则以允许端口 636 上的流量。
 
-## 3. 查找安全 LDAP 外部 IP
+## 3. 查找安全 LDAP 外部 IP {#3-find-the-secure-ldap-external-ip}
 
 1. 导航至 AAD DS 页面 → **Overview（概述）**。
 2. 在 **Secure LDAP（安全 LDAP）** 下，查找**外部 IP 地址**。
@@ -43,9 +43,9 @@ title: "Azure AD LDAP"
 
     ![查找安全 LDAP 外部 IP](/images/tutorials/ldap/azure-ad-ds-secure-ldap-ip.png)
 
-## 4. 启用安全 LDAP（LDAPS）
+## 4. 启用安全 LDAP（LDAPS） {#4-enable-secure-ldap-ldaps}
 
-### 4.1. 证书（PFX）要求
+### 4.1. 证书（PFX）要求 {#41-certificate-pfx-requirements}
 
 | 属性 | 要求 |
 | -------------------------- | ------------------------------------------------------------------------ |
@@ -60,7 +60,7 @@ title: "Azure AD LDAP"
 
 :::
 
-### 4.2. 使用 OpenSSL 生成通配符 PFX（用于测试）
+### 4.2. 使用 OpenSSL 生成通配符 PFX（用于测试） {#42-generate-a-wildcard-pfx-with-openssl-for-testing}
 
 1. **创建 `openssl_wildcard.cnf`：**
 
@@ -127,7 +127,7 @@ title: "Azure AD LDAP"
 
     ![启用安全 LDAP](/images/tutorials/ldap/azure-ad-ds-ldaps-enabled.png)
 
-## 5. 配置网络安全组（NSG）
+## 5. 配置网络安全组（NSG） {#5-configure-network-security-group-nsg}
 
 | 设置 | 示例值 |
 | -------------- | ------------- |
@@ -146,7 +146,7 @@ title: "Azure AD LDAP"
 
 :::
 
-## 6. 在 Entra ID 中创建服务账户
+## 6. 在 Entra ID 中创建服务账户 {#6-create-a-service-account-in-entra-id}
 
 1. 在 Azure 门户中，导航至 **Entra ID** → **Users（用户）** → **New user（新建用户）**。
 2. 设置用户名（例如 `ldap@{your_domain}.onmicrosoft.com`）。
@@ -155,7 +155,7 @@ title: "Azure AD LDAP"
 
     ![创建 Entra ID 服务账户](/images/tutorials/ldap/entra-id-create-service-account.png)
 
-## 7. 配置 Open WebUI 环境变量（.env）
+## 7. 配置 Open WebUI 环境变量（.env） {#7-configure-open-webui-environment-variables-env}
 
 以下是您的 `.env` 文件的示例配置：
 
@@ -197,7 +197,7 @@ LDAP_SEARCH_FILTER="(&(objectClass=user)(objectCategory=person))"
 ```
 *将 `{your_domain}` 和 `<STRONG-PASSWORD>` 等占位符替换为您的实际值。*
 
-## 8. 配置群组同步（可选）
+## 8. 配置群组同步（可选） {#8-configure-group-synchronization-optional}
 
 Open WebUI 可以直接从您的 LDAP 目录同步群组成员资格。当用户登录时，将获取并更新其在 Open WebUI 中的群组信息。
 
@@ -207,7 +207,7 @@ Open WebUI 可以直接从您的 LDAP 目录同步群组成员资格。当用户
 -   `ENABLE_LDAP_GROUP_CREATION="true"`：如果 LDAP 中的群组在 Open WebUI 中不存在，将自动创建。
 -   `LDAP_ATTRIBUTE_FOR_GROUPS="memberOf"`：指定包含用户群组成员资格的 LDAP 属性。`memberOf` 是 Active Directory 环境中此目的的标准属性。
 
-## 9. 将 CA 证书添加到服务器（可选）
+## 9. 将 CA 证书添加到服务器（可选） {#9-add-ca-certificate-to-server-optional}
 
 要启用完整的 TLS 验证（`LDAP_VALIDATE_CERT="true"`）：
 
@@ -217,16 +217,16 @@ sudo update-ca-certificates
 ```
 进行此更改后重启 Open WebUI。
 
-## 10. 测试 LDAPS 连接
+## 10. 测试 LDAPS 连接 {#10-test-ldaps-connection}
 
-### 10.1. OpenSSL 握手测试
+### 10.1. OpenSSL 握手测试 {#101-openssl-handshake-check}
 
 ```bash
 openssl s_client -connect 1.222.222.222:636 -showcerts
 ```
 查找 `Verify return code: 0 (ok)` 以确认证书可信。
 
-### 10.2. ldapsearch（绑定测试）
+### 10.2. ldapsearch（绑定测试） {#102-ldapsearch-bind-test}
 
 ```bash
 ldapsearch -H ldaps://1.222.222.222 \

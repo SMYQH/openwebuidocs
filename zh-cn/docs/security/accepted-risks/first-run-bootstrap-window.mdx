@@ -1,0 +1,62 @@
+---
+title: "首次运行的管理员提升"
+---
+
+# 首次运行的管理员提升 {#first-run-admin-promotion}
+
+|  |  |
+| :--- | :--- |
+| **类别** | CWE-362，竞争条件 |
+| **状态** | 可利用的结果已在 0.9.0 修复；残余问题会安全失败并已被接受 |
+| **追踪为** | [GHSA-h3ww-q6xx-w7x3](https://github.com/open-webui/open-webui/security/advisories/GHSA-h3ww-q6xx-w7x3) / [CVE-2026-45675](https://www.cve.org/CVERecord?id=CVE-2026-45675) |
+
+---
+
+## 概述 {#summary}
+
+新建的 Open WebUI 实例在创建第一个账户之前没有管理员。该首个账户会被自动提升为管理员，随后注册功能关闭。
+
+最初的实现会先检查是否已存在用户，根据该结果决定角色，然后才插入账户。如果两个注册请求同时到达，它们可能都读到空表，并都被插入为管理员。该问题被报告给我们、得到修复，并以 [CVE-2026-45675](https://www.cve.org/CVERecord?id=CVE-2026-45675) 发布。
+
+## 我们修复的内容 {#what-we-fixed}
+
+执行顺序被颠倒了。现在账户会先以默认角色插入，只有在事后发现它是唯一存在的账户时才会被提升：
+
+```python
+# before: decide the role from a check that another request can invalidate
+has_users = Users.has_users(db=db)
+role = "admin" if not has_users else DEFAULT_USER_ROLE
+user = Auths.insert_new_auth(..., role=role)
+```
+
+```python
+# after: insert first, promote only if this account is the only one
+user = Auths.insert_new_auth(..., role=DEFAULT_USER_ROLE)
+if Users.get_num_users(db=db) == 1:
+    Users.update_user_role_by_id(user.id, "admin", db=db)
+    ENABLE_SIGNUP = False
+```
+
+注册路径在 **0.8.4** 中改为这种方式，LDAP 与 OAuth 注册路径则在 **0.9.0** 中改为这种方式，后者也是上述公告的修复版本。
+
+## 剩余部分 {#what-remains}
+
+插入操作与随后的计数并未共享同一个数据库事务。因此在使用 PostgreSQL 的部署上，两个在同一瞬间到达的注册请求可能各自都看到对方已经存在，于是双方的计数都返回 2，两个账户都不会被提升。实例上会留下账户，却没有管理员。
+
+这正是该修复被设计成失败的方向。它所取代的行为是把管理员角色交给每一个与之竞争的请求；而剩下的行为则一个都不给，因此没有人获得本不该获得的东西，而且实例上也没有可被夺取的东西：没有聊天、没有设置、没有其他账户——因为这只可能发生在针对空数据库的最初几次注册上。遇到这种状态的运维人员只需删除空数据库重新开始，不会损失任何东西。
+
+使用默认 SQLite 后端的部署不受影响，因为它的写锁可以防止两次注册以这种方式重叠。
+
+## 为何接受 {#why-it-is-accepted}
+
+在一个不承载任何内容的实例上，一个会安全失败的残余问题，优于它所取代的替代方案。要彻底移除它，就意味着把提升逻辑重写到与插入操作同一个事务中执行，相比当前的失败模式并不会带来任何安全收益——因为当前的失败模式本就已经把该角色拒绝给所有人，而不是授予给谁。
+
+这个窗口的另一半根本不是残余问题，而是一个部署决策。第一个注册的人会成为管理员，而在尚未完成配置就已被暴露的实例上，这个人未必是运维人员。**Open WebUI 面向的是私有的、可信的网络；我们在任何情况下都不建议把未配置的实例暴露到公共网络。** 请先在私有网络、VPN 或本地端口上完成配置。参见加固指南中的[网络部署位置](/getting-started/advanced-topics/hardening#network-placement)。
+
+如果实例必须立即可访问，请在首次启动前设置 `WEBUI_ADMIN_EMAIL` 与 `WEBUI_ADMIN_PASSWORD`，通过启动流程而非界面来创建管理员账户。该账户会在启动过程中被创建，注册会自动关闭，任何其他注册尝试都会被拒绝。参见[通过环境变量设置管理员账户](/getting-started/advanced-topics/hardening#admin-account-from-environment-variables)。
+
+## 参考 {#references}
+
+- [CWE-362：共享资源上的并发执行与不当同步](https://cwe.mitre.org/data/definitions/362.html)
+- [加固 Open WebUI](/getting-started/advanced-topics/hardening)
+- [Open WebUI 安全政策](../security-policy.mdx)

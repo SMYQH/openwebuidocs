@@ -1,23 +1,37 @@
 ---
 sidebar_position: 15
-title: "共享 Open WebUI"
+title: "与团队共享 Open WebUI"
+sidebar_label: "共享 Open WebUI"
+description: "让团队访问同一个 Open WebUI 实例，配置账户与资源权限，并以普通用户身份验证访问权限。"
 ---
 
-# 共享 Open WebUI
+# 与团队共享 Open WebUI {#sharing-open-webui}
 
-**部署一次，让整个团队都能访问。**
+共享同一个 Open WebUI 实例，让你的团队可以用浏览器使用已连接的模型。在邀请用户之前，先配置好网络访问、账户与权限。
 
 Open WebUI 天生就适合共享。一套实例可以服务整个组织。用户只需打开浏览器即可开始聊天，无需按座位单独安装、无需客户端依赖，也不会把数据割裂在不同机器上。
 
 ---
 
-## 为团队而生
+## 搭建一支小团队 {#set-up-a-small-team}
 
-### 顺畅接入
+先准备一个管理员账户，以及一个 Open WebUI 服务器能够访问到的模型端点。小团队可以从一套实例开始；当你的工作负载需要更大容量时，再参考[扩展指南](/getting-started/advanced-topics/scaling)。
+
+1. [安装 Open WebUI](/getting-started/quick-start) 并[连接一个模型](/getting-started/quick-start/connect-a-provider)。确认管理员可以发送消息并收到回复。
+2. 从下面选择一个[网络访问方式](#opening-your-instance-to-the-team)，并确认同事能访问到登录页。远程访问请使用 HTTPS。
+3. [审批用户账户](#the-pending-queue)，或使用你的身份提供商[配置 SSO](/features/authentication-access/auth/sso)。
+4. 创建[组](/features/authentication-access/rbac/groups)，并授予合适的[模型](/features/workspace/models)和[知识库](/features/workspace/knowledge)访问权限。请一并查看[默认权限与组权限](/features/authentication-access/rbac/permissions)：权限是累加的。
+5. 以普通用户身份登录，并按本页末尾的[访问检查项](#verify-team-access)逐条验证。管理员看到的内容并不能证明同事真的拥有预期权限。
+
+共享实例并不会自动共享所有人的文档或对话。请显式授予知识库访问权限；想分享某段对话快照时，请使用[聊天分享](/features/chat-conversations/chat-features/chatshare)。
+
+## 为团队而生 {#built-for-teams}
+
+### 顺畅接入 {#streamlined-onboarding}
 
 终端用户无需安装任何东西、管理 Docker 或操作终端。只要打开浏览器，访问你的实例 URL 并登录即可。
 
-### 协作式智能
+### 协作式智能 {#collaborative-intelligence}
 
 共享实例意味着共享知识。
 
@@ -27,27 +41,27 @@ Open WebUI 天生就适合共享。一套实例可以服务整个组织。用户
 | **共享聊天** | 将完整对话快照发送给同事 |
 | **全局提示词与知识库** | 构建专用 Agent，并立即提供给所有人使用 |
 
-### 共享算力
+### 共享算力 {#shared-compute}
 
 如果运行的是本地模型，一台强大的服务器（或集群）就能为整个团队提供能力，而不需要每张桌面都配备足够强的硬件。
 
-### 集中式管理
+### 集中式管理 {#centralized-administration}
 
 在一个地方统一管理所有内容：控制用户可访问的模型、配置 [**基于角色的访问控制（RBAC）**](/features/authentication-access/rbac)、查看审计日志，并按需限制功能。
 
 ---
 
-## 将实例开放给团队
+## 将实例开放给团队 {#opening-your-instance-to-the-team}
 
 要共享实例，你需要让它能够通过网络访问。常见做法有三种：从简单的局域网访问，到面向生产的公网域名。
 
-### 1. 零配置局域网访问
+### 1. 零配置局域网访问 {#1-zero-config-lan-local-network}
 
 如果团队成员位于同一局域网或 VPN 中，他们可以通过你的机器本地 IP 和端口访问 Open WebUI。
 
 > `http://192.168.1.100:3000`
 
-### 2. 安全的私有网络（推荐）
+### 2. 安全的私有网络（推荐） {#2-secure-private-networks-recommended}
 
 适合无需暴露到公共互联网的远程团队。叠加网络和安全隧道可以在不开放防火墙端口的情况下提供加密访问。
 
@@ -57,7 +71,7 @@ Open WebUI 天生就适合共享。一套实例可以服务整个组织。用户
 | **[Cloudflare Tunnels](/reference/https/cloudflare-tunnel)** | 通过 Cloudflare 边缘暴露，并由 Cloudflare Access（Zero Trust）保护 |
 | **[ngrok](/reference/https/ngrok)** | 适合开发或测试时的临时快速共享 |
 
-### 3. 公网 HTTPS（反向代理）
+### 3. 公网 HTTPS（反向代理） {#3-public-https-reverse-proxy}
 
 对于生产部署，请将 Open WebUI 放在反向代理之后，在你自己的域名上完成 SSL/TLS 终止（例如 `ai.yourcompany.com`）。
 
@@ -69,15 +83,15 @@ Open WebUI 天生就适合共享。一套实例可以服务整个组织。用户
 
 ---
 
-## 团队接入方式
+## 团队接入方式 {#onboarding-your-team}
 
 当实例可以通过网络访问后，你还需要管理用户如何创建账号并登录。
 
-### 待审核队列
+### 待审核队列 {#the-pending-queue}
 
-第一个注册的用户会成为**管理员**。之后所有新注册账号都会进入 **待审核** 状态，只有管理员在管理面板中批准后，才能访问模型并使用平台。
+第一个注册的用户会成为**管理员**。创建这个初始账户会自动关闭 **设置 > 管理 > 认证** 中的 **新用户注册**，此后只有管理员重新打开它，其他人才能注册。新账户随后会进入 **待审核** 状态，在管理员批准之前无法访问模型或使用平台——除非那里的 **默认用户角色** 被设为 `user`。`DEFAULT_USER_ROLE` 只在首次启动时设置该值（此后以已保存的设置为准），而 `ENABLE_SIGNUP` 会在创建第一个账户时被覆盖为关闭。
 
-### 企业级单点登录（SSO）
+### 企业级单点登录（SSO） {#enterprise-single-sign-on-sso}
 
 对于手动审批无法扩展的组织，Open WebUI 可以与现有身份提供商集成。
 
@@ -88,3 +102,13 @@ Open WebUI 天生就适合共享。一套实例可以服务整个组织。用户
 | **[SCIM 2.0](/features/authentication-access/auth/scim)** | 自动完成用户和组的开通与回收 |
 
 [**了解如何设置 SSO →**](/features/authentication-access/auth/sso)
+
+## 验证团队访问权限 {#verify-team-access}
+
+用一个属于目标组的普通账户检查以下各项：
+
+- 被允许的模型可见，并能回复测试消息。
+- 共享的知识库可以访问，并能回答来自测试文档的问题。
+- 受限的模型和受限的知识库对该账户不可见——包括通过直接链接访问时。
+
+再用组外的账户重复一遍，确认受限资源依然不可见。如果任一账户看到的范围超出预期，请查阅[组与资源访问权限](/features/authentication-access/rbac/groups#resource-access-rbac)。

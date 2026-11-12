@@ -6,10 +6,10 @@ sidebar_position: 0
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 工作区
+# 工作区 {#workspace}
 
 <ThemedImage
-  alt="工作区：五个构建块（模型、知识、提示词、技能、工具）组合成 Open WebUI 核心"
+  alt="工作区：一个收纳盘，其中一格装着物品"
   sources={{
     light: useBaseUrl('/images/banners/workspace-light.svg'),
     dark: useBaseUrl('/images/banners/workspace-dark.svg'),
@@ -26,7 +26,37 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | [**模型**](/features/workspace/models) | 用系统提示词、参数、知识和工具包装基础模型，然后将其保存为模型选择器中的可复用预设。 |
 | [**知识**](/features/workspace/knowledge) | 上传文档并构建 AI 检索的集合（RAG），使其从你的来源回答而不是猜测。 |
 | [**提示词**](/features/workspace/prompts) | 保存带有类型变量的可复用提示词模板，在任何聊天中使用 `/` 斜杠命令调用。 |
-| [**技能**](/features/workspace/skills) | 教授模型如何完成任务（方法论、步骤、规则）的 Markdown 指令集，按需加载。 |
+| [**技能**](/features/workspace/skills) | 教授模型如何完成任务（方法论、步骤、规则）的 Markdown 指令集，可选附带[支撑文件](/features/workspace/skills#supporting-files)，按需加载。 |
 | [**工具** ↗](/features/extensibility/plugin/tools) | 赋予模型可以调用的真正能力：API、代码、网络。工具在**插件与扩展**下文档说明，不在此处。 |
 
 每个都有单独的页面，所以从任何地方开始都可以。大多数人从自定义**模型**开始，然后根据需要添加其他部分。
+
+:::tip 对列表排序
+
+**模型**、**知识**、**提示词**、**技能**和**工具**列表，以及**便签**和管理员的**函数**列表，都可以点击**标题**或**更新时间**列标题来排序。点击当前正在排序的那一列会反转方向。每个列表默认按**更新时间**打开，最新的在最前。
+
+:::
+
+:::tip 个人资料卡片
+
+在**模型**、**知识**、**提示词**、**技能**和**工具**列表，或管理员的**函数**列表中指向某个所有者姓名，指向版本历史中某个版本的作者，或指向某个条目访问设置中的某个人，都会打开他们的个人资料卡片——与[频道](/features/channels)显示的是同一张卡片。卡片上有姓名、状态、简介、所属组、当地时间以及最近一次活跃时间。
+
+:::
+
+开启[评论](/features/chat-conversations/chat-features/comments)后，这些列表中的每个条目都可以在侧边栏中讨论。
+
+## 创建、导入与导出 {#creating-importing-and-exporting}
+
+所有添加或移动工作区条目的操作都通过同一个**创建**按钮完成——它位于工作区标题栏右侧、分类标签页旁边。各子页面不再自带**+ 新建模型**、**+ 新建提示词**之类的按钮。该按钮作用于你当前所在的分类，它旁边的小箭头会展开该分类的其余操作（菜单的第一项仍是**创建**）。
+
+| 分类 | 创建 | 菜单中还有 |
+| :--- | :--- | :--- |
+| **模型** | 在独立页面打开模型编辑器 | 导入 JSON、导出 JSON |
+| **知识** | 在列表上方打开对话框 | 无 |
+| **提示词** | 在列表上方打开对话框 | 导入 JSON、导出 JSON |
+| **技能** | 在独立页面打开技能编辑器 | 导入、从 URL 导入（仅管理员）、导入文件夹、导出 ZIP、导出 JSON |
+| **工具** | 在独立页面打开工具编辑器 | 从 URL 导入（仅管理员）、导入 JSON、导出 JSON |
+
+当某个分类只有一个可用操作时，小箭头会被省略，**创建**就是一个普通按钮。知识库总是这种情况；在导入与导出权限被收回时，其他分类也会如此。菜单中每个条目都由对应的 `workspace` 权限把守（`models_import`、`prompts_export` 等），管理员始终能看到全部条目。导出会把该分类的条目写入 JSON 文件（技能还会写入 ZIP），对应的导入则把它们读回来。
+
+旧的创建 URL 仍然有效。`/workspace/prompts/create` 和 `/workspace/knowledge/create` 会打开列表并直接弹出创建对话框，关闭对话框后会回到列表。

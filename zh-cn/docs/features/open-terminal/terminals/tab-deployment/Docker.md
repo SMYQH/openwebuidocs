@@ -1,12 +1,12 @@
 <!-- markdownlint-disable MD041 -->
 
-## 前置条件
+## 前置条件 {#prerequisites}
 
 - 已安装并运行 [Docker Engine](https://docs.docker.com/engine/install/)
 - Open WebUI 正在运行（或准备好一同部署）
 - [Open WebUI 企业版许可证](https://openwebui.com/enterprise)（生产环境使用必须）
 
-## 使用 Docker Compose 快速开始
+## 使用 Docker Compose 快速开始 {#quick-start-with-docker-compose}
 
 此 Compose 文件将 Open WebUI 和 Terminals 编排器一起部署。
 
@@ -122,7 +122,7 @@ Open WebUI 将在 `http://localhost:3000` 上可用。当任何用户激活终�
 
 ---
 
-## 限制
+## 限制 {#limitations}
 
 - **单主机。** 所有用户容器都在一个 Docker 主机上运行。如需高可用性或服务更大的团队，请使用 Kubernetes Operator 后端。
 - **没有内置高可用性。** 如果编排器宕机，活动的终端会话将被中断（尽管容器继续运行并在重新启动时被协调）。

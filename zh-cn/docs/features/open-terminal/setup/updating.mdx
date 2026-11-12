@@ -1,0 +1,147 @@
+---
+sidebar_position: 3
+title: "Updating"
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Updating Open Terminal
+
+Open Terminal 是独立于 Open WebUI 的另一个程序，因此更新 Open WebUI 并不会更新它。如果这些页面中描述的某个功能缺失，或者某个预览效果不如预期，通常原因是一个已经很久没有动过的终端服务器。
+
+## 查看你正在运行的版本 {#check-which-version-you-are-running}
+
+在浏览器中打开 `http://localhost:8000/docs`，使用你给 Open WebUI 配置的那个地址。版本号位于页面顶部 **Open Terminal** 标题旁边。
+
+如果你更想用 shell 来查看：
+
+```bash
+curl -s http://localhost:8000/openapi.json | python -c "import json,sys; print(json.load(sys.stdin)['info']['version'])"
+```
+
+把它与[最新发布版本](https://github.com/open-webui/open-terminal/releases)做对比。这两个请求都不需要你的 API key。
+
+---
+
+## 更新 {#update}
+
+你的文件存放在 Docker 卷或你自己的磁盘上，更新替换的是程序而不是数据。`/home/user` 中的内容不会被改动。
+
+<Tabs>
+  <TabItem value="docker" label="Docker" default>
+
+三条命令：拉取新镜像、删除旧容器、启动新容器。
+
+```bash
+docker pull ghcr.io/open-webui/open-terminal
+docker rm -f open-terminal
+```
+
+然后运行与当初启动它时相同的 `docker run` 命令：
+
+```bash
+docker run -d \
+  --name open-terminal \
+  --restart unless-stopped \
+  -p 8000:8000 \
+  -v open-terminal:/home/user \
+  -e OPEN_TERMINAL_API_KEY=your-secret-key \
+  ghcr.io/open-webui/open-terminal
+```
+
+:::warning 请使用与之前相同的参数
+`docker rm -f` 会删除容器及其设置，因此新容器只会得到你在这条命令行中写下的内容。尤其要保留 `-v open-terminal:/home/user`——正是它把你的文件带了过去；还要保留相同的 `OPEN_TERMINAL_API_KEY`，这样 Open WebUI 才能继续连接。你在这里忘掉的一切，都会直接从新容器中消失。
+
+如果你不确定旧容器当初是用什么参数启动的，请在删除它之前先运行 `docker inspect open-terminal`。
+:::
+
+在使用较小的镜像吗？请拉取你实际运行的标签，例如 `ghcr.io/open-webui/open-terminal:slim`，并在 `docker run` 那一行写上同一个标签。
+
+  </TabItem>
+  <TabItem value="bare-metal" label="Bare Metal">
+
+**通过 pip 安装：**
+
+```bash
+pip install --upgrade open-terminal
+```
+
+然后用 **Ctrl+C** 停止正在运行的服务器并重新启动。升级不会作用于已经在运行的进程。
+
+如果你安装时带有 MCP 附加组件，升级时请保留它：
+
+```bash
+pip install --upgrade "open-terminal[mcp]"
+```
+
+**使用 uvx 运行：**
+
+uvx 会缓存它第一次下载的版本并一直使用。请显式索取最新版本：
+
+```bash
+uvx open-terminal@latest run --host 0.0.0.0 --port 8000 --api-key your-secret-key
+```
+
+  </TabItem>
+  <TabItem value="compose" label="Docker Compose">
+
+在存放 `docker-compose.yml` 的目录下执行：
+
+```bash
+docker compose pull open-terminal
+docker compose up -d open-terminal
+```
+
+第一条命令拉取新镜像，第二条命令用它重建容器。你的 Compose 文件里已经带有卷和 API key，无需重新输入。
+
+两条命令中都不写服务名，即可更新该文件中的全部内容，包括 Open WebUI。
+
+  </TabItem>
+</Tabs>
+
+---
+
+## 确认是否成功 {#confirm-it-worked}
+
+重新加载 `http://localhost:8000/docs` 并再次查看版本号。只要地址和 API key 没有变化，Open WebUI 里就不需要做任何改动。
+
+---
+
+## 更新的服务器能带来什么 {#what-a-newer-server-gives-you}
+
+文件浏览器中的少数几项功能是由终端服务器而非你的浏览器完成的，因此只有服务器版本足够新时它们才会出现：
+
+| 版本 | 新增内容 |
+| :--- | :--- |
+| 0.12.1 | Word 与 PowerPoint 文件以真实效果预览。服务器按 Office 的方式渲染它们，而不是由浏览器近似还原排版。 |
+| 0.12.0 | 文件浏览器除文件名外还会搜索文件内容，并显示匹配的行。 |
+| 0.11.35 | 可配置的文件浏览器主目录、无法修改的文件上的只读标记，以及自定义系统提示中的模板变量。 |
+
+Office 渲染需要默认镜像。`slim`、`alpine` 和 `openshift` 镜像刻意保持小巧，不包含 LibreOffice，因此在那里的文档预览会回退到浏览器自身的渲染，并提示其效果可能与下载版本不同。
+
+---
+
+## 故障排查 {#troubleshooting}
+
+**版本没有变化。** 当标签被固定到某个具体版本时，Docker 会继续使用它已有的镜像。请检查 `docker run` 那一行上的标签，并拉取那个标签而不是裸名称。
+
+**Word 和 PowerPoint 预览看起来仍然只是近似。** 要么服务器版本低于 0.12.1，要么它是不带 LibreOffice 的小型镜像之一。请改用不带标签后缀的 `ghcr.io/open-webui/open-terminal`。
+
+**Open WebUI 提示终端不可用。** 新容器没有使用与旧容器相同的端口或密钥启动。请把 Open WebUI 中的连接与 `docker run` 那一行上的参数做对比，并查看 `docker logs open-terminal`。
+
+**更新后文件不见了。** 新容器启动时没有挂载卷。请停止它，并带上 `-v open-terminal:/home/user`（或你最初使用的那个卷）重新启动。数据仍在卷中，只是新容器看不到它。
+
+---
+
+## 关于 Terminals {#running-terminals}
+
+[Terminals](/features/open-terminal/terminals) 会依据一份策略为每个用户置备一个容器，因此运维人员应在策略上更新镜像，而不是手工更新。在那里修改镜像后，再按照[应用变更](/features/open-terminal/terminals/orchestration/applying-changes)中的说明刷新受影响的终端。
+
+---
+
+## 相关阅读 {#see-also}
+
+- [安装](./installation.mdx)，各种安装方式最初的操作命令。
+- [连接到 Open WebUI](./connecting.md)，如果需要重新配置连接。
+- [文件浏览器](/features/open-terminal/file-browser)，上面那些预览的实际效果。

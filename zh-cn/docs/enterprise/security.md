@@ -3,7 +3,7 @@ sidebar_position: 2
 title: "安全"
 ---
 
-### 企业级安全架构
+### 企业级安全架构 {#enterprise-grade-security-architecture}
 
 对于企业组织来说，采用 AI 不只是技术决策，更是安全决策。每一次模型调用、每一份上传文档、每一个自动化工作流，都意味着有数据需要被保护。
 
@@ -11,9 +11,9 @@ Open WebUI 从设计之初就把安全放在核心优先级上。无论你面对
 
 关于聊天存储、管理员可见性、静态加密、临时对话、模型提供商暴露及推荐控制措施的详细说明，请参阅[聊天数据隐私与加密](/security/chat-data-privacy-and-encryption)。
 
-### 安全架构
+### 安全架构 {#security-architecture}
 
-#### 你的数据，你的基础设施
+#### 你的数据，你的基础设施 {#your-data-your-infrastructure}
 
 与数据需要经过第三方服务器的 SaaS AI 平台不同，Open WebUI 让你对**整个数据管道拥有完全控制权**：
 
@@ -28,7 +28,7 @@ Open WebUI 从设计之初就把安全放在核心优先级上。无论你面对
 
 如果你从主权 AI 的角度评估这一点，请首先定义你的部署必须控制的基础设施、数据、模型、身份、权限、日志和运维边界。请参阅[主权 AI 平台](/enterprise/sovereign-ai)清单，或 openwebui.com 上的[主权 AI 产品概述](https://openwebui.com/sovereign-ai)。
 
-### 监管与合规考量
+### 监管与合规考量 {#regulatory--compliance-considerations}
 
 很多评估 AI 平台的组织，都受到 SOC 2、HIPAA、GDPR、FedRAMP 或 ISO 27001 等监管框架约束。Open WebUI 的自托管、本地部署与隔离网络架构，提供了可构成合规部署**一部分**的技术控制：
 
@@ -45,11 +45,11 @@ Open WebUI 从设计之初就把安全放在核心优先级上。无论你面对
 [**联系企业销售获取合规指导 →**](https://openwebui.com/contact/sales)
 :::
 
-### 身份与访问管理
+### 身份与访问管理 {#identity--access-management}
 
 与现有身份基础设施的无缝集成，可以在降低使用阻力的同时保持安全边界。
 
-#### 企业身份集成
+#### 企业身份集成 {#enterprise-identity-integration}
 
 Open WebUI 可接入你组织已经在使用的身份系统：
 
@@ -57,7 +57,7 @@ Open WebUI 可接入你组织已经在使用的身份系统：
 * **单点登录（SSO）**：支持 SAML 与 OIDC 协议，让用户使用现有企业凭证访问 Open WebUI。
 * **多因素认证（MFA）**：在主认证之上增加额外安全层。
 
-#### 访问控制与权限
+#### 访问控制与权限 {#access-control--permissions}
 
 除了认证外，Open WebUI 还提供细粒度的用户权限控制：
 
@@ -65,9 +65,9 @@ Open WebUI 可接入你组织已经在使用的身份系统：
 * **模型级权限**：控制哪些用户或用户组可以访问特定模型。
 * **工作区隔离**：按团队或部门进行隔离，帮助限制未授权的数据访问。
 
-### 数据治理
+### 数据治理 {#data-governance}
 
-#### 审计与可追责性
+#### 审计与可追责性 {#audit--accountability}
 
 对于受监管行业和重视安全的组织来说，系统使用可见性不是可选项。Open WebUI 支持标准企业日志模式：
 
@@ -75,12 +75,12 @@ Open WebUI 可接入你组织已经在使用的身份系统：
 * **事件追踪**：跟踪 API 使用情况与系统事件，以监控异常。
 * **保留策略控制**：由于数据库由你掌控，因此数据保留策略也由你决定，可按合规要求清除或归档。
 
-#### 数据驻留
+#### 数据驻留 {#data-residency}
 
 对于有地理位置数据要求的组织——无论是出于 GDPR、数据主权法律还是内部政策——Open WebUI 的自托管部署模式都能支持你将数据实际保留在政策要求的地点。
 
 
-### 漏洞管理与披露
+### 漏洞管理与披露 {#vulnerability-management--disclosure}
 
 Open WebUI 中的安全问题通过一个单一的、明确定义的流程处理，而非临时处理：
 
@@ -90,11 +90,11 @@ Open WebUI 中的安全问题通过一个单一的、明确定义的流程处理
 
 参与规则、受支持版本、威胁模型以及什么被视为或不被视为漏洞，均记录在[安全策略](/security/security-policy)中。
 
-### 供应链与包完整性
+### 供应链与包完整性 {#supply-chain--package-integrity}
 
 Open WebUI 的已发布制品是从 [open-webui/open-webui](https://github.com/open-webui/open-webui) 仓库中的公开源代码构建的，并且可以从该源代码重现，因此任何关于发布的声明都可以对照代码进行验证。
 
-自动化供应链扫描器（例如 socket.dev）会定期针对软件包提出行为风险指标、未确认的分类以及许可证或维护者评分。这些反映的是软件的设计能力及元数据产物，而非已确认的漏洞或恶意代码。如果你的审查中出现此类标记，[供应链与安全扫描器](/security/supply-chain-security) 解释了我们对每个类别的立场以及如何解读。第三方依赖项通过日常维护进行跟踪和更新。
+自动化供应链扫描器（例如 socket.dev）会定期针对软件包提出行为风险指标、未确认的分类以及许可证或维护者评分。这些反映的是软件的设计能力及元数据产物，而非已确认的漏洞或恶意代码。如果你的审查中出现此类标记，[供应链与安全扫描器](/security/supply-chain-security/) 解释了我们对每个类别的立场以及如何解读。第三方依赖项通过日常维护进行跟踪和更新。
 
 ### 代码执行与沙箱化 {#code-execution--sandboxing}
 
@@ -106,17 +106,17 @@ Open WebUI 中的服务器端代码执行受到明确的管理员操作控制，
 
 完整的模型请参见[工具和函数安全模型](/features/extensibility/plugin/tools)。
 
-### 这对你的组织意味着什么
+### 这对你的组织意味着什么 {#what-this-means-for-your-organization}
 
-#### 对安全团队
+#### 对安全团队 {#for-security-teams}
 
-Open WebUI 的代码库可公开审计，让你获得可见性与控制权；它会融入你现有的安全工具链，而不是制造新的盲区。如果在你的审查过程中，供应链或包扫描器（例如 socket.dev）标记了 Open WebUI 包，请参见[供应链与安全扫描器](/security/supply-chain-security)了解我们对这些指标的立场。
+Open WebUI 的代码库可公开审计，让你获得可见性与控制权；它会融入你现有的安全工具链，而不是制造新的盲区。如果在你的审查过程中，供应链或包扫描器（例如 socket.dev）标记了 Open WebUI 包，请参见[供应链与安全扫描器](/security/supply-chain-security/)了解我们对这些指标的立场。
 
-#### 对合规负责人
+#### 对合规负责人 {#for-compliance-officers}
 
 相关技术控制已具备，可支撑你的整体合规姿态。无论你是在准备审计，还是在回复安全问卷，Open WebUI 的架构都能提供支持你回答的技术依据。
 
-#### 对 IT 管理层
+#### 对 IT 管理层 {#for-it-leadership}
 
 用户管理不会演变成新的孤岛。Open WebUI 与你现有的身份基础设施协同工作，从而降低管理开销，并帮助你在各类工具之间保持一致的访问策略。
 

@@ -25,7 +25,7 @@ title: "Yandex"
 
 Yandex Web Search 通过 [Yandex Cloud Search API](https://yandex.cloud/en/docs/search-api/api-ref/WebSearch/search) 集成到 Open WebUI 中。
 
-### Docker Compose 设置
+### Docker Compose 设置 {#docker-compose-setup}
 
 将以下环境变量加入你的 Open WebUI `docker-compose.yaml`：
 
@@ -42,7 +42,7 @@ services:
       # YANDEX_WEB_SEARCH_CONFIG: '{"query": {"searchType": "SEARCH_TYPE_RU"}}'
 ```
 
-### 配置项说明
+### 配置项说明 {#configuration-options}
 
 * **YANDEX_WEB_SEARCH_URL**：Yandex Search API 端点，默认值为 `https://searchapi.api.cloud.yandex.net/v2/web/search`
 * **YANDEX_WEB_SEARCH_API_KEY**：你的 Yandex Cloud API Key

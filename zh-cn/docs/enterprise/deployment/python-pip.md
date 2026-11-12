@@ -3,7 +3,7 @@ sidebar_position: 1
 title: "虚拟机上的 Python / Pip"
 ---
 
-# 自动扩缩容虚拟机上的 Python / Pip
+# 自动扩缩容虚拟机上的 Python / Pip {#python--pip-on-auto-scaling-vms}
 
 将 `open-webui serve` 以 systemd 管理的进程形式，部署在云自动扩缩容虚拟机组（AWS ASG、Azure VMSS、GCP MIG）中。
 
@@ -11,14 +11,14 @@ title: "虚拟机上的 Python / Pip"
 继续之前，请先确认你已经配置好了[共享基础设施要求](/enterprise/deployment#shared-infrastructure-requirements)——包括 PostgreSQL、Redis、向量数据库、共享存储和内容提取服务。
 :::
 
-## 何时选择这种模式
+## 何时选择这种模式 {#when-to-choose-this-pattern}
 
 - 你的组织已经具备成熟的 VM 基础设施和运维实践
 - 监管或合规要求你必须进行操作系统层直接控制
 - 团队容器经验有限，但 Linux 运维能力较强
 - 你希望采用更直接的部署方式，而不引入容器编排开销
 
-## 架构
+## 架构 {#architecture}
 
 ```mermaid
 flowchart TB
@@ -41,7 +41,7 @@ flowchart TB
     ASG --> Backend
 ```
 
-## 安装
+## 安装 {#installation}
 
 在每台 VM 上通过带 `[all]` 扩展的 pip 安装（包含 PostgreSQL 驱动）：
 
@@ -70,14 +70,14 @@ WantedBy=multi-user.target
 
 将环境变量放在 `/etc/open-webui/env` 中（参见 [关键配置](/enterprise/deployment#critical-configuration)）。
 
-## 扩展策略
+## 扩展策略 {#scaling-strategy}
 
 - **横向扩展**：让自动扩缩容组根据 CPU 利用率或请求数增减 VM。
 - **健康检查**：将负载均衡器健康检查指向 `/health` 端点（健康时返回 HTTP 200）。
 - **每台 VM 一个进程**：保持 `UVICORN_WORKERS=1`，把容量管理交给自动扩缩容系统。这样可以简化内存核算，并避免默认向量数据库的 fork 安全问题。
 - **会话亲和性（粘性会话）**：在负载均衡器上配置基于 Cookie 的会话亲和性，确保 WebSocket 连接持续路由到同一实例。
 
-## 关键注意事项
+## 关键注意事项 {#key-considerations}
 
 | 注意事项 | 说明 |
 | :--- | :--- |

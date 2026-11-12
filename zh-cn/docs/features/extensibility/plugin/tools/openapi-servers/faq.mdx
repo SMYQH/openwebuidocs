@@ -3,35 +3,13 @@ sidebar_position: 10
 title: "常见问题"
 ---
 
-#### 🌐 Q：为什么我的本地 OpenAPI 工具服务器无法从 WebUI 界面访问？
+#### 🌐 Q：为什么我的本地 OpenAPI 工具服务器无法从 WebUI 界面访问？ {#q-why-isnt-my-local-openapi-tool-server-accessible-from-the-webui-interface}
 
 **A：** 如果你的工具服务器运行在本地（例如 `http://localhost:8000`），基于浏览器的客户端可能会因为 CORS（Cross-Origin Resource Sharing，跨域资源共享）策略而无法访问。
 
 请确保在你的 OpenAPI 服务器中显式启用 CORS 标头。比如，如果你使用 FastAPI，可以这样配置：
 
-```python
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # 或明确指定你的 client origin
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-此外，如果 Open WebUI 本身通过 HTTPS 提供服务（例如 `https://yourdomain.com`），你的本地服务器还必须满足以下任一条件：
-
-- 通过同域 HTTPS 被访问（例如 `https://localhost:8000`）
-- 或者运行在 localhost（`127.0.0.1`）上，以便浏览器对本地开发放宽安全限制
-- 否则，浏览器可能会因 mixed-content 规则而阻止 HTTPS 页面向 HTTP API 发起不安全请求
-
-若要在生产环境中通过 HTTPS 安全工作，你的 OpenAPI servers 也必须使用 HTTPS 提供服务。
-
----
-
-#### 🚀 Q：我的服务实现一定要用 FastAPI 吗？
+#### 🚀 Q：我的服务实现一定要用 FastAPI 吗？ {#q-do-i-need-to-use-fastapi-for-my-server-implementation}
 
 **A：** 不需要！虽然我们的参考实现使用 FastAPI 编写，以便更清晰、更容易上手，但你可以使用任何能够产出合法 OpenAPI（Swagger）规范的框架或语言。常见选择包括：
 
@@ -46,7 +24,7 @@ app.add_middleware(
 
 ---
 
-#### 🚀 Q：为什么选择 OpenAPI，而不是 MCP？
+#### 🚀 Q：为什么选择 OpenAPI，而不是 MCP？ {#q-why-choose-openapi-over-mcp}
 
 **A：** 在大多数真实世界场景中，OpenAPI 相比 MCP 更胜一筹，因为它更简单、工具生态更成熟、更稳定，也更符合开发者习惯。原因如下：
 
@@ -72,7 +50,7 @@ app.add_middleware(
 
 ---
 
-#### 🔐 Q：如何保护我的 OpenAPI 工具服务器？
+#### 🔐 Q：如何保护我的 OpenAPI 工具服务器？ {#q-how-do-i-secure-my-openapi-tool-server}
 
 **A：** OpenAPI 支持行业标准的安全机制，例如：
 
@@ -85,7 +63,7 @@ app.add_middleware(
 
 ---
 
-#### ❓ Q：通过 OpenAPI 工具服务器能构建哪些类型的工具？
+#### ❓ Q：通过 OpenAPI 工具服务器能构建哪些类型的工具？ {#q-what-kind-of-tools-can-i-build-using-openapi-tool-servers}
 
 **A：** 只要它可以通过 REST API 暴露出来，你基本就能把它做成工具。常见类型包括：
 
@@ -99,7 +77,7 @@ app.add_middleware(
 
 ---
 
-#### 🔌 Q：我可以同时运行多个工具服务器吗？
+#### 🔌 Q：我可以同时运行多个工具服务器吗？ {#q-can-i-run-more-than-one-tool-server-at-the-same-time}
 
 **A：** 当然可以。每个工具服务器都独立运行，并暴露自己的 OpenAPI schema。你的 agent 配置可以同时指向多个工具服务器，按需混用。
 
@@ -107,7 +85,7 @@ app.add_middleware(
 
 ---
 
-#### 🧪 Q：在把工具服务器挂到 LLM agent 之前，怎么先测试它？
+#### 🧪 Q：在把工具服务器挂到 LLM agent 之前，怎么先测试它？ {#q-my-global-tool-servers-were-down-and-their-tools-disappeared-do-i-need-to-restart-open-webui}
 
 **A：** 你可以使用以下工具来测试 OpenAPI 工具服务器：
 
@@ -121,7 +99,7 @@ app.add_middleware(
 
 ---
 
-#### 🛠️ Q：我可以扩展或自定义这些参考服务器吗？
+#### 🛠️ Q：我可以扩展或自定义这些参考服务器吗？ {#q-how-do-i-test-a-tool-server-before-linking-it-to-an-llm-agent}
 
 **A：** 可以！`servers/` 目录下的所有 server 都是作为简单模板构建的。你可以 fork 并修改它们，以便：
 
@@ -133,7 +111,7 @@ app.add_middleware(
 
 ---
 
-#### 🌍 Q：我可以把 OpenAPI 工具服务器部署到 AWS、GCP 之类的云平台吗？
+#### 🌍 Q：我可以把 OpenAPI 工具服务器部署到 AWS、GCP 之类的云平台吗？ {#q-can-i-extend-or-customize-the-reference-servers}
 
 **A：** 可以。这些 server 本质上就是普通的 HTTP 服务。你可以把它们部署为：
 
@@ -147,7 +125,7 @@ app.add_middleware(
 
 ---
 
-#### 🧪 Q：如果我已经有一个 MCP server 呢？
+#### 🧪 Q：如果我已经有一个 MCP server 呢？ {#q-can-i-run-openapi-tool-servers-on-cloud-platforms-like-aws-or-gcp}
 
 **A：** 好消息！你可以直接使用我们的 MCP-to-OpenAPI Bridge：[mcpo](https://github.com/open-webui/mcpo)。它让你现有的 MCP tools 几乎无需重写，就能以 OpenAPI 兼容 API 的方式暴露出来，真正做到“插上就用”！🚀
 
@@ -164,7 +142,7 @@ uvx mcpo --port 8000 -- uvx mcp-server-time --local-timezone=America/New_York
 
 ---
 
-#### 🗂️ Q：一个 OpenAPI server 可以同时实现多个工具吗？
+#### 🗂️ Q：一个 OpenAPI server 可以同时实现多个工具吗？ {#q-what-if-i-have-an-existing-mcp-server}
 
 **A：** 可以。单个 OpenAPI server 可以在不同 endpoint 下提供多种相关能力。例如，一个文档 server 可以在同一个 schema 中同时提供搜索、上传、OCR 与总结能力。
 
@@ -174,3 +152,36 @@ uvx mcpo --port 8000 -- uvx mcp-server-time --local-timezone=America/New_York
 
 🙋 还有更多问题？欢迎前往 GitHub Discussions 获取社区帮助与反馈：
 👉 [Community Discussions](https://github.com/open-webui/openapi-servers/discussions)
+
+### 问：一个 OpenAPI 服务器可以实现多个工具吗？ {#q-can-one-openapi-server-implement-multiple-tools}
+
+**答：** 可以。单个 OpenAPI 服务器可以在不同端点下提供多项相关能力。例如，一个文档服务器可以在同一份 schema 中提供搜索、上传、OCR 和摘要。
+
+如果你更看重隔离性和灵活性，也可以完全模块化，为每个工具各建一个 OpenAPI 服务器。
+
+---
+
+还有其他问题？欢迎访问 GitHub 讨论区，获取社区的帮助与反馈：
+[社区讨论](https://github.com/open-webui/openapi-servers/discussions)
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 或明确指定你的 client origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+此外，如果 Open WebUI 本身通过 HTTPS 提供服务（例如 `https://yourdomain.com`），你的本地服务器还必须满足以下任一条件：
+
+- 通过同域 HTTPS 被访问（例如 `https://localhost:8000`）
+- 或者运行在 localhost（`127.0.0.1`）上，以便浏览器对本地开发放宽安全限制
+- 否则，浏览器可能会因 mixed-content 规则而阻止 HTTPS 页面向 HTTP API 发起不安全请求
+
+若要在生产环境中通过 HTTPS 安全工作，你的 OpenAPI servers 也必须使用 HTTPS 提供服务。
+
+---

@@ -14,7 +14,7 @@ import TabItem from '@theme/TabItem';
   <Tabs groupId="macos-topology">
     <TabItem value="host-ollama-mac" label="主机 Ollama" default>
 
-#### 主机运行 Ollama，容器运行 Open WebUI
+#### 主机运行 Ollama，容器运行 Open WebUI {#ollama-on-host-open-webui-in-container}
 
 `Ollama` 直接运行在主机上，`Open WebUI` 运行在 Docker 容器中。
 
@@ -35,7 +35,7 @@ UpdateRelStyle(user, openwebui, $offsetX="-100", $offsetY="-50")
     </TabItem>
     <TabItem value="compose-stack-mac" label="Compose 栈">
 
-#### Ollama 和 Open WebUI 在 Compose 栈中
+#### Ollama 和 Open WebUI 在 Compose 栈中 {#ollama-and-open-webui-in-compose-stack}
 
 `Ollama` 和 `Open WebUI` 均配置在同一个 Docker Compose 栈中，简化网络通信。
 
@@ -58,7 +58,7 @@ UpdateRelStyle(user, openwebui, $offsetX="-100", $offsetY="-50")
     </TabItem>
     <TabItem value="separate-networks-mac" label="独立网络">
 
-#### Ollama 和 Open WebUI 分属不同网络
+#### Ollama 和 Open WebUI 分属不同网络 {#ollama-and-open-webui-separate-networks}
 
 `Ollama` 和 `Open WebUI` 部署在不同的 Docker 网络中，这会导致连通性问题。
 
@@ -83,7 +83,7 @@ UpdateRelStyle(user, openwebui, $offsetX="-100", $offsetY="-50")
     </TabItem>
     <TabItem value="host-network-mac" label="主机网络">
 
-#### Open WebUI 使用主机网络
+#### Open WebUI 使用主机网络 {#open-webui-in-host-network}
 
 `Open WebUI` 使用主机网络，这在某些环境下会影响其连接能力。
 
@@ -175,7 +175,7 @@ UpdateRelStyle(user, openwebui, $offsetX="-100", $offsetY="-50")
     </TabItem>
     <TabItem value="host-network-linux" label="主机网络">
 
-#### Open WebUI 和 Ollama 均使用主机网络
+#### Open WebUI 和 Ollama 均使用主机网络 {#open-webui-in-host-network-ollama-on-host}
 
 `Open WebUI` 和 `Ollama` 都使用主机网络，实现无缝互联。
 
