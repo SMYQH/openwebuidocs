@@ -3,20 +3,57 @@
 ## en-us Source Version
 
 - **Repo**: `en-us` (submodule)
-- **Git commit**: `cb24519d47943f7b78f244bc4c2d624d851f4392`
+- **Git commit**: `36b7e50e4140f3cca1de0aeef4ae776af21169cb`
 - **Branch**: `main`
-- **Snapshot date**: 2026-07-25
+- **Snapshot date**: 2026-11-11
 
 ## Translation Progress Overview
 
 | Metric | Value |
 | --- | --- |
-| en-us source files (.md/.mdx) | 409 |
-| zh-cn files (.md/.mdx) | 409 |
-| en-us `_category_.json` | 49 |
-| zh-cn `_category_.json` | 49 |
-| File coverage | **100%** (all 409 en-us documents have corresponding zh-cn translations) |
-| Content completeness | **~99.9%** |
+| en-us source files (.md/.mdx) | 461 |
+| zh-cn files (.md/.mdx) | 461 |
+| en-us `_category_.json` | 52 |
+| zh-cn `_category_.json` | 52 |
+| File coverage | **100%** (all 461 en-us documents have corresponding zh-cn translations) |
+| Content completeness | **~99%** |
+
+### 2026-11-11 Sync (en-us `cb24519d` -> `36b7e50`)
+
+Large upstream update - 52 new upstream commits covering Channels (encrypted chats, apps, building apps), Open Terminal workspaces, the Community platform, deployment guides, the supply-chain security section, model controls, prompt caching, skills, and a large `reference/env-configuration.mdx` expansion.
+
+- **File set**: en-us grew from 409 -> 461 documents (+52) and 49 -> 52 `_category_.json`. Every en-us path has a zh-cn counterpart (100% file coverage).
+- **New / moved upstream directories**: `features/channels/`, `features/open-terminal/`, `ecosystem/community/`, `getting-started/deployment/`, `security/supply-chain-security/` (with `vulnerability-databases/`). `features/extensibility/pipelines/` was removed upstream and deleted from zh-cn.
+- **New top-level documents translated**: `features/chat-conversations/chat-features/voice-mode.mdx`, `reference/server-side-tool-calling.md`, plus the Channels apps pages, the deployment guides (AWS ECS, Azure Container Apps, Docker Swarm, Google Cloud Run, Kubernetes), and the accepted-risks / vendor-disposition pages.
+- **`reference/env-configuration.mdx`**: rebuilt from the upstream skeleton - 919 environment variables in upstream order, 130 h2/h3 headings, 98 explicit anchor IDs; the image-generation provider block (OpenAI DALL-E / Gemini / ComfyUI / AUTOMATIC1111) was rewritten, and an unterminated code fence plus an orphaned `no_proxy` block were repaired.
+- **Anchor normalisation**: every Chinese heading that mirrors an upstream heading now carries the upstream fragment as an explicit ID (e.g. `{#model-controls}`, `{#version-history}`, `{#selected-and-pinned-models-admin}`), so upstream cross-page links resolve on the Chinese site.
+- **Section parity**: `features/workspace/models.md`, `features/workspace/skills.md`, `features/extensibility/plugin/tools/index.mdx`, `features/extensibility/mcp.mdx`, `troubleshooting/performance.md`, `troubleshooting/connection-error.mdx`, `getting-started/advanced-topics/scaling.md` and `reference/api-endpoints.md` were brought back to the upstream heading order and gained the missing sections (model controls, tool approval, tool search, MCP elicitation, MCP apps, per-room Redis channels, WebSocket heartbeats, JSON encoder, DNS resolver, token counting, ...).
+- **Site code**: `zh-cn/src/`, `zh-cn/scripts/`, `zh-cn/package.json` and the localized `zh-cn/docusaurus.config.ts` were re-synced from the upstream submodule (upstream's PostHog module stays vendored but inert on the Chinese host).
+### 2026-11-12 Sync (en-us `36b7e50` — structural and anchor repairs)
+
+Second pass over the `36b7e50` snapshot: section parity, heading-order repair, anchor normalisation and full production-build validation.
+
+- **Section parity**: all 461 en-us documents now have a matching Chinese section for every upstream heading (verified section-by-section against the upstream skeleton). Restored or added the last missing upstream sections, e.g. `features/extensibility/plugin/development/valves.mdx` (full rewrite — the Chinese page had upstream blocks inserted inside code fences), `getting-started/quick-start/connect-a-provider/index.md` (`Looking for Agents?`), `getting-started/quick-start/connect-a-provider/starting-with-openai-compatible/index.mdx` (`Official Partners`, `The Provider Setting`, `From the model selector`, `Step 2: Start Chatting!`), `reference/api-endpoints.md` (RAG intro), `reference/database-schema.md` (`Memory Table`, `Entity Relationship Diagram`, plus the missing `Comment Table`) and `troubleshooting/manual-database-migration.md` (`"Duplicate Emails" Migration Failure`).
+- **Heading order**: Chinese section order was realigned to the upstream order in the affected pages (e.g. `reference/database-schema.md`, `features/extensibility/plugin/development/valves.mdx`).
+- **Anchor normalisation**: every explicit Chinese heading ID was re-derived with the upstream `github-slugger` slug so upstream cross-page anchors resolve exactly (10 previously mismatched IDs fixed, e.g. `{#appbackend}`, `{#import--export}`, `{#step-5-share-file-storage-across-instances}`, `{#example-specifying-action-frontmatter}`, `{#owning-retrieval-with-file_handler}`).
+- **Markdown escaping**: explicit IDs containing `__` (e.g. `{#execute-works-with-both-__event_call__-and-__event_emitter__}`) are written with escaped underscores (`\\_\\_`) so the markdown emphasis parser does not swallow them.
+- **Frontmatter parity**: `description` and `sidebar_label` were added to the 9 Chinese pages that lacked them, and the `slug: /features/extensibility/community` frontmatter was restored on `ecosystem/community/plugins.mdx` (Chinese links updated accordingly).
+- **Duplicate page removed**: `reference/tab-nginx/NginxProxyManager.md` had a duplicated half-page; it was rewritten from the upstream source.
+- **Verification**: production build (`onBrokenLinks`, `onBrokenAnchors`, `onDuplicateRoutes` all `throw`) completes with zero broken links and zero broken anchors; static assets are in sync (376 en-us files, all present in zh-cn).
+
+### 2026-11-12 Sync (en-us `36b7e50` — content parity pass)
+
+Third pass over the same `36b7e50` snapshot, focused on content that was still missing or untranslated inside otherwise complete pages.
+
+- **Built-in system tools reference** (`features/extensibility/plugin/tools/index.mdx`): the whole "Builtin System Tools" / "Tool Reference" / "Disabling Builtin Tools" / "Granular Builtin Tool Categories" half of the page was rebuilt from upstream. It now carries every upstream tool row (`display_file`, `list_memory_paths`, `read_memory_path`, `update_memory`, `read_skill_file`, `grep_skill_files`, `update_skill_files`, `create_skill`, `create_tool`, `ask_user`, `delegate_task`, `timer`, `notify`, `play_animation`, `search_tools`, `call_tool`), the missing `Attached Chat Files` section, the corrected heading IDs (`{#knowledge-tool-availability-at-a-glance}`, `{#tool-reference}`) and the refreshed minimum-model list (GPT-5.6 Luna, Gemini 3.5 Flash-Lite, MiniMax M3, DeepSeek V4 Flash, Muse Glimmer 30B, Qwen 3.6 27B).
+- **Alternatives comparison pages** (10 files under `alternatives/`): the "What Open WebUI Does Well" sections were rewritten from upstream so they now advertise the agentic platform, builtin tools, MCP servers, sub-agents, timers and automations; `alternatives/anythingllm.mdx` was ported to the new upstream structure (agent-tools paragraph, updated AnythingLLM feature list, refreshed FAQ JSON-LD).
+- **Chat features overview** (`features/chat-conversations/chat-features/index.mdx`): rebuilt from upstream — the page had lost the four screenshots, the chat-input trigger table, the built-in slash-command table (`/compact`, `/status`, `/fork`, `/side`, `/comments`, `/model`, `/settings`, `/compare`, `/skills:create`, `/temporary`), the link-rendering note and the structured-response editor section; a stray `sidebar_position` line and the missing banner were also fixed.
+- **RBAC permissions** (`features/authentication-access/rbac/permissions.md`): the workspace / sharing / chat permission tables were completed from upstream (hidden models, skills import & export, folders sharing, open chat sharing, allow-sharing-with users & groups, web upload, chat export & import, allow call, side chat, enforce temporary chat, encrypted channels) and two corrupted table rows (automations / user webhooks) were repaired.
+- **Computer deprecation**: upstream marked Open WebUI Computer as gradually deprecated. `ecosystem/computer/choose.md` and `ecosystem/computer/index.md` were rewritten from upstream, and the deprecation notice was added to `ecosystem/computer/quickstart.md`, `getting-started/quick-start/connect-an-agent/cptr.mdx` and `getting-started/quick-start/connect-an-agent/index.md`.
+- **Features landing page** (`features/index.mdx`): counts refreshed (13 vector databases, 8 extraction engines, GPT-Image) and the missing rows were added (file browser, model controls, version history, channel apps, MFA, default interface settings, scaling guide).
+- **Brand page** (`brand.mdx`): the logo-asset block with its download links was restored and a duplicated "asset source" section was removed.
+- **Remaining stray English**: untranslated paragraphs in `filter.mdx`, `pipe.mdx`, `installation.mdx`, `building-apps.md`, `channels/index.md`, `nginx.md`, `rag.mdx` and `env-configuration.mdx` were translated, and the misplaced `AUTOMATION_MIN_INTERVAL` block in `reference/env-configuration.mdx` was put back into upstream order.
+- **Verification**: production build passes with zero broken links, zero broken anchors and zero duplicate routes; 1345 internal links and anchors were re-checked against the generated HTML.
 
 ## Deployment Configuration
 

@@ -2,7 +2,7 @@
 
 > AGENTS.MD (this document) is time-sensitive. Agent assistants **must** update this document synchronously as the project evolves. See Section 8.
 > Do not blindly trust this document; content may be out of date.
-> Current document snapshot `Git Commit Hash`: `c22a742f52716c9ee8a4a6e07f805d7d91051739`, `Commit` timestamp: `2026-07-25T14:30:50+08:00`
+> Current document snapshot `Git Commit Hash`: `b3111194fb7e1ddff01498c237d796284c89a392`, `Commit` timestamp: `2026-11-12T22:14:42+08:00`
 
 ---
 
@@ -36,7 +36,9 @@ Built on Docusaurus. Documentation formats are primarily MDX, with some `.md` fi
 
 **Sitemap generation**: The Chinese site intentionally disables Docusaurus's built-in sitemap output. During `postbuild`, `zh-cn/scripts/sync-sitemap.mjs` downloads `https://docs.openwebui.com/sitemap.xml`, rewrites the upstream origin to the origin parsed from `DOMAIN` (defaulting to HTTPS when the scheme is omitted), and writes `zh-cn/build/sitemap.xml`. Deployment builds must pass `DOMAIN`; local or pull-request builds without `DOMAIN` skip synchronization. Download, validation, or write failures must fail the deployment build rather than publish a missing/stale sitemap.
 
-**Link validation**: `zh-cn/docusaurus.config.ts` sets both `onBrokenLinks: "throw"` and `onBrokenAnchors: "throw"`. Production and CI builds must contain zero broken links and zero broken anchors.
+**Link validation**: `zh-cn/docusaurus.config.ts` sets `onBrokenLinks: "throw"`, `onBrokenAnchors: "throw"`, `onDuplicateRoutes: "throw"` and `markdown.hooks.onBrokenMarkdownLinks: "throw"`. Production and CI builds must contain zero broken links, zero broken anchors, zero broken markdown links and zero duplicate routes.
+
+**Upstream site-code sync**: `zh-cn/src/`, `zh-cn/scripts/`, `zh-cn/package.json` and the localized `zh-cn/docusaurus.config.ts` are re-synced from the `en-us` submodule on every upstream sync, but the zh-cn localization of `docusaurus.config.ts` (tagline, url, i18n locale, navbar/footer labels, `editUrl`, `exclude` rules, `sitemap: false` and the Google Analytics setup) is preserved — never overwrite it with the upstream file. Upstream's PostHog module (`src/clientModules/analytics.js`) is vendored so the newly ported components compile, but it is inert on the Chinese host because `isProductionHost()` only matches `docs.openwebui.com`; the Chinese site keeps its own GA4 setup (`src/clientModules/ensure-gtag.js`). Upstream's `scripts/check-index-links.mjs` is vendored as `npm run check-index-links` but is **not** wired into `prebuild`: the Chinese pages intentionally use relative links on index pages, which that script rejects.
 
 **Custom domain auto-bind**: Before `wrangler deploy`, the workflow uses the API token to list zones under the account. If `DOMAIN`'s hostname is covered by an active zone, it patches `wrangler.jsonc` with `routes: [{ pattern, custom_domain: true }]`, sets `workers_dev: false` (production `*.workers.dev` off), and keeps `preview_urls: true`. If the hostname is `*.workers.dev` / `*.pages.dev`, or no matching zone exists, binding is skipped and production `workers.dev` remains enabled.
 
@@ -52,6 +54,9 @@ Built on Docusaurus. Documentation formats are primarily MDX, with some `.md` fi
 | Navbar | Blog, GitHub, Discord | 博客, GitHub |
 | Footer | Docs, Community, More | 文档, 社区, 更多 |
 | Sitemap | Docusaurus/upstream-generated | Build-time mirror of upstream sitemap with origin rewritten from `DOMAIN` |
+| Duplicate routes | `onDuplicateRoutes: "throw"` | `onDuplicateRoutes: "throw"` (same) |
+| Broken markdown links | `markdown.hooks.onBrokenMarkdownLinks: "throw"` | `markdown.hooks.onBrokenMarkdownLinks: "throw"` (same) |
+| Analytics | PostHog (`src/clientModules/analytics.js`), enabled only on `docs.openwebui.com` | Google Analytics (`G-522JSJVWTB`) via `src/clientModules/ensure-gtag.js`; upstream's PostHog module is vendored but inert on the Chinese host |
 | Broken anchor handling | Upstream configuration | Build fails (`onBrokenAnchors: "throw"`) |
 
 ### Documentation Organization
@@ -84,7 +89,7 @@ docs/
 ├── intro.mdx                   # Home / Landing page
 ├── getting-started/             # Quick start
 ├── features/                   # Core features (largest section)
-├── ecosystem/                  # Standalone Open WebUI ecosystem projects (Computer, Knowledge Base Sync)
+├── ecosystem/                  # Standalone Open WebUI ecosystem projects (Computer, Knowledge Base Sync, Community)
 ├── tutorials/                  # Tutorials
 ├── troubleshooting/            # Troubleshooting
 ├── reference/                  # Reference documents
@@ -100,14 +105,14 @@ docs/
 
 | Directory | Content | Translation Notes |
 | --- | --- | --- |
-| `getting-started/` | Installation methods (Docker/K8s/Python), provider connections (Ollama/OpenAI, etc.), upgrade guides | Keep commands and configuration keys in English. |
-| `features/` | Largest section: Chat, Voice, Image Generation, RAG, Web Search, Auth/RBAC, Plugins/Pipelines, Open Terminal, etc. | Translate feature names and UI interaction descriptions. |
-| `ecosystem/` | Standalone Open WebUI projects: Computer (cptr) — full OS environment in-browser; Knowledge Base Sync (oikb) — folder/repo incremental sync | The Computer section is quite large (~63 files); keep commands and environment variable names in English. |
+| `getting-started/` | Installation methods (Docker/K8s/Python), production `deployment/` guides (AWS ECS, Azure Container Apps, Docker Swarm, Google Cloud Run, Kubernetes), provider connections (Ollama/OpenAI, etc.), upgrade guides | Keep commands and configuration keys in English. |
+| `features/` | Largest section: Chat, Voice, Image Generation, RAG, Web Search, Auth/RBAC, Plugins (the standalone Pipelines section was removed upstream in 2026-07), Open Terminal, Channels (Apps, encrypted chats), Workspace, Administration, etc. | Translate feature names and UI interaction descriptions. |
+| `ecosystem/` | Standalone Open WebUI projects: Computer (cptr) — full OS environment in-browser; Knowledge Base Sync (oikb) — folder/repo incremental sync; Community (openwebui.com) — shared models, prompts, tools and functions | The Computer section is quite large (~63 files); keep commands and environment variable names in English. |
 | `reference/` | Environment variables reference (2500+ lines), API docs, HTTPS setup, monitoring | **Do not** translate environment variable names and code snippets. |
 | `tutorials/` | Auth/SSO integration tutorials, third-party tool integrations, community deployments | Translate step-by-step instructions; keep code blocks and configurations untouched. |
 | `troubleshooting/` | Various troubleshooting guides | Keep error messages in their original form. |
 | `enterprise/` | Enterprise architecture, deployment, case studies | Same as above. |
-| `security/` | Security policy, CVE disclosures | Same as above. |
+| `security/` | Security policy, CVE vendor dispositions, accepted risks, supply-chain security (scanner behaviour and rejected-CVE records in downstream vulnerability databases) | Same as above. |
 | `alternatives/` | Comparisons with 13 alternative products | Same as above. |
 
 ---
