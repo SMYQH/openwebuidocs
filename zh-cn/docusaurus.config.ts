@@ -90,7 +90,7 @@ const config: Config = {
 					routeBasePath: "/",
 					// Please change this to your repo.
 					// Remove this to remove the "edit this page" links.
-					editUrl: "https://github.com/GamblerIX2/open-webui-docs/blob/main",
+					editUrl: "https://github.com/SMYQH/openwebuidocs/blob/main/zh-cn",
 					exclude: ["**/tab-**/**"],
 					beforeDefaultRehypePlugins: [shikiPlugin],
 				},

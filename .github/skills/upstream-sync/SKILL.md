@@ -17,7 +17,7 @@ Sync updates from the official English documentation submodule `en-us/` (`open-w
 
 ## Prerequisites
 
-- Workspace root is `open-webui-docs` (contains `en-us/`, `zh-cn/`, `AGENTS.MD`, `STATUS.md`)
+- Workspace root is `openwebuidocs` (contains `en-us/`, `zh-cn/`, `AGENTS.MD`, `STATUS.md`)
 - The translation principles and site differences in the root `AGENTS.MD` have been reviewed
 - On Windows, prefer PowerShell; `git -C` must be available
 
