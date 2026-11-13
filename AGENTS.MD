@@ -2,7 +2,7 @@
 
 > AGENTS.MD (this document) is time-sensitive. Agent assistants **must** update this document synchronously as the project evolves. See Section 8.
 > Do not blindly trust this document; content may be out of date.
-> Current document snapshot `Git Commit Hash`: `ed5febbff86197d63470625af44292fc274363e9`, `Commit` timestamp: `2026-11-13T07:22:53+08:00`
+> Current document snapshot `Git Commit Hash`: `a0c85dffa4840f9a69a4a2f653ac4f5a47d05ea1`, `Commit` timestamp: `2026-11-13T08:51:26+08:00`
 
 ---
 
@@ -63,7 +63,7 @@ Built on Docusaurus. Documentation formats are primarily MDX, with some `.md` fi
 
 * Sidebar is fully auto-generated; sorting and labels are controlled via `_category_.json` (supports emoji prefixes).
 * Tab contents (`tab-*/` directories) are included via MDX `<Tabs>` components and do not appear in the sidebar.
-* Edit links point to `[https://github.com/open-webui/docs/blob/main](https://github.com/open-webui/docs/blob/main)`.
+* Edit links on the Chinese site point at the Chinese sources in this repository: `editUrl: "https://github.com/SMYQH/openwebuidocs/blob/main/zh-cn"` in the localized `zh-cn/docusaurus.config.ts`, which renders as `[https://github.com/SMYQH/openwebuidocs/blob/main/zh-cn/docs/<path>](https://github.com/SMYQH/openwebuidocs/blob/main/zh-cn/docs/<path>)`. The English upstream site keeps pointing at `[https://github.com/open-webui/docs/blob/main](https://github.com/open-webui/docs/blob/main)`.
 
 ---
 

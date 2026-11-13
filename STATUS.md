@@ -70,6 +70,7 @@ Fourth pass over the same `36b7e50` snapshot. The previous passes had already re
 - **Stray English translated**: the remaining untranslated prose in `reference/env-configuration.mdx` (admonition titles), `reference/database-schema.md` (tag table notes), `features/extensibility/plugin/tools/development.mdx` (status event structure), `security/supply-chain-security/vulnerability-databases/incibe.mdx` (duplicate-CVE notes) and `features/chat-conversations/chat-features/conversation-organization.md` (sample system prompt), plus the last English frontmatter titles and page headings (`Task Models`, `Translations`, `API Keys`, `Two-Factor Sign-In (MFA)`, `Apps`, `Encrypted Chats`, `Comments`, `Keyboard Shortcuts`, `Notifications`, `Sub-agents`, `Timers`, `External Document Extraction`, …).
 - **Content corrections**: Service Worker behaviour in `troubleshooting/connection-error.mdx` (upstream registers none), the "Open WebUI backend required" section that had lost its heading, the `PATCH operations` and `externalId` sections of `features/authentication-access/auth/scim.mdx`, the Gemini/OpenAI image-engine endpoint settings, the Redis persistence interval (30 seconds, not 30 minutes) and the vector-database placement in `troubleshooting/performance.md`.
 - **Verification**: production build (`onBrokenLinks`, `onBrokenAnchors`, `onDuplicateRoutes` all `throw`) completes with zero broken links and zero broken anchors; 1416 in-page links checked, 0 broken; heading parity check reports 0 missing upstream headings; 0 U+FFFD characters in the whole `zh-cn/docs` tree.
+- **Edit links fixed**: `zh-cn/docusaurus.config.ts` still pointed at the old `https://github.com/GamblerIX2/open-webui-docs/blob/main` fork, so every “编辑此页” button on the Chinese site linked to the wrong repository. `editUrl` is now `https://github.com/SMYQH/openwebuidocs/blob/main/zh-cn`, which renders as `https://github.com/SMYQH/openwebuidocs/blob/main/zh-cn/docs/<path>` for every Chinese page. The stale fork link in `zh-cn/docs/contributing.mdx` was removed as well, and `AGENTS.MD` now documents the Chinese edit-link target.
 
 ## Deployment Configuration
 
@@ -213,7 +214,7 @@ Issues found after comparing against en-us snapshot `d2871160` have been resolve
 git submodule status
 
 # Verify all files exist (should have no MISSING_IN_ZH entries)
-cd /www/open-webui-docs
+cd /www/openwebuidocs
 diff <(cd en-us/docs && find . -name '*.md' -o -name '*.mdx' | sort) \
      <(cd zh-cn/docs && find . -name '*.md' -o -name '*.mdx' | sort)
 ```
