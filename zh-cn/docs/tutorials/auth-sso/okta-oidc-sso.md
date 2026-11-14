@@ -77,6 +77,8 @@ title: "Okta SSO（OIDC）"
 
 现在，当用户登录 Open WebUI 时，他们需要提供 Okta 密码以及来自 Google Authenticator 的附加验证码。
 
+如果 Open WebUI 自带的[双因素登录](/features/authentication-access/mfa)也已开启，Okta 用户同样会被 Open WebUI 要求提供第二个验证码。想仅依赖 Okta 的认证因子，请开启 **Allow OAuth sign-in without an authenticator**（[`MFA_ALLOW_OAUTH_BYPASS`](/reference/env-configuration#mfa_allow_oauth_bypass)）。
+
 :::note
 
 重新认证频率

@@ -1,26 +1,16 @@
-### 使用 pip 安装
-
-这是通过 Python 安装 Open WebUI 最简单的方式。
-
-#### 1. 安装 Open WebUI
-
 ```bash
 pip install open-webui
-```
-
-#### 2. 启动服务
-
-```bash
 open-webui serve
 ```
 
-Open WebUI 现在运行在 [http://localhost:8080](http://localhost:8080)。
+Open WebUI 运行在 [http://localhost:8080](http://localhost:8080)。设置 `DATA_DIR` 可以指定数据存放位置，例如 `DATA_DIR=~/.open-webui open-webui serve`。使用 `--host` 和 `--port` 可以更改绑定地址，例如 `open-webui serve --port 3000`。
 
-:::tip 出现 “open-webui: command not found”？
-1. 如果你使用了虚拟环境，请确认它已经激活。
-2. 也可以直接这样运行：`python -m open_webui serve`
-3. 如果你想把数据存到指定位置：`DATA_DIR=./data open-webui serve`
-:::
+该命令会用一个密钥对会话签名，它会把密钥写入启动目录下的 `.webui_secret_key`。请在环境变量中设置 `WEBUI_SECRET_KEY`，或始终从同一个目录启动；换用新的密钥会让所有人退出登录。
+
+**提示找不到命令？** 请激活你安装时所用的环境；`open-webui` 命令位于该环境的 `bin` 目录下（Windows 上为 `Scripts`）。
+
+**需要尚未发布的修复？** PyPI 只提供已发布的版本。你可以在自己的安装旁边运行 Docker 的 `:dev` 镜像（并使用独立的数据卷），或按照[开发 Open WebUI](/getting-started/advanced-topics/development)所述从 `dev` 分支运行。从源码检出或 Git URL 安装会触发构建钩子，需要 Node.js 和 npm 来构建前端；PyPI 的 wheel 不需要。
+
 
 ## 卸载 {#uninstall}
 
@@ -29,7 +19,7 @@ Open WebUI 现在运行在 [http://localhost:8080](http://localhost:8080)。
     pip uninstall open-webui
     ```
 
-2. **删除数据（可选，会删除所有数据）：**
+2. **删除数据（可选，会删除所有数据）：** 删除你设置为 `DATA_DIR` 的目录。如果没有设置，数据位于环境内的 `site-packages/open_webui/data`，而 `pip uninstall` 会保留它，因为它是在运行时创建的。
     ```bash
     rm -rf ~/.open-webui
     ```

@@ -70,7 +70,7 @@ DeepSeek-R1-GGUF/
 
 ## 第 3 步：确保 Open WebUI 已安装并运行 {#step-3-make-sure-open-webui-is-installed-and-running}
 
-如果您尚未安装 **Open WebUI**，不用担心！设置非常简单。只需按照 [Open WebUI 文档](/)操作。安装完成后，启动应用程序——我们将在后续步骤中连接它以与 DeepSeek-R1 模型交互。
+如果您尚未安装 **Open WebUI**，不用担心！设置非常简单。只需按照 [Open WebUI 文档](https://docs.openwebui.com/)操作。安装完成后，启动应用程序——我们将在后续步骤中连接它以与 DeepSeek-R1 模型交互。
 
 ## 第 4 步：使用 Llama.cpp 服务模型 {#step-4-serve-the-model-using-llamacpp}
 

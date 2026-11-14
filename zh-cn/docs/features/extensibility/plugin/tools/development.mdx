@@ -19,7 +19,7 @@ title: "开发"
 
 ### 顶层文档字符串示例 {#example-top-level-docstring}
 
-```python
+``` python
 """
 title: String Inverse
 author: Your Name
@@ -41,7 +41,7 @@ licence: MIT
 
 Tools 必须定义为名为 `Tools` 的类中的方法，并可选地包含名为 `Valves` 和 `UserValves` 的子类，例如：
 
-```python
+``` python
 class Tools:
     def __init__(self):
         """Initialize the Tool."""
@@ -67,7 +67,7 @@ class Tools:
 
 参数描述可以跨越任意多行。在遇到下一个 `:param`（或 `:return:` 等其他字段）之前，后面的每一行都属于该参数。缩进会被去掉，空行会被丢弃，因此你可以把一段很长的描述排成段落，模型依然能完整收到：
 
-```python
+``` python
 async def search_docs(self, query: str, limit: int = 5) -> str:
     """
     Searches the internal documentation.
@@ -115,7 +115,7 @@ Valves 和 UserValves 用于定义工具的可配置项，你可以在专门的 
 
 只需像上面示例中的 `__user__` 一样，把它们作为参数添加到你的 Tool 类任意方法中即可。`__messages__` 和 `__files__` 会在每次原生工具调用前刷新，其余参数则在请求开始时固定。
 
-#### `file_handler` {#file_handler}
+#### `file_handler` {#file\_handler}
 
 模块级的 `file_handler = True` 会告诉 Open WebUI：工具运行完成后丢弃请求中的附件文件，这样检索流程就不会再把它们注入进来。只有 Legacy 函数调用路径会读取该标志，Native 循环会忽略它。
 
@@ -125,7 +125,7 @@ Valves 和 UserValves 用于定义工具的可配置项，你可以在专门的 
 
 **示例：** 使用用户访问令牌调用外部 API 的工具。
 
-```python
+``` python
 import httpx
 from typing import Optional
 
@@ -183,7 +183,7 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 
 如果模型似乎无法调用工具，请确认它已被启用（可在 Model 页面或聊天输入框旁边的 `+` 按钮中开启）。
 
-:::info Native Mode & Built-in Tools
+:::info Native 模式与内置工具
 编写自定义工具时请注意：当启用 Native Mode 时，Open WebUI 还会提供 **内置系统工具**。有关内置工具、函数调用模式和模型要求的详情，请参阅 [**Tool Calling Modes Guide**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
 :::
 
@@ -192,7 +192,7 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 
 大多数工具根本不需要区分模式。如果你的工具确实需要，请从 `__metadata__` 中读取。**Native 是默认模式，因此要显式判断 Legacy。** 只要不是 `"legacy"`（包括未设置的情况），运行的都是 Native：
 
-```python
+``` python
 def is_legacy_mode(__metadata__) -> bool:
     # Native is the default; only an explicit "legacy" opts out of it.
     return (__metadata__ or {}).get("params", {}).get("function_calling") == "legacy"
@@ -200,7 +200,7 @@ def is_legacy_mode(__metadata__) -> bool:
 
 把它定义一次，在所有需要分支的地方调用，而不是在每个方法里重新推导模式：
 
-```python
+``` python
 if is_legacy_mode(__metadata__):
     # Legacy: the full event-emitter surface is available (message, replace, deltas)
     ...
@@ -250,7 +250,10 @@ else:
 #### 最佳实践与建议 {#best-practices-and-recommendations}
 
 **对于需要实时 UI 更新的工具：**
-```python
+
+**对于必须在两种模式下都能工作的工具：**
+
+``` python
 class Tools:
     def __init__(self):
         # 记录函数调用模式要求的说明
@@ -258,7 +261,7 @@ class Tools:
 
     async def interactive_tool(self, prompt: str, __event_emitter__=None) -> str:
         """
-        ⚠️ 该工具需要 function_calling = "default" 才能正确发出事件
+        This tool requires function_calling = "legacy" for proper event emission
         """
         if not __event_emitter__:
             return "事件发射器不可用——请确认已启用 Default function calling mode"
@@ -270,40 +273,9 @@ class Tools:
         })
         # ... rest of tool logic
 ```
+**对于必须同时在两种模式下都能工作的工具：**
 
-**对于必须在两种模式下都能工作的工具：**
-```python
-async def universal_tool(self, prompt: str, __event_emitter__=None, __metadata__=None) -> str:
-    """
-    设计为可在 Default 与 Native 两种函数调用模式下工作的工具
-    """
-    # 检查是否处于 native 模式（这只是一个粗略启发式）
-    is_native_mode = __metadata__ and __metadata__.get("params", {}).get("function_calling") == "native"
-
-    if __event_emitter__:
-        if is_native_mode:
-            # Native 模式下只使用兼容的事件类型
-            await __event_emitter__({
-                "type": "status",
-                "data": {"description": "正在 Native 模式下处理...", "done": False}
-            })
-        else:
-            # Default 模式下可使用完整事件能力
-            await __event_emitter__({
-                "type": "message",
-                "data": {"content": "正在以完整事件支持处理..."}
-            })
-
-    # ... tool logic here
-
-    if __event_emitter__:
-        await __event_emitter__({
-            "type": "status",
-            "data": {"description": "已成功完成", "done": True}
-        })
-
-    return "工具执行已完成"
-```
+基于 [`is_legacy_mode()`](#detecting-the-mode-in-your-tool) 分支：在 Legacy 路径上使用 `message` / `replace` 做流式输出，在 Native 路径上发出 `status` 更新并由工具返回组装好的内容。辅助函数和完整的分支模式见上文的[在工具中检测当前模式](#detecting-the-mode-in-your-tool)。不要在每个方法里重新推导模式。
 
 #### 事件发射器问题排查 {#troubleshooting-event-emitter-issues}
 
@@ -320,7 +292,7 @@ async def universal_tool(self, prompt: str, __event_emitter__=None, __metadata__
 4. **考虑混合方案**：核心功能使用兼容事件，并在必要时优雅降级
 
 **调试你的事件发射器：**
-```python
+``` python
 async def debug_events_tool(self, __event_emitter__=None, __metadata__=None) -> str:
     """Debug tool to test event emitter functionality"""
 
@@ -336,7 +308,7 @@ async def debug_events_tool(self, __event_emitter__=None, __metadata__=None) -> 
 
     mode_info = "Unknown"
     if __metadata__:
-        mode_info = __metadata__.get("params", {}).get("function_calling", "default")
+        mode_info = __metadata__.get("params", {}).get("function_calling") or "native (default)"
 
     await __event_emitter__({
         "type": "status",
@@ -361,22 +333,22 @@ async def debug_events_tool(self, __event_emitter__=None, __metadata__=None) -> 
 
 下面这些特定事件类型的行为各不相同：
 
-#### Status Events ✅ FULLY COMPATIBLE {#status-events-fully-compatible}
+#### Status 事件 ✅ 完全兼容 {#status-events-fully-compatible}
 
 **Status 事件在 Default 和 Native 两种函数调用模式下行为完全一致。** 这是在工具执行期间提供实时反馈最可靠的事件类型。
 
 Status 事件会在消息执行步骤时添加实时状态更新，可以在工具执行的任意阶段发出。状态消息会显示在消息内容正上方，对于会延迟 LLM 响应或处理大量信息的工具来说非常关键。
 
 **Status 事件的基本结构：**
-```python
-await __event_emitter__({
-    "type": "status",
+``` python
+    await __event_emitter__({
+        "type": "status",
     "data": {
         "description": "Message that shows up in the chat",
         "done": False,        # False = still processing, True = completed
         "hidden": False       # False = visible, True = auto-hide when done
     }
-})
+    })
 ```
 
 **Status 事件参数：**
@@ -387,13 +359,13 @@ await __event_emitter__({
 <details>
 <summary>基础 Status 示例</summary>
 
-```python
+``` python
 async def data_processing_tool(
         self, data_file: str, __user__: dict, __event_emitter__=None
     ) -> str:
         """
         Processes a large data file with status updates
-        ✅ Works in both Default and Native function calling modes
+        Works in both Legacy and Native function calling modes
         """
 
         if not __event_emitter__:
@@ -430,13 +402,13 @@ async def data_processing_tool(
 <details>
 <summary>带错误处理的高级 Status 示例</summary>
 
-```python
+``` python
 async def api_integration_tool(
         self, endpoint: str, __event_emitter__=None
     ) -> str:
         """
         Integrates with external API with comprehensive status tracking
-        ✅ Compatible with both function calling modes
+        Compatible with both function calling modes
         """
 
         if not __event_emitter__:
@@ -489,13 +461,13 @@ async def api_integration_tool(
 <details>
 <summary>多步骤进度 Status 示例</summary>
 
-```python
+``` python
 async def batch_processor_tool(
         self, items: list, __event_emitter__=None
     ) -> str:
         """
         Processes items in batches with detailed progress tracking
-        ✅ Works perfectly in both function calling modes
+        Works perfectly in both function calling modes
         """
 
         if not __event_emitter__ or not items:
@@ -565,48 +537,35 @@ Message 事件（`message`、`chat:message`、`chat:message:delta`、`replace`�
 Native 函数调用会反复发出带完整内容快照的 `chat:completion` 事件，这些快照会完全替换消息内容，导致工具发出的任何消息更新闪烁并消失。
 
 **安全的 Message 事件结构（仅限 Default 模式）：**
-```python
+``` python
 await __event_emitter__({
     "type": "message",  # Also: "chat:message", "chat:message:delta", "replace"
     "data": {"content": "This content will be appended/replaced in the chat"},
-    # Note: message types do NOT require a "done" condition
-})
+            # Update status for current batch
+            })
 ```
-
-**Message 事件类型：**
-- `message` / `chat:message:delta`：向现有消息追加内容
-- `chat:message` / `replace`：替换整条消息内容
-- 这两类事件在 Native 模式下都会被覆盖
-
-<details>
-<summary>安全的 Message 流式输出（Default 模式）</summary>
-
-```python
+``` python
 async def streaming_content_tool(
         self, query: str, __event_emitter__=None, __metadata__=None
     ) -> str:
         """
         Streams content updates during processing
-        ⚠️ REQUIRES function_calling = "default" - Will not work in Native mode!
+        REQUIRES function_calling = "legacy" - Will not work in Native mode!
         """
 
-        # Check function calling mode (rough detection)
-        mode = "unknown"
-        if __metadata__:
-            mode = __metadata__.get("params", {}).get("function_calling", "default")
-
-        if mode == "native":
-            return "❌ This tool requires Default function calling mode. Message streaming is not supported in Native mode due to content overwriting issues."
+        # Legacy Mode only; see "Detecting the Mode in Your Tool" above.
+        if not is_legacy_mode(__metadata__):
+            return "This tool requires Legacy Mode. Message streaming is overwritten in Native mode, which is the default."
 
         if not __event_emitter__:
             return "Event emitter not available"
 
         # Stream progressive content updates
         content_chunks = [
-            "🔍 **Phase 1: Research**\nGathering information about your query...\n\n",
-            "📊 **Phase 2: Analysis**\nAnalyzing gathered data patterns...\n\n",
-            "✨ **Phase 3: Synthesis**\nGenerating insights and recommendations...\n\n",
-            "📝 **Phase 4: Final Report**\nCompiling comprehensive results...\n\n"
+            "**Phase 1: Research**\nGathering information about your query...\n\n",
+            "**Phase 2: Analysis**\nAnalyzing gathered data patterns...\n\n",
+            "**Phase 3: Synthesis**\nGenerating insights and recommendations...\n\n",
+            "**Phase 4: Final Report**\nCompiling comprehensive results...\n\n"
         ]
 
         accumulated_content = ""
@@ -640,33 +599,49 @@ async def streaming_content_tool(
 
         return "Content streaming completed successfully. All phases processed."
 ```
+
+**Message 事件类型：**
+- `message` / `chat:message:delta`：向现有消息追加内容
+- `chat:message` / `replace`：替换整条消息内容
+- 这两类事件在 Native 模式下都会被覆盖
+
+<details>
+<summary>安全的 Message 流式输出（Default 模式）</summary>
+
 </details>
 
 <details>
 <summary>动态内容替换（Default 模式）</summary>
 
-```python
+</details>
+
+<details>
+<summary>模式安全的消息工具</summary>
+
+一个能够适应模式的工具会基于 [`is_legacy_mode()`](#detecting-the-mode-in-your-tool) 分支：在 Legacy 路径上它流式发送逐步的 `message` 事件，在 Native 路径（默认）上它发出 `status` 更新，并把组装好的内容作为工具结果返回。辅助函数和分支骨架见[在工具中检测当前模式](#detecting-the-mode-in-your-tool)。
+
+</details>
+
+``` python
 async def live_dashboard_tool(
         self, __event_emitter__=None, __metadata__=None
     ) -> str:
         """
         Creates a live-updating dashboard using content replacement
-        ⚠️ ONLY WORKS in Default function calling mode
+        ONLY WORKS in Legacy Mode
         """
 
-        # Verify we're not in Native mode
-        mode = __metadata__.get("params", {}).get("function_calling", "default") if __metadata__ else "default"
-
-        if mode == "native":
+        # Legacy Mode only; see "Detecting the Mode in Your Tool" above.
+        if not is_legacy_mode(__metadata__):
             return """
-❌ **Native Mode Incompatibility**
+**Native Mode Incompatibility**
 
-This dashboard tool cannot function in Native mode because:
+This dashboard tool cannot function in Native mode (the default) because:
 - Content replacement events get overwritten by completion snapshots
 - Live updates will flicker and disappear
 - Real-time data will not persist in the interface
 
-**Solution:** Switch to Default function calling mode in Model Settings → Advanced Params → Function Calling = "Default"
+**Solution:** Set Function Calling to "Legacy" in Model Settings → Advanced Params. Legacy Mode is unsupported, so prefer redesigning around Native-compatible events.
 """
 
         if not __event_emitter__:
@@ -675,9 +650,9 @@ This dashboard tool cannot function in Native mode because:
         # Create initial dashboard
         initial_dashboard = """
 
-# 📊 Live System Dashboard
+# Live System Dashboard
 
-## System Status: 🟡 Initializing...
+## System Status: Initializing...
 
 ### Current Metrics:
 - **CPU Usage**: Loading...
@@ -697,21 +672,21 @@ This dashboard tool cannot function in Native mode because:
         # Simulate live data updates
         updates = [
             {
-                "status": "🟢 Online",
+                "status": "Online",
                 "cpu": "23%",
                 "memory": "64%",
                 "users": "1,247",
                 "response": "145ms"
             },
             {
-                "status": "🟢 Optimal",
+                "status": "Optimal",
                 "cpu": "18%",
                 "memory": "61%",
                 "users": "1,352",
                 "response": "132ms"
             },
             {
-                "status": "🟡 Busy",
+                "status": "Busy",
                 "cpu": "67%",
                 "memory": "78%",
                 "users": "1,891",
@@ -724,7 +699,7 @@ This dashboard tool cannot function in Native mode because:
 
             updated_dashboard = f"""
 
-# 📊 Live System Dashboard
+# Live System Dashboard
 
 ## System Status: {data['status']}
 
@@ -758,93 +733,6 @@ This dashboard tool cannot function in Native mode because:
 
         return "Dashboard monitoring session completed."
 ```
-</details>
-
-<details>
-<summary>模式安全的消息工具</summary>
-
-```python
-async def adaptive_content_tool(
-        self, content_type: str, __event_emitter__=None, __metadata__=None
-    ) -> str:
-        """
-        Adapts behavior based on function calling mode
-        ✅ Provides best possible experience in both modes
-        """
-
-        # Detect function calling mode
-        mode = "default"  # Default assumption
-        if __metadata__:
-            mode = __metadata__.get("params", {}).get("function_calling", "default")
-
-        if not __event_emitter__:
-            return f"Generated {content_type} content (no real-time updates available)"
-
-        # Mode-specific behavior
-        if mode == "native":
-            # Use only compatible events in Native mode
-            await __event_emitter__({
-                "type": "status",
-                "data": {"description": f"Generating {content_type} content in Native mode...", "done": False}
-            })
-
-            await asyncio.sleep(2)
-
-            await __event_emitter__({
-                "type": "status",
-                "data": {"description": "Content generation complete", "done": True}
-            })
-
-            # Return content normally - no message events
-            return f"""
-
-# {content_type.title()} Content
-
-**Mode**: Native Function Calling (Limited Event Support)
-
-Generated content here... This content is returned as the tool result rather than being streamed via message events.
-
-*Note: Live content updates are not available in Native mode due to event compatibility limitations.*
-"""
-
-        else:  # Default mode
-            # Full message event functionality available
-            await __event_emitter__({
-                "type": "status",
-                "data": {"description": "Generating content with full streaming support...", "done": False}
-            })
-
-            # Stream content progressively
-            progressive_content = [
-                f"# {content_type.title()} Content\n\n**Mode**: Default Function Calling ✅\n\n",
-                "## Section 1: Introduction\nStreaming content in real-time...\n\n",
-                "## Section 2: Details\nAdding detailed information...\n\n",
-                "## Section 3: Conclusion\nFinalizing content delivery...\n\n",
-                "*✅ Content streaming completed successfully!*"
-            ]
-
-            for i, chunk in enumerate(progressive_content):
-                await __event_emitter__({
-                    "type": "message",
-                    "data": {"content": chunk}
-                })
-
-                await __event_emitter__({
-                    "type": "status",
-                    "data": {"description": f"Streaming section {i+1}/{len(progressive_content)}...", "done": False}
-                })
-
-                await asyncio.sleep(1.5)
-
-            await __event_emitter__({
-                "type": "status",
-                "data": {"description": "Content streaming complete!", "done": True}
-            })
-
-            return "Content has been streamed above with full Default mode capabilities."
-```
-</details>
-
 #### Citations ✅ 完全兼容 {#citations-fully-compatible}
 
 **Citation 事件在 Default 与 Native 两种函数调用模式下行为完全一致。** 这种事件类型会在聊天界面中提供来源引用，用户可以点击查看原始材料。
@@ -852,7 +740,11 @@ Generated content here... This content is returned as the tool result rather tha
 Citation 对于从外部来源、数据库或文档中检索信息的工具至关重要。它们提供透明度，并允许用户验证信息来源。
 
 **Citation 事件结构：**
-```python
+
+**重要的 Citation 配置：**
+实现自定义引用时，你 **必须** 在 `Tools` 类中禁用自动引用：
+
+``` python
 await __event_emitter__({
     "type": "citation",
     "data": {
@@ -871,14 +763,6 @@ await __event_emitter__({
 })
 ```
 
-**重要的 Citation 配置：**
-实现自定义引用时，你 **必须** 在 `Tools` 类中禁用自动引用：
-
-```python
-def __init__(self):
-    self.citation = False  # REQUIRED - prevents automatic citations from overriding custom ones
-```
-
 :::warning
 
 **⚠️ 关键引用警告：**
@@ -889,17 +773,26 @@ def __init__(self):
 <details>
 <summary>基础 Citation 示例</summary>
 
-```python
-class Tools:
-    def __init__(self):
-        self.citation = False  # Disable automatic citations
+</details>
 
+<details>
+<summary>高级多来源 Citation 示例</summary>
+
+</details>
+
+<details>
+<summary>数据库 Citation 工具</summary>
+
+</details>
+
+``` python
+class Tools:
     async def research_tool(
             self, topic: str, __event_emitter__=None
         ) -> str:
         """
         Researches a topic and provides proper citations
-        ✅ Works identically in both Default and Native modes
+        Works identically in both Legacy and Native modes
         """
 
         if not __event_emitter__:
@@ -947,18 +840,13 @@ class Tools:
 
         return f"Research on '{topic}' completed. Found {len(sources)} relevant sources with detailed citations."
 ```
-</details>
-
-<details>
-<summary>高级多来源 Citation 示例</summary>
-
-```python
+``` python
 async def comprehensive_analysis_tool(
         self, query: str, __event_emitter__=None
     ) -> str:
         """
         Performs comprehensive analysis with multiple source types
-        ✅ Full compatibility across all function calling modes
+        Full compatibility across all function calling modes
         """
 
         if not __event_emitter__:
@@ -1088,18 +976,13 @@ Comprehensive analysis of '{query}' has been completed using {citation_count} au
 All sources have been properly cited and are available for review by clicking the citation links above.
 """
 ```
-</details>
-
-<details>
-<summary>数据库 Citation 工具</summary>
-
-```python
+``` python
 async def database_query_tool(
         self, sql_query: str, __event_emitter__=None
     ) -> str:
         """
         Queries database and provides data citations
-        ✅ Works perfectly in both function calling modes
+        Works perfectly in both function calling modes
         """
 
         if not __event_emitter__:
@@ -1162,14 +1045,12 @@ Retrieved **{len(query_results)}** records with complete citation metadata. Each
 All data sources have been properly cited for transparency and verification.
 """
 ```
-</details>
-
-#### Additional Compatible Event Types ✅ {#additional-compatible-event-types}
+#### 其他兼容的事件类型 ✅ {#additional-compatible-event-types}
 
 以下事件类型在 Default 和 Native 两种函数调用模式下行为完全一致：
 
 **Notification 事件**
-```python
+``` python
 await __event_emitter__({
     "type": "notification",
     "data": {"content": "Toast notification message"}
@@ -1177,15 +1058,15 @@ await __event_emitter__({
 ```
 
 **文件事件**
-```python
+``` python
 await __event_emitter__({
     "type": "files", # or "chat:message:files"
-    "data": {"files": [{"name": "report.pdf", "url": "/files/report.pdf"}]}
+    "data": {"files": [{"type": "file", "name": "report.pdf", "url": "/files/report.pdf"}]}
 })
 ```
 
 **后续问题事件**
-```python
+``` python
 await __event_emitter__({
     "type": "chat:message:follow_ups",
     "data": {"follow_ups": ["What about X?", "Tell me more about Y"]}
@@ -1193,7 +1074,7 @@ await __event_emitter__({
 ```
 
 **标题更新事件**
-```python
+``` python
 await __event_emitter__({
     "type": "chat:title",
     "data": {"title": "New Chat Title"}
@@ -1201,19 +1082,15 @@ await __event_emitter__({
 ```
 
 **标签事件**
-```python
+``` python
 await __event_emitter__({
     "type": "chat:tags",
-### 阀门与 UserValves（可选，但强烈建议使用） {#valves-and-uservalves-optional-but-highly-encouraged}
-
-Valves 和 UserValves 用于指定工具的可自定义设置，更多内容请参阅专门的 [Valves 与 UserValves 页面](/features/extensibility/plugin/development/valves)。存放在 Valves 中的机密信息（例如 API 密钥）可以[静态加密](/features/extensibility/plugin/development/valves#encrypting-valve-values-at-rest)。
-
     "data": {"tags": ["research", "analysis", "completed"]}
 })
 ```
 
 **错误事件**
-```python
+``` python
 await __event_emitter__({
     "type": "chat:message:error",
     "data": {
@@ -1225,32 +1102,32 @@ await __event_emitter__({
 ```
 
 **确认事件**
-```python
-await __event_emitter__({
+``` python
+confirmed = await __event_call__({
     "type": "confirmation",
-    "data": {"message": "Are you sure you want to continue?"}
+    "data": {"title": "Please confirm", "message": "Are you sure you want to continue?"}
 })
 ```
 
 **输入请求事件**
-```python
-await __event_emitter__({
+``` python
+answer = await __event_call__({
     "type": "input",
-    "data": {"prompt": "Please enter additional information:"}
+    "data": {"title": "More detail needed", "message": "Please enter additional information:", "placeholder": "..."}
 })
 ```
 
 **代码执行事件**
-```python
-await __event_emitter__({
+``` python
+result = await __event_call__({
     "type": "execute",
-    "data": {"code": "print('Hello from tool-generated code!')"}
+    "data": {"code": "return document.title;"}  # runs in the browser, so JavaScript
 })
 ```
 
 #### 函数调用模式综合指南 {#comprehensive-function-calling-mode-guide}
 
-:::danger Write tools for Native Mode — Default Mode is unsupported
+:::danger 为 Native 模式编写工具 —— Default 模式不再受支持
 Default Mode **属于旧版且不再支持**。新工具应编写为在 Native Mode 下工作。下面的模式对比细节仅保留给仍在维护旧版 Default-Mode 工具的人，帮助他们了解迁移时需要弥补的差距——这 **不是** 对新项目选择 Default Mode 的建议。
 
 如果你的工具设计依赖某个只在 Default Mode 中存在的事件类型，请围绕 Native 兼容面重新设计 UX（`status`、`notification`、`citation`、`chat:message:files`、`confirmation`、`chat:message:follow_ups`，再加上从工具方法返回最终内容块）。要求用户为了运行你的工具而切换到旧模式，这种做法今后不可接受。
@@ -1288,74 +1165,95 @@ Default Mode **属于旧版且不再支持**。新工具应编写为在 Native M
 - 把基于 `chat:message` 的仪表盘改成返回渲染后的仪表盘内容（Markdown / HTML 都可以）。
 - 保持 `citation`、`notification`、`confirmation` 和文件附件不变——它们在两种模式下行为一致。
 
-**通用兼容模式：**
-```python
-async def mode_adaptive_tool(
-        self, query: str, __event_emitter__=None, __metadata__=None
+**通用兼容模式：** 基于 [`is_legacy_mode()`](#detecting-the-mode-in-your-tool) 分支。在 Legacy 路径上发送 `message` 事件以产生渐进式输出；在 Native 路径（默认）上发出 `status` 更新并由工具返回结果。辅助函数和分支骨架见[在工具中检测当前模式](#detecting-the-mode-in-your-tool)。
+``` python
+async def event_diagnostics_tool(
+        self, __event_emitter__=None, __metadata__=None, __user__=None
     ) -> str:
         """
-        Tool that adapts its behavior based on function calling mode
-        ✅ Provides optimal experience in both modes
+        Comprehensive diagnostic tool for event emitter debugging
         """
 
-        # Detect current mode
-        mode = "default"
-        if __metadata__:
-            mode = __metadata__.get("params", {}).get("function_calling", "default")
+        report = ["# Event Emitter Diagnostic Report\n"]
 
-        is_native_mode = (mode == "native")
-
-        if not __event_emitter__:
-            return "Tool executed successfully (no event support)"
-
-        # Always safe: status updates work in both modes
-        await __event_emitter__({
-            "type": "status",
-            "data": {"description": f"Running in {mode} mode...", "done": False}
-        })
-
-        # Mode-specific logic
-        if is_native_mode:
-            # Native mode: use compatible events only
-            await __event_emitter__({
-                "type": "status",
-                "data": {"description": "Processing with native efficiency...", "done": False}
-            })
-
-            # Simulate processing
-            await asyncio.sleep(1)
-
-            # Return results directly - no message streaming
-            result = f"Query '{query}' processed successfully in Native mode."
-
+        # Check event emitter availability
+        if __event_emitter__:
+            report.append("Event emitter is available\n")
         else:
-            # Default mode: full event capabilities
-            await __event_emitter__({
-                "type": "message",
-                "data": {"content": f"🔍 **Processing Query**: {query}\n\n"}
-            })
+            report.append("Event emitter is NOT available\n")
+            return "".join(report)
 
+        # Check metadata availability
+        if __metadata__:
+            mode = __metadata__.get("params", {}).get("function_calling") or "native"
+            report.append(f"Function calling mode: **{mode}**\n")
+        else:
+            report.append("Metadata not available; assuming Native (the default)\n")
+            mode = "native"
+
+        # Check user context
+        if __user__:
+            report.append("User context available\n")
+        else:
+            report.append("User context not available\n")
+
+        # Test compatible events (work in both modes)
+        report.append("\n## Testing Compatible Events:\n")
+
+        try:
             await __event_emitter__({
                 "type": "status",
-                "data": {"description": "Analyzing with full streaming...", "done": False}
+                "data": {"description": "Testing status events...", "done": False}
             })
+            report.append("Status events: WORKING\n")
+        except Exception as e:
+            report.append(f"Status events: FAILED - {str(e)}\n")
 
-            await asyncio.sleep(1)
+        try:
+            await __event_emitter__({
+                "type": "notification",
+                "data": {"content": "Test notification"}
+            })
+            report.append("Notification events: WORKING\n")
+        except Exception as e:
+            report.append(f"Notification events: FAILED - {str(e)}\n")
 
+        # Test problematic events (broken in Native mode)
+        report.append("\n## Testing Mode-Dependent Events:\n")
+
+        try:
             await __event_emitter__({
                 "type": "message",
-                "data": {"content": "📊 **Results**: Analysis complete with detailed findings.\n\n"}
+                "data": {"content": "**Test message event** - This should appear in Legacy Mode only\n"}
             })
+            report.append("Message events: SENT (may disappear in Native mode)\n")
+        except Exception as e:
+            report.append(f"Message events: FAILED - {str(e)}\n")
 
-            result = "Query processed with full Default mode capabilities."
-
-        # Final status (works in both modes)
+        # Final status
         await __event_emitter__({
             "type": "status",
-            "data": {"description": "Processing complete!", "done": True}
+            "data": {"description": "Diagnostic complete", "done": True}
         })
 
-        return result
+        # Mode-specific recommendations
+        report.append("\n## Recommendations:\n")
+
+        if mode == "legacy":
+            report.append("""
+**Legacy Mode Detected**: full event support, but Legacy Mode is unsupported
+- All event types work, but new tools should not depend on Legacy-only events
+- Migrate to Native Mode (the default): return your final content and use status / citation / notification
+""")
+        else:
+            report.append("""
+**Native Mode** (the default): limited event support
+- Use: status, citation, notification, files events
+- Avoid: message, replace, chat:message events (overwritten by completion snapshots)
+- Return your primary output as the tool's return value
+""")
+
+        return "".join(report)
 ```
 </details>
 
@@ -1381,116 +1279,29 @@ async def mode_adaptive_tool(
 - **解决方案**：在 `__init__` 方法中把 `self.citation = False`
 
 **诊断工具：**
-```python
-async def event_diagnostics_tool(
-        self, __event_emitter__=None, __metadata__=None, __user__=None
-    ) -> str:
-        """
-        用于事件发射器调试的综合诊断工具
-        """
-
-        report = ["# 🔍 Event Emitter Diagnostic Report\n"]
-
-        # 检查事件发射器是否可用
-        if __event_emitter__:
-            report.append("✅ Event emitter is available\n")
-        else:
-            report.append("❌ Event emitter is NOT available\n")
-            return "".join(report)
-
-        # 检查元数据是否可用
-        if __metadata__:
-            mode = __metadata__.get("params", {}).get("function_calling", "default")
-            report.append(f"✅ Function calling mode: **{mode}**\n")
-        else:
-            report.append("⚠️ Metadata not available (mode unknown)\n")
-            mode = "unknown"
-
-        # 检查用户上下文
-        if __user__:
-            report.append("✅ User context available\n")
-        else:
-            report.append("⚠️ User context not available\n")
-
-        # 测试兼容事件（两种模式都可用）
-        report.append("\n## 测试兼容事件：\n")
-
-        try:
-            await __event_emitter__({
-                "type": "status",
-                "data": {"description": "Testing status events...", "done": False}
-            })
-            report.append("✅ Status events: WORKING\n")
-        except Exception as e:
-            report.append(f"❌ Status events: FAILED - {str(e)}\n")
-
-        try:
-            await __event_emitter__({
-                "type": "notification",
-                "data": {"content": "Test notification"}
-            })
-            report.append("✅ Notification events: WORKING\n")
-        except Exception as e:
-            report.append(f"❌ Notification events: FAILED - {str(e)}\n")
-
-        # 测试有模式差异的事件（在 Native 模式中会失效）
-        report.append("\n## 测试依赖模式的事件：\n")
-
-        try:
-            await __event_emitter__({
-                "type": "message",
-                "data": {"content": "**Test message event** - This should appear in Default mode only\n"}
-            })
-            report.append("✅ Message events: SENT (may disappear in Native mode)\n")
-        except Exception as e:
-            report.append(f"❌ Message events: FAILED - {str(e)}\n")
-
-        # 最终状态
-        await __event_emitter__({
-            "type": "status",
-            "data": {"description": "Diagnostic complete", "done": True}
-        })
-
-        # 按模式给出建议
-        report.append("\n## 建议：\n")
-
-        if mode == "native":
-            report.append("""
-⚠️ **检测到 Native Mode**：事件支持有限
-- ✅ 可使用：status、citation、notification、files 事件
-- ❌ 应避免：message、replace、chat:message 事件
-- 💡 如需完整功能，请切换到 Default mode
-""")
-        elif mode == "default":
-            report.append("""
-✅ **检测到 Default Mode**：可用完整事件支持
-- 所有事件类型都应当正常工作
-- 最适合交互式和流式工具
-""")
-        else:
-            report.append("""
-❓ **未知模式**：请检查模型配置
-- 确认已启用函数调用
-- 验证模型是否支持工具调用
-""")
-
-        return "".join(report)
-```
 </details>
 
 <details>
 <summary>📚 事件发射器速查表</summary>
 
 **始终兼容（两种模式都可用）：**
-```python
 
-# Status 更新——非常适合进度跟踪
+**仅限 Default Mode（Native 中会失效）：**
+
+**模式检测模式：**
+
+**必要导入：**
+</details>
+
+``` python
+
+# Status updates - perfect for progress tracking
 await __event_emitter__({
     "type": "status",
     "data": {"description": "Processing...", "done": False}
 })
 
-# Citation——来源标注的核心能力
+# Citations - essential for source attribution
 await __event_emitter__({
     "type": "citation",
     "data": {
@@ -1499,59 +1310,44 @@ await __event_emitter__({
     }
 })
 
-# Notification——用户提醒
+# Notifications - user alerts
 await __event_emitter__({
     "type": "notification",
     "data": {"content": "Task completed!"}
 })
 ```
+``` python
 
-**仅限 Default Mode（Native 中会失效）：**
-```python
+# These will flicker/disappear in Native mode
 
-# ⚠️ 这些在 Native 模式中会闪烁/消失
-
-# 渐进式内容流式输出
+# Progressive content streaming
 await __event_emitter__({
     "type": "message",
     "data": {"content": "Streaming content..."}
 })
 
-# 内容替换
+# Content replacement
 await __event_emitter__({
     "type": "replace",
     "data": {"content": "New complete content"}
 })
 
-# Delta 更新
+# Delta updates
 await __event_emitter__({
     "type": "chat:message:delta",
     "data": {"content": "Additional content"}
 })
 ```
-
-**模式检测模式：**
-```python
-def get_function_calling_mode(__metadata__):
-    """用于检测当前函数调用模式的工具函数"""
-    if not __metadata__:
-        return "unknown"
-    return __metadata__.get("params", {}).get("function_calling", "default")
-
-# 在工具中的使用方式：
-mode = get_function_calling_mode(__metadata__)
-is_native = (mode == "native")
-can_stream_messages = not is_native
+``` python
+# Native is the default; only an explicit "legacy" opts out.
+is_legacy = is_legacy_mode(__metadata__)
+can_stream_messages = is_legacy   # message / replace work in Legacy only
 ```
-
-**必要导入：**
-```python
+``` python
 import asyncio
 from datetime import datetime
 from typing import Optional, Callable, Awaitable
 ```
-</details>
-
 ### 富 UI 元素嵌入 {#rich-ui-element-embedding}
 
 Tools 和 Actions 可以返回 HTML 内容，并在聊天中直接渲染为可交互的 iframe。完整文档、示例、安全注意事项和 CORS 配置请参阅专门的 **[Rich UI Embedding](/features/extensibility/plugin/development/rich-ui)** 指南。
@@ -1579,7 +1375,7 @@ Tools 和 Actions 可以返回 HTML 内容，并在聊天中直接渲染为可�
 
 **在生产环境中请设置 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements)**，彻底禁用运行时 pip 安装。然后使用自定义 Dockerfile 在镜像构建阶段预先安装所有必需包：
 
-```dockerfile
+``` dockerfile
 FROM ghcr.io/open-webui/open-webui:main
 
 RUN pip install --no-cache-dir python-docx requests beautifulsoup4
@@ -1600,7 +1396,7 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 <details>
 <summary>示例</summary>
 
-```python
+``` python
 """
 title: myToolName
 author: myName

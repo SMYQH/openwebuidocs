@@ -33,38 +33,42 @@ Jupyter Notebook 是一个开源 Web 应用程序，允许用户创建和共享�
 
 # 第 1 步：启动 OUI 和 Jupyter {#step-1-launch-oui-and-jupyter}
 
-为此，我使用了 `docker-compose` 来启动包含两个服务及 LLM 的整合栈，但分别运行各个 Docker 容器也应该可以工作。
+为此，我使用 Docker Compose 启动了一个同时包含两个服务以及我的 LLM 的服务栈，但分别运行各个 Docker 容器也应该可行。
 
 ```yaml title="docker-compose.yml"
 services:
-open-webui:
-image: ghcr.io/open-webui/open-webui:latest
-container_name: open-webui
-ports:
-- "3000:8080"
-volumes:
-- open-webui:/app/backend/data
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:latest
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui:/app/backend/data
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
-jupyter:
-image: jupyter/minimal-notebook:latest
-container_name: jupyter-notebook
-ports:
-- "8888:8888"
-volumes:
-- jupyter_data:/home/jovyan/work
-environment:
-- JUPYTER_ENABLE_LAB=yes
-- JUPYTER_TOKEN=123456
+  jupyter:
+    image: jupyter/minimal-notebook:latest
+    container_name: jupyter-notebook
+    ports:
+      - "8888:8888"
+    volumes:
+      - jupyter_data:/home/jovyan/work
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=123456
 
 volumes:
-open-webui:
-jupyter_data:
+  open-webui:
+  jupyter_data:
 ```
 
-在保存 `docker-compose` 文件的目录中运行以下命令即可启动上述服务栈：
+`extra_hosts` 这一行让 `host.docker.internal` 在 Linux 上也能解析，下文的 `CODE_EXECUTION_JUPYTER_URL` 正依赖于此；在这个 Compose 项目内部，`http://jupyter:8888` 同样可用。
 
-```bash title="运行 docker-compose"
-docker-compose up -d
+在保存了 `docker-compose.yml` 文件的目录中运行下面的命令即可启动上述服务栈：
+
+```bash title="运行 Docker Compose"
+docker compose up -d
 ```
 
 现在您应该可以通过以下 URL 访问两个服务：
@@ -74,9 +78,9 @@ docker-compose up -d
 | Open-WebUI | `http://localhost:3000` |
 | Jupyter | `http://localhost:8888` |
 
-访问 Jupyter 服务时，您需要上面定义的 `JUPYTER_TOKEN`。本教程使用了示例令牌值 `123456`。
+访问 Jupyter 服务时，您需要使用上面定义的 `JUPYTER_TOKEN`。本教程使用了示例令牌值 `123456`。
 
-![代码执行配置](/images/tutorials/jupyter/jupyter-token.png)
+![Jupyter 登录页面要求输入密码或令牌](/images/tutorials/jupyter/jupyter-token.png)
 
 # 第 2 步：为 Jupyter 配置代码执行 {#step-2-configure-code-execution-for-jupyter}
 
@@ -96,6 +100,10 @@ Open-WebUI 和 Jupyter 都运行后，我们需要在 Admin Panel -> Settings ->
 | `CODE_INTERPRETER_JUPYTER_AUTH_TOKEN` | 123456 |
 | `CODE_INTERPRETER_JUPYTER_TIMEOUT` | 60 |
 
+这些都是持久化的管理端设置：环境变量只在针对全新数据库的首次启动时生效；此后以数据库中保存的值为准（在 设置 > 管理 > 代码执行 中修改），除非设置 `ENABLE_PERSISTENT_CONFIG=False`。`CODE_EXECUTION_JUPYTER_AUTH` 只接受 `token` 或 `password` 两种取值；填入其他值则不会发送任何凭据，而密码模式会通过 Jupyter 的 `/login` 表单登录。`CODE_INTERPRETER_JUPYTER_*` 系列变量默认取其 `CODE_EXECUTION_JUPYTER_*` 对应项的值，但 `CODE_INTERPRETER_ENGINE` 并非如此（它默认是 `pyodide`），因此请同时设置这两个引擎变量。
+
+当 Jupyter 成为执行引擎后，默认开启的 [`ENABLE_ORJSON`](/reference/env-configuration#enable_orjson) 能更快地把一次运行的输出送进聊天，在代码打印大量内容或生成图片时尤其明显。请保持它为 `True`；它只在启动时读取一次，修改后需要重启。
+
 ## 第 3 步：测试连接 {#step-3-test-the-connection}
 
 首先，让我们确认 Jupyter 目录中的内容。如下图所示，我们只有一个空的 `work` 文件夹。
@@ -107,7 +115,7 @@ Open-WebUI 和 Jupyter 都运行后，我们需要在 Admin Panel -> Settings ->
 让我们运行第一个提示词。确保已选择 `Code Execution` 按钮。
 
 ```txt
-提示词：使用虚假数据创建两个 CSV 文件。第一个 CSV 应使用原生 Python 创建，第二个应使用 pandas 库创建。将 CSV 命名为 data1.csv 和 data2.csv
+Prompt: Create two CSV files using fake data. The first CSV should be created using vanilla python and the second CSV should be created using the pandas library. Name the CSVs data1.csv and data2.csv
 ```
 
 ![代码执行配置](/images/tutorials/jupyter/jupyter-create-csv.png)
@@ -121,7 +129,7 @@ Open-WebUI 和 Jupyter 都运行后，我们需要在 Admin Panel -> Settings ->
 让我们运行第二个提示词。同样，确保已选择 `Code Execution` 按钮。
 
 ```txt
-提示词：使用 matplotlib 和 seaborn 在 Python 中创建几个可视化图表并保存到 jupyter
+Prompt: Create several visualizations in python using matplotlib and seaborn and save them to jupyter
 ```
 
 ![代码执行配置](/images/tutorials/jupyter/jupyter-create-viz.png)
@@ -135,7 +143,7 @@ Open-WebUI 和 Jupyter 都运行后，我们需要在 Admin Panel -> Settings ->
 让我们一起运行最后一个提示词。在这个提示词中，我们将仅通过提示词创建一个全新的 notebook。
 
 ```txt
-提示词：编写 Python 代码来读写 JSON 文件，并将其保存到我的名为 notebook.ipynb 的 notebook 中
+Prompt: Write python code to read and write json files and save it to my notebook called notebook.ipynb
 ```
 
 ![代码执行配置](/images/tutorials/jupyter/jupyter-create-notebook.png)

@@ -76,11 +76,11 @@ async def resolve_user(user_id: str):
 
 ---
 
-### 🗄️ 2. 用 `get_async_db_context` 替换 `get_db_context` {#2-replace-get_db_context-with-get_async_db_context}
+### 🗄️ 2. 用 `get_async_db_context` 替换 `get_db_context` {#2-replace-get\_db\_context-with-get\_async\_db\_context}
 
 如果你的插件会自己打开数据库 session（虽然不常见，但某些 Tools 会这么做），那么旧的同步 helper 已不再适用，请切换到异步版本。
 
-#### 之前（0.8.x）
+#### 之前（0.8.x） {#before-08x-1}
 ```python
 from open_webui.internal.db import get_db_context
 from open_webui.models.users import User
@@ -90,7 +90,7 @@ def count_active_users():
         return db.query(User).filter_by(is_active=True).count()
 ```
 
-#### 之后（0.9.0）
+#### 之后（0.9.0） {#after-090-1}
 ```python
 from sqlalchemy import select, func
 from open_webui.internal.db import get_async_db_context
@@ -122,7 +122,7 @@ async def count_active_users():
 插件入口自 0.5 起本来就是异步的，因此签名无需改变。变化点在于：你在函数体内部如何访问模型。
 
 #### 之前（0.8.x）——一个查找调用者的 Pipe {#before-08x-a-pipe-that-looks-up-the-caller}
-```python
+``` python
 from pydantic import BaseModel
 from fastapi import Request
 
@@ -137,12 +137,12 @@ class Pipe:
         __request__: Request,
     ) -> str:
         full_user = Users.get_user_by_id(__user__["id"])
-        body["model"] = "llama3.2:latest"
+        body["model"] = "qwen3.6:27b"
         return await generate_chat_completion(__request__, body, full_user)
 ```
 
-#### 之后（0.9.0）
-```python
+#### 之后（0.9.0） {#after-090-2}
+``` python
 from pydantic import BaseModel
 from fastapi import Request
 
@@ -157,7 +157,7 @@ class Pipe:
         __request__: Request,
     ) -> str:
         full_user = await Users.get_user_by_id(__user__["id"])
-        body["model"] = "llama3.2:latest"
+        body["model"] = "qwen3.6:27b"
         return await generate_chat_completion(__request__, body, full_user)
 ```
 
@@ -179,7 +179,7 @@ class Tools:
         return file.data.get("content", "") if file else ""
 ```
 
-#### 之后（0.9.0）
+#### 之后（0.9.0） {#after-090-3}
 ```python
 from open_webui.models.files import Files
 
@@ -195,7 +195,7 @@ class Tools:
 
 如果你的插件暴露了自己的 FastAPI route（少数高级 Tool 会这么做），并且声明了数据库 session 依赖，那么你还需要同时更新依赖函数与类型标注。
 
-#### 之前（0.8.x）
+#### 之前（0.8.x） {#before-08x-2}
 ```python
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -207,7 +207,7 @@ def my_endpoint(db: Session = Depends(get_session)):
     ...
 ```
 
-#### 之后（0.9.0）
+#### 之后（0.9.0） {#after-090-4}
 ```python
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession

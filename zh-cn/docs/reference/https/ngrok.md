@@ -5,7 +5,6 @@ title: "使用 ngrok 的 HTTPS"
 
 # 使用 ngrok 的 HTTPS {#https-using-ngrok}
 
-## 使用 ngrok 的 HTTPS {#prerequisites}
 
 **为本地 Open WebUI 立刻获得公网 HTTPS。零配置、零开放端口。**
 
@@ -17,7 +16,7 @@ ngrok 非常适合**开发与测试**。对于生产部署，请优先选择反�
 
 ---
 
-## 前提条件 {#1-install-ngrok}
+## 前提条件 {#prerequisites}
 
 | 要求 | 详情 |
 | :--- | :--- |
@@ -26,7 +25,7 @@ ngrok 非常适合**开发与测试**。对于生产部署，请优先选择反�
 
 ---
 
-## 1. 安装 ngrok {#2-authenticate}
+## 1. 安装 ngrok {#1-install-ngrok}
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -58,7 +57,7 @@ choco install ngrok
   </TabItem>
 </Tabs>
 
-## 2. 完成认证 {#3-start-the-tunnel}
+## 2. 完成认证 {#2-authenticate}
 
 ```bash
 ngrok config add-authtoken YOUR_AUTH_TOKEN
@@ -66,7 +65,7 @@ ngrok config add-authtoken YOUR_AUTH_TOKEN
 
 你的 authtoken 可在 [dashboard.ngrok.com/get-started/your-authtoken](https://dashboard.ngrok.com/get-started/your-authtoken) 获取。
 
-## 3. 启动隧道 {#configure-open-webui}
+## 3. 启动隧道 {#3-start-the-tunnel}
 
 ```bash
 ngrok http 8080
@@ -82,7 +81,7 @@ Forwarding  https://a1b2-203-0-113-42.ngrok-free.app → http://localhost:8080
 
 ---
 
-## 配置 Open WebUI {#custom-domain-optional}
+## 配置 Open WebUI {#configure-open-webui}
 
 设置 `WEBUI_URL`，确保 OAuth 回调与内部链接都能正确解析：
 
@@ -101,7 +100,7 @@ ngrok 免费层的 URL 会在每次重启 tunnel 后变化。请相应更新 `WE
 
 ---
 
-## 自定义域名（可选） {#quick-reference}
+## 自定义域名（可选） {#custom-domain-optional}
 
 在付费 ngrok 计划中，你可以申请固定子域名，使 URL 不再变化：
 
@@ -113,7 +112,7 @@ ngrok http 8080 --url=your-name.ngrok-free.app
 
 ---
 
-## 快速参考 {#limitations}
+## 快速参考 {#quick-reference}
 
 | 操作 | 命令 / 值 |
 | :--- | :--- |
@@ -125,7 +124,7 @@ ngrok http 8080 --url=your-name.ngrok-free.app
 
 ---
 
-## 限制
+## 限制 {#limitations}
 
 | 问题 | 说明 |
 | :--- | :--- |

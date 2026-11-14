@@ -108,7 +108,7 @@ UpdateRelStyle(user, openwebui, $offsetX="-100", $offsetY="-50")
   <Tabs groupId="linux-topology">
     <TabItem value="host-ollama-linux" label="主机 Ollama" default>
 
-#### 主机运行 Ollama，容器运行 Open WebUI
+#### 主机运行 Ollama，容器运行 Open WebUI {#ollama-on-host-open-webui-in-container-1}
 
 `Ollama` 运行在主机上，`Open WebUI` 常署在 Docker 容器中。
 
@@ -129,7 +129,7 @@ UpdateRelStyle(user, openwebui, $offsetX="-100", $offsetY="-50")
     </TabItem>
     <TabItem value="compose-stack-linux" label="Compose 栈">
 
-#### Ollama 和 Open WebUI 在 Compose 栈中
+#### Ollama 和 Open WebUI 在 Compose 栈中 {#ollama-and-open-webui-in-compose-stack-1}
 
 `Ollama` 和 `Open WebUI` 均位于同一个 Docker Compose 栈中，实现直接网络通信。
 
@@ -152,7 +152,7 @@ UpdateRelStyle(user, openwebui, $offsetX="-100", $offsetY="-50")
     </TabItem>
     <TabItem value="separate-networks-linux" label="独立网络">
 
-#### Ollama 和 Open WebUI 在独立网络中
+#### Ollama 和 Open WebUI 在独立网络中 {#ollama-and-open-webui-separate-networks-1}
 
 `Ollama` 和 `Open WebUI` 分属不同的 Docker 网络，可能导致连通性问题。
 

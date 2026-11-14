@@ -50,7 +50,7 @@ CPTR_LOG_UPSTREAM_REQUESTS=true cptr run
 
 模型 API 请求写入 `<data>/logs/upstream-requests.jsonl`（50 MB 轮转，可通过 `CPTR_UPSTREAM_REQUEST_LOG_PATH` 和 `CPTR_UPSTREAM_REQUEST_LOG_ROTATION` 配置）。完成调查后关闭它：文件增长很快且包含提示内容。
 
-## CORS
+## CORS {#cors}
 
 `CPTR_CORS_ALLOWED_ORIGINS` 控制哪些浏览器来源可以调用 API。默认值为 `*`。如果你在另一个来源上托管单独的前端，设置一个显式的逗号分隔列表：
 

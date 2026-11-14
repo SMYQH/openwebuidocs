@@ -28,7 +28,7 @@ title: "连接错误"
 
 当你把 Open WebUI 放在启用了 HTTPS 的反向代理后面时，必须正确配置这些设置：
 
-```bash
+``` bash
 # 在首次启动前把它设为你的真实域名（OAuth/SSO 和正常运行都需要）
 WEBUI_URL=https://your-open-webui-domain.com
 # 如果你已经启动过 Open WebUI 也不用担心，仍然可以在管理面板中修改
@@ -86,12 +86,6 @@ Open WebUI v0.5.0 及更高版本需要 WebSocket 支持。如果 WebSocket 不�
    - **Nginx 修复方式**：确认 location 块中使用了 `proxy_http_version 1.1;`（Open WebUI 的多数 Nginx 示例默认如此）。
 
 多实例部署中，请为 WebSocket 管理配置 Redis：
-```bash
-ENABLE_WEBSOCKET_SUPPORT=true
-WEBSOCKET_MANAGER=redis
-WEBSOCKET_REDIS_URL=redis://redis:6379/1
-```
-
 关于 Redis 配置细节，请参阅 [Redis WebSocket Support](/tutorials/integrations/redis)。完整的多实例扩缩容实践请参阅 [Scaling Open WebUI](/getting-started/advanced-topics/scaling)。如果你在多副本场景中遇到特定的 WebSocket 403 错误，请参见 [扩缩容与高可用故障排查](/troubleshooting/multi-replica#2-websocket-403-errors--connection-failures)。
 
 ### 测试你的配置 {#testing-your-configuration}
@@ -120,20 +114,12 @@ WEBSOCKET_REDIS_URL=redis://redis:6379/1
 
 如果流式响应时出现 Markdown 渲染错乱（例如可见 `##`、`**` 或格式断裂），但关闭流式输出后又恢复正常，这通常是 **nginx proxy buffering** 导致的。
 
-### 常见症状
+### 常见症状 {#common-symptoms-1}
 
 - 响应中直接显示原始 Markdown token（`##`、`**`、`###`）
 - 粗体标记位置异常（例如 `** Control:**` 而不是 `**Control:**`）
 - 响应中随机缺词或缺段落
 - 关闭流式输出后格式恢复正常
-
-### 常见症状 {#common-symptoms}
-
-- 助手消息返回时**完全为空**，界面上没有任何错误，日志中在任何日志级别下也没有任何内容。
-- 看起来**毫无规律**：大多数轮次都正常，同一个提示词有时成功、有时不成功。
-- 服务商仍会为这个空轮次的输出 token 向你计费。
-- 存储的消息中 `content: ''` 且 `output: []`，而 `usage.completion_tokens` 不为零。
-- 启用工具之后情况会明显恶化，使用内置工具时尤其如此，因为模型会自行调用它们。
 
 ### 原因：Nginx 代理缓冲 {#cause-nginx-proxy-buffering}
 
@@ -143,7 +129,7 @@ WEBSOCKET_REDIS_URL=redis://redis:6379/1
 
 在 Open WebUI 的 nginx location 块中加入以下配置：
 
-```nginx
+``` nginx
 location / {
     proxy_pass http://your-open-webui-upstream;
 
@@ -174,12 +160,13 @@ location / {
 
 ## 当模型使用工具时回复为空白 {#blank-replies-when-the-model-uses-a-tool}
 
-### 常见症状 {#common-symptoms}
+### 常见症状 {#common-symptoms-2}
 
-- 对于一个已经配置好、刚刚还能正常工作的模型，对话却以**“未找到模型”**失败，之后又恢复正常。
-- Ollama 的模型列表会自行清空，重启后又恢复。
-- 日志中出现 `ClientConnectorDNSError` 或 `Cannot connect to host ...`，而同一个容器内的 shell 却能正常解析该主机名。
-- 在某些 Windows 主机上，从第一次启动开始，对外部模型服务商的每一次请求都会失败。
+- 助手消息返回时**完全为空**，界面上没有任何错误，日志中在任何日志级别下也没有任何内容。
+- 看起来**毫无规律**：大多数轮次都正常，同一个提示词有时成功、有时不成功。
+- 服务商仍会为这个空轮次的输出 token 向你计费。
+- 存储的消息中 `content: ''` 且 `output: []`，而 `usage.completion_tokens` 不为零。
+- 启用工具之后情况会明显恶化，使用内置工具时尤其如此，因为模型会自行调用它们。
 
 ### 原因：服务商在流式工具调用中省略了 `index` {#cause-the-provider-omits-index-on-streamed-tool-calls}
 
@@ -191,12 +178,12 @@ OpenAI 的流式 schema 在每个工具调用增量上都有一个 `index` 字�
 
 直接向端点发起请求并查看工具调用的数据块。把你自己的 URL、密钥和模型替换进去：
 
-```bash
-curl -s -N -X POST "https://your-provider.example/v1/chat/completions" -H "Authorization: Bearer $API_KEY" -H "Content-Type: application/json" -d '{"model":"your-model","stream":true,"messages":[{"role":"user","content":"What is the weather in Paris?"}],"tools":[{"type":"function","function":{"name":"get_weather","parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}}}]}'
-```
 
 在 `delta.tool_calls` 条目中查找 `"index"`。如果它不存在，你就遇到了这个问题。外层 `choices` 条目上的 `index` 是另一个字段，不算数。
 
+``` bash
+curl -s -N -X POST "https://your-provider.example/v1/chat/completions" -H "Authorization: Bearer $API_KEY" -H "Content-Type: application/json" -d '{"model":"your-model","stream":true,"messages":[{"role":"user","content":"What is the weather in Paris?"}],"tools":[{"type":"function","function":{"name":"get_weather","parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}}}]}'
+```
 ### 解决方案 {#solutions}
 
 1. **在前面加一层网关。** LiteLLM、OpenRouter 或任何与服务商原生 API 通信、同时输出符合 schema 的 OpenAI 结果的代理。这是唯一能既保留原生工具调用、又让内置工具继续工作的方案。
@@ -276,12 +263,19 @@ Open WebUI 中有些功能提供**两种配置方式**：一种是**用户/直�
    使用 host 网络后，WebUI 的内部端口会从 3000 变成 8080。
 
 **示例 Docker 命令：**
-```bash
+``` bash
 docker run -d --network=host -v open-webui:/app/backend/data -e OLLAMA_BASE_URL=http://127.0.0.1:11434 --name open-webui --restart always ghcr.io/open-webui/open-webui:main
 ```
 运行后，WebUI 应可通过 `http://localhost:8080` 访问。
 
 ## 间歇性名称查找失败（常被报告为“未找到模型”） {#intermittent-name-lookup-failures-often-reported-as-model-not-found}
+
+### 常见症状 {#common-symptoms-3}
+
+- 对于一个已经配置好、刚刚还能正常工作的模型，对话却以**“未找到模型”**失败，之后又恢复正常。
+- Ollama 的模型列表会自行清空，重启后又恢复。
+- 日志中出现 `ClientConnectorDNSError` 或 `Cannot connect to host ...`，而同一个容器内的 shell 却能正常解析该主机名。
+- 在某些 Windows 主机上，从第一次启动开始，对外部模型服务商的每一次请求都会失败。
 
 ### 原因 {#cause}
 
@@ -296,7 +290,7 @@ docker run -d --network=host -v open-webui:/app/backend/data -e OLLAMA_BASE_URL=
 
 c-ares 作为一个可选项仍然可用，在繁忙的实例上值得一试，因为它消除了每次出站请求前的一段排队延迟：
 
-```bash
+``` bash
 AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=true
 ```
 
@@ -306,7 +300,7 @@ AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=true
 
 如果 Open WebUI 加载模型需要很久，或者模型选择器一直转圈，常见原因是你在连接配置中保存了不可达或非常慢的 API endpoint。
 
-### 常见症状
+### 常见症状 {#common-symptoms-4}
 
 - 模型选择器长时间显示加载状态
 - `/api/models` 返回 `500 Internal Server Error`
@@ -323,8 +317,8 @@ AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=true
 
 通过 `AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST` 调低模型列表请求超时：
 
-```bash
-# 把模型列表抓取的超时时间（秒）设短一些，让不可达 endpoint 更快失败
+``` bash
+# Set a shorter timeout (in seconds) for faster failure on unreachable endpoints
 AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=3
 ```
 
@@ -340,20 +334,22 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=3
 如果你保存了不可达 URL，导致连设置页面都进不去，那么坏配置已经写入数据库，并且会优先于环境变量生效。可以使用以下恢复方式之一：
 
 **选项 A：启动时重置配置**
-```bash
+``` bash
+# 把模型列表抓取的超时时间（秒）设短一些，让不可达 endpoint 更快失败
 RESET_CONFIG_ON_START=true
 ```
 
 **选项 B：始终使用环境变量**
-```bash
+``` bash
+# Prevents database values from taking precedence (changes in UI won't persist across restarts)
 ENABLE_PERSISTENT_CONFIG=false
 ```
 
 **选项 C：手动清理数据库（高级）**
 
 如果你使用的是 SQLite，停止容器后执行：
-```bash
-sqlite3 webui.db "DELETE FROM config WHERE id LIKE '%urls%';"
+``` bash
+sqlite3 webui.db "DELETE FROM config WHERE key IN ('ollama.base_urls','openai.api_base_urls');"
 ```
 
 :::warning
@@ -377,15 +373,15 @@ sqlite3 webui.db "DELETE FROM config WHERE id LIKE '%urls%';"
 
 如果你在资源受限的系统上（尤其是 Raspberry Pi 等设备）遇到页面加载慢、API 超时或 UI 无响应，问题可能与数据库会话共享有关。
 
-### 原因
+### 原因 {#cause-1}
 
 数据库会话共享可能会让低配硬件（Raspberry Pi、CPU 配额极低的容器等）或并发下的 SQLite 数据库过载。
 
-### 解决方法
+### 解决方法 {#solution-1}
 
 关闭数据库会话共享：
 
-```bash
+``` bash
 DATABASE_ENABLE_SESSION_SHARING=false
 ```
 
@@ -399,7 +395,7 @@ DATABASE_ENABLE_SESSION_SHARING=false
 2. **切换 endpoint**：如果 Hugging Face 服务异常，可在 Docker 命令中改用镜像
 
 **示例 Docker 命令：**
-```bash
+``` bash
 docker run -d -p 3000:8080 -e HF_ENDPOINT=https://hf-mirror.com/ --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
 ```
 
@@ -408,30 +404,32 @@ docker run -d -p 3000:8080 -e HF_ENDPOINT=https://hf-mirror.com/ --add-host=host
 
 如果你正在使用带自签名证书的外部工具，例如 Tika、用于嵌入的 Ollama、或外部 reranker，可能会遇到 SSL 校验错误。
 
-### 常见症状
+### 常见症状 {#common-symptoms-5}
 
 - 日志中出现 `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate`
 - Tika 文档导入失败
 - 嵌入生成因 SSL 报错失败
 - Reranking 因 SSL 报错失败
 
-### 解决方法
+### 解决方法 {#solution-2}
 
 你可以通过以下环境变量，为这些内部工具连接关闭 SSL 校验：
 
-1. **同步请求（Tika、External Reranker）使用：**
-   ```bash
-   REQUESTS_VERIFY=false
-   ```
+1.  **对于同步请求（Tika、External Reranker）：**
+    ```bash
+    REQUESTS_VERIFY=false
+    ```
 
-2. **异步请求（Ollama Embeddings）使用：**
-   ```bash
-   AIOHTTP_CLIENT_SESSION_SSL=false
-   ```
+2.  **对于异步请求（Ollama Embeddings）：**
+    ```bash
+    AIOHTTP_CLIENT_SESSION_SSL=false
+    ```
 
 :::warning
-关闭 SSL 校验会降低安全性。只有在你信任所处网络及目标服务（例如安全的内网环境）时才应这样做。
+关闭 SSL 校验会降低安全性。只有在你信任所处网络及目标服务（例如在安全的内网环境中运行）时才应这样做。
 :::
+
+对于使用 TLS 的 Milvus，请将 [`MILVUS_SERVER_PEM_PATH`](/reference/env-configuration#milvus_server_pem_path) 指向 CA 或服务器证书。校验仍保持开启。
 
 ## 🍏 MacOS 上的 Podman {#podman-on-macos}
 
@@ -441,7 +439,7 @@ docker run -d -p 3000:8080 -e HF_ENDPOINT=https://hf-mirror.com/ --add-host=host
 2. **设置 `OLLAMA_BASE_URL`** 为 **`http://host.containers.internal:11434`**。
 
 **示例 Podman 命令：**
-```bash
+``` bash
 podman run -d -p 3000:8080 -e OLLAMA_BASE_URL=http://host.containers.internal:11434 -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
 ```
 
@@ -455,16 +453,16 @@ podman run -d -p 3000:8080 -e OLLAMA_BASE_URL=http://host.containers.internal:11
 
 - **症状**：加载搜索结果时出现 `[SSL: CERTIFICATE_VERIFY_FAILED]`
 - **解决方法**：可以单独关闭 Web Loader（抓取器）的 SSL 校验
-  ```bash
+``` bash
   ENABLE_WEB_LOADER_SSL_VERIFICATION=false
-  ```
+```
   > **注意**：这个设置只影响网页抓取本身。如果你是在搜索引擎（例如本地 SearXNG）或后续步骤（Embedding/Reranking）中遇到 SSL 问题，请查看本页其他章节。
 
 ### 代理配置问题 {#proxy-configuration-issues}
 
 如果在使用 Bocha、Tavily 等 Web Search 提供商时，看到 `UNEXPECTED_EOF_WHILE_READING` 或 `Max retries exceeded` 之类的 SSL 错误：
 
-#### 常见症状
+#### 常见症状 {#common-symptoms-6}
 
 - `SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING]'))`
 - `Max retries exceeded with url: /v1/web-search`
@@ -480,13 +478,13 @@ podman run -d -p 3000:8080 -e OLLAMA_BASE_URL=http://host.containers.internal:11
 
 如果你的 `https_proxy` 指向的是 `http://...`（HTTP）而不是 `https://...`（HTTPS），握手通常会失败，因为代理会提前终止连接。
 
-### 解决方法 {#solutions}
+#### 解决方法 {#solutions-1}
 
 1. **修正代理配置**：为 HTTPS 流量使用支持 HTTPS 的代理，或让 HTTP 代理正确支持 CONNECT 隧道
 2. **为特定主机绕过代理**：设置 `NO_PROXY`
-   ```bash
+``` bash
    NO_PROXY=api.bochaai.com,api.tavily.com,api.search.brave.com
-   ```
+```
 3. **如果不需要代理则禁用**：直接取消这些代理环境变量
 
 #### 为什么独立脚本可以工作 {#why-standalone-scripts-work}

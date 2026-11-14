@@ -190,13 +190,13 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 
 ## 故障排查 {#troubleshooting}
 
-### "Task result not found. Please wait for a completion status."
+### "Task result not found. Please wait for a completion status." {#task-result-not-found-please-wait-for-a-completion-status}
 
 **原因：** 使用了多个 Uvicorn worker，而任务存储又是内存级别。
 
 **解决方案：** 在 docling-serve 配置中将 `UVICORN_WORKERS=1`。
 
-### "Connections to remote services is only allowed when set explicitly"
+### "Connections to remote services is only allowed when set explicitly" {#connections-to-remote-services-is-only-allowed-when-set-explicitly}
 
 **原因：** 图片描述的 API 模式需要显式开启对外服务访问。
 

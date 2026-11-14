@@ -71,14 +71,14 @@ WantedBy=default.target
 
 ```bash
 systemctl --user enable --now cptr
-loginctl enable-linger $USER   # 即使未登录也保持运行
+loginctl enable-linger $USER   # keep it running when you're not logged in
 ```
 
 ### Windows（任务计划程序） {#windows-task-scheduler}
 
 任务计划程序 → **创建任务**：触发器**登录时**，操作**启动程序**，使用 `cptr.exe` 的完整路径（例如 `C:\Users\you\venvs\cptr\Scripts\cptr.exe`）和参数 `run --headless`。在设置下，启用"如果任务失败，每隔……重新启动"。
 
-### Docker
+### Docker {#docker}
 
 使用重启策略；Docker 在崩溃和重启后重新启动容器：
 

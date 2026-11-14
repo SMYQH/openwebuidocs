@@ -20,7 +20,7 @@ title: "部署 Open WebUI"
 | 托管容器服务 | 你的组织在托管容器平台上运行应用。 | [容器服务](/enterprise/deployment/container-service) |
 | 虚拟机上的 Python | 你在虚拟机上管理应用进程和扩缩容。 | [虚拟机上的 Python / Pip](/enterprise/deployment/python-pip) |
 
-### Docker Swarm
+### Docker Swarm {#docker-swarm}
 
 | 指南 | 内容范围 |
 | :--- | :--- |

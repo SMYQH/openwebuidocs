@@ -3,7 +3,7 @@ title: CLI
 sidebar_position: 2
 ---
 
-# CLI
+# CLI {#cli}
 
 CLI 只有一个命令：
 

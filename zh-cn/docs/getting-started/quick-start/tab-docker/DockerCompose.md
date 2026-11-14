@@ -1,30 +1,40 @@
-# Docker Compose 配置
+将其保存为 `docker-compose.yml`，把密钥替换为 `openssl rand -hex 32` 的输出，然后运行 `docker compose up -d`：
 
-使用 Docker Compose 可以更方便地管理多容器 Docker 应用。
-
-Docker Compose 需要额外安装 `docker-compose-v2`。
-
-:::warning
-
-**注意：** 一些旧版 Docker Compose 教程仍使用 version 1 语法，例如 `docker-compose build`。请确认你使用的是 version 2 语法，即 `docker compose build`（中间是空格，不是连字符）。
-
-:::
-
-## 示例 `docker-compose.yml`
-
-下面是一个用于部署 Open WebUI 的示例配置：
-
-```yaml
+```yaml title="docker-compose.yml"
 services:
-  openwebui:
+  open-webui:
     image: ghcr.io/open-webui/open-webui:main
     ports:
       - "3000:8080"
     volumes:
       - open-webui:/app/backend/data
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - WEBUI_SECRET_KEY=your-secret-key
+    restart: unless-stopped
+
 volumes:
   open-webui:
 ```
+
+`extra_hosts` 让 `host.docker.internal` 在 Linux 上解析到宿主机。在未设置 `OLLAMA_BASE_URL` 时，镜像会到 `http://host.docker.internal:11434`（然后是 `:12434`）查找 Ollama，正是这一行让它能够访问运行在宿主机上的 Ollama。
+
+要更新，请运行 `docker compose pull`，然后再运行 `docker compose up -d`。"更新" 选项卡上的 Watchtower 命令针对名为 `open-webui` 的容器；除非你给服务添加 `container_name: open-webui`，Compose 会把这个容器命名为 `<project>-open-webui-1`。
+
+标签与 Docker 选项卡上的相同：修改 `image:` 那一行即可。要试用 `:dev`，请把它作为第二个服务添加，并使用独立的数据卷和端口，参见[运行预发布镜像](/getting-started/quick-start#running-the-pre-release-image)。请使用 Docker Compose v2（`docker compose`，中间带空格）。
+
+
+
+下面的各节是对上面这份 `docker-compose.yml` 的扩展。
+
+:::warning
+
+**警告：** 较早的 Docker Compose 教程可能使用 1 版语法，例如 `docker-compose build`。请确保使用 2 版语法，例如 `docker compose build`（注意是空格而不是连字符）。
+
+:::
+
+
 
 ### 运行预发布镜像 {#running-the-pre-release-image}
 
@@ -111,33 +121,3 @@ deploy:
     ```bash
     docker rmi ghcr.io/open-webui/open-webui:main
     ```
-
-### 使用 Slim 镜像 {#slim-image}
-
-如果你的环境存储空间或带宽有限，可以使用不预打包模型的 slim 镜像：
-
-```yaml
-services:
-  openwebui:
-    image: ghcr.io/open-webui/open-webui:main-slim
-    ports:
-      - "3000:8080"
-    volumes:
-      - open-webui:/app/backend/data
-volumes:
-  open-webui:
-```
-
-:::note
-
-**说明：** slim 镜像会在首次使用时下载所需模型（whisper、embedding 模型），因此第一次启动可能更慢，但镜像体积会明显更小。
-
-:::
-
-## 启动服务 {#starting-the-services}
-
-运行以下命令启动服务：
-
-```bash
-docker compose up -d
-```

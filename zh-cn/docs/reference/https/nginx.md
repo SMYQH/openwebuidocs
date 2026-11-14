@@ -7,7 +7,6 @@ title: "使用 Nginx 的 HTTPS"
 
 # 使用 Nginx 的 HTTPS {#https-using-nginx}
 
-## 使用 Nginx 的 HTTPS
 
 确保用户与 Open WebUI 之间的通信安全至关重要。HTTPS（HyperText Transfer Protocol Secure）会对传输数据进行加密，防止窃听和篡改。通过将 Nginx 配置为反向代理，你可以轻松为 Open WebUI 部署添加 HTTPS，同时提升安全性和可信度。
 

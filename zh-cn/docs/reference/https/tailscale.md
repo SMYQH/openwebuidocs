@@ -5,7 +5,6 @@ title: "使用 Tailscale 的 HTTPS"
 
 # 使用 Tailscale 的 HTTPS {#https-using-tailscale}
 
-## 使用 Tailscale 的 HTTPS {#prerequisites}
 
 **在你的私有网络中，从任意位置安全访问 Open WebUI。无需开放端口、无需自己管理证书，也无需公网暴露。**
 
@@ -21,7 +20,7 @@ Tailscale 会在你的设备之间建立一个加密 mesh VPN（即 “tailnet�
 
 ---
 
-## 前提条件 {#1-install-tailscale}
+## 前提条件 {#prerequisites}
 
 | 要求 | 详情 |
 | :--- | :--- |
@@ -31,7 +30,7 @@ Tailscale 会在你的设备之间建立一个加密 mesh VPN（即 “tailnet�
 
 ---
 
-## 1. 安装 Tailscale {#2-connect-the-server}
+## 1. 安装 Tailscale {#1-install-tailscale}
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -60,7 +59,7 @@ curl -fsSL https://tailscale.com/install.sh | sh
   </TabItem>
 </Tabs>
 
-## 2. 连接服务器 {#3-access-open-webui}
+## 2. 连接服务器 {#2-connect-the-server}
 
 在运行 Open WebUI 的机器上执行：
 
@@ -74,7 +73,7 @@ sudo tailscale up
 tailscale status
 ```
 
-## 3. 访问 Open WebUI {#enable-https-with-tailscale-certificates}
+## 3. 访问 Open WebUI {#3-access-open-webui}
 
 在同一 tailnet 上的任意设备中打开：
 
@@ -86,7 +85,7 @@ http://my-server.tail1234.ts.net:8080
 
 ---
 
-## 使用 Tailscale 证书启用 HTTPS
+## 使用 Tailscale 证书启用 HTTPS {#enable-https-with-tailscale-certificates}
 
 Tailscale 可以为你的 tailnet 主机名自动申请受信任的 Let's Encrypt 证书。
 

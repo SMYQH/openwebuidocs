@@ -89,7 +89,7 @@ Notion 的 OAuth 会话可能在空闲或容器重启后过期。如果出现 `F
 
 ## 故障排除 {#troubleshooting}
 
-### `Failed to connect to MCP server 'ntn'`
+### `Failed to connect to MCP server 'ntn'` {#failed-to-connect-to-mcp-server-ntn}
 
 OAuth 会话已过期。在任意聊天中重新切换 Notion 工具（**+** → **Integrations → Tools**）以重新授权。
 
@@ -101,10 +101,10 @@ OAuth 会话已过期。在任意聊天中重新切换 Notion 工具（**+** →
 
 ![OAuth 回调 mismatching_state 错误。](/images/mcp-notion/notion-setup-step13.png)
 
-### `Object not found`
+### `Object not found` {#object-not-found}
 
 该页面尚未与集成共享。在 OAuth 流程中，Notion 会询问授权访问哪些页面——请确保选择了相关页面。您可以随时通过 [Notion 集成设置](https://www.notion.so/profile/integrations)更新访问权限。
 
-### 创建页面时出现 `missing_property` {#missing_property-when-creating-a-page}
+### 创建页面时出现 `missing_property` {#missing\_property-when-creating-a-page}
 
 Notion 需要父页面或数据库。请告知模型：*"先搜索我的'Notes'页面，然后在其中创建新页面。"*

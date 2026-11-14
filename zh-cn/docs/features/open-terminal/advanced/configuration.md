@@ -115,7 +115,7 @@ open-terminal run --config /path/to/my-config.toml
 
 ---
 
-## Docker secrets
+## Docker 密钥 {#docker-secrets}
 
 对于生产 Docker 部署，可以从 secret 文件加载 API Key：
 

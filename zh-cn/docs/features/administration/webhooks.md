@@ -34,30 +34,36 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 5.  点击 **"保存"**。
 
 #### 方式二：通过环境变量 {#option-2-through-environment-variables}
-
-您也可以使用 `WEBHOOK_URL` 环境变量设置 Webhook URL。更多详情请参阅[环境变量配置](/reference/env-configuration/#webhook_url)文档。
+`WEBHOOK_URL` 环境变量会在启动时一次性迁移为一个订阅了全部事件的 **Default webhook**。如果你只想接收注册事件，可以把它收窄为 `auth.signup` 或 `user.created`。更多详情请参阅[环境变量配置](https://docs.openwebui.com/reference/env-configuration/#webhook_url)文档。
 
 ### 负载格式 {#payload-format}
-
-当新用户注册时，Open WebUI 将向配置的 URL 发送包含新用户详情的 JSON `POST` 请求。
+当匹配的事件触发时，Open WebUI 会向配置的 URL 发送一个 `POST` 请求。表单注册会先触发 `user.created`，然后触发 `auth.signup`，因此订阅了全部事件的 webhook 会收到两次 POST。通过 OAuth、LDAP、SCIM 或由管理员创建的用户只会触发 `user.created`，并相应设置 `source`。通用 URL 会收到事件信封；Slack 和 Google Chat 收到 `{"text": ...}`，Discord 收到 `{"content": ...}`，Teams 收到 MessageCard。
 
 **负载示例：**
 
 ```json
 {
-  "event": "new_user",
-  "user": {
-    "email": "tim@example.com",
-    "name": "Tim"
-  }
+  "schema": "0.11.3",
+  "id": "8b1f...",
+  "event": "auth.signup",
+  "resource": "auth",
+  "operation": "signup",
+  "created_at": 1758150000,
+  "source": "api",
+  "actor": {"type": "user", "id": "...", "name": "Tim", "email": "tim@example.com", "role": "pending"},
+  "subject": {"type": "user", "id": "..."},
+  "data": {"email": "tim@example.com"}
 }
 ```
 
 ## 2. 用户 Webhook：对话响应通知 {#2-user-webhook-notification-targets}
+此 Webhook 允许单个用户在关心的事情发生时收到通知，例如模型完成一次长时间响应、收到频道消息，或日历提醒触发。当你已离开 Open WebUI 标签页时，它尤其有用。
 
-此 Webhook 允许单个用户在模型完成响应时收到通知。对于可能需要数分钟处理的长时间运行任务特别有用，即使您已离开 Open WebUI 标签页也能收到通知。
+每位用户在 **设置 > 通知** 中配置一个或多个**通知目标**，并为每个目标选择它接收哪些事件，以及只在离开时触发还是始终触发。模型也可以通过 `notify` 工具自行发送通知。
 
-### 使用场景
+完整功能请参阅 **[通知](/features/chat-conversations/chat-features/notifications)**：目标、可订阅的事件、投递模式、URL 遮蔽以及 `notify` 工具。
+
+### 使用场景 {#use-case-1}
 
 - **长时间任务提醒：** 如果您提交了需要数分钟处理的复杂提示词，可以关闭浏览器标签页，仍会在响应就绪时立即收到通知。这让您可以处理其他任务，无需不断查看 Open WebUI 界面。
 
@@ -66,46 +72,31 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 仅当您**未主动使用 WebUI** 时才会发送通知。如果您已打开并聚焦该标签页，则不会触发 Webhook，避免不必要的通知。
 
 ### 启用/禁用用户 Webhook {#enablingdisabling-user-webhooks}
-
 用户 Webhook 默认禁用。管理员可以在需要时为所有用户启用此功能，也可以保持禁用以防止外部请求。
 
 可通过两种方式操作：
 
 1.  **直接在管理面板中：**
-    - 转到 **管理面板 > 设置 > 通用 > 功能**。
+    - 转到 **设置 > 管理 > 通用 > 功能**。
     - 切换 **"用户 Webhook"** 开关。
 
 2.  **使用环境变量：**
-    - 在后端配置中将环境变量 `ENABLE_USER_WEBHOOKS` 设置为 `False`。这将全局禁用该功能并从用户个人资料中隐藏该设置。
+    - 该功能默认关闭。`ENABLE_USER_WEBHOOKS` 默认为 `False`，**用户 Webhook** 权限同样默认关闭，因此要提供该功能，请设置 `ENABLE_USER_WEBHOOKS=True`（或使用上面的开关）并授予该权限。将其设为 `False` 会重新关闭该功能，并从用户个人资料中隐藏该设置。
 
-### 配置
+用户还需要 `features.webhooks` 权限（[`USER_PERMISSIONS_FEATURES_USER_WEBHOOKS`](/reference/env-configuration#user_permissions_features_user_webhooks)）；管理员始终拥有该权限。
 
-1.  点击左下角的个人头像打开设置菜单。
-2.  导航到 **设置 > 账户**。
-3.  找到 **"通知 Webhook"** 字段。
-4.  输入您的个人 Webhook URL。
-5.  点击 **"保存"**。
+### 配置 {#configuration-1}
+1.  点击左下角的头像打开设置菜单。
+2.  导航到 **设置 > 通知**。
+3.  添加一个目标并填入您的 webhook URL，然后选择它应接收哪些事件。
+4.  使用 **Send Test** 确认其正常工作。
 
-### 负载格式
-
-当对话响应就绪且您处于非活跃状态时，Open WebUI 将向您的 Webhook URL 发送包含对话详情的 JSON `POST` 请求。
-
-**负载示例：**
-
-```json
-{
-  "event": "chat_response",
-  "chat": {
-    "id": "abc-123-def-456",
-    "title": "我的精彩对话",
-    "last_message": "这是我提交的提示词内容。"
-  }
-}
-```
+:::info 从旧的 Notification Webhook 字段升级
+**设置 > 账户** 下的单一 **Notification Webhook** 字段已被"目标"取代。已有的 URL 会自动迁移为一个订阅了全部事件的目标，因此无需任何操作，通知仍会照常送达。
+:::
 
 ## 3. 频道 Webhooks：外部消息集成 {#3-channel-webhooks-external-message-integration}
-
-频道 Webhooks 允许外部服务、自动化工具或脚本直接向 Open WebUI 频道发送消息。这支持与监控系统、CI/CD 流水线、通知服务或任何自定义自动化工具的无缝集成。
+频道 Webhooks 让外部服务、自动化工具或脚本直接向 Open WebUI 频道发布消息，例如来自监控系统、CI/CD 流水线、通知服务或任何自定义自动化工具。一个 webhook 会把消息发布到某一个频道。如果某个服务还需要响应 `@mentions` 或发布按钮，请把它构建为 [App](/features/channels/apps)。
 
 ### 使用场景 {#use-cases}
 
@@ -114,7 +105,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 - **自定义自动化：** 与 n8n、Zapier 或自定义脚本集成，自动化消息发送。
 - **外部通知：** 将外部服务的通知转发到您的 Open WebUI 工作空间。
 
-### 工作原理
+### 工作原理 {#how-it-works-1}
 
 每个频道可以有多个 Webhook。每个 Webhook 具有：
 - 外部服务可向其 `POST` 的唯一 **Webhook URL**
@@ -186,7 +177,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 #### 示例：使用 cURL {#example-using-curl}
 
 ```bash
-curl -X POST "https://your-instance.com/api/channels/webhooks/{webhook_id}/{token}" \
+curl -X POST "https://your-instance.com/api/v1/channels/webhooks/{webhook_id}/{token}" \
   -H "Content-Type: application/json" \
   -d '{"content": "生产环境部署成功完成！🚀"}'
 ```
@@ -196,7 +187,7 @@ curl -X POST "https://your-instance.com/api/channels/webhooks/{webhook_id}/{toke
 ```python
 import requests
 
-webhook_url = "https://your-instance.com/api/channels/webhooks/{webhook_id}/{token}"
+webhook_url = "https://your-instance.com/api/v1/channels/webhooks/{webhook_id}/{token}"
 message = {
     "content": "构建 #1234 失败：单元测试未通过。"
 }

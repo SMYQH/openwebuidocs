@@ -127,11 +127,9 @@ title: "Unraid 部署（新手友好）"
 - WebSocket 断开或长期停留在加载状态
 
 - 确保代理正确转发 WebSocket 升级头。
-- 确保子路径路由策略一致（转发前去掉或重写前缀）。
-- 设置不带末尾斜杠的 `WEBUI_URL`，例如：
-  - `WEBUI_URL=https://example.com/openwebui`
-- 若子路径方案仍不稳定，建议改用子域名：
-  - `WEBUI_URL=https://ai.example.com`
+- 确保代理正确转发 WebSocket 升级头。
+- Open WebUI 没有 base-path 设置，因此像 `/openwebui` 这样的子路径无法工作：前端会从域名根路径请求 `/api/...`、`/ws/socket.io` 和 `/_app/...`。请改用子域名或部署在根路径下。
+- 将 `WEBUI_URL` 设为该公开 URL（不带末尾斜杠），例如 `WEBUI_URL=https://ai.example.com`；它会用于 OAuth 重定向和链接，而不是路由。如果安装已经启动过，请改在设置 > 管理 > 通用中修改 **WebUI URL**，因为该环境变量只在首次启动时生效。
 
 更多反向代理排障方法请参阅 [Connection Errors](/troubleshooting/connection-error)。
 

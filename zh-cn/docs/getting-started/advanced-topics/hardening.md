@@ -5,18 +5,13 @@ title: "强化 Open WebUI 安全"
 
 <a id="hardening-open-webui"></a>
 
-# 强化 Open WebUI 安全
+# 强化 Open WebUI 安全 {#hardening-open-webui}
 
 Open WebUI 是一个自托管应用，会向已认证用户提供模型推理、工具执行、代码流水线等能力。与数据库、容器仓库、CI 服务器等其他自托管基础设施一样，部署方需要自行管理运行环境、网络暴露方式和配置。Open WebUI 提供了本指南中介绍的控制项；具体如何配置，取决于你的环境与威胁模型。
 
 本指南聚焦于可用于强化部署安全性的配置项。每一节都会说明某个设置的作用、默认值以及如何修改。它并不是一份面面俱到的安全手册；最终，保障部署安全仍是你的责任。你的运行环境、合规要求和威胁模型，将决定哪些项与你最相关。
 
-## 概览 {#hardening-open-webui}
-
-### 网络放置建议 {#network-placement}
-
-:::tip
-
+## 网络放置 {#network-placement}
 Open WebUI 的设计预期是运行在私有、可信网络中，类似数据库、容器仓库或 CI 服务器这类自托管基础设施。大多数部署都会放在企业防火墙、VPN 或其他仅允许已知用户访问的网络边界之后。
 
 对于把安全放在优先位置的组织，推荐将 Open WebUI 放在以下一种或多种保护层之后：
@@ -26,12 +21,6 @@ Open WebUI 的设计预期是运行在私有、可信网络中，类似数据库
 - 带认证与 IP allowlist 的反向代理
 
 DDoS 防护和暴力破解防护（限速、连接节流、fail2ban）应由代理层或网络层承担。
-
-:::
-
-如果你是第一次部署 Open WebUI，建议先查看本文底部的[速查表](#quick-reference)，获取按优先级整理的摘要，然后再阅读与你部署场景相关的章节。
-
----
 
 ### 请求不存在的路径 {#requests-for-paths-that-do-not-exist}
 
@@ -46,18 +35,13 @@ Open WebUI 提供的是单页应用，因此请求应用不认识的路径时，
 ---
 
 ## 密钥 {#secret-key}
+`WEBUI_SECRET_KEY` 用于签署 JWT（登录令牌），并为 OAuth 会话数据派生加密密钥。
 
-`WEBUI_SECRET_KEY` 用于签发 JWT（登录 token），并派生 OAuth 会话数据的加密密钥。
+**需要显式设置它的场景：**
 
-**默认行为：**
+如果你在负载均衡器后面运行多个 Open WebUI 实例，每个实例必须共用同一个密钥。否则，一个实例签发的令牌会被另一个实例拒绝，导致登录失败。使用 `openssl rand -base64 32` 生成密钥，并通过环境变量传给所有副本。
 
-通过 Docker（`start.sh`）或 `open-webui serve` 运行时，应用会先检查环境变量中是否设置了 `WEBUI_SECRET_KEY`。如果没有，它会自动生成一个随机密钥，并保存到数据目录中的 `.webui_secret_key`。之后重启时会重新加载这个已保存的密钥。这意味着在单实例部署中，通常无需手动配置。
-
-**什么时候必须显式设置：**
-
-如果你在负载均衡器后运行多个 Open WebUI 实例，所有实例必须共享同一个密钥。否则，一个实例签发的 token 会被另一个实例拒绝，导致登录失败。你可以通过 `openssl rand -base64 32` 生成密钥，并以环境变量形式传给所有副本。
-
-**轮换：** 更换该密钥会让所有现有会话失效，用户需要重新登录。
+**轮换：** 更换密钥会使所有现有会话失效，用户需要重新登录。如果开启了[双因素登录](#two-factor-sign-in)，用户的验证器密钥会用从 `WEBUI_SECRET_KEY` 派生的密钥加密；一旦用户完成注册，轮换后 Open WebUI 将拒绝启动。请在用户注册之前设置 [`MFA_ENCRYPTION_KEY`](/reference/env-configuration#mfa_encryption_key)，这样才能自由轮换 `WEBUI_SECRET_KEY`。已安装的 [App](/features/channels/apps) 在轮换后会停止连接；请卸载每个 App，用其 API 密钥重新连接，并把它们加回各自的频道（参见 [WEBUI_SECRET_KEY 变更后 App 停止连接](/features/channels/apps#apps-stop-connecting-after-webui_secret_key-changed)）。
 
 ---
 
@@ -153,32 +137,43 @@ WEBUI_SESSION_COOKIE_SAME_SITE=strict
 除非分别用 `WEBUI_AUTH_COOKIE_SECURE` 和 `WEBUI_AUTH_COOKIE_SAME_SITE` 覆盖，否则这些设置同样会作用于 OAuth Cookie。
 
 ### Token 过期时间 {#token-expiry}
-
-JWT 决定用户能保持登录多久。默认值是 `4w`（4 周）。你可以缩短它：
+JWT 决定用户保持登录状态的时间。默认是 `4w`（4 周）。你可以缩短它：
 
 ```bash
 JWT_EXPIRES_IN=24h
 ```
 
-将 `JWT_EXPIRES_IN=-1` 设为无限期不过期。Open WebUI 会对此输出警告。
+设置 `JWT_EXPIRES_IN=-1` 会完全关闭令牌过期。如果这样设置，Open WebUI 会记录一条警告。
+
+[Tether](/ecosystem/tether) 等原生应用改用可续期会话，这类会话在闲置 [`SESSION_EXPIRES_IN`](/reference/env-configuration#session_expires_in) 后结束（默认 `90d`）。退出应用、通过 [Session API](/ecosystem/tether#session-api) 删除会话，以及下文提到的每种全账户登出，都会立即吊销此类会话，无论是否使用 Redis。
 
 ### Token 撤销 {#token-revocation}
 
-:::warning Token 撤销依赖 Redis
+把账户从所有设备登出这一操作会记录在数据库中，无论是否使用 Redis 都会生效。它会在以下情况发生：
 
-如果没有 Redis，**用户登出后 token 不会失效**。该 token 会一直保持有效，直到自然过期（默认 4 周）。这意味着：
+- 用户修改了自己的密码，或管理员为其设置了新密码。
+- 管理员在用户编辑对话框中点击了 **登出所有设备**（参见[将用户从所有设备登出](/features/authentication-access/rbac/roles#signing-a-user-out-of-every-device)）。
+- 用户设置或更换了验证器，或生成了新的恢复码，或运维人员重置了其 MFA。
+- 管理员修改了[两步验证](#two-factor-sign-in)设置，这会登出所有账户。
 
-- 被盗或泄露的 token 无法通过登出来撤销
-- 用户改密码后，已有会话不会立刻失效
-- 管理员停用账户后，也不会立刻阻断访问
+从那一刻起，此前为该账户签发的每一个 token 都会被拒绝。该账户的实时连接会被关闭，该用户正在进行的自动化和子智能体运行也会失去访问权限。每个已打开的实时连接每 30 秒还会重新校验一次，一旦其会话被吊销或已过期就会被关闭。API key 仍然有效；请删除或重新生成 key 以切断它。该检查会在每个请求时读取数据库，数据库无法访问时请求会被拒绝。
+
+停用账户会保留已为它签发的 token，但账户角色会在每个请求时重新校验。请同时使用 **登出所有设备** 来结束其会话。
+
+:::warning 单个会话的登出需要 Redis
+
+如果没有 Redis，**登出不会使该会话的 token 失效**。该 token 会一直保持有效，直到自然过期（默认 4 周）。这意味着：
+
+- 被盗或泄露的 token 无法通过登出来撤销；**登出所有设备** 或修改密码才能终止它
 - OIDC back-channel logout 无法撤销 token
 
-配置 Redis 后，Open WebUI 才支持按 token 精确撤销。当用户登出、修改密码或被管理员停用时，其 token 会被加入一个会自动过期的撤销列表。这才是面向生产的预期行为。
+配置 Redis 后，登出会把该 token 加入一个会自动过期的撤销列表，而 OIDC back-channel logout 会让受影响的用户从所有设备登出。这才是面向生产的预期行为。
 
-**如果你暂时无法部署 Redis，** 请缩短 `JWT_EXPIRES_IN`（例如 `1h` 或 `4h`）以缩小暴露窗口。Redis 配置请参考 [Redis 教程](/tutorials/integrations/redis)。
+**撤销检查采用 fail-open 策略。** 无法访问 Redis 的撤销检查会接受该 token，并且每个工作进程最多每分钟记录一次 `Revocation check failed; accepting token`。因此 Redis 故障期间，实例会退回到上面列出的无 Redis 行为，登出不会生效——请把 Redis 的可用性视为认证面的一部分，并针对这条日志配置告警。
+
+**如果你暂时无法部署 Redis**， 请缩短 `JWT_EXPIRES_IN`（例如 `1h` 或 `4h`）以缩小暴露窗口。Redis 配置请参考 [Redis 教程](/tutorials/integrations/redis)。
 
 :::
-
 ---
 
 ## 跨域资源共享（CORS） {#cors}
@@ -214,51 +209,50 @@ CORS_ALLOW_CUSTOM_SCHEME=app
 ---
 
 ## 安全响应头 {#security-headers}
+Open WebUI 内置了 `SecurityHeadersMiddleware`，它会向响应中注入 HTTP 安全响应头。默认一个都不设置，你需要通过环境变量逐个选择开启。每项可接受的值和回退行为都列在环境变量参考的[安全响应头](/reference/env-configuration#security-headers)一节中。
 
-Open WebUI 内置 `SecurityHeadersMiddleware`，可以为响应注入 HTTP 安全头。默认情况下这些头都不会启用，因此你需要通过环境变量逐项开启。
-
-下面是一套适合生产部署的起始配置：
+以下是面向生产部署的推荐起始配置：
 
 ```bash
 # HTTP Strict Transport Security：告诉浏览器只使用 HTTPS
 HSTS=max-age=31536000;includeSubDomains
 
-# 阻止页面被嵌入到其他站点的 iframe 中
+# 防止页面被嵌入其他站点的 iframe
 XFRAME_OPTIONS=DENY
 
-# 阻止浏览器进行 MIME 类型嗅探
+# 防止浏览器进行 MIME 类型嗅探
 XCONTENT_TYPE=nosniff
 
-# 控制请求中携带多少 Referrer 信息
+# 控制随请求发送多少引用来源信息
 REFERRER_POLICY=strict-origin-when-cross-origin
 
-# 限制浏览器功能访问权限
+# 限制对浏览器功能的访问
 PERMISSIONS_POLICY=camera=(),microphone=(),geolocation=()
 
-# Content Security Policy
+# 内容安全策略
 CONTENT_SECURITY_POLICY=default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'
 
-# Content Security Policy 的 report-only 模式（只记录违规，不强制拦截）
+# 仅报告模式的内容安全策略（记录违规但不强制执行）
 CONTENT_SECURITY_POLICY_REPORT_ONLY=default-src 'self'; report-uri /csp-report
 
-# Cross-Origin 隔离相关响应头
+# 跨源隔离响应头
 CROSS_ORIGIN_EMBEDDER_POLICY=require-corp    # 可选值：unsafe-none, require-corp, credentialless
 CROSS_ORIGIN_OPENER_POLICY=same-origin       # 可选值：unsafe-none, same-origin-allow-popups, same-origin
 CROSS_ORIGIN_RESOURCE_POLICY=same-origin     # 可选值：same-site, same-origin, cross-origin
 
-# Reporting API 端点配置
+# 上报 API 端点配置
 REPORTING_ENDPOINTS=default="https://your-report-collector.example/reports"
 ```
 
 :::tip
 
-如果你启用了 Content Security Policy，请先从宽松策略开始，再逐步收紧。过于严格的 CSP 会直接破坏前端。可以先用 `CONTENT_SECURITY_POLICY_REPORT_ONLY` 做验证，浏览器开发者工具会告诉你哪些资源被拦截了。
+如果你要设置内容安全策略，请从宽松开始，逐步收紧。过于严格的 CSP 会破坏前端。可以用 `CONTENT_SECURITY_POLICY_REPORT_ONLY` 在强制执行前先测试策略。浏览器开发者工具会告诉你哪些资源被拦截了。
 
 :::
 
-:::warning Cross-Origin Isolation
+:::warning 跨源隔离
 
-同时设置 `CROSS_ORIGIN_EMBEDDER_POLICY=require-corp` 与 `CROSS_ORIGIN_OPENER_POLICY=same-origin` 会启用跨源隔离。这可能导致来自第三方源的资源（例如外部图片、脚本或 iframe）无法加载，除非这些资源明确返回合适的 CORS 头。上线前请充分测试。
+同时设置 `CROSS_ORIGIN_EMBEDDER_POLICY=require-corp` 和 `CROSS_ORIGIN_OPENER_POLICY=same-origin` 会启用跨源隔离。除非这些资源明确设置了合适的 CORS 响应头，否则这可能会破坏从第三方来源加载的资源（例如外部图片、脚本或 iframe）。部署前请充分测试。
 
 :::
 
@@ -276,8 +270,7 @@ HSTS=max-age=31536000;includeSubDomains
 ```
 
 ### 可信代理 IP {#trusted-proxy-ips}
-
-Open WebUI 使用 `--forwarded-allow-ips` 判断哪些代理被信任，可以发送 `X-Forwarded-For` 头。默认值是 `*`（信任全部），这在 Open WebUI 位于隔离网络、且前面只有单个反向代理时通常是合理的。如果你的网络拓扑更复杂，请限制为代理自身的 IP：
+[`FORWARDED_ALLOW_IPS`](/reference/env-configuration#forwarded_allow_ips) 决定哪些代理被信任可以发送 `X-Forwarded-For` 响应头。Docker 镜像、`open-webui serve` 和 `open-webui dev` 都会读取它。默认值为 `*`（信任全部），这只在前置一个会覆盖这些响应头的反向代理、且其他任何东西都无法访问后端时才合适。否则任何客户端都可以声称任意地址，这会破坏按地址的登录限制，并使审计日志中的地址失真。请将其限制为你的代理 IP：
 
 ```bash
 FORWARDED_ALLOW_IPS=192.168.1.100
@@ -375,12 +368,7 @@ DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
 迁移步骤见[扩展指南](/getting-started/advanced-topics/scaling#step-1-switch-to-postgresql)。请使用强且唯一的凭据，并将数据库放在内部网络中。
 
 ### SQLCipher {#sqlcipher}
-
-如果你仍使用 SQLite，但需要静态数据加密，Open WebUI 支持 SQLCipher：
-
-```bash
-DATABASE_TYPE=sqlite+sqlcipher
-```
+不支持 SQLCipher，设置 `DATABASE_TYPE=sqlite+sqlcipher` 时 Open WebUI 会拒绝启动。对于需要静态加密的 SQLite 部署，请把数据目录放在加密文件系统上（Linux 上的 LUKS、Windows 上的 BitLocker、macOS 上的 FileVault）。若要保留已有 SQLCipher 数据库中的数据，请先按照[升级现有的 SQLCipher 数据库](/reference/database-schema#upgrading-an-existing-sqlcipher-database)中的说明解密它。
 
 ### 连接池调优 {#connection-pool-tuning}
 
@@ -464,24 +452,22 @@ ENABLE_OPENAI_API_PASSTHROUGH=false
 OpenAI 路由器包含一个兜底代理端点（`/{path:path}`），可以使用管理员配置的 API 密钥，把任意请求转发给上游兼容 OpenAI 的 API。**此功能默认关闭，也建议保持关闭。** 一旦启用，任意已认证用户都可以借助管理员凭据访问任意上游端点——包括 Open WebUI 本身并未原生支持的端点——而且不受模型级访问控制约束。除非你明确需要直通上游 API，并完全理解其安全影响，否则不要启用。
 
 ### 数据共享与导出 {#data-sharing-and-export}
-
-以下功能决定了数据可以如何共享或导出：
+有若干功能控制着数据可以如何被共享或导出：
 
 ```bash
-# 允许用户将聊天分享给其他已认证用户（默认：true）
+# 显示 Open WebUI 社区的分享与发现选项（默认：true）
 ENABLE_COMMUNITY_SHARING=true
 
 # 允许管理员从数据库批量导出所有用户聊天（默认：true）
 ENABLE_ADMIN_EXPORT=true
 
-# 允许用户使用自己的 API 密钥直连模型提供商，
-# 绕过服务端代理（默认：false）
+# 允许用户使用自己的 API 密钥直接连接模型提供商，绕过服务端代理（默认：false）
 ENABLE_DIRECT_CONNECTIONS=false
 ```
 
-`ENABLE_COMMUNITY_SHARING` 允许用户为聊天生成分享链接。任何已认证且持有链接的用户都可以查看该聊天。如果你的部署涉及敏感对话，可考虑设为 `false`。
+`ENABLE_COMMUNITY_SHARING` 控制是否显示把聊天、模型、提示词、工具、Functions、Skills 和使用统计发送到 Open WebUI 社区的选项，以及发现社区内容的链接。设为 `false` 即可让一切都留在你自己的实例上。聊天分享链接是另一个独立功能：新建的链接默认保持私密，直到其所有者选择谁可以查看，参见[聊天分享](/features/chat-conversations/chat-features/chatshare)。
 
-`ENABLE_DIRECT_CONNECTIONS` 启用后，用户可以在浏览器中配置自己的 API 密钥和模型端点。注意这些连接仍由后端发起，因此用户的 API 密钥会传到 Open WebUI 服务器。默认关闭。
+`ENABLE_DIRECT_CONNECTIONS` 开启后，允许用户在浏览器中配置自己的 API 密钥和模型端点。这些连接由后端发起，因此用户的 API 密钥会被发送到 Open WebUI 服务器。该功能默认关闭。
 
 ### Workspace 权限 {#workspace-permissions}
 
@@ -529,7 +515,6 @@ MAX_BODY_LOG_SIZE=2048
 ```
 
 ### 路径过滤 {#path-filtering}
-
 ```bash
 # 仅审计特定路径（白名单模式）
 AUDIT_INCLUDED_PATHS=auths,users,configs
@@ -538,9 +523,17 @@ AUDIT_INCLUDED_PATHS=auths,users,configs
 AUDIT_EXCLUDED_PATHS=/chats,/chat,/folders
 ```
 
-认证端点（signin、signout、signup）无论路径过滤如何都会被审计。请求体中的密码会自动脱敏。
+无论路径排除规则如何，认证端点（登录、登出、注册以及 MFA 端点）始终会被审计。`/api/v1/auths` 和 `/oauth/` 下的请求在各层级都只记录其元数据，从而让密码、MFA 验证码和会话令牌不进入日志。其他地方，凡是字段名以 `password`、`secret`、`token`、`key` 或 `authorization` 结尾（或其复数形式，例如 `tokens`）的，无论大小写，在请求体和响应体中都会被遮蔽。这包括值列表以及被请求体大小限制截断的值。
 
----
+每条记录都有一个 `model_id` 字段，表示客户端请求的模型。对于聊天和补全请求它会被填充：`/api/chat/completions`（同时也以 `/api/v1/chat/completions` 提供）、兼容 Anthropic 的 `/api/v1/messages`（同时也以 `/api/message` 提供）、`/openai/chat/completions`、`/openai/responses`，以及 `/ollama` 下的聊天、补全、Messages 和 Responses 请求。开启 [`ENABLE_OPENAI_API_PASSTHROUGH`](/reference/env-configuration#enable_openai_api_passthrough) 后，转发给 `/openai` 下提供方的每个请求也会记录其请求体中的 `model`。那些让 Open WebUI 转而调用模型的请求（例如 `/api/v1/tasks` 下的任务端点，或提及某个模型的频道消息）可以记录被调用的模型。其他请求则记录 `null`。`AUDIT_INCLUDED_PATHS` 只匹配 `/api/` 下的路由，因此设置它之后，`/openai` 和 `/ollama` 下的请求不会留下审计记录。无论 `MAX_BODY_LOG_SIZE` 如何设置，该字段都在各层级完整写入，因此仅凭 `METADATA` 就足以看出谁使用了哪个模型。默认排除项会跳过 `/api/chat/completions`，也就是聊天界面使用的端点。若要记录这些请求，请从列表中移除 `/chat`：
+
+```bash
+AUDIT_EXCLUDED_PATHS=/chats,/folders
+```
+
+记录聊天请求后，对 `/api/chat/completions` 请求的每次模型回复都会在请求记录旁边写下自己的审计条目。当回复调用工具时，模型在两次工具调用之间的每一轮回答各有一条。这类条目在 `model_id` 中记录作出回答的模型，并在 `usage` 中记录提供商报告的 token 计数（`input_tokens`、`output_tokens` 和 `total_tokens`）。它的 `extra.request_id` 保存该请求条目的 `id`，两者由此关联。提供商未报告 token 计数的回复不写这些计数。后台任务（例如标题和标签生成）同样不写。
+
+在这些过滤范围内，审计日志覆盖携带凭据的 `POST`、`PUT`、`PATCH` 和 `DELETE` 请求（可通过 [`ENABLE_AUDIT_GET_REQUESTS`](/reference/env-configuration#enable_audit_get_requests) 加入 `GET`），以及上述认证端点。凭据是 `Authorization` 请求头（通常为 `Bearer`）、会话 cookie，或者 `x-api-key` 请求头中的 API 密钥（请求头名可通过 [`CUSTOM_API_KEY_HEADER`](/reference/env-configuration#custom_api_key_header) 重命名）。使用 API 密钥登录的请求会记在该密钥所有者名下。密钥错误的请求则不带用户记录。Socket.IO 流量在两种传输方式上都在其外，包括当 [`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configuration#enable_websocket_support) 关闭时浏览器使用的 `/ws/socket.io` 长轮询请求。
 
 ## 网络与外发请求 {#network-and-outbound-requests}
 
@@ -563,39 +556,38 @@ ENABLE_WEB_LOADER_SSL_VERIFICATION=true
 OFFLINE_MODE=true
 ```
 
-这会禁用 HuggingFace Hub 下载、版本检查和其他外发请求。模型与 embeddings 必须已经在本地可用。
+这会禁用 HuggingFace Hub 下载、版本更新检查，以及 embedding、reranking 和 Whisper 模型的自动更新。模型与 embeddings 必须已经在本地可用。
+
+离线模式管理的是 Open WebUI 代表自己发起的连接。它并不会阻止你自己配置的连接，例如外部模型 API、OAuth 提供商、网络搜索、工具服务器或对象存储。真正能把它们隔离的，是在网络层面将实例隔离。有关仍然可用的功能完整列表，请参见 [`OFFLINE_MODE`](/reference/env-configuration#offline_mode)。
 
 ### SSRF 防护 {#ssrf-prevention}
-
-RAG 网页加载器可以从 URL 拉取内容。默认情况下，它不能访问本地网络地址：
+RAG 网页加载器可以从 URL 抓取内容。默认情况下，它无法访问本地网络地址：
 
 ```bash
 ENABLE_RAG_LOCAL_WEB_FETCH=false
 ```
 
-设为 `true` 后，网页加载器就可以访问私有 IP 范围，这在某些环境中可能必要，但也会引入 SSRF 风险。
+将其设为 `true` 允许网页加载器从私有 IP 段抓取内容，这在某些环境中可能是必要的，但也会引入 SSRF 风险。
 
-Open WebUI 还会默认阻止访问云厂商元数据端点（AWS `169.254.169.254`、GCP `metadata.google.internal`、Azure `metadata.azure.com`、Alibaba Cloud `100.100.100.200`）。你也可以继续扩展这份黑名单：
+私有地址检查不仅检查 IPv6，还会查看其内部内容。像 `::ffff:169.254.169.254` 这样的地址，或包裹了 RFC 1918/回环目标的 6to4、Teredo 或 NAT64 地址，在 IPv6 层面是全局可路由的，却仍解析到内部位置；Open WebUI 会提取其中内嵌的 IPv4 地址，并据此阻止该次抓取。这既适用于 URL 校验阶段，也适用于连接阶段，因此返回这些形式的 DNS 解析结果同样会被拒绝。
+
+Open WebUI 默认还会屏蔽云服务商的元数据端点（AWS `169.254.169.254`、GCP `metadata.google.internal`、Azure `metadata.azure.com`，以及阿里云 `100.100.100.200`）。你可以用额外的域名或 IP 扩展这份屏蔽列表：
 
 ```bash
 WEB_FETCH_FILTER_LIST=!internal.yourcompany.com,!10.0.0.0/8
 ```
 
-条目前加 `!` 表示阻止。
+用 `!` 作为条目前缀表示屏蔽。
 
-外发 HTTP 请求默认也不会跟随 `3xx` 重定向。如果没有这一防护，攻击者提供的 URL 可以绕过最初提交主机的白名单检查，然后通过 `302` 重定向到一个无需重新验证的内部地址（RFC 1918、`127.0.0.1`、云元数据 IP）。默认设置关闭了 RAG 网页加载器、图片加载、OAuth 预检、代码解释器登录和工具服务器执行中的这一绕过路径。除非你有特殊需求（例如短链接 URL）且已部署其他 SSRF 防护，否则请保持默认：
+默认情况下，对外的 HTTP 请求也不会跟随 `3xx` 重定向。没有这道闸门时，攻击者提供的 URL 可以在最初提交的主机上通过白名单检查，随后再以 `302` 重定向到内部地址（RFC 1918、`127.0.0.1`、云元数据 IP），而这些地址未经过重新校验就被访问。默认设置在 RAG 网页加载器、图片加载、OAuth 预检、代码解释器登录以及工具服务器执行中关闭了这条绕过路径。除非你有特定需求（例如短链接 URL）且已部署其他 SSRF 防护，否则请保持默认：
 
 ```bash
 AIOHTTP_CLIENT_ALLOW_REDIRECTS=false
 ```
 
-### Playwright 加载器（v0.9.6+） {#profile-image-url-forwarding}
+[App](/features/channels/apps) 还有自己的一道闸门：App URL 必须使用 HTTPS 并解析到公网地址。Open WebUI 拒绝来自 App 的重定向，并始终验证其证书。[`APP_ALLOWED_PRIVATE_ORIGINS`](/reference/env-configuration#app_allowed_private_origins) 列出了允许在私有地址或纯 HTTP 上使用的 App 源。
 
-:::note
-早期版本只对默认的网页加载器应用 URL 校验和重定向拦截；而基于 Playwright 的加载器（`WEB_LOADER_ENGINE=playwright` / `playwright` Docker 变体）可以不受限制地导航并跟随重定向到内部或被列入黑名单的 URL。从 v0.9.6 起，Playwright 路径会与默认加载器一样强制执行 `validate_url()` 和重定向规则，因此上述 SSRF 防护措施对任意网页加载器引擎都生效。如果你使用了 Playwright，请确认你的版本是 v0.9.6 或更新。
-:::
-
-### 头像图片 URL 转发 {#iframe-content-security-policy}
+### 头像图片 URL 转发 {#profile-image-url-forwarding}
 
 用户和模型的头像图片端点可以发出 `302 Found` 重定向到 `profile_image_url` 中存储的任意来源，以便在 UI 中显示外部托管的头像（例如通过上游身份提供商的 Gravatar）。该重定向会导致用户的浏览器直接向外部来源发起请求，从而泄露客户端 IP、User-Agent 和 Referer 头。如果某个账户的 `profile_image_url` 被设置为攻击者控制的主机，就可以利用这一点对任何渲染其头像的人进行去匿名化。
 
@@ -613,7 +605,7 @@ ENABLE_PROFILE_IMAGE_URL_FORWARDING=false
 PROFILE_IMAGE_ALLOWED_MIME_TYPES=image/png,image/jpeg
 ```
 
-### Iframe 内容安全策略
+### Iframe 内容安全策略 {#iframe-content-security-policy}
 
 Open WebUI 会在 `srcdoc` iframe 中渲染 LLM 生成的和用户上传的 HTML，用于 Artifacts、代码/HTML 预览、文件预览和引用弹窗。这些 iframe 上的 `sandbox` 属性提供了基线隔离。对于希望限制渲染 HTML 能执行的操作（特别是外发网络请求）的部署，可以设置一个注入到每个 iframe 文档中的 CSP：
 
@@ -649,31 +641,34 @@ Tools 和 Functions 会在你的服务器上执行任意 Python 代码，权限�
 由于 Tools 和 Functions 会执行服务端代码，因此任何拥有创建或导入权限的用户，实际上都等同于拥有 Open WebUI 进程级别的权限。这是扩展机制的天然属性。默认情况下，只有管理员可以创建和导入 Tools / Functions。下面这些设置用于控制相关权限。
 
 ### 完全禁用此功能 {#disabling-the-feature-entirely}
-
-如果你的部署根本不使用 Tools 或 Functions，可以完全移除这个攻击面：
+如果你的部署根本不使用 Tools 或 Functions，那就把这一整面移除：
 
 ```bash
-# 设为 false 以禁用内置的 Tools 和 Functions 执行面
+# 总开关：Tools、Functions、工具服务器和 Open Terminal
 ENABLE_PLUGINS=false
+
+# 或只关闭其中一部分
+ENABLE_TOOLS=false
+ENABLE_FUNCTIONS=false
+ENABLE_TOOL_SERVERS=false
 ```
 
-这比[安全模式](#safe-mode)更强。安全模式会停用所有 Functions 但保留功能入口；`ENABLE_PLUGINS=false` 会隐藏工作区的 **Tools** 和管理员的 **Functions** 页面，使其端点返回空结果，并跳过所有插件执行路径（filters、actions、pipe 函数、内置原生工具调用和代码解释器检测）。通过连接配置的 OpenAPI 和 MCP 工具服务器不受影响。关闭此设置即可消除这些功能带来的任意代码执行攻击面，因此在不需要此功能时应始终使用。
+这比[安全模式](#safe-mode)更强。安全模式会停用所有 Functions，但保留该功能本身；`ENABLE_PLUGINS=false` 则会隐藏工作区的 **Tools** 页面和管理员的 **Functions** 页面，并阻止 Tools、Functions、OpenAPI 与 MCP 工具服务器、Open Terminal 连接以及用户的直连工具服务器加载或运行。[`ENABLE_TOOLS`](/reference/env-configuration#enable_tools)、[`ENABLE_FUNCTIONS`](/reference/env-configuration#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](/reference/env-configuration#enable_tool_servers) 各自关闭其中一部分。这四个开关都需要重启。
 
 ### 代码执行 {#code-execution}
-
-Open WebUI 默认启用了两个代码执行相关能力：
+Open WebUI 默认启用两项代码执行功能：
 
 ```bash
-# 允许执行聊天回复中的代码块（默认：true，执行引擎：pyodide）
+# 允许执行聊天回复中的代码块（默认：true；引擎 pyodide，旧版）
 ENABLE_CODE_EXECUTION=true
 CODE_EXECUTION_ENGINE=pyodide
 
-# 允许模型在推理过程中运行代码（默认：true，执行引擎：pyodide）
+# 允许模型在其推理过程中运行代码（默认：true；引擎 pyodide，旧版）
 ENABLE_CODE_INTERPRETER=true
 CODE_INTERPRETER_ENGINE=pyodide
 ```
 
-默认引擎是 `pyodide`，它通过 WebAssembly 在浏览器中运行 Python，不会在服务器上执行代码。如果你切换到 Jupyter（`jupyter`），代码就会在 Jupyter 服务器端运行，也就具备服务端访问权限。如果使用此引擎，请务必额外保护好 Jupyter 实例。
+`pyodide`（浏览器/WebAssembly）和 `jupyter`（服务端）是**旧版**代码执行引擎。**如果你不需要聊天内代码执行，请通过设置 `ENABLE_CODE_EXECUTION=false` 和 `ENABLE_CODE_INTERPRETER=false` 关闭这两项功能。** 如果确实需要，请做好隔离：优先使用 **[Open Terminal](/features/open-terminal)**，它在独立的 Docker 容器中运行代码；在多租户部署中则可使用 **[Terminals](/enterprise)** 实现按用户隔离。不要把基于浏览器的 `pyodide` 引擎当作安全边界，也绝不要在未加固 Jupyter 实例的情况下暴露 `jupyter` 引擎，因为它拥有直接的服务端访问权限。
 
 ### 安全模式 {#safe-mode}
 
@@ -713,8 +708,7 @@ USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS=false
 ## 容器加固 {#container-hardening}
 
 ### 基础镜像 {#base-image}
-
-默认 Dockerfile 使用 `python:3.11-slim-bookworm`。如果你的组织要求使用加固过或已审批的基础镜像，可以通过修改 Dockerfile 中的 `FROM` 行来替换它。这在要求最小化、已做漏洞扫描的企业基础镜像环境中很常见。
+默认的 Dockerfile 使用 `python:3.12-slim-trixie`（Debian 13 上的 Python 3.12）。如果你的组织要求使用加固过的或已批准的基础镜像，可以修改 Dockerfile 中的 `FROM` 行来替换它。这在要求最小化、经过漏洞扫描基础镜像的企业环境中很常见。
 
 ### 非 root 运行 {#non-root-execution}
 
@@ -733,8 +727,7 @@ docker build --build-arg USE_PERMISSION_HARDENING=true .
 ```
 
 ### 数据目录 {#data-directory}
-
-数据目录（`/app/backend/data`）包含数据库、上传文件、缓存插件以及自动生成的密钥。请使用合适的文件系统权限保护该目录，并将它纳入你的备份策略。
+数据目录（`/app/backend/data`）包含数据库、上传的文件和缓存的插件。自动生成的密钥会写入 `/app/backend/.webui_secret_key`，位于该目录之外，因此请设置 [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key)，或把 [`WEBUI_SECRET_KEY_FILE`](/reference/env-configuration#webui_secret_key_file) 指向数据目录内，以便在容器重建后仍然保留。请用合适的文件系统权限保护该目录，并把它纳入备份策略。
 
 ### 开发功能 {#development-features}
 
@@ -753,15 +746,16 @@ GLOBAL_LOG_LEVEL=INFO
 
 JSON 日志适合接入 ELK、Datadog、Splunk 等日志聚合系统。
 
-### OpenTelemetry
-
+### OpenTelemetry {#opentelemetry}
 ```bash
 ENABLE_OTEL=true
+ENABLE_OTEL_TRACES=true
+ENABLE_OTEL_METRICS=true
 OTEL_EXPORTER_OTLP_ENDPOINT=http://your-collector:4317
 OTEL_SERVICE_NAME=open-webui
 ```
 
-完整配置请参阅 [监控](/reference/monitoring) 与 [Open WebUI 日志](/getting-started/advanced-topics/logging)。
+完整配置请参见[监控](/reference/monitoring)和[记录 Open WebUI 日志](/getting-started/advanced-topics/logging)。
 
 ---
 

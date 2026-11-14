@@ -3,7 +3,7 @@ title: Docker
 sidebar_position: 2
 ---
 
-# Docker
+# Docker {#docker}
 
 从官方镜像运行 Open WebUI Computer：
 
@@ -21,7 +21,7 @@ docker run --rm -it \
 - `-v cptr-data:/data`：将应用状态（数据库、配置、上传）保存在命名卷中。保留此挂载，否则每次重启都会丢失账户和设置。
 - `-v "$PWD:/workspace"`：将你当前的项目挂载到容器中，以便 Open WebUI Computer 可以处理它。
 
-## docker-compose.yaml
+## docker-compose.yaml {#docker-composeyaml}
 
 对于需要保持运行的主机：
 

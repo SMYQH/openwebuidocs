@@ -35,8 +35,8 @@ title: "外部"
 2. 打开 `设置` 标签，再进入 `网页搜索`
 3. 将 `启用 Web Search` 切换为开启
 4. 将 `网页搜索引擎` 从下拉菜单设为 `external`
-5. 在 `External Search URL` 中填写你自定义搜索 API 的完整 URL（例如 `http://localhost:8000/search` 或 `https://my-search-api.example.com/api/search`）
-6. 在 `External Search API Key` 中填写访问该搜索端点所需的密钥。如果你的端点不需要鉴权，也可以留空（但对于公网端点，不推荐）
+5. 在 **External Web Search URL**（`EXTERNAL_WEB_SEARCH_URL`）中填写你自定义搜索 API 的完整 URL（例如 `http://localhost:8000/search` 或 `https://my-search-api.example.com/api/search`）
+6. 在 **External Web Search API Key**（`EXTERNAL_WEB_SEARCH_API_KEY`）中填写访问该搜索端点所需的密钥。如果你的端点不需要鉴权，也可以留空（但对于公网端点，不推荐）
 7. 点击 `Save`
 
 ![Open WebUI 管理面板中的 External Search 配置](/images/tutorial_external_search.png)
@@ -49,6 +49,8 @@ Open WebUI 会按如下方式与你的 `External Search URL` 交互：
 - **请求头：**
   - `Content-Type: application/json`
   - `Authorization: Bearer <YOUR_EXTERNAL_SEARCH_API_KEY>`
+  - `User-Agent: Open WebUI (https://github.com/open-webui/open-webui) RAG Bot`
+  - 用户身份请求头（`X-OpenWebUI-User-Name`、`X-OpenWebUI-User-Id`、`X-OpenWebUI-User-Email`、`X-OpenWebUI-User-Role`，或在设置了 `FORWARD_USER_INFO_HEADER_JWT_SECRET` 时使用签名 JWT），以及在存在聊天 id 时的 `X-OpenWebUI-Chat-Id`
 - **请求体（JSON）：**
 
     ```json

@@ -9,7 +9,7 @@ title: "Mistral OCR"
 
 :::
 
-## Mistral OCR
+## Mistral OCR {#mistral-ocr}
 
 本文提供一个逐步指南，说明如何将 Mistral OCR 集成到 Open WebUI 中。Mistral OCR 是一个光学字符识别库，专门用于从多种基于图像的文件格式中提取文本——包括扫描版 PDF、图片和手写文档——并转换为 JSON 或纯文本等结构化数据。它支持多语言文本识别、版面分析与手写内容理解，能够以强大且可定制的方式简化 AI 文档搜索、总结与数据提取流程。
 

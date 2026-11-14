@@ -6,7 +6,7 @@ sidebar_position: 1
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# Open WebUI Computer
+# Open WebUI Computer {#open-webui-computer}
 
 <ThemedImage
   alt="展示桌面和手机上的真实工作区的 Open WebUI Computer"

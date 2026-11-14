@@ -21,7 +21,7 @@ title: "SerpApi"
 
 :::
 
-## SerpApi API
+## SerpApi API {#serpapi-api}
 
 [SerpApi](https://serpapi.com/) 提供快速、易用且完整的 Google 及其他搜索引擎抓取 API。任何当前或未来会返回 `organic_results` 的 SERP engine 都可被支持。默认 web search engine 是 `google`，但也可以改为 `bing`、`baidu`、`google_news`、`google_scholar`、`google_patents` 等。
 

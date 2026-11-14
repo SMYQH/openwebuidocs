@@ -9,10 +9,16 @@ title: "Python 代码执行"
 
 Open WebUI 提供两种执行 Python 代码的方式：
 
+![代码执行设置](/images/admin/admin-code-execution.png)
+
 1. **手动代码执行**：对 LLM 生成的 Python 代码块点击 “Run” 按钮，即可在浏览器中运行（基于 Pyodide / WebAssembly）
 2. **Code Interpreter**：一种 AI 能力，允许模型在回复过程中自动编写并执行 Python 代码（基于 Pyodide 或 Jupyter）
 
-这两种方式都支持像 matplotlib 图表这样的可视化输出，并可直接在聊天中内联显示。使用 Pyodide 引擎时，还会提供一个位于 `/mnt/uploads/` 的**持久化虚拟文件系统**——文件会在多次代码执行和页面刷新之间保留，并且附加到消息的文件会自动放入其中，供代码直接访问。
+这两种方式都支持像 matplotlib 图表这样的可视化输出，并可直接在聊天中内联显示。使用 Pyodide 引擎时，还会提供一个位于 `/mnt/uploads/` 的**持久化虚拟文件系统**——文件会在多次代码执行之间保留（若启用 [`ENABLE_PYODIDE_FILE_PERSISTENCE`](/reference/env-configuration#enable_pyodide_file_persistence)，页面刷新后同样保留），并且附加到消息的文件会自动放入其中，供代码直接访问。
+
+:::caution Pyodide 与 Jupyter 均为旧版引擎
+浏览器内的 **Pyodide** 引擎与 **Jupyter** 引擎都属于**旧版**。它们保留下来是为了提供零配置、聊天气泡内的 Python；但面对真实负载、完整的包支持以及 shell 访问时，请改用 **[Open Terminal](/features/chat-conversations/chat-features/code-execution#open-terminal)**。Pyodide 在未来的版本中可能会被弃用。
+:::
 
 ## 代码解释器能力 {#code-interpreter-capability}
 
@@ -44,11 +50,11 @@ Code Interpreter 是一种模型能力，可让 LLM 在对话过程中自主编�
 | 变量 | 默认值 | 说明 |
 |----------|---------|-------------|
 | `ENABLE_CODE_INTERPRETER` | `true` | 全局启用 / 禁用代码解释器 |
-| `CODE_INTERPRETER_ENGINE` | `pyodide` | 使用的引擎：`pyodide`（浏览器，推荐）或 `jupyter`（服务器，旧版） |
+| `CODE_INTERPRETER_ENGINE` | `pyodide` | 使用的引擎：`pyodide`（浏览器，旧版）或 `jupyter`（服务器，旧版）。如需完整的 Python 与 shell 访问，请改用 [Open Terminal](/features/open-terminal)。 |
 | `CODE_INTERPRETER_PROMPT_TEMPLATE` | （内置） | 自定义代码解释器提示模板 |
-| `CODE_INTERPRETER_BLACKLISTED_MODULES` | `""` | 用逗号分隔的被禁用 Python 模块列表 |
+| `CODE_INTERPRETER_BLOCKED_MODULES` | `""` | 用逗号分隔的、需要拒绝导入的模块名称。默认为空。它只拦截顶层的直接导入，是一种可选的便捷过滤器，并非安全边界；详见[参考文档](/reference/env-configuration#code_interpreter_blocked_modules)。 |
 
-有关 Jupyter 配置，请参阅 [Jupyter Notebook 集成](/tutorials/integrations/dev-tools/jupyter) 教程。
+有关 Jupyter 配置，请参阅 [Jupyter Notebook 集成](/tutorials/integrations/dev-tools/jupyter) 教程。在 Jupyter 引擎上，[`ENABLE_ORJSON`](/reference/env-configuration#enable_orjson)（默认开启）能更快地把一次运行的输出送到聊天中，在代码输出很多或生成图像时尤其明显。
 
 :::note 文件系统提示注入
 当选择 Pyodide 引擎时，Open WebUI 会自动在代码解释器指令后附加一段与文件系统相关的提示，告知模型 `/mnt/uploads/` 的存在以及如何发现用户上传的文件。使用 Jupyter 时，则不会附加这一段（因为 Jupyter 有自己的文件系统）。因此，你无需在自定义 `CODE_INTERPRETER_PROMPT_TEMPLATE` 中手动加入文件系统说明——系统会自动补上。
@@ -132,6 +138,8 @@ Open WebUI 内置了基于 [Pyodide](https://pyodide.org/)（WebAssembly）的�
 
 Pyodide worker 是**持久化**的——它只会创建一次，并在后续多次代码执行中复用。这意味着，同一会话中执行之间，变量、已导入模块以及写入虚拟文件系统的文件都会被保留。
 
+**运行** 按钮仅由 [`ENABLE_CODE_EXECUTION`](/reference/env-configuration#enable_code_execution) 控制，对所有用户开放。**Code Interpreter** 群组权限和模型能力都不会影响它。使用默认的 Pyodide 引擎时，代码在用户自己的浏览器中运行；若把 [`CODE_EXECUTION_ENGINE`](/reference/env-configuration#code_execution_engine) 设为 `jupyter`，则改为在 Jupyter 服务器上运行。
+
 ### 手动运行代码 {#running-code-manually}
 
 1. 让 LLM 为你生成 Python 代码
@@ -158,6 +166,9 @@ Pyodide 预装以下包，系统会根据 import 语句自动检测并按需加�
 | sympy | 符号数学 |
 | tiktoken | LLM token 计数 |
 | pytz | 时区处理 |
+| openpyxl | Excel 文件（`pandas.read_excel` 与 `to_excel` 也会加载它） |
+| python-pptx | PowerPoint 文件 |
+| python-docx | Word 文件 |
 
 Python 标准库也完整可用（json、csv、math、datetime、os、io 等）。
 
@@ -170,7 +181,7 @@ AI **不能安装**上述列表之外的库。任何导入不受支持包的代�
 使用 Pyodide 引擎时，会在 `/mnt/uploads/` 挂载一个持久化虚拟文件系统。它由浏览器的 IndexedDB 和 [IDBFS](https://emscripten.org/docs/api_reference/Filesystem-API.html#filesystem-api-idbfs) 提供支持，并具备以下能力：
 
 - **跨执行持久化** —— 一次代码执行写入的文件，在后续执行中仍可访问
-- **跨刷新持久化** —— 页面刷新后文件仍然保留（存储在 IndexedDB 中）
+- **跨刷新持久化** *（需手动开启）* —— 只有在设置 [`ENABLE_PYODIDE_FILE_PERSISTENCE=true`](/reference/env-configuration#enable_pyodide_file_persistence) 后，文件才会在页面刷新后保留（默认关闭）。关闭该开关时，Pyodide 运行在不透明源（opaque origin）的沙箱中，基于 IndexedDB 的文件系统不会跨刷新保留
 - **自动挂载上传文件** —— 附件会在执行前从服务器拉取，并放入 `/mnt/uploads/`，因此模型能直接读取
 - **文件浏览器面板** —— 启用 Code Interpreter 后，聊天控制侧边栏中会显示文件浏览器。你可浏览、预览、上传、下载和删除文件，无需终端
 

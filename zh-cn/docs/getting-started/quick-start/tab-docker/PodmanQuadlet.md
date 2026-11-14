@@ -13,7 +13,7 @@ Podman Quadlet 允许你把容器作为原生 systemd 服务进行管理。这�
 2. **创建容器文件：**
    新建 `~/.config/containers/systemd/open-webui.container`，内容如下：
 
-   ```ini title="open-webui.container"
+``` ini title="open-webui.container"
    [Unit]
    Description=Open WebUI Container
    After=network-online.target
@@ -23,17 +23,19 @@ Podman Quadlet 允许你把容器作为原生 systemd 服务进行管理。这�
    ContainerName=open-webui
    PublishPort=3000:8080
    Volume=open-webui:/app/backend/data
+   Environment=WEBUI_SECRET_KEY=your-secret-key
    
-   # 网络：Podman 5+ 默认使用 Pasta
-   # 如果需要访问宿主机服务（例如宿主机上的 Ollama）：
+   # Networking: Pasta is used by default in Podman 5+
+   # If you need to access host services (like Ollama on the host):
    AddHost=host.containers.internal:host-gateway
+   Environment=OLLAMA_BASE_URL=http://host.containers.internal:11434
 
    [Service]
    Restart=always
 
    [Install]
    WantedBy=default.target
-   ```
+```
 
 3. **重新加载 systemd 并启动服务：**
    ```bash

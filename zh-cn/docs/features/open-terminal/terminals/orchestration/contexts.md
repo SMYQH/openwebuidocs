@@ -3,7 +3,7 @@ sidebar_position: 2
 title: "Terminal Contexts"
 ---
 
-# Terminal Contexts
+# 终端上下文 {#terminal-contexts}
 
 编排器（orchestrator）连接可以按上下文划定范围。针对聊天和自动化任务，管理员分别要决定两件事：
 

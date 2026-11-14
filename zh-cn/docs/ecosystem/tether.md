@@ -3,7 +3,7 @@ title: "Tether"
 sidebar_position: 3
 ---
 
-# Tether
+# Tether {#tether}
 
 Tether 是 Open WebUI 的桌面伴侣应用，提供 macOS、Windows 和 Linux 版本。它会登录到你的实例并把你的电脑连接上去，这样聊天就可以把这台电脑当作终端使用，应用也能显示桌面通知。项目位于 [github.com/open-webui/tether](https://github.com/open-webui/tether)。个人非商业用途免费。商业或组织性的生产使用需要 [Open WebUI 企业版许可证](https://docs.openwebui.com/enterprise)。
 

@@ -43,7 +43,7 @@ AI 检查文件大小和内容以找到完全相同的重复文件，然后询�
 
 AI 使用图像工具（Docker 中已预装）进行批量转换和调整大小：
 
-![AI 使用 run_command 进行批量文件操作](/images/open-terminal-ai-install-run.png)
+![AI 正在用产品照片构建联系表并以内联方式展示](/images/open-terminal-ai-batch-convert.png)
 
 ---
 

@@ -34,7 +34,7 @@ Open WebUI 从设计之初就把安全放在核心优先级上。无论你面对
 
 * **自托管数据管道**：除非你主动配置外部模型提供商，否则数据默认保留在你自己的基础设施内部。
 * **身份集成**：支持 SSO、LDAP、RBAC，用于执行你的访问控制策略。
-* **可审计日志**：容器原生日志流可与企业级 SIEM 工具兼容。
+* **可用于审计的日志**：容器原生日志流可与企业级 SIEM 工具兼容。请求审计日志默认关闭（`AUDIT_LOG_LEVEL=NONE`），开启后写入 `DATA_DIR/audit.log`；设置 `ENABLE_AUDIT_STDOUT=true` 可同时将其发送到容器的 stdout。
 * **数据驻留控制**：由你决定数据的物理存储位置。
 
 :::warning 合规责任归属
@@ -55,7 +55,7 @@ Open WebUI 可接入你组织已经在使用的身份系统：
 
 * **LDAP 与 Active Directory**：直接连接你现有的目录服务，实现用户认证与管理。
 * **单点登录（SSO）**：支持 SAML 与 OIDC 协议，让用户使用现有企业凭证访问 Open WebUI。
-* **多因素认证（MFA）**：在主认证之上增加额外安全层。
+* **多因素认证（MFA）**：当登录通过 SSO 委托给你的身份提供方时由其强制执行；或者通过 Open WebUI 自身的[双因素登录](/features/authentication-access/mfa)配合验证器应用，为密码、LDAP、SSO 和可信请求头登录提供多因素认证。
 
 #### 访问控制与权限 {#access-control--permissions}
 

@@ -61,42 +61,42 @@ docker compose up -d
 - 填写你从 DuckDNS 获得的邮箱和域名。一个域名带星号，另一个不带。例如：``*.hello.duckdns.org`` 和 ``hello.duckdns.org``。
 - 选择 **使用 DNS 验证**，选择 DuckDNS，然后粘贴你的 API token。例如：
 ```dns_duckdns_token=f4e2a1b9-c78d-e593-b0d7-67f2e1c9a5b8```
-- 同意 Let's Encrypt 条款并保存。若有需要，可调整传播时间（120 秒）。
+- Agree to Let’s Encrypt terms and save. Change propagation time **if needed** (120 seconds).
 
-5. **创建 Proxy Host：**
+5. **Create Proxy Hosts:**
 
-- 对于每个服务（例如 openwebui、nextcloud），进入 **主机 → 代理主机 → 添加代理主机**。
+- For each service (e.g., openwebui, nextcloud), go to Hosts → Proxy Hosts → Add Proxy Host.
 
-- 填入域名（例如 `openwebui.hello.duckdns.org`）。
-- 协议选择 HTTP（默认），启用 ``WebSocket 支持``，并指向你的 Docker IP（如果 open-webui 和 NGINX Manager 运行在同一台机器上，这个 IP 和前面一样，例如 ``192.168.0.6``）。
-- 选择之前生成的 SSL 证书，强制启用 SSL，并开启 HTTP/2。
+- Fill in the domain name (e.g., openwebui.hello.duckdns.org).
+- Set the scheme to HTTP (default), enable ``Websockets support`` and point to your Docker IP (if docker with open-webui is running on the same computer as NGINX manager, this will be the same IP as earlier (example: ``192.168.0.6``)
+- Select the SSL certificate generated earlier, force SSL, and enable HTTP/2.
 
 :::danger 关键：为 WebSocket 连接配置 CORS
 
-WebSocket 连接中非常常见、而且很难排查的问题，是跨源资源共享（CORS）策略配置错误。当你把 Open WebUI 放在 Nginx Proxy Manager 这样的反向代理后面时，**必须**在 Open WebUI 配置中设置 `CORS_ALLOW_ORIGIN` 环境变量。
+A very common and difficult-to-debug issue with WebSocket connections is a misconfigured Cross-Origin Resource Sharing (CORS) policy. When running Open WebUI behind a reverse proxy like Nginx Proxy Manager, you **must** set the `CORS_ALLOW_ORIGIN` environment variable in your Open WebUI configuration.
 
-如果不这样做，即使你在 Nginx Proxy Manager 中启用了 “WebSocket 支持”，WebSocket 连接也会失败。
+Failure to do so will cause WebSocket connections to fail, even if you have enabled "Websockets support" in Nginx Proxy Manager.
 
 :::
 
-:::danger 关键：为流式传输关闭代理缓冲
+:::danger 关键：关闭流式响应的代理缓冲
 
-**这是导致 Markdown 乱码和流式响应损坏的最常见原因。**
+**This is the most common cause of garbled markdown and broken streaming responses.**
 
-在 Nginx Proxy Manager 中，进入代理主机 → **高级** 选项卡 → 并在 **自定义 Nginx 配置** 字段中添加以下指令：
+In Nginx Proxy Manager, go to your proxy host → **Advanced** tab → and add these directives to the **Custom Nginx Configuration** field:
 
 ```nginx
 proxy_buffering off;
 proxy_cache off;
 ```
 
-如果不这样做，Nginx 会重新分块 SSE 流，导致 Markdown 格式被打散（出现可见的 `##`、`**`、缺词等问题）。这也会让流式响应更快。
+Without this, Nginx re-chunks SSE streams, breaking markdown formatting (visible `##`, `**`, missing words). This also makes streaming responses significantly faster.
 
 :::
 
-:::tip 长补全的超时设置
+:::tip 为长时间补全放宽超时
 
-复杂任务的长时间 LLM 补全（30 分钟以上）可能超过默认的 60 秒超时。请在 **高级** 选项卡 → **自定义 Nginx 配置** 中添加以下指令：
+Long LLM completions (30+ minutes for complex tasks) may exceed the default 60-second timeout. Add these directives in the **Advanced** tab → **Custom Nginx Configuration**:
 
 ```nginx
 proxy_read_timeout 1800;
@@ -104,44 +104,44 @@ proxy_send_timeout 1800;
 proxy_connect_timeout 1800;
 ```
 
-这会把超时时间设置为 30 分钟。你可以根据使用场景自行调整。
+This sets a 30-minute timeout. Adjust as needed for your use case.
 
 :::
 
 :::tip 缓存最佳实践
 
-虽然 Nginx Proxy Manager 会自动处理大部分配置，但你仍应注意：
+While Nginx Proxy Manager handles most configuration automatically, be aware that:
 
-- **静态资源**（CSS、JS、图片）默认会被缓存，以提升性能
-- **认证端点** 永远不应被缓存
-- 如果你在 NPM 的 “高级” 选项卡中添加自定义缓存规则，请确保排除 `/api/`、`/auth/`、`/signup/` , `/signin/`、`/sso/`、`/admin/`、`/signout/`、`/oauth/`、`/login/` 和 `/logout/` 等路径
+- **Static assets** (CSS, JS, images) are cached by default for better performance
+- **Authentication endpoints** should never be cached
+- If you add custom caching rules in NPM's "Advanced" tab, ensure you exclude paths like `/api/`, `/auth/`, `/signup/` , `/signin/`, `/sso/`, `/admin/`, `/signout/`, `/oauth/`, `/login/`, and `/logout/`
 
-默认的 NPM 配置已经正确处理了这些情况——只有在你非常清楚自己在做什么时，才去修改缓存规则。
+The default NPM configuration handles this correctly - only modify caching if you know what you're doing.
 
 :::
 
-**示例：**
-如果你通过 `https://openwebui.hello.duckdns.org` 访问界面，那么必须设置：
+**Example:**
+If you access your UI at `https://openwebui.hello.duckdns.org`, you must set:
 
 ```bash
 CORS_ALLOW_ORIGIN="https://openwebui.hello.duckdns.org"
 ```
 
-你也可以提供一个以分号分隔的允许域名列表。**不要跳过这一步。**
+You can also provide a semicolon-separated list of allowed domains. **Do not skip this step.**
 
 :::
 
-6. **把你的 URL 添加到 open-webui（否则会出现 HTTPS 错误）：**
+6. **Add your url to open-webui (otherwise getting HTTPS error):**
 
-- 进入 open-webui → 设置 → 管理 → 常规
-- 在 **Webhook URL** 文本框中输入你通过 Nginx 反向代理连接 open-webui 所用的 URL。例如：``hello.duckdns.org``（在这种配置下不是必需）或 ``openwebui.hello.duckdns.org``（在这种配置下是必需的）。
+- Go to your open-webui → Settings → Admin → General
+- In the **Webhook URL** text field, enter your URL through which you will connect to your open-webui via Nginx reverse proxy. Example: ``hello.duckdns.org`` (not essential with this one) or ``openwebui.hello.duckdns.org`` (essential with this one).
 
 #### 访问 WebUI {#access-the-webui}
 
-你可以通过 HTTPS 访问 Open WebUI，例如 ``hello.duckdns.org`` 或 ``openwebui.hello.duckdns.org``（按你的实际配置而定）。
+Access Open WebUI via HTTPS at either ``hello.duckdns.org`` or ``openwebui.hello.duckdns.org`` (in whatever way you set it up).
 
 :::note
 
-防火墙提示：请注意，本地防火墙软件（如 Portmaster）可能会阻止 Docker 内部网络流量或所需端口。如果遇到问题，请检查防火墙规则，确保此配置所需的通信已被允许。
+Firewall Note: Be aware that local firewall software (like Portmaster) might block internal Docker network traffic or required ports. If you experience issues, check your firewall rules to ensure necessary communication for this setup is allowed.
 
 :::

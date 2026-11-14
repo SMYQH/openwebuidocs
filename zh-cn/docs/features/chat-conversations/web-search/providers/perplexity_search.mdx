@@ -21,7 +21,7 @@ title: "Perplexity 搜索"
 
 :::
 
-## Perplexity Search API
+## Perplexity Search API {#perplexity-search-api}
 
 :::info
 
@@ -44,7 +44,7 @@ Perplexity Search API 只是一个搜索引擎接口，而 Perplexity 集成则�
 配置方式如下：
 
 1. 按照上面的步骤操作，并将引擎设为 `perplexity_search`
-2. 在 **Perplexity Search API Base URL** 中，把默认 URL 替换为你的 LiteLLM 端点
+2. 在 **Perplexity Search API URL** 字段（`PERPLEXITY_SEARCH_API_URL`，默认 `https://api.perplexity.ai/search`）中，把默认值替换为你的 LiteLLM 端点。该字段填写的是完整的搜索端点，而不是基础 URL
 3. URL 必须遵循以下格式：`http://<your-litellm-url>/search/<your-search-provider-name>` —— 请确保其中的提供商名称与 LiteLLM 配置中定义的名称完全一致
 
 **示例：**

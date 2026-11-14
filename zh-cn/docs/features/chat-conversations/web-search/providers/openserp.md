@@ -9,7 +9,7 @@ title: "OpenSERP"
 
 :::
 
-:::tip Troubleshooting
+:::tip 故障排查
 
 Web 搜索遇到问题？请查阅 [Web 搜索故障排查指南](/troubleshooting/web-search)，了解代理配置、连接超时、内容为空等常见问题的解决办法。
 

@@ -79,7 +79,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=3
 
 ### 从 Hugging Face 下载 GGUF 模型 {#downloading-gguf-models-from-hugging-face}
 
-Ollama 也可以直接从 Hugging Face 下载 GGUF 模型。在 **从 Ollama.com 拉取模型** 或模型选择器中，把模型写成 `hf.co/{用户名}/{仓库}:{量化}`，例如 `hf.co/ggml-org/gemma-3-270m-it-GGUF:Q8_0`。量化标识要与 GGUF 文件名中的写法一致，例如 `Q4_K_M` 或 `Q8_0`。之后该模型会以这个完整名称列出。关于哪些仓库可用，请参阅 Hugging Face 的 [Ollama 指南](https://huggingface.co/docs/hub/en/ollama)。
+Ollama 也可以直接从 Hugging Face 下载 GGUF 模型。在 **从 Ollama.com 拉取模型** 或模型选择器中，把模型写成 `hf.co/{username}/{repository}:{quantization}`，例如 `hf.co/ggml-org/gemma-3-270m-it-GGUF:Q8_0`。量化标识要与 GGUF 文件名中的写法一致，例如 `Q4_K_M` 或 `Q8_0`。之后该模型会以这个完整名称列出。关于哪些仓库可用，请参阅 Hugging Face 的 [Ollama 指南](https://huggingface.co/docs/hub/en/ollama)。
 
 ### 上传 GGUF 文件 {#uploading-a-gguf-file}
 
@@ -89,9 +89,7 @@ Ollama 也可以直接从 Hugging Face 下载 GGUF 模型。在 **从 Ollama.com
 
 ## 更新与删除模型 {#updating-and-deleting-models}
 
-Open WebUI 会在任何当前被 Ollama 运行时保活的模型旁显示一个绿色的 "Loaded" 指示符；管理员还会在模型行看到一个 **Eject** 按钮，无需重启服务即可将其卸载。背后 Open WebUI 会调用 `POST /api/models/unload`（仅管理员可用），向提供该模型的每一个 Ollama 节点转发一个 `keep_alive=0` 的 generate 请求。
-
-当你需要在多个大模型之间切换、释放 GPU / VRAM，或者在拉取新版本后希望强制重新加载时，这非常有用。如果尝试卸载的模型所在提供商不支持卸载，将直接返回错误，而不是静默失败。
+这两个操作都位于下载功能所在的同一个 **管理** 对话框中（参见[第 2 步](#step-2-managing-your-ollama-instance)）。它们只作用于你打开 **管理** 的那个连接背后的 Ollama 服务器，因此当你有多个 Ollama 连接时，需要在每个想要修改的连接上分别打开 **管理**。
 
 ---
 
@@ -111,6 +109,27 @@ Open WebUI 会在任何当前被 Ollama 运行时保活的模型旁显示一个�
 
 ---
 
+## 创建模型 {#creating-a-model}
+
+**创建模型**（同样位于 **管理** 对话框中）会在该 Ollama 服务器上基于它已有的某个模型创建一个新模型，并带有自己的系统提示词或参数。不会下载任何新内容，因此只需几秒钟。
+
+1. 为新模型输入一个名称，例如 `pirate-gemma`。
+2. 在下方的输入框中用 JSON 描述该模型，字段参见 Ollama 的 [create API](https://docs.ollama.com/api/create)。`from` 是要基于的模型，且必须已存在于该服务器上。例如：
+
+   ```json
+   {"from": "gemma3:270m", "system": "You answer in one short sentence.", "parameters": {"temperature": 0.3, "num_ctx": 8192}}
+   ```
+
+3. 点击名称旁边的 **创建模型** 按钮。在名称和 JSON 都填写完整之前，该按钮保持禁用状态。
+
+当 Ollama 完成后，Open WebUI 会显示 **success**，新模型会以 `pirate-gemma:latest` 出现在模型选择器中。如果 JSON 无法解析，会显示错误且不会发送任何内容。如果 `from` 模型不在该服务器上，Ollama 会尝试从 Ollama.com 下载它，并在那里不存在该模型时失败并提示 **pull model manifest: file does not exist**。
+
+:::note 此处设置的系统提示词是兜底
+Ollama 只在对话没有发送系统提示词时才使用模型自身的系统提示词。来自 **工作区** > **模型** 中模型设置的系统提示词、来自用户设置的系统提示词，或由过滤器添加的系统提示词都会取代它。若要让某个系统提示词在 Open WebUI 中始终生效，请在 **工作区** > **模型** 中设置。
+:::
+
+---
+
 ## 卸载已加载的模型 {#unloading-loaded-models}
 
 Open WebUI 会在当前由运行时保持预热的 Ollama 模型旁显示一个绿色的“已加载”指示器，管理员可以在模型行上看到 **弹出** 按钮，无需重启服务器即可卸载它。在底层，Open WebUI 会调用 `POST /api/models/unload`（仅管理员），它会向每个提供该模型的 Ollama 节点转发一次带 `keep_alive=0` 的 generate 调用。
@@ -119,36 +138,31 @@ Open WebUI 会在当前由运行时保持预热的 Ollama 模型旁显示一个�
 
 ---
 
-## 使用推理 / Thinking 模型 {#creating-a-model}
-
-如果你使用的是 **DeepSeek-R1** 或 **Qwen3** 这类会在 `<think>...</think>` 标签中输出思考内容的推理模型，则需要在 Ollama 中配置 **reasoning parser** 才能正确显示。
-
-### 使用推理/思考模型 {#using-reasoning--thinking-models}
+## 使用推理 / Thinking 模型 {#using-reasoning--thinking-models}
 
 Ollama 会自行把模型的思考过程与它的答案分开。自 Ollama v0.9.0 起，支持思考的模型（Qwen3、DeepSeek-R1、DeepSeek-V3.1、GPT-OSS）会在单独的 `thinking` 字段中返回思考轨迹，Open WebUI 会把它显示在答案上方一个可折叠的小节中。这里不涉及任何服务端开关，`ollama serve` 也不接受此类参数。
 
-### 配置 reasoning parser {#controlling-thinking}
+### 控制思考级别 {#controlling-thinking}
 
-使用 `--reasoning-parser` 参数启动 Ollama：
+**模型控制 > 控制 > 高级参数** 下的 **think (Ollama)** 控件（或在模型编辑器中按模型设置）会作为 `think` 参数发送给 Ollama：
 
-```bash
-ollama serve --reasoning-parser deepseek_r1
-```
+| 设置 | Ollama 收到什么 |
+|---|---|
+| **默认** | 无。适用 Ollama 自身的默认值，即对支持思考的模型默认开启思考。 |
+| **开启** | `true` |
+| **自定义** | 一个思考级别：`low`、`medium`、`high` 或 `max`。GPT-OSS 只接受级别。 |
+| **关闭** | `false` |
 
-这样可以确保思考块与最终答案被正确分离，并在 Open WebUI 中显示为可折叠区域。
-
-:::tip
-`deepseek_r1` 解析器适用于大多数推理模型，包括 Qwen3。如果遇到问题，请查看我们的[推理与思考模型指南](/features/chat-conversations/chat-features/reasoning-models)，了解其他解析器与详细排查方法。
-:::
+把推理直接写成 `<think>...</think>` 文本、而不使用 Ollama 思考字段的模型，由 **Reasoning Tags** 设置处理。两项设置及排查步骤请参阅[推理与思考模型指南](/features/chat-conversations/chat-features/reasoning-models)。
 
 ---
 
-## 上下文长度 (`num_ctx`) 和 `OLLAMA_CONTEXT_LENGTH` {#context-length-num_ctx-and-ollama_context_length}
+## 上下文长度 (`num_ctx`) 和 `OLLAMA_CONTEXT_LENGTH` {#context-length-num\_ctx-and-ollama\_context\_length}
 
 模型实际能"看到"多少对话内容由**上下文长度**决定。对于 Ollama，它来自两个地方，其中一个会静默覆盖另一个：
 
-- **`OLLAMA_CONTEXT_LENGTH`** 在 **Ollama 服务器**上设置，是 Ollama 用于模型的默认上下文长度。Ollama 自身默认为较小的值（历史上为 `2048`，新版本为 `4096`）。
-- **`num_ctx`** 是 **Open WebUI 的高级参数**（聊天控制 > 高级参数，或在模型编辑器中按模型设置）。它默认**未设置**，因此默认情况下应用 Ollama 的 `OLLAMA_CONTEXT_LENGTH`。
+- **`OLLAMA_CONTEXT_LENGTH`** 在 **Ollama 服务器**上设置，是 Ollama 用于模型的默认上下文长度。自 Ollama v0.15.5 起，Ollama 会根据可用显存选取该默认值：显存低于 24 GiB 时为 `4096`，24 到 48 GiB 之间为 `32768`，48 GiB 及以上为 `262144`（参见 [Ollama 的上下文长度文档](https://docs.ollama.com/context-length)）。
+- **`num_ctx`** 是 **Open WebUI 的高级参数**（聊天中的**模型控制 > 控制 > 高级参数**，或在模型编辑器中按模型设置）。它默认**未设置**，因此默认情况下应用 Ollama 的 `OLLAMA_CONTEXT_LENGTH`。
 
 :::warning `num_ctx` 会覆盖 `OLLAMA_CONTEXT_LENGTH`
 如果在 Open WebUI 中的任何地方设置了 `num_ctx`（模型预设的参数或聊天的高级参数），Open WebUI 会在每次请求时将其发送给 Ollama，并且每次请求的 `num_ctx` **会覆盖**服务器的 `OLLAMA_CONTEXT_LENGTH`。打开 `num_ctx` 控制开关会**预填 `2048`**，这是一个非常小的值，因此很容易在不知情的情况下将模型限制在 2048 个 token，即使你在 Ollama 端提高了 `OLLAMA_CONTEXT_LENGTH`。
@@ -159,7 +173,7 @@ ollama serve --reasoning-parser deepseek_r1
 **操作建议：**
 
 - 要为所有 Ollama 模型设置默认值，请在 **Ollama 服务器**上设置 `OLLAMA_CONTEXT_LENGTH`，并在 Open WebUI 中**保持 `num_ctx` 未设置**，这样就不会被覆盖。
-- 要按模型或按聊天设置，请将 `num_ctx` 设置为模型的合理值（例如 `8192`、`16384` 或模型的最大值），而不是 `2048` 默认值。请记住它会覆盖 `OLLAMA_CONTEXT_LENGTH`。
+- 要按模型或按聊天设置，请将 `num_ctx` 设置为模型的合理值（例如 `8192`、`16384` 或模型的最大值），而不是 `2048` 预填值。请记住它会覆盖 `OLLAMA_CONTEXT_LENGTH`。
 - 更大的上下文会使用更多 VRAM 和 RAM，请根据你的硬件容量合理设置。
 
 ---

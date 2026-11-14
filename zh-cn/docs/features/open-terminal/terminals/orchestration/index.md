@@ -20,6 +20,7 @@ flowchart LR
 ## 阅读本节 {#read-this-section}
 
 - [策略](/features/open-terminal/terminals/orchestration/policies)：镜像选择、资源、存储、环境变量和空闲超时。
+- [终端上下文](/features/open-terminal/terminals/orchestration/contexts)：终端是否在聊天和自动化中提供，以及每个已保存的聊天或自动化是否获得自己的工作区。
 - [环境变量](/features/open-terminal/terminals/orchestration/environment-variables)：原始环境值、引号处理、转发行为和保留键。
 - [应用变更](/features/open-terminal/terminals/orchestration/applying-changes)：为什么变更只影响新预配的终端以及如何刷新用户。
 - [自定义镜像](/features/open-terminal/terminals/orchestration/custom-images)：构建、标记、推送、配置和发布自定义 Open Terminal 镜像。
@@ -33,11 +34,11 @@ flowchart LR
 
 | 层 | 职责 |
 | :--- | :--- |
-| Open WebUI | 存储编排器连接信息、选择策略、呈现终端和文件浏览器 UI |
-| Terminals 编排器 | 认证请求、解析策略、预配容器、转发环境变量、应用空闲超时、处理刷新/生命周期工作 |
-| 策略 | 定义镜像、环境、资源、存储和空闲超时 |
+| Open WebUI | 存储编排器连接信息、选择策略与[终端上下文](/features/open-terminal/terminals/orchestration/contexts)，并呈现聊天、终端、文件浏览器和预览 UI |
+| Terminals 编排器 | 认证请求、解析策略与上下文、预配工作区、转发环境变量、应用空闲超时、处理刷新/生命周期工作 |
+| 策略 | 定义工作区镜像、环境、资源、存储、安全上下文和空闲超时 |
 | 策略生命周期 | 定义随时间推移的维护行为，例如终端持久化文件的定时重置 |
-| Open Terminal 容器 | 执行命令、提供文件服务、暴露 OpenAPI 工具、报告文件浏览器根元数据 |
+| Open Terminal 工作区 | 执行命令、提供文件服务、暴露 OpenAPI 工具、运行代码与服务器、报告文件浏览器根元数据 |
 
 ## 编排器环境变量 {#orchestrator-environment-variables}
 

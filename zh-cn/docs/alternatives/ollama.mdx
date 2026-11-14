@@ -65,7 +65,7 @@ Ollama 和 Open WebUI 是本地 AI 生态系统中最流行的配对。Ollama �
 
 ```bash
 # 最常见的 Open WebUI 设置
-ollama pull llama3
+ollama pull muse-glimmer:30b-q4_K_M
 docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway \
   -v open-webui:/app/backend/data --name open-webui \
   ghcr.io/open-webui/open-webui:main

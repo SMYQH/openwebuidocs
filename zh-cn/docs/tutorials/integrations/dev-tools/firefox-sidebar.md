@@ -45,7 +45,7 @@ title: "Firefox 侧栏"
 3. 填写提示词 label、value 和 ID（例如 `{"id":"My Prompt", "value": "This is my custom prompt.", "label": "My Prompt"}`）
 4. 按需重复以上步骤添加更多提示词
 
-### browser.ml.chat.provider
+### browser.ml.chat.provider {#browsermlchatprovider}
 
 1. 搜索 `browser.ml.chat.provider`
 2. 填入你的 Open WebUI 实例 URL，并可附带可选参数（例如 `https://my-open-webui-instance.com/?model=browser-productivity-assistant&temporary-chat=true&tools=jina_web_scrape`）
@@ -63,7 +63,7 @@ title: "Firefox 侧栏"
 
 - `youtube`：提供 YouTube 视频 ID，在聊天中转录该视频（例如 `/?youtube=VIDEO_ID`）
 
-### Web Search
+### Web Search {#web-search}
 
 - `web-search`：将此参数设为 `true` 以启用网页搜索（例如 `/?web-search=true`）
 
@@ -73,7 +73,7 @@ title: "Firefox 侧栏"
 
 ### 通话叠加层 {#call-overlay}
 
-- `call`：将此参数设为 `true` 可在聊天界面启用视频/通话叠加层（例如 `/?call=true`）
+- `call` 或 `voice`：将此参数设为 `true` 即可启动语音模式（确认麦克风授权提示后，例如 `/?call=true`）
 
 ### 初始查询 {#initial-query-prompt}
 

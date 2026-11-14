@@ -37,68 +37,67 @@ import TabItem from '@theme/TabItem';
 ### 最小配置示例 {#example-minimal-setup}
 
 <Tabs>
-  <TabItem value="gemini-3-pro" label="Gemini 3.0 Pro（又名 Nano Banana Pro）" default>
+  <TabItem value="gemini-3-pro" label="Gemini 3 Pro Image（又名 Nano Banana Pro）" default>
 
 **创建图像**
-- **创建图像模型**: `gemini-3-pro-image-preview`
-- **图像尺寸**: `2816x1536`
-- **图像提示词生成**: 开启
+- **模型**: `gemini-3-pro-image`
+- **图像尺寸**: （不会发送给 Gemini，可留空）
+- **图像提示词生成**: 开启（仅限旧版函数调用）
 - **图像生成引擎**: `Gemini`
-- **Gemini 基础 URL**: `https://generativelanguage.googleapis.com/v1beta`
-- **Gemini API 密钥**: 输入你的 API 密钥
+- **基础 URL**: `https://generativelanguage.googleapis.com/v1beta`
+- **API 密钥**: 输入你的 API 密钥
 - **Gemini 端点方法**: `generateContent`
 
 **编辑图像**
+- **图像编辑**: 开启
 - **图像编辑引擎**: `Gemini`
-- **模型**: `gemini-3-pro-image-preview`
-- **图像尺寸**: （可留空）
-- **Gemini 基础 URL**: `https://generativelanguage.googleapis.com/v1beta`
-- **Gemini API 密钥**: 输入你的 API 密钥
+- **模型**: `gemini-3-pro-image`
+- **图像尺寸**: （不会发送给 Gemini，可留空）
+- **基础 URL**: `https://generativelanguage.googleapis.com/v1beta`
+- **API 密钥**: 输入你的 API 密钥
 
 </TabItem>
-  <TabItem value="gemini-2.5-flash" label="Gemini 2.5 Flash（又名 Nano Banana）">
+  <TabItem value="gemini-3.1-flash" label="Gemini 3.1 Flash Image（又名 Nano Banana 2）">
 
 **创建图像**
-- **创建图像模型**: `gemini-2.5-flash-image`
-- **图像尺寸**: `2816x1536`
-- **图像提示词生成**: 开启
+- **模型**: `gemini-3.1-flash-image`
+- **图像尺寸**: （不会发送给 Gemini，可留空）
+- **图像提示词生成**: 开启（仅限旧版函数调用）
 - **图像生成引擎**: `Gemini`
-- **Gemini 基础 URL**: `https://generativelanguage.googleapis.com/v1beta`
-- **Gemini API 密钥**: 输入你的 API 密钥
+- **基础 URL**: `https://generativelanguage.googleapis.com/v1beta`
+- **API 密钥**: 输入你的 API 密钥
 - **Gemini 端点方法**: `generateContent`
 
 **编辑图像**
+- **图像编辑**: 开启
 - **图像编辑引擎**: `Gemini`
-- **模型**: `gemini-2.5-flash-image`
-- **图像尺寸**: （可留空）
-- **Gemini 基础 URL**: `https://generativelanguage.googleapis.com/v1beta`
-- **Gemini API 密钥**: 输入你的 API 密钥
+- **模型**: `gemini-3.1-flash-image`
+- **图像尺寸**: （不会发送给 Gemini，可留空）
+- **基础 URL**: `https://generativelanguage.googleapis.com/v1beta`
+- **API 密钥**: 输入你的 API 密钥
 
 </TabItem>
 </Tabs>
 
-![Open WebUI 图像设置页面截图，已选中 Gemini，并高亮显示 API key、模型和图像尺寸字段。](/images/image-generation-and-editing/gemini-settings.png)
+![Open WebUI 图像设置页面截图，已选中 Gemini。](/images/image-generation-and-editing/gemini-settings.png)
 
 :::info
 
-该功能似乎只适用于支持以下 endpoint 的模型：`https://generativelanguage.googleapis.com/v1beta/models/<MODEL_NAME>:predict`。  
-这是 Google 提供的、兼容 OpenAI 的实验性 **BETA** endpoint。
+Imagen 模型和 Gemini 模型由不同的端点提供，因此 **Gemini 端点方法**必须与你填写的模型相匹配。
 
-Google Imagen 模型使用这个 endpoint，而 Gemini 模型则使用另一个以 `:generateContent` 结尾的 endpoint。
+Imagen 模型使用 `predict`：
 
-Imagen 模型 endpoint 示例：
-
-- `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict`
+- `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict`。
 - [Imagen 模型文档](https://ai.google.dev/gemini-api/docs/imagen)
 
-Gemini 模型 endpoint 示例：
+Gemini 模型使用 `generateContent`：
 
-- `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent`
+- `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image:generateContent`。
 - [Gemini 模型文档](https://ai.google.dev/gemini-api/docs/image-generation)
 
-如果你尝试调用 `gemini-3-pro-image-preview` 这类 Gemini 模型，但仍使用图像生成中的 `predict` endpoint，就会因 endpoint 不匹配而报错：
+如果端点方法留空，会回退到 `predict`，因此像 `gemini-3-pro-image` 这样的 Gemini 模型在你切换到 `generateContent` 之前都会失败。
 
-`400: [ERROR: models/gemini-3-pro-image-preview is not found for API version v1beta, or is not supported for predict. Call ListModels to see the list of available models and their supported methods.]`
+`400: [ERROR: models/gemini-3-pro-image is not found for API version v1beta, or is not supported for predict. Call ListModels to see the list of available models and their supported methods.]`
 
 :::
 

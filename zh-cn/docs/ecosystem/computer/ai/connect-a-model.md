@@ -16,10 +16,10 @@ sidebar_position: 2
 | **API 类型** | 仅 OpenAI：聊天补全或响应 |
 | **基础 URL** | 必需。例如 `https://api.openai.com/v1`、`http://localhost:11434/v1` |
 | **API 密钥** | 必需。Ollama 会忽略该值，但字段不能为空 |
-| **前缀 ID** | 可选命名空间，添加到模型 ID 前面，例如 `openrouter/gpt-4o` |
+| **前缀 ID** | 可选命名空间，添加到模型 ID 前面，例如 `openrouter/gpt-5.6-sol` |
 | **模型** | 可选的逗号分隔列表。留空以自动发现 |
 
-## Ollama
+## Ollama {#ollama}
 
 - **提供商：** OpenAI
 - **基础 URL：** `http://localhost:11434/v1`
@@ -27,15 +27,15 @@ sidebar_position: 2
 
 你已拉取的模型会自动发现并出现在模型选择器中。
 
-## OpenRouter
+## OpenRouter {#openrouter}
 
 - **提供商：** OpenAI
 - **基础 URL：** `https://openrouter.ai/api/v1`
 - **API 密钥：** 你的 OpenRouter 密钥
 
-OpenRouter 暴露许多模型；设置一个**前缀 ID** 如 `openrouter`，使其模型带有命名空间（`openrouter/gpt-4o`），避免与其他连接的模型冲突。
+OpenRouter 暴露许多模型；设置一个**前缀 ID** 如 `openrouter`，使其模型带有命名空间（`openrouter/gpt-5.6-sol`），避免与其他连接的模型冲突。
 
-## Anthropic
+## Anthropic {#anthropic}
 
 - **提供商：** Anthropic
 - **基础 URL：** `https://api.anthropic.com/v1`

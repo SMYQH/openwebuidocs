@@ -8,7 +8,7 @@ Podman 支持类似 Kubernetes 的语法来部署 Pod、卷等资源，而无需
 
 下面是一个用于部署的 Podman Kube Play 示例文件：
 
-```yaml
+``` yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -17,6 +17,9 @@ spec:
   containers:
     - name: container
       image: ghcr.io/open-webui/open-webui:main
+      env:
+        - name: WEBUI_SECRET_KEY
+          value: your-secret-key
       ports:
         - name: http
           containerPort: 8080

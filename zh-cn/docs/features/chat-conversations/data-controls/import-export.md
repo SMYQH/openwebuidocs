@@ -32,11 +32,18 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 - **ChatGPT 导出文件**：来自 OpenAI ChatGPT 的导出对话（会自动识别并转换）
 - **自定义 JSON 文件**：任何遵循下文预期结构的 JSON 文件
 
+:::info 导入权限同样涵盖分叉
+
+**Allow Chat Import** 同时也控制着[分叉聊天](/features/chat-conversations/chat-features/)——也就是把一段已有对话复制成新对话。当该项未被授予时，这里的 **Import Chats** 行、助手回复下的 **Fork chat** 操作，以及聊天输入框 `/` 菜单中的 `/fork` 条目，都会直接从界面中移除，而不是显示出来再被拒绝。管理员始终不受此限制。参见[权限](/features/authentication-access/rbac/permissions#3-chat-permissions)。
+
+:::
+
 ### 导入行为 {#import-behavior}
 
 - 导入的聊天会追加到现有对话中（不会覆盖已有数据）
 - 每个导入聊天都会分配新的唯一 ID，因此重复导入同一文件会产生重复聊天
 - 如果是 ChatGPT 导出文件，系统会自动检测格式并完成转换
+- 你账户中尚不存在的标签会依据文件创建。导出时每个标签都保存为小写并以下划线分隔，因此名为 Import Test 的标签回来后会变成 import_test
 
 ## 聊天导入 JSON Schema {#chat-import-json-schema}
 
@@ -46,12 +53,12 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 
 数组中的每个对象都应包含一个 `chat` 键，用于承载对话数据：
 
-```json
+``` json
 [
   {
     "chat": {
       "title": "My Conversation",
-      "models": ["llama3.2"],
+      "models": ["qwen3.6:27b"],
       "history": {
         "currentId": "message-id-2",
         "messages": {
@@ -69,7 +76,7 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
             "childrenIds": [],
             "role": "assistant",
             "content": "I'm doing well, thank you!",
-            "model": "llama3.2",
+            "model": "qwen3.6:27b",
             "done": true,
             "timestamp": 1700000005
           }
@@ -91,11 +98,11 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 
 如果数组中的对象**没有** `chat` 键，那么整个对象会被直接视为聊天数据本身（也就是系统会自动将其包装为 `{ "chat": <object> }`）：
 
-```json
+``` json
 [
   {
     "title": "My Conversation",
-    "models": ["llama3.2"],
+    "models": ["qwen3.6:27b"],
     "history": {
       "currentId": "message-id-2",
       "messages": {
@@ -112,7 +119,7 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
           "childrenIds": [],
           "role": "assistant",
           "content": "Hi there!",
-          "model": "llama3.2",
+          "model": "qwen3.6:27b",
           "done": true
         }
       }
@@ -130,7 +137,9 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 | `chat` | object | ✅ | 对话数据（见下方 Chat Data） |
 | `meta` | object | ❌ | 元数据，如 `tags`（字符串数组）。默认 `{}` |
 | `pinned` | boolean | ❌ | 聊天是否置顶。默认 `false` |
-| `folder_id` | string \| null | ❌ | 聊天应放入的文件夹 ID。默认 `null` |
+| `archived` | boolean | ❌ | 聊天是否已归档。默认 `false`。已归档的聊天会被导入到 **设置 > 已归档聊天** |
+| `variables` | object | ❌ | 为该聊天的[聊天变量](/features/chat-conversations/chat-features/chat-params#chat-variables)填入的值。默认 `{}` |
+| `folder_id` | string \| null | ❌ | 聊天应放入的文件夹 ID。默认 `null`。它必须指向一个你有权写入的文件夹，可以是你拥有的，也可以是你被授予写入权限的 |
 | `created_at` | integer \| null | ❌ | 聊天创建时间的 Unix 时间戳（秒） |
 | `updated_at` | integer \| null | ❌ | 聊天最后更新时间的 Unix 时间戳（秒） |
 
@@ -198,7 +207,7 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 
 它使用的是旧格式（没有 `chat` 包装），并且只包含一条用户消息。
 
-## FAQ
+## FAQ {#faq}
 
 **Q：导入聊天会覆盖现有对话吗？**  
 **A：** 不会。导入的聊天会与现有对话并列存在。

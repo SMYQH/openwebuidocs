@@ -6,7 +6,7 @@ sidebar_position: 2
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# Open Terminal & Terminals
+# Open Terminal & Terminals {#open-terminal--terminals}
 
 <ThemedImage
   alt="终端：一个带光标的屏幕方块"

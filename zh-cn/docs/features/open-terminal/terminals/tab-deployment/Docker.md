@@ -99,7 +99,7 @@ Open WebUI 将在 `http://localhost:3000` 上可用。当任何用户激活终�
 | `TERMINALS_IDLE_TIMEOUT_MINUTES` | `0` (禁用) | 容器停止前的非活动分钟数。对于典型使用，请设置为 `30`。 |
 | `TERMINALS_MAX_CPU` | (空) | 用户容器的 CPU 限制（例如 `2`）。 |
 | `TERMINALS_MAX_MEMORY` | (空) | 用户容器的内存限制（例如 `4Gi`）。 |
-| `TERMINALS_OPEN_WEBUI_URL` | (空) | 如果设置，则针对此 Open WebUI 实例验证传入的 JWT，而不是使用 `TERMINALS_API_KEY`。 |
+| `TERMINALS_OPEN_WEBUI_URL` | (空) | 如果设置，则针对此 Open WebUI 实例验证传入的 JWT，而不是使用 `TERMINALS_API_KEY`。管理员 API 仍需要该密钥。 |
 | `TERMINALS_ENABLE_UI` | `true` | 在 `/` 提供内置的最小化管理 UI。仅 API 部署时设为 `false`。 |
 | `TERMINALS_LOG_LEVEL` | `INFO` | 服务器和操作员日志级别（DEBUG、INFO、WARNING、ERROR、CRITICAL）。 |
 
@@ -110,7 +110,7 @@ Open WebUI 将在 `http://localhost:3000` 上可用。当任何用户激活终�
 <details>
 <summary>容器生命周期详情</summary>
 
-**命名。** 容器命名为 `terminals-<user-hash>`（其中 `<user-hash>` 是用户 ID 的 SHA-256 的前 12 个十六进制字符，用于生成 DNS 安全的名称），非默认策略下为 `terminals-<user-hash>-<policy>`。可使用 `docker ps --filter "label=app.kubernetes.io/managed-by=terminals"` 轻松过滤。
+**命名。** 容器命名为 `terminals-<user-hash>`（其中 `<user-hash>` 是用户 ID 的 SHA-256 的前 12 个十六进制字符，用于生成 DNS 安全的名称），非默认策略下为 `terminals-<user-hash>-<policy>`。可使用 `docker ps --filter "label=app.kubernetes.io/managed-by=terminals"` 轻松过滤。编排器还会以用户 id `system` 预配一个容器，Open WebUI 用它来读取策略的工具列表和系统提示词，因此看到一行不熟悉的用户是预期之内的。
 
 **健康检查。** 创建容器后，编排器会轮询其 `/health` 端点，直到返回 HTTP 200（最多 15 秒）。只有这样它才开始代理流量。
 

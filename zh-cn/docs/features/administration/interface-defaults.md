@@ -52,7 +52,7 @@ title: "默认界面设置"
 
 ---
 
-### 方式二：使用环境变量（`DEFAULT_INTERFACE_SETTINGS`） {#option-2-using-environment-variables-default_interface_settings}
+### 方式二：使用环境变量（`DEFAULT_INTERFACE_SETTINGS`） {#option-2-using-environment-variables-default\_interface\_settings}
 
 对于自动化部署，请使用 `DEFAULT_INTERFACE_SETTINGS` 环境变量来配置默认值。该值必须是一个表示 **JSON 对象**的 **JSON 字符串**，其键为[下表](#setting-keys)中列出的设置名称。
 
@@ -85,7 +85,7 @@ services:
 
 下面是 **Settings > Interface** 页面上的每一个选项，按页面中的出现顺序排列，并列出在 `DEFAULT_INTERFACE_SETTINGS` 中应使用的名称，以及在你未设置默认值时 Open WebUI 所使用的取值。
 
-### UI
+### UI {#ui}
 
 | 键 | 在 Settings > Interface 中的标签 | 内置默认值 |
 | --- | --- | --- |
@@ -153,7 +153,7 @@ services:
 | `insertPromptAsRichText` | Insert Prompt as Rich Text | `false` |
 | `largeTextAsFile` | Paste Large Text as File | `false` |
 
-### Artifacts
+### Artifacts {#artifacts}
 
 | 键 | 在 Settings > Interface 中的标签 | 内置默认值 |
 | --- | --- | --- |

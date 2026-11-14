@@ -3,7 +3,7 @@ sidebar_position: 3
 title: "事件"
 ---
 
-# 🔔 事件：在 Open WebUI 中使用 `__event_emitter__` 和 `__event_call__` {#events-using-\_\_event_emitter\_\_-and-\_\_event_call\_\_-in-open-webui}
+# 🔔 事件：在 Open WebUI 中使用 `__event_emitter__` 和 `__event_call__` {#events-using-\_\_event\_emitter\_\_-and-\_\_event\_call\_\_-in-open-webui}
 
 Open WebUI 的插件架构不仅仅是处理输入和产生输出——**它还涉及与 UI 和用户的实时交互式通信**。为了使你的 Tools、Functions 和 Pipes 更具动态性，Open WebUI 通过 `__event_emitter__` 和 `__event_call__` 辅助函数提供了内置事件系统。
 
@@ -53,7 +53,7 @@ POST /api/v1/chats/{chat_id}/messages/{message_id}/event
 
 你可以通过调用以下代码在 Tool 或 Function 的任何位置触发事件：
 
-```python
+``` python
 await __event_emitter__(
     {
         "type": "status",  # See the event types list below
@@ -72,7 +72,7 @@ await __event_emitter__(
 
 当你需要暂停执行直到用户响应时（如确认/取消对话框、代码执行或输入），使用 `__event_call__`：
 
-```python
+``` python
 result = await __event_call__(
     {
         "type": "input",  # Or "confirmation", "execute"
@@ -88,7 +88,26 @@ result = await __event_call__(
 ```
 
 :::tip 可配置的超时时间
-默认情况下，`__event_call__` 会在抛出超时异常之前，等待用户响应最长 **300 秒**（5 分钟）。该超时时间可通过 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout) 环境变量进行配置。如果你的用户需要更多时间填写表单、做出决策或完成复杂交互，请适当提高该值。
+默认情况下，`__event_call__` 会**一直等待**用户响应，因此一个无人应答的提示会无限期占用这次调用。请将 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout) 设置为秒数来限制它。两种失败模式都以普通返回值的形式返回，而不会抛出异常，因此请检查结果中是否有 `error` 键：
+
+| 情况 | `__event_call__` 返回什么 |
+|-----------|-------------------------------|
+| 浏览器已经断开 | `{"error": "Client session disconnected."}`，立即返回 |
+| 超时前无人应答 | `{"error": "Event call timed out. The browser tab may be inactive or closed."}` |
+
+超时并不会断开标签页。如果用户只是还没有作答，其会话仍然保持活跃，你可以再次向他提问。
+
+``` python
+result = await __event_call__(
+    {
+        "type": "confirmation",
+        "data": {"title": "Delete the file?", "message": "This cannot be undone."},
+    }
+)
+
+if isinstance(result, dict) and result.get("error"):
+    return f"Could not ask the user: {result['error']}"
+```
 :::
 
 ---
@@ -97,7 +116,7 @@ result = await __event_call__(
 
 当你发送或调用事件时，其基础结构如下：
 
-```json
+``` json
 {
   "type": "event_type",   // See full list below
   "data": { ... }         // Event-specific payload
@@ -135,11 +154,11 @@ result = await __event_call__(
 
 ### ❗ 各事件类型的详细说明 {#details-on-specific-event-types}
 
-### `status`
+### `status` {#status}
 
 在 UI 中显示状态/进度更新：
 
-```python
+``` python
 await __event_emitter__(
     {
         "type": "status",
@@ -166,13 +185,13 @@ await __event_emitter__(
 :::warning 始终发出最后一个 `done: True`
 如果你发出了 status 事件，请务必在状态序列结束时至少再发送一个 `done: True`。否则最后一条状态会无限保持闪烁动画，看起来就像处理从未结束——即使响应已经完成。
 
-```python
-# ✅ Correct pattern
+``` python
+# Correct pattern
 await __event_emitter__({"type": "status", "data": {"description": "Fetching data...", "done": False}})
 # ... do work ...
 await __event_emitter__({"type": "status", "data": {"description": "Complete!", "done": True}})
 
-# ⚠️ Broken pattern — shimmer never stops
+# Later, as you generate more:
 await __event_emitter__({"type": "status", "data": {"description": "Fetching data...", "done": False}})
 # ... do work, return result, but never sent done: True
 ```
@@ -192,11 +211,11 @@ await __event_emitter__({"type": "status", "data": {"description": "Fetching dat
 
 ---
 
-### `chat:message:delta` or `message`
+### `chat:message:delta` or `message` {#chatmessagedelta-or-message}
 
 **流式输出**（追加文本）：
 
-```python
+``` python
 await __event_emitter__(
     {
         "type": "chat:message:delta",  # or simply "message"
@@ -223,7 +242,7 @@ await __event_emitter__(
 
 **设置（或替换）整条消息内容：**
 
-```python
+``` python
 await __event_emitter__(
     {
         "type": "chat:message",  # or "replace"
@@ -240,7 +259,7 @@ await __event_emitter__(
 
 **附加或更新文件：**
 
-```python
+``` python
 await __event_emitter__(
     {
         "type": "files",  # or "chat:message:files"
@@ -264,16 +283,16 @@ await __event_emitter__(
 
 完整的载荷结构如下：
 
-```python
-await __event_emitter__(
-    {
-        "type": "embeds",  # 短名称；会持久化到数据库
+``` python
+    await __event_emitter__(
+        {
+        "type": "embeds",  # short name; persists to the DB
         "data": {
             "embeds": ["<html>…</html>", "https://example.com/widget"],
-            "replace": False,  # 可选，默认 False
+            "replace": False,  # optional, default False
         },
-    }
-)
+        }
+    )
 ```
 
 #### 追加 vs. 替换 {#append-vs-replace}
@@ -289,28 +308,31 @@ await __event_emitter__(
 
 #### 示例：在工具结束时追加单个 embed {#example-append-a-single-embed-at-the-end-of-a-tool}
 
-```python
+
+``` python
 async def get_weather_dashboard(self, city: str, __event_emitter__) -> str:
-    html = build_dashboard_html(city)  # 你的渲染器
-    await __event_emitter__(
-        {
-            "type": "embeds",
+    html = build_dashboard_html(city)  # your renderer
+        await __event_emitter__(
+            {
+                "type": "embeds",
             "data": {"embeds": [html]},
-        }
-    )
+            }
+        )
     return f"Rendered weather dashboard for {city}."
 ```
-
 #### 示例：从 pipe 替换实时进度 widget {#example-replace-a-live-progress-widget-from-a-pipe}
 
-```python
+
+用户重新加载聊天时，`message.embeds` 只包含一条最新记录，而不是五个叠加的进度卡。
+
+``` python
 async def pipe(self, body: dict, __event_emitter__):
     for step in range(1, 6):
         progress_html = f"""
             <div style="font-family:system-ui;padding:1rem;">
-              <h3>正在为你的资料库建立索引</h3>
+              <h3>Indexing your library</h3>
               <progress value="{step}" max="5" style="width:100%;"></progress>
-              <p>第 {step} 步，共 5 步……</p>
+              <p>Step {step} of 5…</p>
             </div>
         """
         await __event_emitter__(
@@ -318,27 +340,25 @@ async def pipe(self, body: dict, __event_emitter__):
                 "type": "embeds",
                 "data": {
                     "embeds": [progress_html],
-                    "replace": True,  # 覆盖，不叠加
+                    "replace": True,  # overwrite, don't stack
                 },
             }
         )
         await asyncio.sleep(2)
 
-    # 最终状态——同样替换，消息上只剩一个 embed
+    # Final state, also replaces, leaving exactly one embed on the message
     await __event_emitter__(
         {
             "type": "embeds",
-            "data": {"embeds": ["<div>✅ 索引已完成。</div>"], "replace": True},
+            "data": {"embeds": ["<div>Library indexed.</div>"], "replace": True},
         }
     )
     yield "Indexing complete."
 ```
-
-用户重新加载聊天时，`message.embeds` 只包含一条最新记录，而不是五个叠加的进度卡。
-
 #### 示例：清除所有 embeds {#example-clear-all-embeds}
 
-```python
+
+``` python
 await __event_emitter__(
     {
         "type": "embeds",
@@ -346,7 +366,6 @@ await __event_emitter__(
     }
 )
 ```
-
 #### 注意事项 {#notes}
 
 - **持久化需使用短名称。** 发送 `"embeds"`（或 `"chat:message:embeds"`），但请注意只有短名称 `"embeds"` 才会持久化到数据库——参见下方的[持久化表格](#which-event-types-are-persisted-to-the-database)。`replace` 标志对未持久化的别名无效。
@@ -355,36 +374,30 @@ await __event_emitter__(
 
 ---
 
-### `chat:title`
+### `chat:title` {#chattitle}
 
 **更新聊天标题：**
 
-```python
+``` python
 await __event_emitter__(
     {
         "type": "chat:title",
-        "data": {
-            "title": "Market Analysis Bot Session"
-        },
+        "data": "Market Analysis Bot Session",
     }
 )
 ```
 
 ---
 
-### `chat:tags`
+### `chat:tags` {#chattags}
 
 **更新聊天标签：**
 
-```python
-await __event_emitter__(
-    {
-        "type": "chat:tags",
-        "data": {
-            "tags": ["finance", "AI", "daily-report"]
-        },
-    }
-)
+``` python
+from open_webui.models.chats import Chats
+
+await Chats.update_chat_tags_by_id(chat_id, ["finance", "AI", "daily-report"], user)
+await __event_emitter__({"type": "chat:tags", "data": {}})
 ```
 
 ---
@@ -393,20 +406,30 @@ await __event_emitter__(
 
 **添加参考/引用：**
 
-```python
+``` python
 await __event_emitter__(
     {
         "type": "source",  # or "citation"
         "data": {
-            # Open WebUI Source (Citation) Object
+            "source": {"name": "My Source Name", "id": "my-source-id"},
+            "document": ["The exact text passage being cited."],
+            "metadata": [
+                {
+                    "source": "https://example.com/page",
+                    "name": "Page Title",
+                    "url": "https://example.com/page",
+                }
+            ],
         }
     }
 )
 ```
 
+`document` 与 `metadata` 是平行的列表（每条被引用的段落对应一个条目）。`source.name` / `source.id` 用于标注引用分组，而每个 `metadata` 条目的 `source` / `url` 则是显示在回复下方的链接。外部工具（OpenAPI 与 MCP）会发出同样的 `source` 事件——它们把 `{"type": "source", "data": {...}}` 这样的请求体 POST 到[事件端点](#external-tool-events)；MCP 搜索工具正是通过这种方式附加引用的，在原生函数调用模式下也是如此。
+
 **用于代码执行（跟踪执行状态）：**
 
-```python
+``` python
 await __event_emitter__(
     {
         "type": "source",
@@ -419,11 +442,11 @@ await __event_emitter__(
 
 ---
 
-### `notification`
+### `notification` {#notification}
 
 **显示 toast 通知：**
 
-```python
+``` python
 await __event_emitter__(
     {
         "type": "notification",
@@ -437,11 +460,11 @@ await __event_emitter__(
 
 ---
 
-### `chat:message:favorite`
+### `chat:message:favorite` {#chatmessagefavorite}
 
 **更新消息的收藏/置顶状态：**
 
-```python
+``` python
 await __event_emitter__(
     {
         "type": "chat:message:favorite",
@@ -455,7 +478,7 @@ await __event_emitter__(
 **它具体做了什么：**
 这个事件会强制 Open WebUI 前端更新本地缓存中的消息 “favorite” 状态。如果没有这个发射器，某个 **Action Function** 直接修改数据库里的 `message.favorite` 字段，前端（它维护着自己的状态）可能会在下一次自动保存时覆盖你的改动。这个发射器能确保 UI 与数据库完全同步。
 
-:::note Designed for Actions
+:::note 专为 Action 设计
 虽然从技术上讲，任何插件类型（tools、pipes、filters）都可以发出这个事件，但它 **是为 Actions 设计并且在 Actions 中最有意义** 的。Actions 处理的是现有消息，并且可以直接修改数据库。如果从 pipe 或 tool 发出这个事件，只会临时更新前端状态；除非插件同时也把改动写入数据库，否则在下一次聊天自动保存时，这个改动就会丢失。
 :::
 
@@ -468,11 +491,11 @@ await __event_emitter__(
 
 ---
 
-### `confirmation`（**需要** `__event_call__`） {#confirmation-requires-\_\_event_call\_\_}
+### `confirmation`（**需要** `__event_call__`） {#confirmation-requires-\_\_event\_call\_\_}
 
 **显示确认对话框并获取用户响应：**
 
-```python
+``` python
 result = await __event_call__(
     {
         "type": "confirmation",
@@ -497,11 +520,11 @@ else:
 
 ---
 
-### `input`（**需要** `__event_call__`） {#input-requires-\_\_event_call\_\_}
+### `input`（**需要** `__event_call__`） {#input-requires-\_\_event\_call\_\_}
 
 **提示用户输入文本：**
 
-```python
+``` python
 result = await __event_call__(
     {
         "type": "input",
@@ -526,7 +549,7 @@ await __event_emitter__(
 
 若要隐藏敏感输入（例如 API key、密码），请在数据载荷中将 `type` 设为 `"password"`。输入框会以带显示/隐藏切换的掩码密码框形式渲染：
 
-```python
+``` python
 result = await __event_call__(
     {
         "type": "input",
@@ -550,7 +573,7 @@ result = await __event_call__(
 
 若想提供一组固定选项而不是自由文本，请在数据载荷中传入 `"input": {"type": "select", "options": ["a", "b"]}`。取消对话框时返回的是 `false` 而不是字符串，因此使用该值之前请先判断。
 
-### `execute`（同时适用于 `__event_call__` 和 `__event_emitter__`） {#execute-works-with-both-\_\_event_call\_\_-and-\_\_event_emitter\_\_}
+### `execute`（同时适用于 `__event_call__` 和 `__event_emitter__`） {#execute-works-with-both-\_\_event\_call\_\_-and-\_\_event\_emitter\_\_}
 
 **直接在用户浏览器中运行 JavaScript。**
 
@@ -561,9 +584,10 @@ result = await __event_call__(
 | `__event_call__` | 运行 JS 并 **等待返回值**（双向） | 你需要在 Python 里拿到结果（例如读取 `localStorage`、检测浏览器状态） |
 | `__event_emitter__` | 运行 JS，**只发出不等待**（单向） | 你不需要结果（例如触发文件下载、操作 DOM） |
 
-#### 双向示例（使用 `__event_call__`） {#two-way-example-with-\_\_event_call\_\_}
+#### 双向示例（使用 `__event_call__`） {#two-way-example-with-\_\_event\_call\_\_}
 
-```python
+
+``` python
 result = await __event_call__(
     {
         "type": "execute",
@@ -583,17 +607,23 @@ await __event_emitter__(
     }
 )
 ```
+#### 只发不等示例（使用 `__event_emitter__`） {#fire-and-forget-example-with-\_\_event\_emitter\_\_}
 
-#### 只发不等示例（使用 `__event_emitter__`） {#fire-and-forget-example-with-\_\_event_emitter\_\_}
 
-```python
-# Trigger a blob download — no return value needed
+:::tip iOS PWA 兼容性
+在 iOS Safari（尤其是 PWA / 独立模式）中，使用 `__event_call__` 触发 blob 下载可能会报 `"TypeError: Load failed"`——浏览器处理下载时，双向响应通道会断开。改用 `__event_emitter__`（只发不等）可以完全避免这个问题，因为它不需要响应通道。
+
+如果你的 `execute` 代码会触发文件下载，而且你并不需要返回值，那么为了获得最高的跨平台兼容性，请优先使用 `__event_emitter__`。
+:::
+
+``` python
+# Trigger a blob download, no return value needed
 try:
     await __event_emitter__(
-        {
-            "type": "execute",
-            "data": {
-                "code": """
+    {
+        "type": "execute",
+        "data": {
+            "code": """
                     (function() {
                         const blob = new Blob([data], {type: 'application/octet-stream'});
                         const url = URL.createObjectURL(blob);
@@ -605,20 +635,13 @@ try:
                         URL.revokeObjectURL(url);
                         a.remove();
                     })();
-                """
-            }
+            """
         }
-    )
+    }
+)
 except Exception:
     pass
 ```
-
-:::tip iOS PWA 兼容性
-在 iOS Safari（尤其是 PWA / 独立模式）中，使用 `__event_call__` 触发 blob 下载可能会报 `"TypeError: Load failed"`——浏览器处理下载时，双向响应通道会断开。改用 `__event_emitter__`（只发不等）可以完全避免这个问题，因为它不需要响应通道。
-
-如果你的 `execute` 代码会触发文件下载，而且你并不需要返回值，那么为了获得最高的跨平台兼容性，请优先使用 `__event_emitter__`。
-:::
-
 #### 它是如何工作的 {#how-it-works}
 
 `execute` 事件会使用 `new Function()` **直接在主页面上下文中**运行 JavaScript。这意味着：
@@ -634,7 +657,8 @@ except Exception:
 
 #### 示例：显示自定义表单 {#example-display-a-custom-form}
 
-```python
+
+``` python
 result = await __event_call__(
     {
         "type": "execute",
@@ -665,7 +689,6 @@ result = await __event_call__(
 )
 # result will be {"name": "...", "email": "..."}
 ```
-
 #### `execute` 与 Rich UI 嵌入的对比 {#execute-vs-rich-ui-embeds}
 
 `execute` 事件和 [Rich UI 嵌入](/features/extensibility/plugin/development/rich-ui) 是创建交互体验的两种互补方式：
@@ -681,6 +704,8 @@ result = await __event_call__(
 临时交互（确认、定制对话框、触发下载、读取页面状态）请使用 `execute`；想在对话中长期保留的可视化内容，则使用 Rich UI 嵌入。
 
 :::warning
+如果 JavaScript 抛出异常，浏览器会记录错误并且永远不会回复，于是 `__event_call__` 会一直等待，直到 `WEBSOCKET_EVENT_CALLER_TIMEOUT` 超时——默认情况下等同于永不超时。请用 `try` 和 `catch` 包住代码，并从 `catch` 分支中 `return` 一个错误值。
+
 由于 `execute` 在用户浏览器会话中运行未沙箱化的 JavaScript，它拥有对 Open WebUI 页面上下文的完整访问权限。仅在受信函数中使用此事件——切勿通过它执行不受信任或用户提供的代码。
 :::
 
@@ -701,20 +726,20 @@ result = await __event_call__(
 
 **为什么只靠事件传内容对 Pipe 来说很脆弱**：当 Pipe 完成时，前端会把整个聊天历史（包括其本地状态中的所有消息内容）保存回数据库。这个全量保存可能会 **覆盖** 后端事件发射器之前持久化的内容。如果 Pipe 返回 `None` 或空字符串，并且只依赖 `type: "message"` 事件传内容，那么最终保存时可能会把空内容写入数据库——把事件发射器写进去的内容擦掉。
 
-```python
-# ❌ Fragile: relies only on events for content — can be overwritten on save
+``` python
+# Fragile: relies only on events for content — can be overwritten on save
 async def pipe(self, body: dict, __event_emitter__=None):
     await __event_emitter__({"type": "message", "data": {"content": "Hello!"}})
     # Returns None — frontend may save empty content, overwriting the emitted content
 
-# ✅ Correct: return content directly, use events for supplementary data
+# Correct: return content directly, use events for supplementary data
 async def pipe(self, body: dict, __event_emitter__=None):
     await __event_emitter__({"type": "status", "data": {"description": "Working...", "done": False}})
     result = "Hello!"
     await __event_emitter__({"type": "status", "data": {"description": "Done", "done": True}})
     return result
 
-# ✅ Also correct: yield for streaming, use events for supplementary data
+# Also correct: yield for streaming, use events for supplementary data
 async def pipe(self, body: dict, __event_emitter__=None):
     await __event_emitter__({"type": "status", "data": {"description": "Streaming...", "done": False}})
     for chunk in ["Hello", ", ", "world", "!"]:
@@ -737,7 +762,7 @@ async def pipe(self, body: dict, __event_emitter__=None):
 
 ### 问：如何为用户触发通知？ {#q-how-do-i-trigger-a-notification-for-the-user}
 使用 `notification` 类型：
-```python
+``` python
 await __event_emitter__({
     "type": "notification",
     "data": {"type": "success", "content": "Task complete"}
@@ -746,7 +771,7 @@ await __event_emitter__({
 
 ### 问：如何提示用户输入并获取答案？ {#q-how-do-i-prompt-the-user-for-input-and-get-their-answer}
 使用：
-```python
+``` python
 response = await __event_call__({
     "type": "input",
     "data": {
@@ -756,10 +781,10 @@ response = await __event_call__({
     }
 })
 
-# response will be: {"value": "user's answer"}
+# response is the raw string the user typed
 ```
 
-### 问：`__event_call__` 可用哪些事件类型？ {#q-what-event-types-are-available-for-\_\_event_call\_\_}
+### 问：`__event_call__` 可用哪些事件类型？ {#q-what-event-types-are-available-for-\_\_event\_call\_\_}
 - `"input"`：输入框对话框
 - `"confirmation"`：是/否、确定/取消对话框
 - `"execute"`：在客户端运行提供的代码并返回结果（也可与 `__event_emitter__` 配合用于发出即忘——见上方 [execute](#execute-works-with-both-__event_call__-and-__event_emitter__)）
@@ -775,39 +800,20 @@ response = await __event_call__({
 
 ---
 
-## 🌐 外部工具事件 {#external-tool-events}
+## 外部工具事件 {#external-tool-events}
 
 外部工具（OpenAPI 和 MCP 服务器）可以通过 REST 端点向 Open WebUI UI 发出事件。这使得运行在外部服务器上的工具也能实现状态更新、通知和流式内容等功能。
-
-### 外部工具（OpenAPI & MCP） {#external-tool-events}
-
-外部工具可以通过**专用 REST 端点**发出事件。当设置 `ENABLE_FORWARD_USER_INFO_HEADERS=True` 时，Open WebUI 将以下标头传递给所有外部工具请求：
-
-| 标头 | 说明 |
-|--------|-------------|
-| `X-Open-WebUI-Chat-Id` | 触发该工具调用的聊天 ID |
-| `X-Open-WebUI-Message-Id` | 与本次工具调用关联的消息 ID |
-
-你的外部工具可以使用这些标头通过以下方式将事件发送回 UI：
-
-```
-POST /api/v1/chats/{chat_id}/messages/{message_id}/event
-```
-
-详情参见下方的[外部工具事件](#external-tool-events)。
-
----
 
 ### 前提条件 {#prerequisites}
 
 要接收聊天 ID 和消息 ID 的标头，你必须在 Open WebUI 实例上启用标头转发，并设置以下环境变量：
 
-```
-ENABLE_FORWARD_USER_INFO_HEADERS=True
-```
 
 否则，Open WebUI 不会在请求外部工具时包含这些识别标头，事件发射也就无法工作。
 
+```
+ENABLE_FORWARD_USER_INFO_HEADERS=True
+```
 ### Open WebUI 提供的标头 {#headers-provided-by-open-webui}
 
 当 Open WebUI 调用你的外部工具（且已启用标头转发）时，它会带上以下标头：
@@ -838,7 +844,7 @@ ENABLE_FORWARD_USER_INFO_HEADERS=True
 
 **请求体：**
 
-```json
+``` json
 {
   "type": "status",
   "data": {
@@ -864,13 +870,14 @@ ENABLE_FORWARD_USER_INFO_HEADERS=True
 
 ### 示例：Python 外部工具 {#example-python-external-tool}
 
-```python
+
+``` python
 import httpx
 
 def my_tool_handler(request):
     # Extract headers from incoming request
-    chat_id = request.headers.get("X-Open-WebUI-Chat-Id")
-    message_id = request.headers.get("X-Open-WebUI-Message-Id")
+    chat_id = request.headers.get("X-OpenWebUI-Chat-Id")
+    message_id = request.headers.get("X-OpenWebUI-Message-Id")
     api_key = "your-open-webui-api-key"
     
     # Emit a status event
@@ -897,10 +904,9 @@ def my_tool_handler(request):
     
     return {"result": "success"}
 ```
-
 ### 示例：JavaScript/Node.js 外部工具 {#example-javascriptnodejs-external-tool}
 
-```javascript
+``` javascript
 async function myToolHandler(req) {
   const chatId = req.headers['x-open-webui-chat-id'];
   const messageId = req.headers['x-open-webui-message-id'];
@@ -946,7 +952,7 @@ async function myToolHandler(req) {
 :::info 没有执行超时
 Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运行几分钟甚至几小时——Open WebUI 本身不会自动终止它。能停止运行中任务的只有：
 - 函数本身返回或抛出异常
-- 通过 `POST /api/tasks/stop/{task_id}` 手动取消（UI 中的停止按钮）
+- 手动取消。界面中的停止按钮会调用 `POST /api/tasks/chat/{chat_id}/stop`；按任务停止的 `POST /api/tasks/stop/{task_id}` 仅限管理员使用，在没有 chat id 时作为回退方案
 - Open WebUI 服务进程重启
 :::
 
@@ -956,16 +962,18 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 
 #### ✅ 会持久化（关闭标签页后仍保留） {#persisted-survive-tab-close}
 
+临时聊天或频道消息不会写入以下任何内容，因为两者都没有可供写入的已保存聊天记录。
+
 | 类型 | 保存了什么 |
 |------|-------------|
 | `status` | 追加到消息的 `statusHistory` 数组 |
 | `message` | 追加到消息的 `content` 字段 |
 | `replace` | 覆盖消息的 `content` 字段 |
-| `embeds` | 追加到消息的 `embeds` 数组（Rich UI HTML），或者在设置了 `data.replace: true` 时整体替换。完整 payload 形式和实时进度示例参见 [`embeds`](#embeds-or-chatmessageembeds)。 |
-| `files` | 追加到消息的 `files` 数组 |
-| `source` / `citation` | 追加到消息的 `sources` 数组 |
+| `embeds` | 合并进消息的 `embeds` 数组（Rich UI HTML），最新的排在最前；当设置了 `data.replace: true` 时则整体替换。完整 payload 形式和实时进度示例参见 [`embeds`](#embeds-or-chatmessageembeds)。 |
+| `files` | 合并进消息的 `files` 数组，最新的排在最前 |
+| `source` / `citation` | 追加到消息的 `sources` 数组，但前提是 payload 本身没有 `type` 字段。像 `code_execution` 这类带类型的来源不会由事件发射器写入；它会抵达浏览器，由浏览器在保存聊天时把它存到消息上。 |
 
-这 6 种类型都会在事件发射器函数内部直接写入数据库，完全不依赖 `ENABLE_REALTIME_CHAT_SAVE`。
+这 6 种类型都会在事件发射器函数内部直接写入数据库。
 
 :::warning 使用短名称以便持久化
 后端事件发射器只识别上面这些短名称来执行数据库写入。如果你发送的是 `"chat:message:embeds"` 而不是 `"embeds"`，前端虽然会以相同方式处理，但 **后端不会持久化它**。如果你需要持久化，请始终使用短名称（`"status"`、`"message"`、`"replace"`、`"embeds"`、`"files"`、`"source"`）。
@@ -1016,7 +1024,7 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 
 无论浏览器状态如何，当任务完成时，你的函数最终返回值都会 **始终** 保存到数据库。
 
-#### Pipes
+#### Pipes {#pipes}
 
 当 Pipe 的 `pipe()` 方法返回（或者生成器结束 yield）时，流式处理器会在完成时保存最终结果：
 - 如果 `ENABLE_REALTIME_CHAT_SAVE` **开启**：在流式过程中会保存中间片段
@@ -1028,7 +1036,7 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 返回值会优先于事件发出的内容。如果你的 Pipe 发出 `"message"` 事件但返回 `None`，最终保存的内容会是空的——前端的最终保存会覆盖事件发射器写入数据库的内容。请始终直接从 `pipe()` 方法返回或 yield 你的内容。
 :::
 
-#### Tools
+#### Tools {#tools}
 
 | 返回类型 | 会发生什么 | 是否持久化？ |
 |-------------|-------------|-----------|
@@ -1037,7 +1045,7 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 | `str` / `dict` | 作为工具结果文本使用 | ✅ 是 |
 | `list`（MCP） | 文字项拼接，图片转换为文件 | ✅ 是 |
 
-#### Actions
+#### Actions {#actions}
 
 Actions 与 tools 使用相同的返回值处理方式。相同的持久化规则同样适用：
 
@@ -1047,7 +1055,7 @@ Actions 与 tools 使用相同的返回值处理方式。相同的持久化规�
 | `HTMLResponse`（不带 inline） | 正文解码为纯文本结果 | ✅ 是 |
 | `str` / `dict` | 作为 Action 结果文本使用 | ✅ 是 |
 
-#### Filters
+#### Filters {#filters}
 
 Filters 会在管线中转换 `form_data`——它们不会直接向用户返回结果。不过，Filters **确实会收到 `__event_emitter__`**，并且可以发出像 `"status"`、`"embeds"`、`"message"` 等可持久化的事件类型。
 

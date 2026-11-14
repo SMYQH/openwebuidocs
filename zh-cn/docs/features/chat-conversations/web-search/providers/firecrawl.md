@@ -28,7 +28,7 @@ title: "Firecrawl"
 ## 前提条件 {#prerequisites}
 
 - **已安装 Open WebUI**：正在运行的 Open WebUI 实例（本地或 Docker）。
-- **Firecrawl API 密钥**：来自 [firecrawl.dev](https://firecrawl.dev) 的托管服务，或来自你自己的自托管 Firecrawl 部署。
+- **Firecrawl API 密钥**：来自 [firecrawl.dev](https://firecrawl.dev) 的托管服务。若使用未启用鉴权的自托管部署，可以留空，此时不会发送 `Authorization` 请求头。
 - **管理员权限**：对 Open WebUI 实例的管理员访问权限。
 
 ## 配置步骤 {#configuration}
@@ -40,7 +40,7 @@ title: "Firecrawl"
 3. 开启**启用网络搜索**开关。
 4. 从**网络搜索引擎**下拉菜单中选择 **Firecrawl**（引擎值为 `firecrawl`）。
 5. 将你的密钥粘贴到 **Firecrawl API 密钥**字段。
-6. （仅自托管）将 **Firecrawl API 基础 URL** 设置为你的实例，例如 `https://firecrawl.example.com`。默认为 `https://api.firecrawl.dev`。
+6. （仅自托管）将 **Firecrawl API 基础 URL** 设置为你的实例地址，例如 `https://firecrawl.example.com`。Open WebUI 会自行追加 `/v2/search` 和 `/v2/scrape`，因此除非版本路径就是 `/v2`，否则不要包含版本路径。默认为 `https://api.firecrawl.dev`。
 7. 保存。
 
 然后开始一个聊天，在提示词字段中用 **+** 按钮启用网络搜索，运行一个查询以确认 Firecrawl 返回结果。

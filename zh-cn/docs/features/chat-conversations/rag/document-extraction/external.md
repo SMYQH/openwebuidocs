@@ -36,7 +36,7 @@ PUT {EXTERNAL_DOCUMENT_LOADER_URL}/process
 - **请求体**：未经修改的原始文件字节。
 - **`Content-Type`**：检测到的文件 MIME 类型。
 - **`Authorization`**：如果配置了 API key，则为 `Bearer {EXTERNAL_DOCUMENT_LOADER_API_KEY}`。
-- **`X-Filename`**：已存储的文件名 `<file id>_<原始名称>`，经过 URL 编码。在自定义请求头中使用 `{{FILE_NAME}}` 占位符，即可单独收到原始名称。
+- **`X-Filename`**：已存储的文件名 `<file id>_<original name>`，经过 URL 编码。在自定义请求头中使用 `{{FILE_NAME}}` 占位符，即可单独收到原始名称。
 - 在 **Headers** / [`EXTERNAL_DOCUMENT_LOADER_HEADERS`](/reference/env-configuration#external_document_loader_headers) 中设置的任何请求头，一个带占位符模板的自定义请求头 JSON 对象：`{{FILE_ID}}`、`{{FILE_NAME}}`、`{{FILE_CONTENT_TYPE}}`、`{{USER_ID}}`、`{{USER_NAME}}`、`{{USER_EMAIL}}`、`{{USER_ROLE}}`、`{{USER_GROUPS}}`、`{{USER_GROUP_IDS}}`。
 - 自动转发的用户身份：若设置了 [`FORWARD_USER_INFO_HEADER_JWT_SECRET`](/reference/env-configuration#forward_user_info_header_jwt_secret)，则以签名 JWT 的形式放在 `X-OpenWebUI-User-Jwt` 中；否则使用普通的 `X-OpenWebUI-User-Name`、`X-OpenWebUI-User-Id`、`X-OpenWebUI-User-Email` 和 `X-OpenWebUI-User-Role` 请求头。
 

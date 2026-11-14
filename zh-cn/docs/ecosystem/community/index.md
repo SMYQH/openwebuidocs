@@ -6,7 +6,7 @@ sidebar_position: 0
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# Open WebUI Community
+# Open WebUI Community {#open-webui-community}
 
 <ThemedImage
   alt="Open WebUI 社区：一面帖子看板，其中一张被取出并指向你的实例"

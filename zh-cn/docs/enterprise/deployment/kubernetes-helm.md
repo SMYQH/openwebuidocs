@@ -64,31 +64,33 @@ helm install openwebui open-webui/open-webui -f values.yaml
 
 你的 `values.yaml` 应覆盖默认值，并指向共享基础设施。Chart 已为许多常见设置提供专用配置项——在可用时，应优先使用这些配置项，而不是直接传裸环境变量：
 
-```yaml
-# values.yaml 覆盖示例（完整结构请参考 chart 文档）
+``` yaml
+# Example values.yaml overrides (refer to chart documentation for full schema)
 replicaCount: 3
 
-# -- 数据库：使用外部 PostgreSQL 实例
+# -- Database: use an external PostgreSQL instance
 databaseUrl: "postgresql://user:password@db-host:5432/openwebui"
 
-# -- WebSocket 与 Redis：chart 可以在集群内自动部署 Redis，
-#    也可以通过 websocket.url 指向外部 Redis 实例
+# -- WebSocket & Redis: the chart can auto-deploy Redis in-cluster,
+#    or you can point to an external Redis instance via websocket.url
 websocket:
   enabled: true
   manager: redis
-# url: "redis://my-external-redis:6379/0"  # 如使用外部 Redis，请取消注释
+  # url: "redis://my-external-redis:6379/0"  # uncomment to use external Redis
   redis:
     enabled: true  # set to false if using external Redis
 
-# -- Tika：chart 可在集群内自动部署 Tika
+# -- Tika: the chart can auto-deploy Tika in-cluster
 tika:
   enabled: true
 
-# -- Ollama：如果使用外部模型 API 或独立 Ollama 部署，请关闭
+# -- Ollama and Pipelines are deployed by default; disable what you do not use
 ollama:
   enabled: false
+pipelines:
+  enabled: false
 
-# -- 存储：多副本场景建议使用对象存储而不是本地 PVC
+# -- Storage: use object storage instead of local PVC for multi-replica
 persistence:
   provider: s3  # or "gcs" / "azure"
   s3:
@@ -98,26 +100,21 @@ persistence:
     accessKeyExistingAccessKey: "access-key"
     secretKeyExistingSecret: "openwebui-s3-creds"
     secretKeyExistingSecretKey: "secret-key"
-  # -- 或者，也可以用共享文件系统（RWX PVC）替代对象存储：
+  # -- Alternatively, use a shared filesystem (RWX PVC) instead of object storage:
   # provider: local
   # accessModes:
   #   - ReadWriteMany
   # storageClass: "efs-sc"
 
-# -- Ingress：若通过 ingress controller 对外暴露，请在此配置
+# -- Ingress: configure if exposing via an ingress controller
 ingress:
   enabled: true
   class: "nginx"
   host: "ai.example.com"
   tls: true
   existingSecret: "openwebui-tls"
-  annotations:
-    nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingress.kubernetes.io/session-cookie-name: "open-webui-session"
-    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
-    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
 
-# -- 其余没有专用 chart 配置项的设置
+# -- Remaining settings that don't have dedicated chart values
 extraEnvVars:
   - name: WEBUI_SECRET_KEY
     valueFrom:
@@ -125,12 +122,7 @@ extraEnvVars:
         name: openwebui-secrets
         key: secret-key
   - name: VECTOR_DB
-    value: "pgvector"
-  - name: PGVECTOR_DB_URL
-    valueFrom:
-      secretKeyRef:
-        name: openwebui-secrets
-        key: database-url
+    value: "pgvector"  # uses DATABASE_URL unless PGVECTOR_DB_URL is set
   - name: UVICORN_WORKERS
     value: "1"
   - name: ENABLE_DB_MIGRATIONS

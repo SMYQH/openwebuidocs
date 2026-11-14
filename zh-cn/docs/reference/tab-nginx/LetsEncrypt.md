@@ -1,13 +1,5 @@
-# 使用 Let's Encrypt
 
-Let's Encrypt 提供免费且被大多数浏览器信任的 SSL 证书，非常适合保护生产环境。
-
-本指南采用两阶段流程：
-
-1. **第一阶段：** 临时运行 Nginx，证明你拥有该域名，并从 Let's Encrypt 获取证书。
-2. **第二阶段：** 重新配置 Nginx，使用新证书提供安全的 HTTPS 连接。
-
-### Let''s Encrypt {#lets-encrypt}
+### Let's Encrypt {#lets-encrypt}
 
 Let's Encrypt 提供免费的 SSL 证书，被大多数浏览器信任，非常适合为你的生产环境提供保护。
 
@@ -16,7 +8,7 @@ Let's Encrypt 提供免费的 SSL 证书，被大多数浏览器信任，非常�
 1.  **阶段 1：** 临时运行 Nginx，证明你拥有该域名，并从 Let's Encrypt 获取证书。
 2.  **阶段 2：** 重新配置 Nginx，使用新证书建立安全的 HTTPS 连接。
 
-## 前提条件 {#prerequisites}
+#### 前提条件 {#prerequisites}
 
 * 一个 **域名**（例如 `my-webui.com`），并带有指向服务器公网 IP 的 **DNS `A` 记录**。
 * 已在服务器上安装 **Docker** 和 **Docker Compose**。

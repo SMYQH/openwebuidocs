@@ -39,7 +39,7 @@ az login
 
 ## Docker 配置 {#docker-configuration}
 
-### Dockerfile
+### Dockerfile {#dockerfile}
 
 创建或修改 Dockerfile，以便安装 Azure CLI：
 
@@ -49,7 +49,7 @@ RUN pip install azure-cli
 CMD [ "bash", "start.sh"]
 ```
 
-### Docker Compose
+### Docker Compose {#docker-compose}
 
 配置 `docker-compose.yml`，将 Azure CLI 配置目录挂载到容器内，并设置相应环境变量：
 
@@ -73,14 +73,14 @@ services:
     container_name: open-webui
     volumes:
       - open-webui:/app/backend/data
-      - ${HOME}/.azure:/app/.azure # 这是关键部分；Windows 上请将 ${HOME}/.azure 改为 %USERPROFILE%\.azure*
+      - ${HOME}/.azure:/app/.azure # THIS IS THE IMPORTANT BIT, FOR WINDOWS REPLACE ${HOME}/.azure with %USERPROFILE%\.azure*
     depends_on:
       - ollama
     ports:
       - ${OPEN_WEBUI_PORT-3000}:8080
     environment:
       - 'OLLAMA_BASE_URL=http://ollama:11434/'
-      - AZURE_CONFIG_DIR=/app/.azure # 这是关键部分*
+      - AZURE_CONFIG_DIR=/app/.azure # THIS IS THE IMPORTANT BIT*
       - 'WEBUI_SECRET_KEY='
     extra_hosts:
       - host.docker.internal:host-gateway

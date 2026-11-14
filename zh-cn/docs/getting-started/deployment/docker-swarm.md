@@ -4,7 +4,7 @@ sidebar_position: 15
 title: "Docker Swarm"
 ---
 
-# Docker Swarm
+# Docker Swarm {#docker-swarm}
 
 本栈将 Open WebUI、ChromaDB 与 Ollama 作为三个服务部署在 Docker Swarm 中。它假设你已经运行了一个 Swarm。
 
@@ -20,7 +20,7 @@ ChromaDB 作为独立的 HTTP 服务器运行，Open WebUI 通过 [`CHROMA_HTTP_
 mkdir -p data/open-webui data/chromadb data/ollama
 ```
 
-#### Docker-stack.yaml
+#### Docker-stack.yaml {#docker-stackyaml}
 
 ```yaml title="docker-stack.yaml"
 services:

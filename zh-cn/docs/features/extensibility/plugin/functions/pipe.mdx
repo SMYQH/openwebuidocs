@@ -123,20 +123,16 @@ class Pipe:
 
 ### 说明 {#explanation}
 
-### `pipes` 函数
+- **`pipes` 函数**：
+  - 返回一个字典列表。`pipes` 也可以是普通的列表属性，或者是一个异步函数。
+  - 每个字典代表一个模型，其中 `id` 和 `name` 键必须唯一。模型 id 会变成 `<function id>.<id>`，Open WebUI 通过按第一个点号切分来还原函数 id，因此子 id 本身可以包含点号。类上的 `name` 属性会被加到每个子模型名称的前面。
+  - 这些模型会在 Open WebUI 的模型选择器中单独显示。
+  - 如果 `pipes()` 抛出异常，该函数不会贡献任何模型。如果某个条目缺少 `id` 或 `name`，整个函数都会被跳过。
+  - 函数 id 本身必须是合法的 Python 标识符，并且以小写形式保存。
 
-- 返回一个字典列表。`pipes` 也可以是一个普通的列表属性，或者是一个异步函数。
-- 每个字典代表一个模型，包含唯一的 `id` 和 `name` 键。模型 id 会变成 `<function id>.<id>`，Open WebUI 通过在第一个点处切分来还原 function id，因此子 id 自身可以包含点。类上的 `name` 属性会被添加到每个子模型名称之前。
-- 这些模型会分别显示在 Open WebUI 的模型选择器中。
-- 如果 `pipes()` 抛出异常，该函数不会贡献任何模型。如果某个条目缺少 `id` 或 `name`，整个函数会被跳过。
-- function id 本身必须是合法的 Python 标识符，并且会以小写形式存储。
-
-### 更新后的 `pipe` 函数
-
-- 根据所选模型处理输入。
-- 在这个示例中，它会把模型 id 包含在返回字符串中。
-
----
+- **更新后的 `pipe` 函数**：
+  - 根据所选模型处理输入。
+  - 在这个示例中，它会把模型 id 包含在返回的字符串里。
 
 ## 示例：OpenAI 代理 Pipe {#example-openai-proxy-pipe}
 
@@ -265,7 +261,7 @@ class Pipe:
 
 **返回格式**：一个字典列表，每个模型都包含 `id` 和 `name`。
 
-#### `pipe` 函数
+#### `pipe` 函数 {#the-pipe-function-1}
 
 - **用途**：处理对所选 OpenAI 模型的请求并返回响应。
 
@@ -337,7 +333,7 @@ class Pipe:
         return await generate_chat_completion(__request__, body, user)
 ```
 
-### 说明
+### 说明 {#explanation-1}
 
 - **导入**：
     - `open_webui.models.users` 中的 `Users`：用于获取用户信息。

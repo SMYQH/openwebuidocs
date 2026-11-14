@@ -26,7 +26,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 ---
 
 ## 为什么使用提示词？ {#why-prompts}
-
+![Saved prompts in the workspace](/images/workspace/prompts-list.png)
 ### 停止重复输入相同的指令 {#stop-retyping-the-same-instructions}
 
 保存一次提示词，用 `/command` 使用它。Bug 报告模板、会议记录、代码审查、内容简报：任何您输入超过两次的内容都应该成为提示词。
@@ -41,7 +41,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 受控共享 {#controlled-sharing}
 
-与特定用户或用户组共享提示词。公开提示词出现在所有人的 `/` 建议中。私有提示词留在您自己的工作区中。
+与特定用户或用户组共享提示词。公开提示词出现在所有人的 `/` 建议中。私有提示词留在您自己的工作区中。对于您拥有编辑权限的提示词，在拥有 **Prompts Sharing** 权限的前提下，**工作区 > 提示词** 列表的 **⋯** 菜单中的 **访问** 可以直接打开[共享设置](/features/authentication-access/rbac/groups#resource-access-rbac)，无需进入编辑器，并且其中的每项更改都会立即保存。以写权限保存提示词会保留其原有的共享设置，包括您本身没有权限设置的 **Public** 选项。
 
 ---
 
@@ -61,16 +61,18 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 创建提示词 {#creating-a-prompt}
 
-导航到**工作区 > 提示词**，点击 **+ 新建提示词**。
+导航到 **工作区 > 提示词**，点击工作区页头中的 **Create**。
 
 | 字段 | 说明 |
 | :--- | :--- |
 | **名称** | 用于标识的描述性标题 |
 | **标签** | 用于过滤的分类 |
-| **访问权限** | 控制谁可以查看和使用该提示词 |
+| **访问权限** | 控制谁可以查看和使用该提示词。需要 [**Prompts Sharing**](/features/authentication-access/rbac/permissions#2-sharing-permissions) 权限 |
 | **命令** | 斜杠命令触发器（例如 `/summarize`） |
 | **提示词内容** | 发送给模型的实际文本，包含变量 |
 | **提交信息** | 可选的版本跟踪变更描述 |
+
+**对比修订**位于提示词内容上方，可在内容旁边打开一个空的 **Proposed revision** 窗格。在那里粘贴一份修订版本（例如由模型写出的版本），点击 **Compare** 标记变更，然后用箭头逐条浏览。**Apply to draft** 会把右侧窗格的内容放入编辑器，这样就可以用 **Original →** 丢弃不需要的变更，它会将该变更的原文复制到右侧窗格。对于替换文本的变更，**Keep both** 会把原文和修订文本依次放入右侧窗格。之后再保存提示词。
 
 使用清晰的变量名（`{{your_name}}` 而非 `{{var1}}`），添加描述性的 `placeholder` 文本，在合理的地方提供 `default` 值，只将真正必要的字段标记为 `:required`。公开提示词出现在每个用户的 `/` 建议中，因此应谨慎选择公开内容。使用启用/禁用切换将不活跃的提示词从建议中隐藏。
 
@@ -84,7 +86,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 | 变量 | 说明 |
 | :--- | :--- |
-| `{{CLIPBOARD}}` | 剪贴板中的内容（需要剪贴板权限） |
+| `{{CLIPBOARD}}` | 剪贴板中的内容。如果浏览器阻止了剪贴板访问，会提示无法读取剪贴板 |
 | `{{CURRENT_DATE}}` | 当前日期 |
 | `{{CURRENT_DATETIME}}` | 当前日期和时间 |
 | `{{CURRENT_TIME}}` | 当前时间 |
@@ -92,17 +94,26 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | `{{CURRENT_WEEKDAY}}` | 当前星期几 |
 | `{{USER_NAME}}` | 您的显示名称 |
 | `{{USER_EMAIL}}` | 您的邮箱地址 |
+| `{{USER_ROLE}}` | 您的角色，例如 `admin` 或 `user` |
 | `{{USER_BIO}}` | 设置 > 账户 > 用户资料中的个人简介（未设置则不替换） |
 | `{{USER_GENDER}}` | 设置 > 账户 > 用户资料中的性别（未设置则不替换） |
 | `{{USER_BIRTH_DATE}}` | 设置 > 账户 > 用户资料中的出生日期（未设置则不替换） |
 | `{{USER_AGE}}` | 根据出生日期计算的年龄（未设置则不替换） |
 | `{{USER_LANGUAGE}}` | 您选择的语言 |
-| `{{USER_LOCATION}}` | 您的位置（需要 HTTPS + 设置 > 界面开关） |
-| `{{USER_GROUPS}}` | 您所在用户组的逗号分隔列表（若不属于任何用户组则为空）。仅当提示词中实际引用该占位符时才会从数据库解析。 |
+| `{{USER_LOCATION}}` | 您的位置。浏览器会直接请求地理位置权限，这需要 HTTPS。界面开关仅控制随聊天请求发送的位置 |
+| `{{USER_GROUPS}}` | 您所属用户组的逗号分隔列表，包含通过父组继承的用户组（若没有则为空）。仅在占位符存在时才会从数据库解析，并且仅用于模型系统提示词和任务模板。在以 `/` 插入的提示词中，它会保持字面量形式。 |
 
 ### 自定义输入变量 {#custom-input-variables}
 
 在提示词内容中添加变量，用户使用斜杠命令时会看到弹出表单。
+
+:::info 此语法仅适用于提示词内容
+
+本页描述的语法适用于已保存提示词的内容。把 `{{name | text:required}}` 放入模型的系统提示词中不会有任何效果：它不会声明任何字段，不会打开任何表单，而是以字面文本的形式到达模型。
+
+系统提示词应改用[聊天变量](/features/chat-conversations/chat-features/chat-params#chat-variables)，它们是相同的字段类型，只是带有 `chat.variables.` 前缀，因此上面的示例会变成 `{{chat.variables.name | text:required}}`。
+
+:::
 
 **简单输入**创建单行文本字段：
 ```
@@ -124,11 +135,11 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 | 类型 | 说明 | 示例 |
 | :--- | :--- | :--- |
-| **text** | 单行文本（默认） | `{{name \| text:placeholder="输入名称":required}}` |
+| **text** | 单行文本（默认） | `{{name \| text:placeholder="Enter name":required}}` |
 | **textarea** | 多行文本 | `{{description \| textarea:required}}` |
-| **select** | 下拉菜单 | `{{priority \| select:options=["高","中","低"]:required}}` |
+| **select** | 下拉菜单 | `{{priority \| select:options=["High","Medium","Low"]:required}}` |
 | **number** | 数字输入 | `{{count \| number:min=1:max=100:default=5}}` |
-| **checkbox** | 布尔开关 | `{{include_details \| checkbox:label="包含分析"}}` |
+| **checkbox** | 布尔开关 | `{{include_details \| checkbox:label="Include analysis"}}` |
 | **date** | 日期选择器 | `{{start_date \| date:required}}` |
 | **datetime-local** | 日期和时间选择器 | `{{appointment \| datetime-local}}` |
 | **color** | 颜色选择器 | `{{brand_color \| color:default="#FFFFFF"}}` |
@@ -194,9 +205,19 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 版本历史 {#version-history}
 
-每次保存都会创建一个新版本。编辑提示词时，**历史侧边栏**显示所有版本，包括提交信息、作者、时间戳，以及当前生产版本上的"使用中"标识。
+每次保存都会在提示词内容发生变化时创建一个新版本。编辑提示词时，提示词内容上方的历史菜单默认显示 **Live**（当前生效的生产版本）。展开它会按从新到旧列出各版本，每条带有提交信息和作者（悬停可看日期），并提供 **Load more** 以加载更早的版本。
 
-**预览**任何版本只需点击它。**设为生产版本**可将其恢复为活跃版本。从菜单**删除**旧版本（当前生产版本不能删除）。
+- **预览**任意版本只需点击它。其内容会以只读方式打开，下方显示版本 ID 和日期。
+- **Compare to current** 会显示该版本与 Live 版本之间的差异：先并排显示名称和标签，然后以差异视图展示提示词内容。布局菜单可在 **Split** 与 **Unified** 之间切换，浏览器会记住该选择。仅涉及行尾符的更改会显示为 **Only line endings changed**。任一版本的内容超过 5000 行时无法比较（`Diff is limited to 5000 lines per version`）。
+- **Edit as new version** 可让预览中的内容变为可编辑，保存后会基于它创建新版本。此处 **Save** 旁边的 **Set as Production** 复选框默认未勾选，因此 Live 提示词会保持不变，直到您勾选它。
+- **Set as Production** 可将该版本恢复为当前生效的版本。
+- 某个版本的 **⋯** 菜单中的 **Delete** 会在您于 **Delete Version** 对话框中确认后删除它。Live 版本无法删除。建立在已删除版本之上的版本会重新关联到其父版本，因此历史记录始终保持连贯。
+
+![Compare to current in the prompt editor, with an older version on the left and the production version on the right in the Split layout](/images/workspace/prompt-version-compare.webp)
+
+切换到其他版本或在存在未保存更改时离开编辑器，都会先询问是否放弃这些更改。任何可以查看提示词的人都能打开并比较其版本；编辑、将某个版本设为生效以及删除则需要写权限。
+
+通过 API，`GET /api/v1/prompts/id/{prompt_id}/history/diff?from_id=...&to_id=...` 会返回两个快照、按行表示的内容差异，以及 `name_changed` 和 `line_endings_only`；后者在内容仅行尾符不同时为 `true`。
 
 :::note 迁移说明
 版本控制更新之前创建的提示词已自动迁移，内容保留为初始"使用中"版本。URL 结构从基于命令改为基于 ID，因此现有书签可能需要更新。从 v0.5.0 起，所有变量默认为可选。
@@ -206,35 +227,35 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 示例 {#examples}
 
-### Bug 报告生成器（`/bug_report`） {#bug-report-generator-bug_report}
+### Bug 报告生成器（`/bug_report`） {#bug-report-generator-bug\_report}
 
 带有必填摘要、优先级下拉菜单和重现步骤的结构化表单，以及可选上下文字段：
 
 ```txt
-请根据以下信息生成一份 Bug 报告：
+Generate a bug report with the following details:
 
-**摘要：** {{summary | text:placeholder="问题的简要摘要":required}}
-**优先级：** {{priority | select:options=["严重","高","中","低"]:default="中":required}}
-**重现步骤：**
+**Summary:** {{summary | text:placeholder="A brief summary of the issue":required}}
+**Priority:** {{priority | select:options=["Critical","High","Medium","Low"]:default="Medium":required}}
+**Steps to Reproduce:**
 {{steps | textarea:placeholder="1. 进入...\n2. 点击...\n3. 出现错误...":required}}
 
-**附加上下文：** {{additional_context | textarea:placeholder="浏览器版本、操作系统、截图等"}}
-**解决方案：** {{workaround | textarea:placeholder="找到的任何临时解决方案"}}
+**Additional Context:** {{additional_context | textarea:placeholder="Browser version, OS, screenshots, etc."}}
+**Workaround:** {{workaround | textarea:placeholder="Any temporary solutions found"}}
 
-请将以上内容格式化为清晰完整的 Bug 报告文档。
+Please format this into a clear and complete bug report document.
 ```
 
-### 会议记录（`/meeting_minutes`） {#meeting-minutes-meeting_minutes}
+### 会议记录（`/meeting_minutes`） {#meeting-minutes-meeting\_minutes}
 
 日期和时间选择器、必填参与者和议程、可选决定和行动项：
 
-```txt
+``` txt
 # 会议记录
 
-**日期：** {{meeting_date | date:required}}
-**时间：** {{meeting_time | time:required}}
-**标题：** {{title | text:placeholder="例如：每周团队同步":required}}
-**参与者：** {{attendees | text:placeholder="逗号分隔的姓名列表":required}}
+**Date:** {{meeting_date | date:required}}
+**Time:** {{meeting_time | time:required}}
+**Title:** {{title | text:placeholder="e.g., Weekly Team Sync":required}}
+**Attendees:** {{attendees | text:placeholder="Comma-separated list of names":required}}
 
 ## 议程/主要讨论点
 {{agenda_items | textarea:placeholder="粘贴议程或列出讨论的主要主题。":required}}
@@ -246,10 +267,10 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 {{action_items | textarea:placeholder="每项行动的负责人和截止日期。"}}
 
 ## 下次会议
-**日期：** {{next_meeting | date}}
-**主题：** {{next_topics | text:placeholder="下次讨论的内容"}}
+**Date:** {{next_meeting | date}}
+**Topics:** {{next_topics | text:placeholder="Items to discuss next time"}}
 
-请将以上内容格式化为清晰专业的会议摘要。
+Please format this into a clean and professional meeting summary.
 ```
 
 ### 标题生成（任务模型模板） {#title-generation-task-model-template}
@@ -257,12 +278,12 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 使用消息选择器 + 管道过滤器保持上下文小：
 
 ```txt
-对话历史：
+Chat history:
 <chat_history>
 {{MESSAGES:END:2|middletruncate:500}}
 </chat_history>
 
-为这段对话生成一个简短标题。
+Generate a short title for this conversation.
 ```
 
 发送最后 2 条消息，每条最多 500 字符。
@@ -274,6 +295,8 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 ### 斜杠命令命名空间 {#slash-command-namespace}
 
 公开提示词出现在每个用户的 `/` 建议中。过多公开提示词会使菜单杂乱。使用启用/禁用切换将不活跃的提示词从建议中排除。
+
+[内置斜杠命令](/features/chat-conversations/chat-features/)的名称实际上是被保留的：`compact`、`status`、`fork` 和 `model`。使用这些命令的提示词仍会显示在菜单中，从菜单中选用时也依然有效；但如果用户手动输入并发送，执行的是内置命令而不是该提示词。请改用其他命令名称。
 
 ### 默认为可选 {#optional-by-default}
 

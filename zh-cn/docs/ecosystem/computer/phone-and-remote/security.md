@@ -18,7 +18,7 @@ sidebar_position: 7
 
 ## 使所有会话登出 {#sign-every-session-out}
 
-登出仅删除该浏览器的 cookie，更改密码不会使现有会话失效。要一次性撤销所有会话：将 `config.toml` 中的 `[server] secret` 替换为新的随机值并重启 `cptr`。然后轮换其他任何授予访问权限的凭据：网关 API 密钥、消息机器人令牌。
+登出仅删除该浏览器的 cookie，更改密码不会使现有会话失效。要一次性撤销所有会话：将 `config.toml`（位于数据目录中，默认是 `~/.cptr`）中的 `[server] secret` 替换为新的随机值并重启 `cptr`。然后轮换其他任何授予访问权限的凭据：网关 API 密钥、消息机器人令牌。
 
 ## 无人值守路径以完全审批模式运行 {#unattended-paths-act-with-full-approval}
 

@@ -5,9 +5,9 @@ title: "可定制的横幅"
 
 ## 概述 {#overview}
 
-Open WebUI 允许管理员向已登录用户展示自定义横幅。横幅适用于公告、全系统警报、维护通知及其他重要消息。
+Open WebUI 允许管理员在新建聊天界面展示自定义横幅。横幅仅在未打开任何聊天时显示在聊天标题栏下方，不会出现在工作区、管理面板或其他页面。横幅适用于公告、全系统警报、维护通知及其他重要消息。
 
-横幅会持久显示，用户可选择**关闭**（可配置）。您可以通过两种方式配置横幅：
+用户可以关闭任意横幅，关闭状态默认仅对当前页面加载有效，横幅也可以选择记住该关闭状态。您可以通过两种方式配置横幅：
 
 1. **管理面板**（推荐用于快速编辑和试验）
 2. **环境变量（`WEBUI_BANNERS`）**（推荐用于自动化/GitOps 风格部署）
@@ -35,7 +35,7 @@ Open WebUI 允许管理员向已登录用户展示自定义横幅。横幅适用
 这是管理横幅最直接的方式：
 
 1. 以管理员身份登录 Open WebUI 实例。
-2. 导航到 **管理面板** → **设置** → **通用**。
+2. 导航到 **设置** → **管理面板** → **系统** → **通用**。
 3. 找到 **横幅** 部分。
 4. 点击 **+** 图标添加新横幅。
 5. 点击 **保存** 应用更改。
@@ -48,8 +48,10 @@ Open WebUI 允许管理员向已登录用户展示自定义横幅。横幅适用
   - `warning`（黄色）
   - `error`（红色）
 - **标题：** 横幅的主标题。
-- **内容：** 主要消息（仅支持 HTML）。
-- **可关闭：** 启用后，用户可以关闭横幅。
+- **内容：** 主要消息。会渲染 Markdown 并允许内联 HTML，两者都会经过净化器处理。解析前每个换行都会变为换行符，因此跨行的 Markdown 块（列表、表格、引用块）无法成形；这些内容请改用其 HTML 形式。
+- **记住关闭状态：** 启用后，用户关闭过的横幅将保持关闭；禁用后，横幅会在下次页面加载时再次显示。
+
+**横幅** 标题旁的地球图标选择器会按语言分别保存内容，因此每位用户看到的都是其界面语言对应的横幅。参见 [Translations](/features/administration/translations#banners)。
 
 #### 关闭横幅的机制 {#how-dismissing-works}
 
@@ -63,7 +65,7 @@ Open WebUI 允许管理员向已登录用户展示自定义横幅。横幅适用
 
 ---
 
-### 方式二：使用环境变量（`WEBUI_BANNERS`） {#option-2-using-environment-variables-webui_banners}
+### 方式二：使用环境变量（`WEBUI_BANNERS`） {#option-2-using-environment-variables-webui\_banners}
 
 对于自动化部署，可使用 `WEBUI_BANNERS` 环境变量配置横幅。该值必须是一个**JSON 字符串**，表示横幅对象的**列表**（数组）。
 
@@ -95,9 +97,10 @@ services:
 - `id`（字符串，必填）：横幅的唯一标识符，用于跟踪用户是否已关闭。
 - `type`（字符串，必填）：横幅样式，必须为以下之一：`info`、`success`、`warning`、`error`。
 - `title`（字符串，可选）：标题文本。
-- `content`（字符串，必填）：横幅主要消息（仅支持 HTML）。
-- `dismissible`（布尔值，必填）：用户是否可以关闭横幅。
+- `content`（字符串，必填）：横幅主要消息（支持 Markdown 和内联 HTML）。
+- `dismissible`（布尔值，必填）：已关闭的横幅是否对该用户保持关闭（即 **记住关闭状态** 开关）。
 - `timestamp`（整数，必填）：存在于配置中，但目前前端不使用该字段控制显示时间。
+- `i18n`（对象，可选）：按语言键控的翻译内容，每个条目包含一个 `content` 字符串。用户会看到与其界面语言匹配的条目，若无匹配则回退到 `content`。参见 [Translations](/features/administration/translations#banners)。
 
 ### 推荐的 `id` 策略（重要） {#recommended-id-strategy-important}
 
@@ -113,7 +116,7 @@ services:
 
 ## 支持的内容格式（仅限 HTML） {#supported-content-formatting}
 
-横幅的 `title` 和 `content` 支持**仅限 HTML** 的子集——Markdown 语法不会被渲染。不支持的标签可能以纯文本显示或破坏布局。
+横幅的 `content` 会先按 Markdown 解析，再经过净化器处理，因此内联 Markdown（`**粗体**`、`[链接](url)`、反引号）和内联 HTML 均可正常渲染。由于解析前每个换行都会先变成换行符，跨行的块级 Markdown（多行列表、表格、引用块、后置标题）无法成形。HTML 列表、标题、表格和引用块则可以正常渲染。`title` 虽然在 JSON 中被接受，但从不显示：编辑器没有"标题"字段，横幅展示的是类型标签加上内容。
 
 ### 文本格式 {#text-formatting}
 
@@ -127,7 +130,7 @@ services:
 | `<small>` | 略小的文字 |
 | `<sub>` / `<sup>` | 下标 / 上标 |
 | `<code>` / `<kbd>` | 等宽内联代码 |
-| `<abbr title="提示">` | 悬停提示 |
+| `<abbr title="tooltip">` | 悬停提示 |
 
 ### 结构 {#structure}
 
@@ -135,13 +138,13 @@ services:
 | --- | --- |
 | `<br>` 或字面换行 | 换行 |
 | `<hr>` | 水平分隔线 |
-| `<details><summary>点击</summary>...</details>` | 可折叠区块 |
+| `<details><summary>Click</summary>...</details>` | 可折叠区块 |
 
 ### 链接与媒体 {#links--media}
 
 | HTML | 效果 |
 | --- | --- |
-| `<a href="..." target="_blank">` | 可点击链接 |
+| `<a href="...">` | 可点击链接。净化器会移除 `target`，因此链接在当前标签页打开 |
 | `<img src="..." width="16" height="16">` | 内联图片 |
 
 ### 自定义样式 {#custom-styling}
@@ -149,17 +152,17 @@ services:
 支持在允许的标签上使用内联样式：
 
 ```html
-<span style="color: #b91c1c;">彩色文字</span>
-<span style="font-weight: 600;">加重字体</span>
-<span style="background: linear-gradient(90deg,#e0f2fe,#fef9c3);">渐变背景</span>
+<span style="color: #b91c1c;">Colored text</span>
+<span style="font-weight: 600;">Heavier weight</span>
+<span style="background: linear-gradient(90deg,#e0f2fe,#fef9c3);">Gradient background</span>
 ```
 
 您也可以将整个消息区域包裹在块级元素中以应用样式：
 
 ```html
 <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:10px 14px;line-height:1.3;display:block;width:100%;box-sizing:border-box;">
-  <b>通知标题</b><br>
-  简短的辅助消息。
+  <b>Notice title</b><br>
+  Short supporting message.
 </div>
 ```
 
@@ -175,7 +178,7 @@ services:
 
 采用可预测的结构：
 
-- 以事件类型或状态开头：`维护`、`故障`、`政策更新`、`新功能`。
+- 以事件类型或状态开头：`Maintenance`、`Incident`、`Policy update`、`New feature`。
 - 把最重要的信息放在最前：日期、时间、影响或所需操作。
 - 正文保持一两句话。
 - 仅在用户需要更多细节时添加一个链接。
@@ -206,8 +209,8 @@ services:
 
 ```html
 <div style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-left:6px solid #64748b;border-radius:12px;padding:10px 14px;line-height:1.3;display:block;width:100%;box-sizing:border-box;">
-  <b>通知标题</b><br>
-  简短的辅助消息。
+  <b>Notice title</b><br>
+  Short supporting message.
 </div>
 ```
 
@@ -228,7 +231,7 @@ services:
 如下这种紧凑风格：
 
 ```html
-<b>通知</b><br>一句简短的话。<br>另一句简短的话。
+<b>Notice</b><br>One short sentence.<br>Another short sentence.
 ```
 
 比含大量换行的格式化 HTML 渲染得更可控。
@@ -266,7 +269,7 @@ services:
 请使用以下精确格式：
 
 ```html
-<a href="https://example.com" target="_blank">打开链接</a>
+<a href="https://example.com" target="_blank">Open link</a>
 ```
 
 **建议：**
@@ -274,14 +277,14 @@ services:
 - 使用 `target="_blank"`（含下划线）。
 - 如果 URL 包含查询参数，在 `href` 属性中将 `&` 转义为 `&amp;`：
   ```html
-  <a href="https://example.com/page?x=1&amp;y=2" target="_blank">示例</a>
+  <a href="https://example.com/page?x=1&amp;y=2" target="_blank">Example</a>
   ```
 - 如需确保下划线，将链接文字包裹在 `<u>` 中：
   ```html
-  <a href="https://example.com" target="_blank"><u>支持</u></a>
+  <a href="https://example.com" target="_blank"><u>Support</u></a>
   ```
 
-### 3）`WEBUI_BANNERS` 中的 JSON/YAML 转义问题 {#3-jsonyaml-escaping-issues-in-webui_banners}
+### 3）`WEBUI_BANNERS` 中的 JSON/YAML 转义问题 {#3-jsonyaml-escaping-issues-in-webui\_banners}
 
 使用 `WEBUI_BANNERS` 时，您是在将 JSON 嵌入 YAML 字符串（或 Shell 字符串）中。常见问题包括：
 
@@ -320,35 +323,24 @@ services:
 ### 模式：带链接的最简两行公告 {#pattern-minimal-two-line-announcement-with-a-link}
 
 ```html
-<b>通知</b><br>
-服务更新：<a href="https://example.com/status" target="_blank"><u>状态页面</u></a>
+<b>Notice</b><br>
+Service updates: <a href="https://example.com/status" target="_blank"><u>Status page</u></a>
 ```
 
 ### 模式：紧凑"标签"徽章（日期/影响标签） {#pattern-compact-label-chip-dateimpact-tag}
 
 ```html
 <span style="display:inline-block;background:#fff3cd;color:#664d03;padding:2px 8px;border-radius:999px;">
-  计划中
+  Scheduled
 </span>
 ```
 
 ### 模式：可折叠详情（保持横幅简短） {#pattern-styled-notice-block}
 
-```html
-<b>计划更新</b><br>
-<details>
-  <summary>更多详情</summary>
-  <br>
-  此次更新可能在部署窗口期间造成短暂中断。
-</details>
-```
-
-### 模式：样式化通知块 {#pattern-collapsible-details-keep-banners-short}
-
 当整条消息应作为一个公告区域呈现时，使用全宽样式块。粘贴到横幅内容字段时，请保持该 HTML 紧凑，特别是当其中还包含 `<br>` 标签时。
 
 ```html
-<div style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-left:6px solid #64748b;border-radius:12px;padding:10px 14px;line-height:1.3;display:block;width:100%;box-sizing:border-box;"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin-bottom:5px;"><span style="display:inline-flex;align-items:center;background:#64748b;color:#fff;padding:1px 7px;border-radius:999px;line-height:1.25;font-size:10px;font-weight:700;letter-spacing:.04em;">NOTICE</span><b>通知标题</b><span style="display:inline-flex;align-items:center;background:#fff;color:#334155;padding:1px 8px;border-radius:999px;line-height:1.25;border:1px solid #cbd5e1;">关键信息</span></div><div>简短的辅助消息。</div></div>
+<div style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-left:6px solid #64748b;border-radius:12px;padding:10px 14px;line-height:1.3;display:block;width:100%;box-sizing:border-box;"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin-bottom:5px;"><span style="display:inline-flex;align-items:center;background:#64748b;color:#fff;padding:1px 7px;border-radius:999px;line-height:1.25;font-size:10px;font-weight:700;letter-spacing:.04em;">NOTICE</span><b>Notice title</b><span style="display:inline-flex;align-items:center;background:#fff;color:#334155;padding:1px 8px;border-radius:999px;line-height:1.25;border:1px solid #cbd5e1;">Key detail</span></div><div>Short supporting message.</div></div>
 ```
 
 此模式使用了：
@@ -358,6 +350,17 @@ services:
 - 用于事件类型的小型大写标签。
 - 用于最重要元数据的紧凑日期/时间徽章。
 - `flex-wrap` 使标题行在窄屏下也能正确显示。
+
+### 模式：样式化通知块 {#pattern-collapsible-details-keep-banners-short}
+
+```html
+<b>Planned update</b><br>
+<details>
+  <summary>More details</summary>
+  <br>
+  This update may cause brief interruptions during the deployment window.
+</details>
+```
 
 ---
 
@@ -395,7 +398,7 @@ services:
 ### 横幅无法关闭 {#banner-cannot-be-dismissed}
 
 - 确认 `dismissible` 已设为 `true`。
-- 如果 `dismissible` 为 `false`，横幅是故意保持始终可见的。
+- 每条横幅都可以通过其 × 按钮关闭。`dismissible: true`（编辑器中的 **记住关闭状态** 开关）会在浏览器中记住这次关闭，因此横幅保持消失；`false` 只在页面重新加载前隐藏它。无法将横幅设为不可关闭。
 
 ### 横幅布局看起来错乱或过高 {#banner-layout-looks-broken-or-too-tall}
 
@@ -409,7 +412,7 @@ services:
 
 ### 横幅内容可以使用 Markdown 吗？ {#can-i-use-markdown-in-banner-content}
 
-不可以。横幅内容**仅支持 HTML**。Markdown 语法不会被渲染。
+可以，但仅限于内联 Markdown。内容会先按 Markdown 解析，再经过净化器处理。由于换行会先变成换行符，跨行的 Markdown 块无法成形，因此需要多行的列表、表格和标题请改用 HTML。
 
 ### `timestamp` 是否控制横幅何时显示？ {#does-timestamp-control-when-a-banner-shows}
 
@@ -417,4 +420,4 @@ services:
 
 ### 可以同时展示多种语言的内容吗？ {#can-i-show-content-in-multiple-languages}
 
-可以。你可以在 `content` 中包含多种语言。如果希望横幅保持简短，可以把次要语言放进 `<details>` 块中。
+可以，但更好的做法是翻译横幅，而不是在一条消息中堆叠多种语言：使用 **横幅** 标题旁的地球图标选择器，每位用户只会看到自己的语言。参见 [Translations](/features/administration/translations#banners)。通过 `WEBUI_BANNERS` 设置的横幅也可以携带同样的内容，即在横幅上使用按语言键控的 `i18n` 对象，每个条目中包含一个 `content` 字符串。

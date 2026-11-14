@@ -14,48 +14,50 @@ Open WebUI 采用**无状态、容器优先架构**，因此它的扩展方式�
 ---
 
 ## 了解默认配置 {#understanding-the-defaults}
+Open WebUI 默认是**自包含的单实例部署**。标准 Docker 镜像包含：
 
-开箱即用时，Open WebUI 以**单容器**形式运行，并具备：
+- **内嵌 SQLite**，通过持久化卷保存应用数据
+- **内嵌 ChromaDB**（同样基于 SQLite），用于 RAG 嵌入
+- **本地文件存储**（`STORAGE_PROVIDER=local`），用于 `DATA_DIR/uploads` 下的上传文件
+- **单个 Uvicorn worker**，不需要外部数据库或 Redis
 
-- 存储在本地卷中的**内嵌 SQLite 主数据库**
-- 用于 RAG 向量嵌入的**内嵌 ChromaDB 向量数据库**（同样由 SQLite 支撑）
-- **单个 Uvicorn worker** 进程
-- **无外部依赖**（没有 Redis、没有外部数据库）
+这让部署时间和运维开销都很低，也让**气隙部署**变得简单。
 
-这非常适合个人使用、小团队或评估场景。当你超出这些默认能力时，扩展之旅就开始了——尤其要注意的是，在安全运行多进程之前，**这两个 SQLite 数据库**（主库与向量库）都必须被替换。
+**水平扩展需要共享的持久化与协调机制**，这样每个副本才能基于同一份数据工作。在增加副本之前，请先切换到 PostgreSQL 和客户端/服务器模式的向量数据库，配置共享文件存储并加入 Redis。之后应用层就可以在负载均衡器后面独立扩展。
+
+:::warning 外部数据库不保存上传的文件
+PostgreSQL 保存文件元数据和存储路径，向量数据库保存嵌入向量，两者都不保存文件本身。在增加副本之前，请配置**外部对象存储（S3、GCS 或 Azure Blob）**，或配置每个副本都能访问的**共享文件系统**。参见[第 5 步](#step-5-share-file-storage-across-instances)。
+:::
 
 ---
 
 ## 第 1 步——切换到 PostgreSQL {#step-1-switch-to-postgresql}
+**何时需要：** 你计划运行不止一个 Open WebUI 实例，或者你的 SQLite 文件位于本地直连的 SSD/NVMe 之外的任何介质上。
 
-**何时需要：** 你计划运行多个 Open WebUI 实例，或希望数据库具备更好的性能与可靠性。**如果你的 SQLite 文件不在本地直连 SSD/NVMe 上，也应该尽快切换**——见下方提示。
-
-:::tip 如果你是单副本、数据库位于本地磁盘，这一步并非必需
-**以下场景继续使用 SQLite 完全没问题：** 单副本部署、个人使用、评估、homelab、小团队——前提是数据库文件位于本地直连 SSD/NVMe 上，并且你没有运行多个副本或多个 worker。0.8 → 0.9 的异步后端问题，主要会在 `webui.db` 位于网络存储时暴露；在本地磁盘上，SQLite 依然快速、受支持，而且是合理的默认值。无需迁移。你可以跳过这一步，直接处理真正需要的后续步骤。
+:::tip 如果你是本地磁盘上的单副本部署，就不需要这一步
+对于单副本部署、个人使用、评估、家庭实验室和小团队，SQLite 完全够用，**只要数据库文件位于本地直连的 SSD/NVMe 上。** 你可以直接跳到后面需要的步骤。
 :::
 
-SQLite 把所有内容存放在一个文件中，不擅长处理多个进程的并发写入。PostgreSQL 是面向生产的数据库，能够支持大量同时连接。
+SQLite 把所有内容存在单个文件中，对多进程的并发写入处理不佳。PostgreSQL 支持大量并发连接。
 
 **需要做什么：**
 
-将 `DATABASE_URL` 环境变量指向你的 PostgreSQL 服务器：
+把 [`DATABASE_URL`](/reference/env-configuration#database_url) 指向你的 PostgreSQL 服务器：
 
 ```
 DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
 ```
 
-**关键点：**
+请使用普通的 `postgresql://` URL，Open WebUI 会自行选择异步驱动（psycopg 3）。
 
-- Open WebUI **不会**在数据库之间自动迁移数据——请在你的 SQLite 中积累生产数据之前就做好规划。
-- 对高并发部署，请根据实际使用模式调整 `DATABASE_POOL_SIZE` 与 `DATABASE_POOL_MAX_OVERFLOW`。详细说明见 [数据库优化](/troubleshooting/performance#database-optimization)。
-- 请记住，**每个 Open WebUI 实例都有自己的连接池**，因此总连接数 = 连接池大小 × 实例数。
-- 如果跳过这一步仍用 SQLite 运行多实例，你会遇到 `database is locked` 错误甚至数据损坏。详见 [数据库损坏 / “Locked” 错误](/troubleshooting/multi-replica#4-database-corruption--locked-errors)。
+**需要了解的关键点：**
 
-:::tip
-一个不错的起点是 `DATABASE_POOL_SIZE=15` 与 `DATABASE_POOL_MAX_OVERFLOW=20`。每个实例的总连接数应明显低于 PostgreSQL 的 `max_connections`（默认 100）。
-:::
+- Open WebUI **不会**在数据库之间迁移数据，因此在 SQLite 中已有生产数据之前就要规划好这一步。
+- **连接池。** 未设置 [`DATABASE_POOL_SIZE`](/reference/env-configuration#database_pool_size) 时，每个进程使用 SQLAlchemy 默认的 5 个连接加 10 个溢出连接。一旦设置了 `DATABASE_POOL_SIZE`，溢出连接默认值会降为 `0`，因此还要设置 [`DATABASE_POOL_MAX_OVERFLOW`](/reference/env-configuration#database_pool_max_overflow)。`DATABASE_POOL_SIZE=0` 会禁用连接池。对于繁忙实例，`DATABASE_POOL_SIZE=15` 配 `DATABASE_POOL_MAX_OVERFLOW=20` 是一个不错的起点。
+- **每个副本都有自己的连接池。** 最大连接数为 `(DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW) × 副本数`。请把它控制在 PostgreSQL 的 `max_connections`（默认 100）以下，并为其余客户端留出余量。按上面的取值，3 个副本可以打开 105 个连接。
+- 单实例的连接池调优请参见[连接池大小](/troubleshooting/performance#connection-pool-sizing)。
 
-关于凭据管理以及使用 SQLCipher 加密 SQLite 的方案，请参阅 [硬化指南中的数据库一节](/getting-started/advanced-topics/hardening#database)。
+凭据处理和静态加密请参见[加固指南的数据库一节](/getting-started/advanced-topics/hardening#database)。
 
 ### 为什么一旦扩展（或升级），网络存储上的 SQLite 就会出问题 {#why-sqlite-on-network-storage-fails-the-moment-you-scale-or-upgrade}
 
@@ -63,10 +65,6 @@ DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
 
 原理可以概括为：SQLite 的持久性保障依赖每次提交都执行 `fsync()`。在本地 SSD 上，这大约是 100 微秒；在 NFS / CephFS / Azure Files / 由网络存储支撑的 Kubernetes PVC 上，可能需要 50–500 毫秒，甚至更久。旧的同步后端里，FastAPI 大约 40 线程的 worker 池天然形成了节流，所以慢存储只会让应用“变慢”。而异步后端没有线程池上限——asyncio 事件循环会并发调度成千上万个数据库协程，每个慢速 `fsync` 都会占住连接整整一段时间，SQLAlchemy 的异步连接池（默认 `pool_size=5` + `max_overflow=10` = 15 个连接）很快就会被打满。随后你会看到：
 
-```
-sqlalchemy.exc.TimeoutError: QueuePool limit of size 5 overflow 10 reached,
-connection timed out, timeout 30.00
-```
 
 把连接池调大并不会真正解决问题，只是把崩溃点向后挪。更多连接意味着更多慢速 `fsync` 同时打到同一套慢存储上；瓶颈仍然在文件系统。
 
@@ -77,10 +75,6 @@ connection timed out, timeout 30.00
 1. **最佳方案——切到 PostgreSQL（本步骤）。** 数据库服务器在自己的本地存储上管理 I/O。应用虽然通过网络访问它，但这种开销远远低于 NFS 上的 `fsync`，而 Postgres 从诞生起就是为并发写入设计的。这也是多副本、多用户、Kubernetes/Swarm 部署的唯一受支持配置。
 2. **把 `webui.db` 从网络存储移到本地 SSD/NVMe。** 这只适合单节点、低用户量部署。你的 RAG 文件和上传文件依然可以放 NFS——问题针对的是 SQLite，不是共享文件系统本身。
 3. **如果暂时做不到以上两点，可临时缓解：**
-   ```bash
-   DATABASE_POOL_SIZE=1
-   DATABASE_SQLITE_PRAGMA_BUSY_TIMEOUT=30000
-   ```
    这会把异步数据库访问串行化为单连接，用牺牲并发来换稳定。**不适合作为长期方案**——请尽快完成真正迁移。
 
 简而言之：同步后端通过线程池限制了并发，因此慢存储只会让系统*变慢*；异步后端允许大规模并发，于是慢速 `fsync` 会堆积、连接长时间不归还、连接池迅速打满，整个系统卡死。以前能勉强承受，是因为应用根本不会同时发起 20 个 `fsync`。
@@ -88,44 +82,54 @@ connection timed out, timeout 30.00
 ---
 
 ## 第 2 步——加入 Redis {#step-2-add-redis}
+**何时需要：** 你运行不止一个 Open WebUI 实例。
 
-**何时需要：** 你想运行多个 Open WebUI 实例（横向扩展），或在单实例内运行多个 Uvicorn worker。
+Redis 让所有实例能够协同工作。它有两个作用：
 
-Redis 充当**共享状态存储**，让所有 Open WebUI 实例能够协调会话、WebSocket 连接和应用状态。没有它时，用户会因请求被不同实例处理而看到不一致行为。
+- [`REDIS_URL`](/reference/env-configuration#redis_url)：登出时的令牌吊销、停止和恢复在其他实例上运行的响应、登录限流、OAuth 令牌刷新锁，以及可选的基础模型缓存。
+- [`WEBSOCKET_MANAGER=redis`](/reference/env-configuration#websocket_manager)：把实时更新（流式 token、频道消息、笔记编辑）送达连接在其他实例上的用户，并在实例之间共享模型列表、活跃用户和在线状态。它连接到 [`WEBSOCKET_REDIS_URL`](/reference/env-configuration#websocket_redis_url)，后者默认为 `REDIS_URL`。
 
 **需要做什么：**
 
-设置以下环境变量：
+在每个实例上同时设置：
 
 ```
 REDIS_URL=redis://redis-host:6379/0
 WEBSOCKET_MANAGER=redis
-ENABLE_WEBSOCKET_SUPPORT=true
 ```
 
-**关键点：**
+请让 [`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configuration#enable_websocket_support) 保持默认值 `true`。
 
-- 对单实例基础使用来说，Redis **不是必须的**。但要注意，**没有 Redis 时，登出并不会撤销 token**——它们会一直有效，直到过期（默认 4 周）。如果你的部署面向生产或涉及敏感数据，即使单实例也强烈建议启用 Redis；否则至少应缩短 `JWT_EXPIRES_IN` 来降低暴露时间。详见硬化指南中的 [Token 撤销](/getting-started/advanced-topics/hardening#token-revocation)。
-- 如果你用的是 Redis Sentinel 做高可用，还应设置 `REDIS_SENTINEL_HOSTS`，并考虑设置 `REDIS_SOCKET_CONNECT_TIMEOUT=5`，避免故障切换时长时间挂起。
-- 对 AWS ElastiCache 或其他托管 Redis Cluster 服务，请设置 `REDIS_CLUSTER=true`。
-- 请确保 Redis 服务器的 `timeout 1800` 与足够高的 `maxclients`（10000+），以避免长期运行后连接耗尽。
-- 高并发 WebSocket 流式场景下，请检查 Redis Pub/Sub 的输出缓冲区限制。较大的 Socket.IO 事件在 Redis 使用较小默认缓冲区时可能让 Pub/Sub 客户端断开；详见 [WebSocket Pub/Sub 缓冲区限制](/tutorials/integrations/redis#websocket-pubsub-buffer-limits)。
-- 对绝大多数部署而言，**单个 Redis 实例**就足够了，即使用户数量达到数千。除非你有明确的高可用或带宽需求，否则几乎不需要 Redis Cluster。若你以为自己需要它，先确认连接数和内存占用问题是否只是配置不当（见 [常见反模式](/troubleshooting/performance#common-anti-patterns)）。
-- 如果在多实例环境中没有 Redis，你会遇到 [WebSocket 403 错误](/troubleshooting/multi-replica#2-websocket-403-errors--connection-failures)、[配置不同步问题](/troubleshooting/multi-replica#3-model-not-found-or-configuration-mismatch) 和间歇性认证失败。
+Open WebUI 使用的是普通 Redis 命令，因此像 [**Valkey**](/tutorials/integrations/valkey) 或 **Dragonfly** 这样的 Redis 协议服务器用同样的设置也能工作。两者都不在 Open WebUI 的测试范围内。请使用较新的版本，并让 Dragonfly 以独立模式运行，因为它的集群模式不具备实时更新所依赖的发布/订阅能力。
 
-关于 Redis 的完整分步配置（Docker Compose、Sentinel、Cluster 模式、验证），请参考 [Redis WebSocket 支持](/tutorials/integrations/redis) 教程。反向代理后的 WebSocket 与 CORS 问题见 [连接错误](/troubleshooting/connection-error#https-tls-cors--websocket-issues)。
+**需要了解的关键点：**
 
----
+- 单实例部署不需要 Redis；只有多副本才需要。
+- [Tether](/ecosystem/tether) 连接在 [`UVICORN_WORKERS`](/reference/env-configuration#uvicorn_workers) 大于 1 时需要 Redis。参见它的[要求](/ecosystem/tether#requirements)。
+- **Redis Sentinel：** 设置 [`REDIS_SENTINEL_HOSTS`](/reference/env-configuration#redis_sentinel_hosts) 和 [`WEBSOCKET_SENTINEL_HOSTS`](/reference/env-configuration#websocket_sentinel_hosts)（websocket 管理器只读取后者）。`REDIS_URL` 的主机部分应为 master 的服务名。设置 `REDIS_SOCKET_CONNECT_TIMEOUT=5`，避免故障转移时长时间挂起。
+- **Redis Cluster**（例如以集群模式运行的 AWS ElastiCache）：设置 [`REDIS_CLUSTER=true`](/reference/env-configuration#redis_cluster)。websocket 管理器会遵循该设置。
+- 设置 Redis 服务器的 `timeout`（例如 `1800`）以及足够高的 `maxclients`（10000+），以防止连接耗尽。
+- 对于大流量流式输出，请提高 Redis 的 Pub/Sub 输出缓冲区限制；参见 [WebSocket Pub/Sub 缓冲区限制](/tutorials/integrations/redis#websocket-pubsub-buffer-limits)。
+- 所有实例必须使用相同的 [`WEBSOCKET_REDIS_ROOM_CHANNELS`](/reference/env-configuration#websocket_redis_room_channels) 值。参见[按房间分配的 Redis 频道](#per-room-redis-channels)。
+- 对于绝大多数部署（即使有数千用户）），一个 **单个 Redis 实例** 就够用。在考虑 Redis Cluster 之前，请先检查是否存在可修复的配置问题（参见[常见错误模式](/troubleshooting/performance#common-anti-patterns)）。
+
+如需完整的 Redis 搭置（Docker Compose、Sentinel、Cluster、验证），请参阅 [Redis WebSocket 支持](/tutorials/integrations/redis) 教程。若需处理反向代理后的 WebSocket 和 CORS 问题，请参见[连接错误](/troubleshooting/connection-error#https-tls-cors--websocket-issues)。
 
 ## 第 3 步——运行多个实例 {#step-3-run-multiple-instances}
+**何时需要：** 你需要服务更多用户，或希望获得高可用性。
 
-**何时需要：** 你需要处理更多用户，或者希望获得高可用（部署时无停机，或单个容器崩溃时不影响服务）。
-
-Open WebUI 是无状态的，因此你可以在**负载均衡器**后按需运行任意数量的实例。每个实例都完全一致且可互换。
+在共享状态就绪之后，在**负载均衡器**后面按需运行任意数量的相同实例。
 
 :::warning
-在运行多实例前，请确保已完成**第 1 步和第 2 步**（PostgreSQL 与 Redis）。此外，所有副本还必须共享同一个 `WEBUI_SECRET_KEY`——否则用户会遇到[登录循环和 401 错误](/troubleshooting/multi-replica#1-login-loops--401-unauthorized-errors)。关于如何生成、存储和轮换该密钥（以及配套的 `OAUTH_SESSION_TOKEN_ENCRYPTION_KEY`），请参阅硬化指南中的 [Secret Key](/getting-started/advanced-topics/hardening#secret-key)。完整上线前检查项见 [核心要求检查清单](/troubleshooting/multi-replica#core-requirements-checklist)。
+请先完成**第 1、2、4、5 步**。所有副本还必须使用相同的 `WEBUI_SECRET_KEY`，否则用户会遇到[登录循环和 401 错误](/troubleshooting/multi-replica#1-login-loops--401-unauthorized-errors)。关于如何生成、保存和轮换该密钥（以及 `OAUTH_SESSION_TOKEN_ENCRYPTION_KEY`），参见[密钥](/getting-started/advanced-topics/hardening#secret-key)。预检查清单参见[核心要求检查表](/troubleshooting/multi-replica#core-requirements-checklist)。
 :::
+
+每个实例保持一个 worker（[`UVICORN_WORKERS=1`](/reference/env-configuration#uvicorn_workers)，默认值），通过调整副本数来扩展。这样每个副本都有自己的内存上限，也可以单独重启。
+
+- **Docker Compose**（单主机）：在 Open WebUI 服务上设置 `deploy.replicas`，或运行 `docker compose up -d --scale open-webui=3`。请移除该服务上固定的主机端口映射（如 `3000:8080`），因为只有一个容器能绑定主机端口。在同一个 Compose 项目中放置一个反向代理（Nginx、Traefik 或 Caddy），并将其指向 `open-webui:8080`；Docker 的 DNS 会为该服务名返回所有副本，代理再以轮询方式把请求分摊到它们。启用 WebSocket（默认开启）时，普通的轮询即可；粘性会话何时有帮助请参见[会话亲和性](/troubleshooting/multi-replica#session-affinity-sticky-sessions)。Nginx 只在启动时解析该名称，因此修改副本数后需要重新加载它。
+- **Docker Swarm** 或 **Kubernetes**（多主机）：设置服务或 Deployment 的副本数，或交给自动扩缩容机制管理。参见 [Docker Swarm](/deployment/docker-swarm) 和 [Kubernetes](/deployment/kubernetes)。
+
+只让一个进程执行数据库迁移；参见[更新与迁移](/troubleshooting/multi-replica#updates-and-migrations)。Compose 会给每个副本相同的设置，因此 `ENABLE_DB_MIGRATIONS` 无法自行挑选其中一个。升级时先缩容到一个副本（`docker compose up -d --scale open-webui=1`），等待其健康后再扩回去。
 
 ### 将 HTTP 压缩卸载给负载均衡器 {#offload-http-compression-to-the-load-balancer}
 
@@ -158,7 +162,7 @@ UVICORN_WS_PER_MESSAGE_DEFLATE=false
 
 以 Nginx 为例：
 
-```nginx
+``` nginx
 proxy_cache_path /var/cache/nginx/openwebui levels=1:2 keys_zone=OPENWEBUI_STATIC:10m
                  max_size=1g inactive=7d use_temp_path=off;
 
@@ -180,30 +184,6 @@ location ^~ /_app/immutable/ {
 - HTML 外壳和 `/_app/version.json` 应保持不缓存或只缓存几分钟，否则用户会错过升级。除非设置了 [`CACHE_CONTROL`](/reference/env-configuration#cache_control)，否则 Open WebUI 会以 `Cache-Control: no-cache` 发送 HTML 外壳；请在代理层保留该头部。
 - `proxy_cache` 让每个资源在每个缓存生命周期内只从某个副本获取一次，而不是每个用户获取一次。
 - Nginx 会对每个响应都进行压缩（它的缓存保存的是未压缩的响应体），因此请使用适中的级别：`gzip_comp_level 4;` 或 brotli 质量 4 到 5，并加上 `gzip_min_length 1000;`。
-
-### 方案 A：容器编排（推荐）
-
-使用 Kubernetes、Docker Swarm 等平台来管理多个副本：
-
-- 每个容器保持 `UVICORN_WORKERS=1`（让编排器负责扩展，不要让应用自己扩展）
-- 在除一个指定“主” pod 外的所有副本上设置 `ENABLE_DB_MIGRATIONS=false`，避免迁移竞争——安全流程见 [更新与迁移](/troubleshooting/multi-replica#updates-and-migrations)
-- 通过调整副本数实现扩缩容
-
-### 方案 B：单容器多 worker
-
-如果部署更简单（例如单台高性能服务器），可以增大 `UVICORN_WORKERS`：
-
-```
-UVICORN_WORKERS=4
-```
-
-这会在单个容器内生成多个应用进程。但即便如此，你依然需要 PostgreSQL 和 Redis。
-
-:::info
-通常更推荐容器编排，因为它具备自动重启、滚动更新和更细粒度资源控制。单容器多 worker 则是在没有编排平台时更简单的替代方案。
-:::
-
----
 
 ### 将 JSON 编码器切换为 orjson {#switch-the-json-encoder-to-orjson}
 
@@ -238,12 +218,29 @@ AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=True
 它是可选开启的，因为 c-ares 读取的名称来源比操作系统少。之后的测试项参见 [DNS 解析器](/troubleshooting/performance#dns-resolver)。
 
 ## 第 4 步——切换到外部向量数据库 {#step-4-switch-to-an-external-vector-database}
+**何时需要：** 你在生产环境中经常处理文档（RAG、知识库）。
 
-**何时需要：** 当你运行多个 Uvicorn worker（`UVICORN_WORKERS > 1`）或多个副本时。**这一步不是可选项。**
+默认的内容提取器（pypdf）和默认的本地嵌入模型（SentenceTransformers）都运行在每个 Open WebUI 进程内部，因此它们的内存开销会在每个副本上重复出现，而提取器也是内存增长的一个常见来源。请把两者都迁移到外部服务。
 
-:::danger 默认 ChromaDB 会在多进程环境中崩溃
+**需要做什么：**
 
-默认向量数据库（ChromaDB）使用基于 **SQLite** 的本地 `PersistentClient`。SQLite 连接**不具备 fork 安全性**——当 uvicorn fork 出多个 worker 后，每个进程都会继承同一数据库连接。并发写入（例如上传文档时）会导致 **worker 立刻死亡**：
+1. **把内容提取引擎**切换到外部服务：
+
+
+若要把不同文件类型路由到不同后端，请运行你自己的服务并设置 `CONTENT_EXTRACTION_ENGINE=external`。参见[外部文档提取](/features/chat-conversations/rag/document-extraction/external)。
+
+2. **把嵌入引擎**切换到外部提供方：
+
+
+**需要了解的关键点：**
+
+- 详情和可选项参见[内容提取引擎](/troubleshooting/performance#content-extraction-engine)和[嵌入引擎](/troubleshooting/performance#embedding-engine)。
+- slim 镜像不包含本地嵌入或重排模型，因此必须使用外部嵌入引擎。
+- 外部的 Tika、Docling 或嵌入端点都是新增的外发目的地。请仅通过内部网络访问它们，并查阅加固指南中的[网络与外发请求](/getting-started/advanced-topics/hardening#network-and-outbound-requests)（`AIOHTTP_CLIENT_ALLOW_REDIRECTS=false`、`WEB_FETCH_FILTER_LIST`）。
+
+:::danger 多进程设置下默认的 ChromaDB 会导致崩溃
+
+默认的 ChromaDB 以嵌入方式运行在 Open WebUI 进程内部，并把数据存放在 `DATA_DIR/vector_db` 下的本地 SQLite 文件中。只有一个进程可以写入这些文件。当存在多个副本时，并发写入（例如在上传文档期间）会导致进程崩溃：
 
 ```
 save_docs_to_vector_db:1619 - adding to collection file-id
@@ -251,42 +248,42 @@ INFO:     Waiting for child process [pid]
 INFO:     Child process [pid] died
 ```
 
-这不是 bug，而是 [SQLite 众所周知的限制](https://www.sqlite.org/howtocorrupt.html#_carrying_an_open_database_connection_across_a_fork_)。在多副本部署中，如果多个容器访问同一个 ChromaDB 数据目录，也会触发同类问题。
-
-关于完整崩溃链路分析，参见 [文档上传期间 worker 崩溃](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker) 或 [RAG → Worker 崩溃](/troubleshooting/rag#12-worker-dies-during-document-upload)。
+参见[文档上传期间 worker 崩溃](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
 
 :::
 
 **需要做什么：**
 
-把 `VECTOR_DB` 环境变量设置为一个客户端-服务端模式的向量数据库：
+把 [`VECTOR_DB`](/reference/env-configuration#vector_db) 设置为客户端/服务器模式的向量数据库：
 
 ```
 VECTOR_DB=pgvector
 ```
 
-**推荐替代方案：**
+**推荐的替代方案：**
 
 | 向量数据库 | 最适合 | 配置 |
 |---|---|---|
-| **PGVector** | 已经在使用 PostgreSQL 的团队——复用现有数据库基础设施 | `VECTOR_DB=pgvector` + `PGVECTOR_DB_URL=postgresql://...` |
-| **MariaDB Vector** | 基于 HNSW 的向量检索——在多连接负载下具备较强扩展性 | `VECTOR_DB=mariadb-vector` + `MARIADB_VECTOR_DB_URL=mariadb+mariadbconnector://...` |
-| **Milvus** | 面向大规模自托管部署与高吞吐查询；支持多租户隔离 | `VECTOR_DB=milvus` + `MILVUS_URI=http://milvus-host:19530` |
-| **Qdrant** | 适合需要高效过滤与元数据检索的自托管部署；支持多租户 | `VECTOR_DB=qdrant` + `QDRANT_URI=http://qdrant-host:6333` |
-| **Pinecone** | 全托管云服务——无需自己维护基础设施，按用量付费 | `VECTOR_DB=pinecone` + `PINECONE_API_KEY=...` |
-| **ChromaDB（HTTP 模式）** | 想继续用 ChromaDB，但通过独立服务进程保证多进程安全 | `VECTOR_DB=chroma` + `CHROMA_HTTP_HOST=chroma-host` + `CHROMA_HTTP_PORT=8000` |
+| **PGVector** | 已经在运行 PostgreSQL 的团队 | `VECTOR_DB=pgvector` + `PGVECTOR_DB_URL=postgresql://...`（默认为 `DATABASE_URL`） |
+| **MariaDB Vector** | 运行 MariaDB 的团队 | `VECTOR_DB=mariadb-vector` + `MARIADB_VECTOR_DB_URL=mariadb+mariadbconnector://...` |
+| **Milvus** | 查询吞吐很高的大型自托管部署 | `VECTOR_DB=milvus` + `MILVUS_URI=http://milvus-host:19530` |
+| **Qdrant** | 需要高效过滤和元数据搜索的自托管部署 | `VECTOR_DB=qdrant` + `QDRANT_URI=http://qdrant-host:6333` |
+| **Pinecone** | 完全托管的云服务 | `VECTOR_DB=pinecone` + `PINECONE_API_KEY=...` |
+| **ChromaDB（HTTP 模式）** | 保留 ChromaDB，但作为独立服务器运行 | `VECTOR_DB=chroma` + `CHROMA_HTTP_HOST=chroma-host` + `CHROMA_HTTP_PORT=8000` |
 
 :::note
 
-只有 PGVector 和 ChromaDB 会由 Open WebUI 团队持续稳定维护。其他向量存储主要由社区贡献加入。
+核心团队维护 PGVector 和 ChromaDB，其他向量存储是社区贡献的集成。
 
 :::
 
 :::tip
-如果你已经在使用 PostgreSQL，**PGVector** 是最简单的选择——无需新增基础设施，就能在现有数据库上增加向量检索能力。
+**PGVector** 是最省事的选择，如果你已经在为主数据库运行 PostgreSQL：不需要额外基础设施。
 
-对于追求自托管环境中最大扩展性的场景，**Milvus** 与 **Qdrant** 都支持**多租户模式**（`ENABLE_MILVUS_MULTITENANCY_MODE=True` / `ENABLE_QDRANT_MULTITENANCY_MODE=True`），可在大规模环境中提供更好的资源共享能力。
+**Milvus** 和 **Qdrant** 都有多租户模式，我们建议在使用它们时一律开启。不开启的话，每个文件、知识库、用户记忆和网页搜索都会拥有自己的集合，在稍大一些的实例上很快就会遇到扩展问题。开启后，所有数据共享少数几个集合。Qdrant 默认开启（[`ENABLE_QDRANT_MULTITENANCY_MODE`](/reference/env-configuration#enable_qdrant_multitenancy_mode)），Milvus 默认关闭（[`ENABLE_MILVUS_MULTITENANCY_MODE`](/reference/env-configuration#enable_milvus_multitenancy_mode)），因此 Milvus 需要手动开启。请在首次启动前决定；之后再切换需要重建索引。
 :::
+
+slim 镜像只支持 PGVector，也就是它默认的 `VECTOR_DB`。
 
 ---
 
@@ -297,65 +294,74 @@ VECTOR_DB=pgvector
 默认情况下，Open WebUI 会把上传文件存到 `DATA_DIR`（通常是 `/app/backend/data`）下的本地文件系统。在多实例环境中，每个实例都必须能访问同一批文件。没有共享存储时，当请求打到不同副本上，你会看到[上传文件和 RAG 知识不可访问](/troubleshooting/multi-replica#5-uploaded-files-or-rag-knowledge-inaccessible)。
 
 ### 我一定需要云存储（S3）吗？ {#do-i-need-cloud-storage-s3}
+**要求的是共享的文件访问能力，对象存储只是实现方式之一。** 你可以使用 S3、GCS 或 Azure Blob，也可以保持 `STORAGE_PROVIDER=local`，并在每个副本上以相同路径挂载同一个共享文件系统。
 
-**不一定。** Open WebUI 会用**基于 UUID 的唯一文件名**保存所有上传文件。多个进程和多个副本只会**创建新文件**或**读取已有文件**，不会同时写入同一文件。因此，在正常情况下，简单的**共享文件系统挂载**就能正确工作，不会发生写冲突。但你必须确保所有 worker / 副本都能访问同一个共享 `DATA_DIR` 目录。
+**你的可选方案：**
 
-**可选方案：**
-
-| 方案 | 适用场景 |
+| 方案 | 何时使用 |
 |---|---|
-| **共享文件系统**（NFS、AWS EFS、CephFS、GlusterFS 或共享 Docker 卷） | 大多数部署最简单的做法。把同一目录挂载到所有实例的 `/app/backend/data`。适用于本地部署、Docker Swarm，以及支持 ReadWriteMany（RWX）卷的 Kubernetes。 |
-| **云对象存储**（S3、GCS、Azure Blob） | 更适合云原生、超大规模部署，或你希望获得托管级持久性（11 个 9）并避免自己维护共享文件系统。需要配置 `STORAGE_PROVIDER`。 |
+| **共享文件系统**（NFS、AWS EFS、CephFS，或单主机上的共享卷） | 你已经在运维共享存储。在所有实例上以相同路径挂载同一目录；多节点 Kubernetes 需要 ReadWriteMany（RWX）存储。 |
+| **外部对象存储**（S3、GCS、Azure Blob） | 副本运行在不同主机上，或者文件需要在没有共享卷的情况下在容器替换后依然保留。请在每个副本上配置 `STORAGE_PROVIDER` 和同一个存储桶或容器。 |
 
-:::info `STORAGE_PROVIDER` 实际控制什么？
-`STORAGE_PROVIDER` 只控制**上传文件**（文档、图片等）存储在哪里。它**不会**影响主数据库（主数据库用 `DATABASE_URL`）或向量数据库（用 `VECTOR_DB`）。如果不设置，文件默认仍存放在 `DATA_DIR` 本地文件系统中。
+:::info `STORAGE_PROVIDER` 究竟控制什么？
+`STORAGE_PROVIDER` 覆盖的是通过 Open WebUI 文件上传 API 保存的文件：文档、附件和生成的图片。主数据库（`DATABASE_URL`）、向量数据库（`VECTOR_DB`）以及 `DATA_DIR` 的其余部分仍留在原处。直接从 `/cache/` 提供的文件（例如某些工具输出）使用文件系统，如果需要由其他副本提供，同样需要共享访问。
 :::
 
 ### 方案 A：共享文件系统（最简单） {#option-a-shared-filesystem-simplest}
-
-无需修改配置——只要确保所有实例都挂载同一个目录即可：
+保持 `STORAGE_PROVIDER=local`，并在所有实例上以相同路径挂载同一目录：
 
 **Kubernetes 示例：**
-```yaml
+``` yaml
 volumes:
   - name: data
     persistentVolumeClaim:
-      claimName: openwebui-data  # 必须支持 ReadWriteMany (RWX)
+      claimName: openwebui-data  # Must be ReadWriteMany (RWX)
 ```
 
 **Docker Compose 示例：**
-```yaml
+``` yaml
 volumes:
   - /opt/data/openwebui-data:/app/backend/data
 ```
 
+这种绑定挂载只在**同一主机**上的容器之间共享文件。在不同主机上，源目录本身必须位于共享存储上。不同主机上同名的 Docker 卷是彼此独立的卷。
+
 :::warning
-**不要**把 SQLite 数据库存放在网络文件系统上。SQLite 的文件锁在 NFS 上无法可靠工作。这也是为什么在扩展到多实例前，应先切换到 PostgreSQL（第 1 步）。
+请把 SQLite 数据库放在网络文件系统之外。这也是在扩展之前切换到 PostgreSQL（[第 1 步](#step-1-switch-to-postgresql)）的原因之一。
 :::
 
+数据目录共享之后，请收紧其中可以落盘的内容：大小、数量和扩展名限制参见[文件上传限制](/getting-started/advanced-topics/hardening#file-upload-limits)，文件系统权限和备份参见[数据目录](/getting-started/advanced-topics/hardening#data-directory)。
+
 ### 方案 B：云对象存储 {#option-b-cloud-object-storage}
+在**每个副本**上设置 `STORAGE_PROVIDER` 以及存储桶或容器和凭据。所有副本必须使用同一个目标位置，包括在设置了 `S3_KEY_PREFIX` 时使用相同的前缀，并拥有读、写和删除文件的权限。
 
-设置 `STORAGE_PROVIDER` 及对应凭证：
+**支持的提供方：**
 
-**支持的提供商：**
-
-| 提供商 | `STORAGE_PROVIDER` 取值 |
+| 提供方 | 将 `STORAGE_PROVIDER` 设为 |
 |---|---|
-| Amazon S3（或兼容 S3 的 MinIO、R2） | `s3` |
+| Amazon S3（或像 MinIO、R2 这样的 S3 兼容服务） | `s3` |
 | Google Cloud Storage | `gcs` |
 | Microsoft Azure Blob Storage | `azure` |
 
-```
+``` bash
 STORAGE_PROVIDER=s3
 S3_BUCKET_NAME=my-openwebui-bucket
 S3_REGION_NAME=us-east-1
+
+# 对于兼容 S3 的服务，还需要设置其端点：
+# S3_ENDPOINT_URL=https://s3.example.com
+# S3_ADDRESSING_STYLE=path
 ```
 
-各提供商对应的凭证和 bucket 配置环境变量不同，详见[环境变量参考](/reference/env-configuration#cloud-storage)。
+对于 S3，省略 `S3_ACCESS_KEY_ID` 和 `S3_SECRET_ACCESS_KEY` 即可使用默认的 AWS 凭据链（例如 IAM 角色），也可以通过你的密钥管理系统同时提供两者。GCS 使用 `GCS_BUCKET_NAME` 配合应用默认凭据或 `GOOGLE_APPLICATION_CREDENTIALS_JSON`。Azure 使用 `AZURE_STORAGE_ENDPOINT` 和 `AZURE_STORAGE_CONTAINER_NAME`，配合 `AZURE_STORAGE_KEY` 或默认的 Azure 凭据。slim 镜像只支持 `local` 和 `s3`。
 
-数据目录共享后，请进一步收紧能落到其中的内容：见 [文件上传限制](/getting-started/advanced-topics/hardening#file-upload-limits)（大小、数量、扩展名限额）和 [数据目录](/getting-started/advanced-topics/hardening#data-directory)（文件系统权限与备份指引）。
+所有提供方设置请参见[环境变量参考](/reference/env-configuration#cloud-storage)，完整示例请参见 [S3 存储教程](/tutorials/maintenance/s3-storage)。
 
----
+:::warning 对象存储仍然需要本地磁盘
+上传的文件会先写入 `DATA_DIR/uploads`，然后再发送到存储桶。读取时则先把文件下载到那里，Open WebUI 才会处理或提供它们。请为每个副本准备一个可写的数据目录，其空间和 I/O 能力足以应对并发传输。
+
+`STORAGE_LOCAL_CACHE=false` 会在处理完成后移除云端文件的本地副本。但无论如何都要规划本地磁盘容量，因为下载和尚未处理的上传仍会占用它。
+:::
 
 ### 切换已有部署 {#switching-an-existing-deployment}
 
@@ -364,23 +370,22 @@ S3_REGION_NAME=us-east-1
 在把生产流量发往多个副本之前，先通过一个副本上传文件，再通过另一个副本下载它。知识库文档和生成的图片也要一并检查，然后在替换上传副本后重复一次。
 
 ## 第 6 步——修复内容提取与 Embeddings 默认配置 {#step-6-fix-content-extraction--embeddings}
+**何时需要：** 你在生产环境中经常处理文档（RAG、知识库）。
 
-**何时需要：** 你在生产环境中会持续处理文档（RAG、知识库等）时。
-
-:::danger 这些默认值在规模化环境中会导致内存泄漏
-默认内容提取引擎（pypdf）和默认 embedding 引擎（SentenceTransformers）是生产环境中 Open WebUI **最常见的两大内存泄漏来源**。修复它们的重要性不亚于切换 PostgreSQL 或加入 Redis。
-:::
+默认的内容提取器（pypdf）和默认的本地嵌入模型（SentenceTransformers）都运行在每个 Open WebUI 进程内部，因此它们的内存开销会在每个副本上重复出现，而提取器也是内存增长的一个常见来源。请把两者都迁移到外部服务。
 
 **需要做什么：**
 
-1. **把内容提取引擎切换到外部服务：**
+1. **把内容提取引擎**切换到外部服务：
 
 ```
 CONTENT_EXTRACTION_ENGINE=tika
 TIKA_SERVER_URL=http://tika:9998
 ```
 
-2. **把 embedding 引擎切换到外部提供商：**
+若要把不同文件类型路由到不同后端，请运行你自己的服务并设置 `CONTENT_EXTRACTION_ENGINE=external`。参见[外部文档提取](/features/chat-conversations/rag/document-extraction/external)。
+
+2. **把嵌入引擎**切换到外部提供方：
 
 ```
 RAG_EMBEDDING_ENGINE=openai
@@ -388,29 +393,27 @@ RAG_EMBEDDING_ENGINE=openai
 RAG_EMBEDDING_ENGINE=ollama
 ```
 
-**关键点：**
+**需要了解的关键点：**
 
-- 默认内容提取器（pypdf）存在难以避免的**已知内存泄漏**，会导致 Open WebUI 进程内存持续增长。改用外部提取器（Tika、Docling）后，这些泄漏会被隔离在独立进程/容器中。
-- 默认 SentenceTransformers embedding 模型每个 worker 会加载约 500MB 内存。8 个 worker 就是 4GB，仅 embeddings 就能吃掉不少资源。外部 embedding 服务可避免这一点。
-- 详细说明与配置项请参考性能指南中的 [内容提取引擎](/troubleshooting/performance#content-extraction-engine) 和 [嵌入引擎](/troubleshooting/performance#embedding-engine)。
-- 外部 Tika、Docling 或 embedding 端点会成为 Open WebUI 新的出站目标。仅通过内网与它们通信，并查阅硬化指南中的 [网络与出站请求](/getting-started/advanced-topics/hardening#network-and-outbound-requests) 一节，了解默认的 SSRF 防护（`AIOHTTP_CLIENT_ALLOW_REDIRECTS=false`、`WEB_FETCH_FILTER_LIST`），以确保错误配置的提取器 URL 不会被重定向到内部地址。
+- 详情和可选项参见[内容提取引擎](/troubleshooting/performance#content-extraction-engine)和[嵌入引擎](/troubleshooting/performance#embedding-engine)。
+- slim 镜像不包含本地嵌入或重排模型，因此必须使用外部嵌入引擎。
+- 外部的 Tika、Docling 或嵌入端点都是新增的外发目的地。请仅通过内部网络访问它们，并查阅加固指南中的[网络与外发请求](/getting-started/advanced-topics/hardening#network-and-outbound-requests)（`AIOHTTP_CLIENT_ALLOW_REDIRECTS=false`、`WEB_FETCH_FILTER_LIST`）。
 
 ---
 
 ## 第 7 步——加入可观测性 {#step-7-add-observability}
+**何时需要：** 你想监控性能并排查大规模部署中的问题。
 
-**何时需要：** 你想监控性能、排查问题，并理解系统在规模化运行时的真实状态。
-
-Open WebUI 支持通过 **OpenTelemetry** 导出 traces、metrics 和 logs 到你的观测平台（Grafana、Datadog、New Relic 等）：
+Open WebUI 通过 **OpenTelemetry** 向 Grafana、Datadog、New Relic 等平台导出链路追踪、指标和日志。打开总开关以及你需要的每种信号：
 
 ```
 ENABLE_OTEL=true
+ENABLE_OTEL_TRACES=true
+ENABLE_OTEL_METRICS=true
 OTEL_EXPORTER_OTLP_ENDPOINT=http://your-collector:4317
 ```
 
-这样你就能看到请求延迟、数据库查询性能、错误率等关键指标。
-
-完整配置请参阅 [OpenTelemetry](/reference/monitoring/otel)。应用级日志配置（日志级别、调试输出）见 [Open WebUI 日志](/getting-started/advanced-topics/logging)。面向日志聚合器的结构化日志默认设置，以及记录认证事件、管理员动作和数据访问的专用审计日志，请见硬化指南中的 [Observability](/getting-started/advanced-topics/hardening#observability) 与 [Audit Logging](/getting-started/advanced-topics/hardening#audit-logging)。
+完整配置请参见 [OpenTelemetry 监控](/reference/monitoring/otel)。日志级别参见[记录 Open WebUI 日志](/getting-started/advanced-topics/logging)。结构化日志和审计日志参见加固指南中的[可观测性](/getting-started/advanced-topics/hardening#observability)和[审计日志](/getting-started/advanced-topics/hardening#audit-logging)。
 
 ---
 
@@ -418,7 +421,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://your-collector:4317
 
 一个可用于生产的扩展型部署通常会长这样：
 
-```mermaid
+``` mermaid
 flowchart TD
     %% Main Flow
     LB["Load Balancer<br/>(Nginx, HAProxy, Cloud LB)"]
@@ -459,65 +462,73 @@ flowchart TD
 **遇到问题？** [扩缩容与高可用](/troubleshooting/multi-replica) 覆盖了常见问题（登录循环、WebSocket 失败、数据库锁、worker 崩溃）及其解决方法。性能调优请参见 [优化、性能与内存占用](/troubleshooting/performance)。
 
 ### 扩展部署的最小环境变量集合 {#minimum-environment-variables-for-scaled-deployments}
+``` bash
+# 每个副本上使用相同的值
+WEBUI_SECRET_KEY=your-shared-secret
 
-```bash
-# 主数据库
+# 数据库
 DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
+DATABASE_POOL_SIZE=15
+DATABASE_POOL_MAX_OVERFLOW=20
 
-# 向量数据库（多 worker/多副本时不要使用默认 ChromaDB）
+# 向量数据库（多个副本时绝不要用内嵌的 ChromaDB）
 VECTOR_DB=pgvector
 PGVECTOR_DB_URL=postgresql://user:password@db-host:5432/openwebui
 
 # Redis
 REDIS_URL=redis://redis-host:6379/0
 WEBSOCKET_MANAGER=redis
-ENABLE_WEBSOCKET_SUPPORT=true
 
-# 存储——二选一：
-# 方案 A：共享文件系统（无需环境变量，只需挂载同一卷）
-# 方案 B：云存储
+# 文件存储：跨副本必需，在所有副本上配置其中一种方案。
+# 方案 A：STORAGE_PROVIDER=local 配合相同的共享文件系统和挂载路径。
+#           各主机上独立的 Docker 卷并不共享文件。
+# 方案 B：外部对象存储（所有副本使用相同的存储桶和键前缀）
 # STORAGE_PROVIDER=s3
 # S3_BUCKET_NAME=my-openwebui-bucket
 # S3_REGION_NAME=us-east-1
+# 对象存储仍然需要可写的本地磁盘；参见第 5 步。
 
-# 内容提取（生产环境不要使用默认 pypdf）
+# 把内容提取和嵌入放到应用进程之外
 CONTENT_EXTRACTION_ENGINE=tika
 TIKA_SERVER_URL=http://tika:9998
-
-# Embeddings（规模化环境不要使用默认 SentenceTransformers）
 RAG_EMBEDDING_ENGINE=openai
 # 或：RAG_EMBEDDING_ENGINE=ollama
 
-# Workers（让编排器做扩展，worker 保持 1）
-UVICORN_WORKERS=1
-
-# 迁移（除一个实例外，其余实例设为 false）
+# 迁移：除一个实例外其余都设为 false；参见"更新与迁移"
 ENABLE_DB_MIGRATIONS=false
 
-# 并发与数据库写节流（规模化部署必备——见下方说明）
+# 为阻塞型工作（数据库调用、文件 I/O）留出余量；默认上限为 40
 THREAD_POOL_SIZE=2000
-DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL=300
+
+# 仅当你的负载均衡器、ingress 或 CDN 会压缩响应时才需要
+# ENABLE_COMPRESSION_MIDDLEWARE=false
+
+# 逐 token 的 WebSocket 压缩很费 CPU，收益很小
+# UVICORN_WS_PER_MESSAGE_DEFLATE=false
+
+# 减少空闲心跳；掉线的用户在活跃计数中停留的时间更长
+# WEBSOCKET_HEARTBEAT_INTERVAL=60
+
+# 就地增长流式响应；在高并发下有助于长回答
+ENABLE_CHAT_RESPONSE_STREAM_INPLACE_APPEND=True
+
+# 更快的名称查找；开启后请确认名称仍能正确解析
+AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=True
 ```
 
-:::warning 两个最常被遗忘、却会让扩展部署卡死的设置
-- **`THREAD_POOL_SIZE=2000`** —— Open WebUI 会把阻塞型工作（数据库调用、文件 I/O、同步处理函数）丢给一个线程池，其默认的并发上限只有 **40**。在规模化部署中，一旦有 40 个阻塞操作同时进行，后续每个请求都会**排队**，整个应用看起来会陷入卡死，尽管 CPU/RAM 都很空闲。`2000` 对大型实例来说是*下限*；它只是并发上限，**不是** CPU/线程数，因此设大并不会造成争用。绝对不要调小它。（唯一的例外是硬件确实非常小的情况——这就不是“扩展部署”了。）
-- **`DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL=300`** —— 在线状态追踪会把每位用户的 `last_active_at` 写入数据库。**未设置（即使用默认值）意味着该写入完全不限流——大致每次认证请求都会触发一次 `UPDATE` + `COMMIT`。** 在规模化部署中，这会形成持续的、细粒度的写入事务风暴，把连接池打满，却没有带来任何功能上的收益。推荐设为 `300`–`500` 秒；它在大规模/生产部署中是必须的，在其他场景中也能免费换取性能提升。
-
-两者都仅在启动时读取一次，且无法在管理界面中配置。详见 [性能 → 数据库优化](/troubleshooting/performance#database-optimization) 与 [性能 → 高并发](/troubleshooting/performance#high-concurrency--network-optimization)。
+:::warning 不要跳过 THREAD_POOL_SIZE
+Open WebUI 把阻塞型工作（数据库调用、文件 I/O、同步处理函数）放在线程池中执行，默认最多并发 **40** 个操作。一旦有 40 个在执行中，后续请求就会排队，应用看起来像是卡住了，而 CPU 和内存看起来都很正常。`THREAD_POOL_SIZE` 可以提高这个上限。线程只在需要时才创建，因此取值较大是安全的。参见[线程池大小](/troubleshooting/performance#thread-pool-size)。
 :::
 
 ### 大规模场景下需要重新审视的安全默认值 {#security-defaults-to-revisit-at-scale}
+有些在单用户评估场景下合理的默认值，一旦真实用户通过 SSO 登录就变得更重要。完整讨论见[加固指南](/getting-started/advanced-topics/hardening)。最常被忽略的几项：
 
-有些默认配置在单用户评估场景下没有问题，但一旦把部署放到 SSO 之后并面向真实用户提供服务，就不再合适。完整讨论见 [硬化指南](/getting-started/advanced-topics/hardening)；在企业部署中最常被忽略的几项是：
+- **用 `ENABLE_PROFILE_IMAGE_URL_FORWARDING=false` 关闭外部头像重定向。** 默认情况下，头像端点会重定向到 `profile_image_url` 所持有的任意外部 URL，因此每个显示该头像的浏览器都会把自己的 IP、User-Agent 和 Referer 发送到那个来源。只有当你希望显示由 IdP 托管的头像（例如来自 `OAUTH_PICTURE_CLAIM` 的 Google 或 Gravatar URL）时才保留默认值；`data:` URI 头像无论如何都存放在本地。参见[SSO 配置](/features/authentication-access/auth/sso)。
+- **把 `WEBUI_SECRET_KEY` 设置为每个副本上相同的值。** `OAUTH_SESSION_TOKEN_ENCRYPTION_KEY` 默认取它的值；如果你单独设置了该变量，它也必须在所有地方保持一致。否则会话会跨副本失效，由某个 Pod 存储的 OAuth 令牌也无法被另一个 Pod 解密。
+- **如果你的部署涉及敏感数据，请调低 `JWT_EXPIRES_IN`**（默认四周），尤其是在没有 Redis 做登出吊销的情况下。参见[令牌吊销](/getting-started/advanced-topics/hardening#token-revocation)。
+- **设置 `ENABLE_OAUTH_ID_TOKEN_COOKIE=false`。** 默认情况下，原始的 IdP id_token 也会作为 Cookie 发送到浏览器。Open WebUI 会把 id_token 保存在服务端的 OAuth 会话中，并在登出时使用该副本。
 
-- **禁用外部头像 URL 重定向** —— `ENABLE_PROFILE_IMAGE_URL_FORWARDING=false`。默认情况下，用户/模型头像端点会 `302` 跳转到 `profile_image_url` 中保存的任意外部 URL，这会让每一个查看头像的浏览器把自己的 IP、User-Agent 和 Referer 泄露给该源站。共享部署应将其设为 `false`，**除非**你的 IdP 仅以 `data:` URI 提供头像（Open WebUI 会将其本地化保存，不受影响），或你有意保留 IdP 托管的头像渲染——例如 `OAUTH_PICTURE_CLAIM` 返回 Google/Gravatar URL，且你希望它们直接显示。配套的 OAuth picture-claim 设置见 [SSO 配置](/features/authentication-access/auth/sso)。
-- **`WEBUI_SECRET_KEY` 与 `OAUTH_SESSION_TOKEN_ENCRYPTION_KEY` 在所有副本上保持同一个值**。否则，滚动重启时会话会断裂，一个 pod 写入的 OAuth 令牌也无法被另一个 pod 解密。
-- **缩短 `JWT_EXPIRES_IN`**，不要继续使用 4 周的默认值——尤其是在处理敏感数据，且 Redis 还没就位（无法在登出时撤销令牌）的场景。详见 [Token 撤销](/getting-started/advanced-topics/hardening#token-revocation)。
-- 一旦所有客户端都迁移到新的服务端会话模型，就**关闭 `ENABLE_OAUTH_ID_TOKEN_COOKIE`**（设为 `false`）。旧的 cookie 会把 IdP 原始的 id_token 透出到浏览器，新模型只保留在服务端。
-
-这些都是配置默认值的调整，而不是新功能——只是当部署进入到多用户、且前面已经有一个真实身份提供商时，这些原有的开关就更重要了。
-
-除了这份简短的清单外，硬化指南按主题对相同的关注点进行了分组，便于你逐项推进：[网络位置](/getting-started/advanced-topics/hardening#network-placement)、[认证与注册](/getting-started/advanced-topics/hardening#authentication-and-signup)、[会话与 Cookie 安全](/getting-started/advanced-topics/hardening#session-and-cookie-security)、[安全响应头](/getting-started/advanced-topics/hardening#security-headers)、[访问控制](/getting-started/advanced-topics/hardening#access-control)、[Tools、Functions 与 Pipelines](/getting-started/advanced-topics/hardening#tools-functions-and-pipelines)，以及结尾的 [安全优先部署](/getting-started/advanced-topics/hardening#security-first-deployment) 清单。
+除这份清单之外，加固指南还按主题逐一讨论了同样的问题：[网络放置](/getting-started/advanced-topics/hardening#network-placement)、[认证与注册](/getting-started/advanced-topics/hardening#authentication-and-signup)、[会话与 Cookie 安全](/getting-started/advanced-topics/hardening#session-and-cookie-security)、[安全响应头](/getting-started/advanced-topics/hardening#security-headers)、[访问控制](/getting-started/advanced-topics/hardening#access-control)、[工具、函数与管道](/getting-started/advanced-topics/hardening#tools-functions-and-pipelines)，以及[安全优先的部署](/getting-started/advanced-topics/hardening#security-first-deployment)检查表。
 
 ---
 

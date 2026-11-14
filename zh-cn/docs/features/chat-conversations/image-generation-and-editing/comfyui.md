@@ -97,6 +97,8 @@ docker run -d -p 3000:8080 \
 
     你可以在 ComfyUI 中点击某个 node，并查看其详细信息来找到对应的 node ID。
 
+    Open WebUI 会从 workflow 的 **Save Image**、**Save Image (Advanced)**、**Save Animated WEBP**、**Save Animated PNG** 和 **Preview Image** 节点返回图片。动画图片在聊天中会保持为动画。
+
     ![Screenshot of the ComfyUI Workflow Nodes section in Open WebUI, showing the mapping fields.](/images/image-generation-and-editing/comfyui-node-mapping.png)
 
     :::info
@@ -111,6 +113,10 @@ docker run -d -p 3000:8080 \
     - 点击页面底部的 **Save** 按钮完成配置。之后你就可以在 Open WebUI 中使用 ComfyUI 进行图像生成了。
 
 ![Screenshot of an image being generated in the chat using ComfyUI.](/images/image-generation-and-editing/comfyui-create-image-in-chat.png)
+
+:::info
+消息上没有“生成图像”按钮。生成是从聊天本身发起的：在消息输入框的 **+** 菜单中开启 **图像**，然后再请求生成图片。具体需要满足的条件，以及一个社区插件可以添加该按钮，请参见[使用方法](/features/chat-conversations/image-generation-and-editing/usage)。
+:::
 
 ## 编辑图像 {#edit-image}
 
@@ -272,13 +278,13 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 #### 模型存放位置 {#model-storage-location}
 
 ```
-📂 ComfyUI/
-├── 📂 models/
-│   ├── 📂 diffusion_models/
+ComfyUI/
+├── models/
+│   ├── diffusion_models/
 │   │   └── qwen_image_fp8_e4m3fn.safetensors
-│   ├── 📂 vae/
+│   ├── vae/
 │   │   └── qwen_image_vae.safetensors
-│   └── 📂 text_encoders/
+│   └── text_encoders/
 │       └── qwen_2.5_vl_7b_fp8_scaled.safetensors
 ```
 
@@ -291,22 +297,22 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 
 ### Qwen 图像编辑 {#qwen-image-editing}
 
-#### 模型下载
+#### 模型下载 {#model-download-1}
 
 - **扩散模型**: [qwen_image_edit_fp8_e4m3fn.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_fp8_e4m3fn.safetensors)
 - **文本编码器**: [qwen_2.5_vl_7b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors)
 - **VAE**: [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors)
 
-#### 模型存放位置
+#### 模型存放位置 {#model-storage-location-1}
 
 ```
-📂 ComfyUI/
-├── 📂 models/
-│   ├── 📂 diffusion_models/
+ComfyUI/
+├── models/
+│   ├── diffusion_models/
 │   │   └── qwen_image_edit_fp8_e4m3fn.safetensors
-│   ├── 📂 vae/
+│   ├── vae/
 │   │   └── qwen_image_vae.safetensors
-│   └── 📂 text_encoders/
+│   └── text_encoders/
 │       └── qwen_2.5_vl_7b_fp8_scaled.safetensors
 ```
 
@@ -322,48 +328,48 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 
 本节提供一个额外示例，说明如何为 FLUX.1 模型配置图像生成。
 
-### FLUX.1 Dev
+### FLUX.1 Dev {#flux1-dev}
 
-#### 模型下载
+#### 模型下载 {#model-download-2}
 
 - **扩散模型**: [flux1-dev.safetensors](https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors)
 - **文本编码器 1**: [clip_l.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors?download=true)
 - **文本编码器 2**: [t5xxl_fp16.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors?download=true)（推荐在 VRAM 大于 32GB 时使用）
 - **VAE**: [ae.safetensors](https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors?download=true)
 
-#### 模型存放位置
+#### 模型存放位置 {#model-storage-location-2}
 
 ```
-📂 ComfyUI/
-├── 📂 models/
-│   ├── 📂 diffusion_models/
+ComfyUI/
+├── models/
+│   ├── diffusion_models/
 │   │   └── flux1-dev.safetensors
-│   ├── 📂 vae/
+│   ├── vae/
 │   │   └── ae.safetensors
-│   └── 📂 text_encoders/
+│   └── text_encoders/
 │       ├── clip_l.safetensors
 │       └── t5xxl_fp16.safetensors
 ```
 
-### FLUX.1 Schnell
+### FLUX.1 Schnell {#flux1-schnell}
 
-#### 模型下载
+#### 模型下载 {#model-download-3}
 
 - **扩散模型**: [flux1-schnell.safetensors](https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors)
 - **文本编码器 1**: [clip_l.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors?download=true)
 - **文本编码器 2**: [t5xxl_fp8_e4m3fn.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors?download=true)（推荐在 VRAM 大于 32GB 时使用）
 - **VAE**: [ae.safetensors](https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors?download=true)
 
-#### 模型存放位置
+#### 模型存放位置 {#model-storage-location-3}
 
 ```
-📂 ComfyUI/
-├── 📂 models/
-│   ├── 📂 diffusion_models/
+ComfyUI/
+├── models/
+│   ├── diffusion_models/
 │   │   └── flux1-schnell.safetensors
-│   ├── 📂 vae/
+│   ├── vae/
 │   │   └── ae.safetensors
-│   └── 📂 text_encoders/
+│   └── text_encoders/
 │       ├── clip_l.safetensors
 │       └── t5xxl_fp8_e4m3fn.safetensors
 ```

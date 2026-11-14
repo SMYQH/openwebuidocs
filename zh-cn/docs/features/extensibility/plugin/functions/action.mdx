@@ -38,7 +38,7 @@ Actions 是基于 Python 的函数，可直接集成到聊天消息工具栏中�
 
 Action 采用特定的类结构，核心入口是 `action` 方法：
 
-```python
+``` python
 class Action:
     def __init__(self):
         self.valves = self.Valves()
@@ -46,24 +46,23 @@ class Action:
     class Valves(BaseModel):
         # 配置参数
         parameter_name: str = "default_value"
-        priority: int = 0  # 控制按钮显示顺序（值越小越靠前）
+        priority: int = 0  # Controls button display order (lower = appears first)
 
     async def action(self, body: dict, __user__=None, __event_emitter__=None, __event_call__=None):
         # Action 逻辑
-        return {"content": "Modified message content"}
+        return {"messages": [{"id": body["id"], "content": "Modified message content"}]}
 ```
 
 ### Action 方法参数 {#action-method-parameters}
-
 `action` 方法会收到多个参数，用于提供执行上下文：
 
-- **`body`** —— 包含消息数据与上下文的字典
-- **`__user__`** —— 当前用户对象，包含权限与设置
-- **`__event_emitter__`** —— 向前端发送实时更新的函数
-- **`__event_call__`** —— 用于双向交互（确认、输入等）的函数
-- **`__model__`** —— 触发该 action 的模型信息
-- **`__request__`** —— FastAPI request 对象，可访问 headers 等
-- **`__id__`** —— Action ID（适用于 multi-action functions）
+- **`body`**：聊天发送的请求，包含 `messages`（到目前为止的对话，每条记录带有 `id`、`role`、`content`、`timestamp`，以及消息存在时的 `info` 和 `sources`）、`model`、`chat_id`、`session_id` 和 `id`，其中 `id` 是触发该按钮的消息 ID。`content` 是该消息的输出文本（如果有）。其中不携带任何附件。
+- **`__user__`**：以普通 `dict` 形式表示的用户记录（`UserModel.model_dump()`），当函数定义了 `UserValves` 时会额外加入 `valves` 条目
+- **`__event_emitter__`**：向前端发送实时更新的函数
+- **`__event_call__`**：用于双向通信（确认、输入）的函数
+- **`__model__`**：触发该 action 的模型信息
+- **`__request__`**：FastAPI request 对象，可访问 headers 等
+- **`__id__`**：单个 action 的函数 ID。对于子 action，它只是子 action 的 ID（`summarize`，而不是 `my_fn.summarize`），因此子 action 的 ID 不能包含点号
 
 ### 返回值 {#return-value}
 
@@ -73,13 +72,13 @@ class Action:
 
 Actions 可以使用 Open WebUI 的实时事件系统构建交互体验：
 
-### 事件发射器（`__event_emitter__`） {#event-emitter-\_\_event_emitter\_\_}
+### 事件发射器（`__event_emitter__`） {#event-emitter-\_\_event\_emitter\_\_}
 
 **有关 Events 与 Event emitters 的完整说明，请参阅 [Events and Event Emitters](/features/extensibility/plugin/development/events/)。**
 
 可在 action 执行过程中向前端发送实时更新：
 
-```python
+``` python
 async def action(self, body: dict, __event_emitter__=None):
     # 发送状态更新
     await __event_emitter__({
@@ -94,11 +93,11 @@ async def action(self, body: dict, __event_emitter__=None):
     })
 ```
 
-### 事件调用（`__event_call__`） {#event-call-\_\_event_call\_\_}
+### 事件调用（`__event_call__`） {#event-call-\_\_event\_call\_\_}
 
 在执行过程中请求用户输入或确认：
 
-```python
+``` python
 async def action(self, body: dict, __event_call__=None):
     # 请求用户确认
     response = await __event_call__({
@@ -120,49 +119,52 @@ async def action(self, body: dict, __event_call__=None):
     })
 ```
 
+当浏览器无法作答时，`__event_call__` 会返回一个带 `error` 键的 `dict`，而不是抛出异常：可能是该标签页已经断开连接，或者设置了 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout) 且在超时前无人响应。使用结果前请先检查该键。参见[事件 → 交互式事件](/features/extensibility/plugin/development/events#interactive-events)。
 ## Action 类型与配置方式 {#action-types-and-configurations}
 
 ### 单一 Action {#single-actions}
 
 标准 action 只有一个 `action` 方法：
 
-```python
+``` python
 async def action(self, body: dict, **kwargs):
     # 单 Action 实现
-    return {"content": "Action result"}
+    return {"messages": [{"id": body["id"], "content": "Action result"}]}
 ```
 
 ### 多重 Action {#multi-actions}
 
 Functions 可以通过 `actions` 数组定义多个子 action：
 
-```python
-actions = [
-    {
-        "id": "summarize",
-        "name": "Summarize",
-        "icon_url": "https://example.com/icons/summarize.svg"
-    },
-    {
-        "id": "translate",
-        "name": "Translate",
-        "icon_url": "https://example.com/icons/translate.svg"
-    }
-]
+``` python
+class Action:
+    actions = [
+        {
+            "id": "summarize",
+            "name": "Summarize",
+            "icon_url": "https://example.com/icons/summarize.svg"
+        },
+        {
+            "id": "translate",
+            "name": "Translate",
+            "icon_url": "https://example.com/icons/translate.svg"
+        }
+    ]
 
-async def action(self, body: dict, __id__=None, **kwargs):
-    if __id__ == "summarize":
-        # 总结逻辑
-        return {"content": "Summary: ..."}
-    elif __id__ == "translate":
-        # 翻译逻辑
-        return {"content": "Translation: ..."}
+    async def action(self, body: dict, __id__=None, **kwargs):
+        if __id__ == "summarize":
+            # Summarization logic
+            return {"messages": [{"id": body["id"], "content": "Summary: ..."}]}
+        elif __id__ == "translate":
+            # Translation logic
+            return {"messages": [{"id": body["id"], "content": "Translation: ..."}]}
 ```
 
 ### 全局 Action 与模型级 Action {#global-vs-model-specific-actions}
+- **全局 Action** —— 在 Action 的设置中打开开关，即可为所有用户和所有模型全局启用它。
+- **模型专属 Action** —— 在模型设置中为特定模型配置已启用的 Action。
 
-- **全局 Action** —— 在 Action 设置中打开全局开关后，它会对所有用户与所有模型生效
-- **模型专属 Action** —— 也可以在模型设置中仅为特定模型启用
+只有在启用状态下才会提供某个 Action。非管理员用户只能在其有权访问且会展示该 Action 的模型上运行它，而且只能在自己拥有的对话中运行。将 [`ENABLE_PLUGINS`](/reference/env-configuration#enable_plugins) 或 [`ENABLE_FUNCTIONS`](/reference/env-configuration#enable_functions) 设为 `false` 会完全禁用 Actions。
 
 ### 按钮显示顺序（Priority） {#button-display-order-priority}
 
@@ -170,9 +172,9 @@ async def action(self, body: dict, __id__=None, **kwargs):
 
 若要控制顺序，请在 Action 的 Valves 中加入 `priority` 字段：
 
-```python
+``` python
 class Valves(BaseModel):
-    priority: int = 0  # 值越小，按钮越靠前
+    priority: int = 0  # Lower = appears first in the button row
 ```
 
 这与 [filter functions](/features/extensibility/plugin/functions/filter) 使用的是同一套优先级机制，因此整个插件系统的行为保持一致。若未定义 `priority` valve，则默认值为 `0`，同优先级之间按 **function ID 字母序** 排序。
@@ -183,7 +185,7 @@ class Valves(BaseModel):
 
 对于耗时较长的操作，actions 可以与任务系统结合：
 
-```python
+``` python
 async def action(self, body: dict, __event_emitter__=None):
     # 开始长任务
     await __event_emitter__({
@@ -194,49 +196,24 @@ async def action(self, body: dict, __event_emitter__=None):
     # 执行耗时操作
     result = await some_long_running_function()
 
-    return {"content": f"Processing completed: {result}"}
+    return {"messages": [{"id": body["id"], "content": f"Processing completed: {result}"}]}
 ```
 
 ### 文件与媒体处理 {#file-and-media-handling}
 
-Actions 可以处理上传文件并生成新的媒体内容：
-
-```python
-async def action(self, body: dict):
-    message = body
-
-    # 读取上传文件
-    if message.get("files"):
-        for file in message["files"]:
-            # 根据类型处理文件
-            if file["type"] == "image":
-                # 图片处理逻辑
-                pass
-
-    # 返回新文件
-    return {
-        "content": "Analysis complete",
-        "files": [
-            {
-                "type": "image",
-                "url": "generated_chart.png",
-                "name": "Analysis Chart"
-            }
-        ]
-    }
-```
+action 收到的 payload 携带的是对话中的消息，而不是它们的附件，因此返回 `files` 列表不会产生任何作用。要访问某个聊天的文件，请结合聊天与文件 API 使用 `body["chat_id"]`，并通过 `__event_emitter__` 或改写消息内容来展现你的产出。
 
 ### 用户上下文与权限 {#user-context-and-permissions}
 
 Actions 可以读取用户信息并遵循权限控制：
 
-```python
+``` python
 async def action(self, body: dict, __user__=None):
     if __user__["role"] != "admin":
-        return {"content": "This action requires admin privileges"}
+        return {"messages": [{"id": body["id"], "content": "This action requires admin privileges"}]}
 
     user_name = __user__["name"]
-    return {"content": f"Hello {user_name}, admin action completed"}
+    return {"messages": [{"id": body["id"], "content": f"Hello {user_name}, admin action completed"}]}
 ```
 
 ## 示例：指定 Action Frontmatter {#example-specifying-action-frontmatter}
@@ -266,7 +243,7 @@ async def action(self, body: dict, __user__=None):
 <details>
 <summary>示例</summary>
 
-```python
+``` python
 """
 title: Enhanced Message Processor
 author: @admin
@@ -293,13 +270,13 @@ class Action:
         __event_emitter__=None,
         __event_call__=None,
     ):
-        # 发送初始状态
+        # Send initial status
         await __event_emitter__({
             "type": "status",
             "data": {"description": "Processing message..."}
         })
 
-        # 获取用户确认
+        # Get user confirmation
         response = await __event_call__({
             "type": "confirmation",
             "data": {
@@ -309,13 +286,13 @@ class Action:
         })
 
         if not response:
-            return {"content": "Action cancelled by user"}
+            return None
 
-        # 处理消息
-        original_content = body.get("content", "")
-        enhanced_content = f"Enhanced: {original_content}"
+        # Process the message the button was pressed on
+        message = body["messages"][-1]
+        enhanced_content = f"Enhanced: {message.get('content', '')}"
 
-        return {"content": enhanced_content}
+        return {"messages": [{"id": body["id"], "content": enhanced_content}]}
 ```
 
 </details>
@@ -326,19 +303,21 @@ class Action:
 
 始终在 action 中做好错误处理：
 
-```python
+``` python
 async def action(self, body: dict, __event_emitter__=None):
     try:
-        # Action 逻辑
+        # Action logic here
         result = perform_operation()
-        return {"content": f"Success: {result}"}
+        return {"messages": [{"id": body["id"], "content": f"Success: {result}"}]}
     except Exception as e:
         await __event_emitter__({
             "type": "notification",
             "data": {"type": "error", "content": f"Action failed: {str(e)}"}
         })
-        return {"content": "Action encountered an error"}
+        return {"messages": [{"id": body["id"], "content": "Action encountered an error"}]}
 ```
+
+从 `action()` 中逃逸出的异常会变成 HTTP 400、界面上的一个 toast 提示，以及按钮所在那条消息上的一个错误标记。
 
 ### 性能注意事项 {#performance-considerations}
 

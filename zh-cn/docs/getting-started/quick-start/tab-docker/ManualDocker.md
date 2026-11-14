@@ -138,7 +138,7 @@ docker pull ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 ```
 
 :::info Docker Hub
-同样的镜像也以 `openwebui/open-webui` 的形式镜像到 Docker Hub，但只覆盖一部分：`latest`、`latest-<变体>` 以及裸的 `<变体>` 标签（例如 `slim`、`cuda`、`ollama`）跟随 `main`，而 `X.Y.Z` / `X.Y`（带或不带变体后缀）跟随发布版本。`:main`、`:dev`、`:vX.Y.Z` 和 `:git-<sha>` 只存在于 ghcr.io，因此本文档中的每条命令都使用 `ghcr.io/open-webui/open-webui`。
+同样的镜像也以 `openwebui/open-webui` 的形式镜像到 Docker Hub，但只覆盖一部分：`latest`、`latest-<variant>` 以及裸的 `<variant>` 标签（例如 `slim`、`cuda`、`ollama`）跟随 `main`，而 `X.Y.Z` / `X.Y`（带或不带变体后缀）跟随发布版本。`:main`、`:dev`、`:vX.Y.Z` 和 `:git-<sha>` 只存在于 ghcr.io，因此本文档中的每条命令都使用 `ghcr.io/open-webui/open-webui`。
 :::
 
 ---

@@ -27,14 +27,15 @@ Agentic web search 最适合 GPT-5、Claude 4.5+、Gemini 3+、MiniMax M2.5 这�
 
 ## 如何启用 Agentic 行为 {#how-to-enable-agentic-behavior}
 
-要解锁这些能力，你的模型必须支持原生工具调用，并具备较强推理能力（如 GPT-5、Claude 4.5 Sonnet、Gemini 3 Flash、MiniMax M2.5）。这些内置系统工具的管理员级配置请参阅 [**Central Tool Calling Guide**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
+要解锁这些能力，你的模型必须支持原生工具调用，并具备合理的多步推理能力——最低限度需要类似 GPT-5.6 Luna、Gemini 3.5 Flash-Lite、MiniMax M3、Gemma 4 31B，或在本地运行的 Muse Glimmer 30B。这些内置系统工具的管理员级配置请参阅 [**Central Tool Calling Guide**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
 
 1.  **全局启用 Web Search**：确保已在 **Admin Panel → Settings → Web Search** 中配置搜索引擎
 2.  **启用模型能力**：前往 **Admin Panel → Settings → Models**，选中目标模型并启用 **Web Search** capability
 3.  **启用默认功能**：在同一模型设置中，找到 **Default Features**，勾选 **Web Search**。这决定 `search_web` 与 `fetch_url` 是否会默认出现在新聊天中
-4.  **启用 Native Mode (Agentic Mode)**：
-    *   在同一模型设置的 **Advanced Parameters** 中，将 **Function Calling** 设为 `Native`
-5.  **使用高质量模型**：请确保你使用的是推理能力强的 frontier 模型，以获得最佳效果
+4.  **确认 Native Mode (Agentic Mode)**：
+    *   Native 是默认的工具调用模式，因此除非模型被切换到 Legacy，否则它已经处于生效状态。在同一模型设置的 **Advanced Parameters** 中，确认 **Function Calling** 被设为 `Native`（而不是 `Legacy`）。
+5.  **使用高质量搜索引擎**：选择一个能返回相关且最新结果的提供商。为 LLM 工作流而构建的托管提供商通常返回更强的结果，而像 SearXNG 这类自托管引擎则高度依赖上游引擎与实例配置。
+6.  **使用高质量工具调用模型**：使用较新的、原生函数调用可靠且上下文足以容纳工具 schema 和搜索结果的模型。
 
 :::info 通过环境变量进行配置
 
@@ -45,7 +46,7 @@ Agentic web search 最适合 GPT-5、Claude 4.5+、Gemini 3+、MiniMax M2.5 这�
 :::tip Model Capability、Default Features 与聊天开关
 在 **Native Mode**（当前受支持模式）下，`search_web` 与 `fetch_url` 工具要求同时满足：模型启用了 **Web Search** capability，且模型设置中的 **Default Features** 里也勾选了 **Web Search**（或在聊天中手动打开）。只要缺少其中任一项，这两个工具就不会被注入——即使其他 builtin tools 仍可能可用。
 
-这里提到 Default Mode 下的 RAG 式注入行为，仅用于兼容历史部署。Default Mode 已不再受支持；所有模型都应配置为 Native Mode。
+这里提到 Legacy Mode 下的 RAG 式注入行为，仅用于兼容历史部署。Native Mode 是默认模式；Legacy Mode 是已不受支持的退出选项。
 
 **重要：** 如果你关闭了模型的 `web_search` capability，但又使用 Native Mode，那么即使你在聊天中手动打开 Web Search，相关工具依然不会可用。
 :::
@@ -54,7 +55,7 @@ Agentic web search 最适合 GPT-5、Claude 4.5+、Gemini 3+、MiniMax M2.5 这�
 
 🔗 需要特别理解的是：Native Mode（Agentic Mode）的工作方式，与标准模型中全局 “Web Search” 开关背后的机制完全不同。
 
-### `search_web`（仅返回摘要片段） {#search_web-snippets-only}
+### `search_web`（仅返回摘要片段） {#search\_web-snippets-only}
 
 当模型调用 `search_web` 时：
 *   **动作**：它会查询你的搜索引擎，并收到标题、链接和 snippet 列表
@@ -62,11 +63,13 @@ Agentic web search 最适合 GPT-5、Claude 4.5+、Gemini 3+、MiniMax M2.5 这�
 *   **无 RAG**：与传统搜索不同，**不会有任何数据写入 Vector DB**，也不会执行切块或 embedding
 *   **结果**：模型看到的内容，就像人类在搜索结果页上看到的东西一样。如果 snippet 已经包含答案，模型就会直接回答；如果不够，它就必须自己决定是否要“深挖”某个链接
 
-### `fetch_url`（整页上下文） {#fetch_url-full-page-context}
+### `fetch_url`（整页上下文） {#fetch\_url-full-page-context}
 
 如果模型判断搜索 snippet 不足以回答问题，它就会调用 `fetch_url`：
-*   **直接访问**：该工具会访问指定 URL，并使用你配置的 **Web Loader** 提取主要文本
-*   **原始上下文**：提取后的文本会被**直接注入模型上下文窗口**（硬编码截断为最多 50,000 字符，以防止上下文溢出）
+*   **直接访问**：该工具会访问指定 URL，并使用你配置的 **Web Loader** 提取主要文本。
+*   **原始上下文**：提取后的文本会被**直接注入模型上下文窗口**。默认情况下整页内容都会进入上下文。若要设置上限，可在 **设置 > 管理 > Web Search** 中调整 **Fetch URL Content Length Limit**，或设置 [`WEB_FETCH_MAX_CONTENT_LENGTH`](/reference/env-configuration#web_fetch_max_content_length)；超过该字符数的页面会被截断，并以 `[Content truncated...]` 结尾。
+*   **文件**：在读取之前，Open WebUI 会检查该 URL 是网页还是文件。该检查发出的请求与网页加载器完全相同，使用相同的 [`USER_AGENT`](/reference/env-configuration#user_agent)、浏览器请求头和 **Verify SSL Certificate** 设置，因此那些屏蔽未知客户端的站点（例如 Wikimedia）会以同样的方式回应。PDF 或其他文档随后会进入文档提取流程，模型拿到的是它的文本。当文件名没有已知扩展名时（例如 `arxiv.org/pdf/1706.03762`），由服务器报告的文件类型决定该文件被如何读取。
+*   **可引用**：被抓取的页面会以 URL 命名的来源出现在引用面板中。在 Native 模式下，这是网页成为引用的唯一途径，而且它一定是模型真正读过的页面。
 *   **Agentic 优势**：由于不使用 RAG，模型拿到的是网页的“完整画面”，而不是零散片段。这使它能更好执行复杂页面级指令（例如：“Summarize the technical specifications table from this documentation link”）
 
 :::tip

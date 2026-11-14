@@ -3,9 +3,21 @@ sidebar_position: 1
 title: "检索增强生成 (RAG)"
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+<ThemedImage
+  alt="文档：一叠纸张，其中一张被抽出"
+  sources={{
+    light: useBaseUrl('/images/banners/chat-conversations-documents-light.svg'),
+    dark: useBaseUrl('/images/banners/chat-conversations-documents-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
+
 :::warning
 
-如果你正在使用 **Ollama**，请注意它**默认的上下文长度为 2048 个 token**。这会严重限制**检索增强生成 (RAG) 的性能**，特别是对于网络搜索，因为检索到的数据可能**根本不会被使用**或仅被部分处理。
+如果你正在使用 **Ollama**，请注意它**会根据 GPU 的显存来选择模型的默认上下文长度，在显存小于 24 GiB 的 GPU 上这个值是 4096 个 token**（参见 [Ollama 的上下文长度文档](https://docs.ollama.com/context-length)）。这会严重限制**检索增强生成 (RAG) 的性能**，特别是对于网络搜索，因为检索到的数据可能**根本不会被使用**或仅被部分处理。
 
 :::
 
@@ -15,7 +27,9 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 
 ## 本地和远程 RAG 集成 {#local-and-remote-rag-integration}
 
-首先必须通过工作区（Workspace）的“文档”（Documents）部分上传本地文档，然后才能在查询前使用 `#` 符号访问它们。点击聊天框上方出现的格式化 URL。选择后，`Send a message`（发送消息）上方会出现一个文档图标，表示检索成功。
+要在 RAG 中使用本地文档，请将其添加到**工作区 > 知识库**中的知识库，或在聊天中上传。在聊天中，在查询前输入 `#` 并从消息输入框上方出现的建议框中选择该文档。选择后，`Send a message`（发送消息）上方会出现一个文档图标，表示该文档已附加并可用于检索。
+
+![文档与检索设置](/images/admin/admin-documents.png)
 
 :::tip 批量文件管理
 需要清理多个已上传的文档或审计您的存储？您现在可以使用位于 **设置 > 数据控制 > 管理文件 (Settings > Data Controls > Manage Files)** 的集中式**[文件管理器](/features/chat-conversations/data-controls/files)**。在那里删除文件将自动清理其相应的 RAG 嵌入数据。
@@ -61,6 +75,10 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 
 创建后，外部源会像其他知识库一样出现在**工作区 > 知识库**中，并可附加到模型或对话。在查询时，Open WebUI 使用其配置的 RAG 嵌入模型对用户的问题进行嵌入，通过向量搜索外部数据库，并将最匹配的结果注入提示词。Open WebUI 中不会存储文档的副本。
 
+启用[检索查询生成](/reference/env-configuration#enable_retrieval_query_generation)后，所有生成的查询会同时运行。它们的结果按排名合并（先取每个查询的第一条结果，再取每个查询的第二条，以此类推），重复项会被丢弃，列表会被裁剪到结果数量。
+
+在答案下方的来源列表中，每条结果都按其标题列出。当某条结果的**来源字段**保存的是网页地址时，点击其标题或引用中的**内容**链接会打开该页面；否则标题只是纯文本。
+
 :::info 嵌入模型必须匹配
 由于 Open WebUI 对查询进行嵌入并通过向量搜索你的数据库，因此外部数据库中存储的向量必须来自 Open WebUI 使用的**同一个嵌入模型**（模型和维度均需匹配）。不匹配的嵌入会产生不理想或无意义的结果。
 :::
@@ -85,14 +103,10 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 
 从 `管理面板 (Admin Panel)` > `设置 (Settings)` > `文档 (Documents)` 菜单自定义 RAG 模板。
 
-## Markdown 标题拆分
+RAG 模板用于格式化**检索到的上下文**，并会在消息到达模型之前作为前缀附加到你的消息上。请使用 `{{CONTEXT}}` 占位符（或旧版的 `[context]`）来标记检索到的文档上下文插入的位置。没有它，检索到的上下文就无处安放。
 
-启用后，文档将首先按照 markdown 标题 (H1-H6) 进行拆分。这保留了文档结构，并确保尽可能将同一标题下的章节保存在一起。生成的语块然后由标准的字符或 token 拆分器进一步处理。
-
-:::tip
-
-使用 **Chunk Min Size Target** 设置（位于 **管理面板 > 设置 > 文档** 中），在 markdown 拆分后智能合并较小的章节，从而提高检索的连贯性并减少数据库中的向量总数。
-
+:::warning 不要包含查询占位符
+你的消息（即查询）**始终会自动追加**在渲染后的模板之后，因此模型已经能看到它一次。模板同样能识别 `{{QUERY}}` / `[query]` 并在那里替换查询，但由于查询随后仍会被追加，写入该占位符会让查询在最终提示词中出现**两次**。请把 `{{QUERY}}` / `[query]` 从模板中去掉：它是检索上下文的包装器，而不是用来安放查询的位置。
 :::
 
 ## Markdown 标题拆分 {#markdown-header-splitting}
@@ -109,9 +123,10 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 
 Open WebUI 允许您微调文档如何被拆分成块以进行嵌入。这对于获得最佳检索性能至关重要。
 
+- **文本分割器 (Text Splitter)**：决定如何度量语块大小。[`RAG_TEXT_SPLITTER`](/reference/env-configuration#rag_text_splitter) 可取 `character`（默认，RecursiveCharacterTextSplitter）、`token` 或 `token_transformers`。`token` 分割器使用 Tiktoken 计算 token；`token_transformers` 分割器使用由 [`RAG_TOKENIZER_MODEL`](/reference/env-configuration#rag_tokenizer_model) 指定的 HuggingFace 分词器（例如 `bert-base-uncased`）计算，从而让语块边界与你的嵌入模型自身的分词器保持一致。它在 slim 镜像上不可用。
 - **Chunk Size (语块大小)**：设置每个语块的最大字符（或 token）数。
 - **Chunk Overlap (语块重叠)**：指定相邻语块之间共享多少内容以维持上下文。
-- **Chunk Min Size Target (语块最小尺寸目标)**：尽管 [Markdown 标题拆分](#markdown-标题拆分) 在保留结构方面非常出色，但它通常会产生微小且碎片化的语块（例如，独立的副标题、目录条目、单句段落或短列表项），这些语块缺乏足够的语义上下文来进行高质量嵌入。您可以通过设置 **Chunk Min Size Target** 智能合并这些小片段及其相邻片段来解决此问题。
+- **Chunk Min Size Target (语块最小尺寸目标)**：尽管 [Markdown 标题拆分](#markdown-header-splitting) 在保留结构方面非常出色，但它通常会产生微小且碎片化的语块（例如，独立的副标题、目录条目、单句段落或短列表项），这些语块缺乏足够的语义上下文来进行高质量嵌入。您可以通过设置 **Chunk Min Size Target** 智能合并这些小片段及其相邻片段来解决此问题。
 
 ### 为什么使用 Chunk Min Size Target？ {#why-use-a-chunk-min-size-target}
 
@@ -239,36 +254,35 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 ## RAG 功能中的引用（Citations） {#citations-in-rag-feature}
 
-RAG 功能允许用户轻松追踪投喂给 LLMs 的文档上下文，并带有用于参考定位的引用信息。这确保了在您的对话中使用外部来源信息的透明度和问责机制。
+RAG 功能允许用户轻松追踪投喂给 LLMs 的文档上下文，并带有用于参考定位的引用信息。这确保了在您的对话中使用外部来源信息的透明度和问责机制。若要让模型引用页码或每个分块随附的其他细节，请设置 [`RAG_SOURCE_METADATA_KEYS`](/reference/env-configuration#rag_source_metadata_keys)。
 
 ## 文件上下文 vs 内置工具 {#preload-files-vs-builtin-tools}
 
 Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之间的区别对于正确配置模型很重要。
 
 ### 文件上下文能力 {#preload-files-capability}
+**预加载文件 (Preload files)** 能力控制 Open WebUI 是否对附件文件执行 RAG（检索增强生成）。在原生函数调用下它默认关闭，在旧版下默认开启。模型编辑器和 **模型默认值** 会显示其生效值。对于不是来自网页界面聊天的 API 请求，除非模型为它保存了某个值，否则它是开启的，因此放在 `files` 字段中的文件和知识可以到达模型。
 
-**文件上下文 (File Context)** 能力控制 Open WebUI 是否对附件文件执行 RAG（检索增强生成）：
-
-| 文件上下文 | 行为表现 |
+| 预加载文件 | 行为表现 |
 |--------------|----------|
-| ✅ **启用** (默认) | 通过 RAG 处理附加的文件。检索内容并将其注入到对话上下文中。 |
-| ❌ **禁用** | **完全跳过**文件处理。不提取内容，也不注入。模型接收不到任何文件内容。 |
+| **启用** | 通过 RAG 处理附加的文件。检索内容并将其注入到对话上下文中。 |
+| **禁用** | 文件内容永远不会被提取或注入。在原生或默认函数调用下，模型会看到附加文件的列表，并通过内置 **Files** 工具读取它们（`list_chat_files`、`query_chat_files`、`grep_chat_files`、`view_file`、`display_file`）。这些工具需要 **Files** 内置工具类别、模型的 **File Upload** 能力以及用户的上传权限。 |
 
-**何时禁用 File Context：**
-- **完全绕过 RAG**：当你不希望 Open WebUI 对附件进行任何处理时。
-- **仅使用内置工具**：如果您更倾向于让模型通过如 `query_knowledge_bases` 这样的工具按需检索文件内容，而不是拥有预先注入的内容。
+**何时禁用预加载文件：**
+- **完全绕过 RAG**：当你完全不希望 Open WebUI 处理附加文件时。
+- **仅使用[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)**：如果你更倾向于让模型按需检索内容，而不是预先注入。禁用预加载文件也正是[内置 **Files** 工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)可用的前提，模型借此自行列出、搜索和读取聊天附件。
 - **调试/测试**：用来隔离问题是否与 RAG 处理相关。
 
-:::warning File Context 禁用 = 无预注入内容
-禁用 File Context 时，**不会自动提取或注入**文件内容。Open WebUI 不会将文件转发给模型的原生 API。如果禁用此项，模型获取文件内容的唯一方式是依靠内置工具（如果已启用），去查询知识库或按需检索附加文件（代理式文件处理）。
+:::warning 禁用预加载文件 = 无预注入内容
+禁用预加载文件时，文件内容**不会被自动提取或注入**。Open WebUI 不会把文件转发给模型的原生 API。如果禁用此项，模型获取文件内容的唯一途径就是[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)（如果已启用）——查询知识库或按需检索附加文件（代理式文件处理）。
 :::
 
 :::tip 基于单个文件的检索模式
-各个文件和知识库也可被设置为完全绕开 RAG 的模式——通过使用 **"Using Entire Document (使用整篇文档)"** 开关。它无视原生函数调用设置，将完整文件内容注入进每条消息里。参阅 [完全上下文 vs 重点检索](/features/workspace/knowledge#retrieval-modes) 以了解详情。
+各个文件和知识库也可通过 **"Using Entire Document（使用整篇文档）"** 开关设置为完全绕开 RAG。无论原生函数调用设置如何，它都会把完整文件内容注入每条消息。**管理设置** > **文档**中不超过**全文阈值（字符数）**的上传文件和文本附件会自动完整包含，而**始终使用全文**则对每个文档都应用这一规则。欲停止逐个选择，请在**设置 > 界面 > 文件**中设置**默认上传模式**：此后你附加的每个文件都会以你选定的模式开始，之后仍可单独切换。详情参阅[完全上下文 vs 重点检索](/features/workspace/knowledge#retrieval-modes)。
 :::
 
 :::info
-仅当模型启用了**文件上传 (File Upload)** 时，File Context 切换开关才会出现。
+只有当模型启用了 **File Upload** 时，预加载文件开关才会出现。
 :::
 
 ### 内置工具能力 {#builtin-tools-capability}
@@ -285,20 +299,36 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 - **需要可预测的行为**：你只希望模型在给定的有限信息内发挥作用。
 
 ### 结合使用两项能力 {#combining-the-two-capabilities}
+这些能力独立运作，赋予您精细化的控制权。下表描述的是在设置为默认或原生函数调用的模型上，**在聊天内部**附加的文件和知识库。
 
-这些能力独立运作，赋予您精细化的控制权：
+在旧版下，[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)设置对这些附件不起作用。无论该设置如何，模型都不会获得任何自主检索工具，因此只有预加载文件决定结果：开启则内容会像传统 RAG 那一行那样预先注入；关闭则像"无文件处理"那一行一样，内容根本不会到达模型。
 
-| File Context | Builtin Tools | 结果 |
+| 预加载文件 | 内置工具 | 结果 |
 |--------------|---------------|--------|
-| ✅ 启用 | ✅ 启用 | **全能代理模式**：注入 RAG 内容 + 模型能自发查询知识库 |
-| ✅ 启用 | ❌ 禁用 | **传统 RAG**：前期注入内容，不支持自动检索工具 |
-| ❌ 禁用 | ✅ 启用 | **纯工具模式**：不预先注入内容，但模型可通过工具查询知识库或按需抓取附件文件 |
-| ❌ 禁用 | ❌ 禁用 | **无文件处理**：忽略附加文件，没有内容会传递给模型 |
+| 启用 | 启用 | **全能代理模式**：注入 RAG 内容 + 模型能自发查询知识库 |
+| 启用 | 禁用 | **传统 RAG**：前期注入内容，不支持自动检索工具 |
+| 禁用 | 启用 | **纯工具模式**：不预先注入内容。模型按需查询知识库，并且会注入[内置 **Files** 工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)（`list_chat_files`、`query_chat_files`、`grep_chat_files`、`view_file`、`display_file`），让它能读取和搜索聊天自身的附件。该组合同时也是[提示缓存的最优配置](/features/chat-conversations/prompt-caching) |
+| 禁用 | 禁用 | **无文件处理**：忽略附加文件，没有内容会传递给模型 |
+
+:::warning 附加到模型或文件夹上的知识表现不同
+上表涵盖的是在聊天中进行的附加。附加到工作区模型上的知识，以及附加到文件夹上的知识，则遵循函数调用模式：
+
+- **旧版**：知识会排队等待检索并预先注入，与表格描述一致——前提是预加载文件已开启。关闭预加载文件会完全移除检索步骤，因此在旧版下也不会注入任何内容。
+- **默认和原生**：无论预加载文件如何设置，都不会注入。知识通过[内置知识工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)提供给模型，由模型自行决定是否检索。
+
+其后果是一种"静默无效"的配置。当预加载文件已开启、[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)被禁用、而函数调用保持默认时，附加到模型或文件夹上的知识永远不会被触及：既没有注入，模型也没有工具去查询它。默认是大多数部署从未改动过的设置，因此很容易在无意中落入这一组合。
+
+以下任一做法都可以解决：
+
+- 在该模型上保持[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)开启。
+- 把该模型的函数调用设为旧版。
+- 把知识库附加在聊天中，而不是附加到模型或文件夹上。
+:::
 
 :::tip 选择正确的配置
 - **多数模型**：二者均保持开启（默认设定）以获得完整体验。
-- **小型/本地模型**：如果它们不支持函数调用，请关闭 Builtin Tools。
-- **仅按需检索**：如果你希望由模型决定检索内容而非预先提供全部内容，则关闭 File Context，开启 Builtin Tools。
+- **小型/本地模型**：如果它们不支持函数调用，请关闭[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
+- **仅按需检索**：如果你希望由模型决定检索内容而非预先提供全部内容，请禁用预加载文件、启用[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)，并把模型设为默认或原生函数调用。这在旧版下不起作用——旧版从不使用按需工具，因此在关闭预加载文件后将完全检索不到任何内容。
 :::
 
 ## 增强的 RAG Pipeline {#enhanced-rag-pipeline}
@@ -313,15 +343,16 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 
 通过视频 URL 总结 YouTube 视频的专用 RAG 流程让您能够顺畅地直接和视频转录文本互动。这项创新的特性允许您将视频内容纳入对话，进一步充实了您的聊天体验。
 
-## 文档解析 {#document-parsing}
+视频以其转录文本的形式附加，因此没有可用转录的视频无法附加，错误信息会指出属于哪种情况：上传者关闭了字幕、视频有年龄限制或不可用、所请求的语言没有转录，或者 YouTube 因请求来源地址而拦截了请求。可通过 [`YOUTUBE_LOADER_LANGUAGE`](/reference/env-configuration#youtube_loader_language) 设置要尝试的语言，并通过**设置 > 管理 > Web Search > Youtube Proxy URL**（[`YOUTUBE_LOADER_PROXY_URL`](/reference/env-configuration#youtube_loader_proxy_url)）让被拦截的请求走代理。参见[附加链接或 YouTube 视频失败](/troubleshooting/rag#14-attaching-a-link-or-a-youtube-video-fails)。
 
-多种不同的解析器能够提取本地及远程文档的内容。更多信息，请查阅 [`get_loader`](https://github.com/open-webui/open-webui/blob/2fa94956f4e500bf5c42263124c758d8613ee05e/backend/apps/rag/main.py#L328) 函数。
+## 文档解析 {#document-parsing}
+多种不同的解析器能够提取本地及远程文档的内容：内置引擎如 Tika、Docling 和 Mistral OCR，或者在你需要按文件类型路由或自定义逻辑时，通过[外部引擎](/features/chat-conversations/rag/document-extraction/external)运行你自己的服务。完整列表和配置步骤请查阅[文档提取](/features/chat-conversations/rag/document-extraction)。
 
 :::warning 临时聊天限制
 当使用**临时聊天 (Temporary Chat)** 时，为了保证数据私密且不在服务器驻留，文档处理受限在**纯前端**环节。由此，基于后端的高级解析功能（服务于如复杂的 DOCX 格式）会被停用，你可能会看到原始数据而不是整理好的解析文字。要获取完备的文档支持，请使用标准会话（Standard Chat）。
 :::
 
-## CSV 表格摘要 {#csv-table-summary}
+### CSV 表格摘要 {#csv-table-summary}
 
 解析后的 CSV 就是它的各行，仅此而已，因此当模型被问及某个表格包含多少条订单时，它只能根据被检索到的那些行来回答。设置 [`ENABLE_RAG_CSV_SUMMARY=true`](/reference/env-configuration#enable_rag_csv_summary)（默认关闭，需要重启）会在每个 `.csv` 文件前面加上一行，写明其行数、数据行数和列名。
 
@@ -337,7 +368,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 2. 记录下与该 OAuth 客户端绑定的客户端 ID (Client ID)。
 3. 确保你的项目启用了 Google Drive API 和 Google Picker API 两项服务。
 4. 同时将你的应用 (项目) 设定在测试状态 (Testing) 并将你的 Google Drive 邮箱增添至用户列表中。
-5. 配置权限作用域，涵盖这几个 API 所能提供的所有范畴。由于应用停留在测试模式，Google 不要求通过验证来让应用获取有限测试用户的相关数据。
+5. 添加 `https://www.googleapis.com/auth/drive.file` 作用域。Open WebUI 只请求这一个作用域，它授予访问每位用户所选文件的权限。Google 将其归类为非敏感作用域，因此自托管安装无需受限作用域验证或安全评估，用户也不会看到"Google 尚未验证此应用"的警告。
 6. 前往 Google Picker API 的控制台，然后点击创建凭据 (create credentials) 按钮。
 7. 创建一个 API 密钥，并在应用限制 (Application restrictions) 中勾选网站 (Websites)。随后添入你的 Open-WebUI 实例 URL，内容等同于步骤 1 中的授权 JavaScript 来源和重定向 URI 的地址。
 8. 给该 API Key 配置 API 约束限制，使其只准存取 Google Drive API & Google Picker API。
@@ -346,3 +377,5 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 11. 建立 `GOOGLE_REDIRECT_URI` 设定为你 Open-WebUI 实例的 URL (包含端口)。
 12. 接着，在环境里携带着那三项变量重新启动你的 Open-WebUI。
 13. 完成之后，去确保 Google Drive 已经在 `管理面板 (Admin Panel)` < `设置 (Settings)` < `文档 (Documents)` < `Google Drive` 被开启。
+
+选择器以列表视图打开，因为 `drive.file` 作用域无法访问文件缩略图。

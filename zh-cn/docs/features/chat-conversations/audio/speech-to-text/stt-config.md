@@ -19,9 +19,10 @@ Open WebUI 同时支持本地、浏览器内置和远程语音转文本。
 |---------|------------------|-------|
 | Local Whisper（默认） | ❌ | 内置支持，参见 [环境变量](/features/chat-conversations/audio/speech-to-text/env-variables) |
 | OpenAI（Whisper API） | ✅ | [OpenAI STT 指南](/features/chat-conversations/audio/speech-to-text/openai-stt-integration) |
+| 自托管（OpenAI 兼容） | ✅ | [自托管 STT 指南](/features/chat-conversations/audio/speech-to-text/self-hosted-stt)（使用带认证的服务器） |
 | Mistral（Voxtral） | ✅ | [Mistral Voxtral 指南](/features/chat-conversations/audio/speech-to-text/mistral-voxtral-integration) |
 | Deepgram | ✅ | — |
-| Azure | ✅ | — |
+| Azure | ✅ | [Azure AI Speech STT 指南](/features/chat-conversations/audio/speech-to-text/azure-stt-integration) |
 
 **Web API** 则通过浏览器内置语音识别提供 STT（无需 API 密钥，在用户设置中配置）。
 
@@ -44,6 +45,8 @@ Open WebUI 在 **管理员设置 → 音频 → STT** 下提供了 **Allowed Ext
 ## 用户级设置 {#user-level-settings}
 
 除了在管理员面板中配置的实例级设置外，还有一些用户级设置可以提供额外功能。
+
+这些设置位于**设置**的**音频**标签页。管理员以及至少拥有 **Allow Speech to Text**、**Allow Text to Speech** 或 **Allow Call** 中之一的用户都能看到该标签页（参见[权限](/features/authentication-access/rbac/permissions#3-chat-permissions)）。
 
 - **STT 设置：** 包含与语音转文本相关的设置。
 - **语音转文本引擎：** 决定使用哪种语音识别引擎（默认值或 Web API）。
@@ -85,7 +88,7 @@ Open WebUI 在 **管理员设置 → 音频 → STT** 下提供了 **Allowed Ext
 - 使用 `WHISPER_COMPUTE_TYPE` 环境变量调整计算类型：
   ```yaml
   environment:
-    - WHISPER_COMPUTE_TYPE=float16  # 或 float32
+    - WHISPER_COMPUTE_TYPE=float16  # or float32
   ```
 
 :::tip

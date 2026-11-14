@@ -3,7 +3,7 @@ sidebar_position: 9
 title: "Coding Agents"
 ---
 
-# Coding Agents
+# Coding Agents {#coding-agents}
 
 当所选的 Open Terminal 列出了编码智能体时，它们会出现在模型选择器中，与你的常规模型并列。选中其中一个，该智能体就会在终端的工作区中工作，使用该环境的文件与工具。Open WebUI 支持 Claude Code、Codex、Cursor、Grok、OpenCode、Cline、Gemini CLI 和 Pi。
 

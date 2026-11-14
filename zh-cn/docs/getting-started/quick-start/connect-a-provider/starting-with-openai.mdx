@@ -61,14 +61,17 @@ import TabItem from '@theme/TabItem';
 
 ### 高级配置 {#advanced-configuration}
 
-*   **Model IDs (Filter)**：
+*   **Model IDs**（位于 **Advanced** 下）：
     *   *默认（留空）*：自动检测提供商中的全部可用模型。
-  *   *填写后*：作为**白名单** 生效。只有这里列出的模型 ID 会对用户可见，适合隐藏旧模型或高成本模型。
-
+    *   *填写后*：将替换拉取到的列表。Open WebUI 不再为该连接调用提供商的 `/models`，而是只列出你输入的 ID，因此提供商报告的名称、大小和加载状态都不再有。可以用它隐藏较旧或昂贵的模型，或者为提供商并未列出的模型命名。
+    *   *每个 ID 一行*：输入内容的前后空格会被去除；重复的 ID 会以 **Model ID is already added** 拒绝。重新打开一个存储列表中含重复项的连接时，重复项会被合并为各一条，保存时写回的也是清理后的列表。
 *   **Prefix ID**：
-    *   如果你连接了多个提供商，而它们刚好存在同名模型（例如都提供 `llama3`），可在这里加上前缀（如 `groq/`）用于区分。模型将显示为 `groq/llama3`。
+    *   如果你连接了多个提供商，而它们存在同名模型（例如两个提供商都提供 `qwen3.6`），可在这里加上前缀（如 `groq`）以作区分。Open WebUI 会用点号把前缀和模型 ID 连接起来，模型显示为 `groq.qwen3.6`，并在请求发往上游之前再次去掉前缀。写成 `groq/` 的前缀会得到 `groq/.qwen3.6`。不加前缀时，Open WebUI 每个 ID 只保留一个模型：当两个连接返回相同 ID 时，它只列出列表中位置靠前的那个连接所提供的副本，并在不给出警告的情况下丢弃另一个。
 
-4. 点击 **Save** ✅。
+*   **Provider**：
+    *   告诉 Open WebUI URL 后面是什么类型的服务器，这会开启一些额外能力，例如 Azure 路由、本地模型管理或 Anthropic 通过。对 OpenAI 请保持 **Default**。参见 [Provider 设置](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#the-provider-setting)。
+
+4. 点击 **Save**。
 
 这样你的凭据就会被安全保存。
 

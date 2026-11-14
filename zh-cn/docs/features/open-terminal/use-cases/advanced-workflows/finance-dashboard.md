@@ -19,9 +19,9 @@ title: "财务仪表盘"
 4. 创建包含月度趋势、类别分布和主要商家的仪表盘
 5. 标记异常项目：异常大额费用、新增订阅、可能的重复费用
 
-<!-- TODO: 截图——文件浏览器中预览生成的 spending_dashboard.html：包含支出类别饼图、月度趋势柱状图和主要商家表格。 -->
+![在文件标签页中打开生成的支出仪表盘](/images/open-terminal-finance-dashboard.png)
 
-<!-- TODO: 截图——异常报告：“需要检查的 3 项：2 月 15 日向 'TECHSTORE' 收取 450 美元（异常偏高）、新增每月 14.99 美元的 'StreamPlus' 订阅、3 月 3 日和 5 日可能存在重复的 89.00 美元扣费。” -->
+![AI 标记对账单中的异常交易](/images/open-terminal-finance-anomalies.png)
 
 ## 技能内容 {#skill-content}
 

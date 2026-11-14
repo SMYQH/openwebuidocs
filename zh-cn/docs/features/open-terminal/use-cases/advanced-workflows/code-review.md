@@ -19,15 +19,15 @@ title: "代码审查"
 5. 提出带代码片段的具体修复建议
 6. 保存结构化审查报告
 
-<!-- TODO: 截图——聊天界面显示 AI 正在审查分支差异。回复按严重性组织发现：“🔴 严重：user_query() 中存在 SQL 注入——应使用参数化查询。🟡 警告：get_orders() 中存在 N+1 查询。🔵 建议：将校验逻辑提取到辅助函数中。” -->
+![AI 按严重性分组汇报审查发现](/images/open-terminal-code-review-findings.png)
 
-<!-- TODO: 截图——文件浏览器中的生成审查报告：一个 Markdown 文件，包含每个被审查文件的章节、带行号的发现以及附带代码块的修复建议。 -->
+![在文件查看器中打开生成的审查报告](/images/open-terminal-code-review-report.png)
 
 ## 技能内容 {#skill-content}
 
 将下面的内容复制到**工作区 → 技能 → 创建**：
 
-```markdown
+``` markdown
 ---
 name: code-reviewer
 description: Reviews code changes for security, performance, correctness, and style issues
@@ -38,7 +38,7 @@ description: Reviews code changes for security, performance, correctness, and st
 When asked to review code:
 
 1. **Get the diff**: Use `git diff`, `git log`, or read the specified files to understand what changed
-2. **Read full context**: Don't just look at changed lines — read the entire file to understand the surrounding logic, imports, and how the changes fit in
+2. **Read full context**: Don't just look at changed lines, read the entire file to understand the surrounding logic, imports, and how the changes fit in
 3. **Check for these categories**:
    - **Security**: SQL injection, XSS, hardcoded credentials, missing auth checks, unsafe deserialization, path traversal
    - **Correctness**: Logic errors, off-by-one bugs, unhandled edge cases, race conditions, missing error handling
@@ -46,10 +46,10 @@ When asked to review code:
    - **Style & maintainability**: Inconsistent naming, overly complex functions, missing docstrings, dead code, magic numbers
    - **Testing**: Missing test coverage for new code paths, edge cases not tested
 4. **Prioritize findings**:
-   - 🔴 Critical: Must fix before merge (security, data loss, crashes)
-   - 🟡 Warning: Should fix (performance, correctness edge cases)
-   - 🔵 Suggestion: Nice to have (style, refactoring opportunities)
-   - 💬 Nitpick: Optional (naming preferences, formatting)
+   - Critical: Must fix before merge (security, data loss, crashes)
+   - Warning: Should fix (performance, correctness edge cases)
+   - Suggestion: Nice to have (style, refactoring opportunities)
+   - Nitpick: Optional (naming preferences, formatting)
 5. **For each finding**:
    - Cite the exact file and line number
    - Explain WHY it's a problem (not just what's wrong)

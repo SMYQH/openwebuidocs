@@ -5,11 +5,10 @@ title: "使用 HAProxy 的 HTTPS"
 
 # Open WebUI 的 HAProxy 配置 {#haproxy-configuration-for-open-webui}
 
-## Open WebUI 的 HAProxy 配置 {#install-haproxy-and-lets-encrypt}
 
 HAProxy（High Availability Proxy，高可用代理）是一款专门的负载均衡和反向代理方案，可配置性很强，设计目标是在较低资源占用下处理大量连接。更多信息请参阅：[https://www.haproxy.org/](https://www.haproxy.org/)
 
-## 安装 HAProxy 和 Let's Encrypt
+## 安装 HAProxy 和 Let's Encrypt {#install-haproxy-and-lets-encrypt}
 
 首先安装 HAProxy 和 Let's Encrypt 的 certbot：
 
@@ -17,7 +16,7 @@ HAProxy（High Availability Proxy，高可用代理）是一款专门的负载�
 
 ```sudo dnf install haproxy certbot openssl -y```
 
-### Debian 系发行版
+### Debian 系发行版 {#debian-derivatives}
 
 ```sudo apt install haproxy certbot openssl -y```
 
@@ -27,21 +26,22 @@ HAProxy 的配置默认保存在 ```/etc/haproxy/haproxy.cfg```。这个文件�
 
 让 HAProxy 与 Open WebUI 协同工作的基础配置其实很简单。
 
-```shell
+``` shell
  #---------------------------------------------------------------------
 
-# 全局设置
+# Global settings
 
 #---------------------------------------------------------------------
 global
-        # 如果你希望这些日志最终写入 /var/log/haproxy.log，需要：
+    # to have these messages end up in /var/log/haproxy.log you will
+    # need to:
     #
-    # 1）配置 syslog 接收网络日志事件。可通过向
-    #    /etc/sysconfig/syslog 中的 SYSLOGD_OPTIONS 添加 '-r' 选项来完成
+    # 1) configure syslog to accept network log events. This is done
+    #    by adding the '-r' option to the SYSLOGD_OPTIONS in
     #    /etc/sysconfig/syslog
     #
-    # 2）将 local2 事件写入 /var/log/haproxy.log 文件。
-    #    可以添加如下这一行：
+    # 2) configure local2 events to go to the /var/log/haproxy.log
+    #   file. A line like the following can be added to
     #   /etc/sysconfig/syslog
     #
     #    local2.*                       /var/log/haproxy.log
@@ -55,12 +55,14 @@ global
     group       haproxy
     daemon
 
- # 如有需要，可调高 dh-param
+ #adjust the dh-param if too low
     tune.ssl.default-dh-param 2048
 
 #---------------------------------------------------------------------
 
-# 所有未在各自区块中单独指定的 listen/backend 部分都会继承的通用默认值
+# common defaults that all the 'listen' and 'backend' sections will
+
+# use if not designated in their block
 
 #---------------------------------------------------------------------
 defaults
@@ -81,70 +83,70 @@ defaults
     timeout check           10s
     maxconn                 3000
 
-# HTTP
+#http
 frontend web
- # 非 SSL
+ #Non-SSL
     bind 0.0.0.0:80
- # SSL/TLS
+ #SSL/TLS
  bind 0.0.0.0:443 ssl crt /path/to/ssl/folder/
 
-     # Let's Encrypt SSL
+    #Let's Encrypt SSL
     acl letsencrypt-acl path_beg /.well-known/acme-challenge/
     use_backend letsencrypt-backend if letsencrypt-acl
 
- # 子域名方式
+ #Subdomain method
     acl chat-acl hdr(host) -i subdomain.domain.tld
-     # 路径方式
+    #Path Method
     acl chat-acl path_beg /owui/
     use_backend owui_chat if chat-acl
 
-# 将 SSL 请求交给 Let's Encrypt
+#Pass SSL Requests to Lets Encrypt
 backend letsencrypt-backend
     server letsencrypt 127.0.0.1:8688
 
-# OWUI Chat
+#OWUI Chat
 backend owui_chat
-     # 添加 X-FORWARDED-FOR
+    # add X-FORWARDED-FOR
     option forwardfor
-     # 添加 X-CLIENT-IP
+    # add X-CLIENT-IP
     http-request add-header X-CLIENT-IP %[src]
  http-request set-header X-Forwarded-Proto https if { ssl_fc }
     server chat <ip>:3000
 
-## WebSocket 与 HTTP/2 兼容性
+## WebSocket and HTTP/2 Compatibility
 
-从较新的版本开始（包括 HAProxy 3.x），HAProxy 可能会默认启用 HTTP/2。虽然 HTTP/2 支持 WebSocket（RFC 8441），但某些客户端或后端配置在通过 H2 通道加载图标或数据时，可能会出现“卡死”或无响应的情况。
+Starting with recent versions (including HAProxy 3.x), HAProxy may enable HTTP/2 by default. While HTTP/2 supports WebSockets (RFC 8441), some clients or backend configurations may experience "freezes" or unresponsiveness when icons or data start loading via WebSockets over an H2 tunnel.
 
-如果你遇到这些问题：
-1. **为 WebSocket 强制使用 HTTP/1.1**：在 `frontend` 或 `defaults` 部分添加 `option h2-workaround-bogus-websocket-clients`。这会阻止 HAProxy 向客户端声明 RFC 8441 支持，从而回退到更稳定的 HTTP/1.1 Upgrade 机制。
-2. **后端版本**：确保后端连接使用的是 HTTP/1.1（`mode http` 的默认行为）。
+If you experience these issues:
+1. **Force HTTP/1.1 for WebSockets**: Add `option h2-workaround-bogus-websocket-clients` to your `frontend` or `defaults` section. This prevents HAProxy from advertising RFC 8441 support to the client, forcing a fallback to the more stable HTTP/1.1 Upgrade mechanism.
+2. **Backend Version**: Ensure your backend connection is using HTTP/1.1 (the default for `mode http`).
 
-可以在 `defaults` 或 `frontend` 中添加如下内容：
+Example addition to your `defaults` or `frontend`:
 ```shell
 defaults
     # ... other settings
     option h2-workaround-bogus-websocket-clients
 ```
 
-你可以看到，我们为 Open WebUI 和 Let's Encrypt 都配置了 ACL 记录（路由器）。若要在 OWUI 中使用 WebSocket，需要先配置 SSL，而最简单的方式就是使用 Let's Encrypt。
+You will see that we have ACL records (routers) for both Open WebUI and Let's Encrypt. To use WebSocket with OWUI, you need to have an SSL configured, and the easiest way to do that is to use Let's Encrypt.
 
-你可以选择使用子域名方式或路径方式将流量路由到 Open WebUI。子域名方式需要一个专用子域名（例如 `chat.yourdomain.com`），而路径方式则允许你通过域名下的特定路径访问 Open WebUI（例如 `yourdomain.com/owui/`）。请选择最适合你需求的方式，并相应更新配置。
+You can use either the subdomain method or the path method for routing traffic to Open WebUI. The subdomain method requires a dedicated subdomain (e.g., chat.yourdomain.com), while the path method allows you to access Open WebUI through a specific path on your domain (e.g., yourdomain.com/owui/). Choose the method that best suits your needs and update the configuration accordingly.
 
 :::info
 
-你需要将 80 和 443 端口暴露给 HAProxy 服务器。Let's Encrypt 需要这些端口来验证你的域名，HTTPS 流量也依赖它们。你还需要确保 DNS 记录正确指向 HAProxy 服务器。如果你是在家中运行 HAProxy，还需要在路由器中做端口转发，把 80 和 443 转发到 HAProxy 服务器。
+You will need to expose port 80 and 443 to your HAProxy server. These ports are required for Let's Encrypt to validate your domain and for HTTPS traffic. You will also need to ensure your DNS records are properly configured to point to your HAProxy server. If you are running HAProxy at home, you will need to use port forwarding in your router to forward ports 80 and 443 to your HAProxy server.
 
 :::
 
-## 使用 Let's Encrypt 签发 SSL 证书
+## 使用 Let's Encrypt 签发 SSL 证书 {#issuing-ssl-certificates-with-lets-encrypt}
 
-在启动 HAProxy 之前，先生成一个自签名证书作为占位，直到 Let's Encrypt 签发正式证书。生成自签名证书的方法如下：
+Before starting HAProxy, you will want to generate a self-signed certificate to use as a placeholder until Let's Encrypt issues a proper one. Here's how to generate a self-signed certificate:
 
 ```shell
 openssl req -x509 -newkey rsa:2048 -keyout /tmp/haproxy.key -out /tmp/haproxy.crt -days 3650 -nodes -subj "/CN=localhost"
 ```
 
-然后把密钥和证书合并为 HAProxy 可用的 PEM 文件：
+Then combine the key and certificate into a PEM file that HAProxy can use:
 
 ```cat /tmp/haproxy.crt /tmp/haproxy.key > /etc/haproxy/certs/haproxy.pem```
 

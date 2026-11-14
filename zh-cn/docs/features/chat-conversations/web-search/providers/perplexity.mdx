@@ -21,7 +21,7 @@ title: "Perplexity"
 
 :::
 
-## Perplexity API
+## Perplexity API {#perplexity-api}
 
 :::info
 
@@ -31,8 +31,9 @@ title: "Perplexity"
 
 ### 设置 {#setup}
 
-1. 前往：`Admin Panel` -> `Settings` -> `Web Search`
+1. 前往：`Settings` -> `Admin` -> `Web Search`
 2. 打开 `Enable Web Search`
 3. 将 `Web Search Engine` 从下拉框中设为 `perplexity`
 4. 输入你在 [Perplexity API 密钥管理](https://www.perplexity.ai/account/api/keys) 中获取的 API key
-5. 点击保存
+5. 可选地设置 **Perplexity Model**（`PERPLEXITY_MODEL`，默认 `sonar`）以及 **Perplexity Search Context Usage**（`PERPLEXITY_SEARCH_CONTEXT_USAGE`，可为 `low`、`medium` 或 `high`，默认 `medium`）。回答中的引用会变成搜索结果，标题依次为 `Source 1`、`Source 2` 等，并以回答正文作为第一条结果的摘要。
+6. 点击保存

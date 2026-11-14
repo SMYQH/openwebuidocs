@@ -20,9 +20,11 @@ title: "数据报告"
 5. 将所有内容整合为带有封面、摘要、图表和数据表格的格式化 PDF
 6. 将 PDF 保存到文件浏览器以供下载
 
-{/* TODO: Screenshot — File browser showing three outputs: survey_cleaned.csv, charts/ folder with .png files, and survey_report.pdf. The PDF is previewed showing a professional title page. */}
+![文件浏览器中显示清洗后的数据和生成的图表](/images/open-terminal-data-report-outputs.png)
 
-{/* TODO: Screenshot — A page inside the generated PDF showing a bar chart, key findings, and a summary table. */}
+![在聊天中内联显示的生成图表](/images/open-terminal-data-report-chart.png)
+
+{/* TODO: Screenshot: A page inside the generated PDF showing a bar chart, key findings, and a summary table. */}
 
 ## 技能内容 {#skill-content}
 

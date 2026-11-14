@@ -22,7 +22,7 @@ Open WebUI 支持直接集成到浏览器。本教程将指导你把 Open WebUI 
 - 你已安装 Chrome 或其他受支持浏览器。
 - `WEBUI_URL` 环境变量已正确设置，可通过 Docker 环境变量或 `.env` 文件配置，参见[环境变量指南](/reference/env-configuration)。
 
-### 第 1 步：设置 WEBUI_URL 环境变量 {#step-1-set-the-webui_url-environment-variable}
+### 第 1 步：设置 WEBUI_URL 环境变量 {#step-1-set-the-webui\_url-environment-variable}
 
 设置 `WEBUI_URL` 能让浏览器知道查询请求应发送到哪里。
 

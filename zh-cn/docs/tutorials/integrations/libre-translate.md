@@ -67,7 +67,7 @@ LT_FRONTEND_TIMEOUT="2000"
 运行以下命令启动 LibreTranslate 服务：
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 这将以分离模式启动 LibreTranslate 服务。

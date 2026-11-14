@@ -21,7 +21,7 @@ title: "Yacy"
 
 :::
 
-## Yacy API
+## Yacy API {#yacy-api}
 
 ### 设置 {#setup}
 

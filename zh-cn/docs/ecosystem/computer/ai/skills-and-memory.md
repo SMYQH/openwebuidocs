@@ -12,10 +12,10 @@ sidebar_position: 6
 ```markdown
 ---
 name: release-checklist
-description: 我们在这个仓库中如何进行发布
+description: How we cut a release in this repo
 ---
 
-1. 运行完整的测试套件……
+1. Run the full test suite...
 ```
 
 Frontmatter 需要 `name` 和 `description`；正文是指令。可选的子目录：`references/`、`templates/`、`scripts/`、`assets/`。技能渐进式加载：目录始终对模型可见，完整的 `SKILL.md` 在激活时加载，资源按需加载。

@@ -56,7 +56,7 @@ class Pipe:
         self,
         body: dict,
         __user__: dict,
-        __request__: Request, # 新参数
+        __request__: Request, # New parameter
     ) -> str:
         # 在这里编写你的逻辑
 ```
@@ -96,11 +96,11 @@ class Pipe:
 - 例如：
     - **Before (0.4)：**
       ```python
-      from open_webui.apps.webui.models import SomeModel
+      from open_webui.apps.webui.models.chats import Chats
       ```
     - **After (0.5)：**
       ```python
-      from open_webui.models import SomeModel
+      from open_webui.models.chats import Chats
       ```
 
 一般来说，**只需把 `open_webui.apps` 替换为 `open_webui.routers`——但 `webui` 例外，它现在是 `open_webui.main`！**
@@ -111,14 +111,14 @@ class Pipe:
 
 来看一个具体的代码示例：
 
-#### Before
+#### Before {#before}
 
 ```python
 from open_webui.apps.ollama import main as ollama
 from open_webui.apps.openai import main as openai
 ```
 
-#### After
+#### After {#after}
 
 ```python
 
@@ -136,7 +136,7 @@ from open_webui.main import chat_completion
 
 :::
 
-### 📝 补充说明：如何在 `main.chat_completion` 与 `utils.chat.generate_chat_completion` 之间选择 {#additional-note-choosing-between-mainchat_completion-and-utilschatgenerate_chat_completion}
+### 📝 补充说明：如何在 `main.chat_completion` 与 `utils.chat.generate_chat_completion` 之间选择 {#additional-note-choosing-between-mainchat\_completion-and-utilschatgenerate\_chat\_completion}
 
 根据你的使用场景，你可以选择：
 
@@ -150,7 +150,7 @@ from open_webui.main import chat_completion
     - 它是 Open WebUI 0.4 中旧 `main.generate_chat_completions`、`ollama.generate_chat_completion`、`openai.generate_chat_completion` 的**直接继任者**
     - 更适合轻量、简单的调用场景
 
-#### 示例
+#### 示例 {#example-1}
 
 ```python
 
@@ -176,7 +176,7 @@ from open_webui.utils.chat import generate_chat_completion
 - **直接继任者（`generate_chat_completion`）**：轻量级、接近 1:1 替换旧 `ollama` / `openai` 方法
 - **统一方案（`chat_completion`）**：适合完整 API 流程，包括文件解析与附加功能
 
-#### 示例
+#### 示例 {#example-2}
 
 如果你要使用 `chat_completion`，你的函数现在应写成这样：
 
@@ -184,7 +184,7 @@ from open_webui.utils.chat import generate_chat_completion
 
 下面把一个示例函数改写为新的结构：
 
-#### Before (0.4)
+#### Before (0.4) {#before-04}
 
 ```python
 from pydantic import BaseModel
@@ -203,11 +203,11 @@ class Pipe:
     async def pipe(self, body: dict, __user__: dict) -> str:
         # 调用 OpenAI endpoint
         user = User(**__user__)
-        body["model"] = "llama3.2:latest"
+        body["model"] = "qwen3.6:27b"
         return await ollama.generate_chat_completion(body, user)
 ```
 
-#### After (0.5)
+#### After (0.5) {#after-05}
 
 ```python
 from pydantic import BaseModel
@@ -233,7 +233,7 @@ class Pipe:
     ) -> str:
         # 使用更新后签名的统一调用方式
         user = User(**__user__)
-        body["model"] = "llama3.2:latest"
+        body["model"] = "qwen3.6:27b"
         return await generate_chat_completion(__request__, body, user)
 ```
 

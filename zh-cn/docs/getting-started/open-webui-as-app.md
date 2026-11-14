@@ -53,4 +53,4 @@ Safari 是 iOS 上唯一支持 PWA 安装的浏览器。iOS 上的 Chrome 和 Fi
 
 ## 自定义 PWA（管理员） {#customizing-the-pwa-admins}
 
-管理员可以通过 [`EXTERNAL_PWA_MANIFEST_URL`](/reference/env-configuration#external_pwa_manifest_url) 环境变量指向自定义 manifest，对 PWA 进行白标定制。这让你可以设置自定义的应用名称、图标和主题色。
+管理员可以通过 [`EXTERNAL_PWA_MANIFEST_URL`](/reference/env-configuration#external_pwa_manifest_url) 环境变量指向自定义 manifest，对 PWA 进行白标定制。这让你可以设置自定义的应用名称、图标和主题色。服务器会在每次 `/manifest.json` 请求时自行拉取该 URL，因此它必须能从服务器访问，而不只是从浏览器访问。如果不设置该变量，manifest 会使用 `WEBUI_NAME` 作为应用名称（当它不是默认值时会追加 ` (Open WebUI)`），并以 Open WebUI 标志作为图标。

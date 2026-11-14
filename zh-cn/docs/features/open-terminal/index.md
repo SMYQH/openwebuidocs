@@ -6,10 +6,9 @@ title: "Open Terminal"
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# Open Terminal
-
+# Open Terminal {#open-terminal}
 <ThemedImage
-  alt="Open Terminal：Open WebUI 核心驱动真实的终端会话循环，运行命令并读取输出"
+  alt="Terminal: a screen block with a cursor"
   sources={{
     light: useBaseUrl('/images/banners/terminal-light.svg'),
     dark: useBaseUrl('/images/banners/terminal-dark.svg'),
@@ -17,23 +16,32 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
 />
 
-**给你的 AI 一台真正的计算机来工作。**
+**让 Open WebUI 成为一个完整的智能体框架。**
 
-Open Terminal 将真实计算环境连接到 Open WebUI。AI 可以编写代码、执行代码、读取输出、修复错误并迭代，全程无需离开聊天界面。它可以处理文件、安装软件包、运行服务器，并直接将结果返回给你。你可以在 Docker 容器中运行以实现隔离，也可以直接运行在裸机上以获取对机器的完全访问权限。
+[在 GitHub 上查看 →](https://github.com/open-webui/open-terminal)
 
-在这里，想法变成可运行的软件。提出一个问题，得到一个可运行的脚本。描述一个网站，看到它实时渲染。指向一个数据集，获得一份完整的报告。
+智能体框架是围绕模型的那套系统，让模型能够真正完成工作：指令、上下文、工具、状态、权限、反馈回路、可观测性，以及执行环境。Open WebUI 已经提供了这套框架的控制侧：模型、对话、知识库、提示词、工具、MCP 连接、记忆、用户、权限、自动化以及共享的工作流控件。Open Terminal 补上了大多数聊天产品仍然缺失的那部分：真正以计算机为底座的执行环境，行动在其中运行，证据由此返回。
 
-![Open WebUI 配合 Open Terminal，显示文件浏览器侧边栏和聊天界面](/images/open-terminal-file-browser.png)
+这意味着智能体自己完成工作。它可以规划、创建文件、运行代码、检查输出、安装依赖、启动服务器、渲染预览、从错误中恢复，并持续进行，直到产出一个可用的成果物：脚本、报告、补丁、图表、网站、迁移脚本，或整理好的文件夹。
 
-:::tip 想要"浏览器中的电脑"？
-Open Terminal 是**聊天 AI** 驱动的工具。如果你想要从任何浏览器操作自己的机器（文件、编辑器、终端和 git，移动优先），AI 作为可选助手，请参阅 [**Open WebUI Computer**](/ecosystem/computer)，一个独立的 Open WebUI 项目。[选择合适的执行环境](/ecosystem/computer/choose)。
-:::
+Open Terminal 是类计算机的工作区，让 Open WebUI 的智能体循环能够作用于文件、代码、软件包、服务器、文档和生成的成果物。你可以把它运行在 Docker 中以获得隔离，也可以在裸机上运行，让智能体直接作用于宿主机。
 
----
+![Open WebUI with Open Terminal selected and the Files tab open beside a new chat](/images/open-terminal-file-browser.png)
 
-## 功能 {#the-right-mental-model}
+## 正确的心智模型 {#the-right-mental-model}
+现代智能体工作流不是"一次提问、一次作答"，而是有状态的循环：
 
-### 各部分如何组合在一起 {#how-the-harness-fits-together}
+1. 理解目标。
+2. 检查工作区。
+3. 选择一个行动。
+4. 执行该行动。
+5. 观察结果。
+6. 修复、继续或验证。
+
+Open WebUI 负责协调这个循环。Open Terminal 则为循环提供了一个真正发生的场所：可供检查的文件、可供运行的代码、可供验证的输出，以及可以交回的成果物。两者合在一起构成完整的框架：模型、上下文、工具、状态、行动、观察和验证。
+
+
+## 各部分如何组合在一起 {#how-the-harness-fits-together}
 
 | | Open WebUI | Open Terminal |
 | :--- | :--- | :--- |
@@ -47,7 +55,7 @@ Open WebUI 加上 Open Terminal 就是完整的智能体框架：控制层、动
 
 ---
 
-### 人们使用的术语 {#the-terms-people-use}
+## 人们使用的术语 {#the-terms-people-use}
 
 不同团队会用不同的语言来描述这套技术栈。Open Terminal 契合人们描述智能体系统时已经在使用的词汇：
 
@@ -90,13 +98,13 @@ Open WebUI 加上 Open Terminal 就是完整的智能体框架：控制层、动
 
 将 AI 指向包含 PDF、Word 文档或邮件的文件夹。它将读取所有文件并返回结构化结果：摘要、提取的字段或交叉引用。
 
-{/* TODO: 截图 — 用户询问 Johnson 合同的聊天。AI 列出在文件夹中找到的文件（contract_v2.docx、notes.pdf、invoice.xlsx），并提供来自每个文件的相关信息的汇总摘要。 */}
+![AI 阅读一个合同文件文件夹并总结续约情况](/images/open-terminal-document-search.png)
 
 ### Web 开发与实时预览 {#web-development-with-live-preview}
 
 AI 构建 HTML/CSS/JS 项目，启动预览服务器，并在 Open WebUI 内渲染结果。通过在聊天中描述更改来进行迭代。
 
-{/* TODO: 截图 — 屏幕左侧为聊天界面。右侧为实时网站预览面板，显示一个干净的活动落地页，包含横幅、日期和注册按钮。 */}
+![聊天界面旁边是 AI 正在提供服务的活动网站的实时预览](/images/open-terminal-live-site-preview.png)
 
 ### 软件开发 {#software-development}
 
@@ -106,7 +114,7 @@ AI 构建 HTML/CSS/JS 项目，启动预览服务器，并在 Open WebUI 内渲�
 
 批量重命名、排序、去重、转换、压缩和组织文件。管理磁盘空间、计划备份、处理日志。
 
-{/* TODO: 截图 — 用户要求"将所有照片重命名为包含日期"的聊天。AI 回复确认"已重命名 43 个文件"，并附带前后示例：IMG_4521.jpg → 2025-03-15_IMG_4521.jpg。 */}
+![AI 将 43 张照片重命名并在文件名前加上日期](/images/open-terminal-bulk-rename.png)
 
 ---
 
@@ -134,13 +142,14 @@ Open Terminal 需要具备 agent 级工具调用质量的模型，而不仅仅�
 
 ## 使用场景 {#use-cases}
 
-- **[代码执行](./use-cases/code-execution)**：编写、运行和调试脚本
-- **[软件开发](./use-cases/software-development)**：仓库、测试、调试、重构、Git
-- **[文档与数据分析](./use-cases/file-analysis)**：电子表格、PDF、Word 文档、邮件
-- **[Web 开发](./use-cases/web-development)**：构建和预览网站
-- **[系统自动化](./use-cases/system-automation)**：文件管理、备份、批量操作
-- **[高级工作流](./use-cases/advanced-workflows)**：数据报告、研究、代码审查等技能
-- **[文件浏览器](./file-browser)**：上传、预览、编辑文件
+- **[代码执行](/features/open-terminal/use-cases/code-execution)**：编写、运行和调试脚本
+- **[软件开发](/features/open-terminal/use-cases/software-development)**：仓库、测试、调试、重构、Git
+- **[文档与数据分析](/features/open-terminal/use-cases/file-analysis)**：电子表格、PDF、Word 文档、邮件
+- **[Web 开发](/features/open-terminal/use-cases/web-development)**：构建和预览网站
+- **[系统自动化](/features/open-terminal/use-cases/system-automation)**：文件管理、备份、批量操作
+- **[高级工作流](/features/open-terminal/use-cases/advanced-workflows)**：数据报告、研究、代码审查等技能
+- **[文件浏览器](/features/open-terminal/file-browser)**：上传、预览、编辑文件
+- **[编程智能体](/features/open-terminal/coding-agents)**：在模型选择器中使用 Claude Code、Codex 等 agent
 
 ---
 
@@ -149,7 +158,3 @@ Open Terminal 需要具备 agent 级工具调用质量的模型，而不仅仅�
 需要为团队提供隔离的、每个用户独立的终端容器？**[Terminals](./terminals/)** 为每个用户预配专用的 Open Terminal 实例，并支持自动生命周期管理、资源控制和基于策略的环境。
 
 ---
-
-## 您的完整机器
-
-Open Terminal 为 Open WebUI 添加了计算环境。[**Open WebUI Computer**](/ecosystem/computer) 就是计算机本身：文件、终端、git、编辑器和 AI 都在一个浏览器标签页中，可从任何设备访问。

@@ -204,7 +204,7 @@ docker run -d -p 8000:8000 -v voices:/app/voices -v config:/app/config --name op
 2. 使用 `docker-compose.rocm.yml`
 3. 确保宿主机已正确安装 ROCm 驱动
 
-### ARM64 / Apple Silicon
+### ARM64 / Apple Silicon {#arm64--apple-silicon}
 
 - XTTS 在 ARM64 上仅支持 CPU，**会非常慢**
 - 对 ARM 设备建议使用 Piper-only 镜像（`docker-compose.min.yml`）

@@ -22,7 +22,7 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 启用可观测性的最快方式是下载示例 Compose 文件并启动一个本地 Grafana LGTM 栈与 Open WebUI：
 
 ```bash
-curl -fsSLO /docker-compose.otel.yaml
+curl -fsSLO https://docs.openwebui.com/docker-compose.otel.yaml
 docker compose -f docker-compose.otel.yaml up -d
 ```
 
@@ -70,7 +70,7 @@ docker compose -f docker-compose.otel.yaml up -d
       - ENABLE_OTEL_TRACES=true
       - ENABLE_OTEL_METRICS=true
       - ENABLE_OTEL_LOGS=true
-      - OTEL_EXPORTER_OTLP_INSECURE=true # OTLP 使用不安全连接；生产环境中你可能希望移除这一项
+      - OTEL_EXPORTER_OTLP_INSECURE=true # Use insecure connection for OTLP, you may want to remove this in production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
       - OTEL_METRICS_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
       - OTEL_LOGS_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
@@ -103,6 +103,8 @@ WebUI 通过 OpenTelemetry 导出以下指标：
 | ----------------------- | -------- | ---- | -------------------------------------------- |
 | `http.server.requests`  | 计数器   | 1    | `http.method`、`http.route`、`http.status_code` |
 | `http.server.duration`  | 直方图   | ms   | 同上                                         |
+
+如果希望让健康检查等路由不出现在 trace 和 HTTP 指标中，请将 `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS`（或 `OTEL_PYTHON_EXCLUDED_URLS`）设为逗号分隔的正则表达式。每个表达式都会在请求 URL 中的任意位置匹配，因此 `/health,/_app/immutable/.*` 也覆盖 `/health/db`。
 
 指标会通过 OTLP 发送（默认每 10 秒一次，可通过 `OTEL_METRICS_EXPORT_INTERVAL_MILLIS` 配置），并可以在 **Grafana** 中通过 Prometheus/Mimir 进行可视化。
 

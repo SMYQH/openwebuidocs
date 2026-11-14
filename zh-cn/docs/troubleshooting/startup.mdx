@@ -38,7 +38,7 @@ WARNING: CORS_ALLOW_ORIGIN IS SET TO '*' - NOT RECOMMENDED FOR PRODUCTION DEPLOY
 2. 检查全局覆盖设置并取消（或在每次运行时覆盖）：
 
    ```bash
-   echo $DOCKER_DEFAULT_PLATFORM     # 同时检查 Docker Desktop → 设置
+   echo $DOCKER_DEFAULT_PLATFORM     # also check Docker Desktop → Settings
    ```
 
 3. 确认容器实际运行的架构（Apple Silicon 上应为 `aarch64`）：
@@ -66,7 +66,7 @@ docker run --rm --entrypoint python ghcr.io/open-webui/open-webui:main \
 
 ## 离线模式新安装时出现 `ValueError: No embedding model is loaded` {#valueerror-no-embedding-model-is-loaded-with-offline-mode-on-a-fresh-install}
 
-### 症状
+### 症状 {#symptom-1}
 
 容器启动了，它的日志中带有下面的 `LocalEntryNotFoundError`，随后第一次文档上传或 RAG 查询会以 `ValueError` 失败：
 
@@ -81,11 +81,11 @@ SentenceTransformer model name, or configure an external RAG_EMBEDDING_ENGINE
 
 这发生在**新安装**上设置了 [`OFFLINE_MODE=true`](/reference/env-configuration#offline_mode) 和/或 [`HF_HUB_OFFLINE=1`](/reference/env-configuration#hf_hub_offline) 时。
 
-### 原因
+### 原因 {#cause-1}
 
 离线模式会屏蔽 Hugging Face 下载和版本检查。默认的 RAG 嵌入引擎使用一个**必须下载一次的本地 SentenceTransformers 模型**。在新安装上已经启用了离线模式的情况下，模型从未被缓存，因此没有可加载的内容。该错误会在第一次嵌入调用时浮现。
 
-### 修复
+### 修复 {#fix-1}
 
 选择一种方案：
 
@@ -97,9 +97,9 @@ SentenceTransformer model name, or configure an external RAG_EMBEDDING_ENGINE
 
 ---
 
-## 全新 Windows 安装时报 `WEBUI_SECRET_KEY is not set` {#webui_secret_key-is-not-set-on-a-fresh-windows-install}
+## 全新 Windows 安装时报 `WEBUI_SECRET_KEY is not set` {#webui\_secret\_key-is-not-set-on-a-fresh-windows-install}
 
-### 症状
+### 症状 {#symptom-2}
 
 `backend\start_windows.bat` 在启动时中止：
 
@@ -107,11 +107,11 @@ SentenceTransformer model name, or configure an external RAG_EMBEDDING_ENGINE
 WEBUI_SECRET_KEY is not set. It is a hard requirement when authentication is enabled.
 ```
 
-### 原因
+### 原因 {#cause-2}
 
 该脚本从 `.webui_secret_key` 读取密钥，并且只在该文件不存在时才生成一个。早期一次失败运行遗留的空 `.webui_secret_key`，会被读成空密钥。
 
-### 修复
+### 修复 {#fix-2}
 
 **删除 `backend` 文件夹中空的 `.webui_secret_key` 文件**，然后重新启动，让脚本生成一个密钥。
 

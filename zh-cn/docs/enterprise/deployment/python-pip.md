@@ -43,10 +43,11 @@ flowchart TB
 
 ## 安装 {#installation}
 
-在每台 VM 上通过带 `[all]` 扩展的 pip 安装（包含 PostgreSQL 驱动）：
+在每台 VM 上通过带 `postgres` 扩展的 pip 安装（它会添加 PostgreSQL 和 PGVector 驱动）：
 
 ```bash
-pip install open-webui[all]
+python3.12 -m venv /opt/open-webui/venv
+/opt/open-webui/venv/bin/pip install "open-webui[postgres]"
 ```
 
 创建一个 systemd unit 来管理该进程：
@@ -60,7 +61,7 @@ After=network.target
 Type=simple
 User=openwebui
 EnvironmentFile=/etc/open-webui/env
-ExecStart=/usr/local/bin/open-webui serve
+ExecStart=/opt/open-webui/venv/bin/open-webui serve
 Restart=always
 RestartSec=5
 
@@ -68,24 +69,24 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-将环境变量放在 `/etc/open-webui/env` 中（参见 [关键配置](/enterprise/deployment#critical-configuration)）。
+将环境变量放在 `/etc/open-webui/env` 中（参见 [关键配置](/enterprise/deployment#critical-configuration)）。同时请设置 `DATA_DIR`，例如设为 `/var/lib/open-webui`，这样本地缓存就不会落在 Python 包目录（默认值）里。
 
 ## 扩展策略 {#scaling-strategy}
 
 - **横向扩展**：让自动扩缩容组根据 CPU 利用率或请求数增减 VM。
-- **健康检查**：将负载均衡器健康检查指向 `/health` 端点（健康时返回 HTTP 200）。
+- **健康检查**：将负载均衡器健康检查指向 `/ready`，它在启动完成且数据库与 Redis 响应后才会应答。`/health` 只表示进程正在运行。
 - **每台 VM 一个进程**：保持 `UVICORN_WORKERS=1`，把容量管理交给自动扩缩容系统。这样可以简化内存核算，并避免默认向量数据库的 fork 安全问题。
-- **会话亲和性（粘性会话）**：在负载均衡器上配置基于 Cookie 的会话亲和性，确保 WebSocket 连接持续路由到同一实例。
+- **粘性会话**：可选，仅在 `ENABLE_WEBSOCKET_SUPPORT=false` 时才需要。参见[会话亲和性](/troubleshooting/multi-replica#session-affinity-sticky-sessions)。
 
 ## 关键注意事项 {#key-considerations}
 
 | 注意事项 | 说明 |
 | :--- | :--- |
 | **OS 补丁** | 你需要自行负责操作系统更新、安全补丁和 Python 运行环境管理。 |
-| **Python 环境** | 固定 Python 版本（推荐 3.11），并使用虚拟环境或系统级安装。 |
+| **Python 环境** | 在虚拟环境中使用 Python 3.11 或 3.12（推荐 3.12）。 |
 | **存储** | 由于自动扩缩容组中的 VM 不共享本地文件系统，因此应使用对象存储（如 S3）或共享文件系统（如 NFS）。 |
 | **Tika Sidecar** | 可以在每台 VM 上运行 Tika 服务，也可以作为共享服务单独运行。共享实例更便于管理。 |
-| **更新** | 先把实例组缩容到 1 台，执行包更新（`pip install --upgrade open-webui`），等待数据库迁移完成，再扩容回来。 |
+| **更新** | 先把实例组缩容到 1 台，设置 `ENABLE_DB_MIGRATIONS=true` 并执行包更新（`pip install --upgrade "open-webui[postgres]"`），等待数据库迁移完成，再扩容回来并设置 `ENABLE_DB_MIGRATIONS=false`。有关多副本部署的细节请参见[多副本指南](/troubleshooting/multi-replica)。 |
 
 pip 基础安装方式可参考 [快速入门指南](/getting-started/quick-start)。
 

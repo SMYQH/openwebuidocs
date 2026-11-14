@@ -27,22 +27,22 @@ oikb daemon
 命令行上的单个来源不需要配置文件。对于多个来源、定时调度、webhook 或守护进程，你需要在 `.oikb.yaml` 中描述所有内容。使用 `oikb init` 交互式生成，或手动编写：
 
 ```yaml
-defaults:                      # 可选，应用于下方的每个条目
+defaults:                      # optional, applied to every entry below
   interval: 1h
   concurrency: 4
   filter:
     max-size: 50mb
 
 sources:
-  - name: wiki                 # 友好的别名，用于 CLI/API 定位
+  - name: wiki                 # friendly alias for CLI/API targeting
     source: github:owner/repo
     kb-id: 8f3a2b1c-...
-    webhook: true              # 也在推送时同步（参见 Webhook）
+    webhook: true              # also sync on push (see Webhooks)
 
   - name: handbook
     source: confluence:ENG
     kb-id: 4e7d9a0f-...
-    interval: "0 6 * * 1-5"    # 覆盖默认的时间间隔
+    interval: "0 6 * * 1-5"    # overrides the default interval
     notify:
       url: https://hooks.slack.com/services/T.../B.../xxx
       on: error
@@ -77,17 +77,17 @@ sources:
 每个条目的 `interval` 可以是简单的持续时间或 cron 表达式。oikb 通过计数字段自动检测，因此无需标志：
 
 ```yaml
-interval: 30m               # 简单：每 30 分钟
-interval: 1h                # 每小时
-interval: "0 6 * * 1-5"     # cron：工作日上午 6:00
-interval: "0 */6 * * *"     # cron：每 6 小时
+interval: 30m               # simple: every 30 minutes
+interval: 1h                # every hour
+interval: "0 6 * * 1-5"     # cron: weekdays at 06:00
+interval: "0 */6 * * *"     # cron: every 6 hours
 ```
 
 简单持续时间支持 `s`、`m`、`h`、`d`。同一文件中的不同条目可以混合使用两种格式。
 
 ---
 
-## HTTP API
+## HTTP API {#http-api}
 
 | 端点 | 认证 | 描述 |
 |---|:---:|---|
@@ -129,7 +129,7 @@ sources:
     source: github:owner/repo
     kb-id: abc123
     webhook: true
-    github_secret: ${GITHUB_WEBHOOK_SECRET}   # 验证负载签名
+    github_secret: ${GITHUB_WEBHOOK_SECRET}   # verifies the payload signature
 ```
 
 然后在源系统中添加一个指向守护进程的 webhook：
@@ -174,7 +174,7 @@ scrape_configs:
 对于日志聚合器（Datadog、Splunk、ELK、CloudWatch、Loki），每行输出一个 JSON 对象：
 
 ```bash
-oikb daemon --log-format json     # 或 LOG_FORMAT=json
+oikb daemon --log-format json     # or LOG_FORMAT=json
 ```
 
 ### 失败通知 {#failure-notifications}
@@ -184,7 +184,7 @@ oikb daemon --log-format json     # 或 LOG_FORMAT=json
 ```yaml
 notify:
   url: https://hooks.slack.com/services/T.../B.../xxx
-  on: error            # error（默认）| always
+  on: error            # error (default) | always
 ```
 
 同样的格式也适用于 PagerDuty、Opsgenie 或你自己的接收器。除了 `text` 字段外，它还包含结构化的字段（`source`、`status`、`error`、`duration_ms`、文件计数）。
@@ -194,10 +194,10 @@ notify:
 每次运行都会记录在本地 SQLite 数据库中。通过 API（`GET /history`）或 CLI 查询：
 
 ```bash
-oikb history                    # 最近的运行记录，表格视图
-oikb history --errors           # 仅失败的记录
-oikb history --json             # 机器可读格式
-oikb history --clear --days 7   # 清理超过 7 天的记录
+oikb history                    # recent runs, table view
+oikb history --errors           # failures only
+oikb history --json             # machine-readable
+oikb history --clear --days 7   # prune entries older than 7 days
 ```
 
 ---
@@ -231,7 +231,7 @@ oikb history --clear --days 7   # 清理超过 7 天的记录
 
 ## 部署 {#deployment}
 
-### Docker
+### Docker {#docker}
 
 ```bash
 docker run -d \
@@ -244,7 +244,7 @@ docker run -d \
   ghcr.io/open-webui/oikb:latest daemon
 ```
 
-### Docker Compose
+### Docker Compose {#docker-compose}
 
 将其与 Open WebUI 部署在同一个网络上，以便通过服务名称访问服务器：
 
@@ -276,7 +276,7 @@ services:
       timeout: 5s
 ```
 
-### Kubernetes
+### Kubernetes {#kubernetes}
 
 从 ConfigMap 挂载配置，从 Secret 拉取密钥，并将探针连接到健康端点：
 
@@ -329,7 +329,7 @@ spec:
 定时调度器和每个知识库的锁存在于单个进程中，因此守护进程应以**一个副本**的形式运行。水平扩展会导致两个调度器同时同步同一个知识库。要覆盖更多来源，请在一个守护进程中添加条目，而不是运行多个配置副本。
 :::
 
-### GitHub Actions
+### GitHub Actions {#github-actions}
 
 对于基于推送的、构建时的一次性同步（而非长期运行的守护进程），将镜像作为一次性步骤运行。请参阅主页上的 [CI 中的一次性同步](/ecosystem/knowledge-base-sync#one-shot-sync-in-ci)。
 

@@ -1,3 +1,4 @@
+
 # Kubernetes 上的 Helm 配置 {#helm-setup-for-kubernetes}
 
 Helm 可以帮助你管理 Kubernetes 应用。
@@ -50,22 +51,13 @@ Helm 可以帮助你管理 Kubernetes 应用。
 :::
 
 ## 访问 WebUI {#access-the-webui}
+将服务转发到你的机器，然后打开 [http://localhost:3000](http://localhost:3000)：
 
-你可以通过端口转发，或配置 Ingress 来访问 Open WebUI。
-
-### Ingress 配置（Nginx）
-如果你使用的是 **NGINX Ingress Controller**，可以启用 session affinity（粘性会话）以提升 WebSocket 稳定性。请在 Ingress 资源上添加以下注解：
-
-```yaml
-metadata:
-  annotations:
-    nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingress.kubernetes.io/session-cookie-name: "open-webui-session"
-    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
-    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+```bash
+kubectl port-forward service/openwebui-open-webui 3000:80
 ```
 
-这样可以让用户会话尽量保持落在同一个 pod 上，从而减少多副本环境中的 WebSocket 问题（不过只要 Redis 配置正确，这一项的重要性会下降）。
+如需通过 ingress controller 暴露它，请参见[完成生产环境安装](/deployment/kubernetes#finish-the-production-installation)。
 
 ## 卸载 {#uninstall}
 

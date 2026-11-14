@@ -17,7 +17,7 @@ title: "Kokoro Web - Open WebUI 的轻量 TTS 集成"
 
 ### 1. 部署 Kokoro Web API（一个命令） {#1-deploy-kokoro-web-api-one-command}
 
-```yaml
+``` yaml
 services:
   kokoro-web:
     image: ghcr.io/eduardolat/kokoro-web:latest
@@ -35,7 +35,7 @@ services:
 
 ### 2. 连接 Open WebUI（30 秒） {#2-connect-openwebui-30-seconds}
 
-1. 在 Open WebUI 中进入 `管理面板` → `设置` → `音频`
+1. 在 Open WebUI 中转到 `设置` → `管理` → `音频`
 2. 按如下方式配置：
 
     - 文本转语音引擎：`OpenAI`
@@ -105,13 +105,14 @@ Kokoro Web 支持 8 种语言，并为每种语言提供优化语音：
 1. 确认 Kokoro Web 配置和 Open WebUI 设置中的 secret API 密钥一致
 2. 直接测试 API：
 
-    ```bash
-    curl -X POST http://localhost:3000/api/v1/audio/speech \
-      -H "Authorization: Bearer your-api-key" \
-      -H "Content-Type: application/json" \
-      -d '{"input": "Hello world", "voice": "af_heart"}'
-    ```
 
 更多排查建议请参阅 [音频故障排查指南](/troubleshooting/audio)。
 
 **祝你在 Open WebUI 对话中享受自然的 AI 语音体验！**
+
+``` bash
+   curl -X POST http://localhost:3000/api/v1/audio/speech \
+     -H "Authorization: Bearer your-api-key" \
+     -H "Content-Type: application/json" \
+     -d '{"input": "Hello world", "voice": "af_heart"}'
+```

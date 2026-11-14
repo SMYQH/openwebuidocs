@@ -55,18 +55,41 @@ Open WebUI 提供了一个可选的**上下文压缩**功能，帮你处理最�
 它默认**处于禁用状态**。管理员可以在 **Admin Panel > Settings > Interface** 中启用和调整：
 
 - **Context Compaction**：开关（[`ENABLE_CONTEXT_COMPACTION`](/reference/env-configuration#enable_context_compaction)）。
-- **Token Threshold**：触发压缩的预估上下文大小（以 token 计），超过此值时较旧的消息会被压缩（默认 `80000`，[`CONTEXT_COMPACTION_TOKEN_THRESHOLD`](/reference/env-configuration#context_compaction_token_threshold)）。请将其设置得低于模型的实际窗口。单个模型可以通过在其高级参数中设置更低的 **Context Compaction Threshold**（`compact_token_threshold`）来更早触发压缩；全局值保持为上限。
+- **Context Compaction Model**：负责撰写摘要的模型（[`CONTEXT_COMPACTION_MODEL`](/reference/env-configuration#context_compaction_model)）。保持为 **Current Model** 即使用对话自身的模型。
+- **Token Threshold**：触发压缩的预估上下文大小（以 token 计），超过此值时较旧的消息会被压缩（默认 `80000`，[`CONTEXT_COMPACTION_TOKEN_THRESHOLD`](/reference/env-configuration#context_compaction_token_threshold)）。请将其设置得低于模型的实际窗口。这是全局默认值：单个模型可以在自己的高级参数中设置 **Context Compaction Threshold**（`compact_token_threshold`），可高可低，但受 **Token Cap**（[`CONTEXT_COMPACTION_TOKEN_CAP`](/reference/env-configuration#context_compaction_token_cap)）约束，而该上限默认等于阈值。因此，只有提高上限，模型才能比全局默认值更晚触发压缩。**Advanced Params** 下的 **Context Compaction Threshold** 字段仅在 **Context Compaction** 开启时显示。在模型编辑器中，任何有权编辑该模型的用户都能看到它；而在模型默认值、对话设置、对话的 **Controls** 以及任务模型参数中，只有管理员能看到。已经保存的阈值会被保留，并在压缩重新开启后继续生效。
+- **Retained Messages**：保留原文的最近消息所占百分比，更早的消息则由摘要取代（默认 `40`，[`CONTEXT_COMPACTION_RETENTION_PERCENTAGE`](/reference/env-configuration#context_compaction_retention_percentage)）。超出 `10` 到 `50` 范围的值会被截断，因此对话始终至少完整保留十分之一、至多完整保留一半。
 - **Context Compaction Prompt**：可选的自定义摘要提示词（[`CONTEXT_COMPACTION_PROMPT_TEMPLATE`](/reference/env-configuration#context_compaction_prompt_template)）；留空则使用内置默认值。它支持 `{{COMPACTED_MESSAGES}}`（被摘要的消息）和 `{{RECENT_MESSAGES}}`（保留在上下文中的消息）。
+- **Task Model Parameters**：摘要请求所用的生成参数（[`TASK_MODEL_PARAMS`](/reference/env-configuration#task_model_params)），位于同一页面上方的 **Tasks**。摘要请求本身没有输出上限；如果你需要，可以在这里设置 `max_tokens`。该设置与标题、标签及其他后台任务共用，因此修改前请参阅[任务模型](/features/administration/task-models)。
 
 这是摘要替换策略（上述第 4 种），内置于系统中。如果你需要不同的策略（硬上限、优先裁剪附件、按模型窗口），请改用 filter Function。
 
 ### 工作原理 {#how-it-works}
 
-- **它在服务端运行，每次请求触发一次，在聊天中不可见。** 你的完整对话仍会存储并在 UI 中显示；压缩只改变在给定轮次发送给模型的内容。没有徽章或标记指示发生过压缩。
+- **它在服务端运行，每次请求触发一次。** 你的完整对话仍会存储并在 UI 中显示；压缩只改变在给定轮次发送给模型的内容。一行 **Context compacted** 会标出较旧消息被摘要的位置，点击即可查看摘要。
 - **它保留滚动检查点，不会抹除历史。** 当超过阈值时，活动窗口中最旧的约 60% 会被摘要，最近的约 40%（至少两条消息）保持原样，切分点不会将助手的工具调用与其结果分开。摘要作为检查点保存到消息上。后续轮次从该检查点（摘要及其后面的消息）恢复，如果窗口再次超过阈值，它会再次压缩，将之前的摘要合并到新摘要中并向前移动检查点。
-- **任务模型（Task Model）编写摘要。** 它使用与标题和标签生成相同的模型选择逻辑：如果配置了 Task Model（`TASK_MODEL` / `TASK_MODEL_EXTERNAL`）则使用它，否则使用聊天的当前模型，当任务模型不可用时回退到聊天模型。摘要长度受任务模型的 `max_tokens` 限制（默认 1000）。
-- **你的 system prompt、工具和技能得以保留。** 压缩仅摘要对话消息。模型、工作区和文件夹的系统提示词、可用工具及其指令、技能以及任何 RAG、网络搜索或记忆上下文，都在每次请求时在压缩之后重新组装，因此它们永远不会被摘要掉。唯一的例外是聊天历史中较旧的**工具调用结果**：被压缩块中的过往工具结果会被精简到摘要中，但模型仍然可以调用的内容不受影响。
+- **它也会在工具轮次之间运行。** 在漫长的原生工具循环中，每次对模型的后续调用都会在最新工具结果加入后按同一阈值检查一次。该检查从服务商为上一次调用报告的 token 用量出发，只估算此后新增的部分；没有报告用量时，则估算整个上下文。超过阈值时，较旧的部分会被摘要，切分点落在某个工具轮次的开头，因此每次工具调用都与其结果保持在一起，而你在该轮次的用户消息仍留在上下文中、紧接在摘要之后。摘要只读取该条消息中你自己的文本。附带的知识库与文件内容会在摘要写好之后放回给模型。摘要与回复一并存储，因此下一条消息会从它继续，连同切分点之后保留的工具轮次。启用 [`ENABLE_RESPONSES_API_STATEFUL`](/reference/env-configuration#enable_responses_api_stateful) 后，服务商负责保留工具循环的历史，此项检查会被跳过。
+- **检查点不是你打开对话时停留的位置。** 打开一个已压缩的对话会跳到它最近的消息；若一个对话停在检查点上，则会在你首次打开时向前移动。
+- **摘要由可配置的模型撰写。** 除非你用 [`CONTEXT_COMPACTION_MODEL`](/reference/env-configuration#context_compaction_model) 为摘要指定专门的模型，否则它使用对话自身的模型。压缩模型不可用时会回退到对话模型。任务模型从不参与，因此压缩仍会执行。在没有过滤器或管道的情况下，由对话模型撰写的摘要相当于在对话请求后追加摘要提示词重发一次，因此支持提示词缓存的服务商可以直接从缓存中提供历史。除非 [`TASK_MODEL_PARAMS`](/reference/env-configuration#task_model_params) 设置了上限，摘要请求本身没有输出限制，因此适用服务商的常规限制。参见[任务模型](/features/administration/task-models)。
+- **你的 system prompt、工具和技能得以保留。** 压缩仅摘要对话消息。模型、工作区和文件夹的系统提示词、可用工具及其指令、技能以及任何 RAG、网络搜索或记忆上下文，都在每次请求时在压缩之后重新组装，因此它们永远不会被摘要掉。唯一的例外是聊天历史中较旧的**工具调用结果**：被压缩块中的过往工具结果会被精简到摘要中，但模型仍然可以调用的内容不受影响。请求开头已有的系统消息会在压缩运行前被单独保存，并在之后放回最前面，因此它仍位于摘要之前。
 - **失败安全。** 如果摘要器没有返回任何内容，Open WebUI 会回退到一个简短的机械摘要（之前的摘要加上被丢弃消息的截断片段）。如果压缩完全出错，则记录日志，请求会以完整的、未压缩的历史继续处理。
+- **切分点落在用户消息上，也可以完全不切分。** 在一轮开始时，切分点会被放在某条用户消息上，因此一轮对话不会在交换中途被截断。如果没有足够靠前的合适用户消息，例如一段冗长的对话本身就是一次巨大的交换，那么**该请求不会执行压缩**，超阈值的历史会被完整发送。它是静默的：不会报错，并会在下一轮重试。当那一次交换是长串工具调用时，压缩仍可以在回复生成期间于其工具轮次之间切分。因此，超过阈值并不保证一定发生了压缩，压缩也不是发往模型的内容的硬上限。如果你需要确定的边界，请按下文使用过滤器函数。
+- **你可以通过 API 读取当前用量。** `GET /api/v1/chats/{id}` 和 `POST /api/v1/chats/{id}/compact` 会包含一个 `context_usage` 对象，客户端可以用它显示对话距离压缩还有多远：
+
+  ```json
+  {
+    "tokens": 41234,
+    "estimated_tokens": 41234,
+    "threshold": 80000,
+    "percent": 52,
+    "source": "estimated"
+  }
+  ```
+
+  当压缩被禁用或对话没有消息时，它为 `null`。`source` 始终是 `estimated`，即使该计数是基于服务商报告的用量算出来的，因此它无法区分两者。Open WebUI 会优先采用服务商自己报告的 token 计数：它回溯到最近一条带用量记录的消息，取其 prompt 与 completion 总量，只估算此后的消息。当没有消息带用量时，整个数值都是估算的，而估算并不是分词器级别的精确值，因此请把它当作参考刻度，而不是计费数字。
+
+  对话中显示的上下文用量，与压缩使用的阈值是同一个。
+
+  各服务商的词汇不同，常见 ones 都能读取：`prompt_tokens` / `completion_tokens`（OpenAI 风格）、`input_tokens` / `output_tokens`、`prompt_eval_count` / `eval_count`（Ollama），以及 `prompt_n` / `predicted_n` 加上 `cache_n`（llama.cpp）。因此本地后端会依据报告值而非估算值触发压缩。存储的用量会随对话历史一起保存，所以在后续轮次同样能取到报告的计数，而不仅仅是在产生它的那次请求上。
 
 ## 官方支持的方式：使用 filter Function {#the-supported-way-use-a-filter-function}
 
@@ -171,7 +194,7 @@ class Filter:
 <details>
 <summary>显示完整过滤器代码（按模型 token 预算裁剪）</summary>
 
-```python
+``` python
 import json
 import os
 from pydantic import BaseModel, Field
@@ -215,10 +238,10 @@ class Filter:
         model_budgets_json: str = Field(
             default=(
                 '{\n'
-                '  "gpt-5.5": 1000000,\n'
-                '  "claude-opus-4-8": 1000000,\n'
-                '  "claude-sonnet-4-6": 1000000,\n'
-                '  "gemini-3.5-flash": 1000000,\n'
+                '  "gpt-5.6-sol": 1000000,\n'
+                '  "claude-opus-5": 1000000,\n'
+                '  "claude-sonnet-5": 1000000,\n'
+                '  "gemini-3.6-flash": 1000000,\n'
                 '  "qwen3.6": 262144,\n'
                 '  "deepseek-v4": 1000000\n'
                 '}'
@@ -287,8 +310,8 @@ class Filter:
             budgets = {}
         if model_id in budgets:
             return int(budgets[model_id])
-        # Prefix match: "claude-sonnet-4-6-20260514" uses the "claude-sonnet-4-6"
-        # budget. Longest key first so "gpt-5.5-mini" beats "gpt-5.5".
+        # Prefix match: "claude-sonnet-5-20260514" uses the "claude-sonnet-5"
+        # budget. Longest key first so "gpt-5.6-sol-pro" beats "gpt-5.6-sol".
         for key, value in sorted(budgets.items(), key=lambda kv: -len(kv[0])):
             if model_id.startswith(key):
                 return int(value)
@@ -313,6 +336,8 @@ class Filter:
                 other_msgs.pop(0)
         return other_msgs
 
+    # ---- inlet -------------------------------------------------------------
+
     async def inlet(self, body: dict) -> dict:
         messages = body.get("messages", [])
         if not messages:
@@ -321,7 +346,7 @@ class Filter:
         model_id = body.get("model", "") or ""
         budget = self._budget_for(model_id) - self.valves.response_headroom_tokens
         if budget <= 0:
-            return body
+            return body  # Misconfigured — don't mangle the request, let the provider reject.
 
         system_msgs = [m for m in messages if m.get("role") == "system"]
         other_msgs = [m for m in messages if m.get("role") != "system"]
@@ -330,8 +355,8 @@ class Filter:
 
         # Drop oldest non-system messages one at a time until we're under budget
         # or nothing is left to drop. System messages stay put; if they alone
-        # exceed the budget we return the body untouched — that's the right
-        # signal (the admin needs to shrink the system prompt).
+        # already exceed the budget, the provider will reject the request and
+        # that's the right signal (the admin needs to shrink the system prompt).
         while used > budget and other_msgs:
             dropped = other_msgs.pop(0)
             used -= self._message_tokens(dropped, model_id)
@@ -347,14 +372,14 @@ class Filter:
 值得特别注意的几点：
 
 - **配置一次，到处运行。** 将该过滤器设为 **Admin Panel → Functions** 中的全局过滤器。`model_budgets_json` 阀门允许你枚举所有关心的模型，未列出的模型会回退到 `default_budget_tokens`。管理员无需改代码，就能在运行时调整预算。
-- **按模型 id 前缀匹配，且长前缀优先。** `claude-sonnet-4-6-20260514` 会自动使用 `claude-sonnet-4-6` 的预算。如果你在其中列出了像 `gpt-5.5` 和 `gpt-5.5-mini` 这样嵌套的 id，`_budget_for` 会先按键的长度降序排序再走前缀匹配循环，更具体的那一项会赢；否则字典的插入顺序会决定结果，`gpt-5.5` 就有可能先于 `gpt-5.5-mini` 匹配上。
+- **按模型 id 前缀匹配，且长前缀优先。** `claude-sonnet-5-20260514` 会自动使用 `claude-sonnet-5` 的预算。如果你在其中列出了像 `gpt-5.6-sol` 和 `gpt-5.6-sol-pro` 这样嵌套的 id，`_budget_for` 会先按键的长度降序排序再走前缀匹配循环，更具体的那一项会赢；否则字典的插入顺序会决定结果，`gpt-5.6-sol` 就有可能先于 `gpt-5.6-sol-pro` 匹配上。
 - **一套 tokenizer，所有模型通用。** token 数由 `tiktoken` 计算，加载一次后缓存。`encoding_for_model(model_id)` 会在已安装的 tiktoken 认识该 id 时返回该模型自身的编码，否则回退到 `tiktoken_encoding`（默认 `cl100k_base`）。tiktoken 只内置 OpenAI 系列的编码，并且只覆盖到它发布时的模型——所以 Claude、Gemini、Qwen、DeepSeek 以及任何全新的 OpenAI 模型都会走回退路径。这是一种近似，对于带 headroom 的裁剪预算而言已经足够准确。`cl100k_base` 是 Open WebUI 预缓存的唯一编码，因此可以离线工作；较新的 `o200k_base` **没有**被预缓存，会在首次使用时被拉取，所以对于完全离线的环境，要么把它放进 `TIKTOKEN_CACHE_DIR`，要么会自动回退到 `cl100k_base`。
 - **图片按最坏情况估算；音频和文件不计。** Open WebUI 把图片作为 `image_url` 内容部分交给模型，过滤器在不解析 base64 的情况下看不到分辨率，因此对每张图片直接按 `tokens_per_image`（默认 **1600**）收取一个固定值，而不是低估导致窗口爆掉。这个默认值按 4K 高细节上传估算：OpenAI 高细节上限约 1445 token（85 + 每 512px 切片 170），Claude 约 1590（其缩放后约 宽 × 高 / 750），Gemini 高分辨率切片可能更高，因此如果你重度依赖 Gemini 加载多张图片，可以调高这个阀门。**音频和文件部分仍然按 0 计算**；如果需要，按同样的方式加上它们自己的配额即可。
 - **同样的 tool-call 修复逻辑。** 用于保证裁剪后的请求结构依然有效。
 - **配置错误时选择 fail-open。** 如果你不小心把 headroom 设得比预算还大，过滤器会原样放行请求，而不是默默清空会话。此时让提供商返回错误，比静默丢数据更安全。
 
 :::warning 检查你的模型 ID
-Open WebUI 传给 `body["model"]` 的，不一定是提供商原始 id。如果管理员设置了 connection 的 `prefix_id`，模型 id 会变成 `{prefix}.{raw_id}`（例如 `openai.gpt-5.5`）。Pipe function manifest 中的子模型也会被包装成 `{pipe.id}.{sub_id}`（例如 `anthropic.claude-sonnet-4-6-20260514`）。Workspace 中自定义模型甚至可能用 UUID。
+Open WebUI 传给 `body["model"]` 的，不一定是提供商原始 id。如果管理员设置了 connection 的 `prefix_id`，模型 id 会变成 `{prefix}.{raw_id}`（例如 `openai.gpt-5.6-sol`）。Pipe function manifest 中的子模型也会被包装成 `{pipe.id}.{sub_id}`（例如 `anthropic.claude-sonnet-5-20260514`）。Workspace 中自定义模型甚至可能用 UUID。
 
 请把模型选择器里**实际显示的 id**复制到 `model_budgets_json` 中，而不是盲目使用上游提供商的原始 id。格式不对时，请求会静默落回 `default_budget_tokens`，直到真正需要更大预算的聊天失败你才会发现。
 :::

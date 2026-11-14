@@ -195,7 +195,7 @@ Open WebUI 会与每个已启用的 App 保持一条长连接，并自动重连�
 | `Buttons require a channel message` | 按钮点击之后显示。该 App 在私有回复中、或在 `message` 与 `update` 之外的回复中发送了按钮。按钮需要 `visibility` 为 `channel`。 |
 | `App event could not be delivered. Check the WebUI server logs.` | 发给该 App 的事件超过 1 MiB，例如一条非常长的消息。 |
 
-### 更改 WEBUI_SECRET_KEY 后 App 无法连接 {#apps-stop-connecting-after-webui_secret_key-changed}
+### 更改 WEBUI_SECRET_KEY 后 App 无法连接 {#apps-stop-connecting-after-webui\_secret\_key-changed}
 
 Open WebUI 使用派生自 `WEBUI_SECRET_KEY` 的密钥加密每个 App 的 API key 与连接凭据。一旦该值发生变化，Open WebUI 就无法再读取它们：每个 App 都会停留在 **Connecting**，在 **Configure** 中重新填写 API key 也会失败。恢复方法如下，对每个 App 分别操作：
 

@@ -9,10 +9,6 @@ title: "Image Router"
 
 Open WebUI 也支持通过 **Image Router API** 进行图像生成。Image Router 是一个 [开源](https://github.com/DaWe35/image-router) 图像生成代理，可将大多数流行模型统一封装为单一 API。
 
-## 初始设置
-
-1. 从 Image Router 获取一个 [API 密钥](https://imagerouter.io/api-keys)
-
 ### 初始设置 {#initial-setup}
 1. 从 Image Router 获取 [API 密钥](https://imagerouter.io/api-keys)。
 

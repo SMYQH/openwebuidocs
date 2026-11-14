@@ -35,9 +35,9 @@ Event 函数是 Open WebUI **0.10.0** 中引入的新插件原语。
 
 类型从顶层的 `class Event` 自动检测：
 
-```python
+``` python
 """
-title: 示例事件
+title: Example Event
 author: open-webui
 version: 0.1
 """
@@ -75,6 +75,7 @@ class Event:
 | `event` | 事件负载（一个 `dict`）：什么发生了变化，以及 `actor`（触发事件的用户，如果适用）。敏感字段在负载到达你的函数之前已被编辑。 |
 | `__event_name__` | 事件的名称，例如 `auth.signup` 或 `chat.deleted`。用于过滤。 |
 | `__event_id__` | 此特定事件发生的唯一 ID。 |
+| `__event__` | 以 pydantic `Event` 对象（而非 dict）形式提供的同一个事件，方便你使用属性访问。 |
 | `__id__` | 你的 Event 函数的 ID。 |
 | `__app__` | Open WebUI FastAPI 应用实例。这让你可以注册新的 API 路由、读取或更新应用状态以及调用内部服务（参见[注册端点](#registering-endpoints-and-self-installing-plugins)）。 |
 | `__request__` | 当前请求（如果事件是由请求触发的）。 |
@@ -93,19 +94,21 @@ async def event(self, event: dict, __event_name__: str = None, **kwargs):
 
 ## 事件目录 {#the-event-catalog}
 
-Open WebUI 发出 **170+ 事件**，涵盖每个子系统。每个名称以 `<区域>.<操作>` 命名空间组织。代表性选择：
+Open WebUI 发出 **170+ 事件**，涵盖每个子系统。每个名称以 `<area>.<action>` 命名空间组织。代表性选择：
 
 | 区域 | 示例事件 |
 | :--- | :--- |
 | **系统** | `system.startup.started`、`system.startup.completed`、`system.shutdown.started`、`system.shutdown.completed` |
-| **认证** | `auth.signup`、`auth.login`、`auth.logout`、`auth.password_changed`、`auth.api_key.created` |
+| **认证** | `auth.signup`、`auth.login`、`auth.logout`、`auth.password_changed`、`auth.api_key.created`、`auth.sessions_revoked`、`auth.mfa.enrolled`、`auth.mfa.failed` |
 | **用户与组** | `user.created`、`user.deleted`、`user.role_updated`、`user.permissions_updated`、`group.member_added` |
-| **聊天与消息** | `chat.created`、`chat.deleted`、`chat.shared`、`chat.archived`、`chat.compacted`、`message.created`、`message.reaction_added` |
-| **模型与提示词** | `model.created`、`model.updated`、`model.access_updated`、`prompt.created` |
+| **聊天与消息** | `chat.created`、`chat.deleted`、`chat.shared`、`chat.archived`、`chat.compacted`、`chat.finished`、`chat.failed`、`message.created`、`message.reaction_added` |
+| **模型与提示词** | `model.created`、`model.updated`、`model.access_updated`、`model.available`、`model.unavailable`、`prompt.created` |
 | **知识与文件** | `knowledge.created`、`knowledge.file.added`、`knowledge.reindexed`、`file.uploaded`、`file.deleted` |
-| **插件** | `tool.created`、`function.enabled`、`function.valves_updated`、`tool.valves_updated`、`skill.created` |
+| **插件** | `tool.created`、`function.enabled`、`function.enable_started`、`function.disable_started`、`function.valves_updated`、`tool.valves_updated`、`skill.created` |
 | **配置** | `config.updated`、`config.models.updated`、`config.connections.updated`、`config.webhook.updated` |
-| **其他** | `channel.*`、`calendar.*`、`automation.*`、`memory.*`、`note.*`、`image.*`、`audio.*`、`terminal.*`、`feedback.*` |
+| **其他** | `channel.*`、`calendar.*`、`automation.*`、`memory.*`、`note.*`、`image.*`、`audio.*`、`terminal.*`、`feedback.*`、`notification.*` |
+
+其中一些事件还会驱动面向用户的[通知](/features/chat-conversations/chat-features/notifications#events)，该页面列出了用户可以订阅目标的全部事件。
 
 权威的完整列表由后端事件目录公开，并在**管理设置 > 事件**中配置 webhook 时显示。
 
@@ -190,7 +193,7 @@ def run_once(key: str, ttl: int = 300) -> bool:
     # Redis SET NX EX：原子"如果不存在则设置"并带过期时间。在 ttl 窗口内，
     # 所有副本中恰好有一个调用者得到 True。
     if _redis is None:
-        return True  # 单进程：无需协调
+        return True  # single process: nothing to coordinate with
     return bool(_redis.set(f"{REDIS_KEY_PREFIX}:event:{key}", "1", nx=True, ex=ttl))
 
 
@@ -198,11 +201,11 @@ class Event:
     async def event(self, event: dict, __event_name__: str = None, **kwargs):
         if __event_name__ == "system.startup.completed":
             if run_once("startup-provision"):
-                await self.provision()          # 仅在一个副本上运行
+                await self.provision()          # runs on one replica only
         elif __event_name__ == "auth.signup":
             actor_id = (event.get("actor") or {}).get("id", "unknown")
             if run_once(f"signup-log:{actor_id}"):
-                await self.log_signup(event)     # 即使投递两次也只记录一次
+                await self.log_signup(event)     # logged once, even if delivered twice
 ```
 
 这是相同的模式，以及相同的注意事项（密钥选择、`ttl`、用于长时间运行工作的内置 `RedisLock` 帮助类），在所有插件类型的[底层机制 → 并发和多实例](/features/extensibility/plugin/development/under-the-hood#concurrency-and-multiple-instances)中都有文档说明。
@@ -269,7 +272,7 @@ Event 函数在它所响应的活动**之后**运行（用户已创建、消息�
 
 ### 合规和审计 {#compliance-and-audit}
 
-- **事件驱动的告警。** 在高信号事件上发出多接收方告警（频道 + 邮件 + SIEM）。旗舰场景：当有人成为**管理员**时发出告警；`config.*` 变更同理。
+- **事件驱动的告警。** 在高信号事件上发出多接收方告警（频道 + 邮件 + SIEM）。旗舰场景：当有人成为**管理员**时发出告警。`user.role_updated` 无论角色是通过何种方式设置的都会触发，而事件的 `source` 会标明来源路径：管理面板对应 `api`，目录同步对应 `scim`，映射角色的身份提供商登录对应 `oauth`，受信任的角色请求头对应 `trusted_header`。角色变更绝不会隐藏在 `user.updated` 之中。`config.*` 变更同理。
 - **不可变审计接收器。** 将每个事件发送到仅追加存储或 SIEM。免费获得防篡改审计日志。
 - **内容标记。** 扫描 `message.created` 中的密钥和 PII 并进行标记。（要在线阻断，请使用 [Filter](./filter)。）
 - **访问重新认证。** 定期要求资源所有者重新批准谁能访问他们的资源。自动化访问审查。

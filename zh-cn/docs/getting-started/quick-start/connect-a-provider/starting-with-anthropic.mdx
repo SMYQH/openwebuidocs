@@ -8,7 +8,7 @@ title: "Anthropic（Claude）"
 
 Open WebUI 原生支持 **Anthropic 的 Claude 模型**，方式是使用其兼容 OpenAI 的端点。只需填入 API 密钥，就可以直接开始聊天——无需中间层、无需 pipe、无需额外配置。
 
-Open WebUI 内置了兼容层，可自动识别 Anthropic URL、获取模型列表并转换请求。聊天补全、流式输出以及**工具调用**都能开箱即用。
+Open WebUI 会自动识别 Anthropic URL（任何包含 `api.anthropic.com` 的 URL），并为它们处理模型发现：原生模型列表使用 `x-api-key` 分页拿取，并被重塑为 OpenAI 列表格式。聊天请求本身则原样发送到 Anthropic 兼容 OpenAI 的 `/v1/chat/completions`，并使用 Bearer 认证。Open WebUI 还暴露了自己的 Anthropic Messages 端点 `/api/v1/messages`，对于连接在 `api.anthropic.com` 的情况，这些请求会在聊天流程之外原生转发到 `/v1/messages`。
 
 :::warning Anthropic 兼容性声明
 Anthropic 官方说明其兼容 OpenAI 的 API 主要面向**评估与测试**，而不是生产负载。实际使用中，包括工具调用在内的能力都可以正常工作，但请留意这一官方定位。如果你需要 Claude 原生完整特性（PDF 处理、引用、extended thinking、prompt caching），Anthropic 建议使用其原生 `/v1/messages` API，可通过 [pipe function](/features/extensibility/plugin/functions/pipe) 或 [LiteLLM](https://docs.litellm.ai/) 这类代理接入。
@@ -55,8 +55,8 @@ Anthropic 官方说明其兼容 OpenAI 的 API 主要面向**评估与测试**�
 
 | 模型 | ID |
 |---|---|
-| Claude Opus 4.6 | `claude-opus-4-6` |
-| Claude Sonnet 4.6 | `claude-sonnet-4-6` |
+| Claude Opus 5 | `claude-opus-5` |
+| Claude Sonnet 5 | `claude-sonnet-5` |
 | Claude Haiku 4.5 | `claude-haiku-4-5` |
 
 最新模型 ID 请查看 [Anthropic 模型文档](https://docs.anthropic.com/en/docs/about-claude/models)。

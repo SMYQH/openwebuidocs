@@ -13,11 +13,11 @@ sidebar_position: 3
 
 CLI 必须安装在**运行 Computer 的主机上**并登录，而不是在你浏览用的手机或笔记本电脑上。
 
-### Codex
+### Codex {#codex}
 
 命令：`codex`。使用 `codex login` 登录。需要具有应用服务器支持的较新 CLI；如果检测报告不支持的能力，请更新 CLI。
 
-### Claude Code
+### Claude Code {#claude-code}
 
 命令：`claude`。使用 CLI 的正常登录流程登录。还需要 Python 包 `claude-agent-sdk` 在 Computer 运行的环境中；没有它，配置文件会显示 **missing dependency**：
 
@@ -27,23 +27,23 @@ pip install claude-agent-sdk
 
 可用的模型列表取决于已安装的 CLI 版本。
 
-### Cursor
+### Cursor {#cursor}
 
 命令：`agent`。在主机上运行 `agent login`。
 
-### Grok
+### Grok {#grok}
 
 命令：`grok`。使用 CLI 登录，或设置 `XAI_API_KEY` 环境变量。
 
-### OpenCode
+### OpenCode {#opencode}
 
 命令：`opencode`。Computer 会自动启动 `opencode serve`，或者在配置文件中设置**服务器 URL**（和密码）以连接到你已经运行的服务器。模型来自 OpenCode 中连接的提供商。
 
-### Cline
+### Cline {#cline}
 
 命令：`cline`。在主机上运行 `cline auth`。
 
-### Pi
+### Pi {#pi}
 
 命令：`pi`。模型命名空间为 `provider/id`。
 
@@ -62,7 +62,7 @@ pip install claude-agent-sdk
 
 ## 模型、会话和主目录字段 {#models-sessions-and-the-home-field}
 
-- **模型：** 将配置文件中的模型列表留空以从 CLI 自动检测，或手动固定列表。模型 ID 格式如 `agent:claude/claude-sonnet-4-5`。
+- **模型：** 将配置文件中的模型列表留空以从 CLI 自动检测，或手动固定列表。模型 ID 格式如 `agent:claude/claude-sonnet-5`。
 - **会话自动恢复。** 每个后端返回一个会话或线程 ID，存储在聊天中并在下一个轮次传回（Claude Code SDK 会话、Codex 线程恢复、Cursor/Grok/Cline 会话加载）。关闭标签页，在手机上打开聊天，代理会从它离开的地方继续。
 - **主目录：** 将配置文件指向替代的代理配置/登录目录。这对于第二个账户或与你默认的 `~` 配置分开的独立登录很有用。
 

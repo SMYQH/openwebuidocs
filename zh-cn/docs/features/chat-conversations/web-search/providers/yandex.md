@@ -21,7 +21,7 @@ title: "Yandex"
 
 :::
 
-## Yandex Search API
+## Yandex Search API {#yandex-search-api}
 
 Yandex Web Search 通过 [Yandex Cloud Search API](https://yandex.cloud/en/docs/search-api/api-ref/WebSearch/search) 集成到 Open WebUI 中。
 

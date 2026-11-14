@@ -3,9 +3,22 @@ sidebar_position: 200
 title: "⭐ 功能特性"
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+export const Banner = ({slug, alt}) => (
+  <ThemedImage
+    alt={alt}
+    sources={{ light: useBaseUrl(`/images/banners/${slug}-light.svg`), dark: useBaseUrl(`/images/banners/${slug}-dark.svg`) }}
+    style={{ width: '100%', margin: '0.25rem 0 1.25rem' }}
+  />
+);
+
 # 使用 Open WebUI 能做什么 {#what-you-can-do-with-open-webui}
 
 **面向所有 AI 模型的统一界面。私有、可扩展，专为团队构建。**
+
+<Banner slug="features" alt="功能特性：高低不一的区块，其中一个被标记" />
 
 Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作的 ChatGPT、独立运行的图像生成应用、专用的文档搜索工具、以及塞满提示词却无人问津的电子表格。现在，所有内容都汇聚于此：对话、知识库、工具，以及驱动它们的各个模型。
 
@@ -13,6 +26,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 
 ## 💬 聊天与对话 {#chat--conversations}
 
+<Banner slug="chat-conversations" alt="聊天与对话" />
 **与任何模型对话，中途无缝切换，并保持完整的上下文。**
 
 对话是 Open WebUI 的核心。在一个统一界面中与 Ollama、OpenAI、Anthropic 或任何兼容 OpenAI 接口的提供商进行聊天。附带文件、搜索网页、执行代码、让 AI 调用工具——这一切都无需离开聊天界面。
@@ -37,6 +51,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 
 ## 📚 知识库与 RAG {#knowledge--rag}
 
+<Banner slug="kbsync" alt="知识库与 RAG" />
 **让你的 AI 访问文档——并让它自己找到重点。**
 
 上传文件、构建知识库，让 AI 准确检索所需信息。在面对海量集合时选择向量搜索（RAG），或者在需要精确度时注入完整内容。借助原生的函数调用功能，模型能够自主在你的整个知识库中搜索、浏览并整合信息。
@@ -57,6 +72,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 
 ## 🤖 模型与智能体 {#models--agents}
 
+<Banner slug="workspace" alt="模型与智能体" />
 **用自定义指令、工具和知识库包装任何模型，打造专属智能体。**
 
 创建一个始终遵循你的代码规范的“Python 导师”。一个带有公司模板的“会议总结助手”。一个内置代码检查规则的“代码审查员”。每个智能体都是一个配置包装器——只需选择任意基础模型，绑定知识库、工具和系统提示词即可。
@@ -64,7 +80,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 | | |
 | :--- | :--- |
 | 🧩 **模型预设** | 将系统提示词、工具、知识库和参数打包为一体 |
-| 🏷️ **动态变量** | 自动注入 `{{ USER_NAME }}`、`{{ CURRENT_DATE }}` 等变量 |
+| 🏷️ **动态变量** | 自动注入 `{{USER_NAME}}`、`{{CURRENT_DATE}}` 等变量 |
 | 🔧 **绑定工具** | 为特定模型强制启用特定工具 |
 | 👥 **访问控制** | 限制特定用户或群组对模型的访问权限 |
 | 📊 **全局默认值** | 为所有模型设置基础能力和参数 |
@@ -77,6 +93,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 
 ## 📝 笔记 {#notes}
 
+<Banner slug="notes" alt="笔记" />
 **在 AI 的陪伴下写作、思考和完善。**
 
 这是一个专门为不属于单一对话的内容提供的专用工作区。使用富文本编辑器起草，让 AI 原地重写文本，或将笔记作为精确的上下文注入任何聊天中——无需分块，无需向量检索。
@@ -94,9 +111,10 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 
 ## 💬 频道 {#channels}
 
+<Banner slug="channels" alt="频道" />
 **你的团队和 AI 在此实时共同思考。**
 
-这是一个持久的共享空间，人类和 AI 模型可以在同一个对话中互动。呼叫 `@gpt-4o` 起草计划，然后呼叫 `@claude` 进行点评——你的整个团队可以在同一时间线上看到这两者的回复。
+这是一个持久的共享空间，人类和 AI 模型可以在同一个对话中互动。呼叫 `@gpt-5.6` 起草计划，然后呼叫 `@claude` 进行点评——你的整个团队可以在同一时间线上看到这两者的回复。
 
 | | |
 | :--- | :--- |
@@ -104,7 +122,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 | 🧵 **话题与互动** | 回复、固定和表情符号互动 |
 | 🔒 **访问控制** | 公共、私有、基于群组和直接消息频道 |
 | 🧠 **AI 频道感知** | 模型可自主跨频道搜索并综合信息 |
-| 🔌 **[应用](/features/channels/apps)** | 外部服务接入频道，响应 `@提及` 并发布带按钮的消息 |
+| 🔌 **[应用](/features/channels/apps)** | 外部服务接入频道，响应 `@mentions` 并发布带按钮的消息 |
 
 [**了解频道 →**](/features/channels)
 
@@ -112,6 +130,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 
 ## ⚡ 终端 {#open-terminal}
 
+<Banner slug="terminal" alt="Open Terminal" />
 **为你的 AI 提供一台真正的计算机去工作。**
 
 将一个真正的计算环境连接到 Open WebUI。AI 可以编写代码、执行代码、读取输出、修复错误并进行迭代——这一切都在聊天中完成。它可以处理文件、安装包、运行服务器并返回结果。
@@ -133,6 +152,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 
 ## 🔌 扩展能力 {#extensibility}
 
+<Banner slug="extensibility" alt="扩展能力" />
 **通过 Python 工具、管道、MCP 或 OpenAPI 服务器添加任何功能。**
 
 Open WebUI 是一个平台，而不是一个封闭的产品。编写可以在聊天中运行的 Python 工具。通过 OpenAPI 或 MCP 连接外部服务。构建可以过滤、转换或路由每条消息的 Pipeline。一键导入社区构建的扩展程序。
@@ -151,6 +171,7 @@ Open WebUI 是一个平台，而不是一个封闭的产品。编写可以在聊
 
 ## 🔐 认证与访问 {#authentication--access}
 
+<Banner slug="authentication-access" alt="认证与访问" />
 **控制谁能进入、他们能做什么，以及如何连接到你的身份系统。**
 
 Open WebUI 从第一天起就支持多用户。定义角色、创建用户组、设置每个模型的访问权限，并与你的身份提供商集成。从单人安装到数千席位的组织均可适用。
@@ -169,6 +190,7 @@ Open WebUI 从第一天起就支持多用户。定义角色、创建用户组、
 
 ## 🔧 管理 {#administration}
 
+<Banner slug="administration" alt="管理" />
 **监控使用情况、评估模型，并与你的用户进行沟通。**
 
 | | |

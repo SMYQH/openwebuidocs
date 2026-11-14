@@ -102,7 +102,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   </TabItem>
   <TabItem value="gemini" label="Google Gemini">
 
-  **Google Gemini** 提供兼容 OpenAI 的端点，并可与 Open WebUI 良好协作。
+  **Google Gemini** 提供兼容 OpenAI 的端点。普通对话可以正常工作，但其工具调用并不遵循 OpenAI schema，因此启用工具前请先阅读下方的警告。
 
   | 设置项 | 值 |
   |---|---|
@@ -114,6 +114,18 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   URL 必须严格写成 `https://generativelanguage.googleapis.com/v1beta/openai` —— **末尾不要带 `/`**。多出的斜杠会导致 `/models` 调用失败。
   :::
 
+  :::warning 该端点的原生工具调用存在缺陷
+  谷歌的兼容层在两个方面偏离了 OpenAI 的流式 schema：它省略了 schema 在每个流式工具调用中都携带的 `index` 字段；同时 Gemini 3 模型会附加一个专有的 `thought_signature`，而谷歌又要求在后续请求中原样带回。Open WebUI 使用的是 OpenAI schema，因此只要某一轮模型决定调用工具，该调用就会被丢弃，**助手消息将返回空内容**，并且日志中没有任何记录。
+
+  这也包括 Memory 等内置工具，因此看起来像是时有时无：只有模型选择调用某个工具时该轮才会出问题。你的可选方案：
+
+  - 在模型的**高级参数（Advanced Params）**中把 **Function Calling** 设为 **Legacy**。此时工具会通过一个独立的非流式请求执行，不会触及受影响的代码路径。该模式下内置工具不可用。
+  - 如果你只需要普通对话，请为该模型关闭**内置工具**能力。
+  - 若要使用可用的原生工具调用，请在前面架设一个能转换到谷歌原生 API 的网关，例如 LiteLLM 或 OpenRouter，或者使用直接调用 `generateContent` 的管道。
+
+  这是谷歌一侧的偏差，Open WebUI 不会为此做变通。[模型使用工具时回复为空](/troubleshooting/connection-error#blank-replies-when-the-model-uses-a-tool) 详细说明了这一症状，包括如何针对其他提供商进行排查。该问题记录于 [#28492](https://github.com/open-webui/open-webui/issues/28492)。
+  :::
+
   </TabItem>
   <TabItem value="deepseek" label="DeepSeek">
 
@@ -123,7 +135,11 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   |---|---|
   | **URL** | `https://api.deepseek.com/v1` |
   | **API Key** | 你在 [platform.deepseek.com](https://platform.deepseek.com/) 获取的 API key |
-  | **Model IDs** | 自动发现（例如 `deepseek-chat`、`deepseek-reasoner`） |
+  | **Model IDs** | 自动发现（例如 `deepseek-v4-pro`、`deepseek-v4-flash`） |
+
+  :::caution 旧别名已下线
+  `deepseek-chat` 和 `deepseek-reasoner` 别名已于 2026-07-24 下线。请直接使用 `deepseek-v4-*` 模型 ID。
+  :::
 
   </TabItem>
   <TabItem value="mistral" label="Mistral">
@@ -134,7 +150,11 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   |---|---|
   | **URL** | `https://api.mistral.ai/v1` |
   | **API Key** | 你在 [console.mistral.ai](https://console.mistral.ai/) 获取的 API key |
-  | **Model IDs** | 自动发现（例如 `mistral-large-latest`、`codestral-latest`、`mistral-small-latest`） |
+  | **Model IDs** | 自动发现（例如 `mistral-large-3-25-12`、`mistral-small-4-0-26-03`、`codestral-25-08`） |
+
+  :::caution 不再提供 `-latest` 别名
+  Mistral 不再发布 `mistral-large-latest` 这类 `-latest` 别名。请改用 [Mistral 模型总览](https://docs.mistral.ai/getting-started/models/models_overview/) 中带日期的模型 ID。
+  :::
 
   </TabItem>
   <TabItem value="groq" label="Groq">
@@ -145,7 +165,11 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   |---|---|
   | **URL** | `https://api.groq.com/openai/v1` |
   | **API Key** | 你在 [console.groq.com](https://console.groq.com/) 获取的 API key |
-  | **Model IDs** | 自动发现（例如 `llama-3.3-70b-versatile`、`deepseek-r1-distill-llama-70b`） |
+  | **Model IDs** | 自动发现（例如 `openai/gpt-oss-120b`、`openai/gpt-oss-20b`、`groq/compound`） |
+
+  :::caution Groq 已下线其 Llama 对话模型
+  `llama-3.3-70b-versatile` 和 `llama-3.1-8b-instant` 已于 2026-08-16 停止服务。请改用 `gpt-oss` 或 `compound` 模型。
+  :::
 
   </TabItem>
   <TabItem value="perplexity" label="Perplexity">
@@ -165,13 +189,17 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   </TabItem>
   <TabItem value="minimax" label="MiniMax">
 
-  **MiniMax** 是一家专注高性能模型的 AI 公司，其 **MiniMax M2.5** 尤其针对代码、推理和多轮对话做了优化。其 **Coding Plan** 订阅对于高频编程使用场景，相比按量计费通常更具性价比。
+  **MiniMax** 是一家专注高性能模型的 AI 公司。其最新模型 **MiniMax M3** 针对智能体推理、工具使用、代码编写和长上下文任务做了优化。其 **Coding Plan** 订阅对于高频编程使用场景，相比按量计费通常更具性价比。
 
   | 设置项 | 值 |
   |---|---|
   | **URL** | `https://api.minimax.io/v1` |
   | **API Key** | 你的 Coding Plan API key（见下方第 2 步） |
-  | **Model IDs** | **必须手动填写**——例如 `MiniMax-M2.5` |
+  | **Model IDs** | **必须手动填写**——例如 `MiniMax-M3` |
+
+  :::note 下方截图显示的是 `MiniMax-M2.5`
+  本节截图是在 M3 发布之前截取的。操作步骤完全相同：看到 `MiniMax-M2.5` 的地方一律替换为 `MiniMax-M3`。
+  :::
 
   **第 1 步：订阅 MiniMax Coding Plan**
 
@@ -203,7 +231,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   2. 点击 **OpenAI API** 区域下的 **+** 图标。
   3. 填写上表中的 URL 和 API key。
   4. **重要：** MiniMax 不提供 `/models` 端点，所以你必须手动添加模型。
-  5. 在 **Model IDs (Filter)** 中输入 `MiniMax-M2.5`，然后点击 **+** 图标。
+  5. 在 **Model IDs** 中输入 `MiniMax-M3`，然后点击 **+** 图标。
   6. 点击 **Verify Connection**（你应看到成功提示）。
   7. 点击 **Save**。
 
@@ -212,7 +240,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   **第 4 步：开始聊天**
 
-  在模型下拉框中选择 **MiniMax-M2.5** 并开始聊天。推理与思考模式默认即可正常工作，无需额外配置。
+  在模型下拉框中选择 **MiniMax-M3** 并开始聊天。推理与思考模式默认即可正常工作，无需额外配置。
 
   ![MiniMax 聊天界面](/images/tutorials/minimax/minimax-chat.png)
 
@@ -225,7 +253,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   |---|---|
   | **URL** | `https://ai-gateway.vercel.sh/v1` |
   | **API Key** | 从 [Vercel 控制台](https://vercel.com/docs/ai-gateway/authentication/api-keys) 获取的 AI Gateway API 密钥 |
-  | **Model IDs** | 自动检测；可选择筛选到特定的网关模型 ID，例如 `anthropic/claude-opus-4.8` |
+  | **Model IDs** | 自动检测；可选择筛选到特定的网关模型 ID，例如 `anthropic/claude-opus-5` |
 
   :::tip
   Vercel AI Gateway 实现了 OpenAI Chat Completions API（包括 `/models` 和 `/chat/completions`），因此你可以将其作为普通的兼容 OpenAI 连接添加到 Open WebUI 中。请使用 [AI Gateway 模型目录](https://vercel.com/ai-gateway/models) 中列出的模型 ID。
@@ -244,7 +272,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   :::tip
   OpenRouter 会暴露**成千上万**个模型，这会让模型选择器非常混乱，也会拖慢管理界面。我们**强烈建议**：
-  1. **使用白名单**——只添加你真正需要的模型 ID（例如 `anthropic/claude-sonnet-4-5`、`google/gemini-2.5-pro`）。
+  1. **使用白名单**——只添加你真正需要的模型 ID（例如 `anthropic/claude-sonnet-5`、`google/gemini-3.6-flash`）。
   2. 通过 `Settings > Connections > Cache Base Model List` 或 `ENABLE_BASE_MODELS_CACHE=True` **启用模型缓存**。若不缓存，页面加载可能需要 10–15 秒甚至更久。详见[性能指南](/troubleshooting/performance)。
   :::
 
@@ -260,7 +288,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   * **LiteLLM** 搭配 Bedrock 提供商（LiteLLM 并非专门为 AWS 设计）
   * **Bedrock Mantle** —— AWS 原生方案，无需额外安装
 
-  #### 功能对比
+  #### 功能对比 \{#feature-comparison}
 
   | 能力 | Bedrock Access Gateway (BAG) | stdapi.ai | LiteLLM（Bedrock 提供商） | AWS Bedrock Mantle |
   |------------------------------| --- | --- | --- | --- |
@@ -275,7 +303,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   | 无需安装 | — | — | — | ✅ |
   | 许可 | MIT | AGPL 或商业版 | MIT 或商业版 | AWS 服务 |
 
-  #### 方案 1：Bedrock Access Gateway (BAG)
+  #### 方案 1：Bedrock Access Gateway (BAG) \{#solution-1-bedrock-access-gateway-bag}
 
   **前置要求**
 
@@ -333,7 +361,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   - [Connecting Open WebUI to AWS Bedrock](https://gauravve.medium.com/connecting-open-webui-to-aws-bedrock-a1f0082c8cb2)
   - [Using Amazon Bedrock with Open WebUI for Sensitive Data](https://jrpospos.blog/posts/2024/08/using-amazon-bedrock-with-openwebui-when-working-with-sensitive-data/)
 
-  #### 方案 2：stdapi.ai
+  #### 方案 2：stdapi.ai \{#solution-2-stdapiai}
 
   [stdapi.ai](https://stdapi.ai/) 是一个兼容 OpenAI 的 API 网关，你可以将它部署在 AWS 账户中，也可以使用 Docker 在本地运行。
 
@@ -441,7 +469,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   如果你发现 TTS 语言自动识别不稳定，可以在 stdapi.ai 中固定语言（例如 `DEFAULT_TTS_LANGUAGE=en-US`）。
 
-  #### 方案 3：AWS Bedrock Mantle
+  #### 方案 3：AWS Bedrock Mantle \{#solution-3-aws-bedrock-mantle}
 
   [Bedrock Mantle](https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html) 是 AWS 提供的原生方案，可为 Amazon Bedrock 直接提供兼容 OpenAI 的 API 端点，无需额外基础设施或安装，因此也是接入 Bedrock 的最简单方式。
 
@@ -480,7 +508,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   详情请参见 [Bedrock Mantle 文档](https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html)。
 
-  #### 开始使用 Bedrock Base Models
+  #### 开始使用 Bedrock Base Models \{#start-using-bedrock-base-models}
 
   ![使用 Bedrock 模型](/images/tutorials/amazon-bedrock/amazon-bedrock-models-in-oui.png)
 
@@ -509,6 +537,10 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   Azure OpenAI 使用的是**部署名（deployment names）**作为模型 ID，而不是标准 OpenAI 模型名。因此你必须把部署名加入 Model IDs 白名单。
   :::
 
+  :::tip Azure 会根据 URL 自动识别
+  如果你把 **Provider** 保持为 **Default**，而 URL 中包含 `azure.` 或 `cognitive.microsoft.com` 且结尾不是 `/openai/v1`，对话框会自动切换到 Azure 模式，并照样要求填写 API Version 和 deployment 名称。只有当 Azure 兼容端点位于其他域名上时，才需要显式设置下拉选项。
+  :::
+
   :::tip 两种 Azure URL 格式
   Azure 支持两种 URL 形式：
 
@@ -535,7 +567,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   ```bash
   pip install litellm
-  litellm --model gpt-4 --port 4000
+  litellm --model gpt-5.6-sol --port 4000
   ```
 
   生产环境中，建议通过 `litellm_config.yaml` 配置模型。详见 [LiteLLM 文档](https://docs.litellm.ai/)。
@@ -605,8 +637,11 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   |---|---|
   | **URL** | `http://localhost:1234/v1` |
   | **API Key** | 留空（或使用 `lm-studio` 作为占位） |
+  | **Provider** | `LM Studio`（可选，允许从 Open WebUI 管理模型） |
 
   连接前，请先在 LM Studio 的 “Local Server” 标签页中启动服务。
+
+  在 **高级设置** 中把 **Provider** 设为 `LM Studio`，会在模型选择器中标记已加载的模型，并让管理员无需离开 Open WebUI 就能下载、加载和卸载模型。参见[从 Open WebUI 管理本地模型](#managing-local-models-from-open-webui)。
 
   </TabItem>
   <TabItem value="vllm" label="vLLM">
@@ -647,9 +682,9 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
 如果你的服务启动较慢，或你通过高延迟网络连接，可以调整模型列表获取超时：
 
-```bash
+``` bash
 # 针对较慢连接调整超时（默认 10 秒）
-AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=5
+AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 ```
 
 如果你保存了不可达 URL，导致界面卡住，请查看 [模型列表加载问题](/troubleshooting/connection-error#model-list-loading-issues-slow-ui--unreachable-endpoints) 故障排查页面以获取恢复方法。
@@ -657,6 +692,22 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=5
 :::
 
 ---
+
+:::info 转发 Cookie
+
+**高级设置 > 转发 Cookie** 决定浏览器请求中的 Cookie 是否会被转发到该服务器。它默认关闭，且只作用于管理员配置的连接；用户自己的直连永远不会转发 Cookie。
+
+只为你自己掌控、并且通过 Cookie 来认证请求发起者的服务器开启它，通常是你自己网络内、使用同一套登录体系的那类服务器。浏览器为你的 Open WebUI 域名保存的所有内容都会随请求一起过去，包括会话 Cookie，因此第三方端点绝不应该开启它。
+
+**这一点发生了变化：** 使用 **Session** 或 **System OAuth** 认证类型的连接过去会无条件转发 Cookie，现在不会了。如果这类连接在升级后不再能够通过认证，请开启此项。
+
+:::
+
+:::info OAuth 认证类型
+
+当 **Auth** 设为 **OAuth** 时，Open WebUI 会把用户 SSO 登录得到的访问令牌以 bearer token 的形式发送给该服务器。浏览器中的聊天使用该浏览器会话的登录状态。当该会话没有令牌，或请求根本没有浏览器会话（使用 API key 或 bearer token 的 API 调用）时，则使用该用户最近一次 SSO 登录的结果。从未通过 SSO 登录的用户不会发送任何令牌。
+
+:::
 
 ## 服务商设置 {#the-provider-setting}
 

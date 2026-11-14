@@ -27,7 +27,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 它是一个独立的程序（命令行工具加一个可选的长期运行[守护进程](/ecosystem/knowledge-base-sync/daemon)），并非 Open WebUI 服务器的一部分，但它是为 Open WebUI 构建的，并通过标准 REST API 与其通信。
 
 :::info 需要 Open WebUI 0.9.6+
-oikb 驱动了 **v0.9.6** 中新增的增量同步端点（`/sync/diff` 和 `/sync/cleanup`）。如果服务器版本更旧，则没有可供调用的接口。这些端点的服务器端行为在[知识库 → 同步本地目录](/features/workspace/knowledge#syncing-a-local-directory)中有文档说明。
+oikb 驱动了增量同步端点（`POST /api/v1/knowledge/{id}/sync/diff` 和 `.../sync/cleanup`）。如果服务器版本更旧，则没有可供调用的接口。这些端点的服务器端行为在[知识库 → 同步本地目录](/features/workspace/knowledge#syncing-a-local-directory)中有文档说明。
 :::
 
 ---
@@ -85,7 +85,7 @@ pip install oikb[gcs]      # Google Cloud Storage
 pip install oikb[azure]    # Azure Blob
 pip install oikb[dropbox]  # Dropbox
 pip install oikb[gdrive]   # Google Drive
-pip install oikb[all]      # 一次性安装所有可选连接器
+pip install oikb[all]      # every optional connector at once
 ```
 
 完整的可选组件列表为：`s3`、`gcs`、`azure`、`dropbox`、`r2`、`gdrive`、`gmail`、`gsites`、`web`、`oracle`、`sharepoint-cert` 和 `all`。表中未列出的连接器（GitHub、Confluence、Notion、Jira、Slack 以及大多数其他连接器）无需额外安装。
@@ -98,7 +98,7 @@ pip install oikb[all]      # 一次性安装所有可选连接器
 
 ```bash
 export OPEN_WEBUI_URL=http://localhost:3000
-export OPEN_WEBUI_API_KEY=sk-your-api-key   # 设置 → 账户 → API 密钥
+export OPEN_WEBUI_API_KEY=sk-your-api-key   # Settings → Account → API keys
 
 # 将本地文件夹同步到知识库
 oikb sync ./docs --kb-id your-kb-id
@@ -137,7 +137,7 @@ API 密钥以**你**的用户身份进行身份验证。oikb 只能读取和写�
 ```bash
 oikb config set url http://localhost:3000
 oikb config set token sk-your-api-key
-oikb config get                    # 显示已保存的内容（令牌会被掩码处理）
+oikb config get                    # show what's saved (token is masked)
 ```
 
 保存到 `~/.config/oikb/config.yaml`（通过 `OIKB_CONFIG_DIR` 覆盖目录）。解析顺序，优先级从高到低：
@@ -152,7 +152,7 @@ oikb config get                    # 显示已保存的内容（令牌会被掩�
 
 1. oikb 扫描源并为每个文件计算 **SHA-256** 校验和。
 2. 它将这个清单（路径、文件名和校验和，**不是**文件内容）发送到 Open WebUI 的 `/sync/diff`，服务器回复确切**新增**、**修改**和**删除**的内容，以及需要创建或移除的目录。此调用是只读的，不会更改知识库。
-3. oikb 删除过时的文件（以及现在为空的目录），创建缺失的目录，然后仅上传**新增**和**修改**的文件，每个文件都带有其哈希标签，以便服务器跳过重新哈希。
+3. oikb 删除过时的文件（以及现在为空的目录），创建缺失的目录，然后仅上传**新增**和**修改**的文件，每个文件都带有其哈希标签，以便服务器跳过重新哈希。在服务器端，除非设置了 `ENABLE_KNOWLEDGE_FILE_RETENTION=true`、该文件仍被关联到另一个知识库，或者该键的用户既不是文件所有者也不是管理员，否则清理过程还会删除过时文件的记录和已存储的字节。在 0.9.6 之前上传的文件没有存储校验和，因此会在首次同步时被报告为已修改——它会被替换一次，之后就不再变化。
 
 由于差异比较基于内容哈希，未发生变化的仓库几乎可以立即重新同步：没有内容被重新上传、重新提取或重新嵌入，因此频繁运行没有成本。只有真正的变更才会产生工作。
 
@@ -166,7 +166,7 @@ oikb config get                    # 显示已保存的内容（令牌会被掩�
 
 **来源**可以是本地路径，也可以是 `scheme:target` 格式的字符串。oikb 将 scheme 解析为对应的连接器，拉取文件并将其同步到知识库。凭据永远不会写入来源字符串或 `.oikb.yaml` 中；每个连接器从**环境变量**中读取凭据，因此密钥不会出现在你的配置中（配合 [`${VAR}` 插值](/ecosystem/knowledge-base-sync/daemon#the-oikbyaml-config-file)使用，可使配置文件可提交）。
 
-在下表中，`[括号]` 表示来源字符串中的可选部分。
+在下表中，`[brackets]` 表示来源字符串中的可选部分。
 
 | 分组 | 连接器 | 来源字符串 | 凭据（环境变量） |
 |---|---|---|---|
@@ -233,12 +233,12 @@ sources:
     source: github:owner/repo
     kb-id: your-kb-id
     filter:
-      include: ["docs/**/*.md", "*.txt"]   # 仅包含这些
-      exclude: ["drafts/**", "**/*.tmp"]   # 排除这些（在包含之后应用）
-      max-size: 50mb                        # 跳过任何大于此值的文件
+      include: ["docs/**/*.md", "*.txt"]   # only these
+      exclude: ["drafts/**", "**/*.tmp"]   # minus these (applied after include)
+      max-size: 50mb                        # skip anything larger
 ```
 
-`max-size` 支持 `b`、`kb`、`mb`、`gb`。超过大小限制的文件会在差异比较前发出警告并跳过，因此它们永远不会上传。它也可以作为 CLI 标志使用：`oikb sync ./docs --kb-id abc --max-file-size 50mb`。
+`max-size` 支持 `b`、`kb`、`mb`、`gb`。超过大小限制的文件会在差异比较前发出警告并跳过，因此它们永远不会上传。它也可以作为 CLI 标志使用：`oikb sync ./docs --kb-id abc --max-file-size 50mb`。当管理员设置了自己的限制时，Open WebUI 也会强制执行（两者默认都未设置）：大于管理员"最大上传大小"（`RAG_FILE_MAX_SIZE`，单位 MB）的文件会以 HTTP 413 拒绝，扩展名不在"允许的文件扩展名"（`RAG_ALLOWED_FILE_EXTENSIONS`）之内的文件会以 HTTP 400 拒绝，因此在你在此处过滤掉它们之前，这类文件在每次同步时都会失败。
 
 要将一个来源的不同部分路由到不同的知识库，请使用不同的 `filter.include` 和 `kb-id` 创建单独的条目：
 
@@ -354,13 +354,15 @@ Docker 镜像可以作为一次性命令运行，使其成为[GitHub Actions](/e
 
 ### 索引仍在服务端进行 {#indexing-still-happens-server-side}
 
-oikb 上传很快，但 Open WebUI 会异步提取和嵌入每个新文件。刚刚同步的文件已在知识库中，但可能需要片刻才能被查询到。
+oikb 上传很快，但 Open WebUI 会异步提取和嵌入每个新文件。上传在文件被存储后立即返回；提取、嵌入以及到知识库的关联都在后台任务中完成，`GET /api/v1/files/{id}/process/status` 会报告文件何时处于 `completed` 或 `failed` 状态。在此之前，它不会出现在知识库的文件列表中。
 
 ---
 
 ## 故障排除 {#troubleshooting}
 
-**`Connection refused` 或 `401 Unauthorized`**：URL 或密钥错误或未设置。使用 `oikb config get` 检查，或运行 `echo $OPEN_WEBUI_URL` 和 `echo $OPEN_WEBUI_API_KEY`。密钥必须是有效的 Open WebUI API 密钥（设置 → 账户）。
+**`Connection refused` 或 `401 Unauthorized`**：URL 或密钥错误或未设置。使用 `oikb config get` 检查，或运行 `echo $OPEN_WEBUI_URL` 和 `echo $OPEN_WEBUI_API_KEY`。密钥必须是有效的 Open WebUI API 密钥（设置 → 账户）。API 密钥默认关闭：必须由管理员启用（`ENABLE_API_KEYS`），并且非管理员用户还需要 API Keys 权限，否则账户页面不会显示 API 密钥分区。
+
+**`403 Forbidden`**：密钥有效，但服务器上禁用了 API 密钥、你的用户缺少 API Keys 权限、端点限制已开启（`ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS`）且 `API_KEYS_ALLOWED_ENDPOINTS` 未包含 `/api/v1/knowledge` 和 `/api/v1/files`，或者你的用户对目标知识库没有写权限。
 
 **`No source specified and no .oikb.yaml found`**：你运行了 `oikb sync` 但未指定来源，且当前目录中没有 `.oikb.yaml`。请传递一个来源（`oikb sync ./docs --kb-id ...`）或使用 `oikb init` 创建配置文件。
 

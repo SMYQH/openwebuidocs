@@ -36,12 +36,12 @@ title: "扩缩容与高可用"
 - 日志中出现 “Error decrypting tokens”
 
 **原因：**
-每个副本使用了不同的 `WEBUI_SECRET_KEY`。当副本 A 发出会话 token（JWT）后，副本 B 会因为无法用自己的密钥验证签名而拒绝它。
+各副本使用了不同的 `WEBUI_SECRET_KEY`。副本 B 会拒绝由副本 A 签名的 token。如果不设置 `WEBUI_SECRET_KEY`，每个容器都会在首次启动时各自生成一个密钥。
 
 **解决方法：**
-在所有后端副本上，把 `WEBUI_SECRET_KEY` 设置成**同一个**强随机字符串。
+在所有副本上，把 `WEBUI_SECRET_KEY` 设置成**同一个**强随机字符串。如果你另外设置了 `OAUTH_SESSION_TOKEN_ENCRYPTION_KEY`，它也必须在所有地方保持一致。
 
-```yaml
+``` yaml
 # Kubernetes/Compose 示例
 env:
   - name: WEBUI_SECRET_KEY
@@ -66,17 +66,16 @@ env:
    如果日志出现 `engineio.base_server:_log_error_once:354 - https://yourdomain.com is not an accepted origin`，你就必须更新该变量。它接受**以分号分隔**的允许来源列表。
 
    **示例：**
-   ```bash
+``` bash
    CORS_ALLOW_ORIGIN="https://chat.yourdomain.com;http://chat.yourdomain.com;https://yourhostname;http://localhost:3000"
-   ```
+```
    *请把用户可能访问 Open WebUI 的所有合法 IP、域名和主机名都列进去。*
 2. **为 WebSocket 启用 Redis：**
    确保所有副本都设置了：
-   ```bash
-   ENABLE_WEBSOCKET_SUPPORT=True
+``` bash
+    REDIS_URL=redis://your-redis-host:6379/0
    WEBSOCKET_MANAGER=redis
-   WEBSOCKET_REDIS_URL=redis://your-redis-host:6379/0
-   ```
+```
 
 <span id="3-model-not-found-or-configuration-mismatch"></span>
 ### 3. “Model Not Found” 或配置不一致 {#3-model-not-found-or-configuration-mismatch}
@@ -91,10 +90,6 @@ env:
 
 **解决方法：**
 把 `REDIS_URL` 指向共享 Redis 实例，以启用实时配置同步。
-
-```bash
-REDIS_URL=redis://your-redis-host:6379/0
-```
 
 <span id="4-database-corruption--locked-errors"></span>
 ### 4. 数据库损坏 / “Locked” 错误 {#4-database-corruption--locked-errors}
@@ -115,17 +110,14 @@ REDIS_URL=redis://your-redis-host:6379/0
 **解决方法——按正确性从高到低排序：**
 
 1. **迁移到 PostgreSQL（强烈推荐，也是多副本的必需项）：**
-   ```bash
-   DATABASE_URL=postgresql+asyncpg://user:password@postgres-host:5432/openwebui
-   ```
+``` bash
+   DATABASE_POOL_SIZE=1
+   DATABASE_SQLITE_PRAGMA_BUSY_TIMEOUT=30000
+```
    对 Kubernetes / Docker Swarm 来说，这几乎是强制要求。Postgres 负责管理自己的本地存储 I/O，因此网络 `fsync` 病理会彻底消失。完整迁移步骤见 [Scaling → Step 1](/getting-started/advanced-topics/scaling#step-1-switch-to-postgresql)。
 2. **如果你是单实例并且可以移动数据库：** 把 `webui.db` 放到本地直连 SSD/NVMe（宿主机 bind mount、本地卷、临时盘），**不要** 与上传文件和 RAG 文件共用同一块 NFS/Ceph/EFS 网络盘。
 3. **不要只增加 `DATABASE_POOL_SIZE`。** 更大的连接池并不能解决慢 `fsync`，只会让更多慢 `fsync` 并发堆积在同一份慢存储上，把崩溃点往后推几秒而已。
 4. **只作为临时止损手段：**
-   ```bash
-   DATABASE_POOL_SIZE=1
-   DATABASE_SQLITE_PRAGMA_BUSY_TIMEOUT=30000
-   ```
    这样会把并发串行化到单个异步连接，以稳定性换吞吐。**不支持长期使用。** 如果后台调度器的轮询是压垮系统的最后一根稻草，还可以考虑 `ENABLE_AUTOMATIONS=false`。
 
 <span id="5-uploaded-files-or-rag-knowledge-inaccessible"></span>
@@ -147,11 +139,11 @@ REDIS_URL=redis://your-redis-host:6379/0
 
 **症状：**
 - 日志在同一秒内出现如下序列：
-  ```
+```
   save_docs_to_vector_db:1619 - adding to collection file-id
   INFO:     Waiting for child process [pid]
   INFO:     Child process [pid] died
-  ```
+```
 - RAG 文档导入过程中 worker 立即退出
 - 崩溃是瞬时的，而不是超时后发生
 
@@ -173,14 +165,13 @@ REDIS_URL=redis://your-redis-host:6379/0
 
 **推荐方案**——将 ChromaDB 独立运行：
 
-```bash
+``` bash
 # 单独运行 chroma server
 chroma run --host 0.0.0.0 --port 8000 --path /data/vector_db
 
 # 然后为 Open WebUI 设置这些环境变量
 CHROMA_HTTP_HOST=localhost
 CHROMA_HTTP_PORT=8000
-UVICORN_WORKERS=4
 ```
 
 ### 7. 云环境 Kubernetes 比本地明显更慢 {#7-slow-performance-in-cloud-vs-local-kubernetes}
@@ -199,44 +190,16 @@ UVICORN_WORKERS=4
 
 ### 8. 优化数据库性能 {#8-optimizing-database-performance}
 
-对于资源充足的 PostgreSQL 部署，可考虑以下优化：
+**症状：**
+- PostgreSQL 在负载下出现 `QueuePool limit of size N overflow M reached` 错误。
+- PostgreSQL 以 `too many clients already` 拒绝连接。
 
-#### 数据库会话共享
+**原因：**
+单个进程的连接池对其负载而言过小，或者所有进程的连接池加起来超过了 PostgreSQL 的 `max_connections`。每个副本都有自己的连接池。
 
-启用会话共享可以提升高并发下的性能：
+**解决方法：**
+按进程设置 `DATABASE_POOL_SIZE` 与 `DATABASE_POOL_MAX_OVERFLOW`，并参照[第 1 步](/getting-started/advanced-topics/scaling#step-1-switch-to-postgresql)核对总和是否超过 `max_connections`。如果出现的是阻塞式任务堆积（应用卡死，但 CPU 和内存看起来正常），则提高 [`THREAD_POOL_SIZE`](/troubleshooting/performance#thread-pool-size)。
 
-```bash
-DATABASE_ENABLE_SESSION_SHARING=true
-```
-
-详情见 [DATABASE_ENABLE_SESSION_SHARING](/reference/env-configuration#database_enable_session_sharing)。
-
-#### 连接池大小
-
-如果在高并发下遇到 `QueuePool limit reached` 或连接超时，可提高连接池大小：
-
-```bash
-DATABASE_POOL_SIZE=15 (or higher)
-DATABASE_POOL_MAX_OVERFLOW=20 (or higher)
-```
-
-**重要：** `DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW` 的总和应明显低于数据库的 `max_connections`。PostgreSQL 默认 `max_connections` 为 100，因此单个 Open WebUI 实例建议控制在 50-80 以下，以给其他客户端和维护任务留出空间。
-
-:::warning 连接池大小会随着并发乘法放大
-**每个 Open WebUI 进程都会维护自己的独立连接池。** 这同时适用于多副本（Kubernetes pod、Docker Swarm 副本）以及每个副本中的多个 Uvicorn worker。
-
-数据库最大连接数的计算方式是：
-
-```
-Total connections = (DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW) × Total processes
-```
-
-其中 `Total processes = 副本数 × 每个副本的 UVICORN_WORKERS`。
-
-例如，`DATABASE_POOL_SIZE=15`、`DATABASE_POOL_MAX_OVERFLOW=20`、3 个副本、每个 2 个 worker，总计可能打开 **210 个连接**（35 × 6 进程）。
-:::
-
-更多说明请参阅 [DATABASE_POOL_SIZE](/reference/env-configuration#database_pool_size)。关于缓存、会话共享和内容提取调优等完整数据库优化内容，请参阅 [性能与内存](./performance)。
 
 ### 9. Function/Tool 依赖安装导致崩溃 {#9-functiontool-dependency-installation-crashes}
 
@@ -250,7 +213,7 @@ Total connections = (DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW) × Total p
 **解决方法：**
 将 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements) 关闭运行时 pip 安装，然后在镜像构建阶段预装所有依赖：
 
-```dockerfile
+``` dockerfile
 FROM ghcr.io/open-webui/open-webui:main
 
 RUN pip install --no-cache-dir python-docx requests beautifulsoup4
@@ -271,7 +234,15 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 **升级 Open WebUI 版本时，务必保证只有一个进程负责执行数据库迁移。**
 :::
 
-数据库迁移会在启动时自动执行。如果多个副本（或同一容器中的多个 worker）在升级后同时启动，它们可能会并发执行迁移，从而导致竞争条件或数据库 schema 损坏。
+:::danger 关键：绝不能让两个版本共用同一个数据库
+**新旧版本的 Open WebUI 实例绝不能同时为流量提供服务。** 在涉及 schema 变更的版本中，滚动更新、金丝雀发布以及“更新一个副本、等它健康后再扩展其余副本”这类策略都不受支持。
+:::
+
+数据库迁移会在启动时自动执行。如果多个副本在启动时同时运行新版本，它们就会并发执行迁移，从而可能损坏 schema。
+
+请先停止所有副本，让其中一个实例完成迁移，然后再把整个集群以新版本拉起。这会带来一次短暂的全量中断；跨 schema 变更并不存在通用的零停机路径。
+
+升级前请先备份数据库。把旧镜像换回去并不能撤销一次迁移：schema 以及被重写的行都会保持迁移之后的状态。真正的退路是恢复一份升级前制作的备份。参见[备份与恢复](/getting-started/updating#backup--restore)。
 
 **安全更新流程：**
 
@@ -290,7 +261,7 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 4. **再扩容：** 将副本数恢复到目标值
 
 ### 会话亲和性（Sticky Sessions） {#session-affinity-sticky-sessions}
-虽然在正确配置 Redis 后，Open WebUI 设计上是无状态的，但在负载均衡器 / Ingress 层启用 **Session Affinity**（Sticky Sessions）仍然可以提升性能，并减少 WebSocket 连接偶发抖动。
+在配置好 Redis 并开启 WebSocket（默认开启）的情况下，任意副本都可以处理任意请求，因此并不需要粘性会话。在网络不稳定时，偶尔的抖动或重连仍可能影响流式响应或工具调用抵达浏览器的过程；如果你遇到这种情况，开启粘性会话值得一试。当 `ENABLE_WEBSOCKET_SUPPORT=false` 时，粘性会话是必需的，因为长轮询要求同一个连接的每个请求都落到同一个副本上。
 
 - **Nginx Ingress：** `nginx.ingress.kubernetes.io/affinity: "cookie"`
 - **AWS ALB：** 启用 Target Group Stickiness
@@ -299,7 +270,7 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 
 ### 使用更快的 JSON 编码器 {#use-the-faster-json-encoder}
 
-```bash
+``` bash
 ENABLE_ORJSON=True
 ```
 

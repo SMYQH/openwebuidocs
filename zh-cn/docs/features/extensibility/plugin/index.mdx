@@ -23,13 +23,15 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 1. **只从受信任的来源安装。** 切勿从未知或不受信任的来源导入 Tools 或 Functions。恶意代码可能危害你的整个系统。
 
-2. **导入前审查代码。** 安装任何社区 Tool 或 Function 之前，先审查其源代码。如果你不明白它的功能，就不要安装。
+2. **被推荐不代表经过审核。** 一个插件被亮点推荐、出现在 [Open WebUI 社区站点](https://openwebui.com/) 上，并不构成**背书**，也**不代表**其代码经过了安全或质量审查。列表条目由社区提交，未经审核。参见[社区插件](/features/extensibility/community)。
 
-3. **保护你的数据目录。** `data` 目录（在 Docker 中挂载为 `/app/backend/data`）包含你的数据库、配置以及缓存的 Tools/Functions。如果攻击者获得该目录的写入权限，他们可以注入将在你服务器上执行的恶意代码。
+3. **导入前审查代码。** 安装任何社区 Tool 或 Function 之前，先审查其源代码。如果你不明白它的功能，就不要安装。
 
-4. **限制 Workspace 访问。** 只有受信任的管理员才应有权限创建、导入或修改 Tools 和 Functions。普通用户**不应该**拥有 Workspace 访问权限，除非明确需要。
+4. **保护你的数据目录。** `data` 目录（在 Docker 中挂载为 `/app/backend/data`）包含你的数据库、配置以及缓存的 Tools/Functions。如果攻击者获得该目录的写入权限，他们可以注入将在你服务器上执行的恶意代码。
 
-5. **定期审查已安装的插件。** 定期通过 **Workspace → Tools** 和**管理面板 → Functions** 检查实例中安装的 Tools 和 Functions。
+5. **限制 Workspace 访问。** 只有受信任的管理员才应有权限创建、导入或修改 Tools 和 Functions。普通用户**不应该**拥有 Workspace 访问权限，除非明确需要。
+
+6. **定期审查已安装的插件。** 定期通过 **Workspace → Tools** 和**管理面板 → Functions** 检查实例中安装的 Tools 和 Functions。
 
 **可能出什么问题？** 恶意 Tool 或 Function 可能泄露数据、安装恶意软件、挖取加密货币、横向移动到你网络中的其他系统，或损坏你的实例。
 
@@ -57,7 +59,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 让我们先把 **Open WebUI** 看作一个可以完成许多与大型语言模型（LLM）相关任务的"基础"软件。但有时你需要额外的功能或能力，这些功能不是*开箱即用*的——这就是 **Tools** 和 **Functions** 发挥作用的地方。
 
-### Tools
+### Tools {#tools}
 
 **Tools** 是一个令人兴奋的功能，因为它们允许 LLM 做的不仅仅是处理文本。它们提供了 LLM 自身没有的**外部能力**。
 
@@ -75,7 +77,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 2. **股票价格查询** 📈。
 3. **航班追踪信息** ✈️。
 
-### Functions
+### Functions {#functions}
 
 **Tools** 由 AI 在对话过程中使用，而 **Functions** 则帮助扩展或定制 Open WebUI 本身的能力。想象一下，Tools 就像给菜肴添加新食材，Functions 则是你用来控制厨房的流程！🚪
 
@@ -107,22 +109,7 @@ Functions 与 Tools 不在同一位置。
 
 两者都被设计成**可插拔**的，意味着你只需在社区点一下鼠标，就能轻松把它们导入到自己的系统里！🎉 你不需要花几个小时去写代码或折腾它们。
 
-## 什么是 Pipelines？ {#want-to-try}
-
-接下来，是 **Pipelines**… 这里听起来可能有些技术门槛——但别被吓到。
-
-**Pipelines** 是 Open WebUI 的一项计划的一部分，目标是把 WebUI 的每一块能力都做成**与 OpenAI 的 API 系统互操作**。本质上，它在 **Tools** 和 **Functions** 已经能做到的事情之上又向前推进了一步，带来了更大的灵活性。它允许你把功能转成与 OpenAI API 兼容的格式。🧠
-
-### 但关键在于…
-
-除非你在处理非常高级的场景，否则**大概率用不到** pipelines。
-
-- **Pipelines 是给谁用的？** 通常是**专家**或正在处理更复杂用例的人。
-- **什么时候需要它？** 当你想把处理从主 Open WebUI 实例上卸载到另一台机器上（避免压垮主系统）时。
-
-在大多数情况下，作为初学者甚至是中级用户，你完全不需要担心 pipelines。专心享受 **Tools** 和 **Functions** 为你的 Open WebUI 体验带来的便利就行！
-
-## 想要尝试？🚀
+## 想要尝试？🚀 {#want-to-try}
 
 进入 Open WebUI，前往社区部分，尝试导入像**天气更新**这样的工具，或者也许通过 Function 向工具栏添加新功能。探索这些工具将向你展示 Open WebUI 可以有多强大、多灵活！
 

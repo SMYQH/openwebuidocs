@@ -7,7 +7,7 @@ sidebar_position: 12
 
 在下面找到你的症状（使用 Ctrl+F）。首先检查是否有明显问题：`curl http://127.0.0.1:8000/api/health` 可以告诉你服务器是否正常运行。
 
-## "cptr: command not found"
+## "cptr: command not found" {#cptr-command-not-found}
 
 包安装到了一个与你 PATH 上不同的 Python 环境中。将其安装到你实际运行的 Python 中：
 
@@ -17,7 +17,7 @@ python -m pip install cptr
 
 如果你使用 pipx 或在虚拟环境中安装的，先激活该环境（或使用 `pipx run cptr run` / `uvx cptr@latest run`）。然后用 `cptr run` 启动。
 
-## "Port 8000 already in use"
+## "Port 8000 already in use" {#port-8000-already-in-use}
 
 其他程序占用了该端口。要么在另一个端口上运行：
 

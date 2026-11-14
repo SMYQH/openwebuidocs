@@ -30,7 +30,7 @@ title: "OpenAPI 工具服务器"
 
 虽然 OpenAPI 工具非常适合用外部服务扩展 Open WebUI，但与原生 Python 工具相比，仍有一些限制：
 
-- **仅支持单向事件：** OpenAPI 工具可以通过 REST endpoint 发出状态更新、通知和其他[单向事件](/features/extensibility/plugin/development/events#external-tool-events)。Open WebUI 会自动传递 `X-Open-WebUI-Chat-Id` 与 `X-Open-WebUI-Message-Id` headers 来支持这一点。但需要用户输入或确认的交互式事件，仅原生 Python 工具支持
+- **仅支持单向事件：** OpenAPI 工具可以通过 REST endpoint 发出状态更新、通知和其他[单向事件](/features/extensibility/plugin/development/events#external-tool-events)。Open WebUI 会传递 `X-OpenWebUI-Chat-Id` 与 `X-OpenWebUI-Message-Id` 请求头以支持这一点，但仅在开启了 [`ENABLE_FORWARD_USER_INFO_HEADERS`](/reference/env-configuration#enable_forward_user_info_headers) 时才会这样做，而该开关默认关闭。而需要用户输入或确认的交互式事件，仅原生 Python 工具支持
 - **不支持流式输出：** 工具响应会作为完整结果返回，而不是 token-by-token 地流式传回
 
 如果你需要交互式 UI 反馈（例如确认框、用户输入），建议把工具实现为 [native Python Tool](/features/extensibility/plugin/tools/development)。

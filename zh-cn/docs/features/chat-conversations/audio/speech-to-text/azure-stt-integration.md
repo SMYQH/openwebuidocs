@@ -110,11 +110,11 @@ services:
 
 ## 故障排查 {#troubleshooting}
 
-### “Azure API key and region are required for Azure STT”
+### “Azure API key and region are required for Azure STT” {#azure-api-key-and-region-are-required-for-azure-stt}
 
 未保存 API 密钥。请在 **API 密钥** 中填入你的 Speech 资源密钥（或设置 `AUDIO_STT_AZURE_API_KEY`）并保存。
 
-### “External: Access denied due to invalid subscription key or wrong API endpoint”
+### “External: Access denied due to invalid subscription key or wrong API endpoint” {#external-access-denied-due-to-invalid-subscription-key-or-wrong-api-endpoint}
 
 Azure 拒绝了该密钥。请检查：
 
@@ -122,7 +122,7 @@ Azure 拒绝了该密钥。请检查：
 2. **Azure 区域** 是否为你的 Speech 资源所在区域
 3. 如果设置了**终结点 URL**，它是否为不含路径的资源终结点
 
-### “External: Resource not found”
+### “External: Resource not found” {#external-resource-not-found}
 
 Azure 无法识别该地址。如果设置了**终结点 URL**，请确认主机名之后没有路径。
 

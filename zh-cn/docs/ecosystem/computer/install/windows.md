@@ -3,7 +3,7 @@ title: Windows
 sidebar_position: 3
 ---
 
-# Windows
+# Windows {#windows}
 
 在 PowerShell 中：
 

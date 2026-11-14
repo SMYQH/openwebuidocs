@@ -27,3 +27,7 @@ uvx cptr@latest run
 - 升级后应用内会显示更新说明，总结更改内容。
 - 管理 UI 可以检查 GitHub 上的最新发布版本。这仅供信息参考；它从不自行更新应用。
 - 如果升级后 UI 看起来过时或损坏，请执行浏览器硬刷新（旧的前端可能被缓存）。
+
+:::tip 大版本升级之前
+请备份数据目录（`~/.cptr`，或 Docker 中的 `/data` 卷），这样你就能带着对应状态回滚到上一个版本。参见[数据与备份](/ecosystem/computer/operate/data-and-backups)。
+:::

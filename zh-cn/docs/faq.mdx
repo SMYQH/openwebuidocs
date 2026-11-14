@@ -235,12 +235,13 @@ def wait_for_processing(token, file_id):
 - **Web Search 查询**：启用 Web Search 时生成搜索词
 - **自动补全建议**：如果已启用
 
-默认情况下，这些任务会使用你当前对话中的**同一个模型**。如果你使用的是昂贵的 API 模型（例如 GPT-4 或 Claude），成本就会明显升高。
+默认情况下，这些任务会使用你当前对话中的**同一个模型**。如果你使用的是昂贵的 API 模型（例如 GPT-5.6 Sol 或 Claude Opus 5），成本就会明显升高。
 
 **降低 API 成本的方法：**
 1. 进入 **Admin Panel > Settings > Interface**（查看标题/标签生成设置）
-2. 在 **Admin Panel > Settings > Models** 中配置一个 **Task Model**，让后台任务使用更小、更便宜的模型（例如 GPT-4o-mini）或本地模型
+2. 在 **Settings > Admin > Interface > Tasks** 中配置一个 **Task Model**，让后台任务使用更小、更便宜的模型（例如 GPT-5.6 Luna）或本地模型
 3. 关闭你不需要的功能（自动标题、自动标签等）
+4. 通过在同一个 **Tasks** 分区中的 **Task Model Parameters** 里设置 `max_tokens`，为这些请求限定可以花费的上限。否则标签、追问和搜索查询生成默认不会发送任何输出上限。参见[任务模型](/features/administration/task-models#task-model-parameters)
 
 :::tip 节省成本建议
 将 Task Model 设置为快速、便宜的模型（或通过 Ollama 使用本地模型），同时把主聊天模型保留为能力更强的模型。这样你可以同时获得：对话时更智能的回复，以及后台任务的低成本/免费处理。

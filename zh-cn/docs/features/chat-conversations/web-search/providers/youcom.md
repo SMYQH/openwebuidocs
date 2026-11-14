@@ -21,7 +21,7 @@ title: "You.com"
 
 :::
 
-## You.com YDC Index API
+## You.com YDC Index API {#youcom-ydc-index-api}
 
 [You.com](https://you.com/) 提供 YDC Index API，这是一套会返回结构化搜索结果的 web search API，包括标题、URL、描述和 snippets。
 
@@ -39,7 +39,7 @@ services:
     environment:
       ENABLE_WEB_SEARCH: True
       WEB_SEARCH_ENGINE: "youcom"
-      YOUCOM_API_KEY: "YOUR_API_KEY"
+      YOUCOM_API_KEY: "YOUR_API_KEY" # YDC_API_KEY is accepted as a fallback name
       WEB_SEARCH_RESULT_COUNT: 3
       WEB_SEARCH_CONCURRENT_REQUESTS: 10
 ```

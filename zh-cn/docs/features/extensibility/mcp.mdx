@@ -97,7 +97,7 @@ MCP 服务器只能由**管理员**在**管理员设置 → 外部工具**下添
 
 :::
 
-:::info OAuth Scopes
+:::info OAuth 作用域
 
 使用任何一种 OAuth 模式时，**OAuth Scopes** 设置控制 Open WebUI 从服务器的授权服务器请求哪些范围：
 
@@ -156,7 +156,7 @@ Open WebUI 通过服务器发布的 OAuth 发现文档来定位授权服务器�
 
 :::
 
-:::info Resource Indicators (RFC 8707)
+:::info 资源指示符（RFC 8707）
 
 如果 MCP 服务器在其 [RFC 9728 Protected Resource Metadata 文档](https://datatracker.ietf.org/doc/html/rfc9728)（`/.well-known/oauth-protected-resource`）中发布了 `resource` 字段，Open WebUI 会在 discovery 期间捕获它，并作为 `resource` 参数转发到**授权重定向**、**令牌交换**和每次**刷新令牌调用**上。这样会在签发的令牌上正确设置 `aud` 声明，符合按照 [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) 严格校验受众的身份提供商要求。
 
@@ -172,14 +172,22 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 **变通方案：** 用户应通过聊天输入区的 **➕** 按钮按每个对话手动启用 OAuth 2.1 工具。这样会在工具被调用前触发认证流程。一旦完成初次认证，令牌刷新会自动进行。
 :::
 
+:::info
+
+`Register Client` 对 `oauth_2.1` 和 `oauth_2.1_static` 都是必需的。在静态认证下，Open WebUI 使用你提供的凭据以及服务器元数据发现（不进行动态客户端注册）。
+
+静态认证会在请求体中发送客户端密钥（`client_secret_post`），当服务器只声明支持时，则改用 HTTP Basic 请求头（`client_secret_basic`）。
+
+:::
+
+
 ### 连接 URL {#connection-urls}
 
 如果你在 **Docker** 中运行 Open WebUI，而 MCP 服务器在**宿主机**上：
 *   使用 `http://host.docker.internal:<port>`（如 `http://host.docker.internal:3000/sse`）而不是 `localhost`。
 
 ### 自定义标头 {#custom-headers}
-
-无论是 MCP 还是 OpenAPI 工具服务器连接，都支持一个自由格式的 **Headers** 字段（JSON 对象），其内容会被合并进每一次出站请求。Header 值支持一小套模板变量，会在请求发起时由服务器端展开，因此你无需为每个用户、每个聊天或每条消息单独配置连接，就能让同一条连接路由到不同的后端逻辑：
+无论是 MCP 还是 OpenAPI 工具服务器连接，都支持一个自由格式的 **Headers** 字段（JSON 对象），其内容会被合并进每一次出站请求。Header 值支持模板占位符，例如 `{{USER_ID}}`、`{{USER_EMAIL}}`、`{{USER_GROUPS}}`、`{{CHAT_ID}}`、`{{MESSAGE_ID}}`、`{{MODEL_ID}}` 和 `{{USER_IP}}`，Open WebUI 会在请求发起时将它们展开。这样无需为每个用户、每个聊天或每条消息单独配置连接，就能让同一条连接路由到不同的后端逻辑，也允许工具服务器按用户组（而非单个用户）进行鉴权。
 
 | 变量 | 替换为 |
 | :--- | :--- |
@@ -187,8 +195,11 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 | `{{USER_NAME}}` | 当前调用用户的显示名。 |
 | `{{USER_EMAIL}}` | 当前调用用户的邮箱地址。 |
 | `{{USER_ROLE}}` | 当前调用用户的角色（例如 `admin`、`user`）。 |
+| `{{USER_GROUPS}}` | 当前用户所属用户组名称的逗号分隔列表（包含通过父组继承的组）。 |
 | `{{CHAT_ID}}` | 当前聊天的 ID（在非聊天上下文中——例如 **Verify Connection** 按钮——为空）。 |
 | `{{MESSAGE_ID}}` | 当前消息的 ID（非聊天上下文中为空）。 |
+| `{{MODEL_ID}}` | 处理本次聊天请求的模型 ID。 |
+| `{{USER_IP}}` | 发出请求的客户端地址。在无客户端发起的请求（自动化、定时器、子 agent 等）中为空。 |
 
 未识别的变量会按字面文本透传。非字符串的 header 值会在替换前被强制转为字符串。**管理员设置 → Connections → OpenAI** 中为 OpenAI 兼容模型连接附加的自定义标头也支持同样的变量，因此你可以用同一套机制同时在两类调用上做租户路由或审计追踪传播。
 
@@ -206,7 +217,7 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 
 ### 模型看到的工具名称 {#tool-names-the-model-sees}
 
-Open WebUI 会以 `<服务器 ID>_<工具名>` 的形式向模型提供每个 MCP 工具。某些提供商（例如 OpenAI API 和 AWS Bedrock）会拒绝工具名超过 64 个字符的请求，因此较长的名称会被缩短为其前 55 个字符、一个下划线以及 8 位哈希。同一个工具总会得到相同的缩短名称，而调用 MCP 服务器时仍使用原始工具名。
+Open WebUI 会以 `<server ID>_<tool name>` 的形式向模型提供每个 MCP 工具。某些提供商（例如 OpenAI API 和 AWS Bedrock）会拒绝工具名超过 64 个字符的请求，因此较长的名称会被缩短为其前 55 个字符、一个下划线以及 8 位哈希。同一个工具总会得到相同的缩短名称，而调用 MCP 服务器时仍使用原始工具名。
 
 启用大量 MCP 工具后，[工具搜索](/features/extensibility/plugin/tools#tool-search) 会把庞大的工具定义排除在每次请求之外，直到模型主动查找。它的 **始终加载的工具** 模式正是针对这些名称，因此 `github_*` 会让 ID 为 `github` 的服务器的所有工具保持加载。
 
@@ -237,7 +248,7 @@ MCP 工具可以附带交互式应用（[MCP Apps](https://modelcontextprotocol.
 
 ## 故障排除 {#troubleshooting}
 
-### "Failed to connect to MCP server"
+### "Failed to connect to MCP server" {#failed-to-connect-to-mcp-server}
 
 **现象**：
 使用工具时对话显示 "Failed to connect to MCP server"，即使设置中的**验证连接**按钮显示"已连接"。在使用任一 OAuth 2.1 模式的连接上，该按钮显示为 **检查 OAuth 发现**，它只能确认已找到并解析出授权服务器的发现文档。

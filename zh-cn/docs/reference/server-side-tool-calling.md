@@ -202,7 +202,7 @@ curl -s -X DELETE -H "Authorization: Bearer $OWUI_KEY" "$OWUI_URL/api/v1/chats/$
 `chat_id` 为 `temporary:<session_id>` 时同样会运行完整循环且完全不持久化任何内容。`<session_id>` 是你自己已登录客户端的 socket.io 会话 ID，同时也作为 `session_id` 发送；其他任何 `temporary:` ID 都会以 `404` 拒绝。输出只会通过该 socket 送出，因此这需要真实的 socket.io 客户端。对于纯 HTTP 场景，请采用创建再删除的方式。
 :::
 
-### 阻塞式变体（不带 `session_id`） {#blocking-variant-no-session_id}
+### 阻塞式变体（不带 `session_id`） {#blocking-variant-no-session\_id}
 
 去掉 `session_id` 后请求将不再异步：HTTP 调用会阻塞直到整个工具循环结束，然后返回 `null`。你仍然从聊天中读取答案，但可以跳过 A3 中的轮询。代价是这种模式下**不可用内置工具**。当 `tool_ids`、`terminal_id` 和 MCP 就足够时使用它。
 

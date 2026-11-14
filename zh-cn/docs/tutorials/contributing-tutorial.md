@@ -58,16 +58,16 @@ b. **修改 `docusaurus.config.ts` 以使用环境变量**
 
 - 更新 `docusaurus.config.ts`，改为读取这些环境变量，并保留本地或直连部署的默认值：
 
-     ```typescript
+``` typescript
      const config: Config = {
        title: "Open WebUI",
-       tagline: "ChatGPT-Style WebUI for LLMs (Formerly Ollama WebUI)",
+       tagline: "On a mission to build the best AI interface",
        favicon: "images/favicon.png",
-       url: process.env.SITE_URL || "https://openwebui.com",
+       url: process.env.SITE_URL || "https://docs.openwebui.com",
        baseUrl: process.env.BASE_URL || "/",
        ...
      };
-     ```
+```
 
 - 这样可确保 Fork 仓库和自定义部署场景下的行为一致。
 
@@ -82,7 +82,7 @@ b. **修改 `docusaurus.config.ts` 以使用环境变量**
 
 7. **编写你的变更**
 
-   - 在你 Fork 的仓库中进入对应目录（如 `docs/tutorial/`）。
+   - 在你 Fork 的仓库中进入对应目录（如 `docs/tutorials/`）。
    - 新建教程 Markdown 文件，或编辑现有教程。
    - 确保你的教程包含“非官方支持”警告横幅。
 
@@ -102,7 +102,7 @@ b. **修改 `docusaurus.config.ts` 以使用环境变量**
 
 :::warning
 
-本教程由社区贡献，不属于 Open WebUI 团队官方支持范围。内容仅用于演示如何根据你的特定场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+This tutorial is a community contribution and is not supported by the Open WebUI team. It serves only as a demonstration on how to customize Open WebUI for your specific use case. Want to contribute? Check out the contributing tutorial.
 
 :::
 
@@ -116,8 +116,8 @@ b. **修改 `docusaurus.config.ts` 以使用环境变量**
 你可以使用以下命令在本地测试 Docusaurus 站点：
 
 ```bash
-npm install   # 安装依赖
-npm run build # 构建生产版本站点
+npm install   # Install dependencies
+npm run build # Build the site for production
 ```
 
 这样可以在部署前尽早发现问题。

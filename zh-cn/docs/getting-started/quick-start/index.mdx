@@ -144,7 +144,7 @@ Open WebUI 支持 **macOS、Linux**（x86_64 和 ARM64，包括 Raspberry Pi 与
   <TabItem value="third-party" label="第三方">
     <Tabs>
       <TabItem value="pinokio-computer" label="Pinokio.computer">
-        ### 通过 Pinokio.computer 安装
+        ### 通过 Pinokio.computer 安装 \{#pinokiocomputer-installation}
 
         如需通过 Pinokio.computer 安装，请访问其官网：
 
@@ -160,6 +160,10 @@ Open WebUI 支持 **macOS、Linux**（x86_64 和 ARM64，包括 Raspberry Pi 与
 
 ## 安装完成后 {#open-it}
 
+Docker： [http://localhost:3000](http://localhost:3000)。Python 与桌面应用： [http://localhost:8080](http://localhost:8080)。首次启动大约需要一分钟。
+
+页面加载不出来？运行 `docker logs -f open-webui`（使用 Compose 时为 `docker compose logs -f`），并等待出现 `Application startup complete`。如果始终没有出现，请参阅[启动与 Docker 故障排查](/troubleshooting/startup)。端口被占用：修改 `-p 3000:8080` 中左边的数字，或在使用 Python 时运行 `open-webui serve --port 9999`。
+
 :::tip 首次登录
 
 - **管理员账户：** 第一个创建的账户会获得**管理员权限**，负责用户管理与系统设置。
@@ -168,7 +172,7 @@ Open WebUI 支持 **macOS、Linux**（x86_64 和 ARM64，包括 Raspberry Pi 与
 
 :::
 
-### 创建管理员账户 {#create-the-admin-account}
+## 创建管理员账户 {#create-the-admin-account}
 
 第一个界面显示 **开始使用 Open WebUI**，并提供 **创建管理员账户**。这个首个账户就是管理员：它管理用户以及所有实例级设置。所有内容（包括这次登录）都保存在你自己的数据卷中。
 
@@ -180,10 +184,16 @@ Open WebUI 支持 **macOS、Linux**（x86_64 和 ARM64，包括 Raspberry Pi 与
 
 ## 连接模型提供商 {#connect-a-model-provider}
 
-Open WebUI 至少需要一个模型提供商才能开始聊天。请选择你的方案：
+Open WebUI 本身不带任何模型。请前往你的头像 > **设置 > 管理 > 连接**。
+
+**Ollama 就在这台机器上？** 通过 Docker 启动时它会被自动识别为 `http://host.docker.internal:11434`（这正是第 1 步中 `--add-host` 的作用），通过 Python 启动时则为 `http://localhost:11434`，并显示在 **管理 Ollama API 连接** 之下。作为管理员，你可以在新聊天的模型选择器中输入模型名称并确认拉取，从而下载模型。Ollama 在另一台机器上：使用 `-e OLLAMA_BASE_URL=http://server:11434`，或在连接设置中填写该 URL。
+
+**持有来自 OpenAI、Anthropic 或任意兼容 OpenAI 的提供商的 API key？** 点击 **管理 OpenAI API 连接** 旁边的 **+**，填入提供商 URL（OpenAI：`https://api.openai.com/v1`）和你的 key，然后点击 **保存**。模型列表会自动填充。
+
+各提供商的指南：
 
 | 提供商 | 指南 |
-|----------|-------|
+|----------|-------||
 | **Ollama**（本地模型） | [从 Ollama 开始 →](/getting-started/quick-start/connect-a-provider/starting-with-ollama) |
 | **OpenAI** | [从 OpenAI 开始 →](/getting-started/quick-start/connect-a-provider/starting-with-openai) |
 | **任意兼容 OpenAI 的 API** | [兼容 OpenAI 的提供商 →](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible) |
@@ -191,32 +201,11 @@ Open WebUI 至少需要一个模型提供商才能开始聊天。请选择你的
 | **llama.cpp** | [从 llama.cpp 开始 →](/getting-started/quick-start/connect-a-provider/starting-with-llama-cpp) |
 | **vLLM** | [从 vLLM 开始 →](/getting-started/quick-start/connect-a-provider/starting-with-vllm) |
 
-### 连接 Agent
+:::tip 模型列表为空？
+当 Open WebUI 运行在 Docker 中时，宿主机上的 Ollama 必须监听 `0.0.0.0`：[无法连接到 Ollama 服务器](/troubleshooting/connection-error#connection-to-ollama-server)。对于 API 提供商，请检查 URL 和 key；有些提供商不发布模型列表，需要在连接的 **Model IDs** 中手动填写模型 ID：[兼容 OpenAI 的提供商](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)。
+:::
 
-想要的不只是模型？AI Agent 可以执行终端命令、读写文件、搜索网页、维护记忆并串联复杂工作流——而这一切都通过 Open WebUI 熟悉的聊天界面完成。
-
-| Agent | 描述 | 指南 |
-|-------|-------------|-------|
-| **Hermes Agent** | Nous Research 的自主 Agent，支持终端、文件操作、网页搜索、记忆和可扩展技能 | [设置 Hermes Agent →](/getting-started/quick-start/connect-an-agent/hermes-agent) |
-| **OpenClaw** | 开源自托管 Agent，支持 shell 访问、文件操作、网页浏览和消息集成 | [设置 OpenClaw →](/getting-started/quick-start/connect-an-agent/openclaw) |
-
-更多关于 Agent 与提供商差异的说明，请阅读 [**连接 Agent 概览 →**](/getting-started/quick-start/connect-an-agent)
-
-### 第一次使用 Open WebUI？
-
-如果这是你第一次接触 Open WebUI，建议下一步阅读 [**新用户必读**](/getting-started/essentials)。它把每个新用户迟早都需要知道的六件事——插件、工具调用、任务模型、上下文管理、RAG 与 Open Terminal——集中放在了一页里。
-
-### 探索功能
-
-连接完成后，继续看看 Open WebUI 还能做什么：[功能总览 →](/features)
-
-### 实验性：Open Responses
-
-Open WebUI 对 [Open Responses](https://www.openresponses.org/) 规范提供实验性支持。更多说明请参见 [Open Responses 入门指南](/getting-started/quick-start/connect-a-provider/starting-with-open-responses)。
-
----
-
-### 发送你的第一条消息 {#send-your-first-message}
+## 发送你的第一条消息 {#send-your-first-message}
 
 点击 **新建对话**，在消息框内的选择器中挑选一个模型，输入内容并按 Enter。把文件拖进对话中即可就它提问。
 
@@ -226,7 +215,49 @@ Open WebUI 对 [Open Responses](https://www.openresponses.org/) 规范提供实�
 
 安装到此为止。下面的一切都是可选的。
 
-## 社区 {#where-to-go-next}
+## 第一次使用 Open WebUI？ {#where-to-go-next}
+[**Open WebUI 入门必读**](/getting-started/essentials)从这里继续。它涵盖大多数人在第一周会配置的内容：
+
+| | |
+|---|---|
+| [插件](/getting-started/essentials#plugins) | 来自社区目录的工具与 Functions；你缺少的功能通常都在其中。 |
+| [工具调用](/getting-started/essentials#tool-calling-native-vs-legacy) | 原生模式让模型自行决定何时搜索、读取文件或保存记忆。 |
+| [任务模型](/getting-started/essentials#task-models) | 标题、标签和自动补全由独立的模型运行；请把它们指向一个较小的模型。 |
+| [上下文管理](/getting-started/essentials#context-management) | 为什么长对话会撞墙，以及上下文压缩如何处理它。 |
+| [基础 RAG](/getting-started/essentials#basic-rag) | 在对话中或以知识库的形式，与你自己的文档对话。 |
+| [网页搜索](/getting-started/essentials#web-search) | 选择一个搜索提供商，当问题需要时由模型发起搜索。 |
+| [Open Terminal](/getting-started/essentials#open-terminal) | 模型可以在其中构建并运行内容的沙箱化 shell。 |
+
+**让它持续运行**
+
+- **更新：** 使用第 1 步的命令拉取新镜像并重建容器，保持同一个 `WEBUI_SECRET_KEY`；你的数据在数据卷中。[更新](/getting-started/updating)
+- **每次更新前备份数据卷：**[备份与恢复](/getting-started/updating#backup--restore)
+- **与他人共享**你的网络或团队中的其他人：[共享 Open WebUI](/getting-started/sharing)。在暴露到你的机器之外之前，请先阅读[加固指南](/getting-started/advanced-topics/hardening)。
+- **作为应用安装**到你的手机或桌面：[将 Open WebUI 作为应用](/getting-started/open-webui-as-app)
+- **外发请求：** 标准安装会自行发起这些请求。对 GitHub 的版本检查，可通过 `ENABLE_VERSION_UPDATE_CHECK=false` 关闭。对默认 OpenAI 连接的模型列表请求，删除该连接或设置 `ENABLE_OPENAI_API=false` 即可消除。每次启动时对 Hugging Face 上本地嵌入模型的更新检查，可通过 `RAG_EMBEDDING_MODEL_AUTO_UPDATE=false` 关闭。
+
+**Agent**
+
+想要的不只是模型？AI Agent 可以执行终端命令、读写文件、搜索网页、维护记忆并串联复杂工作流——而这一切都通过 Open WebUI 熟悉的聊天界面完成。
+
+| Agent | 描述 | 指南 |
+|-------|-------------|-----|
+| **Hermes Agent** | Nous Research 的自主 Agent，支持终端、文件操作、网页搜索、记忆和可扩展技能 | [设置 Hermes Agent →](/getting-started/quick-start/connect-an-agent/hermes-agent) |
+| **OpenClaw** | 开源自托管 Agent，支持 shell 访问、文件操作、网页浏览和消息集成 | [设置 OpenClaw →](/getting-started/quick-start/connect-an-agent/openclaw) |
+
+更多关于 Agent 与提供商差异的说明，请阅读 [**连接 Agent 概览 →**](/getting-started/quick-start/connect-an-agent)
+
+想要一个拥有终端、文件和网页访问权限的自主 Agent？请参阅[连接 Agent](/getting-started/quick-start/connect-an-agent)。
+
+**更多内容**
+
+连接完成后，继续看看 Open WebUI 还能做什么：[功能总览 →](/features)
+
+Open WebUI 对 [Open Responses](https://www.openresponses.org/) 规范提供实验性支持。更多说明请参见 [Open Responses 入门指南](/getting-started/quick-start/connect-a-provider/starting-with-open-responses)。
+
+---
 
 - [**GitHub Issues**](https://github.com/open-webui/open-webui/issues) —— 提交 bug 和功能请求
 - **想帮忙？** 欢迎测试[开发分支](/contributing)并反馈问题，无需写代码。
+
+问题：[Discord](https://discord.gg/5rJgQTnV4s)。Bug：[GitHub Issues](https://github.com/open-webui/open-webui/issues)。

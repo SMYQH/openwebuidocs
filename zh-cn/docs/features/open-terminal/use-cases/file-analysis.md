@@ -17,7 +17,7 @@ description: "使用 Open Terminal 读取文档、分析表格、从文件中提
 | **演示文稿** | PowerPoint (.pptx), OpenDocument (.odp) |
 | **其他** | 邮件 (.eml), 电子书 (.epub), 纯文本, HTML, Markdown, JSON, XML |
 
-AI 可以直接读取所有这些文件。它不需要将它们上传到任何外部服务。文件内容保留在你的服务器上，并在本地处理。
+Open Terminal 会在其执行环境中读取和处理文件。返回给 AI 的内容会发送到为该对话配置的模型端点。如果这些内容必须留在你的基础设施内，请使用本地模型和本地处理服务。参见[聊天数据隐私与加密](/security/chat-data-privacy-and-encryption)。
 
 ---
 

@@ -21,7 +21,7 @@ title: "Brave"
 
 :::
 
-## Brave API
+## Brave API {#brave-api}
 
 Open WebUI 内置了两个由 Brave 提供支持的搜索引擎，它们共用同一个 API key（`BRAVE_SEARCH_API_KEY`）和同一份速率限制，但调用的端点不同：
 
@@ -41,7 +41,7 @@ services:
   open-webui:
     environment:
       ENABLE_WEB_SEARCH: True
-      WEB_SEARCH_ENGINE: "brave"             # 或 "brave_llm_context"
+      WEB_SEARCH_ENGINE: "brave"             # or "brave_llm_context"
       BRAVE_SEARCH_API_KEY: "YOUR_API_KEY"
       # BRAVE_SEARCH_CONTEXT_TOKENS: 8192    # 仅用于 brave_llm_context
       WEB_SEARCH_RESULT_COUNT: 3

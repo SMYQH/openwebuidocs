@@ -103,7 +103,7 @@ environment:
 **STT：** 将引擎留空（使用后端内置 Whisper）
 ```yaml
 environment:
-  - WHISPER_MODEL=base  # 可选：tiny, base, small, medium, large
+  - WHISPER_MODEL=base  # Options: tiny, base, small, medium, large
 ```
 
 **TTS：** 使用 OpenAI Edge TTS（免费的 Microsoft 音色）
@@ -206,7 +206,9 @@ docker exec open-webui bash -lc "pip install datasets==3.6.0" && docker restart 
 将以下内容加入 `docker-compose.yml`：
 ```yaml
 environment:
-  - EXTRA_PIP_PACKAGES=datasets==3.6.0
+  - # Open WebUI has no EXTRA_PIP_PACKAGES hook. Build a derived image instead:
+# FROM ghcr.io/open-webui/open-webui:main
+# RUN pip install datasets==3.6.0
 ```
 
 **验证安装版本：**
@@ -309,7 +311,7 @@ CUDA 镜像的主要加速对象是 RAG embedding/reranking 模型和 Whisper ST
 
 ```yaml
 environment:
-  - WHISPER_COMPUTE_TYPE=float16  # GPU 推荐值
+  - WHISPER_COMPUTE_TYPE=float16  # Recommended for GPU
 ```
 
 **可用计算类型（来自 faster-whisper）：**
@@ -333,12 +335,12 @@ environment:
 1. **设置正确语言：**
    ```yaml
    environment:
-     - WHISPER_LANGUAGE=en  # 使用 ISO 639-1 语言代码
+     - WHISPER_LANGUAGE=en  # Use ISO 639-1 language code
    ```
 2. **尝试更大的 Whisper 模型** 以提高准确率（代价是速度更慢）：
    ```yaml
    environment:
-     - WHISPER_MODEL=medium  # 可选：tiny, base, small, medium, large
+     - WHISPER_MODEL=medium  # Options: tiny, base, small, medium, large
    ```
 3. **检查浏览器麦克风权限**（见上文）
 4. **改用 Web API 引擎：**
@@ -371,8 +373,8 @@ Open WebUI 已原生支持 ElevenLabs。配置方法如下：
 ```yaml
 environment:
   - AUDIO_TTS_ENGINE=elevenlabs
-  - AUDIO_TTS_API_KEY=sk_...  # 你的 ElevenLabs API 密钥
-  - AUDIO_TTS_VOICE=EXAVITQu4vr4xnSDxMaL  # ElevenLabs 面板中的音色 ID
+  - AUDIO_TTS_API_KEY=sk_...  # Your ElevenLabs API key
+  - AUDIO_TTS_VOICE=EXAVITQu4vr4xnSDxMaL  # Voice ID from ElevenLabs dashboard
   - AUDIO_TTS_MODEL=eleven_multilingual_v2
 ```
 
@@ -404,9 +406,13 @@ docker logs openai-edge-tts -f
 
 对于外部 TTS 服务，可直接测试：
 
-```bash
+``` bash
 # 测试 OpenAI Edge TTS
-curl -X POST http://localhost:5050/v1/audio/speech   -H "Content-Type: application/json"   -H "Authorization: Bearer your_api_key_here"   -d '{"input": "Hello, this is a test.", "voice": "alloy"}'   --output test.mp3
+curl -X POST http://localhost:5050/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -d '{"input": "Hello, this is a test.", "voice": "alloy"}' \
+  --output test.mp3
 ```
 
 ### 网络连通性 {#network-connectivity}
@@ -429,7 +435,7 @@ curl http://your-tts-service:port/health
 
 | 变量 | 说明 |
 |----------|-------------|
-| `AUDIO_TTS_ENGINE` | TTS 引擎：`""`（空，禁用后端 TTS，改用浏览器）、`openai`、`mistral`、`elevenlabs`、`azure`、`transformers` |
+| `AUDIO_TTS_ENGINE` | TTS 引擎：`""`（空，禁用后端 TTS，改用浏览器）、`openai`、`openai-realtime`、`mistral`、`elevenlabs`、`azure`、`transformers`。对 `openai-realtime` 请参见[实时语音通话](/reference/env-configuration#realtime-voice-calls) |
 | `AUDIO_TTS_MODEL` | 使用的 TTS 模型（默认：`tts-1`） |
 | `AUDIO_TTS_VOICE` | TTS 默认音色（默认：`alloy`） |
 | `AUDIO_TTS_API_KEY` | ElevenLabs 或 Azure TTS 的 API 密钥 |

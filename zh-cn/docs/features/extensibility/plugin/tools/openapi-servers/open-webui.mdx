@@ -58,6 +58,8 @@ uvicorn main:app --host 0.0.0.0 --reload
 - 仅对注册该工具服务器的用户可见
 - 连接由用户浏览器直接发起（client-side）
 - 非常适合个人工作流，或测试自定义 / 本地工具
+- 只有在管理员在 **设置 > 管理 > 集成** 的 **用户连接** 分区中开启了 **直连集成**（[`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)，默认关闭）时，设置中的集成标签页才会显示。开启后管理员会立即看到它。其他人还需要 **直连工具服务器** 权限（也是默认关闭）。在 **直连集成** 关闭期间，在这里保存的工具服务器不会在聊天中被使用；开启后会重新生效
+- **Auth** 决定你的浏览器向服务器发送什么，既适用于对话框中的连接检查，也适用于保存后的连接：**Bearer** 发送密钥，**Session** 发送你的 Open WebUI 令牌，**None** 不发送任何内容
 
 #### 2. 全局工具服务器（通过管理员设置添加） {#2-global-tool-servers-added-via-admin-settings}
 
@@ -127,6 +129,16 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ---
 
+:::info 转发 Cookie
+
+**高级设置 > 转发 Cookie** 决定浏览器请求中的 Cookie 是否会被转发到该服务器。它默认关闭，且只作用于管理员配置的连接；用户自己的直连永远不会转发 Cookie。
+
+只为你自己掌控、并且通过 Cookie 来认证请求发起者的服务器开启它，通常是你自己网络内、使用同一套登录体系的那类服务器。浏览器为你的 Open WebUI 域名保存的所有内容都会随请求一起过去，包括会话 Cookie，因此第三方端点绝不应该开启它。
+
+**这一点发生了变化：** 使用 **Session** 或 **System OAuth** 认证类型的连接过去会无条件转发 Cookie，现在不会了。如果这类连接在升级后不再能够通过认证，请开启此项。
+
+:::
+
 ## 第 3 步：确认工具服务器已连接成功 ✅ {#step-3-confirm-your-tool-server-is-connected}
 
 当工具服务器成功连接后，Open WebUI 会在消息输入区域直接显示一个 👇 工具服务器指示器：
@@ -171,19 +183,15 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ## （可选）第 4 步：启用 “Native” Function Calling（ReACT 风格）🧠 {#optional-step-4-choosing-the-function-calling-mode}
 
-:::info
+原生函数调用是默认方式，因此不需要为它开启什么。模型使用自己内置的工具调用能力，这要求模型确实支持原生工具调用。某些本地模型口称支持原生工具调用，但实际效果往往差，所以如果可以选择，请优先使用原生工具调用能力稳健的模型。
 
-要想让它真正好用，**你所选的模型必须支持原生工具调用**。某些本地模型虽然声称支持，但实际效果往往较差。为了获得最佳体验，我们强烈建议使用 GPT-4o 或其他原生支持函数调用的 OpenAI 模型。
+`Legacy` 是另一种选项：Open WebUI 会将工具定义注入提示词，并在生成之前调用一次工具。它适用于得太更广泛的模型，代价是只能限于那一轮单次工具调用，而原生模式会不断调用工具，直到模型完成。
 
-:::
+切换模式的方法：
 
-如果你希望在对话中直接启用 ReACT 风格（Reasoning + Acting）的原生函数调用，可以把 Open WebUI 切换到原生函数调用。
-
-✳️ 启用方式：
-
-1. 打开聊天窗口
-2. 前往 ⚙️ **聊天控制 > 高级参数**
-3. 将 **函数调用** 参数从 `Default` 改为 `Native`
+1. 打开聊天窗口。
+2. 打开消息输入框旁的 **Model controls > Controls > Advanced Params**。
+3. 设置 **Function Calling** 参数。`Default` 与 `Native` 行为完全一致，`Legacy` 则选择提示词注入。
 
 ![原生工具调用](/images/openapi-servers/open-webui/native.png)
 

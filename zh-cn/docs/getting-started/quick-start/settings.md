@@ -17,7 +17,7 @@ Open WebUI 从一开始就是面向多用户设计的。即使你是唯一使用
 
 | | |
 | :--- | :--- |
-| **位置** | 头像菜单 > **Admin Settings**，或 **Admin Panel > Settings** |
+| **位置** | 个人资料头像 > **Settings**，然后进入 **Admin** 区域 |
 | **访问权限** | 仅管理员 |
 | **作用范围** | 整个实例和所有用户 |
 
@@ -27,7 +27,7 @@ Open WebUI 从一开始就是面向多用户设计的。即使你是唯一使用
 
 - 与 Ollama、OpenAI 及其他提供商的连接
 - 启用或禁用网页搜索、图片生成与代码执行
-- 默认模型选择与参数预设
+- [已选择和置顶的模型](/features/workspace/models#selected-and-pinned-models-admin)与参数预设
 - RBAC 策略、SSO 配置和注册限制
 
 ---

@@ -54,15 +54,16 @@ title: "S3 存储"
 
 ## 2. 运行 Open-WebUI {#2-run-open-webui}
 
-在启动 Open-WebUI 实例之前，还需要设置一个名为 `STORAGE_PROVIDER` 的环境变量。该变量告知 Open-WebUI 您要使用的存储提供商。默认情况下，`STORAGE_PROVIDER` 为空，即 Open-WebUI 使用本地存储。
+在启动 Open-WebUI 实例之前，还需要设置最后一个环境变量 `STORAGE_PROVIDER`。该变量告知 Open-WebUI 你要使用哪个存储提供商。默认情况下，`STORAGE_PROVIDER` 为 `local`；如果值为空或无法识别，启动会直接失败并提示 "Unsupported storage provider"。使用 `s3` 时，每次上传的文件会先写入 `/app/backend/data/uploads`，然后再复制到存储桶；每次读取时对象也会被下载回该目录，因此本地数据卷依然必不可少。
 
 | **存储提供商** | **类型** | **描述** | **默认值** |
 |----------------------|----------|-------------------------------------------------------------------------------------------------|-------------|
-| `local`              | str      | 提供空字符串（`' '`）时默认使用本地存储                                | 是         |
+| `local`              | str      | 文件保留在 `/app/backend/data/uploads` 下                                                    | 是         |
 | `s3`                 | str      | 使用 S3 客户端库及 Amazon S3 存储中提到的相关环境变量         | 否          |
 | `gcs`                | str      | 使用 GCS 客户端库及 Google Cloud Storage 中提到的相关环境变量     | 否          |
+| `azure`              | str      | 使用 Azure Blob Storage 客户端，配合 `AZURE_STORAGE_ENDPOINT` 与 `AZURE_STORAGE_CONTAINER_NAME`，以及 `AZURE_STORAGE_KEY`；若不提供该密钥则使用默认的 Azure 凭据 | 否          |
 
-要使用 Amazon S3，需要将 `STORAGE_PROVIDER` 设置为 "S3"，并配置步骤 1 中收集的所有环境变量（`S3_ACCESS_KEY_ID`、`S3_SECRET_ACCESS_KEY`、`S3_ENDPOINT_URL`、`S3_REGION_NAME`、`S3_BUCKET_NAME`）。
+要使用 Amazon S3，需要将 `STORAGE_PROVIDER` 设置为 `s3`（小写，取值按精确匹配），并配置步骤 1 中收集的环境变量。严格来说只有 `S3_BUCKET_NAME` 是必填项，通常还需要 `S3_REGION_NAME`：如果不设置 `S3_ACCESS_KEY_ID` 和 `S3_SECRET_ACCESS_KEY`，则会使用默认的 AWS 凭据链（例如 IAM 角色）；而 `S3_ENDPOINT_URL` 只有在使用兼容 S3 的服务时才需要。此外还可以使用 `S3_KEY_PREFIX`、`S3_ADDRESSING_STYLE`（MinIO 风格的端点用 `path`）、`S3_USE_ACCELERATE_ENDPOINT` 和 `S3_ENABLE_TAGGING`。
 
 这里还将 `ENV` 设置为 "dev"，这样可以查看 Open-WebUI 的 Swagger 文档，以便进一步测试并确认 S3 存储配置是否正常工作。
 
@@ -91,7 +92,7 @@ docker run -d \
 
 ![在 Open-WebUI 中获取响应](/images/tutorials/amazon-s3/amazon-s3-oui-response.png)
 
-很好！看起来 Open-WebUI 中的一切都按预期运行了。现在让我们验证文本文件是否确实已上传并存储在指定的 S3 存储桶中。通过 AWS 管理控制台可以看到，S3 存储桶中现在有一个文件。除了我们上传的文件名（`hello.txt`）外，还可以看到对象名称后面附加了一个唯一 ID。这就是 Open-WebUI 追踪所有已上传文件的方式。
+很好！看起来 Open-WebUI 中的一切都按预期运行了。现在让我们验证文本文件是否确实已上传并存储在指定的 S3 存储桶中。通过 AWS 管理控制台可以看到，S3 存储桶中现在有一个文件。除了我们上传的文件名（`hello.txt`）外，还可以看到对象名称前面加上了一个唯一 ID（即 `<file-id>_hello.txt`；如果设置了 `S3_KEY_PREFIX`，则该前缀位于更前面）。这就是 Open-WebUI 追踪所有已上传文件的方式。
 
 ![S3 存储桶中的对象](/images/tutorials/amazon-s3/amazon-s3-object-in-bucket.png)
 

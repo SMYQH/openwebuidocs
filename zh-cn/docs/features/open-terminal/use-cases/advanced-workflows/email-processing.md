@@ -19,9 +19,9 @@ title: "邮件处理"
 5. 标记过期项目
 6. 撰写最关键邮件的摘要
 
-{/* TODO: Screenshot — Chat showing the AI processing 45 email files and producing a summary. File browser previews email_actions.csv as a formatted table with Date, From, Subject, Action Item, Deadline, Status columns. */}
+![以表格形式预览提取出的待办事项](/images/open-terminal-email-actions-table.png)
 
-{/* TODO: Screenshot — The summary output listing the 5 most critical action items with their deadlines and which email they came from. */}
+![摘要输出列出了 5 个最关键的待办事项及其截止时间和来源邮件](/images/open-terminal-email-summary.png)
 
 ## 技能内容 {#skill-content}
 

@@ -21,7 +21,7 @@ title: "SearchApi"
 
 :::
 
-## SearchApi API
+## SearchApi API {#searchapi-api}
 
 [SearchApi](https://searchapi.io) 提供一组实时 SERP API。任何当前或未来会返回 `organic_results` 的 SERP 引擎都可被支持。默认 web search engine 是 `google`，但你也可以改成 `bing`、`baidu`、`google_news`、`bing_news`、`google_scholar`、`google_patents` 等。
 

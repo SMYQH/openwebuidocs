@@ -55,18 +55,18 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
 
 <Tabs groupId="database-type">
   <TabItem value="sqlite" label="SQLite（默认）" default>
-    ```bash title="终端"
+``` bash title="终端"
     # 先确认数据库位置
     docker inspect open-webui | grep -A 5 Mounts
 
     # 创建带时间戳的备份
     cp /path/to/webui.db /path/to/webui.db.backup.$(date +%Y%m%d_%H%M%S)
-    ```
+```
   </TabItem>
   <TabItem value="postgresql" label="PostgreSQL">
-    ```bash title="终端"
+``` bash title="终端"
     pg_dump -h localhost -U your_user -d open_webui_db > backup_$(date +%Y%m%d_%H%M%S).sql
-    ```
+```
   </TabItem>
 </Tabs>
 
@@ -76,7 +76,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
 
 <Tabs groupId="database-type">
   <TabItem value="sqlite" label="SQLite" default>
-    ```bash title="终端 - 验证备份"
+``` bash title="终端 - 验证备份"
     # 测试备份能否打开
     sqlite3 /path/to/webui.db.backup "SELECT count(*) FROM user;"
 
@@ -84,14 +84,14 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
     sqlite3 /path/to/webui.db ".schema" > current-schema.sql
     sqlite3 /path/to/webui.db.backup ".schema" > backup-schema.sql
     diff current-schema.sql backup-schema.sql
-    ```
+```
   </TabItem>
   <TabItem value="postgresql" label="PostgreSQL">
-    ```bash title="终端 - 验证备份"
+``` bash title="终端 - 验证备份"
     # 确认备份文件非空且包含 SQL
     head -n 20 backup_*.sql
     grep -c "CREATE TABLE" backup_*.sql
-    ```
+```
   </TabItem>
 </Tabs>
 
@@ -107,7 +107,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
 
 <Tabs groupId="install-type">
   <TabItem value="docker" label="Docker" default>
-    ```bash title="终端"
+``` bash title="终端"
     # 先停止 Open WebUI
     docker stop open-webui
 
@@ -116,25 +116,25 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
       -v open-webui:/app/backend/data \
       --entrypoint /bin/bash \
       ghcr.io/open-webui/open-webui:main
-    ```
+```
 
     :::note 确认当前位置
     进入容器后先确认当前所在路径：
-    ```bash
+``` bash
     pwd
-    ```
+```
     Alembic 配置文件位于 `/app/backend/open_webui/alembic.ini`。无论你当前在哪个目录，最终都需要切换到这里。
     :::
   </TabItem>
   <TabItem value="local" label="本地安装">
-    ```bash title="终端"
+``` bash title="终端"
     # 进入 Open WebUI 安装目录
     cd /path/to/open-webui/backend/open_webui
 
     # 如使用虚拟环境则激活
     source ../../venv/bin/activate  # Linux/Mac
     # venv\Scripts\activate  # Windows
-    ```
+```
   </TabItem>
 </Tabs>
 
@@ -142,7 +142,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
 
 进入包含 `alembic.ini` 的目录并配置所需环境变量：
 
-```bash title="终端 - 切换目录并配置环境"
+``` bash title="终端 - 切换目录并配置环境"
 # 先确认当前所在目录
 pwd
 
@@ -160,7 +160,7 @@ ls -la alembic.ini
 <Tabs groupId="install-type">
   <TabItem value="docker" label="Docker" default>
 
-```bash title="终端 - 设置环境变量（Docker）"
+``` bash title="终端 - 设置环境变量（Docker）"
 # 必需：Database URL
 # SQLite（绝对路径需 4 个斜杠）
 export DATABASE_URL="sqlite:////app/backend/data/webui.db"
@@ -187,7 +187,7 @@ echo "WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:0:10}..."
   </TabItem>
   <TabItem value="local" label="本地安装">
 
-```bash title="终端 - 设置环境变量（本地）"
+``` bash title="终端 - 设置环境变量（本地）"
 # 必需：Database URL
 # SQLite（从 backend/open_webui 目录出发的相对路径）
 export DATABASE_URL="sqlite:///../data/webui.db"
@@ -211,14 +211,14 @@ echo "WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:0:10}..."
 ```
 
 :::note 本地安装的环境
-本地安装常将 `DATABASE_URL` 写在 `.env` 文件中，但 Alembic 的 `env.py` 可能不会自动加载 `.env`。运行 Alembic 命令前，请先在 shell 中显式 export 这些变量。
+本地安装常将 `DATABASE_URL` 写在 `.env` 文件中，但运行 `alembic` 会 import `open_webui.env`，而它加载的是仓库根目录下的 `.env`。放在其他位置的 `.env` 会被忽略，因此这种情况下请先在 shell 中 export 相应变量，再运行 Alembic 命令。
 :::
 
   </TabItem>
 </Tabs>
 
 :::danger 两个变量都必须设置
-如果缺少 `WEBUI_SECRET_KEY`，Alembic 命令会直接因 `Required environment variable not found` 失败。Open WebUI 的代码 import 了 `env.py`，会先校验该变量是否存在，Alembic 甚至还没来得及连上数据库就会退出。
+当 `WEBUI_AUTH` 开启而 `WEBUI_SECRET_KEY` 缺失时，Alembic 命令会失败并提示 `WEBUI_SECRET_KEY is not set. It is a hard requirement when authentication is enabled.`。Open WebUI 的代码会 import `env.py`，后者在 Alembic 还没能连接数据库之前就校验该变量是否存在。
 :::
 
 :::warning SQLite 路径语法
@@ -231,7 +231,7 @@ echo "WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:0:10}..."
 
 执行以下只读诊断命令：
 
-```bash title="终端 - 诊断（安全，只读）"
+``` bash title="终端 - 诊断（安全，只读）"
 # 查看当前迁移版本
 alembic current -v
 
@@ -242,7 +242,7 @@ alembic heads
 alembic history
 
 # 预览将要执行的迁移（不会真正应用）
-alembic upgrade head --sql | head -30
+alembic history -r current:head
 
 # 检查是否有分支（出现分支意味着有问题）
 alembic branches
@@ -252,7 +252,7 @@ alembic branches
 
 ```
 # alembic current 通常会显示类似：
-ae1027a6acf (head)
+b8f2c6d91a04 (head)
 
 # 如果看到多个 head 或分支，说明迁移历史有问题
 ```
@@ -273,16 +273,16 @@ ae1027a6acf (head)
 
 <Tabs groupId="database-type">
   <TabItem value="sqlite" label="SQLite" default>
-    ```bash title="终端"
+``` bash title="终端"
     sqlite3 /app/backend/data/webui.db ".tables"
     sqlite3 /app/backend/data/webui.db "SELECT * FROM alembic_version;"
-    ```
+```
   </TabItem>
   <TabItem value="postgresql" label="PostgreSQL">
-    ```bash title="终端"
+``` bash title="终端"
     psql -h localhost -U user -d dbname -c "\dt"
     psql -h localhost -U user -d dbname -c "SELECT * FROM alembic_version;"
-    ```
+```
   </TabItem>
 </Tabs>
 
@@ -294,7 +294,7 @@ ae1027a6acf (head)
 
 若诊断结果表明存在待执行的迁移（`current` < `heads`），直接升级到最新：
 
-```bash title="终端 - 升级到最新"
+``` bash title="终端 - 升级到最新"
 # 确认所在目录正确
 cd /app/backend/open_webui
 
@@ -304,14 +304,14 @@ alembic upgrade head
 
 **注意这些输出：**
 
-```bash
+``` bash
 INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
 INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
 # highlight-next-line
 INFO  [alembic.runtime.migration] Running upgrade abc123 -> def456, add_new_column
 ```
 
-:::note "Will assume non-transactional DDL"
+:::note “将假定为非事务性 DDL”
 对 SQLite 而言，这是一条**正常的提示信息**，不是错误。SQLite 不支持 schema 变更的回滚，因此迁移只能在没有事务保护的情况下执行。
 
 如果这条消息后进程似乎"卡住"，请等 2-3 分钟——某些迁移本就需要时间，尤其是：
@@ -326,12 +326,12 @@ INFO  [alembic.runtime.migration] Running upgrade abc123 -> def456, add_new_colu
 
 如果你只想应用到某个特定版本：
 
-```bash title="终端 - 升级到指定版本"
+``` bash title="终端 - 升级到指定版本"
 # 先列出所有可用版本
 alembic history
 
 # 升级到指定 revision
-alembic upgrade ae1027a6acf
+alembic upgrade <revision>
 ```
 
 ### 回滚（Downgrade） {#downgrade-rollback}
@@ -340,7 +340,11 @@ alembic upgrade ae1027a6acf
 回滚可能会**永久性丢失数据**，特别是迁移本身删除过列或表的情况。只有在你完全理解后果时才执行。
 :::
 
-```bash title="终端 - 回滚迁移"
+回滚越过 [Apps](/features/channels/apps) 迁移（`c92da83b017f`）时，只要还存在任何由应用发送的消息，就会停在 `Export/remove app messages before downgrading apps`。这些消息清除之后，它会删除 app 表以及所有 app 频道成员关系。
+
+回滚越过为 [SCIM](/features/authentication-access/auth/scim#integration-with-sso) 用户新增登录记录的迁移（`0bd252b206fb`）时，它会保留自己新增的那些记录，因为这些账户在升级后可能已经设置了密码或两步验证登录。
+
+``` bash title="终端 - 回滚迁移"
 # 回滚一个版本
 alembic downgrade -1
 
@@ -355,14 +359,14 @@ alembic downgrade base
 
 迁移完成后，请确认一切正常：
 
-```bash title="终端 - 迁移后验证"
+``` bash title="终端 - 迁移后验证"
 # 验证当前版本符合预期
 alembic current
 # 应显示 (head)，表示已在最新版本
 # 例如：ae1027a6acf (head)
 
 # 确认没有遗留的待执行迁移
-alembic upgrade head --sql | head -20
+alembic history -r current:head
 # 输出若只剩注释或为空，表示已是最新
 
 # 验证关键表存在（SQLite）
@@ -378,27 +382,27 @@ sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM user;"
 
 <Tabs groupId="install-type">
   <TabItem value="docker" label="Docker" default>
-    ```bash title="终端"
+    ```bash title="Terminal"
     # 退出诊断容器
     exit
 
     # 正常启动 Open WebUI
     docker start open-webui
-
-    # 跟踪日志确认迁移
+    
+    # 查看日志以确认迁移成功
     docker logs -f open-webui
-
-    # 看到成功启动后，在浏览器测试
-    # 访问 http://localhost:8080 验证登录页能正常加载
+    
+    # 确认成功启动，然后在浏览器中测试
+    # 访问 http://localhost:8080 并确认登录页能正常加载
     ```
   </TabItem>
   <TabItem value="local" label="本地安装">
-    ```bash title="终端"
+    ```bash title="Terminal"
     # 启动 Open WebUI
-    python -m open_webui.main
+    open-webui serve
 
-    # 观察启动是否成功
-    # 然后访问 http://localhost:8080 测试
+    # 观察启动成功的提示信息
+    # 通过访问 http://localhost:8080 进行测试
     ```
   </TabItem>
 </Tabs>
@@ -443,7 +447,7 @@ sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: acces
 
 按[第 2 步](#step-2-diagnose-current-state)进入环境，然后运行：
 
-```bash title="终端"
+``` bash title="终端"
 cd /app/backend/open_webui  # Docker
 alembic upgrade head
 ```
@@ -467,20 +471,20 @@ someone@example.com (x2). Merge or remove the duplicate users and rerun migratio
 
 1. 列出受影响的账户，以便区分彼此：
 
-   ```sql
+``` sql
    SELECT id, email, name, role, created_at, last_active_at
    FROM "user"
    WHERE lower(email) IN (SELECT lower(email) FROM "user" GROUP BY lower(email) HAVING count(*) > 1)
    ORDER BY lower(email), created_at;
-   ```
+```
 
 2. 删除重复账户之前，先检查它各自持有哪些内容，因为聊天、文件夹、笔记、文件和工作区条目都通过所有者的 `id` 进行引用：
 
-   ```sql
+``` sql
    SELECT (SELECT count(*) FROM chat WHERE user_id = '<id>') AS chats,
           (SELECT count(*) FROM folder WHERE user_id = '<id>') AS folders,
           (SELECT count(*) FROM note WHERE user_id = '<id>') AS notes;
-   ```
+```
 
 3. 通过更新 `user_id` 把这些内容重新归属到保留的账户上，或者接受其丢失，然后通过 **管理面板 > 用户** 列表删除重复账户——该操作会一并删除对应的 `auth` 行。
 
@@ -506,7 +510,7 @@ v0.9.6 重做了内置的 Alembic 迁移，使其在运行时探查实际 schema
 
 **诊断：**
 
-```bash title="终端 - 找出卡住的迁移"
+``` bash title="终端 - 找出卡住的迁移"
 # 查看 Alembic 认为当前在哪个 revision
 alembic current
 # 输出示例：374d2f66af06 (head)
@@ -529,7 +533,7 @@ alembic history
 
 如果你没有备份，可以删掉部分创建的表，让迁移从头执行。**这样做之前必须先确认安全性：**
 
-```bash title="终端 - 删表前的检查"
+``` bash title="终端 - 删表前的检查"
 # 1. 确认该迁移确实没有完成（current revision 应早于失败的那一个）
 alembic current
 
@@ -548,7 +552,7 @@ ls migrations/versions/ | grep <revision_id>
 
 确认迁移确实没完成、且源数据完好后，删表并重跑：
 
-```bash title="终端 - 删表并重跑"
+``` bash title="终端 - 删表并重跑"
 # SQLite：
 sqlite3 /app/backend/data/webui.db "DROP TABLE <table_name>;"
 
@@ -567,7 +571,7 @@ alembic upgrade head
 
 如果上面两种方案都不可行，可以让 Alembic 直接跳过这条卡住的迁移：
 
-```bash title="终端"
+``` bash title="终端"
 # 把该迁移标记为已应用，但不真正执行
 alembic stamp <revision_id>
 
@@ -593,7 +597,7 @@ Stamp 只是把迁移标记为已完成，会跳过剩下的步骤（例如把�
 
 **诊断：**
 
-```bash title="终端 - 确认部分迁移链状态"
+``` bash title="终端 - 确认部分迁移链状态"
 # 查看 Alembic 认为当前所在 revision
 alembic current
 # 例如：37f288994c47  （落后 head 好几个版本）
@@ -617,7 +621,7 @@ sqlite3 /app/backend/data/webui.db "SELECT name FROM sqlite_master WHERE type='t
 
 思路：逐个 revision 升级。成功就继续；失败时若错误是 "duplicate column" 或 "already exists"，就 stamp 跳过；若是其他错误，立刻停下来排查。
 
-```bash title="终端 - 分步恢复"
+``` bash title="终端 - 分步恢复"
 # 拿到按顺序排列的待执行迁移列表
 alembic history
 
@@ -627,14 +631,14 @@ alembic upgrade <first_pending_revision>
 
 如果成功：
 
-```bash
+``` bash
 # 继续下一个
 alembic upgrade <next_revision>
 ```
 
 如果失败并提示 "duplicate column name" 或 "already exists"：
 
-```bash
+``` bash
 # 说明该迁移的 schema 变更其实在之前的某次部分运行中已经应用过。
 # 对该 revision 执行 stamp 推进 alembic_version，而不重跑 SQL。
 alembic stamp <that_revision>
@@ -653,7 +657,7 @@ alembic upgrade <next_revision>
 
 某些迁移不仅修改 schema，还会把数据从旧表复制到新表（例如 `chat_message` 迁移会从 `chat` 表的 JSON 列做回填）。如果这类迁移的*建表*成功了，但*回填*被打断：
 
-```bash title="终端 - 检查回填是否完成"
+``` bash title="终端 - 检查回填是否完成"
 # 看新表里有没有数据
 sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM <table_name>;"
 ```
@@ -661,26 +665,26 @@ sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM <table_name>;"
 如果行数大于 0，回填很可能已经完成——stamp 跳过即可。如果行数为 0，你有两个选择：
 
 1. **删表后重跑**（不丢数据，但大库回填可能很慢）：
-   ```bash
+``` bash
    sqlite3 /app/backend/data/webui.db "DROP TABLE <table_name>;"
    alembic upgrade <that_revision>
-   ```
+```
 
 2. **Stamp 跳过**（快，但跳过回填——依赖该新表的功能可能出现历史数据缺口）：
-   ```bash
+``` bash
    alembic stamp <that_revision>
-   ```
+```
 
 **验证与启动：**
 
-```bash title="终端 - 验证恢复结果"
+``` bash title="终端 - 验证恢复结果"
 alembic current
 # 应显示：<latest_revision> (head)
 ```
 
 然后退出容器并正常启动：
 
-```bash
+``` bash
 exit
 docker start open-webui
 docker logs -f open-webui
@@ -690,7 +694,7 @@ docker logs -f open-webui
 "stamp 后继续"这套策略只适用于 "already exists" 和 "duplicate column" 错误——这类错误本身就证实了对应 schema 变更已经在数据库中。如果某次迁移失败并报出*其他类型*的错误（数据类型不匹配、外键违规、与 schema 冲突无关的 Python traceback），**不要** stamp 跳过。请到 GitHub Issue 上贴出完整错误。
 :::
 
-### "Required environment variable not found"
+### "Required environment variable not found" {#required-environment-variable-not-found}
 
 **原因：** 缺少 `WEBUI_SECRET_KEY` 环境变量。
 
@@ -700,13 +704,13 @@ docker logs -f open-webui
 Open WebUI 的 `env.py` 在加载时会引入 models，model 又会导入 `open_webui.env`，后者会校验 `WEBUI_SECRET_KEY` 是否存在。缺少该变量时，Python 会在 Alembic 连接数据库之前就崩溃。
 :::
 
-### "No config file 'alembic.ini' found"
+### "No config file 'alembic.ini' found" {#no-config-file-alembicini-found}
 
 **原因：** 当前目录不对。
 
 **解决方法：**
 
-```bash title="终端"
+``` bash title="终端"
 # 如果容器名不是 'open-webui'，先查出来
 docker ps
 
@@ -721,13 +725,13 @@ cd /app/backend/open_webui  # 最常见的路径
 ls -la alembic.ini
 ```
 
-### "Target database is not up to date"
+### "Target database is not up to date" {#target-database-is-not-up-to-date}
 
 **原因：** 数据库版本与代码期望的 schema 不一致。
 
 **诊断：**
 
-```bash title="终端 - 诊断版本不一致"
+``` bash title="终端 - 诊断版本不一致"
 # 数据库认为自己的版本是
 alembic current
 
@@ -745,9 +749,9 @@ alembic heads
 
     **修复：** 直接应用待执行的迁移即可。
 
-    ```bash title="终端"
+``` bash title="终端"
     alembic upgrade head
-    ```
+```
   </TabItem>
   <TabItem value="mismatch" label="Schema 不一致">
     **场景：** `alembic current` 显示版本已正确，但仍然报错
@@ -756,7 +760,7 @@ alembic heads
 
     **修复：** 从备份恢复——这属于数据库损坏。
 
-    ```bash title="终端"
+``` bash title="终端"
     # 停止一切
     docker stop open-webui
 
@@ -765,16 +769,16 @@ alembic heads
 
     # 重试迁移
     alembic upgrade head
-    ```
+```
   </TabItem>
   <TabItem value="fresh" label="全新数据库">
     **场景：** 需要为新建数据库初始化 schema
 
     **修复：** 从头运行迁移。
 
-    ```bash title="终端"
+``` bash title="终端"
     alembic upgrade head
-    ```
+```
   </TabItem>
 </Tabs>
 
@@ -809,7 +813,7 @@ alembic heads
   <TabItem value="lock" label="检查数据库锁">
     可能有其他进程把数据库锁住了。
 
-    ```bash title="终端 - 检查锁"
+``` bash title="终端 - 检查锁"
     # 查找在用该数据库文件的进程
     fuser /app/backend/data/webui.db
 
@@ -821,14 +825,14 @@ alembic heads
 
     # 重试迁移
     alembic upgrade head
-    ```
+```
   </TabItem>
   <TabItem value="corrupt" label="数据库损坏">
     如果数据库本身已损坏，迁移会一直卡住。
 
-    ```bash title="终端 - 完整性检查"
+``` bash title="终端 - 完整性检查"
     sqlite3 /app/backend/data/webui.db "PRAGMA integrity_check;"
-    ```
+```
 
     如果完整性检查不通过，从备份恢复。
   </TabItem>
@@ -846,7 +850,7 @@ alembic heads
 
 **如果你不小心生成了错误的迁移文件：**
 
-```bash title="终端 - 删除错误的迁移"
+``` bash title="终端 - 删除错误的迁移"
 # 列出迁移文件
 ls -la /app/backend/open_webui/migrations/versions/
 
@@ -871,14 +875,14 @@ git checkout /app/backend/open_webui/migrations/  # 如使用 git
 
 **PostgreSQL 解决方法：**
 
-```sql title="PostgreSQL 修复"
--- 连接到 PostgreSQL 数据库
+``` sql title="PostgreSQL 修复"
+-- Connect to your PostgreSQL database
 psql -h localhost -U your_user -d open_webui_db
 
--- 补上缺失的主键约束（PostgreSQL 语法）
+-- Add missing primary key constraint (PostgreSQL syntax)
 ALTER TABLE public."user" ADD CONSTRAINT user_pk PRIMARY KEY (id);
 
--- 验证约束已添加
+-- Verify constraint was added
 \d+ public."user"
 ```
 
@@ -913,7 +917,7 @@ UNIQUE constraint failed: alembic_version.version_num
 
 **诊断：**
 
-```bash title="终端 - 查找重复列"
+``` bash title="终端 - 查找重复列"
 # 列出 message 表的所有列
 sqlite3 /app/backend/data/webui.db "PRAGMA table_info(message);"
 
@@ -929,7 +933,7 @@ sqlite3 /app/backend/data/webui.db "PRAGMA table_info(message);"
 移除列可能造成数据丢失。**操作前务必先备份数据库。**
 :::
 
-```bash title="终端 - 移除重复列（SQLite）"
+``` bash title="终端 - 移除重复列（SQLite）"
 # 1. 先备份数据库！
 cp /app/backend/data/webui.db /app/backend/data/webui.db.pre-fix
 
@@ -944,15 +948,15 @@ PRAGMA table_info(message);
 .schema message
 
 # 5. 新建一张没有重复列的表
--- 拷贝原 CREATE TABLE 语句，但去掉重复列定义
--- 示例（请按实际 schema 调整）：
+-- Copy the CREATE TABLE statement but remove duplicate column definition
+-- Example (adjust to your actual schema):
 CREATE TABLE message_new (
     id TEXT PRIMARY KEY,
     content TEXT,
     role TEXT,
-    -- ... 其他列 ...
-    reply_to_id TEXT,  -- 只保留一份
-    -- ... 剩余列 ...
+    -- ... other columns ...
+    reply_to_id TEXT,  -- Only one instance
+    -- ... remaining columns ...
     FOREIGN KEY (reply_to_id) REFERENCES message(id)
 );
 
@@ -978,18 +982,18 @@ alembic upgrade head
 
 **备选 —— 已确定哪一列是重复时的简化做法：**
 
-```bash title="终端 - 已知重复列的快速修复"
+``` bash title="终端 - 已知重复列的快速修复"
 # 仅当该列确实完全重复、且 SQLite 的表重建能正确处理时可用
 
 sqlite3 /app/backend/data/webui.db <<EOF
--- 用正确 schema 建临时表
+-- Create temporary table with correct schema
 CREATE TABLE message_temp AS SELECT DISTINCT * FROM message;
 
--- 删除原表
+-- Drop original table
 DROP TABLE message;
 
--- 用正确 schema 重新创建（先从原始 .schema message 取得定义）
--- 然后把数据复制回去
+-- Recreate with proper schema (get from .schema message originally)
+-- Then copy data back
 EOF
 ```
 
@@ -1020,13 +1024,13 @@ EOF
 
 **自动过渡过程：**
 
-1. Open WebUI 的 `internal/db.py` 先通过 `handle_peewee_migration()` 跑旧 Peewee 迁移
+1. Peewee 时期的迁移代码已经全部移除。唯一残留的 Peewee 时代处理是 Alembic 修订 `461111b60977`，它会为旧表补上缺失的主键。残留的 `migratehistory` 表不起任何作用。
 2. 然后 `config.py` 通过 `run_migrations()` 跑 Alembic 迁移
 3. 这两个系统理论上应该是透明衔接的
 
 **如果自动过渡失败：**
 
-```bash title="终端 - 手动过渡"
+``` bash title="终端 - 手动过渡"
 # 检查是否还有旧 Peewee 迁移记录
 sqlite3 /app/backend/data/webui.db "SELECT * FROM migratehistory;" 2>/dev/null
 
@@ -1055,7 +1059,7 @@ alembic upgrade head
 
 在部署新代码前，先以一次性 Job 运行迁移：
 
-```bash title="Kubernetes Job 示例"
+``` bash title="Kubernetes Job 示例"
 # 1. 运行迁移 Job
 kubectl apply -f migration-job.yaml
 
@@ -1073,9 +1077,9 @@ kubectl rollout restart deployment/openwebui
 
 在迁移期间让应用离线：
 
-```bash title="维护窗口工作流"
+``` bash title="维护窗口工作流"
 # 1. 停止所有应用实例
-docker-compose down
+docker compose down
 
 # 2. 运行迁移
 docker run --rm -v open-webui:/app/backend/data \
@@ -1083,7 +1087,7 @@ docker run --rm -v open-webui:/app/backend/data \
   bash -c "cd /app/backend/open_webui && alembic upgrade head"
 
 # 3. 用新代码重新启动所有实例
-docker-compose up -d
+docker compose up -d
 ```
 
 最简单，但有停机时间。
@@ -1093,7 +1097,7 @@ docker-compose up -d
 
 维护两套完全相同的环境，迁移完成后切流量：
 
-```bash title="蓝绿部署工作流"
+``` bash title="蓝绿部署工作流"
 # 1. 绿（新）环境接入已迁移的数据库
 # 2. 在绿环境部署新代码
 # 3. 完整验证绿环境
@@ -1108,15 +1112,39 @@ docker-compose up -d
 
 ### 仅生成 SQL，不直接应用 {#generate-sql-without-applying}
 
-如需审核或审计，可以生成迁移 SQL 而不真正执行：
+如需在不触碰真实数据库的前提下查看 SQL 变更，可以在一份副本上运行升级，并比较升级前后的 schema。升级输出会列出它运行的每一个迁移，差异对比则以 SQL 的形式展示最终的 schema 变更。
 
-```bash title="终端 - 生成迁移 SQL"
-# 为待执行迁移生成 SQL
-alembic upgrade head --sql > /tmp/migration-plan.sql
+<Tabs groupId="database-type">
+  <TabItem value="sqlite" label="SQLite" default>
+    ``` bash title="Terminal - Preview Upgrade on a Copy"
+    # Copy the database and save its current schema
+    cp /path/to/webui.db /tmp/webui-preview.db
+    sqlite3 /tmp/webui-preview.db ".schema" > /tmp/schema-before.sql
 
-# 审查将要应用的内容
-cat /tmp/migration-plan.sql
-```
+    # Upgrade the copy
+    DATABASE_URL="sqlite:////tmp/webui-preview.db" alembic upgrade head
+
+    # Compare the schema after the upgrade
+    sqlite3 /tmp/webui-preview.db ".schema" > /tmp/schema-after.sql
+    diff /tmp/schema-before.sql /tmp/schema-after.sql
+    ```
+  </TabItem>
+  <TabItem value="postgresql" label="PostgreSQL">
+    ``` bash title="Terminal - Preview Upgrade on a Copy"
+    # Copy the database (stop Open WebUI first so the source has no open connections)
+    createdb -h localhost -U your_user -T open_webui_db open_webui_preview
+    pg_dump -h localhost -U your_user -d open_webui_preview --schema-only > /tmp/schema-before.sql
+
+    # Upgrade the copy
+    DATABASE_URL="postgresql://user:password@localhost:5432/open_webui_preview" alembic upgrade head
+
+    # Compare the schema after the upgrade, then drop the copy
+    pg_dump -h localhost -U your_user -d open_webui_preview --schema-only > /tmp/schema-after.sql
+    diff /tmp/schema-before.sql /tmp/schema-after.sql
+    dropdb -h localhost -U your_user open_webui_preview
+    ```
+  </TabItem>
+</Tabs>
 
 **适用场景：**
 
@@ -1133,19 +1161,18 @@ cat /tmp/migration-plan.sql
 
 如果你的数据库服务器是离线或隔离的：
 
-```bash title="终端 - 离线迁移流程"
-# 1. 在开发机上生成 SQL
-alembic upgrade head --sql > upgrade-to-head.sql
+``` bash title="Terminal - Offline Migration Workflow"
+# 1. 立刻停止 Open WebUI
+scp production-server:/app/backend/data/webui.db /tmp/webui.db
 
-# 2. 把 SQL 文件传到生产
-scp upgrade-to-head.sql production-server:/tmp/
+# 2. 验证备份完整性
+DATABASE_URL="sqlite:////tmp/webui.db" alembic upgrade head
 
-# 3. 在生产手动应用 SQL
-sqlite3 /app/backend/data/webui.db < /tmp/upgrade-to-head.sql
+# 3. 恢复备份
+DATABASE_URL="sqlite:////tmp/webui.db" alembic current
 
-# 4. 手动更新 alembic_version 表
-sqlite3 /app/backend/data/webui.db \
-  "UPDATE alembic_version SET version_num='<target_revision>';"
+# 4. 在重试迁移前先排查根因
+scp /tmp/webui.db production-server:/app/backend/data/webui.db
 ```
 
 :::danger 手动更新 alembic_version
@@ -1169,20 +1196,20 @@ SQLite 迁移是**非事务性的**。一旦迁移执行到一半失败，数据
 
 **恢复步骤：**
 
-```bash title="终端 - 从备份恢复"
-# 1. 立刻停止 Open WebUI
+``` bash title="Terminal - Restore from Backup"
+# 1. Stop Open WebUI immediately
 docker stop open-webui
 
-# 2. 验证备份完整性
+# 2. Verify backup integrity
 sqlite3 /path/to/webui.db.backup "PRAGMA integrity_check;"
 
-# 3. 恢复备份
+# 3. Restore backup
 cp /path/to/webui.db.backup /path/to/webui.db
 
-# 4. 在重试迁移前先排查根因
+# 4. Investigate root cause before retrying
 docker logs open-webui > migration-failure-logs.txt
 
-# 5. 在重试前带着日志寻求帮助
+# 5. Get help with logs before attempting migration again
 ```
 
 :::warning 不要用 "stamp" 跳过未完成的迁移
@@ -1195,21 +1222,21 @@ docker logs open-webui > migration-failure-logs.txt
 
 <Tabs groupId="database-type">
   <TabItem value="sqlite" label="SQLite" default>
-    ```bash title="终端 - SQLite 完整性检查"
+``` bash title="Terminal - SQLite Integrity Check"
     sqlite3 /app/backend/data/webui.db "PRAGMA integrity_check;"
 
-    # 输出应该是：ok
-    # 出现其他内容就意味着数据库已损坏
-    ```
+    # Should output: ok
+    # If it outputs anything else, database is corrupted
+```
   </TabItem>
   <TabItem value="postgresql" label="PostgreSQL">
-    ```bash title="终端 - PostgreSQL 完整性检查"
-    # 检查表损坏
+``` bash title="Terminal - PostgreSQL Integrity Check"
+    # Check for table corruption
     psql -h localhost -U user -d dbname -c "SELECT * FROM pg_stat_database WHERE datname='open_webui_db';"
 
-    # Vacuum 和 analyze
+    # Vacuum and analyze
     psql -h localhost -U user -d dbname -c "VACUUM ANALYZE;"
-    ```
+```
   </TabItem>
 </Tabs>
 
@@ -1235,22 +1262,6 @@ docker logs open-webui > migration-failure-logs.txt
 
 **收集诊断信息：**
 
-```bash title="终端 - 收集诊断数据"
-# 版本信息
-docker logs open-webui 2>&1 | head -20 > diagnostics.txt
-
-# 迁移状态
-cd /app/backend/open_webui
-alembic current -v >> diagnostics.txt
-alembic history >> diagnostics.txt
-
-# 数据库信息（SQLite）
-sqlite3 /app/backend/data/webui.db ".tables" >> diagnostics.txt
-sqlite3 /app/backend/data/webui.db "SELECT * FROM alembic_version;" >> diagnostics.txt
-
-# 完整的迁移日志
-alembic upgrade head 2>&1 >> diagnostics.txt
-```
 
 **到哪里寻求帮助：**
 
@@ -1269,3 +1280,20 @@ alembic upgrade head 2>&1 >> diagnostics.txt
 :::note
 不要公开分享你的 `webui.db` 文件——里面有用户凭据和敏感数据。只分享文本形式的诊断输出。
 :::
+
+``` bash title="Terminal - Collect Diagnostic Data"
+# Version information
+docker logs open-webui 2>&1 | head -20 > diagnostics.txt
+
+# Migration state
+cd /app/backend/open_webui
+alembic current -v >> diagnostics.txt
+alembic history >> diagnostics.txt
+
+# Database info (SQLite)
+sqlite3 /app/backend/data/webui.db ".tables" >> diagnostics.txt
+sqlite3 /app/backend/data/webui.db "SELECT * FROM alembic_version;" >> diagnostics.txt
+
+# Full migration log
+alembic upgrade head 2>&1 >> diagnostics.txt
+```

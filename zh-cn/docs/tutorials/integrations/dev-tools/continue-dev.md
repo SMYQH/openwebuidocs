@@ -6,7 +6,7 @@ title: "Continue.dev"
 # 将 Continue.dev VS Code 扩展与 Open WebUI 集成 {#integrating-continuedev-vs-code-extension-with-open-webui}
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/tutorials/contributing-tutorial)。
 :::
 
 ## 下载扩展 {#download-extension}
@@ -44,9 +44,9 @@ name: Local Assistant
 version: 1.0.0
 schema: v1
 models:
-  - name: LLama3
+  - name: Qwen3.6
     provider: openai
-    model: Meta-Llama-3-8B-Instruct-Q4_K_M.gguf
+    model: qwen3.6:27b
     env:
       useLegacyCompletionsEndpoint: false
     apiBase: http://localhost:3000/api
@@ -108,7 +108,7 @@ models:
 设置您要使用的模型名称，该名称将显示在扩展的聊天输入框中。
 
 ```yaml
-name: LLama3
+name: Qwen3.6
 ```
 
 ![continue.dev chat input](/images/tutorials/continue-dev/continue_dev_extension_input_field.png)
@@ -131,7 +131,7 @@ provider: openai
 在用户指定的名称下方，您会找到实际的模型名称。
 
 ```yaml
-model: Meta-Llama-3-8B-Instruct-Q4_K_M.gguf
+model: qwen3.6:27b
 ```
 
 ---
@@ -147,7 +147,7 @@ env:
 
 ---
 
-### APIBase
+### APIBase {#apibase}
 
 这是关键步骤：您需要将 continue.dev 扩展的请求指向您的 Open WebUI 实例。
 如果实例托管在某处，请使用实际域名（例如 `https://example.com/api`），或使用本地设置（例如 `http://localhost:3000/api`）。

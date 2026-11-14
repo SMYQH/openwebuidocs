@@ -27,7 +27,7 @@ title: "Google PSE"
 
 :::
 
-## Google PSE API
+## Google PSE API {#google-pse-api}
 
 ### 设置 {#setup}
 

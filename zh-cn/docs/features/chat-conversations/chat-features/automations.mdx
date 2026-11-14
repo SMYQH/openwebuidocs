@@ -7,6 +7,8 @@ title: "自动化"
 
 Automations 允许你按周期自动执行提示词。每次执行都会创建一个聊天，并走完整的聊天完成流程，因此模型默认值、工具、过滤器以及其他 Pipeline 行为仍然全部生效。
 
+运行与你的聊天使用相同的方式使用[记忆](/features/chat-conversations/memory)。当你的记忆已开启时，一次运行会获得记忆工具；开启 **Memory System Context** 后，你已存储的记忆也会进入其上下文，所用的模型、权限与管理员设置与聊天完全一致。记忆是否开启取决于你在 **Settings > Personalization** 中的 **记忆** 开关；如果你从未设置过它，则由[默认界面设置](/features/administration/interface-defaults)决定，而在连默认界面设置也没有的情况下，则取决于实例是否启用了 Memories。
+
 管理员可通过 [`ENABLE_AUTOMATIONS`](/reference/env-configuration#enable_automations) 环境变量，或 **Admin Panel > Settings > General** 中的开关，在全局启用或禁用自动化。禁用后，自动化 worker 会停止处理任务，API endpoint 会返回 `403`，侧边栏入口也会隐藏。
 
 ## 你可以自动化什么 {#what-you-can-automate}
@@ -80,7 +82,7 @@ Automations 允许你按周期自动执行提示词。每次执行都会创建�
 
 ### 运行编码智能体 {#running-a-coding-agent}
 
-选定终端后，**模型**列表还会提供该终端报告的编码智能体，名称格式为 `<智能体>/<模型>`。更换终端或文件夹会重新加载该列表，**创建**和**保存**会等待加载完成。智能体自动化需要先有终端才能保存。它的结果始终会进入某个聊天。每次运行前，Open WebUI 都会检查终端和智能体是否仍然可用，任意一个消失都会导致运行失败。
+选定终端后，**模型**列表还会提供该终端报告的编码智能体，名称格式为 `<agent>/<model>`。更换终端或文件夹会重新加载该列表，**创建**和**保存**会等待加载完成。智能体自动化需要先有终端才能保存。它的结果始终会进入某个聊天。每次运行前，Open WebUI 都会检查终端和智能体是否仍然可用，任意一个消失都会导致运行失败。
 
 ## 编辑与管理 {#edit-and-manage}
 

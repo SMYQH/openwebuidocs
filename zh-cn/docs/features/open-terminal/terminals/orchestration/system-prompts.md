@@ -29,11 +29,11 @@ Open Terminal 默认提供生成的系统提示词。它包括运行时详细信
 示例：
 
 ```text
-你在 {{home}} 上工作，使用 {{os}} {{kernel}}。
-终端示例使用 {{shell}}。
+You are working in {{home}} on {{os}} {{kernel}}.
+Use {{shell}} for terminal examples.
 ```
 
-## OPEN_TERMINAL_INFO
+## OPEN_TERMINAL_INFO {#open\_terminal\_info}
 
 当你希望保留生成的提示词并附加运维人员提供的上下文时使用 `OPEN_TERMINAL_INFO`，例如已安装的工具、实验说明或环境说明。
 

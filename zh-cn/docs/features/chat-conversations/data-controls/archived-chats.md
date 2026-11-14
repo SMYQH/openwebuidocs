@@ -30,10 +30,22 @@ Open WebUI 允许你将对话归档，这样既能保留它们供日后参考，
     该操作无法撤销。所有聊天历史都会被永久删除。
     :::
 
-## FAQ
+:::info 删除需要聊天删除权限
+
+已归档聊天上的 **删除** 和 **删除所有聊天** 只会为拥有 **允许聊天删除** 权限的人显示。没有该权限时两者都不会出现，因此不会出现按下却拒绝执行的按钮，归档与 **取消归档全部** 的行为也会保持不变。管理员始终不受此限制。参见[权限](/features/authentication-access/rbac/permissions#3-chat-permissions)。
+
+:::
+
+:::info 管理员可隐藏归档入口
+
+管理员可以在[可见控件](/features/administration/interface-defaults#hiding-controls)中隐藏 **归档** 入口，这也会一并隐藏取消归档。已归档的聊天仍可在此处打开和删除。
+
+:::
+
+## FAQ {#faq}
 
 **Q：我可以在已归档聊天里搜索内容吗？**  
-**A：** 归档面板目前只按聊天标题搜索。如果你想按消息内容搜索，需要先恢复该聊天。
+**A：** 可以。归档面板自身按聊天标题搜索。在聊天输入框 **+** 菜单中的 **参考对话** 选择器，以及搜索窗口（`Cmd+K` / `Ctrl+K`），都可以在加上 `archived:true` 过滤条件后读取已归档聊天的消息，例如 `archived:true quarterly report`。无需先恢复聊天就能在其中搜索。参见[历史记录与搜索](/features/chat-conversations/chat-features/history-search#filter-prefixes)。
 
 **Q：可归档聊天数量有限制吗？**  
 **A：** 没有硬性上限。可扩展性取决于你的数据库配置。

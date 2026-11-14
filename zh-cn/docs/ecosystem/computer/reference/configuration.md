@@ -3,18 +3,18 @@ title: config.toml
 sidebar_position: 4
 ---
 
-# config.toml
+# config.toml {#configtoml}
 
 Computer 的服务器配置位于 `<data-dir>/config.toml`：默认为 `~/.cptr/config.toml`，Docker 中为 `/data/config.toml`。
 
 ```toml
 [server]
-secret = "..."              # JWT 签名密钥，首次运行时生成
+secret = "..."              # JWT signing secret, generated on first run
 
 [auth]
-mode = "password"           # "password"（默认）、"pam" 或 "trusted_header"
-header = "Remote-User"      # trusted_header 模式：哪个标头携带用户名
-trusted_sources = []        # trusted_header 模式：可选的代理 IP 白名单
+mode = "password"           # "password" (default), "pam", or "trusted_header"
+header = "Remote-User"      # trusted_header mode: which header carries the username
+trusted_sources = []        # trusted_header mode: optional IP allowlist for the proxy
 
 [app_config]
 # 存储在数据库中的应用配置镜像
@@ -38,7 +38,7 @@ Computer 加密存储的值（前缀为 `encrypted:`），例如提供商 API �
 
 任何模式下都没有 localhost 绕过；每个请求都需要认证。更多关于整体模型的信息：[安全](/ecosystem/computer/phone-and-remote/security)。
 
-## `[app_config]`：镜像 {#app_config-the-mirror}
+## `[app_config]`：镜像 {#app\_config-the-mirror}
 
 你在 UI 中更改的设置会存储在数据库*中并*镜像到此部分。启动时，文件会重新写入数据库：**文件优先**。两个后果：
 

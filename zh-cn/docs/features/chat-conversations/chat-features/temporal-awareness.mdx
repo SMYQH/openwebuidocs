@@ -9,10 +9,12 @@ title: "时间感知"
 
 ## 系统级时间感知 {#system-level-awareness}
 
-默认情况下，Open WebUI 会通过 system prompt 将时间变量注入到模型环境中。即使不使用专门工具，大多数模型也能感知以下信息：
-- **`CURRENT_DATE`**：以 YYYY-MM-DD 格式注入
-- **`CURRENT_TIME`**：以 HH:MM 格式注入
-- **`CURRENT_WEEKDAY`**：例如 Monday、Tuesday
+日期和时间本身不会自动传到模型那里。只有当系统提示词、模型文件或提示词中包含下列占位符时，Open WebUI 才会在请求发送前把它们填入：
+
+- **`CURRENT_DATE`**：以 YYYY-MM-DD 格式注入。
+- **`CURRENT_TIME`**：对于来自界面的聊天，按浏览器本地 24 小时制以 `HH:MM:SS` 表示。未携带浏览器变量的请求（API 调用、自动化、定时器）会得到服务器本地时间，格式为 `hh:MM:SS AM/PM`。
+- **`CURRENT_DATETIME`**：日期与时间合在一起。`CURRENT_TIMEZONE` 和 `USER_LANGUAGE` 只由浏览器填充，因此对 API 调用方、自动化和定时器来说会保持字面量。
+- **`CURRENT_WEEKDAY`**：（例如 Monday、Tuesday）。
 
 这些变量也可以在 [**提示词**](/features/workspace/prompts) 或 [**模型文件**](/features/workspace/models) 中通过 `{{CURRENT_DATE}}` 语法手动使用。
 

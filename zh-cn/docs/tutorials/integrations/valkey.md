@@ -32,14 +32,14 @@ title: "使用 Valkey（兼容 Redis）"
 
 创建一份 `docker-compose.yml`：
 
-```yml
+``` yml
 services:
   valkey:
     image: docker.io/valkey/valkey:8.0.1-alpine
     container_name: valkey
     volumes:
       - valkey-data:/data
-    command: "valkey-server --save 30 1 --maxclients 10000 --timeout 1800"
+    command: "valkey-server --save 30 1 --appendonly yes --maxmemory-policy noeviction --maxclients 10000 --timeout 1800"
     healthcheck:
       test: "[ $$(valkey-cli ping) = 'PONG' ]"
       start_period: 5s
@@ -85,11 +85,7 @@ docker network create openwebui-network
 
 ```bash
 REDIS_URL="redis://valkey:6379/0"
-
-# WebSocket 支持
-ENABLE_WEBSOCKET_SUPPORT="true"
 WEBSOCKET_MANAGER="redis"
-WEBSOCKET_REDIS_URL="redis://valkey:6379/1"
 ```
 
 :::info 协议仍然是 `redis://`
@@ -102,7 +98,7 @@ Open WebUI 通过 Redis 协议连接，因此连接字符串是 `redis://...`，
 
 ```bash
 docker exec -it valkey valkey-cli ping                              # → PONG
-docker logs open-webui 2>&1 | grep -i redis                          # 通用连接
+docker logs open-webui 2>&1 | grep -i redis                          # general connection
 docker logs open-webui 2>&1 | grep "Using Redis to manage websockets"
 ```
 

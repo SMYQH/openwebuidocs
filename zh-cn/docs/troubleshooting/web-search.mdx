@@ -70,6 +70,8 @@ search:
 
   在 Native/Agentic 工具调用模式下，如果模型在 `search_web` 中省略了 `count`，Open WebUI 会默认使用 `WEB_SEARCH_RESULT_COUNT`。如果模型提供了 `count`，也会被限制在管理员配置的同一最大值以内。
 
+- **压缩响应会被拒绝**：Open WebUI 会请求未压缩的页面和文件，并以 `The server answered with a compressed response, which is not accepted.` 拒绝压缩响应。如果主机总是以压缩方式发送文件（例如上传时带有 `Content-Encoding` 说明头的 S3 或 MinIO 对象），就无法读取。请在不带该说明头的情况下重新上传文件。
+
 - **尝试不同 loader**：把 `WEB_LOADER_ENGINE` 改为 `playwright` 以处理 JavaScript 较重的网站，或使用 `firecrawl`/`tavily` 获得更好的提取效果。
 
 - **设置真实的 User-Agent**：如果来自 Wikipedia、受 Cloudflare 保护的大型站点等来源的结果为空（或在日志中出现 403），说明默认的 Python `requests` / `aiohttp` UA 被反爬机制拦截了。请将 [`USER_AGENT`](/reference/env-configuration#user_agent) 设置为真实的浏览器 UA（例如 `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36`）。该设置同时影响 Web 搜索的结果抓取与 `fetch_url` 工具。
@@ -78,7 +80,7 @@ search:
 
 ---
 
-### 4. Web Search 已启用但模型没有调用 `search_web` {#4-web-search-is-enabled-but-the-model-does-not-call-search_web}
+### 4. Web Search 已启用但模型没有调用 `search_web` {#4-web-search-is-enabled-but-the-model-does-not-call-search\_web}
 
 如果网页搜索引擎已经配置好（例如以 DuckDuckGo 为后端的 DDGS）、模型也启用了 Web Search、当前对话的 Web Search 开关也已打开，但助手仍然不搜索就作答，那么问题通常出在模型能力而不是搜索提供商。
 
@@ -121,4 +123,10 @@ search:
 | `WEB_LOADER_CONCURRENT_REQUESTS` | 页面抓取并发数 |
 | `WEB_LOADER_ENGINE` | 内容提取引擎 |
 
+
+以上全部都是持久化设置，因此 **Settings > Admin > Web Search** 才是它们的唯一真实来源。页面抓取器会在每次搜索时从这份已保存的配置中读取代理信任、加载器并发数和 SSL 校验设置，所以你在那里保存的变更会直接作用于下一次搜索，无需重启，并且与这些设置在其他位置的行为保持一致。如果你在管理面板中做的修改看起来没有生效，请回到那里重新确认，而不要想当然地认为环境变量仍在起作用：环境变量只用于设定初始值，之后保存的设置优先。
+
+**Web Search Engine** 只在 **Web Search** 开启期间才是必需的，因此 **Loader** 设置可以在没有它的情况下保存。
+
+当 **Web Search** 关闭时，页面会隐藏那些仅对搜索生效的设置，但它们已保存的值会被保留。
 ---

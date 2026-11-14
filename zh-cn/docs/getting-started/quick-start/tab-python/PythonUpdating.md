@@ -1,3 +1,4 @@
+
 # 使用 Python 更新 {#updating-with-python}
 
 如果你是通过 `pip` 在本地安装的 **Open WebUI**，可按以下方式升级到最新版本：
@@ -22,6 +23,10 @@ open-webui serve
 2. 设置 `UVICORN_WORKERS=1` 后启动应用。
 3. 等待应用完全启动并完成迁移。
 4. 停止应用，再按目标 worker 数重新启动。
+:::
+
+:::warning 多个 worker
+迁移会在每个进程启动时运行。如果你的 `UVICORN_WORKERS` 大于 `1`，请先以 `UVICORN_WORKERS=1` 启动新版本，等待迁移完成后再重启。不建议运行多于一个 worker；请改用[副本](/getting-started/advanced-topics/scaling#step-3-run-multiple-instances)进行扩容。
 :::
 
 有关版本固定、回滚和备份流程，请参见[完整更新指南](/getting-started/updating)。

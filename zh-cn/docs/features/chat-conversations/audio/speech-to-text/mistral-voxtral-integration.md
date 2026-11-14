@@ -27,15 +27,18 @@ title: "Mistral Voxtral 语音转文本"
 |---------|-------|
 | **语音转文本引擎** | `MistralAI` |
 | **API 密钥** | 你的 Mistral API 密钥 |
-| **STT 模型** | `voxtral-mini-latest`（或留空使用默认值） |
+| **STT 模型** | `voxtral-mini-2602`（或留空使用默认值） |
 
 5. 点击 **Save**
 
 ## 可用模型 {#available-models}
-
 | 模型 | 说明 |
-|-------|-------------|
-| `voxtral-mini-latest` | 默认转录模型（推荐） |
+|-------|-------------| 
+| `voxtral-mini-2602` | Voxtral Mini Transcribe 2 —— 当前的转录模型（推荐） |
+
+:::caution 请显式设置模型
+Mistral 不再发布 `voxtral-mini-latest` 之类的 `-latest` 别名。请使用 [Mistral 模型总览](https://docs.mistral.ai/getting-started/models/models_overview/)中的带日期 ID。
+:::
 
 ## 环境变量配置 {#environment-variables-setup}
 
@@ -48,7 +51,7 @@ services:
     environment:
       - AUDIO_STT_ENGINE=mistral
       - AUDIO_STT_MISTRAL_API_KEY=your-mistral-api-key
-      - AUDIO_STT_MODEL=voxtral-mini-latest
+      - AUDIO_STT_MODEL=voxtral-mini-2602
     # ... 其他配置
 ```
 
@@ -60,7 +63,7 @@ services:
 | `AUDIO_STT_MISTRAL_API_KEY` | 你的 Mistral API 密钥 | empty |
 | `AUDIO_STT_MISTRAL_API_BASE_URL` | Mistral API 基础 URL | `https://api.mistral.ai/v1` |
 | `AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS` | 使用 chat completions 端点 | `false` |
-| `AUDIO_STT_MODEL` | STT 模型 | `voxtral-mini-latest` |
+| `AUDIO_STT_MODEL` | STT 模型 | `voxtral-mini-2602` |
 
 ## 转录方式 {#transcription-methods}
 
@@ -121,7 +124,7 @@ Voxtral 接受常见音频格式。系统默认允许 `audio/*` 和 `video/webm`
 | --------- | ----------------- | ---------------- | --------------- |
 | **成本** | 按分钟计费 | 按分钟计费 | 免费 |
 | **隐私** | 音频发送到 Mistral | 音频发送到 OpenAI | 音频保留本地 |
-| **模型选项** | voxtral-mini-latest | whisper-1 | tiny → large |
+| **模型选项** | voxtral-mini-2602 | gpt-transcribe、whisper-1 | tiny → large |
 | **需要 GPU** | 否 | 否 | 推荐 |
 
 ## 成本说明 {#cost-considerations}

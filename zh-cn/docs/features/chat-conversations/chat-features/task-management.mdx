@@ -25,6 +25,8 @@ title: "任务管理"
 - `create_tasks` —— 在多步骤工作开始时调用一次，创建完整清单
 - `update_task` —— 每完成一个步骤后调用，用于按 id 将某个任务标记为 `pending`、`in_progress`、`completed` 或 `cancelled`
 
+因为任务列表存储在聊天本身上，这两个工具都需要一个已保存的聊天。在[临时聊天](/features/chat-conversations/chat-features/url-params#8-temporary-chat-sessions)或[频道](/features/channels)中没有可写入的聊天记录，因此根本不会向模型提供这些工具，模型只会用普通文本做规划。
+
 当这些工具被使用时：
 
 - 任务会存储在聊天级别

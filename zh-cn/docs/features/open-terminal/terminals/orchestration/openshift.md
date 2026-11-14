@@ -3,7 +3,7 @@ sidebar_position: 8
 title: "OpenShift"
 ---
 
-# OpenShift
+# OpenShift {#openshift}
 
 Terminals 可以在 OpenShift 上作为受限的每用户终端沙箱运行。
 

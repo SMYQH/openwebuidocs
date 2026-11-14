@@ -5,8 +5,6 @@ title: "监控"
 
 # 监控 {#monitoring}
 
-## 📊 监控 {#why-monitor}
-
 <a id="authentication-setup-for-api-key-"></a>
 
 **在用户发现问题之前就先发现问题。**
@@ -15,7 +13,7 @@ Open WebUI 提供健康检查和模型接口，便于与你现有的监控系统
 
 ---
 
-## 为什么要监控？
+## 为什么要监控？ {#why-monitor}
 
 ### 快速发现故障 {#catch-outages-quickly}
 
@@ -76,7 +74,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 创建一个**非管理员用户**（例如 `monitoring-bot`），从该账户生成 API key，并将其用于所有监控请求。这样即使密钥泄露，也能把影响范围降到最低。
 :::
 
-### Uptime Kuma 配置（模型连通性）
+### Uptime Kuma 配置（模型连通性） {#uptime-kuma-setup-1}
 
 1. **Monitor Type:** HTTP(s) - JSON Query
 2. **URL:** `http://your-open-webui-instance:8080/api/models`
@@ -86,13 +84,13 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 6. **Expected Value:** `true`
 7. **Interval:** `300 seconds` (5 minutes)
 
-### Advanced JSONata Queries
+### 高级 JSONata 查询 {#advanced-jsonata-queries}
 
 | 目标 | 查询 |
 | :--- | :--- |
 | 至少存在一个 Ollama 模型 | `$count(data[owned_by='ollama'])>0` |
-| 存在指定模型 | `$exists(data[id='gpt-4o'])` |
-| 存在多个模型 | `$count(data[id in ['gpt-4o', 'gpt-4o-mini']]) = 2` |
+| 存在指定模型 | `$exists(data[id='gpt-5.6-sol'])` |
+| 存在多个模型 | `$count(data[id in ['gpt-5.6-sol', 'gpt-5.6-luna']]) = 2` |
 
 可以在 [jsonata.org](https://try.jsonata.org/) 上使用示例 API 响应测试这些查询。
 
@@ -102,13 +100,13 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 发送一条真实的聊天补全请求，以端到端验证整条推理链路。
 
-```bash
+``` bash
 curl -X POST http://your-open-webui-instance:8080/api/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [{"role": "user", "content": "Respond with the word HEALTHY"}],
-    "model": "llama3.1",
+    "model": "qwen3.6:27b",
     "temperature": 0
   }'
 ```

@@ -72,27 +72,31 @@ Authorization: Bearer {TERMINALS_API_KEY}
 
 刷新请求体：
 
-```json
+``` json
 {
   "user_id": "optional-user-id",
   "policy_id": "optional-policy-id",
+  "context_id": "optional-context-id",
   "only_idle": true,
   "reset": false
 }
 ```
 
-`only_idle` 默认为 `true`。`reset` 默认为 `false`。
+`only_idle` 默认为 `true`。`reset` 默认为 `false`。省略 `context_id` 则匹配用户的所有上下文。
 
 停止请求体：
 
-```json
+``` json
 {
   "user_id": "...",
-  "policy_id": "default"
+  "policy_id": "default",
+  "context_id": "default"
 }
 ```
 
 `policy_id` 默认为 `default`。
+
+`context_id` 也默认为 `default`，即共享终端。传入 `chat:<chat-id>` 或 `automation:<automation-id>` 可以指定由[终端上下文](/features/open-terminal/terminals/orchestration/contexts)创建的其中一个独立终端。由于停止操作默认针对的是共享终端而不是全部，所以在按聊天连接的用户会保留其聊天终端，除非你显式指定。
 
 ## 故障排除 {#troubleshooting}
 

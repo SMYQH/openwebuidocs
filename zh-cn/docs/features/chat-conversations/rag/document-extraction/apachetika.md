@@ -19,15 +19,12 @@ title: "Apache Tika 提取"
 - 已在系统中安装 Docker
 - 已为 Open WebUI 准备 Docker 网络
 
-## 集成步骤
-
-## 集成步骤 {#integration-steps}
+# 集成步骤 {#integration-steps}
 
 ### 第 1 步：创建 Apache Tika 的 Docker Compose 文件，或直接运行 Docker 命令 {#step-1-create-a-docker-compose-file-or-run-the-docker-command-for-apache-tika}
-
 你有两种方式运行 Apache Tika：
 
-#### 方式 1：使用 Docker Compose
+**方式 1：使用 Docker Compose**
 
 在与你的 Open WebUI 实例相同目录下创建一个名为 `docker-compose.yml` 的新文件，并加入以下配置：
 
@@ -47,7 +44,7 @@ services:
 docker compose up -d
 ```
 
-#### 方式 2：使用 Docker Run 命令
+**方式 2：使用 Docker Run 命令**
 
 你也可以直接运行以下命令启动 Apache Tika：
 
@@ -145,7 +142,7 @@ if __name__ == "__main__":
 
 运行该脚本的说明如下：
 
-### 脚本运行前提条件
+### 脚本运行前提条件 {#prerequisites-1}
 
 - 系统中已安装 Python 3.x
 - 已安装 `requests` 库（可通过 `pip install requests` 安装）
@@ -184,6 +181,6 @@ if __name__ == "__main__":
 - **支持多种文件格式**：Apache Tika 支持大量文件格式，非常适合需要处理多样文档类型的组织
 - **增强内容分析能力**：Apache Tika 的高级内容分析能力可以帮助你从文件中提取更多有价值的信息
 
-## 结论
+## 结论 {#conclusion-1}
 
 将 Apache Tika 集成到 Open WebUI 是一个相对直接的过程，并且能够显著增强 Open WebUI 实例的元数据提取能力。按照本文步骤操作后，你就可以轻松将 Apache Tika 设置为上下文提取引擎。

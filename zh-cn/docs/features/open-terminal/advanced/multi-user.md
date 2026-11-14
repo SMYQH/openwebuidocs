@@ -99,6 +99,8 @@ flowchart LR
 - **资源控制** — 可按用户或按环境设置 CPU、内存和存储限制
 - **多环境支持** — 为不同团队提供不同配置（如数据科学、开发等）
 - **Kubernetes 支持** — 支持 Docker、Kubernetes 和 k3s
+- **可选的工作区隔离** — 通过 [终端上下文](/features/open-terminal/terminals/orchestration/contexts)，可以让每个已保存的聊天或每个自动化拥有自己的工作区，而不是每个用户共用一个
+- **Docker 后端上的单一网络** — 所有工作区都位于同一个 Docker 网络中，以便编排器可以按名称访问每个工作区，这也使工作区能够访问其他用户工作区已打开的端口。文件和进程仍然相互隔离。对于互不信任的用户，请使用 Kubernetes 后端并添加 NetworkPolicy
 
 ```mermaid
 flowchart LR
@@ -118,11 +120,11 @@ flowchart LR
 
 提供两种部署后端：
 
-- **[Docker 后端](../terminals/)** — 运行在单个 Docker 宿主机上。适合中小型团队或没有 Kubernetes 的环境。
-- **[Kubernetes Operator](../terminals/)** — 使用基于 CRD 的 Operator 进行生产级部署，通过 Helm chart 与 Open WebUI 一起部署。
+- **[Docker 后端](../terminals/#deployment)** — 运行在单个 Docker 宿主机上。适合中小型团队或没有 Kubernetes 的环境。
+- **[Kubernetes Operator](../terminals/#deployment)** — 使用基于 CRD 的 Operator 进行生产级部署，通过 Helm chart 与 Open WebUI 一起部署。
 
 :::info 需要企业许可证
-Terminals 需要 [Open WebUI 企业许可证](https://openwebui.com/enterprise)。许可证详情请参阅 [Terminals 仓库](https://github.com/open-webui/terminals)。
+Terminals 需要 [Open WebUI 企业许可证](https://docs.openwebui.com/enterprise)。许可证详情请参阅 [Terminals 仓库](https://github.com/open-webui/terminals)。
 :::
 
 ## 相关链接 {#related}

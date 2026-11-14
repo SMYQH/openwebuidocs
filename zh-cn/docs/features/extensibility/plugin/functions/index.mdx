@@ -28,7 +28,7 @@ Open WebUI 支持四种类型的 Functions。类型根据你 Python 代码中的
 | **Action** | `class Action` | 为消息添加交互式按钮 | 显示为聊天消息上的可点击按钮 |
 | **Event** | `class Event` | 在系统事件发生时运行自定义逻辑 | 在后台运行；无直接 UI |
 
-### Pipe Functions
+### Pipe Functions {#pipe-functions}
 
 Pipe 将自己注册为 Open WebUI 中的新"模型"。当用户选择它并发送消息时，`pipe()` 方法处理整个请求，无需 LLM 后端。这使 Pipes 极其灵活：
 
@@ -41,7 +41,7 @@ Pipe 将自己注册为 Open WebUI 中的新"模型"。当用户选择它并发�
 
 → **[Pipe Function 指南](/features/extensibility/plugin/functions/pipe)**
 
-### Filter Functions
+### Filter Functions {#filter-functions}
 
 Filter 位于用户和模型之间，在三个阶段拦截数据：
 
@@ -55,7 +55,7 @@ Filters 可以全局应用（到所有模型）或附加到特定模型。可切
 
 → **[Filter Function 指南](/features/extensibility/plugin/functions/filter)**
 
-### Action Functions
+### Action Functions {#action-functions}
 
 Action 向对话消息工具栏添加自定义按钮。当用户点击它时，`action()` 方法运行，可完全访问事件系统以进行实时 UI 反馈、用户提示和确认。
 
@@ -63,7 +63,7 @@ Actions 可以做 Python 能做的任何事情：摘要或翻译消息、复制�
 
 → **[Action Function 指南](/features/extensibility/plugin/functions/action)**
 
-### Event Functions
+### Event Functions {#event-functions}
 
 *Open WebUI 0.10.0 中的新功能。*
 

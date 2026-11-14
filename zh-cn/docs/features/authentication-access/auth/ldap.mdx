@@ -166,7 +166,7 @@ Open WebUI 需要每个账户都有邮箱地址。mail 属性为空的用户无�
 
 以下是 LDAP 集成过程中常见错误的解决方案。
 
-### `port must be an integer`
+### `port must be an integer` {#port-must-be-an-integer}
 
 ```
 ERROR | open_webui.routers.auths:ldap_auth:447 - LDAP authentication error: port must be an integer - {}
@@ -178,7 +178,7 @@ ERROR | open_webui.routers.auths:ldap_auth:447 - LDAP authentication error: port
 -   确保 `.env` 文件或 export 命令中的 `LDAP_SERVER_PORT` 值没有引号：`LDAP_SERVER_PORT=389`。
 -   从 `LDAP_SERVER_HOST` 中删除协议（`http://`、`ldap://`）。它应该只是主机名或 IP（例如 `localhost`）。
 
-### `[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred`
+### `[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred` {#ssl-unexpected\_eof\_while\_reading-eof-occurred}
 
 ```
 ERROR | LDAP authentication error: ("('socket ssl wrapping error: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1016)',)",) - {}

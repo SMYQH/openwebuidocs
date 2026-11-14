@@ -94,7 +94,7 @@ title: "聊天参数"
 
 :::
 
-## Chat Variables
+## Chat Variables {#chat-variables}
 
 Chat Variables 把模型的系统提示词变成了一张简短的表单。管理员在系统提示词中写入占位符，Open WebUI 会要求打开该模型聊天的人填写它们。答案保存在该聊天上，并在其中每一条消息中复用。
 
@@ -162,7 +162,7 @@ Chat Variables 把模型的系统提示词变成了一张简短的表单。管�
 
 模型编辑器会列出它找到的内容，位于 **Detected Variables** 之下，分为 **Chat Variables** 和 **User Variables**。它会对以下情况发出警告：键名不是小写蛇形命名、`select` 没有 `options=[...]`、同一个键以两种不同方式定义，以及给用户变量写了定义——因为用户变量由每位用户各自配置，对其加定义不会产生任何作用。
 
-## User Variables
+## User Variables {#user-variables}
 
 User Variables 让同一个共享的系统提示词能为每个使用它的人产生不同的结果。管理员在模型的系统提示词中写入占位符，每位用户填写自己的值。
 

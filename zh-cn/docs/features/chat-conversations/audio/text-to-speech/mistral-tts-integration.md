@@ -28,19 +28,18 @@ title: "Mistral TTS 集成"
 | **文本转语音引擎** | `MistralAI` |
 | **API 基础 URL** | `https://api.mistral.ai/v1` |
 | **API 密钥** | 你的 Mistral API 密钥 |
-| **TTS 模型** | `mistral-tts-latest`（或留空使用默认值） |
+| **TTS 模型** | `voxtral-tts-26-03`（或留空使用默认值） |
 | **TTS 语音** | 从可用语音中选择 |
 
 5. 点击 **Save**
 
 ## 可用模型 {#available-models}
-
 | 模型 | 说明 |
-|-------|-------------|
-| `mistral-tts-latest` | Mistral TTS 默认使用的模型 |
+|-------|-------------| 
+| `voxtral-tts-26-03` | Voxtral TTS —— 当前的 Mistral 文字转语音模型，支持零样本音色克隆 |
 
 :::info
-如果 `AUDIO_TTS_MODEL` 为空，Open WebUI 在使用 Mistral TTS 时会默认回退到 `mistral-tts-latest`。
+如果 `AUDIO_TTS_MODEL` 为空，Open WebUI 会回退到 `voxtral-mini-tts-2603`。选择 **MistralAI** 作为引擎时会填入该模型。
 :::
 
 ## 环境变量配置 {#environment-variables-setup}
@@ -55,7 +54,7 @@ services:
       - AUDIO_TTS_ENGINE=mistral
       - AUDIO_TTS_MISTRAL_API_KEY=your-mistral-api-key
       - AUDIO_TTS_MISTRAL_API_BASE_URL=https://api.mistral.ai/v1
-      - AUDIO_TTS_MODEL=mistral-tts-latest
+      - AUDIO_TTS_MODEL=voxtral-tts-26-03
       - AUDIO_TTS_VOICE=<voice-id>
     # ... 其他配置
 ```
@@ -67,7 +66,7 @@ services:
 | `AUDIO_TTS_ENGINE` | 设置为 `mistral` | empty（仅使用浏览器侧 TTS） |
 | `AUDIO_TTS_MISTRAL_API_KEY` | 你的 Mistral API 密钥 | empty |
 | `AUDIO_TTS_MISTRAL_API_BASE_URL` | Mistral API 基础 URL | `https://api.mistral.ai/v1` |
-| `AUDIO_TTS_MODEL` | TTS 模型 | `mistral-tts-latest`（Mistral 引擎的有效默认值） |
+| `AUDIO_TTS_MODEL` | TTS 模型 | `voxtral-mini-tts-2603`（内置回退值） |
 | `AUDIO_TTS_VOICE` | 语音 ID | empty |
 
 ## 选择语音 {#choosing-voices}

@@ -21,7 +21,7 @@ title: "Kagi"
 
 :::
 
-## Kagi Search API
+## Kagi Search API {#kagi-search-api}
 
 [Kagi](https://kagi.com) 是一个高级搜索引擎，它聚合了来自多个来源（包括自有索引）的结果，并按准确性和相关性重新排序。Kagi Search API 可让程序化访问这些结果。
 

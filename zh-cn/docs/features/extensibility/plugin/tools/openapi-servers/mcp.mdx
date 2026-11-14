@@ -151,18 +151,54 @@ FROM python:3.11-slim
 WORKDIR /app
 RUN pip install mcpo uv
 
-# 替换为你的 MCP server 启动命令；这里以 uvx mcp-server-time 为例
+# Replace with your MCP server command; example: uvx mcp-server-time
 CMD ["uvx", "mcpo", "--host", "0.0.0.0", "--port", "8000", "--", "uvx", "mcp-server-time", "--local-timezone=America/New_York"]
 ```
 
-2. **本地构建并运行容器**
+2. **在本地构建并运行容器**
 
 ```bash
 docker build -t mcp-proxy-server .
 docker run -d -p 8000:8000 mcp-proxy-server
 ```
 
-3. **部署容器**
+如果你想直接使用已发布的 mcpo 镜像而不自行构建镜像，请把代理绑定到 `0.0.0.0`，这样 Docker 的端口发布才能访问到它：
+
+```bash
+docker run --rm -p 8000:8000 ghcr.io/open-webui/mcpo:main \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --api-key "top-secret" \
+  -- your_mcp_server_command
+```
+
+对于 Docker Compose，请把同样的 mcpo 参数写进 service 的 command：
+
+```yaml
+services:
+  mcpo:
+    image: ghcr.io/open-webui/mcpo:main
+    ports:
+      - "8000:8000"
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --api-key
+      - top-secret
+      - --
+      - your_mcp_server_command
+```
+
+把 `your_mcp_server_command` 替换为你的 MCP server 命令，并把每个参数都写成独立的 `command` 列表项。然后用下面的命令启动和停止代理：
+
+```bash
+docker compose up
+docker compose down
+```
+
+3. **部署你的容器**
 
 推送到 DockerHub 或其他镜像仓库：
 
@@ -171,9 +207,9 @@ docker tag mcp-proxy-server yourdockerusername/mcp-proxy-server:latest
 docker push yourdockerusername/mcp-proxy-server:latest
 ```
 
-然后你可以通过 Docker Compose、Kubernetes YAML、或常见云端容器服务（AWS ECS、Azure Container Instances、Render.com、Heroku 等）进行部署。
+使用 Docker Compose、Kubernetes YAML 清单，或你常用的云容器服务（AWS ECS、Azure Container Instances、Render.com 或 Heroku）进行部署。
 
-你的生产级 MCP servers 现在就能以 REST API 形式使用了！
+你的生产 MCP 服务器现在可以通过 REST API 访问了！
 
 ## 技术细节与背景 {#technical-details-and-background}
 

@@ -18,7 +18,7 @@ title: "图像处理"
 4. 生成联系表（所有缩略图的网格）
 5. 报告文件数量和大小节省情况
 
-{/* TODO: Screenshot — File browser showing three output folders: processed/ (watermarked), thumbnails/ (200x200), plus a contact_sheet.png previewed as a grid of product images. */}
+![文件浏览器中显示处理后的图片和缩略图](/images/open-terminal-image-processing-outputs.png)
 
 ## 技能内容 {#skill-content}
 

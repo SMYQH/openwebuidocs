@@ -15,13 +15,16 @@ Open WebUI 从第一天起就支持多用户。无论你是在运行个人实例
 
 | | |
 | :--- | :--- |
-| 👥 **[RBAC](./rbac)** | 角色、用户组和按资源设置的权限。定义谁可以访问什么 |
-| 🔑 **[SSO / OIDC](./auth/sso)** | 使用 Google、Microsoft、Okta、Keycloak 或任何 OIDC 提供商进行联合认证 |
-| 📂 **[LDAP](./auth/ldap)** | 对你现有的目录服务进行认证 |
-| 📋 **[SCIM 2.0](./auth/scim)** | 从你的 IdP 自动化用户和用户组的预配与取消预配 |
-| 🔐 **[API Keys](./api-keys)** | 用于脚本、机器人、流水线和集成的程序化访问 |
+| 👥 **[RBAC](/features/authentication-access/rbac)** | 角色、用户组和按资源设置的权限。定义谁可以访问什么，并可以使用[嵌套用户组](/features/authentication-access/rbac/groups#nested-groups)、[每个用户组的默认模型](/features/authentication-access/rbac/groups#default-models-per-group)和[**在所有设备上登出**](/features/authentication-access/rbac/roles#signing-a-user-out-of-every-device) |
+| 🔑 **[SSO / OIDC](/features/authentication-access/auth/sso)** | 使用 Google、Microsoft、Okta、Keycloak 或任何 OIDC 提供商进行联合认证 |
+| 📂 **[LDAP](/features/authentication-access/auth/ldap)** | 对你现有的目录服务进行认证 |
+| 📋 **[SCIM 2.0](/features/authentication-access/auth/scim)** | 从你的 IdP 自动化用户和用户组的预配与取消预配 |
+| 🔐 **[Two-Factor Sign-In (MFA)](/features/authentication-access/mfa)** | 每次登录时要求输入认证器应用生成的验证码 |
+| 🔐 **[API Keys](/features/authentication-access/api-keys)** | 用于脚本、机器人、流水线和集成的程序化访问 |
 
 ---
+
+![管理面板中的认证设置](/images/admin/admin-authentication.png)
 
 ## 整体架构 {#how-it-fits-together}
 
@@ -31,7 +34,7 @@ flowchart LR
     IdP -->|SCIM 2.0| Provision["用户 & 用户组<br/>预配"]
     Auth --> RBAC["RBAC 引擎"]
     Provision --> RBAC
-    RBAC -->|角色 + 用户组| Permissions["按用户<br/>权限"]
+    RBAC -->|Roles + Groups| Permissions["Per-User<br/>Permissions"]
     Permissions --> Resources["模型 · 知识库<br/>工具 · 频道"]
     APIKeys["API Keys"] -->|Bearer Token| RBAC
 ```

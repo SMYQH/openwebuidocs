@@ -36,7 +36,7 @@ Pyodide 是一个**旧版**代码执行引擎。它仍然是聊天内代码解�
 Pyodide 通过 WebAssembly 在浏览器中运行 Python。它具备沙箱隔离，适合多用户环境，但也存在一些限制：
 
 - **持久化文件存储** —— `/mnt/uploads/` 虚拟文件系统由 IndexedDB（IDBFS）支持；同一会话中多次代码执行之间文件仍然保留，但**跨页面刷新生效需要 [`ENABLE_PYODIDE_FILE_PERSISTENCE=true`](/reference/env-configuration#enable_pyodide_file_persistence)**（默认关闭）。关闭时，Pyodide 运行在沙箱化的 opaque-origin iframe 中，文件系统不会跨页面刷新保留
-- **内置文件浏览器** —— 启用 Code Interpreter 后，聊天控制侧边栏会出现文件浏览器面板。你可以浏览、预览、上传、下载和删除 Pyodide 文件系统中的文件，无需终端
+- **内置文件浏览器** —— 启用 Code Interpreter 后，聊天的[标签页](/features/chat-conversations/chat-features/#tabs-side-panel)中会出现 **Files** 标签。你可以浏览、预览、上传、下载和删除 Pyodide 文件系统中的文件，无需终端
 - **用户文件访问** —— 附加到消息的文件会在执行前自动放入 `/mnt/uploads/`，因此模型和你的代码都可以直接读取
 - **库支持有限** —— 仅有部分 Python 包可用。依赖 C 扩展或系统调用的库通常无法使用
 - **无 shell 访问** —— 不能执行 shell 命令、安装软件包或直接与操作系统交互

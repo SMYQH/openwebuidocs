@@ -52,8 +52,8 @@ sidebar_position: 3
 名称：`Morning test check`。计划：`RRULE:FREQ=DAILY;BYHOUR=9;BYMINUTE=0`。提示词：
 
 ```text
-在此工作区中运行测试套件。不要更改任何文件。
-报告通过或失败；如果失败，包括失败的测试和错误输出。
+Run the test suite in this workspace. Don't change any files.
+Report pass or fail; if it failed, include the failing test and error output.
 ```
 
 点击**立即运行**，阅读它创建的聊天，一旦输出是你可以在几秒钟内判断的内容，就保持启用状态。

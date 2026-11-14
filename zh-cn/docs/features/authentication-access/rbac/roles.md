@@ -22,9 +22,9 @@ Open WebUI 定义了三种主要的**系统角色**，用于确定用户账户�
 
 :::warning 管理员限制与最佳实践
 虽然管理员通常拥有不受限制的访问权限，但某些系统配置可能会出于安全和隐私原因限制其能力：
-*   **隐私控制**：像 `ENABLE_ADMIN_CHAT_ACCESS=False` 这样的环境变量可以防止管理员查看用户的对话。
+*   **隐私控制**：[`ENABLE_ADMIN_CHAT_ACCESS=False`](/reference/env-configuration#enable_admin_chat_access) 会在界面中对管理员隐藏用户的对话。它并不会阻止管理员访问数据；参见[聊天数据隐私](/security/chat-data-privacy-and-encryption#admin-users)。
 *   **特定功能异常可能存在**：某些功能可以在标准管理员绕过行为之外强制执行额外检查。特别是对于 API Keys，只要启用了 `ENABLE_API_KEYS`，管理员就可以生成密钥。
-*   **访问控制例外**：如果禁用了 `BYPASS_ADMIN_ACCESS_CONTROL`，管理员可能需要明确权限才能访问私有模型/知识库/笔记资源。
+*   **访问控制例外**：如果禁用了 `BYPASS_ADMIN_ACCESS_CONTROL`，管理员也会像其他人一样受到访问授权检查。私有的工作区项目（模型、知识库、提示词、工具、技能、笔记）仅所有者以及被共享的人可见。由管理员配置且没有任何授权的连接和 arena 模型仍仅对管理员可见。参见[各资源类型中“私有”的具体含义](/features/authentication-access/rbac/groups#what-private-means-for-each-resource-type)。
 
 为获得稳健的安全态势，我们建议通过用户组将管理员纳入您的权限体系，而不仅仅依赖角色的隐式绕过。这确保了在启用绕过限制时能保持一致的访问。
 :::
@@ -44,11 +44,6 @@ Open WebUI 定义了三种主要的**系统角色**，用于确定用户账户�
 :::
 
 ## 角色分配 {#role-assignment}
-
-### 初始设置
-*   **第一个用户：** 在全新安装中创建的第一个账户会自动被分配**管理员**角色。
-*   **无头管理员创建：** 对于自动化/容器化部署，可以使用环境变量自动创建管理员账户（见下文）。
-*   **后续用户：** 新注册用户被分配**默认用户角色**。
 
 ### 初始设置 {#initial-setup}
 
@@ -105,7 +100,7 @@ DEFAULT_USER_ROLE=pending
 
 ## 主管理员 {#the-primary-administrator}
 
-实例上创建的第一个账户（参见[初始设置](#初始设置)）是**主管理员**。它没有特殊标记：内部仅根据创建时间戳判断，即最早创建的账户。
+实例上创建的第一个账户（参见[初始设置](#initial-setup)）是**主管理员**。它没有特殊标记：内部仅根据创建时间戳判断，即最早创建的账户。
 
 主管理员享有一项额外的小保护。界面不会为其显示删除控件，后端也会拒绝通过用户 API 删除该账户。这纯粹是为了防止初始引导账户被意外删除，否则可能导致实例失去其创始管理员或触发不必要的角色重新分配。
 
@@ -144,19 +139,19 @@ Open WebUI 将自动：
 
 ### 配置示例 {#example-configuration}
 
-#### Docker Compose
+#### Docker Compose {#docker-compose}
 ```yaml
 services:
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     environment:
       - WEBUI_ADMIN_EMAIL=admin@example.com
-      - WEBUI_ADMIN_PASSWORD=${ADMIN_PASSWORD}  # 使用密钥管理
+      - WEBUI_ADMIN_PASSWORD=${ADMIN_PASSWORD}  # Use secrets management
       - WEBUI_ADMIN_NAME=System Administrator
     # ... 其他配置
 ```
 
-#### Kubernetes Secret
+#### Kubernetes Secret {#kubernetes-secret}
 ```yaml
 apiVersion: v1
 kind: Secret

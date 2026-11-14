@@ -112,33 +112,104 @@ services:
 | `AUDIO_TTS_MODEL` | TTS 模型（`tts-1` 或 `tts-1-hd`） | `tts-1` |
 | `AUDIO_TTS_VOICE` | 使用的语音 | `alloy` |
 
-## 测试 TTS {#using-the-openai-realtime-engine}
+## 使用 OpenAI Realtime 引擎 {#using-the-openai-realtime-engine}
+
+**OpenAI Realtime** 文本转语音引擎使用 OpenAI 的实时语音模型来生成语音，与[实时通话](/features/chat-conversations/chat-features/voice-mode#realtime-calls)所用的是同一批模型。对于每一段文本，Open WebUI 都会向 `<API Base URL>/realtime` 开启一个短暂的 WebSocket 会话，请模型朗读该文本，并把结果保存为一个完成的 WAV 片段。它像其他任何文本转语音引擎一样，为朗读（Read Aloud）和标准语音通话提供服务。
+
+1. 前往 **设置 > 管理 > 音频**。
+2. 把 **文本转语音引擎** 设为 **OpenAI Realtime**。模型和语音会切换为 `gpt-realtime-2.1-mini` 和 `marin`。
+3. 填入 **API Base URL** 和 **API Key**。这与 `OpenAI` 引擎使用的是同一组字段。
+4. 可选地修改 **TTS 模型**、**TTS 语音** 或 **提示模板**，然后点击 **保存**。
+
+| 设置 | 可选值 |
+|---------|---------|
+| **TTS 模型** | `gpt-realtime-2.1-mini`（默认）或 `gpt-realtime-2.1` |
+| **TTS 语音** | `alloy`、`ash`、`ballad`、`coral`、`echo`、`sage`、`shimmer`、`verse`、`marin`（默认）或 `cedar` |
+| **提示模板** | 给模型的指令。留空则使用内置提示词，它会让模型逐字、用原文语言朗读，不回答、不总结、不添加评论 |
+
+在该引擎下，**提示模板** 字段取代了 **额外参数** 的作用。同样适用上文提到的[语音优先级](#voice-priority)：先看模型的 **TTS 语音**，再看用户自己的语音，最后是管理员默认值。每个完成的片段都会被缓存，因此同样的文本配同样的模型、语音和提示词，下次会直接命中缓存播放。
+
+API Base URL 必须以 `http://` 或 `https://` 开头，且不含查询字符串、用户名或密码。通过环境变量配置：
+
+```yaml
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    environment:
+      - AUDIO_TTS_ENGINE=openai-realtime
+      - AUDIO_TTS_OPENAI_API_BASE_URL=https://api.openai.com/v1
+      - AUDIO_TTS_OPENAI_API_KEY=sk-...
+      - AUDIO_TTS_MODEL=gpt-realtime-2.1-mini
+      - AUDIO_TTS_VOICE=marin
+      # 可选：替换内置的朗读指令
+      # - REALTIME_TTS_PROMPT_TEMPLATE=...
+```
+
+参见环境变量参考中的 [`REALTIME_TTS_PROMPT_TEMPLATE`](/reference/env-configuration#realtime_tts_prompt_template)。
+
+## 将 OpenRouter 作为文本转语音提供商 {#using-openrouter-as-a-text-to-speech-provider}
+
+Open WebUI 的 `OpenAI` TTS 引擎兼容任何实现了 OpenAI Audio API 的服务，包括 [OpenRouter](https://openrouter.ai)。本节介绍如何把 OpenRouter 配置为你的 TTS 提供商，以及如何避开一个常见的 `400 Bad Request` 错误。
+
+### 400 错误为何发生 {#why-the-400-error-happens}
+
+OpenRouter 的 [`/audio/speech` 端点](https://openrouter.ai/docs/guides/overview/multimodal/tts)在省略该字段时会把 `response_format` 默认为 `pcm`。Open WebUI 在其请求载荷中不会发送 `response_format`，因此 OpenRouter 返回原始 PCM 音频，而 Open WebUI 无法播放它，于是产生 `400 Bad Request`。
+
+修复方法是在 TTS 设置的 **OpenAI Params** 字段（额外参数）中加入 `{"response_format": "mp3"}`，显式请求 MP3。
+
+### 快速配置（UI） {#quick-setup-ui-1}
+
+1. 点击你的**头像图标**（左下角）
+2. 选择 **管理面板**
+3. 点击 **设置** → **音频** 标签页 → **文本转语音设置**
+4. 按下表配置：
+
+| 设置 | 值 |
+|---------|-------|
+| **文本转语音引擎** | `OpenAI` |
+| **API Base URL** | `https://openrouter.ai/api/v1` |
+| **API Key** | 你的 OpenRouter API 密钥（`sk-or-...`） |
+| **TTS 模型** | 任意 OpenRouter TTS 模型，例如 `openai/tts-1` |
+| **TTS 语音** | 从可用语音中选择 |
+| **OpenAI Params** | `{"response_format": "mp3"}` |
+
+:::important
+
+**OpenAI Params** 字段必须包含 `{"response_format": "mp3"}`。没有它，OpenRouter 会默认使用 `pcm`，语音请求将因 `400 Bad Request` 错误而失败。
+
+:::
+
+5. 点击 **保存**
+
+### 环境变量配置 {#environment-variables-setup-1}
+
+如果你更倾向于通过环境变量配置，请用 `AUDIO_TTS_OPENAI_PARAMS` 添加参数 JSON：
+
+```yaml
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    environment:
+      - AUDIO_TTS_ENGINE=openai
+      - AUDIO_TTS_OPENAI_API_BASE_URL=https://openrouter.ai/api/v1
+      - AUDIO_TTS_OPENAI_API_KEY=sk-or-...
+      - AUDIO_TTS_MODEL=openai/tts-1
+      - AUDIO_TTS_VOICE=alloy
+      - AUDIO_TTS_OPENAI_PARAMS={"response_format":"mp3"}
+    # ... 其他配置
+```
+
+:::info
+
+OpenRouter 支持 `mp3` 和 `pcm` 两种输出格式。在 Open WebUI 中请始终选择 `mp3`；PCM 输出是为实时流式流水线设计的，Open WebUI 无法播放它。
+
+:::
+
+## 测试 TTS {#testing-tts}
 
 1. 新建一个聊天
 2. 向任意模型发送一条消息
 3. 点击 AI 回复上的**扬声器图标**，听它朗读内容
-
-## 响应切分 {#using-openrouter-as-a-text-to-speech-provider}
-
-朗读较长回复时，Open WebUI 可以在发送到 TTS 引擎前先把文本拆分成多个片段。该设置位于 **管理面板 > 设置 > 音频** 下的 **响应切分**。
-
-| 选项 | 说明 |
-|--------|-------------|
-| **Punctuation**（默认） | 按句子边界切分：句号（`.`）、感叹号（`!`）、问号（`?`）和换行。自然感最佳。 |
-| **Paragraphs** | 仅按段落分隔（双换行）切分。生成的音频块更长。 |
-| **None** | 整段回复作为一个整体发送。长回复可能会导致音频启动延迟。 |
-
-:::tip
-大多数场景建议使用 **Punctuation** 模式。它在流式性能（更快开始播放）和自然语音节奏之间取得了最好平衡。
-:::
-
-### 400 错误为何发生 {#why-the-400-error-happens}
-
-OpenRouter 的 [`/audio/speech` 端点](https://openrouter.ai/docs/guides/overview/multimodal/tts)在省略该字段时会把 `response_format` 默认为 `pcm`。Open WebUI 在其请求载荷中不会发送 `response_format`，因此 OpenRouter 返回原始 PCM 音频，而 Open WebUI 无法播放它，最终导致 `400 Bad Request`。
-
-修复方法是在 TTS 设置的 **OpenAI Params** 字段（额外参数）中加入 `{"response_format": "mp3"}`，显式请求 MP3。
-
-## 故障排查 {#testing-tts}
 
 ## 响应切分 {#response-splitting}
 

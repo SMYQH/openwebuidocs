@@ -3,7 +3,7 @@ sidebar_position: 5
 title: "Create Documents & Files"
 ---
 
-# Create Documents and Files
+# 创建文档和文件 {#create-documents-and-files}
 
 读取文件只是一半。Open Terminal 同样可以**写入**文件：Word 文档、PDF、幻灯片、图表、脚本。AI 用镜像中已有的常规 Python 库构建该文件，把它保存到你的工作区，并可以直接放进聊天里，还带上一个下载按钮。
 

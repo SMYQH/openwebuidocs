@@ -137,7 +137,7 @@ export CORS_ALLOW_ORIGIN="http://localhost:5173;http://localhost:8080;http://192
 
 ## 故障排查 {#troubleshooting}
 
-### “FATAL ERROR: Reached Heap Limit”
+### “FATAL ERROR: Reached Heap Limit” {#fatal-error-reached-heap-limit}
 
 Node.js 内存不足了。`npm run build` 本身已设置了 12 GB 的堆上限。对于 `npm run dev` 和其他前端命令，请在运行前先增大堆内存：
 

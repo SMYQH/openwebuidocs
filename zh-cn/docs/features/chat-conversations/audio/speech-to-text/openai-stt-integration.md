@@ -55,7 +55,7 @@ services:
       - AUDIO_STT_ENGINE=openai
       - AUDIO_STT_OPENAI_API_BASE_URL=https://api.openai.com/v1
       - AUDIO_STT_OPENAI_API_KEY=sk-...
-      - AUDIO_STT_MODEL=whisper-1
+      - AUDIO_STT_MODEL=gpt-transcribe
     # ... 其他配置
 ```
 
@@ -66,7 +66,7 @@ services:
 | `AUDIO_STT_ENGINE` | 设置为 `openai` | empty（使用本地 Whisper） |
 | `AUDIO_STT_OPENAI_API_BASE_URL` | OpenAI API 基础 URL | `https://api.openai.com/v1` |
 | `AUDIO_STT_OPENAI_API_KEY` | 你的 OpenAI API 密钥 | empty |
-| `AUDIO_STT_MODEL` | STT 模型 | `whisper-1` |
+| `AUDIO_STT_MODEL` | STT 模型 | `gpt-transcribe` |
 | `AUDIO_STT_SUPPORTED_CONTENT_TYPES` | 允许的音频 MIME 类型 | `audio/*,video/webm` |
 
 ### 支持的音频格式 {#supported-audio-formats}
@@ -95,7 +95,11 @@ OpenAI Whisper API 支持：`mp3`、`mp4`、`mpeg`、`mpga`、`m4a`、`wav`、`w
 | **成本** | 按分钟计费 | 免费（使用你的硬件） |
 | **隐私** | 音频发送到 OpenAI | 音频留在本地 |
 | **需要 GPU** | 否 | 为了速度建议使用 |
-| **模型选项** | 仅 `whisper-1` | tiny、base、small、medium、large |
+| **模型选项** | `gpt-transcribe`、`gpt-live-transcribe`、`whisper-1` | tiny、base、small、medium、large |
+
+:::info
+OpenAI 推荐新部署使用 `gpt-transcribe`；`whisper-1` 仍然可用，也是 `AUDIO_STT_MODEL` 未设置时 Open WebUI 所使用的模型。若需要完全本地的转录，请使用本地 Whisper（内置于 Open WebUI）或 Deepgram 等其他提供商。
+:::
 
 在以下情况下推荐选择 **OpenAI**：
 - 你没有 GPU

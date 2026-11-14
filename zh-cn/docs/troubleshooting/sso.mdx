@@ -101,7 +101,7 @@ ENABLE_OAUTH_SIGNUP=true
 
 ### 3. 缺少必需变量 {#3-missing-required-variables}
 
-#### OPENID_PROVIDER_URL 对 OIDC 是必需的 {#openid_provider_url-is-mandatory-for-oidc}
+#### OPENID_PROVIDER_URL 对 OIDC 是必需的 {#openid\_provider\_url-is-mandatory-for-oidc}
 很多用户会忘记这个关键变量。缺少它时，OIDC 无法工作。
 
 ✅ **Microsoft Entra ID：**
@@ -144,14 +144,17 @@ OPENID_PROVIDER_URL=https://your-authentik-domain/application/o/your-app-name/.w
 **解决方法：**
 1. **开发/测试环境：** 保持 `ENABLE_OAUTH_PERSISTENT_CONFIG=false`（默认就是如此），确保始终从环境变量读取
 2. **生产环境：** 二选一：
-   - 通过 Admin Panel 配置 OAuth，而不是依赖环境变量；或
-   - 保持 `ENABLE_OAUTH_PERSISTENT_CONFIG=false`（默认），让 OAuth 仍以环境变量为准
+   - 设置 `ENABLE_OAUTH_PERSISTENT_CONFIG=true`，并通过 Admin Panel 而不是环境变量来配置设置；或
+   - 保持 `ENABLE_OAUTH_PERSISTENT_CONFIG=false`（默认），让环境变量在 OAuth 设置上优先生效
+3. **彻底重来：** 删除数据库 volume，用正确配置重新启动
+
+在它为 `false` 期间，Admin Panel 的 OAuth 区域是只读的，所以一次编辑不会看起来像是生效了，又在下次重启时消失。参见 [`ENABLE_OAUTH_PERSISTENT_CONFIG`](../reference/env-configuration.mdx#enable_oauth_persistent_config)。
 3. **彻底重来：** 删除数据库 volume，用正确配置重新启动
 
 📌 **Docker Compose 示例：**
 ```yaml
 environment:
-  - ENABLE_OAUTH_PERSISTENT_CONFIG=false
+  - ENABLE_OAUTH_PERSISTENT_CONFIG=false  # Forces reading from env vars (this is the default)
   - OAUTH_CLIENT_ID=your_client_id
   - OAUTH_CLIENT_SECRET=your_secret
   - OPENID_PROVIDER_URL=your_provider_url
@@ -175,9 +178,9 @@ environment:
 
 📌 **Redirect URI 格式示例：**
 ```
-✅ Correct: https://ai.company.com/oauth/oidc/callback
-❌ Wrong: https://ai.company.com/oauth/callback/oidc
-❌ Wrong: https://ai.company.com/callback
+Correct: https://ai.company.com/oauth/oidc/callback
+Wrong: https://ai.company.com/oauth/callback/oidc
+Wrong: https://ai.company.com/callback
 ```
 
 :::tip
@@ -226,7 +229,7 @@ location ~* ^/(api|oauth|callback|login|ws|websocket) {
 
 **常见问题：** 反向代理里的 cookie 设置，尤其是 `HttpOnly` 与 `SameSite`，可能会干扰 OAuth 认证流程。
 
-#### 症状：
+#### 症状： {#symptoms-1}
 - “No token found in localStorage”
 - 登录成功后却不断重定向循环
 - 认证似乎成功了，但立刻又跳回登录页
@@ -249,25 +252,27 @@ proxy_cookie_flags ~ secure samesite=lax;
 ```bash
 WEBUI_SESSION_COOKIE_SAME_SITE=lax
 WEBUI_AUTH_COOKIE_SAME_SITE=lax
-WEBUI_SESSION_COOKIE_SECURE=true  # 如果你使用 HTTP，请改为 false
-WEBUI_AUTH_COOKIE_SECURE=true     # 如果你使用 HTTP，请改为 false
+WEBUI_SESSION_COOKIE_SECURE=true  # Set to false if using HTTP
+WEBUI_AUTH_COOKIE_SECURE=true     # Set to false if using HTTP
 ```
 
 ---
 
 ### 8. 网络超时问题 {#8-network-timeout-issues}
 
-OAuth 提供商有时响应较慢，导致认证握手阶段超时。
+OAuth 提供商有时响应较慢，导致认证握手阶段超时。请提高 [`OAUTH_TIMEOUT`](/reference/env-configuration#oauth_timeout) 以给它们更长的时间。
 
-#### 症状：
+#### 症状： {#symptoms-2}
 - 日志中出现 `httpcore.ReadTimeout`
 - 出现 `CSRF Warning! State not equal in request and response`
 - OAuth 登录偶发性失败
 
 **解决方法：**
 ```bash
-AIOHTTP_CLIENT_TIMEOUT=600
-AIOHTTP_CLIENT_TIMEOUT_OPENAI_MODEL_LIST=30
+
+# Increase the OAuth handshake timeout (seconds). AIOHTTP_CLIENT_TIMEOUT does not
+# affect the OAuth client, which is httpx-based.
+OAUTH_TIMEOUT=60
 ```
 
 ---
@@ -277,7 +282,7 @@ AIOHTTP_CLIENT_TIMEOUT_OPENAI_MODEL_LIST=30
 
 OAuth 重定向过程中，如果 session cookie 没有被正确保留，就会出现这类错误。
 
-#### 症状：
+#### 症状： {#symptoms-3}
 - `CSRF Warning! State not equal in request and response`
 - 日志中出现 `mismatching_state`
 - 认证看似成功，但最后又跳回登录页
@@ -286,7 +291,9 @@ OAuth 重定向过程中，如果 session cookie 没有被正确保留，就会�
 
 1. **检查 Cookie 域名配置：**
 ```bash
-WEBUI_URL=https://your-exact-domain.com  # 必须完全匹配；也请检查 admin panel 中是否保存了不同值
+
+# Ensure cookies are set for the correct domain
+WEBUI_URL=https://your-exact-domain.com  # Must match exactly - check if you have a different value set in the admin panel
 ```
 
 2. **检查 Session 配置：**
@@ -326,7 +333,9 @@ MICROSOFT_CLIENT_SECRET=your_azure_app_secret
 MICROSOFT_CLIENT_TENANT_ID=your_tenant_id
 MICROSOFT_OAUTH_SCOPE=openid email profile
 MICROSOFT_REDIRECT_URI=https://your-domain/oauth/microsoft/callback
-OPENID_PROVIDER_URL=https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0/.well-known/openid-configuration
+
+# Needed only for SSO to create accounts that do not exist yet. OPENID_PROVIDER_URL is
+# not required for Microsoft: login and sign-out use the tenant's own discovery URL.
 ENABLE_OAUTH_SIGNUP=true
 ```
 
@@ -359,7 +368,7 @@ OAuth callback failed: Unsupported {'app_id'} in header
 
 ---
 
-#### 12. 长时间未升级后已有账户无法登录 {#12-existing-accounts-cannot-sign-in-after-a-long-delayed-upgrade}
+### 12. 长时间未升级后已有账户无法登录 {#12-existing-accounts-cannot-sign-in-after-a-long-delayed-upgrade}
 
 **问题：** 把一个停留在 v0.6.41 之前旧版本的实例升级之后，所有曾通过 SSO 登录过的账户都无法再登录，这些账户的密码登录也会失败。从未使用过 SSO 的账户不受影响。日志记录如下：
 

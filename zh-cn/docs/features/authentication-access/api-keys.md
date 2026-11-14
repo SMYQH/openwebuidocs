@@ -23,9 +23,7 @@ API Key 代表您行事。它继承您的角色和用户组权限——管理 We
 
 ### 可撤销且可审计 {#revocable-and-auditable}
 
-为每个密钥起一个描述性名称（例如"CI 流水线"、"监控机器人"）以跟踪使用情况。如果密钥泄露，立即删除——无需重置密码、无需使会话失效，只需单击一次。
-
----
+一个密钥可以直接替换或删除。创建新密钥会覆盖旧密钥，删除密钥则会让账号不再拥有任何密钥——无论采用哪种方式，泄露的凭据都只需一步就能完成退役，且变更立即生效。这个过程不涉及重置密码，也不涉及使会话失效。管理员还可以通过关闭全局 **API Keys** 开关一次性弄残所有密钥，或者通过移除某用户的功能权限、或者[代为其删除](#managing-a-users-key-admin)来一次性开除某个用户的密钥。密钥的创建与删除都会被记录为认证事件。开启[审计日志](/getting-started/advanced-topics/hardening#audit-logging)后，使用密钥发起的请求都会出现在审计日志中，并归属于该密钥的所有者——无论密钥是以 Bearer token 还是以 `x-api-key` 请求头的形式到达（请求头名可通过 [`CUSTOM_API_KEY_HEADER`](/reference/env-configuration#custom_api_key_header) 重命名）。
 
 ## 主要功能 {#key-features}
 
@@ -154,7 +152,7 @@ CUSTOM_API_KEY_HEADER=X-OpenWebUI-Key
 
 ### 端点限制 {#endpoint-restrictions}
 
-启用 **API Key 端点限制**，只将您的集成实际需要的路由加入白名单。监控机器人只需要 `/api/models` 和 `/api/chat/completions`——不要给它访问 `/api/v1/files/` 或管理员端点的权限。
+启用 **API Key 端点限制**，并只将您的集成实际需要的路由加入白名单。当请求路径与某一条目完全匹配，或者以路径段的方式位于其之下时，该请求就会被允许——例如 `/api/v1/models` 也覆盖了 `/api/v1/models/anything`。监控机器人只需要 `/api/models` 和 `/api/chat/completions`，所以不要开放 `/api/v1/files/` 或管理员端点。该白名单是实例级的，因此必须取所有集成需要的并集。
 
 ### 密钥轮换 {#key-rotation}
 
@@ -187,18 +185,14 @@ CUSTOM_API_KEY_HEADER=X-OpenWebUI-Key
 
 ## 限制 {#limitations}
 
-### 创建后无法再次查看 {#one-key-per-account}
-
-API Keys 在创建后无法再次查看。如果丢失了密钥，请删除并生成新的。
-
-### 每个账户一个密钥 {#no-per-key-permissions}
+### 每个账户一个密钥 {#one-key-per-account}
 
 一个账户只持有一个没有名称的密钥。无法为同一用户并行运行两个密钥，创建密钥总会覆盖已有的那个。请为每个集成使用独立的账户。
 
-### 不支持按密钥设置权限 {#no-automatic-expiration}
+### 不支持按密钥设置权限 {#no-per-key-permissions}
 
 密钥会继承创建者的完整权限。除了端点限制之外，您无法把某个密钥限制为其所有者权限的子集。
 
-### 不会自动过期
+### 不会自动过期 {#no-automatic-expiration}
 
 API Keys 不会自动过期，您必须手动删除并轮换它们。

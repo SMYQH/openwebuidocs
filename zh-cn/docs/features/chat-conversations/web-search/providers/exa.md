@@ -23,17 +23,13 @@ title: "Exa AI"
 
 # Exa AI 网页搜索集成 {#exa-ai-web-search-integration}
 
-本指南介绍如何将 [Exa AI](https://exa.ai/)——一个现代的 AI 驱动搜索引擎——与 Open WebUI 集成以获得网页搜索能力。
-
-## Exa AI Web Search 集成 {#overview}
-
 本指南说明如何将 [Exa AI](https://exa.ai/)——一个现代化、AI 驱动的搜索引擎——集成到 Open WebUI 中，以提供 web search 能力。
 
-## 概览 {#pricing-model}
+## 概览 {#overview}
 
 Exa AI 是一个面向 AI 应用设计的搜索引擎，它通过 API 提供一整套能力，包括网页搜索、网站抓取与深度研究等。将 Exa AI 集成到 Open WebUI 后，你就可以直接在聊天界面中利用其强大的搜索能力。
 
-## 计费模式 {#configuration-steps}
+## 计费模式 {#pricing-model}
 
 Exa AI 采用按 credit 计费、按量付费模式。它不是永久免费服务，但会为新用户提供试用额度以便评估 API。
 
@@ -42,7 +38,7 @@ Exa AI 采用按 credit 计费、按量付费模式。它不是永久免费服�
 
 有关最新且详细的价格信息，请参阅 [Exa AI 定价页面](https://exa.ai/pricing)。
 
-## 配置步骤
+## 配置步骤 {#configuration-steps}
 
 ### 1. 获取 Exa AI API 密钥 {#1-obtain-an-exa-ai-api-key}
 

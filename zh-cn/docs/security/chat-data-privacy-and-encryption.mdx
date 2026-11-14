@@ -19,8 +19,9 @@ Open WebUI 的标准体验旨在提供自托管控制、可审计性、历史记
 | 控制管理员产品导出 | 设置 `ENABLE_ADMIN_EXPORT=false` |
 | 限定管理员工作区列表/选择器可见性 | 设置 `BYPASS_ADMIN_ACCESS_CONTROL=false` |
 | 生产数据库存储暴露 | 使用 PostgreSQL，配合加密卷、提供商加密、TDE（如可用）、TLS 和加密备份 |
-| 仅 SQLite 部署 | 使用 SQLCipher，设置 `DATABASE_TYPE=sqlite+sqlcipher` |
+| 仅 SQLite 部署 | 将数据目录放在加密文件系统上（LUKS、BitLocker、FileVault） |
 | 员工提出敏感或个人问题 | 使用临时聊天，或通过 `USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true` 强制所有用户使用临时聊天 |
+| 用户互相讨论敏感话题 | 在私聊和私密群组中使用[加密聊天](/features/channels/encrypted-chats)：在浏览器中端到端加密，且从不存储在服务器上 |
 | 将提示保留在基础设施内部 | 使用本地或私有模型端点，并按组限制批准的模型 |
 | 敏感文档上传或索引 | 默认关闭文件上传和知识库权限；仅按组授予 |
 | 控制服务器端代码执行 | 将工具和函数限制为受信任的管理员 |
@@ -34,53 +35,49 @@ Open WebUI 的标准体验旨在提供自托管控制、可审计性、历史记
 
 对于生产部署，请使用 PostgreSQL 并在 PostgreSQL 或存储层配置加密。使用加密卷、提供商管理的加密、TDE（如可用）、TLS 用于数据库连接、加密备份和网络隔离。
 
-```bash
-DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
-```
 
 数据库加密保护静态数据。运行中的 Open WebUI 应用程序使用数据库密钥为经过身份验证的用户提供服务并执行正常产品工作流。
 
 对于仅 SQLite 部署，SQLCipher 可以加密本地 SQLite 数据库文件：
 
-```bash
-DATABASE_TYPE=sqlite+sqlcipher
-DATABASE_PASSWORD=your-secure-password
-```
 
+``` bash
+DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
+```
 ### 限制管理员聊天和导出表面 {#limit-admin-chat-and-export-surfaces}
 
-```bash
+
+这些设置减少了管理员通过 Open WebUI 可访问的内容。数据库、主机、备份和应用密钥的直接访问应限于您批准的信任边界内的操作员。
+
+``` bash
 ENABLE_ADMIN_CHAT_ACCESS=false
 ENABLE_ADMIN_EXPORT=false
 BYPASS_ADMIN_ACCESS_CONTROL=false
 ```
-
-这些设置减少了管理员通过 Open WebUI 可访问的内容。数据库、主机、备份和应用密钥的直接访问应限于您批准的信任边界内的操作员。
-
 ### 使用 SSO 并限制账户 {#use-sso-and-restrict-accounts}
 
-```bash
+
+使用您的身份提供商进行 MFA、条件访问、设备状态、组成员资格和用户生命周期管理。尽可能使用 SCIM。对于仍然直接登录 Open WebUI 的账号，请开启内置的[双因素登录](/features/authentication-access/mfa)。
+
+``` bash
 ENABLE_LOGIN_FORM=false
 ENABLE_PASSWORD_AUTH=false
 ENABLE_PASSWORD_CHANGE_FORM=false
 DEFAULT_USER_ROLE=pending
 ```
-
-使用您的身份提供商进行 MFA、条件访问、设备状态、组成员资格和用户生命周期管理。尽可能使用 SCIM。
-
 ### 在不需要历史记录时使用临时聊天 {#use-temporary-chat-where-history-is-not-needed}
 
 临时聊天减少保存的聊天历史。强制临时聊天可以要求用户默认使用此行为，而不是让其可选。
 
 要使临时聊天默认可用：
 
-```bash
+``` bash
 USER_PERMISSIONS_CHAT_TEMPORARY=true
 ```
 
 要强制所有用户默认使用临时聊天：
 
-```bash
+``` bash
 USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true
 ```
 
@@ -97,7 +94,10 @@ USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true
 
 ### 限制高级功能 {#restrict-advanced-capabilities}
 
-```bash
+
+仅向批准的组授予高级功能。
+
+``` bash
 USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS=false
 USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ACCESS=false
 USER_PERMISSIONS_CHAT_FILE_UPLOAD=false
@@ -105,12 +105,9 @@ ENABLE_DIRECT_CONNECTIONS=false
 ENABLE_COMMUNITY_SHARING=false
 ENABLE_API_KEYS=false
 ```
-
-仅向批准的组授予高级功能。
-
 ### 默认保持日志仅为元数据 {#keep-logs-metadata-only-by-default}
 
-```bash
+``` bash
 AUDIT_LOG_LEVEL=METADATA
 ENABLE_AUDIT_STDOUT=true
 LOG_FORMAT=json

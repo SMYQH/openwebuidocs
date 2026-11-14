@@ -42,16 +42,16 @@ sidebar_position: 2
 - **排队**：任务运行时发送的消息会排队并按顺序处理。
 - **同步**：每个机器人对话都是所选工作区中的真实聊天；它会出现在 Computer 侧边栏中，你可以在 Web UI 中继续。
 
-## Telegram
+## Telegram {#telegram}
 
 1. 在 Telegram 上给 [@BotFather](https://t.me/BotFather) 发消息，发送 `/newbot`，命名并复制给出的令牌。
 2. 将令牌粘贴为凭据，验证并启动。
 
 Telegram 使用长轮询，因此你的 Computer 不需要公共 URL。你的发送者 ID 是你的数字 Telegram 用户 ID；从 @userinfobot 这样的机器人获取。在 Bot API 10.1+ 上，你可以获得丰富的草稿流式传输；旧版本回退到 4096 字符块中的纯文本消息。
 
-## Discord
+## Discord {#discord}
 
-1. 在 Discord 开发者门户中，创建一个应用，打开**机器人**，并复制令牌。
+1. 在 [Discord 开发者门户](https://discord.com/developers/applications)中，创建一个应用，打开**机器人**，并复制令牌。
 2. 在同一机器人页面上，启用**消息内容**意图。
 3. 将机器人邀请到你的服务器（使用 `bot` 范围的 OAuth2 URL 生成器）。
 4. 将令牌粘贴为凭据。
@@ -64,7 +64,7 @@ pip install websockets
 
 消息分块到 2000 个字符。
 
-## Slack
+## Slack {#slack}
 
 1. 创建一个 Slack 应用并将其安装到你的工作区以获取机器人令牌（`xoxb-...`）。
 2. 启用**套接字模式**，这会给一个应用级令牌（`xapp-...`）。
@@ -76,7 +76,7 @@ xoxb-your-bot-token|xapp-your-app-token
 
 套接字模式意味着不需要公共 URL。与 Discord 一样，Slack 需要在主机上安装 `pip install websockets`。消息分块到 4000 个字符。
 
-## WhatsApp
+## WhatsApp {#whatsapp}
 
 使用 Meta Cloud API。从你的 Meta 应用获取访问令牌和电话号码 ID，并以竖线分隔输入：
 
@@ -92,7 +92,7 @@ https://<your-host>/api/webhooks/whatsapp/<bot_id>
 
 Webhook 验证目前接受任何验证令牌。WhatsApp 不支持消息编辑，因此没有流式传输；你会收到最终答案。
 
-## Signal
+## Signal {#signal}
 
 需要一个在 Computer 旁边运行的 signal-cli REST API 桥接：
 

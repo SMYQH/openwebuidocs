@@ -7,7 +7,6 @@ title: "后端控制的 API 流程"
 
 ---
 
-## 后端控制、兼容前端的 API 流程 {#prerequisites}
 
 :::warning
 
@@ -18,7 +17,11 @@ title: "后端控制的 API 流程"
 本教程展示如何实现对 Open WebUI 对话的服务器端编排，并确保助手回复能在前端 UI 中正常显示。这种方法不需前端任何介入，并允许完全的后端控制聊天流程。
 本教程已验证适用于 Open WebUI 版本 v0.6.15。未来版本可能会展开行为或 API 结构的变化。
 
-## 前置条件 {#overview}
+:::tip 你关心的是工具调用？
+如果你的目标是让模型使用工具（内置工具、工作区工具、MCP 服务器或终端），并让 Open WebUI 在服务器端执行它们，请参见 [Server-Side Tool Calling (API)](/reference/server-side-tool-calling)。它在此处记述的聊天结构之上添加了开启工具执行所需的字段。
+:::
+
+## 前置条件 {#prerequisites}
 
 在实践本教程之前，请确保你有：
 
@@ -28,7 +31,7 @@ title: "后端控制的 API 流程"
 - 对 REST API 和 JSON 的基本了解
 - 命令行工具：`curl`、`jq`（可选，用于 JSON 解析）
 
-## 概述
+## 概述 {#overview}
 
 本教程描述了一个包含 6 个步骤的完整流程，能够实现对 Open WebUI 对话的服务器端编排，同时确保助手回复能在前端 UI 中正常显示。
 
@@ -51,7 +54,7 @@ title: "后端控制的 API 流程"
 
 示例（bash）：
 
-```bash
+``` bash
 USER_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 ASSISTANT_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 ```
@@ -80,15 +83,15 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 
 **助手消息的预期结构：**
 
-```json
+``` json
 {
   "id": "<uuid>",
   "role": "assistant",
   "content": "",
   "parentId": "<user-msg-id>",
   "childrenIds": [],
-  "model": "gpt-4o",
-  "modelName": "gpt-4o",
+  "model": "gpt-5.6-sol",
+  "modelName": "gpt-5.6-sol",
   "modelIdx": 0,
   "done": false,
   "timestamp": 1720000001
@@ -109,7 +112,7 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 
 :::
 
-```bash
+``` bash
 USER_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 ASSISTANT_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 TIMESTAMP=$(date +%s)
@@ -120,14 +123,14 @@ curl -X POST https://<host>/api/v1/chats/new \
   -d '{
     "chat": {
       "title": "New Chat",
-      "models": ["gpt-4o"],
+      "models": ["gpt-5.6-sol"],
       "messages": [
         {
           "id": "'"$USER_MSG_ID"'",
           "role": "user",
           "content": "Hi, what is the capital of France?",
           "timestamp": '"$TIMESTAMP"',
-          "models": ["gpt-4o"],
+          "models": ["gpt-5.6-sol"],
           "childrenIds": ["'"$ASSISTANT_MSG_ID"'"]
         },
         {
@@ -136,8 +139,8 @@ curl -X POST https://<host>/api/v1/chats/new \
           "content": "",
           "parentId": "'"$USER_MSG_ID"'",
           "childrenIds": [],
-          "model": "gpt-4o",
-          "modelName": "gpt-4o",
+          "model": "gpt-5.6-sol",
+          "modelName": "gpt-5.6-sol",
           "modelIdx": 0,
           "done": false,
           "timestamp": '"$((TIMESTAMP + 1))"'
@@ -151,7 +154,7 @@ curl -X POST https://<host>/api/v1/chats/new \
             "role": "user",
             "content": "Hi, what is the capital of France?",
             "timestamp": '"$TIMESTAMP"',
-            "models": ["gpt-4o"],
+            "models": ["gpt-5.6-sol"],
             "childrenIds": ["'"$ASSISTANT_MSG_ID"'"]
           },
           "'"$ASSISTANT_MSG_ID"'": {
@@ -160,8 +163,8 @@ curl -X POST https://<host>/api/v1/chats/new \
             "content": "",
             "parentId": "'"$USER_MSG_ID"'",
             "childrenIds": [],
-            "model": "gpt-4o",
-            "modelName": "gpt-4o",
+            "model": "gpt-5.6-sol",
+            "modelName": "gpt-5.6-sol",
             "modelIdx": 0,
             "done": false,
             "timestamp": '"$((TIMESTAMP + 1))"'
@@ -184,20 +187,29 @@ curl -X POST https://<host>/api/v1/chats/new \
 
 使用补全端点生成实际的 AI 响应。请使用第 1 步得到的 `chatId`：
 
-```bash
+``` bash
 curl -X POST https://<host>/api/chat/completions \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
     "chat_id": "<chatId>",
     "id": "'"$ASSISTANT_MSG_ID"'",
+    "user_message": {
+      "id": "'"$USER_MSG_ID"'",
+      "role": "user",
+      "content": "Hi, what is the capital of France?",
+      "parentId": null,
+      "childrenIds": ["'"$ASSISTANT_MSG_ID"'"],
+      "timestamp": '"$TIMESTAMP"',
+      "models": ["gpt-5.6-sol"]
+    },
     "messages": [
       {
         "role": "user",
         "content": "Hi, what is the capital of France?"
       }
     ],
-    "model": "gpt-4o",
+    "model": "gpt-5.6-sol",
     "stream": true,
     "background_tasks": {
       "title_generation": true,
@@ -226,24 +238,39 @@ curl -X POST https://<host>/api/chat/completions \
 
 :::
 
+:::warning 一定要带上 `user_message`
+
+`user_message` 承载本次补全所应答的用户消息，也就是你在第 1 步中保存的同一个对象。后端会把助手消息的 `parentId` 设置为那条消息的 `id` 后保存，从而让用户消息留在会话线程中。如果不带上它，助手消息保存时就没有父级，页面刷新后聊天中只会剩下助手回复。
+
+:::
+
 #### 第 2.1 步：结合知识集成（RAG）触发助手补全 {#step-21-trigger-assistant-completion-with-knowledge-integration-rag}
 
 对于涉及知识库或文档集合的高级用例，可以在补全请求中包含知识文件：
 
-```bash
+``` bash
 curl -X POST https://<host>/api/chat/completions \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
     "chat_id": "<chatId>",
     "id": "'"$ASSISTANT_MSG_ID"'",
+    "user_message": {
+      "id": "'"$USER_MSG_ID"'",
+      "role": "user",
+      "content": "Hi, what is the capital of France?",
+      "parentId": null,
+      "childrenIds": ["'"$ASSISTANT_MSG_ID"'"],
+      "timestamp": '"$TIMESTAMP"',
+      "models": ["gpt-5.6-sol"]
+    },
     "messages": [
       {
         "role": "user",
         "content": "Hi, what is the capital of France?"
       }
     ],
-    "model": "gpt-4o",
+    "model": "gpt-5.6-sol",
     "stream": true,
     "files": [
       {
@@ -285,7 +312,7 @@ curl -X POST https://<host>/api/chat/completions \
 
 对于无法处理流式响应的实现，可以轮询聊天端点，直到响应准备好。请使用带指数退避的重试机制：
 
-```bash
+``` bash
 
 # Poll every few seconds until assistant content is populated
 while true; do
@@ -309,7 +336,7 @@ done
 
 获取已完成的对话：
 
-```bash
+``` bash
 curl -X GET https://<host>/api/v1/chats/<chatId> \
   -H "Authorization: Bearer <token>"
 ```
@@ -320,7 +347,7 @@ curl -X GET https://<host>/api/v1/chats/<chatId> \
 
 获取用于 RAG 集成的知识库信息：
 
-```bash
+``` bash
 curl -X GET https://<host>/api/v1/knowledge/<knowledge-id> \
   -H "Authorization: Bearer <token>"
 ```
@@ -329,7 +356,7 @@ curl -X GET https://<host>/api/v1/knowledge/<knowledge-id> \
 
 获取某个特定模型的详细信息：
 
-```bash
+``` bash
 curl -X GET https://<host>/api/v1/models/model?id=<model-name> \
   -H "Authorization: Bearer <token>"
 ```
@@ -338,7 +365,7 @@ curl -X GET https://<host>/api/v1/models/model?id=<model-name> \
 
 对于多轮对话，你可以向现有聊天中追加新消息。你必须提供完整更新后的消息树，并正确维护 `parentId` 和 `childrenIds` 的关联：
 
-```bash
+``` bash
 NEW_USER_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 NEW_ASSISTANT_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 
@@ -362,7 +389,7 @@ curl -X POST https://<host>/api/v1/chats/<chatId> \
             "parentId": "'"$ASSISTANT_MSG_ID"'",
             "childrenIds": ["'"$NEW_ASSISTANT_MSG_ID"'"],
             "timestamp": '"$(date +%s)"',
-            "models": ["gpt-4o"]
+            "models": ["gpt-5.6-sol"]
           },
           "'"$NEW_ASSISTANT_MSG_ID"'": {
             "id": "'"$NEW_ASSISTANT_MSG_ID"'",
@@ -370,8 +397,8 @@ curl -X POST https://<host>/api/v1/chats/<chatId> \
             "content": "",
             "parentId": "'"$NEW_USER_MSG_ID"'",
             "childrenIds": [],
-            "model": "gpt-4o",
-            "modelName": "gpt-4o",
+            "model": "gpt-5.6-sol",
+            "modelName": "gpt-5.6-sol",
             "modelIdx": 0,
             "done": false,
             "timestamp": '"$(($(date +%s) + 1))"'
@@ -388,12 +415,20 @@ curl -X POST https://<host>/api/chat/completions \
   -d '{
     "chat_id": "<chatId>",
     "id": "'"$NEW_ASSISTANT_MSG_ID"'",
+    "user_message": {
+      "id": "'"$NEW_USER_MSG_ID"'",
+      "role": "user",
+      "content": "Can you tell me more about Paris?",
+      "parentId": "'"$ASSISTANT_MSG_ID"'",
+      "childrenIds": ["'"$NEW_ASSISTANT_MSG_ID"'"],
+      "models": ["gpt-5.6-sol"]
+    },
     "messages": [
       { "role": "user", "content": "Hi, what is the capital of France?" },
       { "role": "assistant", "content": "The capital of France is Paris." },
       { "role": "user", "content": "Can you tell me more about Paris?" }
     ],
-    "model": "gpt-4o",
+    "model": "gpt-5.6-sol",
     "stream": true,
     "session_id": "<session-uuid>"
   }'
@@ -411,7 +446,7 @@ curl -X POST https://<host>/api/chat/completions \
 
 助手回复有时会被包裹在 Markdown 代码块中。可以按以下方式清理：
 
-```bash
+``` bash
 
 # Example raw response from assistant
 raw_response='```json
@@ -427,24 +462,24 @@ cleaned_response=$(echo "$raw_response" | sed 's/^```json//' | sed 's/```$//' | 
 echo "$cleaned_response" | jq '.'
 ```
 
-此清理过程会处理：
+This cleaning process handles:
 
-- 移除 ````json` 前缀
-- 移除结尾的 ``` 代码块标记
-- 去除首尾空白字符
-- 验证 JSON 格式
+- Removal of ````json` prefix
+- Removal of ```` suffix
+- Trimming whitespace
+- JSON validation
 
-## API 参考
+## API Reference
 
-### DTO 结构
+### DTO Structures
 
-#### Chat DTO（完整结构）
+#### Chat DTO (Complete Structure)
 
-```json
+``` json
 {
   "id": "chat-uuid-12345",
   "title": "New Chat",
-  "models": ["gpt-4o"],
+  "models": ["gpt-5.6-sol"],
   "files": [],
   "tags": [],
   "params": {
@@ -458,7 +493,7 @@ echo "$cleaned_response" | jq '.'
       "role": "user",
       "content": "Hi, what is the capital of France?",
       "timestamp": 1720000000,
-      "models": ["gpt-4o"],
+      "models": ["gpt-5.6-sol"],
       "childrenIds": ["assistant-msg-id"]
     },
     {
@@ -467,8 +502,8 @@ echo "$cleaned_response" | jq '.'
       "content": "",
       "parentId": "user-msg-id",
       "childrenIds": [],
-      "model": "gpt-4o",
-      "modelName": "gpt-4o",
+      "model": "gpt-5.6-sol",
+      "modelName": "gpt-5.6-sol",
       "modelIdx": 0,
       "done": false,
       "timestamp": 1720000001
@@ -482,7 +517,7 @@ echo "$cleaned_response" | jq '.'
         "role": "user",
         "content": "Hi, what is the capital of France?",
         "timestamp": 1720000000,
-        "models": ["gpt-4o"],
+        "models": ["gpt-5.6-sol"],
         "childrenIds": ["assistant-msg-id"]
       },
       "assistant-msg-id": {
@@ -491,8 +526,8 @@ echo "$cleaned_response" | jq '.'
         "content": "",
         "parentId": "user-msg-id",
         "childrenIds": [],
-        "model": "gpt-4o",
-        "modelName": "gpt-4o",
+        "model": "gpt-5.6-sol",
+        "modelName": "gpt-5.6-sol",
         "modelIdx": 0,
         "done": false,
         "timestamp": 1720000001
@@ -505,17 +540,27 @@ echo "$cleaned_response" | jq '.'
 
 #### ChatCompletionsRequest DTO
 
-```json
+
+``` json
 {
   "chat_id": "chat-uuid-12345",
   "id": "assistant-msg-id",
+  "user_message": {
+    "id": "user-msg-id",
+    "role": "user",
+    "content": "Hi, what is the capital of France?",
+    "parentId": null,
+    "childrenIds": ["assistant-msg-id"],
+    "timestamp": 1720000000,
+    "models": ["gpt-5.6-sol"]
+  },
   "messages": [
     {
       "role": "user",
       "content": "Hi, what is the capital of France?"
     }
   ],
-  "model": "gpt-4o",
+  "model": "gpt-5.6-sol",
   "stream": true,
   "background_tasks": {
     "title_generation": true,
@@ -545,10 +590,9 @@ echo "$cleaned_response" | jq '.'
   ]
 }
 ```
-
 #### ChatCompletionMessage DTO
 
-```json
+``` json
 {
   "role": "user",
   "content": "Hi, what is the capital of France?"
@@ -557,7 +601,7 @@ echo "$cleaned_response" | jq '.'
 
 #### History DTO
 
-```json
+``` json
 {
   "currentId": "assistant-msg-id",
   "messages": {
@@ -566,7 +610,7 @@ echo "$cleaned_response" | jq '.'
       "role": "user",
       "content": "Hi, what is the capital of France?",
       "timestamp": 1720000000,
-      "models": ["gpt-4o"],
+      "models": ["gpt-5.6-sol"],
       "childrenIds": ["assistant-msg-id"]
     },
     "assistant-msg-id": {
@@ -575,8 +619,8 @@ echo "$cleaned_response" | jq '.'
       "content": "The capital of France is Paris.",
       "parentId": "user-msg-id",
       "childrenIds": [],
-      "model": "gpt-4o",
-      "modelName": "gpt-4o",
+      "model": "gpt-5.6-sol",
+      "modelName": "gpt-5.6-sol",
       "modelIdx": 0,
       "timestamp": 1720000001
     }
@@ -588,53 +632,53 @@ echo "$cleaned_response" | jq '.'
 
 **User message:**
 
-```json
+``` json
 {
   "id": "user-msg-id",
   "role": "user",
   "content": "Hi, what is the capital of France?",
   "timestamp": 1720000000,
-  "models": ["gpt-4o"],
+  "models": ["gpt-5.6-sol"],
   "childrenIds": ["assistant-msg-id"]
 }
 ```
 
 **Assistant message:**
 
-```json
+``` json
 {
   "id": "assistant-msg-id",
   "role": "assistant",
   "content": "The capital of France is Paris.",
   "parentId": "user-msg-id",
   "childrenIds": [],
-  "model": "gpt-4o",
-  "modelName": "gpt-4o",
+  "model": "gpt-5.6-sol",
+  "modelName": "gpt-5.6-sol",
   "modelIdx": 0,
   "done": true,
   "timestamp": 1720000001
 }
 ```
 
-### 响应示例
+### 响应示例 {#response-examples}
 
-#### 创建对话响应
+#### 创建对话响应 {#create-chat-response}
 
-```json
+``` json
 {
   "id": "chat-uuid-12345",
   "user_id": "user-uuid",
   "title": "New Chat",
   "chat": {
     "title": "New Chat",
-    "models": ["gpt-4o"],
+    "models": ["gpt-5.6-sol"],
     "messages": [
       {
         "id": "user-msg-id",
         "role": "user",
         "content": "Hi, what is the capital of France?",
         "timestamp": 1720000000,
-        "models": ["gpt-4o"],
+        "models": ["gpt-5.6-sol"],
         "childrenIds": ["assistant-msg-id"]
       },
       {
@@ -643,8 +687,8 @@ echo "$cleaned_response" | jq '.'
         "content": "",
         "parentId": "user-msg-id",
         "childrenIds": [],
-        "model": "gpt-4o",
-        "modelName": "gpt-4o",
+        "model": "gpt-5.6-sol",
+        "modelName": "gpt-5.6-sol",
         "modelIdx": 0,
         "done": false,
         "timestamp": 1720000001
@@ -658,7 +702,7 @@ echo "$cleaned_response" | jq '.'
           "role": "user",
           "content": "Hi, what is the capital of France?",
           "timestamp": 1720000000,
-          "models": ["gpt-4o"],
+          "models": ["gpt-5.6-sol"],
           "childrenIds": ["assistant-msg-id"]
         },
         "assistant-msg-id": {
@@ -667,8 +711,8 @@ echo "$cleaned_response" | jq '.'
           "content": "",
           "parentId": "user-msg-id",
           "childrenIds": [],
-          "model": "gpt-4o",
-          "modelName": "gpt-4o",
+          "model": "gpt-5.6-sol",
+          "modelName": "gpt-5.6-sol",
           "modelIdx": 0,
           "done": false,
           "timestamp": 1720000001
@@ -682,14 +726,14 @@ echo "$cleaned_response" | jq '.'
 }
 ```
 
-#### 最终对话响应（完成后）
+#### 最终对话响应（完成后） {#final-chat-response-after-completion}
 
-```json
+``` json
 {
   "id": "chat-uuid-12345",
   "title": "Capital of France Discussion",
   "chat": {
-    "models": ["gpt-4o"],
+    "models": ["gpt-5.6-sol"],
     "history": {
       "currentId": "assistant-msg-id",
       "messages": {
@@ -698,7 +742,7 @@ echo "$cleaned_response" | jq '.'
           "role": "user",
           "content": "Hi, what is the capital of France?",
           "timestamp": 1720000000,
-          "models": ["gpt-4o"],
+          "models": ["gpt-5.6-sol"],
           "childrenIds": ["assistant-msg-id"]
         },
         "assistant-msg-id": {
@@ -707,8 +751,8 @@ echo "$cleaned_response" | jq '.'
           "content": "The capital of France is Paris. Paris is not only the capital but also the most populous city in France, known for its iconic landmarks such as the Eiffel Tower, the Louvre Museum, and Notre-Dame Cathedral.",
           "parentId": "user-msg-id",
           "childrenIds": [],
-          "model": "gpt-4o",
-          "modelName": "gpt-4o",
+          "model": "gpt-5.6-sol",
+          "modelName": "gpt-5.6-sol",
           "modelIdx": 0,
           "done": true,
           "timestamp": 1720000001
@@ -720,9 +764,9 @@ echo "$cleaned_response" | jq '.'
 }
 ```
 
-#### OWUIKnowledge DTO（知识集合）
+#### OWUIKnowledge DTO（知识集合） {#owuiknowledge-dto-knowledge-collection}
 
-```json
+``` json
 {
   "id": "knowledge-collection-id",
   "type": "collection",
@@ -734,16 +778,16 @@ echo "$cleaned_response" | jq '.'
 }
 ```
 
-#### 模型信息响应
+#### 模型信息响应 {#model-information-response}
 
-```json
+``` json
 {
-  "id": "gpt-4o",
-  "name": "GPT-4 Optimized",
-  "model": "gpt-4o",
-  "base_model_id": "gpt-4o",
+  "id": "gpt-5.6-sol",
+  "name": "GPT-5.6 Sol",
+  "model": "gpt-5.6-sol",
+  "base_model_id": "gpt-5.6-sol",
   "meta": {
-    "description": "Most advanced GPT-4 model optimized for performance",
+    "description": "OpenAI's frontier model for complex professional work",
     "capabilities": ["text", "vision", "function_calling"],
     "context_length": 128000,
     "max_output_tokens": 4096
@@ -759,134 +803,135 @@ echo "$cleaned_response" | jq '.'
 }
 ```
 
-### 字段参考
+### 字段参考 {#field-reference-guide}
 
-#### 必填与可选字段
+#### 必填与可选字段 {#required-vs-optional-fields}
 
-**创建对话 - 必填字段：**
+**Chat Creation - Required Fields:**
 
-- `title` — Chat title (string)
-- `models` — Array of model names (string[])
-- `messages` — Initial message array
-- `history` — Message tree with `currentId` and `messages` map
+- `title`: Chat title (string)
+- `models`: Array of model names (string[])
+- `messages`: Initial message array
+- `history`: Message tree with `currentId` and `messages` map
 
-**创建对话 - 可选字段：**
+**Chat Creation - Optional Fields:**
 
-- `files` — Knowledge files for RAG (defaults to empty array)
-- `tags` — Chat tags (defaults to empty array)
-- `params` — Model parameters (defaults to empty object)
+- `files`: Knowledge files for RAG (defaults to empty array)
+- `tags`: Chat tags (defaults to empty array)
+- `params`: Model parameters (defaults to empty object)
 
-**消息结构 - 用户消息：**
+**Message Structure - User Message:**
 
 - **Required:** `id`, `role`, `content`, `timestamp`, `models`, `childrenIds`
 - **Optional:** `parentId` (for threading; omit for the first message in a chat)
 
-**消息结构 - 助手消息：**
+**Message Structure - Assistant Message:**
 
 - **Required:** `id`, `role`, `content`, `parentId`, `childrenIds`, `model`, `modelName`, `modelIdx`, `timestamp`
 - **Optional:** `done` (boolean, defaults to false), additional metadata fields
 
-**ChatCompletionsRequest - 必填字段：**
+**ChatCompletionsRequest - Required Fields:**
 
-- `chat_id` — Target chat ID
-- `id` — Assistant message ID
-- `messages` — Array of ChatCompletionMessage
-- `model` — Model identifier
-- `session_id` — Session identifier (caller-generated UUID)
+- `chat_id`: Target chat ID
+- `id`: Assistant message ID
+- `messages`: Array of ChatCompletionMessage
+- `model`: Model identifier
+- `session_id`: Session identifier (caller-generated UUID)
 
-**ChatCompletionsRequest - 可选字段：**
+**ChatCompletionsRequest - Optional Fields:**
 
-- `stream` — Enable streaming (defaults to false)
-- `background_tasks` — Control automatic tasks
-- `features` — Enable/disable features
-- `variables` — Template variables
-- `filter_ids` — Pipeline filters
-- `files` — Knowledge collections for RAG
+- `stream`: Enable streaming (defaults to false)
+- `background_tasks`: Control automatic tasks
+- `features`: Enable/disable features
+- `variables`: Template variables
+- `filter_ids`: Pipeline filters
+- `files`: Knowledge collections for RAG
 
-#### 字段约束
+#### 字段约束 {#field-constraints}
 
-**时间戳：**
+**Timestamps:**
 
 - Format: Unix timestamp in **seconds** (not milliseconds) for message timestamps in `history.messages`
 - The top-level chat `timestamp` field uses milliseconds
 - Example: `1720000000` (July 3, 2024)
 
-**UUID：**
+**UUIDs:**
 
 - All ID fields (`id`, `parentId`, `session_id`) should use valid UUID v4 format
 - Example: `550e8400-e29b-41d4-a716-446655440000`
 - IDs are **generated by the caller**, not assigned by the server
 
-**模型名称：**
+**Model Names:**
 
 - Must match available models in your Open WebUI instance
-- Common examples: `gpt-4o`, `gpt-3.5-turbo`, `claude-3-sonnet`
+- Common examples: `gpt-5.6-sol`, `gpt-5.6-luna`, `claude-sonnet-5`
 
-**会话 ID：**
+**Session IDs:**
 
 - Can be any unique string identifier
 - Recommendation: Use UUID format for consistency
 
-**知识文件状态：**
+**Knowledge File Status:**
 
 - Valid values: `"processed"`, `"processing"`, `"error"`
 - Only use `"processed"` files for completions
 
-## 重要说明
+## 重要说明 {#important-notes}
 
 - This workflow is compatible with Open WebUI + backend orchestration scenarios
 - **Critical: Use `currentId` (camelCase)** in the history object, not `current_id` (snake_case)
-- **Critical: Include `childrenIds`** on every message — the frontend uses this to build the message tree
+- **Critical: Include `childrenIds`** on every message. The frontend uses this to build the message tree
 - No frontend code changes are required for this approach
-- `stream: true` 参数可在需要时提供实时流式响应
-- 当请求体中同时包含 `chat_id` 和 `id`（消息 ID）时，`outlet()` 过滤器会在 `/api/chat/completions` 中同步执行。纯 API 调用如果省略这些字段，outlet 会被静默跳过——相关行为细节请参见 [过滤函数：可切换过滤器 vs. 始终启用过滤器](/features/extensibility/plugin/functions/filter#toggleable-filters-vs-always-on-filters)。单独的 `/api/chat/completed` 端点已弃用，不再需要
-- 标题生成等后台任务可以通过 `background_tasks` 对象控制
-- 会话 ID 有助于在多个请求之间保持对话上下文
-- **知识集成：** 使用 `files` 数组包含知识集合，以支持 RAG 能力
-- **响应解析：** 处理可能被 Markdown 代码块包裹的 JSON 响应
-- **错误处理：** 为网络超时和服务器错误实现合适的重试机制
+- The `stream: true` parameter allows for real-time response streaming if needed
+- `outlet()` filters run inline during `/api/chat/completions`, on both the streaming and non-streaming paths, controlled by [`ENABLE_API_OUTLET_FILTERS`](/reference/env-configuration#enable_api_outlet_filters) (default `True`). Neither a `chat_id` nor a message `id` is required in the request body; with neither present, the conversation is reconstructed from the `messages` you sent plus the assistant reply, and a message ID is generated for it. Inline execution does not rewrite the HTTP response body, so the filtered payload never comes back to an API caller over HTTP. The separate `/api/chat/completed` endpoint is deprecated and kept for backward compatibility, and it remains the way to have the filtered payload returned to you. See [Filter Behavior with API Requests](/features/extensibility/plugin/functions/filter#filter-behavior-with-api-requests) for the full picture
+- Background tasks like title generation can be controlled via the `background_tasks` object
+- Session IDs help maintain conversation context across requests
+- **Knowledge Integration:** Use the `files` array to include knowledge collections for RAG capabilities
+- **Response Parsing:** Handle JSON responses that may be wrapped in markdown code blocks
+- **Error Handling:** Implement proper retry mechanisms for network timeouts and server errors
 
-## 常见问题
+## 常见问题 {#common-pitfalls}
 
-| 现象 | 原因 | 解决办法 |
-| --- | --- | --- |
-| 已创建对话但消息没有显示在 UI 中 | 消息缺少 `childrenIds` | 添加 `childrenIds` 数组，把父消息和子消息连接起来 |
-| 对话显示“今天我能帮你做什么？” | 使用了 `current_id`，而不是 `currentId` | 在 history 对象中使用 camelCase 的 `currentId` |
-| 补全成功但回复只以通知形式出现 | 触发补全前，助手消息没有先写入聊天历史 | 在第 1 步中包含空的助手占位符 |
-| 数据库里有消息，但前端显示空对话 | 缺少 `parentId` 或树状关联断裂 | 确保每条消息都有正确的 `parentId`，且父消息的 `childrenIds` 包含该子消息 |
+| Symptom | Cause | Fix |
+|---|---|---|
+| Chat created but messages don't appear in UI | Missing `childrenIds` on messages | Add `childrenIds` array linking parent → child messages |
+| Chat shows "How can I help you today?" | Using `current_id` instead of `currentId` | Use camelCase `currentId` in the history object |
+| Completion works but response only appears as notification | Assistant message not in chat history before triggering completion | Include empty assistant placeholder in Step 1 |
+| Messages exist in DB but frontend shows empty chat | Missing `parentId` or broken tree linkage | Ensure every message has correct `parentId` and parent's `childrenIds` includes the child |
+| User message disappears after a page reload once the completion ran | `user_message` missing from the `/api/chat/completions` request, so the assistant message is saved with no parent | Send `user_message` with the user message's `id` in the completion request (Step 2) |
 
-## 总结
+## 总结 {#summary}
 
-使用 Open WebUI 后端 API 来：
+Use the Open WebUI backend APIs to:
 
-1. **用消息创建对话** — 使用用户输入和空的助手占位符创建对话（包含正确的 `childrenIds` 和 `currentId`）
-2. **触发回复** — 生成 AI 响应（可选地结合知识集成）
-3. **监控完成状态** — 使用流式或轮询方式等待助手回复
-4. **获取最终对话** — 获取并解析已完成的对话
+1. **Start a chat with messages**: Create the conversation with user input and an empty assistant placeholder (including proper `childrenIds` and `currentId`)
+2. **Trigger a reply**: Generate the AI response (with optional knowledge integration)
+3. **Monitor completion**: Wait for the assistant response using streaming or polling
+4. **Fetch the final chat**: Retrieve and parse the completed conversation
 
-**增强能力：**
+**Enhanced Capabilities:**
 
-- **RAG 集成** — 通过知识集合提供上下文感知回复
-- **异步处理** — 使用流式或轮询处理耗时较长的 AI 操作
-- **响应解析** — 清理并验证助手返回的 JSON 响应
-- **会话管理** — 在多个请求之间保持对话上下文
+- **RAG Integration**: Include knowledge collections for context-aware responses
+- **Asynchronous Processing**: Handle long-running AI operations with streaming or polling
+- **Response Parsing**: Clean and validate JSON responses from the assistant
+- **Session Management**: Maintain conversation context across requests
 
-这样即可实现由后端控制的工作流，同时在 Web UI 前端聊天界面中正常呈现，兼顾程序化控制与用户体验。
+This enables backend-controlled workflows that still appear properly in the Web UI frontend chat interface, providing seamless integration between programmatic control and user experience.
 
-这种方案的关键优势在于，它在允许后端完全编排对话流程的同时，仍与 Open WebUI 前端保持完整兼容，并支持知识集成、异步响应处理等高级能力。
+The key advantage of this approach is that it maintains full compatibility with the Open WebUI frontend while allowing complete backend orchestration of the conversation flow, including advanced features like knowledge integration and asynchronous response handling.
 
-## 测试
+## 测试 {#testing}
 
-你可以按照上面提供的分步 `curl` 示例测试实现。请务必把占位符替换成你自己的实际值：
+You can test your implementation by following the step-by-step CURL examples provided above. Make sure to replace placeholder values with your actual:
 
-- 主机 URL
-- 认证令牌
-- 对话 ID（来自创建对话响应）
-- 消息 ID（你生成的 UUID）
-- 模型名称（与你配置的模型一致）
+- Host URL
+- Authentication token
+- Chat IDs (from the create chat response)
+- Message IDs (UUIDs you generate)
+- Model names (matching your configured models)
 
 :::tip
 
-先从一个简单的用户消息开始，确认基础流程正常后，再逐步加入知识集成和高级功能。
+Start with a simple user message and gradually add complexity like knowledge integration and advanced features once the basic flow is working.
 
 :::

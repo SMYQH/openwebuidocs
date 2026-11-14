@@ -5,19 +5,6 @@ title: "📖 参考文档"
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-## 网络拓扑图 {#network-diagrams}
-
-**看看 Open WebUI、Ollama 和 Docker 在不同部署拓扑下如何通信。**
-
-涵盖主机网络、Docker Compose 栈、独立网络以及平台差异的可视化 C4 图。排查连通性问题或规划架构时非常有用。
-
-| | |
-| :--- | :--- |
-| **macOS / Windows** | 主机上的 Ollama、Compose 栈、独立网络、host 网络的坑 |
-| **Linux** | 相同的拓扑，但 Linux 的网络行为有所不同 |
-
-[**查看网络拓扑图 →**](/reference/network-diagrams)
-
 # 参考文档 {#reference}
 <ThemedImage
   alt="Open WebUI 参考文档：环境变量、API 端点、HTTPS、监控与网络拓扑图"
@@ -69,7 +56,23 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 
 ---
 
-## 🔒 HTTPS 配置 {#server-side-tool-calling}
+## 🛠️ 服务端工具调用 {#server-side-tool-calling}
+
+**发送提示词，让 Open WebUI 在服务端运行工具，并把完整答案返回给你。**
+
+你需要的每一种请求都能让模型在服务端调用内置工具、工作区工具、MCP 服务器和 Open Terminal，并沿用你自己的用户权限。支持流式与非流式、可选择是否保存对话，最终沉淀为可复用的脚本。
+
+| | |
+| :--- | :--- |
+| **完整的代理循环** | 多轮原生工具调用，结果可从对话中读回 |
+| **单请求模式** | 一次 HTTP 调用进，一次补全出，工具结果已经生效 |
+| **逐字段控制** | `chat_id`、`id`、`session_id`、`tool_ids`、`terminal_id`、`features` |
+
+[**在服务端运行工具 →**](/reference/server-side-tool-calling)
+
+---
+
+## 🔒 HTTPS 配置 {#https-configuration}
 
 **使用 Nginx、Caddy 或 HAProxy 在 Open WebUI 前端终止 TLS。**
 
@@ -88,7 +91,7 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 
 ---
 
-## 🔑 API 密钥 {#https-configuration}
+## 🔑 API 密钥 {#api-keys}
 
 **为脚本、机器人和集成提供对 Open WebUI 的程序化访问。**
 
@@ -104,7 +107,7 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 
 ---
 
-## 📊 监控 {#api-keys}
+## 📊 监控 {#monitoring}
 
 **使用 Uptime Kuma、OpenTelemetry、Prometheus 和 Grafana 观察你的部署。**
 
@@ -120,7 +123,7 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 
 ---
 
-## 🌐 网络架构图 {#monitoring}
+## 🌐 网络架构图 {#network-diagrams}
 
 **查看 Open WebUI、Ollama 和 Docker 在不同部署拓扑中的通信方式。**
 

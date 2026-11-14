@@ -3,7 +3,7 @@ sidebar_position: 11
 title: "Terminal Pane"
 ---
 
-# The Terminal Pane
+# 终端面板 {#the-terminal-pane}
 
 在[文件浏览器](./file-browser.md)下方，是一个实时展示 AI 正在运行什么的视图：AI 启动的每条命令都会获得一个独立的标签页。若要使用你自己的交互式 shell，可从 **Tabs** 的 **+** 菜单中选择 **New Terminal**；你可以同时打开多个。
 

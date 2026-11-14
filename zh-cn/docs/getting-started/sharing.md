@@ -38,8 +38,10 @@ Open WebUI 天生就适合共享。一套实例可以服务整个组织。用户
 | | |
 | :--- | :--- |
 | **[Channels](/features/channels)** | 团队与 AI 模型实时协作的持久化空间 |
-| **共享聊天** | 将完整对话快照发送给同事 |
+| **共享聊天** | 将完整对话快照发送给同事。分享链接对你授权的用户和用户组私有；实例级或无需登录的链接则需要公开共享和开放共享的聊天权限，而这两项对非管理员用户默认关闭 |
 | **全局提示词与知识库** | 构建专用 Agent，并立即提供给所有人使用 |
+
+分享对话框还可以将聊天上传到 Open WebUI Community 站点。如果希望所有内容都留在内部，请在 Settings > Admin > General 中关闭 **Community Sharing**（或在首次启动前设置 `ENABLE_COMMUNITY_SHARING=false`）。
 
 ### 共享算力 {#shared-compute}
 

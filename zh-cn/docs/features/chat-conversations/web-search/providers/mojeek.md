@@ -21,7 +21,7 @@ title: "Mojeek"
 
 :::
 
-## Mojeek Search API
+## Mojeek Search API {#mojeek-search-api}
 
 ### 设置 {#setup}
 

@@ -127,7 +127,7 @@ AI 应该会使用 Open Terminal 运行一条命令，然后告诉你答案。
 
 ---
 
-## Chat Uploads {#chat-uploads}
+## 聊天上传 {#chat-uploads}
 
 连接表单上的 **Chat Uploads** 决定：在选中该终端时，聊天输入框中附加的文件会放到哪里。
 
@@ -152,13 +152,13 @@ zip 压缩包、SQLite 数据库、视频文件、远超上下文窗口的导出
 
 ---
 
-## Working Directory Context {#working-directory-context}
+## 工作目录上下文 {#working-directory-context}
 
 **Working Directory Context** 位于管理员添加的连接的 **Advanced** 下，默认开启。在它开启时，Open WebUI 会在每条消息上向终端询问其当前工作目录，并把它写入命令工具的说明中，这样模型就知道自己的命令在哪里运行。
 
 工具说明属于每个请求缓存前缀的一部分，因此每次目录变化都会让提供商的[提示词缓存](/features/chat-conversations/prompt-caching)重新开始。关闭该开关可以让说明在消息之间保持一致。
 
-## User Shell Tools {#user-shell-tools}
+## 用户 Shell 工具 {#user-shell-tools}
 
 **Tabs** 的 **+** 菜单中的 **New Terminal** 标签页是你自己的 shell。有两个工具让模型能够读取该 shell 最近的输出并向它发送输入。位于 **Advanced** 下的 **User Shell Tools** 决定模型何时获得这两个工具：
 
@@ -167,7 +167,7 @@ zip 压缩包、SQLite 数据库、视频文件、远超上下文窗口的导出
 
 自动化和子 agent 永远不会获得这两个工具。该字段存在于每一个终端连接上，无论是管理员添加的还是你在自己设置中添加的。
 
-## AGENTS.md
+## AGENTS.md {#agentsmd}
 
 在聊天中选中某个终端时，Open WebUI 会在每条消息上读取该终端用户主目录中的 `AGENTS.md`。其内容会在第一条用户消息之前紧接着以一条用户消息的形式加入对话，因此模型能得到你为该工作区设定的常驻指令。对该文件的修改从下一条消息开始生效。Windows 的主目录同样适用。
 

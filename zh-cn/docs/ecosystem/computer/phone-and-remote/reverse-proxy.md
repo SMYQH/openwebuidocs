@@ -7,7 +7,7 @@ sidebar_position: 4
 
 `cptr` 没有自己的 TLS：代理终止 HTTPS 并将纯 HTTP 转发到 `127.0.0.1:8000`。有一件事常常让人困扰：Computer 是基于 Socket.IO 的，因此代理**必须**转发 WebSocket 升级，否则终端和流式传输会中断。
 
-## nginx
+## nginx {#nginx}
 
 ```nginx
 server {
@@ -23,12 +23,12 @@ server {
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 86400s;   # 长生命周期的终端 WebSocket
+        proxy_read_timeout 86400s;   # long-lived terminal WebSockets
     }
 }
 ```
 
-## Caddy
+## Caddy {#caddy}
 
 Caddy 自动处理 TLS 和 WebSocket 升级：
 
@@ -38,7 +38,7 @@ computer.example.com {
 }
 ```
 
-## Traefik
+## Traefik {#traefik}
 
 将路由器指向一个目标为 `http://127.0.0.1:8000` 的服务。Traefik 默认转发 WebSocket 升级；无需额外的中间件。
 
@@ -49,8 +49,8 @@ computer.example.com {
 ```toml
 [auth]
 mode = "trusted_header"
-header = "Remote-User"          # 默认标头名称
-trusted_sources = ["127.0.0.1"] # 可选：仅接受来自这些 IP 的标头
+header = "Remote-User"          # default header name
+trusted_sources = ["127.0.0.1"] # optional: only accept the header from these IPs
 ```
 
 编辑后重启 `cptr`。查看[配置参考](/ecosystem/computer/reference/configuration)了解所有选项。

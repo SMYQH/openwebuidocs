@@ -17,11 +17,11 @@ title: "应用构建器"
 3. 创建带有仪表盘、图表和搜索功能的精美前端
 4. 填充示例数据
 5. 启动服务器并测试每个接口
-6. 端口预览展示运行中的应用
+6. 运行中的应用可从[浏览器标签页](../web-development.md#the-browser-tab)的 **端口** 列表中打开
 
-{/* TODO: Screenshot — The port preview showing a polished dashboard: summary cards (Total Items: 156, Total Value: $24,350, Low Stock: 3), a bar chart by category, and a searchable product table. */}
+![端口预览中显示一个精致的仪表盘：汇总卡片、按类别划分的柱状图，以及可搜索的商品表格](/images/open-terminal-app-builder-dashboard.png)
 
-{/* TODO: Screenshot — File browser showing the project structure: app.py, database.py, templates/, static/. */}
+![文件浏览器中显示生成的项目结构：app.py、database.py、templates/、static/](/images/open-terminal-app-builder-structure.png)
 
 ## 技能内容 {#skill-content}
 
@@ -41,7 +41,7 @@ When building a web app:
 2. **Design the database first**: Use SQLite with proper schema
 3. **Build the API** with Flask or FastAPI: CRUD, search, filtering, error handling
 4. **Build a polished frontend**:
-   - Modern CSS (not a skeleton — make it look demo-ready)
+   - Modern CSS (not a skeleton, make it look demo-ready)
    - Dashboard with key metrics and charts (Chart.js)
    - Responsive tables with search
    - Forms for data entry

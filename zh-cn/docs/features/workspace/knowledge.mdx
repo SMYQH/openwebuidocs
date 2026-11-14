@@ -17,7 +17,7 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 ## 为什么使用知识库？ {#ask-your-first-document-question}
 
-### 选择如何处理文件 {#choose-how-to-work-with-files}
+## 选择如何处理文件 {#choose-how-to-work-with-files}
 
 | 需求 | 使用 |
 | :--- | :--- |
@@ -29,7 +29,7 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 ---
 
-### 为什么使用知识库？ {#why-knowledge}
+## 为什么使用知识库？ {#why-knowledge}
 
 ---
 
@@ -103,11 +103,14 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 | `grep_knowledge_files` | ✅（有范围） | ✅ | 在知识库文件中进行精确文本/正则搜索（返回带行号的匹配行；自动检测正则如 `error\|warn`） |
 | `view_file` | ✅ | ❌ | 分页读取文件内容（`offset`/`max_chars`）或按行号范围（`start_line`/`end_line`，可选 `line_numbers`）读取 |
 | `view_knowledge_file` | ✅ | ✅ | 从任何可访问的知识库读取文件内容 |
+| `display_file` | ✅ | ✅ | 在聊天中以inline 方式向用户展示某个文件，可选择展示到某一页或某一张幻灯片 |
 | `view_note` | ✅ | ❌ | 读取附加的笔记 |
+
+这里的“已附加”涵盖模型上的知识、聊天所在文件夹上的知识，以及在模型 **Preload files** 能力关闭时直接附加到该聊天上的知识库或笔记。无论来源是什么，模型都会被告知自己拥有什么：你的消息之后会附带一个隐藏的 `list_attached_knowledge` 工具结果，其中以 `<attached_knowledge>` 列表给出这些条目及其 ID，模型用它来分页查看某个知识库的文件清单，或把文件名搜索限制在单一知识库内。使用 `query_knowledge_files` 的内容搜索会在一次排序中覆盖所有已附加的知识，并返回其中得分最高的分块，因此来自不同知识库的分块会争夺同一批结果位次。
 
 关键区别：`list_knowledge` 和 `list_knowledge_bases` 互斥。附加知识库会将模型范围限定为只处理那些文档。不附加则让模型发现用户有权访问的所有内容。
 
-#### 何时优先使用 `grep_knowledge_files` 而非 `query_knowledge_files` {#when-to-prefer-grep_knowledge_files-over-query_knowledge_files}
+#### 何时优先使用 `grep_knowledge_files` 而非 `query_knowledge_files` {#when-to-prefer-grep\_knowledge\_files-over-query\_knowledge\_files}
 
 两个搜索工具互为补充：
 
@@ -121,7 +124,7 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 在智能体流程中，典型的模式是：用 `query_knowledge_files` 定位相关文档，然后用 `grep_knowledge_files` 精确定位具体行，再用 `view_file`（下方行号范围模式）阅读周边上下文。
 
-#### 用 `view_file` 读取 {#reading-with-view_file}
+#### 用 `view_file` 读取 {#reading-with-view\_file}
 
 `view_file` 支持两种寻址模式：
 
@@ -130,7 +133,7 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 行号范围响应包含 `total_lines` 和 `showing_lines`。范围会在最后一整行能装进 [`VIEW_FILE_MAX_CHARS`](/reference/env-configuration#view_file_max_chars) 的位置停下；`truncated` 和 `next_start_line` 会说明从哪里继续。
 
-### 类文件系统访问（`kb_exec`） {#filesystem-style-access-kb_exec}
+### 类文件系统访问（`kb_exec`） {#filesystem-style-access-kb\_exec}
 
 设置 [`ENABLE_KB_EXEC=True`](/reference/env-configuration#enable_kb_exec) 后，Open WebUI 会暴露一个 `kb_exec` 工具，为模型提供对知识库的类文件系统接口。
 
@@ -147,26 +150,20 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 - **`view_note`** —— 当笔记被附加到模型时（`kb_exec` 只处理文件，所以笔记需要专用读取器）
 - **`query_knowledge_bases`** 和 **`search_knowledge_bases`** —— 当没有知识库附加到模型时，让模型仍能按名称/描述发现并搜索知识库
 
-`kb_exec` 遵循与其他知识工具相同的访问控制：用户无权读取的文件会被静默排除在结果之外。
-
-- **每次调用的输出都有上限。** 一条命令最多返回 30,000 个字符（[`KB_EXEC_MAX_OUTPUT_CHARS`](/reference/env-configuration#kb_exec_max_output_chars)），无论这些字符由什么产生；当触达上限时，模型会被告知收窄命令范围。这是整条链路的单次预算，因此对大文件执行 `cat` 与执行范围很宽的 `grep` 受到同样的限制。
-- **范围过宽的 `grep` 会被拒绝而不是执行。** 搜索超过 200 个文件（[`KB_EXEC_MAX_GREP_FILES`](/reference/env-configuration#kb_exec_max_grep_files)）会返回提示，要求把搜索限定到某个目录或 glob；`grep` 最多返回 50 行匹配（[`KNOWLEDGE_GREP_MAX_MATCHES`](/reference/env-configuration#knowledge_grep_max_matches)），与 `grep_knowledge_files` 和 `grep_chat_files` 使用相同的上限。
-- 语义搜索仍应使用 `query_knowledge_files`；当字面命令找不到改写后的概念时，请改用它。
-- 它构建在目录模型之上。`kb_exec` 是唯一能完整反映 UI 中所建目录结构的工具。
-
-该功能**默认关闭**且仍处于实验阶段，但为了获得增强的智能体 RAG 体验，我们建议为运行原生函数调用的强模型启用它（`ENABLE_KB_EXEC=True`）。它面向的是那些已经“用 Shell 思考”的前沿模型：相比编排一系列专用工具的扇出，它们往往更可靠地串联 `ls`、`grep` 和 `cat`。它只在使用原生函数调用时生效；在默认模式下没有效果。
+该功能**默认关闭**且仍处于实验阶段，但为了获得增强的智能体 RAG 体验，我们建议为运行原生函数调用的强模型启用它（`ENABLE_KB_EXEC=True`）。它面向的是那些已经“用 Shell 思考”的前沿模型：相比编排一系列专用工具的扇出，它们往往更可靠地串联 `ls`、`grep` 和 `cat`。它只在使用原生函数调用时生效；对于设为 Legacy 的模型，它不会产生任何效果。
 
 **支持的命令**
 
 | 命令 | 用途 |
 |---------|---------|
 | `ls`、`ls <dir>/`、`ls -a` | 列出当前层级 / 子目录 / 包含完整路径的扁平文件视图 |
+| `ls -t`、`ls -S`、`ls -r` | 排序列表：最新优先、最大优先，或将当前顺序反转 |
 | `tree`、`tree <dir>/` | 递归目录树 |
 | `cat -n <file>` | 读取文件（可选带行号） |
 | `head -N <file>` / `tail -N <file>` | 前 N 行或后 N 行 |
 | `sed -n '<a>,<b>p' <file>` | 输出第 `<a>` 到 `<b>` 行 |
 | `grep "<pattern>" [<dir>/\|<file>\|*.ext]` | 精确/正则搜索；标志 `-i`（不区分大小写）、`-l`（仅文件名）、`-c`（计数） |
-| `find [<dir>/] "<glob>"` | 按 glob 查找文件 |
+| `find [<dir>/] "<glob>"` | 按 glob 查找文件，支持与 `ls` 相同的排序标志 |
 | `wc <file>` | 行/词/字符计数 |
 | `stat <file>` | 文件元数据 |
 
@@ -188,9 +185,17 @@ find docs/ "*.md" | head -10
 - **文件名** —— `auth.md`（当多个目录或知识库中存在同名文件时，会以“模糊的文件名”提示报错）
 - **文件 ID** —— `ls`、`find` 或 `grep` 返回的 UUID
 
+**排序**
+
+`ls`、`find` 和 `tree` 按路径列出文件，因此列表在多次调用之间是稳定且可比较的。有三个标志会改变这一点：`-t` 把最近更新的排在最前，`-S` 把最大的排在最前，`-r` 则反转当前适用的顺序，因此 `ls -tr` 就是最旧优先。它们可以与其他标志组合使用，例如 `ls -a -t` 或 `find docs/ "*.md" -S`。
+
+在几千个文件的知识库里询问“最近改动了什么”，应该用 `ls -a -t | head -20`，而不是读取整份列表。
+
 **行为说明**
 
 - `kb_exec` 遵循与其他知识工具相同的访问控制——用户无法读取的文件会被静默地从结果中排除。
+- **每次调用的输出都有上限。** 一条命令最多返回 30,000 个字符（[`KB_EXEC_MAX_OUTPUT_CHARS`](/reference/env-configuration#kb_exec_max_output_chars)），无论这些字符由什么产生；当触达上限时，模型会被告知收窄命令范围。这是整条链路的单次预算，因此对大文件执行 `cat` 与执行范围很宽的 `grep` 受到同样的限制。
+- **范围过宽的 `grep` 会被拒绝而不是执行。** 搜索超过 200 个文件（[`KB_EXEC_MAX_GREP_FILES`](/reference/env-configuration#kb_exec_max_grep_files)）会返回提示，要求把搜索限定到某个目录或 glob；`grep` 最多返回 50 行匹配（[`KNOWLEDGE_GREP_MAX_MATCHES`](/reference/env-configuration#knowledge_grep_max_matches)），与 `grep_knowledge_files` 和 `grep_chat_files` 使用相同的上限。
 - 模型仍保留 `query_knowledge_files` 用于语义搜索；在字面命令无法找到改写后的概念时使用。
 - 构建于目录模型之上——`kb_exec` 是唯一完整体现 UI 中创建的目录结构的工具。
 
@@ -339,10 +344,17 @@ find docs/ "*.md" | head -10
 
 **文件**
 
-- `POST /api/v1/files/` — 上传文件（注意[文件数量上限](#file-limits)）。在上传元数据中传入 `knowledge_id`（可选 `directory_id`）会让后端**自动关联并处理该文件到指定知识库**——等价于随后调用 `POST /api/v1/knowledge/{id}/file/add`，但不依赖上传后客户端保持连接。这是推荐的单次调用路径（v0.9.6 引入，修复了上传者中途断开导致文件未关联的问题）。服务端会将上传字节做 SHA-256 哈希存入 `file.meta.file_hash`；客户端可以预先计算并通过元数据传入 `file_hash` 以跳过服务端哈希（增量同步流程会用到）。
-- `GET /api/v1/files/{id}/process/status` — 检查处理状态
+- `POST /api/v1/files/` — 上传文件（注意[文件数量上限](#file-limits)）。在上传元数据中传入 `knowledge_id`（可选 `directory_id`）会让后端**在服务端自动关联并处理该文件到指定知识库**——等价于随后调用 `POST /api/v1/knowledge/{id}/file/add`，但不依赖上传后客户端保持连接。这是推荐的单次调用路径（v0.9.6 引入，修复了上传者中途断开导致文件未关联的问题）。服务端会将上传字节做 SHA-256 哈希存入 `file.meta.file_hash`；客户端可以预先计算并通过元数据传入 `file_hash` 以跳过服务端哈希（增量同步流程会用到）。
+- `GET /api/v1/files/{id}/process/status` — 检查处理状态。`completed` 表示索引以及任何知识库关联都已完成。
 - `POST /api/v1/files/{id}/rename` — 重命名文件
-- `POST /api/v1/knowledge/{id}/file/add` — 向知识库添加文件
+- `GET /api/v1/files/{id}/content` — 下载原始文件。对于仅以文本形式存储的文件，返回 404 和 `Original file is unavailable.`。
+- `GET /api/v1/files/{id}/content/{file_name}` — 以附件形式下载文件。当原始上传已不存在时，会以纯文本返回已索引的文本。
+- `GET /api/v1/files/{id}/data/content` — 读取已索引的文本
+- `POST /api/v1/files/{id}/data/content/update` — 替换已索引的文本（body：`content`），并在包含该文件的每个知识库中重新处理。空的 `content` 会以 `400` 拒绝。
+- `POST /api/v1/knowledge/{id}/file/add` — 向知识库添加文件。提取文本已存在于该知识库中的文件会被拒绝，并提示 `Duplicate content detected. Please provide unique content to proceed.`
+- `POST /api/v1/knowledge/{id}/files/batch/add` — 一次添加多个文件。重复检查同样适用：重复的文件会被报告为失败，其余文件仍会被添加。
+- `POST /api/v1/knowledge/{id}/files/validate` — 在发送上传之前，按[文件数量上限](#file-limits)检查一次上传（body：`count`，可选的 `file_size`（字节）和 `removed_file_ids`）。返回 `{"status": true}`，或返回该上传本会遇到的同一个错误。
+- `GET /api/v1/knowledge/{id}/files` — 列出知识库中的文件，按 `page` 分页。添加或更新文件的调用只在 `files` 中返回那些文件；而删除文件、重命名知识库或更改其访问权限时返回空的 `files` 列表，因此请从这里读取完整列表。
 - `POST /api/v1/knowledge/{id}/file/move` — 在同一知识库内移动文件到其他目录（body：`file_id`、`directory_id`——`null` 表示移到知识库根目录）
 
 **目录**
@@ -353,7 +365,7 @@ find docs/ "*.md" | head -10
 
 **增量目录同步**（v0.9.6 引入）
 
-- `POST /api/v1/knowledge/{id}/sync/diff` — 提交本地清单（`manifest: [{path, filename, checksum}]`，其中 `checksum` 是文件字节的 SHA-256），返回 `{added, modified, deleted, mkdir, rmdir, unmodified_count}` 描述要上传、替换、删除的内容，以及要创建/移除的目录。只读——不会修改知识库。
+- `POST /api/v1/knowledge/{id}/sync/diff` — 提交本地清单（`manifest: [{path, filename, checksum}]`，其中 `checksum` 是文件字节的 SHA-256），返回 `{added, modified, deleted, mkdir, rmdir, unmodified_count}` 描述要上传、替换、删除的内容，以及要创建/移除的目录。只读——不会修改知识库。不到一小时前上传到该知识库、且仍处于待处理或处理中的文件，在其路径、名称和校验和都匹配时会被计为未修改，因此第二次同步不会重复上传它；满一小时后它会再次被提供上传。
 - 在按 diff 操作后（创建 `mkdir` 路径，通过 `POST /api/v1/files/` 上传 `added` + `modified` 文件并附带哈希），调用：
 - `POST /api/v1/knowledge/{id}/sync/cleanup` — body：`{file_ids: [...], dir_ids: [...]}`。移除陈旧的文件（从知识库、向量存储和每文件集合中）以及 `sync/diff` 返回的现已为空的目录。请最后运行，避免删除赶在上传之前。
 

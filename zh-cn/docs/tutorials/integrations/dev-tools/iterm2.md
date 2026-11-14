@@ -96,7 +96,7 @@ URL 详情可参见 [API Endpoints 指南](/reference/api-endpoints)。
 
 ---
 
-### Legacy Completions API
+### 旧版 Completions API {#legacy-completions-api}
 
 该设置在 Open WebUI 中通常不需要，如需了解可参考[原始文档](https://platform.openai.com/docs/guides/completions/completions-api-legacy)。
 

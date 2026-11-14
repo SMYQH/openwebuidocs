@@ -84,6 +84,10 @@ Gemini 模型通过 Google AI API 在 Open WebUI 中可用。您可以在连接�
 3. 使用基础 URL `https://generativelanguage.googleapis.com/v1beta/openai` 和您的 Google AI API 密钥添加新连接
 4. Gemini 模型将出现在您的模型选择器中
 
+:::warning 此端点上的工具需要额外设置
+Google 的 OpenAI 兼容层使用的工具调用格式与 OpenAI 兼容客户端所期望的并不相同，因此使用工具的那一轮可能返回一条空的 assistant 消息。这会影响 Memory 等内置工具。请在模型的高级参数中把 **Function Calling** 设为 **Legacy**，或者通过 LiteLLM、OpenRouter 之类的网关来路由 Gemini。参见[模型使用工具时回复为空](/troubleshooting/connection-error#blank-replies-when-the-model-uses-a-tool)以及[OpenAI 兼容提供商指南](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)。
+:::
+
 ---
 
 *Gemini 为 Google 生态系统提供强大的多模态 AI。Open WebUI 是在您自己的基础设施上与其他模型一起使用这些模型的一种方式。*

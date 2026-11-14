@@ -7,7 +7,7 @@ sidebar_position: 3
 
 两者都给你一个转发到 `localhost:8000` 的公共 URL：无需端口转发，默认的 `cptr run` 绑定按原样工作。公开意味着任何找到该 URL 的人都能到达你的登录页面，而 Computer 的密码此时是互联网和你的 shell 之间的唯一屏障。因此，使用提供商的认证层作为第二道门。两个提供商都传递 WebSocket，Computer 的终端和流式传输需要它。
 
-## Cloudflare Tunnel
+## Cloudflare Tunnel {#cloudflare-tunnel}
 
 快速试用（临时随机 URL，无需账户配置）：
 
@@ -22,7 +22,7 @@ cloudflared tunnel --url http://localhost:8000
 - [创建隧道](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
 - [添加 Access 应用](https://developers.cloudflare.com/cloudflare-one/applications/configure-apps/)
 
-## ngrok
+## ngrok {#ngrok}
 
 ```bash
 ngrok http 8000

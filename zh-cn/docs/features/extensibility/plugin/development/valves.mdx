@@ -3,7 +3,7 @@ sidebar_position: 3
 title: "Valves"
 ---
 
-## Valves
+## Valves {#valves}
 
 Valves 和 UserValves 用来让用户提供动态信息，例如 API key 或某个配置项。它们会在 GUI 菜单中为对应的函数生成一个可填写的字段或一个布尔开关。它们始终是可选的，但**强烈建议**提供。
 
@@ -14,60 +14,60 @@ Valves 和 UserValves 用来让用户提供动态信息，例如 API key 或某�
 <details>
 <summary>带注释的示例</summary>
 
-```python
+``` python
 
 from pydantic import BaseModel, Field
 from typing import Literal
 
-# 定义 Valves 和 UserValves
+# Define Valves and UserValves
 class Filter:
-    # 注意缩进：Valves 和 UserValves 必须声明为
-    # Tools、Filter 或 Pipe 类的属性。这里以 Filter 为例。
+    # Notice the indentation: Valves and UserValves are declared as
+    # attributes of a Tools, Filter or Pipe class. Here we take the
+    # example of a Filter.
     class Valves(BaseModel):
-        # Valves 与 UserValves 继承自 pydantic 的 BaseModel。
-        # 这使得 model validators 等高级能力也可使用。
-        test_valve: int = Field(  # 注意类型标注：它会决定 UI 中展示的控件类型
-            # 例如按钮、文本框等
+        # Valves and UserValves inherit from pydantic's BaseModel. This
+        # enables complex use cases like model validators etc.
+        test_valve: int = Field(  # Notice the type hint: it is used to
+            # choose the kind of UI element to show the user (buttons,
+            # texts, etc).
             default=4,
-            description="一个用于控制数值的 valve"
-            # required=False,  # 若设为 True 可强制要求填写
+            description="A valve controlling a numerical value",
         )
-        # 若想让用户在多个字符串中二选一或多选一，可使用 typing.Literal：
+        # To give the user the choice between multiple strings, you can use Literal from typing:
         choice_option: Literal["choiceA", "choiceB"] = Field(
             default="choiceA",
-            description="一个多选 valve 示例",
+            description="An example of a multi choice valve",
         )
-        # priority 字段不是必需的，但如果存在，就会被用于
-        # 排序 Filters。
+        # The priority field is optional but if present will be used to
+        # order the Filters.
         priority: int = Field(
             default=0,
-            description="Filter 的优先级。值越小越先执行"
+            description="Priority level for the filter operations. Lower values are passed through first",
         )
-        pass
-        # 这个 pass 有助于解析，建议保留。
 
-    # UserValves 的定义方式完全相同。
+    # UserValves are defined the same way.
     class UserValves(BaseModel):
         test_user_valve: bool = Field(
-            default=False, description="一个控制开/关的用户 valve"
+            default=False, description="A user valve controlling a True/False (on/off) switch"
         )
-        pass
 
     def __init__(self):
         self.valves = self.Valves()
-        # 由于这些值由管理员设置，因此代码执行时可直接访问
-        pass
+        # Because they are set by the admin, they are accessible directly
+        # upon code execution.
 
-    # inlet 方法这里只是以 Filter 为例，__user__ 的处理逻辑相同
+    # The inlet method is only used for Filter but the __user__ handling is the same
     def inlet(self, body: dict, __user__: dict):
-        # 因为 UserValves 是按用户定义的，所以只有在使用时才可访问
-        # 注意：虽然 __user__ 是 dict，但 __user__["valves"] 实际是
-        # 一个 UserValves 对象，因此可以这样访问：
+        # Because UserValves are defined per user they are only available
+        # on use.
+        # Note that although __user__ is a dict, __user__["valves"] is a
+        # UserValves object. Hence you can access values like that:
         test_user_valve = __user__["valves"].test_user_valve
-        # 或者：
+        # Or:
         test_user_valve = dict(__user__["valves"])["test_user_valve"]
-        # 但下面这种方式会引发 TypeError，因为 pydantic 模型不可下标访问：
-        # test_user_valve = __user__["valves"]["test_user_valve"]  # 不要这样做！
+        # But this raises TypeError, a pydantic model is not subscriptable:
+        # test_user_valve = __user__["valves"]["test_user_valve"]  # Do not do that!
+        return body
 ```
 
 </details>
@@ -180,7 +180,7 @@ class Tools:
             json_schema_extra={
                 "input": {
                     "type": "select",
-                    "options": "get_model_options"  # 以字符串形式指定方法名
+                    "options": "get_model_options"  # Method name as string
                 }
             }
         )
@@ -188,8 +188,8 @@ class Tools:
         @classmethod
         def get_model_options(cls, __user__=None) -> list[dict]:
             """
-            动态获取可用模型。
-            在打开 Valves 配置界面时被调用。
+            Dynamically fetch available models.
+            Called when the Valves configuration UI is opened.
             """
             # 示例：根据运行时状态返回选项
             return [
@@ -220,8 +220,8 @@ class Tools:
         @classmethod
         def get_user_workspaces(cls, __user__=None) -> list[dict]:
             """
-            返回当前用户可用的工作区。
-            __user__ 以 dict 的形式包含用户信息。
+            Return workspaces available to the current user.
+            __user__ contains the user's information as a dict.
             """
             if not __user__:
                 return []

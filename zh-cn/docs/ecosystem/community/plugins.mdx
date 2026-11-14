@@ -75,7 +75,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 | 插件 | 功能说明 |
 | :--- | :--- |
-| **[转发到频道](https://openwebui.com/posts/forward_to_channel_b60c1f03)** | 在每条消息上添加一个转发按钮，将消息发布到 Open WebUI [频道](/features/channels)。支持多频道定位、用户和模型的 `@提及`（提及模型会让它在频道中回复）、私信支持和可选格式（链接的聊天标题、时间戳）。通过 UserValves 支持每个用户的覆盖。需要实例启用频道功能。 |
+| **[转发到频道](https://openwebui.com/posts/forward_to_channel_b60c1f03)** | 在每条消息上添加一个转发按钮，将消息发布到 Open WebUI [频道](/features/channels)。支持多频道定位、用户和模型的 `@mentions`（提及模型会让它在频道中回复）、私信支持和可选格式（链接的聊天标题、时间戳）。通过 UserValves 支持每个用户的覆盖。需要实例启用频道功能。 |
 | **[导出为 Word（增强版）](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/actions/export_to_docx)** | 将对话导出为格式化的 `.docx` Word 文档：语法高亮代码（500+ 语言）、从 LaTeX 转换的原生 Word 公式、渲染为图片的 Mermaid 图表、智能表格和自动生成的参考文献部分。去除 `<think>` / `<analysis>` 推理块；可配置字体和中英文界面。安装 pip 依赖（`python-docx`、`Pygments`、`latex2mathml`、`mathml2omml`），因此请按照下面的检查清单进行审查。 |
 | **[导出为 Excel](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/actions/export_to_excel)** | 从对话中提取 Markdown 表格并导出为格式化的 `.xlsx` 电子表格，自动检测表头、支持多表格、斑马条纹、智能类型转换和可配置的文件名（聊天标题、AI 生成或标题）。可导出最后一条消息或整个聊天。 |
 | **[下载代码块](https://openwebui.com/posts/download_code_blocks_06f51b22)** | 从回复中提取每个围栏代码块，并将每个块下载为正确命名的文件（170+ 语言到扩展名的映射）。多块导航弹窗，带语法高亮预览、行号和可编辑的文件名，以及可选的一键批量模式。 |
@@ -104,8 +104,8 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 | 插件 | 功能说明 |
 | :--- | :--- |
-| **[Interface Defaults](https://github.com/Classic298/open-webui-plugins/tree/main/interface-defaults)** | 从一个函数的阀门中设置你的实例的**设置 → 界面**默认值。新用户（注册、OAuth、SCIM）在创建时**自动应用**；两个一次性按钮可以将默认值推送给所有人或恢复出厂设置。原生阀门 UI、后台批量操作，无需自定义 UI 或 monkey-patching。需要 Open WebUI 0.10.0。 |
 | **[Theme Designer Pro](https://github.com/silentoplayz/theme-designer-pro-presets/tree/main/event-function)** | 实例级主题设计器，作为**独立管理页面**运行（无聊天，无 iframe 沙盒），将 CSS 和状态持久化存储在服务器端的 `DATA_DIR/theme/` 下，并通过 SSE 实时推送给每个连接的用户。包括 OKLCH 颜色引擎、草稿/发布预览模式、自定义 CSS 自动作用域和登录页面主题设置。 |
+| **[User Disclaimer](https://github.com/mhupfauer/open-webui-user-disclaimer)** | 让每个用户在使用实例之前先接受一份免责声明（可接受使用政策、保密提示、保留警告），页面由插件自行提供。该控制在 **角色** 层面执行而不是在浏览器中，因此 REST API 也在覆盖范围内：未接受的用户会被停在 `pending` 状态，接受后再恢复其角色。提高 `version` 阀门的值会让所有人重新提示。安装后需要重启服务。 |
 
 ## 导入前的初学者安全检查清单 {#before-you-import-a-beginner-safety-checklist}
 

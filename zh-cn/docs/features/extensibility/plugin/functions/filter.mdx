@@ -27,8 +27,9 @@ Filter 位于流程中间，就像检查点一样，你可以在这里决定哪�
 下面快速总结一下 Filter 的作用：
 
 1. **修改用户输入（Inlet 函数）**：在输入到达 AI 模型之前对其进行调整。你可以在这里增强清晰度、补充上下文、清理文本，或者按照特定要求重新格式化消息。
-2. **拦截模型输出（Stream 函数）**：在模型生成回复时就捕获并调整 AI 的响应。这对实时修改很有用，比如过滤敏感信息或重新格式化输出以提升可读性。
-3. **修改模型输出（Outlet 函数）**：在 AI 响应处理完成后、展示给用户之前进行调整。这有助于改进、记录或适配数据，让用户体验更干净。
+2. **修改每一次发出的调用（Request 函数）**：在载荷被交给模型提供方之前的最后一刻进行调整，每一次发送都会执行。详见下文的 [`request` 步骤](#the-request-step)。
+3. **拦截模型输出（Stream 函数）**：在模型生成回复时就捕获并调整 AI 的响应。这对实时修改很有用，比如过滤敏感信息或重新格式化输出以提升可读性。
+4. **修改模型输出（Outlet 函数）**：在 AI 响应处理完成后、展示给用户之前进行调整。这有助于改进、记录或适配数据，让用户体验更干净。
 
 > **核心概念：** Filter 不是独立模型，而是用于增强或转换模型*输入与输出之间*数据的工具。
 
@@ -42,7 +43,7 @@ Filter 就像 AI 工作流里的**翻译器或编辑器**：你可以在不打�
 
 ### 🦴 Filter 的基本骨架 {#basic-skeleton-of-a-filter}
 
-```python
+``` python
 from pydantic import BaseModel
 from typing import Optional
 
@@ -60,6 +61,11 @@ class Filter:
         print(f"inlet called: {body}")
         return body
 
+    async def request(self, body: dict) -> dict:
+        # This is where you manipulate the payload for each outgoing model call.
+        print(f"request called: {body}")
+        return body
+
     async def stream(self, event: dict) -> dict:
         # This is where you modify streamed chunks of model output.
         print(f"stream event: {event}")
@@ -73,7 +79,7 @@ class Filter:
 
 ---
 
-#### `request` 步骤 {#the-request-step}
+### `request` 步骤 {#the-request-step}
 
 `request` 接收即将发送给模型服务商的载荷，它返回什么就发送什么。
 
@@ -144,45 +150,6 @@ async def request(self, body: dict) -> dict:
 
 `inlet`、`stream` 和 `outlet` 都没有变化，未定义 `request` 的过滤器行为与之前完全一致。
 
-### 🛠️ 通过 `file_handler` 接管检索 {#owning-retrieval-with-file_handler}
-
-默认情况下，当用户在聊天中挂载知识集合或上传文件时，Open WebUI 会在**所有 inlet filter 全部返回之后**才运行内置 RAG 流程：chat-completion 处理程序会基于用户的最后一条消息在向量库中查询相关 chunk，把它们包进 `<source>` 标签，再追加到最后一条用户消息（或者，根据 `RAG_SYSTEM_CONTEXT`，追加到系统消息）中，最后才调用 LLM。
-
-这一点对 filter 编写者来说很关键：在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件/集合的**引用**（ID、名称、类型）。**真正的 chunk 文本此刻还不存在**——检索还没发生。因此，如果你想检查或改写这些 chunk 本体（PII / PHI 脱敏、重排序、自定义混合打分、翻译、chunk 级访问控制、匿名化），标准的 inlet 契约就不够了——你要的数据还没生成。
-
-**`file_handler = True`** 正是为这种场景准备的“自助”开关。它被声明为 filter 文件顶部的**模块级属性**，含义是告诉 Open WebUI：“我自己来处理检索和 chunk 注入——请跳过内置 RAG 步骤。”一旦开启，后端会在你的 `inlet()` 返回后剥离 `body["metadata"]["files"]` 和 `body["files"]`，于是 chat-completion 处理程序找不到可检索的文件，就会带着你注入的内容直接调用 LLM。
-
-```python
-from pydantic import BaseModel
-from typing import Optional
-
-# 模块级属性 —— 写在 Filter 类**外面**，紧挨着 import。
-file_handler = True
-
-class Filter:
-    class Valves(BaseModel):
-        pass
-
-    def __init__(self):
-        self.valves = self.Valves()
-
-    async def inlet(
-        self,
-        body: dict,
-        __request__=None,
-        __user__: Optional[dict] = None,
-        __model__: Optional[dict] = None,
-    ) -> dict:
-        # 此时 body["metadata"]["files"] 中仍是文件/集合的**引用**。
-        # 该方法返回后，Open WebUI 会剥离它们，**不会**再跑自己的 RAG。
-        # 因此：检索、改写、注入 chunk 都得由你在这里完成。
-        return body
-```
-
-:::warning 它是模块属性，不是 `self.file_handler`
-Open WebUI 读取的是**模块对象**上的 `file_handler`（也就是 filter 所在的那个文件），不是 `Filter` 实例上的。在 `__init__` 里写 `self.file_handler = True` 会被静默忽略。请把赋值放在文件顶部、紧挨着 import——和上面的示例一样。
-:::
-
 ### 🧲 可切换 Filter：让用户掌控 Filter 是否启用（`self.toggle`） {#toggleable-filters-making-filters-user-controllable-selftoggle}
 
 默认情况下，只要 Filter **处于激活状态且在作用范围内**（全局，或附加到当前模型），它就会在每次请求时执行——用户对此没有控制权。这在很多场景下正是你想要的（PII 清洗、日志、强制的安全护栏）。但有时你希望反过来：让用户自己决定某个 Filter 是否在本次会话中运行。
@@ -199,7 +166,7 @@ class Filter:
 
     def __init__(self):
         self.valves = self.Valves()
-        self.toggle = True   # 将该 Filter 设为用户可控（详见下文说明）
+        self.toggle = True   # Make this filter user-controllable (see notes below)
         # 提示：建议使用托管的图标 URL，而不是 base64，避免给 API 载荷带来负担。
         # 关于为什么不推荐 base64 图标，参见 Action Function 文档中的说明。
         self.icon = "https://example.com/icons/lightbulb.svg"
@@ -217,6 +184,18 @@ class Filter:
         )
         return body
 ```
+
+#### `self.toggle = True` 到底做了什么 {#what-selftoggle--true-actually-does}
+
+它是一个**可见性 / 门控标志**，在请求分发时读取一次——**并不是**运行时由 UI 翻转的 Python 对象状态。具体来说：
+
+- **可见性：** 只有当 `self.toggle = True` **并且** Filter 是全局 Filter 或已附加到当前选中的模型时，该 Filter 才会出现在聊天 UI（内联标签 + 集成菜单条目）中。没有 `self.toggle`，Filter 仍会运行（如果处于激活且在作用范围内），但没有 UI 入口——用户无法关闭它。
+- **门控：** 在请求时，后端会检查用户当前的 `filter_ids` 选择。如果 Filter 在该列表中，则 `inlet()` / `stream()` / `outlet()` 会被调用；否则，**Filter 根本不会被调用**。
+- **`self.toggle` 永远不会被 UI 修改。** 在 `inlet()` 内部，它始终是你在 `__init__` 中设置的值——对于每次实际运行的调用，它都是 `True`，因为如果用户禁用了该 Filter，`inlet()` 就不会执行。不要在运行时读取 `self.toggle` 来做逻辑判断；它不是实时的开关信号。
+
+:::warning 从 0.9.0 之前的 Filter 升级
+一些旧版 Filter 使用了类似 `if self.toggle: enable_feature() else: disable_feature()` 这样的模式放在 `inlet()` 内，期望在每次请求时读取 UI 状态。**该模式从未可靠，在 0.9.0+ 上实际上已失效。** 当 UI 中禁用了 Filter，`inlet()` 根本不会被调用，因此不会有 "else" 分支。正确的迁移方式是完全停止对 `self.toggle` 的分支判断，直接无条件地执行逻辑——用户通过选择/取消选择标签来控制 `inlet()` 是否运行。如果你需要用户驱动的配置（数字阈值、目标语言等），请通过 [`UserValves`](#filter-administration--configuration) 暴露；点击标签会自动打开用户 valves 模态框。
+:::
 
 #### 用户如何与可切换 Filter 交互 {#how-users-interact-with-a-toggleable-filter}
 
@@ -240,16 +219,42 @@ class Filter:
 
 `self.icon` 仍然按原来的方式工作：传一个 URL（强烈推荐）或 base64 data URI，它就会同时出现在内联标签和集成菜单的条目中。关于为何更推荐托管 URL 而不是 base64，请参阅 [Action Function icon_url 警告](/features/extensibility/plugin/functions/action#example-specifying-action-frontmatter)。
 
-#### `self.toggle = True` 到底做了什么 {#what-selftoggle--true-actually-does}
+### 🛠️ 通过 `file_handler` 接管检索 {#owning-retrieval-with-file\_handler}
 
-它是一个**可见性 / 门控标志**，在请求分发时读取一次——**并不是**运行时由 UI 翻转的 Python 对象状态。具体来说：
+默认情况下，当用户在聊天中挂载知识集合或上传文件时，Open WebUI 会在**所有 inlet filter 全部返回之后**才运行内置 RAG 流程：chat-completion 处理程序会基于用户的最后一条消息在向量库中查询相关 chunk，把它们包进 `<source>` 标签，再追加到最后一条用户消息（或者，根据 `RAG_SYSTEM_CONTEXT`，追加到系统消息）中，最后才调用 LLM。
 
-- **可见性：** 只有当 `self.toggle = True` **并且** Filter 是全局 Filter 或已附加到当前选中的模型时，该 Filter 才会出现在聊天 UI（内联标签 + 集成菜单条目）中。没有 `self.toggle`，Filter 仍会运行（如果处于激活且在作用范围内），但没有 UI 入口——用户无法关闭它。
-- **门控：** 在请求时，后端会检查用户当前的 `filter_ids` 选择。如果 Filter 在该列表中，则 `inlet()` / `stream()` / `outlet()` 会被调用；否则，**Filter 根本不会被调用**。
-- **`self.toggle` 永远不会被 UI 修改。** 在 `inlet()` 内部，它始终是你在 `__init__` 中设置的值——对于每次实际运行的调用，它都是 `True`，因为如果用户禁用了该 Filter，`inlet()` 就不会执行。不要在运行时读取 `self.toggle` 来做逻辑判断；它不是实时的开关信号。
+这一点对 filter 编写者来说很关键：在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件/集合的**引用**（ID、名称、类型）。**真正的 chunk 文本此刻还不存在**——检索还没发生。因此，如果你想检查或改写这些 chunk 本体（PII / PHI 脱敏、重排序、自定义混合打分、翻译、chunk 级访问控制、匿名化），标准的 inlet 契约就不够了——你要的数据还没生成。
 
-:::warning 从 0.9.0 之前的 Filter 升级
-一些旧版 Filter 使用了类似 `if self.toggle: enable_feature() else: disable_feature()` 这样的模式放在 `inlet()` 内，期望在每次请求时读取 UI 状态。**该模式从未可靠，在 0.9.0+ 上实际上已失效。** 当 UI 中禁用了 Filter，`inlet()` 根本不会被调用，因此不会有 "else" 分支。正确的迁移方式是完全停止对 `self.toggle` 的分支判断，直接无条件地执行逻辑——用户通过选择/取消选择标签来控制 `inlet()` 是否运行。如果你需要用户驱动的配置（数字阈值、目标语言等），请通过 [`UserValves`](#filter-administration--configuration) 暴露；点击标签会自动打开用户 valves 模态框。
+**`file_handler = True`** 正是为这种场景准备的“自助”开关。它被声明为 filter 文件顶部的**模块级属性**，含义是告诉 Open WebUI：“我自己来处理检索和 chunk 注入——请跳过内置 RAG 步骤。”一旦开启，后端会在你的 `inlet()` 返回后剥离 `body["metadata"]["files"]` 和 `body["files"]`，于是 chat-completion 处理程序找不到可检索的文件，就会带着你注入的内容直接调用 LLM。
+
+``` python
+from pydantic import BaseModel
+from typing import Optional
+
+class Filter:
+    class Valves(BaseModel):
+        pass
+
+    def __init__(self):
+        self.valves = self.Valves()
+        # Read from the instance before each inlet() call.
+        self.file_handler = True
+
+    async def inlet(
+        self,
+        body: dict,
+        __request__=None,
+        __user__: Optional[dict] = None,
+        __model__: Optional[dict] = None,
+    ) -> dict:
+        # body["metadata"]["files"] still contains the file/collection REFERENCES here.
+        # After this method returns, Open WebUI strips them and does NOT run its own RAG.
+        # Therefore: it is YOUR job to retrieve, transform, and inject chunks below.
+        return body
+```
+
+:::warning 它是模块属性，不是 `self.file_handler`
+Open WebUI 读取的是**模块对象**上的 `file_handler`（也就是 filter 所在的那个文件），不是 `Filter` 实例上的。在 `__init__` 里写 `self.file_handler = True` 会被静默忽略。请把赋值放在文件顶部、紧挨着 import——和上面的示例一样。
 :::
 
 #### 适用场景 {#when-to-use-it}
@@ -330,7 +335,7 @@ Filter 在数据库中由两个布尔标志控制，可以处于四种状态之�
 
 **API 端点：**
 ```http
-POST /functions/id/{filter_id}/toggle/global
+POST /api/v1/functions/id/{filter_id}/toggle/global
 ```
 
 **视觉标识：**
@@ -406,7 +411,7 @@ class Filter:
 
 ---
 
-### 🔄 Toggleable Filters vs. Always-On Filters {#toggleable-filters-vs-always-on-filters}
+### 🔄 可切换的过滤器与始终启用的过滤器 {#toggleable-filters-vs-always-on-filters}
 
 理解这两类 Filter 的差异，是高效使用 Filter 系统的关键。
 
@@ -468,7 +473,7 @@ class ContentModerationFilter:
 ```python
 class WebSearchFilter:
     def __init__(self):
-        self.toggle = True  # 设为用户可控
+        self.toggle = True  # Make user-controllable
         self.icon = "https://example.com/icons/web-search.svg"
 
     async def inlet(self, body: dict, __event_emitter__) -> dict:
@@ -501,36 +506,38 @@ class WebSearchFilter:
 下面是从管理员配置到 Filter 执行的完整流程：
 
 **1. 管理面板（Filter 创建与全局设置）**
-- 管理面板 → Functions → 创建新 Function
+- 管理面板 → Functions → 创建新的 Function
 - 设置 type="filter"
-- 切换 `is_active`（启用/禁用全局 Filter）
-- 切换 `is_global`（应用于所有模型）
+- 切换 is_active（全局启用/禁用该 Filter）
+- 切换 is_global（应用到所有模型）
 
 **2. 模型配置（按模型选择 Filter）**
-- 模型设置 → Filters 部分
-- FiltersSelector：选择该模型可用的 Filter
-- DefaultFiltersSelector：设置默认启用状态（仅对可切换 Filter 生效）
+- 模型设置 → **Filters** 行
+- Filters 选择器：选择该模型要使用的 Filter
+- **在新会话中默认启用**开关：设置默认启用状态（仅对可切换的 Filter 有效）
 
-**3. 聊天 UI（用户交互——仅可切换 Filter）**
-- 聊天 → 集成菜单（⚙️）→ 切换 Filter
-- 用户可以启用/禁用可切换 Filter
-- 始终启用的 Filter 会自动运行（没有 UI 控制）
+**3. 聊天界面（用户交互，仅限可切换的 Filter）**
+- 聊天输入框 → **+** 菜单 → 逐个切换可切换的 Filter
+- 聊天输入框 → 每个已选 Filter 对应一个标签；打开 **Show Input Selections** 后，点击标签会打开 UserValves 弹窗（如果已定义），否则移除该 Filter
+- 前端在 sessionStorage 中跟踪 `selectedFilterIds`（按聊天、按会话分别保存）
+- 初始选中项由模型的 `defaultFilterIds` 播种
+- 始终启用的 Filter（没有 `self.toggle`）会自动运行，没有任何界面控件
 
 **4. 请求处理（Filter 编译）**
-- 后端：`get_sorted_filter_ids()`
-- 获取全局 Filter（`is_global=True`, `is_active=True`）
-- 从 `model.meta.filterIds` 中加入模型专属 Filter
+- 前端会随请求发送当前的 `selectedFilterIds`
+- 后端：`get_sorted_filter_ids(request, model, filter_ids)`
+- 获取全局 Filter（`is_global=True`、`is_active=True`）以及来自 `model.meta.filterIds` 的模型专属 Filter
 - 按 `is_active` 状态过滤
-- 对可切换 Filter：检查用户的启用状态
-- 按 `priority`（来自 valves）排序
+- **对于可切换的 Filter：** 只保留 ID 出现在请求 `filter_ids` 中的那些。其余的会被完全丢弃（不会被调用，`self.toggle` 也不会被读取）
+- 按优先级排序（来自 valves）
 
 **5. Filter 执行**
-- 执行 `inlet()` Filter（请求前）
+- 执行 inlet() Filter（每轮开始时执行一次）
+- 执行 request() Filter（紧接在请求负载发往提供商之前）
 - 把修改后的请求发送给 LLM
-- 执行 `stream()` Filter（流式过程中）
-- 执行 `outlet()` Filter（响应后）
-
----
+- 执行 stream() Filter（在流式传输过程中）
+- 该轮后续的每一次调用（例如工具结果返回之后）都重复执行 request() 与 stream()
+- 执行 outlet() Filter（在最终响应之后执行一次）
 
 ### 📡 Filter 在 API 请求中的行为 {#filter-behavior-with-api-requests}
 
@@ -538,27 +545,18 @@ class WebSearchFilter:
 
 #### 关键行为差异 {#key-behavioral-differences}
 
-| 函数 | WebUI 请求 | 直接 API — 稳定版（`main`） | 直接 API — 预发布版（`dev`） |
-|----------|--------------|------------------------------|-----------------------------------|
-| `inlet()` | ✅ 始终调用 | ✅ 始终调用 | ✅ 始终调用 |
-| `stream()` | ✅ 流式期间调用 | ✅ 流式期间调用 | ✅ 流式期间调用 |
-| `outlet()` | ✅ 在响应后调用 | ❌ 不会被 `/api/chat/completions` 调用——只会被 `/api/chat/completed` 调用 | ⚠️ 仅在极窄条件下会内联运行（见下文） |
-| `__event_emitter__` | ✅ 显示 UI 反馈 | ⚠️ 对纯 API 调用无效 | ⚠️ 对纯 API 调用无效 |
+| 函数 | WebUI 请求 | 直接 API |
+|----------|--------------|------------|
+| `inlet()` | 始终调用 | 始终调用 |
+| `request()` | 在每次调用提供商之前执行 | 在每次调用提供商之前执行 |
+| `stream()` | 在流式传输期间调用 | 在流式传输期间调用 |
+| `outlet()` | 在响应之后调用 | 默认运行，由 `ENABLE_API_OUTLET_FILTERS` 控制（见下文） |
+| `__event_emitter__` | 显示界面反馈 | 在 `inlet()` 和第一次 `request()` 中是一个真实但不可见的可调用对象，在 `stream()` 和 `outlet()` 中为 `None` |
 
-:::danger 直接 API 调用时的 `outlet()` —— 准确情况
-本页面的旧版本曾声称 `outlet()` 会在非流式的 `/api/chat/completions` 直接 API 请求过程中内联执行。该说法只在 `dev` 分支上部分成立，且依据后端源码验证后，真实情况是：
+:::info 直接 API 调用时的 outlet()
+对于直接调用 `/api/chat/completions` 的客户端，`outlet()` **默认会运行**，在**非流式和流式两条路径上**都会运行，由 [`ENABLE_API_OUTLET_FILTERS`](/reference/env-configuration#enable_api_outlet_filters) 控制（默认 `True`）。在流式路径上，服务端会先累积完整响应，等流结束后再运行一次 `outlet()`。把 `ENABLE_API_OUTLET_FILTERS=False`，即可在直接 API 流量中跳过 outlet 过滤器。
 
-**在打标签的发布版本 / `main` 分支上：** `outlet()` 永远**不会**被 `/api/chat/completions` 调用。它只会在调用方再发起一次 `/api/chat/completed` 时才运行。需要 `outlet()` 的 API 集成必须同时发起这两个调用。
-
-**在 `dev` / 预发布版本上：** `outlet()` 有可能在 `/api/chat/completions` 之后内联触发，但需要**同时**满足以下所有条件：
-
-1. 请求体中**同时**包含 `chat_id` 与 `id`（助手消息 id）。缺一不可——否则后端会看到 `event_emitter = None` 并静默跳过 outlet 段。
-2. `chat_id` 对应的聊天记录必须属于当前已认证的用户；否则请求会在 outlet 路径执行前直接 404。（另一种做法：不传 `chat_id` 但传 `parent_id: null`，让服务器新建一个聊天。）
-3. 请求必须为**非流式**。在流式路径上，服务器会自己消费这个流，并把内容路由到用户的 WebSocket——HTTP 流式 API 调用方实际上什么也收不到。`outlet()` 在数据库侧仍会执行，但流式客户端看不到它的效果。
-
-即便在非流式路径上，**`outlet()` 也并不会改写 HTTP 响应体**。Handler 只更新已持久化的聊天消息行，并通过 WebSocket 发出 `chat:outlet` 事件；返回给 HTTP 客户端的 JSON 仍是 outlet 之前的内容。要观察 `outlet()` 的输出，你必须重新读取聊天记录、订阅 WebSocket，或者改用 `/api/chat/completed`。
-
-**给 Filter 作者的结论：** 如果你的 Filter 的 `outlet()` 需要对纯 API 消费者（Continue.dev、Claude Code、Langfuse trace、自定义脚本等）可见，请把 `/api/chat/completed` 当作今天的受支持入口。当前仅靠 `/api/chat/completions` 期间的内联 `outlet()`，只对行为与 WebUI 一致的客户端才有效。
+**响应可见性：** `outlet()` 的副作用会执行（更新数据库、调用 `__event_emitter__`、发起诸如日志/追踪之类的外部调用），但它**不会**改写 HTTP 响应体；而且在流式路径上，`outlet()` 触发时流式客户端早已收到了流内容。要观察 `outlet()` 的输出，请回读聊天记录、订阅 `chat:outlet` WebSocket 事件，或者改用 `/api/chat/completed`。对于纯 API 调用方，`outlet()` 中的 `__event_emitter__` 为 `None`。
 :::
 
 #### 通过 `__metadata__` 实现 Inlet ↔ Outlet 关联 {#inlet--outlet-correlation-via-\_\_metadata\_\_}
@@ -596,19 +594,20 @@ class Filter:
 
 为直接 API 集成可靠地执行 `outlet()` 的做法是：在 `/api/chat/completions` 之后再发起一次 `POST /api/chat/completed`，把完整对话（包括助手回复）放在 `messages` 中传递。该端点会无条件执行 pipeline 的 outlet Filter 和 Function 的 `outlet()` handler，并把过滤后的负载作为返回结果。
 
-```bash
-# 第二步：在 /api/chat/completions 返回响应后运行 outlet()。
+``` bash
+# Step 2: run outlet() after /api/chat/completions returned a response.
 curl -X POST http://localhost:3000/api/chat/completed \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "llama3.1",
+    "model": "qwen3.6:27b",
     "messages": [
       {"role": "user", "content": "Hello"},
-      {"role": "assistant", "content": "Hi there! How can I help?"}
+      {"role": "assistant", "content": "Hi there! How can I help you?"}
     ],
-    "chat_id": "optional-chat-id",
-    "session_id": "optional-session-id"
+    "id": "the-assistant-message-id",
+    "chat_id": "a-chat-id-you-own",
+    "session_id": ""
   }'
 ```
 
@@ -618,23 +617,17 @@ curl -X POST http://localhost:3000/api/chat/completed \
 
 #### 区分 API 请求与 WebUI 请求 {#detecting-api-vs-webui-requests}
 
-你可以通过检查 `__metadata__` 参数来判断请求是来自 WebUI 还是直接 API 调用：
+没有任何字段会直接标明调用方，因此要改用聊天上下文来判断。来自 WebUI 的请求总是带着 `chat_id` 和 `session_id`；而普通的 API 调用拿到的是空的 `chat_id` 和 `null` 的 `session_id`。这两个键总是存在，所以要判断的是它们的值，而不是它们是否存在：
 
-```python
+``` python
 async def inlet(self, body: dict, __metadata__: dict = None) -> dict:
-    # 判断请求是否来自 WebUI
-    interface = __metadata__.get("interface") if __metadata__ else None
-    
-    if interface == "open-webui":
-        print("Request from WebUI")
+    metadata = __metadata__ or {}
+
+    if metadata.get("chat_id") and metadata.get("session_id"):
+        print("Request from a chat session")
     else:
-        print("Direct API request")
-    
-    # 也可以通过是否存在聊天上下文来判断
-    chat_id = __metadata__.get("chat_id") if __metadata__ else None
-    if not chat_id:
-        print("No chat context - likely a direct API call")
-    
+        print("No chat context, likely a direct API call")
+
     return body
 ```
 
@@ -653,7 +646,7 @@ class Filter:
     
     def __init__(self):
         self.valves = self.Valves()
-        self.user_requests = {}  # 记录每个用户的请求
+        self.user_requests = {}  # Track requests per user
     
     async def inlet(self, body: dict, __user__: dict = None) -> dict:
         if not __user__:
@@ -699,12 +692,11 @@ class Filter:
     async def inlet(self, body: dict, __user__: dict = None, __metadata__: dict = None) -> dict:
         user_email = __user__.get("email", "unknown") if __user__ else "anonymous"
         model = body.get("model", "unknown")
-        interface = __metadata__.get("interface", "api") if __metadata__ else "api"
-        chat_id = __metadata__.get("chat_id") if __metadata__ else None
+        chat_id = (__metadata__ or {}).get("chat_id")
         
         self.logger.info(
             f"Request: user={user_email}, model={model}, "
-            f"interface={interface}, chat_id={chat_id or 'none'}"
+            f"chat_id={chat_id or 'none'}"
         )
         
         return body
@@ -759,9 +751,9 @@ Filter 按 priority **升序**排列。`priority=0` 的 Filter 会在 `priority=
 当多个 Filter 同时启用时，每个 Filter 都会收到**上一个 Filter 修改后的数据**。某个 Filter 的返回值会成为下一个 Filter 的输入。
 
 ```
-用户输入
+User Input
     ↓
-模型路由 Filter（priority=0）→ 修改 body 的部分内容
+Model Router Filter (priority=0) → changes parts of the body
     ↓
 Context Manager Filter (priority=1) → receives modified body ✓
     ↓
@@ -842,7 +834,7 @@ class Filter:
 
 ---
 
-### 🔍 Resolving the Base Model (`__model__`) {#resolving-the-base-model-\_\_model\_\_}
+### 🔍 解析基础模型（`__model__`） {#resolving-the-base-model-\_\_model\_\_}
 
 当用户选择 workspace 或自定义模型时，`body["model"]` 里保存的是自定义模型 ID（例如 `"my-custom-gpt5"`），而不是底层的基模型。要获取真正的基模型，请使用 `__model__` dunder 参数：
 
@@ -873,15 +865,20 @@ Filter 可以在函数签名中声明以下任意参数，以自动接收它们�
 | 参数 | 提供什么 |
 |-----------|-----------------|
 | `__model__` | 完整的模型字典（对 workspace 模型还包含 `info.base_model_id`） |
-| `__user__` | 用户数据（`id`、`email`、`name`、`role`） |
-| `__metadata__` | 请求元数据（`chat_id`、`session_id`、`interface` 等） |
+| `__user__` | 完整的用户记录（`UserModel.model_dump()`），如果 Filter 定义了 `UserValves`，则额外带上 `valves` |
+| `__metadata__` | 请求元数据（`chat_id`、`session_id`、`user_id`、`files`、`features`、`params` 等） |
 | `__event_emitter__` | 向客户端发送状态更新、嵌入等内容的函数 |
-| `__chat_id__` | 聊天会话 ID |
+| `__event_call__` | 发送事件并等待浏览器回应的函数 |
+| `__chat_id__` | 聊天会话 ID。不会传给 `outlet()`，后者从 `body["chat_id"]` 中读取 |
+| `__message_id__` | 正在生成的助手消息的 ID。不会传给 `outlet()` |
+| `__oauth_token__` | 用户的 OAuth token 数据，或者 `None`。不会传给 `outlet()` |
+| `__id__` | 该 Filter 自身的函数 ID |
+| `__body__` | 仅 `stream()`：正在回应的请求体，因为 `stream()` 接收到的分片是 `event` |
 | `__request__` | 原始的 FastAPI `Request` 对象 |
 
 只有你在函数签名中声明的参数才会被注入——Open WebUI 会在运行时检查签名，决定该传入什么。
 
----
+在一轮对话的第一次调用中，`request()` 拿到的参数集合与 `inlet()` 相同，因此这里的 `__model__` 同样能正确解析 workspace 模型；另外还会多一个 `__features__`，其中携带的是流水线从请求体中弹出之后的 `features` 字典。在后续的工具循环跳转中 `__features__` 不存在，所以请为它设置默认值。
 
 ### 🎨 UI 指示与视觉反馈 {#ui-indicators--visual-feedback}
 
@@ -966,9 +963,9 @@ Toggleable Filters (User Choice):
 
 ---
 
-### 🎯 Key Components Explained {#key-components-explained}
+### 🎯 关键组件详解 {#key-components-explained}
 
-#### 1️⃣ **`Valves` Class (Optional Settings)** {#valves-class-optional-settings}
+#### 1️⃣ **`Valves` 类（可选设置）** {#valves-class-optional-settings}
 
 把 **Valves** 看作过滤器的旋钮和滑块。如果你想为用户提供可配置选项来调整过滤器的行为，就在这里定义它们。
 
@@ -1177,10 +1174,10 @@ async def stream(self, event: dict) -> dict:
 ```
 
 > **流式事件示例：**
-```jsonl
+``` jsonl
 {"id": "chatcmpl-B4l99MMaP3QLGU5uV7BaBM0eDS0jb","choices": [{"delta": {"content": "Hi"}}]}
 {"id": "chatcmpl-B4l99MMaP3QLGU5uV7BaBM0eDS0jb","choices": [{"delta": {"content": "!"}}]}
-{"id": "chatcmpl-B4l99MMaP3QLGU5uV7BaBM0eDS0jb","choices": [{"delta": {"content": " 😊"}}]}
+{"id": "chatcmpl-B4l99MMaP3QLGU5uV7BaBM0eDS0jb","choices": [{"delta": {"content": " [redacted]"}}]}
 ```
 📖 **会发生什么？**
 - 每一行都代表模型流式响应中的一个**小片段**。
@@ -1192,7 +1189,7 @@ async def stream(self, event: dict) -> dict:
     for choice in event.get("choices", []):
         delta = choice.get("delta", {})
         if "content" in delta:
-            delta["content"] = delta["content"].replace("😊", "")  # Strip emojis
+            delta["content"] = delta["content"].replace(" [redacted]", "")  # Strip the marker
     return event
 ```
 📖 **之前：** `"Hi 😊"`
@@ -1200,7 +1197,7 @@ async def stream(self, event: dict) -> dict:
 
 ---
 
-#### Responses API 连接上的流式事件 {#streamed-events-on-responses-api-connections}
+##### Responses API 连接上的流式事件 {#streamed-events-on-responses-api-connections}
 
 上面的事件是 **Chat Completions** 数据块，除了 **API 类型** 设为 `Responses` 的连接之外，其他一切都提供这种形式。Responses 连接会原样转发服务商自己的事件流，因此 `stream()` 收到的是带类型的 Responses API 事件。该流以若干不携带文本的记账事件开头，裁剪后只保留携带文本的部分：
 
@@ -1274,6 +1271,10 @@ async def stream(self, event: dict) -> dict:
 📤 **输入**：
 - **`body`**：这里包含聊天中的**所有当前消息**（用户历史 + LLM 回复）。
 
+每条消息都带有 `id`、`role`、`content`、`info` 和 `timestamp`，如果存在还会带有 `output`、`usage` 和 `sources`。只有刚刚结束的那条回复会带有 **`finish_reason`**：这是提供商给出的结束原因，例如 `stop`、`length`（回复触及 token 上限）或 `tool_calls`。当回复涉及工具调用时，它是该轮最后一次模型调用返回的值。
+
+对于 OpenAI 兼容模型和 Ollama 模型，无论是否流式，`finish_reason` 都会被设置。Ollama 在回复被 token 上限截断时报告 `length`。使用 OpenAI Responses API 的连接只在非流式回复上设置它，取值为 `stop` 或 `tool_calls`。
+
 🚀 **你的任务**：修改这个 `body`。你可以清理、追加或记录变更，但要注意每一次调整对用户体验的影响。
 
 💡 **最佳实践**：
@@ -1294,10 +1295,15 @@ async def stream(self, event: dict) -> dict:
 :::
 
 💡 **示例用法**：把不希望用户看到的敏感 API 响应内容去掉：
-```python
+``` python
 async def outlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
     for message in body["messages"]:
         message["content"] = message["content"].replace("<API_KEY>", "[REDACTED]")
+        for item in message.get("output") or []:
+            if item.get("type") == "message":
+                for part in item.get("content") or []:
+                    if part.get("type") == "output_text":
+                        part["text"] = part["text"].replace("<API_KEY>", "[REDACTED]")
     return body
 ```
 
@@ -1328,13 +1334,18 @@ class Filter:
 
 如果想把输出返回成 Markdown 或其他格式化风格，可以使用 `outlet` 函数！
 
-```python
+``` python
 class Filter:
     async def outlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
         # Add "highlight" markdown for every response
         for message in body["messages"]:
             if message["role"] == "assistant":  # Target model response
                 message["content"] = f"**{message['content']}**"  # Highlight with Markdown
+                for item in message.get("output") or []:  # The text the chat shows
+                    if item.get("type") == "message":
+                        for part in item.get("content") or []:
+                            if part.get("type") == "output_text":
+                                part["text"] = f"**{part['text']}**"
         return body
 ```
 
@@ -1403,16 +1414,16 @@ Filter 会修改**进入模型**和**从模型返回**的数据，但不会明�
 ---
 
 ## 🎉 总结：为什么要构建 Filter 函数？ {#recap-why-build-filter-functions}
-
-到这里，你已经学到：
-1. **Inlet** 负责处理 **用户输入**（预处理）。
-2. **Stream** 负责拦截并修改 **流式模型输出**（实时处理）。
-3. **Outlet** 负责调整 **AI 输出**（后处理）。
-4. Filter 最适合做轻量级、实时的数据流调整。
-5. 借助 **Valves**，你可以让用户动态配置 Filter，以适配不同需求。
+到目前为止，你已经了解了：
+1. **Inlet** 每轮对话处理一次，用于操纵**用户输入**（前处理）。
+2. **Request** 在每次调用提供方之前调整**发出的载荷**，包括工具循环中的每一跳。它应当写成幂等的。
+3. **Stream** 拦截并修改**流式模型输出**（实时）。
+4. **Outlet** 微调**AI 输出**（后处理）。
+5. Filter 最适合对数据流进行轻量级的实时改动。
+6. 借助 **Valves**，你可以让用户动态地配置 Filter，以获得定制化的行为。
 
 ---
 
-🚀 **轮到你了**：开始动手试试吧！一个小小的调整，或者一段上下文补充，可能就能让你的 Open WebUI 体验更上一层楼。Filter 好玩、灵活，而且真的能让模型更强。
+**轮到你了**：开始动手尝试吧！什么样的微调或上下文补充能为你的 Open WebUI 体验带来提升？Filter 做起来很有趣，用起来很灵活，能把你的模型带到下一个层次！
 
-祝你编码愉快！✨
+祝编码愉快！

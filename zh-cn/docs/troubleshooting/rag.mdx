@@ -23,42 +23,6 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 
 适用于在消费级硬件上运行的 Ollama 模型（Llama 3.1 8B、Qwen 2.5 7B、Gemma 3 4B、Phi-3 Mini 等），上下文窗口有限。
 
-#### 14. 附加链接或 YouTube 视频失败 {#14-attaching-a-link-or-a-youtube-video-fails}
-
-附加某个网页或 YouTube 视频时返回了错误提示。消息会指出失败的具体环节：链接无法读取会指明是哪个链接，YouTube 字幕被拒绝会给出原因，而提到知识库的消息则表示内容已经读取成功，只是保存失败。
-
-`[ERROR: Could not read content from <url>]` 表示什么都没有附加成功。常见原因有：站点拦截了请求，或只有在 JavaScript 执行后才提供内容——这可以由 [`WEB_LOADER_ENGINE=playwright`](../reference/env-configuration.mdx#web_loader_engine) 处理；Open WebUI 没有被告知要使用的代理，参见 [`WEB_SEARCH_TRUST_ENV`](../reference/env-configuration.mdx#web_search_trust_env)；以及地址被有意拒绝——私有地址、回环地址、云元数据端点以及任何匹配 [`WEB_FETCH_FILTER_LIST`](../reference/env-configuration.mdx#web_fetch_filter_list) 的地址都从不会被请求。
-
-YouTube 附加项就是视频的字幕，因此没有可用字幕的视频根本无法附加。当消息显示 YouTube 阻止了来自你服务器地址的请求时（在云服务商网段中很常见），请通过 [`YOUTUBE_LOADER_PROXY_URL`](../reference/env-configuration.mdx#youtube_loader_proxy_url) 转发。当字幕存在但不是所请求的语言时，把你的语言加入 [`YOUTUBE_LOADER_LANGUAGE`](../reference/env-configuration.mdx#youtube_loader_language)。上传者关闭的字幕、年龄限制以及不可观看的视频则无法绕过。
-
-#### 15. 附加单个文件时没有返回来源 {#15-attaching-a-single-file-returns-no-sources}
-
-用 `#` 附加单个文件时检索不到任何内容，而附加包含该文件的知识库则一切正常。
-
-**问题所在**：属于某个知识库的文件会被索引两次，一次随知识库索引，一次单独索引。单独附加它只会检索它自己的那份索引，而在向量数据库迁移、部分重置或直接在向量数据库中删除之后，这份索引可能已经丢失。
-
-**解决方案：**
-
-1. 在 **设置 > 管理 > 文档 > 重建知识库与记忆向量索引** 处执行**重新索引**。这会重建每个知识库、其中每个文件的单文件索引，以及每位用户的记忆。它会重新提取并重新嵌入全部内容，因此请预留足够时间；如果使用的是付费嵌入模型，还要考虑相应费用。
-2. 如果文件不属于任何知识库，请**重新上传**，因为重新索引只覆盖知识库。
-
----
-
-通过优化这些方面（提取、嵌入、检索和模型上下文），你可以显著提升 LLM 处理你的文档时的准确度。
-
-| 设置 | 值 | 原因 |
-|------|-----|------|
-| **文本分割器** | `token` | 基于实际 token 数的一致分块大小 |
-| **Markdown 标题分割** | **开启** | 保留文档结构 |
-| **分块大小** | `1000` | 较小的分块，使每个检索结果都能舒适地放入上下文 |
-| **分块重叠** | `100` | 标准重叠 |
-| **Top K** | `3–5` | 较少分块，避免耗尽有限的上下文预算 |
-| **完整上下文模式** | 关闭 | 无法承担发送完整文档的开销 |
-
-:::tip 上下文预算计算
-分块大小为 1000 tokens、Top K 为 5 时，RAG 会注入约 5000 tokens 的检索内容。加上系统提示词和对话历史——如果模型的上下文窗口为 8K，留给对话本身的大约只有 2–3K tokens。如果后续问题被截断，请适当降低 Top K。
-:::
-
 ### 云模型，大上下文（32K+ tokens） {#cloud-models-with-large-context-32k-tokens}
 
 适用于 OpenAI（GPT-4o、GPT-5）、Anthropic（Claude）、Google（Gemini）、DeepSeek 及其他 API 提供商，上下文窗口为 32K–1M+ tokens。
@@ -127,14 +91,14 @@ YouTube 附加项就是视频的字幕，因此没有可用字幕的视频根本
 
 ### 2. 只用了文档中的一小部分内容 {#2-only-a-small-part-of-the-document-is-being-used}
 
-Open WebUI 默认假设模型上下文窗口有限。例如很多本地模型（包括 Ollama 默认模型）只有 2048 token。正因如此，Open WebUI 会积极裁剪检索到的内容，以便把它塞进可用窗口中。
+Open WebUI 在设计上默认与上下文窗口有限的模型配合使用。例如，Ollama 会根据可用显存为模型选取默认上下文长度，在显存低于 24 GiB 的 GPU 上这个值是 4096 token（见 [Ollama 的上下文长度文档](https://docs.ollama.com/context-length)），远低于大多数模型本身支持的长度。正因如此，Open WebUI 会积极裁剪检索到的内容，以便把它塞进假定可用的空间里。
 
 **解决方法：**
 
-- 前往 **Admin Settings > Documents**
+- 前往 **设置 > 管理 > 文档**
 - 然后任选其一：
   - **启用 “Bypass Embedding and Retrieval”**——直接发送完整内容，不走检索过滤
-  - **打开 “Full Context Mode”**——把更完整的内容注入模型提示词
+  - **打开 “Always Use Full Text”**——把更完整的内容注入模型提示词
 
 :::warning
 请留意上下文上限——如果模型本身无法处理更多 token，内容仍然会被截断。
@@ -260,8 +224,8 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
 | 问题 | 修复方式 |
 |--------|------|
 | 🤔 模型看不到内容 | 检查文档提取器设置 |
-| 🧹 只使用了部分内容 | 启用 Full Context Mode 或 Bypass Embedding |
-| ⏱ 受 2048 token 限制 | 增大模型上下文，或使用大上下文 LLM |
+| 🧹 只使用了部分内容 | 启用 Always Use Full Text 或 Bypass Embedding |
+| ⏱ 受上下文长度限制 | 增大模型上下文长度，或使用大上下文 LLM |
 | 📉 检索不准确 | 切换到更好的嵌入模型并重新索引 |
 | ❌ 上传限制受阻 | 使用 Folder 上传（配合 `FOLDER_MAX_FILE_COUNT`）；Knowledge Base 限制单独计算 |
 | 🧩 Chunk 过碎 / 过小 | 提高 **Chunk Min Size Target** 合并小片段 |
@@ -271,7 +235,9 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
 | 📷 PDF 图片无法提取 | 使用 Tika/Docling、启用 OCR、或更新 pypdf |
 | 💀 上传时 worker 瞬时死亡 | 在多 worker 下不要继续使用默认 ChromaDB（SQLite） |
 | 💀 上传时 worker 超时死亡 | 更新 Open WebUI，或提高 `--timeout-worker-healthcheck` |
-| 🧠 模型忽略已附加 KB | 启用 Builtin Tools、加系统提示、或关闭 native function calling |
+| 🧠 模型忽略已附加 KB | 启用 Builtin Tools、添加系统提示、或尝试使用整篇文档（Using Entire Document） |
+| 📄 附加单个文件时没有返回内容 | 重新索引以重建单文件索引 |
+| 📄 Docling 引用指向了错误的页码 | [重新索引，或重新上传该文件](/features/chat-conversations/rag/document-extraction/docling#citations-point-to-the-wrong-page) |
 
 ---
 
@@ -308,7 +274,7 @@ def wait_for_processing(token, file_id, timeout=300):
         elif status == 'failed':
             raise Exception(f"Processing failed: {response.json().get('error')}")
 
-        time.sleep(2)  # 每 2 秒轮询一次
+        time.sleep(2)  # Poll every 2 seconds
 
     raise TimeoutError("File processing timed out")
 ```
@@ -395,7 +361,8 @@ Error generating embeddings: 429 Rate limit reached
    - 前往 **Admin Settings > Documents**
    - 尝试 **Apache Tika** 或 **Docling**，它们通常有更好的 OCR 支持
 2. **启用 PDF 图像提取**：
-   - 在 **Admin Settings > Documents** 中确认 **PDF Extract Images (OCR)** 已开启
+   - 在 **设置 > 管理 > 文档** 中确认 **PDF Extract Images (OCR)** 已开启
+   - OCR 每次上传会占用一个处理器线程。如果你的服务器核心很多且处于空闲状态，可以提高 [`RAPIDOCR_PARAMS`](/reference/env-configuration#rapidocr_params) 中的 `intra_op_num_threads`，让单次上传的 OCR 更快完成
 3. **更新 pypdf**：
    新版本 pypdf（6.0.0+）对各类 PDF 格式处理更好
 4. **检查 PDF 是否损坏**：
@@ -406,14 +373,26 @@ Error generating embeddings: 429 Rate limit reached
 <span id="12-worker-dies-during-document-upload"></span>
 ### 12. 文档上传期间 worker 死亡 {#12-worker-dies-during-document-upload}
 
-在**多 worker** 部署中上传文档时，你可能会看到：
+在拥有多个副本或 worker 的部署中上传文档时，你可能会看到：
 
 ```
 INFO:     Waiting for child process [12]
 INFO:     Child process [12] died
 ```
 
-在多 worker 场景下，这通常有**两类不同原因**：
+原因在于**默认的 ChromaDB** 向量数据库与 `UVICORN_WORKERS > 1` 或多个副本的组合。内嵌式 ChromaDB 把数据保存在本地 SQLite 文件中，而这些文件同一时刻只能由一个进程写入。当多个进程同时写入时，它们就会崩溃。你通常会在同一秒内看到这样的输出：
+
+```
+save_docs_to_vector_db:1573 - adding to collection file-id
+INFO:     Waiting for child process [pid]
+INFO:     Child process [pid] died
+```
+
+**解决方案：** 将 `UVICORN_WORKERS=1`，并通过副本进行横向扩展。当副本数多于 1 时，请改用非内嵌式的 ChromaDB：
+- 把 [`VECTOR_DB`](/reference/env-configuration#vector_db) 设置为 `pgvector`、`mariadb-vector`、`milvus` 或 `qdrant`
+- 或者把 ChromaDB 作为独立的 HTTP 服务器运行，并设置 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) / [`CHROMA_HTTP_PORT`](/reference/env-configuration#chroma_http_port)
+
+完整细节请参见[扩缩容与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
 
 ### 13. 模型附加的知识库不生效 {#13-knowledge-base-attached-to-model-not-working}
 
@@ -428,7 +407,7 @@ INFO:     Child process [12] died
 
 如果你启用了 **Native Function Calling**，那么模型必须同时具备**使用工具的能力**和**被明确引导去使用工具**。
 
-#### 知识检索行为矩阵
+#### 知识检索行为矩阵 {#knowledge-retrieval-behavior-matrix}
 
 | | **模型附加了 KB** | **没有附加 KB** |
 |---|---|---|
@@ -482,52 +461,38 @@ Open WebUI 正在转向 **agentic RAG**：由模型自主决定何时以及如�
 
 把提取、嵌入、检索和模型上下文这些环节都调优好之后，你就能显著提升 LLM 处理文档时的准确性与稳定性。
 
-#### 原因 A：ChromaDB SQLite + Fork（瞬时崩溃） {#knowledge-retrieval-behavior-matrix}
+### 14. 附加链接或 YouTube 视频失败 {#14-attaching-a-link-or-a-youtube-video-fails}
 
-如果你使用的是**默认 ChromaDB**（本地 SQLite 支持的 `PersistentClient`），并且设置了 `UVICORN_WORKERS > 1`，那么崩溃原因就是 SQLite **不具备 fork-safe 特性**。uvicorn fork 多个 worker 后，每个进程都会继承同一个 SQLite 连接；多个 worker 同时写向量数据库时，就会导致瞬时崩溃，而不是慢慢超时。
+附加某个网页或 YouTube 视频时返回了错误提示。消息会指出失败的具体环节：链接无法读取会指明是哪个链接，YouTube 字幕被拒绝会给出原因，而提到知识库的消息则表示内容已经读取成功，只是保存失败。
 
-典型日志通常会在同一秒内出现：
-```
-save_docs_to_vector_db:1619 - adding to collection file-id
-INFO:     Waiting for child process [pid]
-INFO:     Child process [pid] died
-```
+`[ERROR: Could not read content from <url>]` 表示什么都没有附加成功。常见原因有：站点拦截了请求，或只有在 JavaScript 执行后才提供内容——这可以由 [`WEB_LOADER_ENGINE=playwright`](../reference/env-configuration.mdx#web_loader_engine) 处理；Open WebUI 没有被告知要使用的代理，参见 [`WEB_SEARCH_TRUST_ENV`](../reference/env-configuration.mdx#web_search_trust_env)；以及地址被有意拒绝——私有地址、回环地址、云元数据端点以及任何匹配 [`WEB_FETCH_FILTER_LIST`](../reference/env-configuration.mdx#web_fetch_filter_list) 的地址都从不会被请求。
 
-**解决方法：** 使用多 worker 时，你**必须**停止使用默认本地 ChromaDB：
-- 将 [`VECTOR_DB`](/reference/env-configuration#vector_db) 改为 `pgvector`、`mariadb-vector`、`milvus` 或 `qdrant`
-- 或者把 ChromaDB 作为独立 HTTP 服务运行，并配置 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) / [`CHROMA_HTTP_PORT`](/reference/env-configuration#chroma_http_port)
+YouTube 附加项就是视频的字幕，因此没有可用字幕的视频根本无法附加。当消息显示 YouTube 阻止了来自你服务器地址的请求时（在云服务商网段中很常见），请通过 [`YOUTUBE_LOADER_PROXY_URL`](../reference/env-configuration.mdx#youtube_loader_proxy_url) 转发。当字幕存在但不是所请求的语言时，把你的语言加入 [`YOUTUBE_LOADER_LANGUAGE`](../reference/env-configuration.mdx#youtube_loader_language)。上传者关闭的字幕、年龄限制以及不可观看的视频则无法绕过。
 
-完整说明请参见 [扩缩容与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
+### 15. 附加单个文件时没有返回来源 {#15-attaching-a-single-file-returns-no-sources}
 
-#### 原因 B：SentenceTransformers 健康检查超时（旧版本）
+用 `#` 附加单个文件时检索不到任何内容，而附加包含该文件的知识库则一切正常。
 
-当你使用**默认 SentenceTransformers** 嵌入引擎（本地嵌入）并启用多个 worker 时，uvicorn 会通过定期 ping 监控 worker 健康。默认健康检查超时仅有 **5 秒**。在旧版本 Open WebUI 中，embedding 调用会阻塞事件循环，worker 因而无法响应健康检查，最终被 uvicorn 判定为无响应并杀掉。
+**问题所在**：属于某个知识库的文件会被索引两次，一次随知识库索引，一次单独索引。单独附加它只会检索它自己的那份索引，而在向量数据库迁移、部分重置或直接在向量数据库中删除之后，这份索引可能已经丢失。
 
-:::note
-这个问题已经在 Open WebUI 中修复。现在 embedding 系统使用 `run_coroutine_threadsafe` 保持主事件循环可响应，因此无论嵌入耗时多久，worker 都不应再因为这个原因在上传期间被杀死。
+**解决方案：**
 
-如果你已经使用包含该修复的版本，但仍看到 worker 死亡，请先优先检查上面的**原因 A**（ChromaDB SQLite），然后确认 Open WebUI 是否已更新到最新版本。
-:::
-
-**谁会受到影响：**
-- 仅限使用**默认 SentenceTransformers** 嵌入引擎（本地嵌入）的部署
-- 仅限启用了**多个 uvicorn worker** 的部署；单 worker 部署没有健康检查超时问题
-- 外部嵌入引擎（Ollama、OpenAI、Azure OpenAI）**不受影响**，因为它们的 API 调用不会阻塞事件循环
-
-✅ **解决方法（适用于尚未包含修复的旧版本）：**
-
-1. **升级 Open WebUI** 到包含 `run_coroutine_threadsafe` 修复的版本。
-2. **提高健康检查超时**，作为临时解决方案：
-   ```yaml
-   command: ["bash", "start.sh", "--workers", "2", "--timeout-worker-healthcheck", "120"]
-   ```
-3. **切换到外部嵌入引擎**，避免本地阻塞：
-   ```
-   RAG_EMBEDDING_ENGINE=ollama
-   RAG_EMBEDDING_MODEL=nomic-embed-text
-   ```
-4. **可选：设置安全超时**，通过 [`RAG_EMBEDDING_TIMEOUT`](/reference/env-configuration#rag_embedding_timeout) 中止异常长时间的 embedding 操作（这不会影响健康检查机制本身）。
+1. 在 **设置 > 管理 > 文档 > 重建知识库与记忆向量索引** 处执行**重新索引**。这会重建每个知识库、其中每个文件的单文件索引，以及每位用户的记忆。它会重新提取并重新嵌入全部内容，因此请预留足够时间；如果使用的是付费嵌入模型，还要考虑相应费用。
+2. 如果文件不属于任何知识库，请**重新上传**，因为重新索引只覆盖知识库。
 
 ---
 
-<span id="13-knowledge-base-attached-to-model-not-working"></span>
+通过优化这些方面（提取、嵌入、检索和模型上下文），你可以显著提升 LLM 处理你的文档时的准确度。
+
+| 设置 | 值 | 原因 |
+|------|-----|------|
+| **文本分割器** | `token` | 基于实际 token 数的一致分块大小 |
+| **Markdown 标题分割** | **开启** | 保留文档结构 |
+| **分块大小** | `1000` | 较小的分块，使每个检索结果都能舒适地放入上下文 |
+| **分块重叠** | `100` | 标准重叠 |
+| **Top K** | `3–5` | 较少分块，避免耗尽有限的上下文预算 |
+| **完整上下文模式** | 关闭 | 无法承担发送完整文档的开销 |
+
+:::tip 上下文预算计算
+分块大小为 1000 tokens、Top K 为 5 时，RAG 会注入约 5000 tokens 的检索内容。加上系统提示词和对话历史——如果模型的上下文窗口为 8K，留给对话本身的大约只有 2–3K tokens。如果后续问题被截断，请适当降低 Top K。
+:::

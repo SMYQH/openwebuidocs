@@ -19,6 +19,8 @@ Open WebUI 采用**无状态、容器优先架构**，这意味着你不会被�
 * **灵活部署：** 可在本地、私有云或混合环境中运行，而无需更改架构。
 * **容器编排兼容性：** 完整支持 Kubernetes、Docker Swarm 及其他编排平台。
 
+默认的单实例部署使用本地 SQLite 和 ChromaDB 存储。在增加副本之前，请先按[扩展指南](/getting-started/advanced-topics/scaling)中的说明配置共享服务和配套的密钥。
+
 对于决策者来说，这意味着你在 Open WebUI 上的前期投入不会演变成技术债。支撑 PoC 的同一套架构，也可以继续扩展到支撑整个组织。
 
 ### 高可用配置 {#high-availability-configuration}

@@ -70,14 +70,15 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 
 ## 可选配置 {#optional-configurations}
 
-- **搜索参数**：更多高级选项（如域名过滤）请参阅 [Tavily API 文档](https://docs.tavily.com/docs/introduction)
+- **搜索参数**：Open WebUI 会向 Tavily 发送 `query`、`max_results` 和 `search_depth`。搜索深度可在 **Tavily Search Depth** 中设置（`ultra-fast`、`fast`、`basic` 或 `advanced`，默认 `basic`），也可以通过 [`TAVILY_SEARCH_DEPTH`](/reference/env-configuration#tavily_search_depth) 设置。域名过滤由 Open WebUI 自己的 **Domain Filter List** 在结果返回之后应用。
+- **端点**：请求会发往 `TAVILY_API_BASE_URL` 加上 `/search`，默认值为 `https://api.tavily.com`。该变量只能从环境变量读取，没有对应的管理界面字段。
 - **环境变量**：可在 `.env` 文件或 Docker 命令中设置 `TAVILY_API_KEY`：
 
   ```bash
   -e TAVILY_API_KEY="your_tavily_api_key"
   ```
 
-  参阅 [环境变量配置](/reference/env-configuration/)
+  参阅 [环境变量配置](/reference/env-configuration)
 - **RAG 集成**：你可以将 Tavily 结果与本地数据结合，构建 Retrieval Augmented Generation 工作流。参阅 [RAG 文档](/features/chat-conversations/rag)
 
 ## 故障排查 {#troubleshooting}
@@ -91,7 +92,7 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 
 ## 额外资源 {#additional-resources}
 
-- [Tavily API 文档](https://docs.tavily.com/docs/introduction)：API 参考与高级选项
+- [Tavily API 文档](https://docs.tavily.com/welcome)：API 参考与高级选项
 - [Open WebUI 功能](/features)：RAG 与 web search 说明
 - [为 Open WebUI 贡献](/contributing)：提交改进或反馈问题
 

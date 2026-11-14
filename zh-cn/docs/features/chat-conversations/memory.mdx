@@ -73,12 +73,17 @@ Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话
 ## 启用记忆工具 {#enabling-memory-tools}
 
 1.  **管理员启用**：确保管理员已经[全局启用](#administrative-controls)记忆功能，并确认你拥有所需权限
-2.  **原生模式（Agentic 模式）**：在模型高级参数中启用**原生函数调用**（**管理面板 > 设置 > 模型 > 模型特定设置 > 高级参数**）
-3.  **需要高质量模型**：若要稳定获得这些能力，请优先使用具备较强推理能力的 frontier 模型（例如 GPT-5、Claude 4.5 Sonnet、Gemini 3 Flash、MiniMax M2.5）。较小本地模型可能无法有效自主管理记忆
-4.  **按模型分类开关**：确保该模型在 **工作区 > 模型 > 编辑 > 内置工具** 中启用了**记忆**分类（默认开启）
+2.  **原生模式（Agentic 模式）**：在模型的高级参数中启用**原生函数调用**（**设置 > 管理 > 模型 > 编辑**该模型 **> 高级参数**）
+3.  **按模型开关**：确保在 **工作区 > 模型 > 编辑** 中，模型的 **记忆** 能力与 **内置工具** 下的 **记忆** 分类均已启用（两者默认均为开启）。模型还需要开启 **内置工具**
+
+[自动化](/features/chat-conversations/chat-features/automations)也会在相同条件下获得记忆工具——只要记忆对其所有者用户开启。这依赖用户在 **设置 > 个性化** 中的 **记忆** 开关。如果用户从未设置过该开关，则由默认界面设置决定，而在连默认界面设置也没有的情况下，则由实例级的 **记忆** 设置决定。
+
+:::warning 出现空回复而非记忆操作
+记忆以原生工具调用的方式运行，因此它只能在流式输出遵循 OpenAI schema 的连接上工作。在流式工具调用中省略 `index` 字段的端点上（其中包括 Google 的 OpenAI 兼容层），该调用会被丢弃，该轮请求返回一条空的 assistant 消息，且日志中不会留下任何记录。由于是否调用 `list_memories` 或 `add_memory` 由模型自行决定，这表现为偶发性的空回复，而不是明显的记忆故障。参见[模型使用工具时出现空回复](/troubleshooting/connection-error#blank-replies-when-the-model-uses-a-tool)。
+:::
 
 :::info 中央工具文档
-有关所有内置 agentic 工具（包括记忆、网络搜索、知识库）的完整说明及配置方法，请参阅 [**原生/Agentic 模式工具指南**](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
+有关所有内置 agentic 工具（包括记忆、网络搜索和知识库）的完整说明及配置方法，请参阅 [**原生/Agentic 模式工具指南**](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
 :::
 
 ## 管理控制 {#administrative-controls}
@@ -96,6 +101,8 @@ Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话
 管理员还可以通过权限界面，按角色或用户组控制记忆访问。
 - **管理 UI**：管理面板 > 用户 > 权限 > 功能 > **记忆**
 - **环境变量**：[`USER_PERMISSIONS_FEATURES_MEMORIES`](/reference/env-configuration#user_permissions_features_memories)（默认：`True`）
+
+收回该权限会切断记忆抵达模型的所有路径。受影响的用户将失去**个性化**标签页，记忆 API 端点会向其返回 `403`，模型不再获得记忆工具，其已存储的记忆也不再被加入模型上下文。最后一项检查会在每次聊天请求时于服务端执行，因此仍在请求记忆的请求（比如之前就开着的个人 **记忆** 开关，或者发送 `features: {"memory": true}` 的 API 客户端）也不会让记忆重新出现。管理员不受该权限检查的限制。
 
 ### 后台审查与限制 {#background-review--limits}
 

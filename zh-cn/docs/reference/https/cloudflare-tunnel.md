@@ -5,7 +5,6 @@ title: "使用 Cloudflare Tunnel 的 HTTPS"
 
 # 通过 Cloudflare Tunnel 配置 HTTPS {#https-using-cloudflare-tunnel}
 
-## 通过 Cloudflare Tunnel 配置 HTTPS {#prerequisites}
 
 **安全地将 Open WebUI 暴露到互联网。无需开放端口、无需证书、也无需反向代理。**
 
@@ -17,7 +16,7 @@ Cloudflare Tunnel（`cloudflared`）会从你的机器向 Cloudflare 边缘网�
 
 ---
 
-## 前提条件 {#option-a-dashboard-setup-no-cli}
+## 前提条件 {#prerequisites}
 
 | 要求 | 详情 |
 | :--- | :--- |
@@ -27,13 +26,13 @@ Cloudflare Tunnel（`cloudflared`）会从你的机器向 Cloudflare 边缘网�
 
 ---
 
-## 方案 A：Cloudflare 控制台配置（无需 CLI）
+## 方案 A：Cloudflare 控制台配置（无需 CLI） {#option-a-dashboard-setup-no-cli}
 
 最简单的方式。全部通过 Cloudflare 控制台完成。
 
 ### 1. 创建 tunnel {#1-create-the-tunnel}
 
-1. 前往 [**Zero Trust → Networks → Tunnels**](https://one.dash.cloudflare.com/networks/tunnels)
+1. 前往 [**Zero Trust → Networks → Connectors**](https://dash.cloudflare.com/?to=/:account/one/networks/connectors)
 2. 点击 **创建隧道** → 选择 **Cloudflared**
 3. 为隧道命名（例如 `open-webui`）
 4. 按页面说明在你的机器上安装并运行连接器
@@ -220,5 +219,5 @@ Cloudflare Zero Trust 可以在不改动 Open WebUI 的情况下，为你的实�
 | 启动 tunnel | `cloudflared tunnel run open-webui` |
 | 添加 DNS | `cloudflared tunnel route dns open-webui chat.your-domain.com` |
 | 安装为系统服务 | `sudo cloudflared service install` |
-| Cloudflare 控制台 | [one.dash.cloudflare.com/networks/tunnels](https://one.dash.cloudflare.com/networks/tunnels) |
+| Cloudflare 控制台 | [https://dash.cloudflare.com/?to=/:account/one/networks/connectors](https://dash.cloudflare.com/?to=/:account/one/networks/connectors) |
 | 设置 CORS origin | `CORS_ALLOW_ORIGIN=https://chat.your-domain.com` |

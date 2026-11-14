@@ -27,7 +27,7 @@ title: "使用 Caddy 的 HTTPS"
   - [拉取最新镜像](#pulling-the-latest-image)
   - [启动 Open WebUI](#starting-open-webui)
 
-## Docker
+## Docker {#docker}
 
 按照 Docker 官方指南配置 apt 仓库：[Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
 
@@ -69,7 +69,7 @@ services:
         restart: unless-stopped
 ```
 
-## Caddy
+## Caddy {#caddy}
 
 Caddy 是一个强大的 Web 服务器，会自动替你管理 TLS 证书，因此非常适合通过 HTTPS 提供 Open WebUI 服务。
 
@@ -87,7 +87,7 @@ Caddy 是一个强大的 Web 服务器，会自动替你管理 TLS 证书，因�
 sudo nano /etc/caddy/Caddyfile
 ```
 
-然后将配置更新为如下内容：
+然后将配置更新为如下内容（确保将 `your-domain.com` 替换为你的真实域名）：
 
 ```caddyfile
 your-domain.com {
