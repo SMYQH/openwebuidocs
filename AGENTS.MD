@@ -2,7 +2,7 @@
 
 > AGENTS.MD (this document) is time-sensitive. Agent assistants **must** update this document synchronously as the project evolves. See Section 8.
 > Do not blindly trust this document; content may be out of date.
-> Current document snapshot `Git Commit Hash`: `3a11a13c65d8dcc643246720af0c4c231da3140e`, `Commit` timestamp: `2026-11-14T08:07:09+08:00`
+> Current document snapshot `Git Commit Hash`: `4f659e050098053e04e040b5ae2ab71cd7accc12`, `Commit` timestamp: `2026-11-17T18:44:53+08:00`
 
 ---
 
@@ -89,7 +89,7 @@ docs/
 ├── intro.mdx                   # Home / Landing page
 ├── getting-started/             # Quick start
 ├── features/                   # Core features (largest section)
-├── ecosystem/                  # Standalone Open WebUI ecosystem projects (Computer, Knowledge Base Sync, Community)
+├── ecosystem/                  # Standalone Open WebUI ecosystem projects (Tether, Knowledge Base Sync, Community)
 ├── tutorials/                  # Tutorials
 ├── troubleshooting/            # Troubleshooting
 ├── reference/                  # Reference documents
@@ -107,8 +107,8 @@ docs/
 | --- | --- | --- |
 | `getting-started/` | Installation methods (Docker/K8s/Python), production `deployment/` guides (AWS ECS, Azure Container Apps, Docker Swarm, Google Cloud Run, Kubernetes), provider connections (Ollama/OpenAI, etc.), upgrade guides | Keep commands and configuration keys in English. |
 | `features/` | Largest section: Chat, Voice, Image Generation, RAG, Web Search, Auth/RBAC, Plugins (the standalone Pipelines section was removed upstream in 2026-07), Open Terminal, Channels (Apps, encrypted chats), Workspace, Administration, etc. | Translate feature names and UI interaction descriptions. |
-| `ecosystem/` | Standalone Open WebUI projects: Computer (cptr) — full OS environment in-browser; Knowledge Base Sync (oikb) — folder/repo incremental sync; Community (openwebui.com) — shared models, prompts, tools and functions | The Computer section is quite large (~63 files); keep commands and environment variable names in English. |
-| `reference/` | Environment variables reference (2500+ lines), API docs, HTTPS setup, monitoring | **Do not** translate environment variable names and code snippets. |
+| `ecosystem/` | Standalone Open WebUI projects: Tether — desktop companion app that connects your computer to the instance; Knowledge Base Sync (oikb) — folder/repo incremental sync; Community (openwebui.com) — shared models, prompts, tools and functions | Keep commands and environment variable names in English. |
+| `reference/` | Environment variables reference (2500+ lines), API docs, HTTPS setup, monitoring, Tether client protocol (native-client sign-in and handshake) | **Do not** translate environment variable names and code snippets. |
 | `tutorials/` | Auth/SSO integration tutorials, third-party tool integrations, community deployments | Translate step-by-step instructions; keep code blocks and configurations untouched. |
 | `troubleshooting/` | Various troubleshooting guides | Keep error messages in their original form. |
 | `enterprise/` | Enterprise architecture, deployment, case studies | Same as above. |

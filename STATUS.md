@@ -3,25 +3,65 @@
 ## en-us Source Version
 
 - **Repo**: `en-us` (submodule)
-- **Git commit**: `36b7e50e4140f3cca1de0aeef4ae776af21169cb`
+- **Git commit**: `3072f18c3dce6b0078f8edd2447367263560f0f7`
 - **Branch**: `main`
-- **Snapshot date**: 2026-11-11
+- **Snapshot date**: 2026-11-17
 
 ## Translation Progress Overview
 
 | Metric | Value |
 | --- | --- |
-| en-us source files (.md/.mdx) | 461 |
-| zh-cn files (.md/.mdx) | 461 |
-| en-us `_category_.json` | 52 |
-| zh-cn `_category_.json` | 52 |
-| File coverage | **100%** (all 461 en-us documents have corresponding zh-cn translations) |
+| en-us source files (.md/.mdx) | 398 |
+| zh-cn files (.md/.mdx) | 398 |
+| en-us `_category_.json` | 43 |
+| zh-cn `_category_.json` | 43 |
+| File coverage | **100%** (all 398 en-us documents have corresponding zh-cn translations) |
 | Content completeness | **100%** (every upstream heading has a matching Chinese section) |
-| Verbatim code blocks | **1441 / 1441** byte-identical to upstream (0 EN-only, 0 zh-cn-only) |
+| Verbatim code blocks | **1119 / 1372** byte-identical to upstream; **1315 / 1372** identical once comment lines are excluded. The 223 blocks that carry Chinese text date from the repository's initial import (comment prose was translated for readability) and were not touched by this sync |
 | Upstream inline code spans preserved | **100%** (0 endpoint / path / env-var / placeholder / command spans missing) |
 | Explicit heading IDs matching upstream | **100%** (0 mismatches, 0 headings without an ID) |
 | Production build | **passes** - 0 broken links, 0 broken anchors, 0 broken markdown links, 0 duplicate routes |
 
+
+### 2026-11-17 Sync (en-us `36b7e50` -> `3072f18`)
+
+Upstream range: 274 files changed, 1035 insertions(+), 4082 deletions(-).
+
+**Removals**
+
+- `ecosystem/computer/` — upstream dropped the entire Computer (cptr) section: 63 pages plus 9 `_category_.json` files. The Chinese tree was deleted to match, together with `getting-started/quick-start/connect-an-agent/cptr.mdx`.
+- Page count moved 461 -> 398 and `_category_.json` count 52 -> 43 on both sides; coverage stays at 100%.
+
+**Additions**
+
+- `reference/tether-client-protocol.md` — new reference page for the native-client sign-in and the Tether handshake flow; translated.
+- `static/images/tether-connect.png` — copied from `en-us/static/`.
+
+**Major rewrites**
+
+- `ecosystem/tether.md` — upstream rewrote the page as a product page (workspace, Spotlight screen capture, folder sandbox). The Chinese page was rewritten to the same structure and heading order.
+- `features/workspace/knowledge.mdx` — new "提出第一个文档问题" walkthrough, a new "附加知识与笔记" section, a Key Features table (13 vector databases, always-use-full-text, file browser with preview), the Retrieval Modes overview, the Full Context paragraph, the reworked agentic-tools table and the scoped-access note.
+- `features/open-terminal/coding-agents.md` — upstream added a "Supported Agents" table (13 agents with their interface and executable) and an "Add Another ACP Agent" section. Both were translated, and a duplicated Chinese block left by an earlier edit was removed.
+- `features/chat-conversations/audio/speech-to-text/openai-stt-integration.md` — `whisper-1` now retires on 2027-02-26, a `:::caution` block lists the retiring models, `AUDIO_STT_MODEL` defaults to empty, and the troubleshooting list gained a step for OpenAI-compatible services.
+
+**Admin-path normalization (upstream-wide)**
+
+Upstream moved "Settings > Admin > X" to "Settings > X (admin section)" across roughly 120 pages. The Chinese pages were updated to the same wording, with the marker rendered as `（管理员区域）`. Headings that upstream re-titled also had their explicit IDs re-derived (`features/open-terminal/setup/connecting.md` now uses `{#2-go-to-settings--integrations-admin-section}`).
+
+**Other content**
+
+- `reference/monitoring/otel.md` — three new user gauges (`webui.users.total`, `webui.users.active`, `webui.users.active.today`) with the 3-minute window and the UTC-midnight semantics.
+- `features/chat-conversations/web-search/providers/google-pse.md` — the Custom Search JSON API end date (2027-01-01) and the `google_pse` engine warning.
+- `security/vendor-dispositions/cve-2024-7999.mdx` and `cve-2024-9840.mdx` — the CNA's published rejection text, and the note that the behaviour belongs to `python-multipart`.
+- `security/accepted-risks/agentic-application-risks.mdx` — the capability bullet now describes creating versus using a Tool; the Security Policy reference was renumbered to Rule 9. Upstream deleted the old Rule 5, so rules 6-13 became 5-12 across the 24 affected Chinese pages.
+- `reference/database-schema.md` — the `auth_session` rows now point at `/reference/tether-client-protocol` instead of the removed `/ecosystem/tether` anchor.
+- `src/css/custom.css` — the monospace font-stack re-wrap was re-synced from upstream.
+- `features/chat-conversations/data-controls/files.md`, `features/chat-conversations/prompt-caching.md`, `features/workspace/knowledge.mdx`, `troubleshooting/rag.mdx`, `features/notes/index.md`, `features/chat-conversations/chat-features/conversation-organization.md`, `features/chat-conversations/rag/index.md`, `features/extensibility/plugin/tools/index.mdx`, `features/extensibility/plugin/functions/filter.mdx` — the "collections" concept was replaced by "knowledge bases" throughout the Chinese text, with links to `/features/workspace/knowledge`.
+
+**Verification**
+
+- Production build passes: 0 broken links, 0 broken anchors, 0 broken markdown links, 0 duplicate routes.
+- Explicit heading IDs re-derived from the upstream English slugs and checked against `github-slugger`: 0 mismatches, 0 Chinese headings without an ID.
 ### 2026-11-14 Third deep audit (en-us `36b7e50`) — content-gap sweep, verbatim-span fidelity, heading/content realignment
 
 Third full pass over the same upstream snapshot `36b7e50`, aimed at the defect classes the token-level detectors could not see. Four independent detectors were run over all 461 page pairs; every finding below was fixed and re-verified.
