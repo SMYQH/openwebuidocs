@@ -63,7 +63,7 @@ docker run -d -p 5050:5050 travisvn/openai-edge-tts:latest
 
 **到这里就已经能用了！**
 
-## 如果你觉得 [OpenAI Edge TTS](https://github.com/travisvn/openai-edge-tts) 有用，请在 GitHub 上点个 ⭐️ {#please-star-the-repo-on-github-if-you-find-openai-edge-ttshttpsgithubcomtravisvnopenai-edge-tts-useful}
+## 如果你觉得 [OpenAI Edge TTS](https://github.com/travisvn/openai-edge-tts) 有用，请在 GitHub 上点个 ⭐️ {#please-star-the-repo-on-github-if-you-find-openai-edge-tts-useful}
 
 <!-- markdownlint-disable-next-line MD033 -->
 <details>

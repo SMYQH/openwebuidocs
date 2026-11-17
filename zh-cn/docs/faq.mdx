@@ -167,6 +167,8 @@ docker run -d -p 3000:8080 -e HF_ENDPOINT=https://hf-mirror.com/ --add-host=host
 
 ### 问：Open WebUI 的 RAG 效果很差，或者几乎不能用，这是为什么？ {#q-rag-with-open-webui-is-very-bad-or-not-working-at-all-why}
 
+**答：** 如果你使用的是 **Ollama**，请注意 Ollama 会根据 GPU 的显存来选择模型的默认上下文长度，在显存不足 24 GiB 的 GPU 上是 **4096 token**（参见 [Ollama 的上下文长度文档](https://docs.ollama.com/context-length)）。这意味着检索到的数据可能完全用不上，因为它超出了可用的上下文窗口。
+
 **答：** 如果你使用的是 **Ollama**，请注意它默认把上下文长度设为 **2048 tokens**。这意味着检索到的数据很可能根本塞不进可用的上下文窗口，因此不会被真正利用。
 
 要提升 Open WebUI 中 Retrieval-Augmented Generation（**RAG**）的效果，你应该把上下文长度提高到更大的值（**8192+ tokens**），确保检索到的文档能有效参与模型回答。

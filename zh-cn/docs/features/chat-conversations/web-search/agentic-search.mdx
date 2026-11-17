@@ -7,8 +7,10 @@ title: "Agentic 搜索与 URL 抓取"
 
 Open WebUI 的网络搜索已经不再只是简单地注入结果片段，而是演进为完整的 **agentic research system**。当你启用 **Native Function Calling (Agentic Mode)** 后，高质量模型就可以自主探索网页、校验事实并继续跟进链接。
 
-:::tip 需要高质量模型
-Agentic web search 最适合 GPT-5、Claude 4.5+、Gemini 3+、MiniMax M2.5 这类 frontier 模型，因为它们更擅长理解搜索结果并决定何时继续深挖。较小的本地模型可能难以完成这种多步骤推理。
+:::tip 最低模型档位（该列表不会持续维护）
+Agentic 网络搜索需要模型能够可靠地调用工具，并判断何时继续深挖。这**不**意味着必须使用 frontier 级模型——便宜且够快就行。**GPT-5.6 Luna**、**Gemini 3.5 Flash-Lite**、**MiniMax M3**、**DeepSeek V4 Flash**，或者本地运行的 **Gemma 4 31B**、**Qwen 3.6 27B**、**Muse Glimmer 30B** 都能很好地胜任并达到最低要求，每个都在撰写时验证过。只有真正过旧或非常小的模型难以完成这种多步骤推理。
+
+**该列表不会持续更新**——追逐每一次模型发布既不现实也没有价值。直接使用你的提供商当前提供的模型即可；你不需要最新最强的，只需要一个较新的。
 :::
 
 :::info 中央工具文档

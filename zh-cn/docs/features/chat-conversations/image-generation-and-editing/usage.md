@@ -75,7 +75,7 @@ description: "在对话中启用图像生成、根据提示词创建图像，并
 该 action 会在消息操作栏中加入一个 “生成图像” 图标，让你可以直接根据 LLM 回复生成图像——这在你希望先让助手迭代优化提示词、满意后再执行生成时会很有帮助。
 
 :::info
-**要求：** 若要使用 **图像编辑** 或 **图像 + 图像生成**，你必须在管理员设置中配置一个支持这些能力的 **图像生成模型**（例如 OpenAI DALL-E，或具备相应 inpainting / img2img 能力的 ComfyUI / Automatic1111 模型）。
+**要求：** 图像编辑需满足本页顶部列出的相同条件。若要使用 **图像编辑** 或 **图像 + 图像生成**，还需在 **Settings** > **Images**（管理员区域）的 **编辑图像** 部分开启 **图像编辑**，并配置编辑引擎（`Default (Open AI)`、`ComfyUI` 或 `Gemini`）以及支持 inpainting 或 img2img 的模型。
 :::
 
 ## 图像编辑（Inpainting） {#image-editing-inpainting}

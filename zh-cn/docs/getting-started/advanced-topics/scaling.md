@@ -54,7 +54,7 @@ DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
 
 - Open WebUI **不会**在数据库之间迁移数据，因此在 SQLite 中已有生产数据之前就要规划好这一步。
 - **连接池。** 未设置 [`DATABASE_POOL_SIZE`](/reference/env-configuration#database_pool_size) 时，每个进程使用 SQLAlchemy 默认的 5 个连接加 10 个溢出连接。一旦设置了 `DATABASE_POOL_SIZE`，溢出连接默认值会降为 `0`，因此还要设置 [`DATABASE_POOL_MAX_OVERFLOW`](/reference/env-configuration#database_pool_max_overflow)。`DATABASE_POOL_SIZE=0` 会禁用连接池。对于繁忙实例，`DATABASE_POOL_SIZE=15` 配 `DATABASE_POOL_MAX_OVERFLOW=20` 是一个不错的起点。
-- **每个副本都有自己的连接池。** 最大连接数为 `(DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW) × 副本数`。请把它控制在 PostgreSQL 的 `max_connections`（默认 100）以下，并为其余客户端留出余量。按上面的取值，3 个副本可以打开 105 个连接。
+- **每个副本都有自己的连接池。** 最大连接数为 `(DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW) × replicas`。请把它控制在 PostgreSQL 的 `max_connections`（默认 100）以下，并为其余客户端留出余量。按上面的取值，3 个副本可以打开 105 个连接。
 - 单实例的连接池调优请参见[连接池大小](/troubleshooting/performance#connection-pool-sizing)。
 
 凭据处理和静态加密请参见[加固指南的数据库一节](/getting-started/advanced-topics/hardening#database)。

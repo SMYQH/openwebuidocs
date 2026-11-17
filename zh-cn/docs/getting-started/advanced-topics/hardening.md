@@ -174,6 +174,7 @@ JWT_EXPIRES_IN=24h
 **如果你暂时无法部署 Redis**， 请缩短 `JWT_EXPIRES_IN`（例如 `1h` 或 `4h`）以缩小暴露窗口。Redis 配置请参考 [Redis 教程](/tutorials/integrations/redis)。
 
 :::
+
 ---
 
 ## 跨域资源共享（CORS） {#cors}
@@ -799,6 +800,7 @@ docker pull ghcr.io/open-webui/open-webui:main
 | [检查注册策略](#registration) | 第一个用户后禁用 | 保持禁用，或使用 `pending` 角色 |
 | [启用密码校验](#password-validation) | 关闭 | `ENABLE_PASSWORD_VALIDATION=true` |
 | [加固 Cookie](#cookie-settings) | `Secure=false`、`SameSite=lax` | `Secure=true`、`SameSite=strict` |
+| [要求双因素登录](#two-factor-sign-in) | 关闭 | `ENABLE_MFA=true` |
 | [启用 token 撤销](#token-revocation) | 无撤销（无 Redis） | 配置 Redis 或缩短 `JWT_EXPIRES_IN` |
 | [限制 CORS](#cors) | `*` | 仅允许你的明确域名 |
 | [设置安全响应头](#security-headers) | 无 | HSTS、X-Frame-Options、CSP、Cross-Origin 策略 |

@@ -81,15 +81,15 @@ ENABLE_DB_MIGRATIONS=false
 
 Open WebUI 支持三种生产级部署模式。每份指南都涵盖该模式对应的架构、扩展策略和关键注意事项。
 
-### [自动扩缩容虚拟机上的 Python / Pip](./python-pip) {#python--pip-on-auto-scaling-vmsenterprisedeploymentpython-pip}
+### [自动扩缩容虚拟机上的 Python / Pip](./python-pip) {#python--pip-on-auto-scaling-vms}
 
 将 `open-webui serve` 以 systemd 管理的进程形式，部署在云自动扩缩容虚拟机组（AWS ASG、Azure VMSS、GCP MIG）中。适合已经具备 VM 基础设施和较强 Linux 运维能力的团队，或受监管要求必须进行操作系统层直接控制的场景。
 
-### [容器服务](./container-service) {#container-serviceenterprisedeploymentcontainer-service}
+### [容器服务](./container-service) {#container-service}
 
 在 AWS ECS/Fargate、Azure Container Apps、Google Cloud Run 等托管平台上运行官方 Open WebUI 容器镜像。适合希望获得容器优势（不可变镜像、版本化部署、无需管理操作系统），但又不想引入 Kubernetes 复杂度的团队。
 
-### [使用 Helm 的 Kubernetes](./kubernetes-helm) {#kubernetes-with-helmenterprisedeploymentkubernetes-helm}
+### [使用 Helm 的 Kubernetes](./kubernetes-helm) {#kubernetes-with-helm}
 
 在任意 Kubernetes 发行版（EKS、AKS、GKE、OpenShift、Rancher、自建集群）上使用官方 Open WebUI Helm Chart 部署。适合需要声明式基础设施、进阶自动扩缩容与 GitOps 工作流的大规模关键任务级场景。
 

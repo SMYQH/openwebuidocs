@@ -88,7 +88,7 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 :::warning
 **致 Ollama 用户的上下文长度警告：** 即使经过内容提取，网页通常包含 4,000-8,000 多个 token，包括主要内容、导航元素、页眉、页脚和元数据。如果只有 2048 个可用 token，您获得的内容不到页面内容的一半，通常会丢失最相关的信息。甚至 4096 个 token 对于全面的网页内容分析也常常是不够的。
 
-**修复方法：** 导航至 **Settings > Models**（管理员区域）中（您的 Ollama 模型的）铅笔图标（**Edit**），打开 **Advanced Params** 并，并**将上下文长度增加到 8192+（或最好超过 16000）个 token**。此设置特别适用于 Ollama 模型。对于 OpenAI 和其他集成模型，请确保您使用的是具有足够内置上下文长度的模型（例如，具有 128k token 的 GPT-4 Turbo）。
+**修复方法：** 导航至 **Settings > Models**（管理员区域）中（您的 Ollama 模型的）铅笔图标（**Edit**），打开 **Advanced Params** 并**将上下文长度增加到 8192+（或最好超过 16000）个 token**。此设置特别适用于 Ollama 模型。对于 OpenAI 和其他集成模型，请确保您使用的是具有足够内置上下文长度的模型（例如，拥有 1M token 上下文窗口的 GPT-5.6）。
 :::
 
 对于网页内容的集成，在聊天中以 `#` 开头开始查询，并紧跟目标 URL。点击聊天框上方出现的方框中的格式化 URL。选择后，`Send a message` 上方会出现一个文档图标，表示检索成功。如果可以，Open WebUI 将从该 URL 获取并解析信息。
@@ -360,7 +360,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 
 ## Google Drive 集成 {#google-drive-integration}
 
-当与一个开启了 Google Picker API 以及 Google Drive API 的 Google Cloud 项目共同配置时，此项特性可以让用户直接从聊天界面接入他们的 Drive 文件并上传文档、幻灯片、表格等作为您的对话上下文。这能够在 `Settings` > `Documents`（管理员区域）菜单下启用。使用它必须要设定 [`GOOGLE_DRIVE_API_KEY 以及 GOOGLE_DRIVE_CLIENT_ID`](/reference/env-configuration) 的环境变量。
+当与一个开启了 Google Picker API 以及 Google Drive API 的 Google Cloud 项目共同配置时，此项特性可以让用户直接从聊天界面接入他们的 Drive 文件并上传文档、幻灯片、表格等作为您的对话上下文。这能够在 `Settings` > `Documents`（管理员区域）菜单下启用。使用它必须要设定 [`GOOGLE_DRIVE_API_KEY` 和 `GOOGLE_DRIVE_CLIENT_ID`](/reference/env-configuration) 的环境变量。
 
 ### 详细说明 {#detailed-instructions}
 

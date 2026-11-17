@@ -143,7 +143,7 @@ docker compose up -d
 
 ### 连接测试通过，但模型仍未加载 {#connection-test-passes-but-no-models-load}
 
-几乎总是因为缺少 `/v1` 后缀。Open WebUI 的连接测试只检查基础连通性，不会验证模型发现是否正常。
+Open WebUI 的连接测试会带上你的密钥请求 `GET <URL>/models`，因此缺少 `/v1` 后缀的 URL 通常会让测试本身就失败。如果测试通过但模型仍未加载，说明 `/models` 的响应不是带有 `data` 列表的 JSON（也不是一个裸列表），或者该连接已被关闭。如果你填写了 Model ID，则只会列出这些 ID，并且不会查询 `/models`。
 
 ### 出现 “无效的 API 密钥” 错误 {#invalid-api-key-errors}
 

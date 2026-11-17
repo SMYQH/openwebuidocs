@@ -45,7 +45,7 @@ Open WebUI 提供了一整套面向对话场景的能力，用于增强你与 AI
 
 - **引用对话**：把另一段对话附加到当前对话，让模型基于其中讨论过的内容工作。可以从 **+ > 添加上下文 > 引用对话** 中选择自己的对话，也可以把对话从侧边栏拖到消息输入框上——对别人共享给你的对话同样有效。对话会整体以纯文本形式加入，不分块、不做向量搜索。任何你有权限读取的对话都可以附加，包括[与你共享的对话](./chatshare.md#using-a-shared-chat-as-context)和[共享文件夹中的对话](./conversation-organization.md#sharing-folders)。
 
-- **分叉对话**：可以从任意助手回复出发，把对话分支为一份独立副本。消息上的 **分叉对话** 操作会把从对话开始到该点为止的历史复制到一个新对话中，标题为 `<原标题> (fork)`，因此你可以尝试另一条路线而不影响原对话。分叉自己的对话会保留其文件夹、置顶、标签和对话变量。共享的只读对话同样可以分叉；参见[克隆或分叉共享的对话](/features/chat-conversations/chat-features/chatshare#cloning-or-forking-a-shared-chat)。分叉需要[对话导入](/features/authentication-access/rbac/permissions#3-chat-permissions)权限（`chat.import`，默认允许；管理员始终通过）。没有该权限时，消息上根本不会显示 **分叉对话** 操作。回复仍在流式输出时以及在临时对话（不会被保存）中也无法分叉。
+- **分叉对话**：可以从任意助手回复出发，把对话分支为一份独立副本。消息上的 **分叉对话** 操作会把从对话开始到该点为止的历史复制到一个新对话中，标题为 `<original title> (fork)`，因此你可以尝试另一条路线而不影响原对话。分叉自己的对话会保留其文件夹、置顶、标签和对话变量。共享的只读对话同样可以分叉；参见[克隆或分叉共享的对话](/features/chat-conversations/chat-features/chatshare#cloning-or-forking-a-shared-chat)。分叉需要[对话导入](/features/authentication-access/rbac/permissions#3-chat-permissions)权限（`chat.import`，默认允许；管理员始终通过）。没有该权限时，消息上根本不会显示 **分叉对话** 操作。回复仍在流式输出时以及在临时对话（不会被保存）中也无法分叉。
 
 - **对话概览**：以全屏窗口呈现整段对话的地图。在对话的 **...** 菜单中通过 **概览** 打开，对话中出现消息后就会列出该入口。被上下文压缩概括过的旧消息会在地图上带有 **已压缩上下文** 标签。
 

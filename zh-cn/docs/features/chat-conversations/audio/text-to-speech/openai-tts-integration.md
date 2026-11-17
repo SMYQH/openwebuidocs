@@ -40,6 +40,12 @@ title: "OpenAI 文本转语音集成"
 | `tts-1` | 标准音质、延迟更低 | 实时应用、更快响应 |
 | `tts-1-hd` | 更高音质 | 预录内容、高品质音频 |
 
+:::caution OpenAI 正在停用这些模型
+
+OpenAI 将于 2027-01-06 从其 API 中移除 `tts-1`、`tts-1-hd` 和 `gpt-4o-mini-tts`。官方推荐的替代模型 `gpt-realtime-2.1-mini` 不支持 `OpenAI` 引擎所调用的 `/audio/speech` 端点，因此仅修改 **TTS 模型**并不够。若要继续用 OpenAI 做语音合成，请改用 [OpenAI Realtime 引擎](#using-the-openai-realtime-engine)。详情见 [OpenAI 弃用页面](https://developers.openai.com/api/docs/deprecations#2026-10-01-text-to-speech-models)。
+
+:::
+
 ## 可用语音 {#available-voices}
 
 OpenAI 提供 6 种内置语音：

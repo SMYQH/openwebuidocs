@@ -5,7 +5,7 @@ title: "📋 安全政策"
 
 :::info 权威来源
 
-该政策的权威版本位于 [GitHub 安全政策](https://github.com/open-webui/open-webui/security)。本页面是其关键原则的快速参考。如有任何不一致，GitHub 版本优先。
+本页即 Open WebUI 安全政策的权威版本，[GitHub 安全政策](https://github.com/open-webui/open-webui/security) 指向这里。
 
 :::
 
@@ -190,22 +190,18 @@ Open WebUI 是一个**自托管、单租户、经过身份验证、基于角色*
 - **一般问题和错误**：使用我们的[问题跟踪器](https://github.com/open-webui/open-webui/issues)
 - **最佳实践指导**：帮助扩展[文档](https://github.com/open-webui/docs)
 
+如有任何其他紧急问题或疑问，请在我们的[问题跟踪器](https://github.com/open-webui/open-webui/issues)中创建 issue。
+
 ## 工具、函数和管道安全 {#tools-functions-and-pipelines-security}
 
-Open WebUI 通过**工具**、**函数**（包括管道、过滤器和操作）和**管道**提供强大的可扩展性。这些功能允许您使用自定义 Python 代码扩展 Open WebUI 的功能。但是，这种力量伴随着安全责任。以下每个文档页面都包含其自己的安全警告 — 查看它们以获得完整的图片：
-
-- [插件安全概览](/features/extensibility/plugin/) — 关键安全警告、信任模型和工作区访问限制
-- [工具](/features/extensibility/plugin/tools/) — 工具创建、导入和 `workspace.tools` 权限的安全警告
-- [函数](/features/extensibility/plugin/functions/) — 仅管理员创建、代码执行警告
-
-:::warning
-
-**工具、函数和管道在您的服务器上执行任意 Python 代码。** 这是有意的 — 这是使它们强大的原因。但是，这意味着它们具有与 Open WebUI 后端流程相同的访问级别。
-
-:::
+**工具、函数和管道在你的服务器上执行任意 Python 代码**，其访问权限与 Open WebUI 后端相同：文件、网络、子进程、环境变量和数据库。这是有意为之。关于它们的报告按[报告指南](#reporting-guidelines)的规则 9 处理。能够写入存放已安装插件的数据卷的攻击者同样在威胁模型之外。如需安全使用，请参阅[插件安全](/features/extensibility/plugin/)警告和[加固指南](/getting-started/advanced-topics/hardening#tools-functions-and-pipelines)。
 
 ## 生产部署安全 {#production-deployment-security}
 
 Open WebUI 为私有、受信任的网络设计，默认配置针对易于设置进行了优化。处理敏感数据的生产部署应查阅[加固指南](../getting-started/advanced-topics/hardening.md)以获取完整清单。
 
-一个关键注意事项：**在没有 Redis 的情况下，登出和修改密码操作不会撤销现有的 JWT 令牌。** 它们会保持有效直到过期（默认：4 周）。这意味着泄露的令牌无法被废弃，且管理员发起的账户停用不会立即阻止访问。对于生产部署，建议[配置 Redis](../tutorials/integrations/redis.md) 或缩短 `JWT_EXPIRES_IN` 以限制暴露窗口。详情请参阅[令牌撤销](../getting-started/advanced-topics/hardening.md#token-revocation)。
+一个关键注意事项：**没有 Redis 时，登出并不会撤销该会话的 JWT 令牌。** 它会一直有效直到过期（默认：4 周）。修改密码和管理员的**退出所有设备**都会结束该账户的所有会话，无论是否使用 Redis。对于生产部署，请[配置 Redis](../tutorials/integrations/redis.md)或缩短 `JWT_EXPIRES_IN` 以限制暴露窗口。详情请参阅[令牌撤销](../getting-started/advanced-topics/hardening.md#token-revocation)。
+
+---
+
+_最后更新于 **2026-11-15**。_

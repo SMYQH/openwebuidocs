@@ -116,7 +116,7 @@ services:
 
 ## 支持的内容格式（仅限 HTML） {#supported-content-formatting}
 
-横幅的 `content` 会先按 Markdown 解析，再经过净化器处理，因此内联 Markdown（`**粗体**`、`[链接](url)`、反引号）和内联 HTML 均可正常渲染。由于解析前每个换行都会先变成换行符，跨行的块级 Markdown（多行列表、表格、引用块、后置标题）无法成形。HTML 列表、标题、表格和引用块则可以正常渲染。`title` 虽然在 JSON 中被接受，但从不显示：编辑器没有"标题"字段，横幅展示的是类型标签加上内容。
+横幅的 `content` 会先按 Markdown 解析，再经过净化器处理，因此内联 Markdown（`**bold**`、`[link](url)`、反引号）和内联 HTML 均可正常渲染。由于解析前每个换行都会先变成换行符，跨行的块级 Markdown（多行列表、表格、引用块、后置标题）无法成形。HTML 列表、标题、表格和引用块则可以正常渲染。`title` 虽然在 JSON 中被接受，但从不显示：编辑器没有"标题"字段，横幅展示的是类型标签加上内容。
 
 ### 文本格式 {#text-formatting}
 

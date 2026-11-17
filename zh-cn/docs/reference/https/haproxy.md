@@ -113,40 +113,40 @@ backend owui_chat
  http-request set-header X-Forwarded-Proto https if { ssl_fc }
     server chat <ip>:3000
 
-## WebSocket and HTTP/2 Compatibility
+## WebSocket 与 HTTP/2 兼容性
 
-Starting with recent versions (including HAProxy 3.x), HAProxy may enable HTTP/2 by default. While HTTP/2 supports WebSockets (RFC 8441), some clients or backend configurations may experience "freezes" or unresponsiveness when icons or data start loading via WebSockets over an H2 tunnel.
+从较新的版本开始（包括 HAProxy 3.x），HAProxy 可能默认启用 HTTP/2。虽然 HTTP/2 支持 WebSocket（RFC 8441），但当图标或数据开始通过 H2 隧道上的 WebSocket 加载时，某些客户端或后端配置可能会出现“卡死”或无响应。
 
-If you experience these issues:
-1. **Force HTTP/1.1 for WebSockets**: Add `option h2-workaround-bogus-websocket-clients` to your `frontend` or `defaults` section. This prevents HAProxy from advertising RFC 8441 support to the client, forcing a fallback to the more stable HTTP/1.1 Upgrade mechanism.
-2. **Backend Version**: Ensure your backend connection is using HTTP/1.1 (the default for `mode http`).
+如果遇到这些问题：
+1. **为 WebSocket 强制使用 HTTP/1.1**：在 `frontend` 或 `defaults` 段中添加 `option h2-workaround-bogus-websocket-clients`。这会阻止 HAProxy 向客户端声明支持 RFC 8441，从而回退到更稳定的 HTTP/1.1 Upgrade 机制。
+2. **后端版本**：确保你的后端连接使用 HTTP/1.1（`mode http` 的默认行为）。
 
-Example addition to your `defaults` or `frontend`:
+在 `defaults` 或 `frontend` 中添加的示例：
 ```shell
 defaults
     # ... other settings
     option h2-workaround-bogus-websocket-clients
 ```
 
-You will see that we have ACL records (routers) for both Open WebUI and Let's Encrypt. To use WebSocket with OWUI, you need to have an SSL configured, and the easiest way to do that is to use Let's Encrypt.
+你会看到其中为 Open WebUI 和 Let's Encrypt 分别定义了 ACL 记录（路由）。要在 OWUI 上使用 WebSocket，必须配置好 SSL，而最简单的方式就是使用 Let's Encrypt。
 
-You can use either the subdomain method or the path method for routing traffic to Open WebUI. The subdomain method requires a dedicated subdomain (e.g., chat.yourdomain.com), while the path method allows you to access Open WebUI through a specific path on your domain (e.g., yourdomain.com/owui/). Choose the method that best suits your needs and update the configuration accordingly.
+你可以选择子域名方式或路径方式，把流量路由到 Open WebUI。子域名方式需要一个独立的子域名（例如 chat.yourdomain.com），路径方式则允许你通过域名下的特定路径访问 Open WebUI（例如 yourdomain.com/owui/）。选择最适合你的方式，并相应更新配置。
 
 :::info
 
-You will need to expose port 80 and 443 to your HAProxy server. These ports are required for Let's Encrypt to validate your domain and for HTTPS traffic. You will also need to ensure your DNS records are properly configured to point to your HAProxy server. If you are running HAProxy at home, you will need to use port forwarding in your router to forward ports 80 and 443 to your HAProxy server.
+你需要把 80 和 443 端口暴露到 HAProxy 服务器。Let's Encrypt 验证域名以及 HTTPS 流量都需要这两个端口。同时还要确保 DNS 记录正确指向你的 HAProxy 服务器。如果你是在家里运行 HAProxy，还需要在路由器中配置端口转发，把 80 和 443 端口转发到 HAProxy 服务器。
 
 :::
 
 ## 使用 Let's Encrypt 签发 SSL 证书 {#issuing-ssl-certificates-with-lets-encrypt}
 
-Before starting HAProxy, you will want to generate a self-signed certificate to use as a placeholder until Let's Encrypt issues a proper one. Here's how to generate a self-signed certificate:
+在启动 HAProxy 之前，你先生成一个自签名证书作为占位，等 Let's Encrypt 签发正式证书后再替换。生成自签名证书的方法如下：
 
 ```shell
 openssl req -x509 -newkey rsa:2048 -keyout /tmp/haproxy.key -out /tmp/haproxy.crt -days 3650 -nodes -subj "/CN=localhost"
 ```
 
-Then combine the key and certificate into a PEM file that HAProxy can use:
+然后把密钥和证书合并成 HAProxy 可用的 PEM 文件：
 
 ```cat /tmp/haproxy.crt /tmp/haproxy.key > /etc/haproxy/certs/haproxy.pem```
 

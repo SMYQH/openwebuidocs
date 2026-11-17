@@ -1161,7 +1161,7 @@ Default Mode **属于旧版且不再支持**。新工具应编写为在 Native M
 将 Default-Mode 工具迁移到 Native 时，常见的改写方式如下：
 
 - 把中途追加内容的 `message` 事件改成一个单独的最终返回值，返回已组装好的完整内容。
-- 把基于 `replace` 的进度条改成一系列 `status` 事件（例如 `"description": "第 3/5 步——正在获取..."`）。
+- 把基于 `replace` 的进度条改成一系列 `status` 事件（例如 `"description": "Step 3 of 5 — fetching..."`）。
 - 把基于 `chat:message` 的仪表盘改成返回渲染后的仪表盘内容（Markdown / HTML 都可以）。
 - 保持 `citation`、`notification`、`confirmation` 和文件附件不变——它们在两种模式下行为一致。
 
@@ -1387,7 +1387,9 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 
 :::note
 
-请记住，pip 与 Open WebUI 运行在同一个进程中，因此安装期间 **UI 会完全无响应**。
+pip 作为子进程在工作线程中运行，因此安装期间 Open WebUI 的其余部分仍会继续处理请求。只有触发安装的那次保存操作会等待。
+
+Open WebUI 还会把保存的源码中的四个 import 前缀——`from utils`、`from apps`、`from main` 和 `from config`——改写为对应的 `open_webui.` 形式，方式是纯字符串替换。因此 `from configparser import ConfigParser` 会变成 `from open_webui.configparser import ConfigParser` 并失败。请改写为 `import configparser`，并避免在文件中使用这四个前缀。
 
 系统不会采取任何措施来处理与 Open WebUI 自身依赖之间的冲突。若不小心指定了 requirements，可能会把 Open WebUI 搞坏。你也许可以通过把 `open-webui` 本身也写进 requirements 来绕过这个问题。
 

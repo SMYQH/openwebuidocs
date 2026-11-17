@@ -650,6 +650,12 @@ DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0         # disable the per-connection mmap win
 
 | 问题 | 症状 | 修复方式 |
 |---|---|---|
+| **陈旧连接** | Redis 连接数耗尽或内存无限增长 | 在 redis.conf 中设置 `timeout 1800`（30 分钟后终止空闲连接） |
+| **maxclients 过小** | 出现 `max number of clients reached` 错误 | 将 `maxclients` 设为 10000 或更高 |
+| **没有连接上限** | Open WebUI 的 Pod 可能累积永不关闭的连接 | 在 Redis 客户端配置中把 `timeout` 与连接池上限结合起来 |
+| **Pub/Sub 输出缓冲区上限过低** | WebSocket 流停滞，出现 `Cannot publish to redis... giving up`，或在发布大型 Socket.IO 事件时 Redis 日志中出现客户端输出缓冲区断连 | 调高 Redis 的 `client-output-buffer-limit ... pubsub ...` 设置，容量按你的 websocket 负载和可用 Redis 内存确定 |
+
+关于 Pub/Sub 输出缓冲区上限，包括检查它的命令和一份示例配置，请参阅[WebSocket Pub/Sub 缓冲区上限](/tutorials/integrations/redis#websocket-pubsub-buffer-limits)。
 
 ## ⚠️ 常见反模式 {#common-anti-patterns}
 下面这些真实世界中的错误，经常会让组织为了掩盖根因而过度扩容基础设施：

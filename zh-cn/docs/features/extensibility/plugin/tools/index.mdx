@@ -326,7 +326,7 @@ Open WebUI 在执行调用前会修复常见的参数问题：
 
 使用 **默认** 引擎时，由对话模型作出决定。Open WebUI 会把审批策略加入系统提示词，并为每个工具添加一个必需的 `__approval__` 参数，并在工具运行前将其移除。只有当模型在该参数中恰好发送 `{"required": false}` 时，调用才会不经审批直接执行；其他任何情况（包括完全省略）都会请求审批。参数不是纯 JSON 对象的工具，或自行定义了 `__approval__` 参数的工具，不会获得 `__approval__` 参数，因此它们的调用始终会请求审批。在[旧版模式](#legacy-mode-prompt-based)中，没有任何工具会获得该参数，因此每次调用都会请求审批。决定随调用一同返回，所以该引擎无需额外服务。由于对话模型评判自己的调用，能够引导模型的内容（例如工具结果中的指令）同样会影响它的决定。
 
-使用 **决策 API** 引擎时，Open WebUI 会在每次工具调用时向 `<API 基础 URL>/decisions` 发送一个 `POST` 请求，其中包含 **模型**、审批策略、你最近的请求和最后四条消息、工具的定义和名称、调用的参数，以及工具类型和开放终端 ID。该服务会返回这次调用需要审批的概率。当该概率达到或超过 **审批阈值** 时，调用会请求审批。当审查服务在 5 秒内没有响应、失败或返回无效结果时，调用也会请求审批；当 **审批阈值** 不是 0 到 1 之间的数字时同样如此；当除模型和审批策略之外的数据超过 64 KB 时也会如此。审查服务必须实现与[工具搜索](#tool-search) **决策 API** 引擎相同的 `/decisions` 端点。
+使用 **决策 API** 引擎时，Open WebUI 会在每次工具调用时向 `<API Base URL>/decisions` 发送一个 `POST` 请求，其中包含 **模型**、审批策略、你最近的请求和最后四条消息、工具的定义和名称、调用的参数，以及工具类型和开放终端 ID。该服务会返回这次调用需要审批的概率。当该概率达到或超过 **审批阈值** 时，调用会请求审批。当审查服务在 5 秒内没有响应、失败或返回无效结果时，调用也会请求审批；当 **审批阈值** 不是 0 到 1 之间的数字时同样如此；当除模型和审批策略之外的数据超过 64 KB 时也会如此。审查服务必须实现与[工具搜索](#tool-search) **决策 API** 引擎相同的 `/decisions` 端点。
 
 [工具搜索](#tool-search)中的 `search_tools` 调用不会经过审查。如果关闭 **自动权限**，此前使用 **自动** 的对话会切换为 **请求审批**。
 
@@ -375,7 +375,7 @@ Open WebUI 在执行调用前会修复常见的参数问题：
 | **嵌入** | 使用[文档](/features/chat-conversations/rag)嵌入模型计算查询与每个工具定义之间的相似度。工具嵌入按 worker 在内存中缓存（总计最多 2048 条，按用户分别保存），不做持久化。重启后或嵌入模型变更时会重新计算。 |
 | **决策 API** | 由服务为每个工具与查询的相关性打分。达到或超过 **相关性阈值**（[`TOOL_SEARCH_DECISIONS_THRESHOLD`](/reference/env-configuration#tool_search_decisions_threshold)，默认 `0.5`）的工具会被返回，相关性高的排在前面。 |
 
-**决策 API** 引擎拥有自己的 **API 基础 URL**（[`TOOL_SEARCH_DECISIONS_API_BASE_URL`](/reference/env-configuration#tool_search_decisions_api_base_url)，默认 `https://api.openai.com/v1`）、**API 密钥**（[`TOOL_SEARCH_DECISIONS_API_KEY`](/reference/env-configuration#tool_search_decisions_api_key)）、**模型**（[`TOOL_SEARCH_DECISIONS_MODEL`](/reference/env-configuration#tool_search_decisions_model)，默认 `gpt-6-luna`）和 **提示词**（[`TOOL_SEARCH_DECISIONS_PROMPT`](/reference/env-configuration#tool_search_decisions_prompt)，留空表示使用内置指令）。每次搜索都会向 `<API 基础 URL>/decisions` 发送一个 `POST` 请求，其中包含 **模型**、模型的搜索查询，以及每个被延迟工具对应的一个问题（该问题包含 **提示词** 和该工具的定义），按每批最多 400 个工具分批，总计 30 秒内完成。服务会为每个工具返回一个概率。搜索失败时，模型会收到一条错误消息而不是结果。
+**决策 API** 引擎拥有自己的 **API 基础 URL**（[`TOOL_SEARCH_DECISIONS_API_BASE_URL`](/reference/env-configuration#tool_search_decisions_api_base_url)，默认 `https://api.openai.com/v1`）、**API 密钥**（[`TOOL_SEARCH_DECISIONS_API_KEY`](/reference/env-configuration#tool_search_decisions_api_key)）、**模型**（[`TOOL_SEARCH_DECISIONS_MODEL`](/reference/env-configuration#tool_search_decisions_model)，默认 `gpt-6-luna`）和 **提示词**（[`TOOL_SEARCH_DECISIONS_PROMPT`](/reference/env-configuration#tool_search_decisions_prompt)，留空表示使用内置指令）。每次搜索都会向 `<API Base URL>/decisions` 发送一个 `POST` 请求，其中包含 **模型**、模型的搜索查询，以及每个被延迟工具对应的一个问题（该问题包含 **提示词** 和该工具的定义），按每批最多 400 个工具分批，总计 30 秒内完成。服务会为每个工具返回一个概率。搜索失败时，模型会收到一条错误消息而不是结果。
 
 请针对[模型看到的工具名称](/features/extensibility/mcp#tool-names-the-model-sees)来编写始终加载的模式。MCP 工具带有其服务器 ID 作为前缀（服务器 ID 为 `github` 的 `get_issue` 工具名为 `github_get_issue`），因此 `github_*` 会让该服务器的所有工具保持加载。
 
@@ -566,7 +566,7 @@ Open WebUI 在执行调用前会修复常见的参数问题：
 | `view_channel_message` | `message_id`（必填） | `{id, content, user_name, created_at, reply_count}` |
 | `view_channel_thread` | `parent_message_id`（必填） | `{channel_id, channel_name, thread_id, message_count, messages: [...]}` |
 | **任务管理** | | |
-| `create_tasks` | `tasks`（必填）：`{content (必填), status (默认：pending), id (可选，自动生成)}` 列表 | `{tasks: [...], summary: {total, pending, in_progress, completed, cancelled}}` |
+| `create_tasks` | `tasks`（必填）：`{content (required), status (default: pending), id (optional, auto-generated)}` 列表 | `{tasks: [...], summary: {total, pending, in_progress, completed, cancelled}}` |
 | `update_task` | `id`（必填），`status`（默认：`completed`；取值范围为 `pending`、`in_progress`、`completed`、`cancelled`） | `{tasks: [...], summary: {total, pending, in_progress, completed, cancelled}}` |
 | **自动化** | | |
 | `create_automation` | `name`（必填），`prompt`（必填），`rrule`（必填），`folder_id`（可选，把生成的对话归档到用户的某个文件夹） | `{status, id, name, model_id, folder_id, is_active, next_runs}` |

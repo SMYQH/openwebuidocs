@@ -50,7 +50,7 @@ title: "S3 存储"
 
 有关可用 S3 端点 URL 的完整列表，请参阅：[Amazon S3 常规端点](https://docs.aws.amazon.com/general/latest/gr/s3.html)
 
-有关所有 `云存储` 配置选项，请参阅 [Open-WebUI 云存储配置](/reference/env-configuration#cloud-storage) 文档。
+有关所有 `Cloud Storage` 配置选项，请参阅 [Open-WebUI 云存储配置](/reference/env-configuration#cloud-storage) 文档。
 
 ## 2. 运行 Open-WebUI {#2-run-open-webui}
 

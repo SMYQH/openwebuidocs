@@ -12,7 +12,7 @@ title: "Jupyter Notebook"
 本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
-从 v0.5.11 开始，Open-WebUI 发布了一个名为 `代码解释器中的 Jupyter Notebook 支持` 的新功能。该功能允许您将 Open-WebUI 与 Jupyter 集成。此后的几个版本中已对该功能进行了多次改进，请仔细查阅版本发布说明。
+从 v0.5.11 开始，Open-WebUI 发布了一个名为 `Jupyter Notebook Support in Code Interpreter` 的新功能。该功能允许您将 Open-WebUI 与 Jupyter 集成。此后的几个版本中已对该功能进行了多次改进，请仔细查阅版本发布说明。
 
 本教程将带您了解连接两个服务的基本设置步骤。
 

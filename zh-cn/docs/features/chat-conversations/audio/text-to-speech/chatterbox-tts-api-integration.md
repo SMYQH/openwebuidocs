@@ -224,7 +224,7 @@ cd frontend && npm install && npm run build
 
 ![Open WebUI 音频管理员设置截图，展示此项目所需的正确端点](https://lm17s1uz51.ufs.sh/f/EsgO8cDHBTOUjUe3QjHytHQ0xqn2CishmXgGfeJ4o983TUMO)
 
-## 如果觉得这个项目有帮助，请为 [GitHub 仓库](https://github.com/travisvn/chatterbox-tts-api) 点个 ⭐️ {#please-star-the-repo-on-githubhttpsgithubcomtravisvnchatterbox-tts-api-to-support-development}
+## 如果觉得这个项目有帮助，请为 [GitHub 仓库](https://github.com/travisvn/chatterbox-tts-api) 点个 ⭐️ {#please-star-the-repo-on-github-to-support-development}
 
 ## 需要帮助？ {#need-help}
 

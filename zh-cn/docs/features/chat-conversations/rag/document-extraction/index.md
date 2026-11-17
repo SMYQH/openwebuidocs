@@ -39,4 +39,4 @@ Open WebUI 提供强大的文档提取能力，使你可以在 RAG（Retrieval A
 
 Open WebUI 支持多种文档提取引擎，以适配不同需求与文档类型。每种提取方式都有各自优势，适合不同场景。
 
-你可以查阅各个提取方式的专门文档，了解如何配置并在 Open WebUI 实例中有效使用它们。
+你可以查阅各个提取方式的专门文档，了解如何配置并在 Open WebUI 实例中有效使用它们。其中有四个引擎尚无独立页面：Datalab Marker、MinerU、Azure Document Intelligence 和 PaddleOCR-VL。它们的配置项列在[环境变量参考](/reference/env-configuration#rag-content-extraction-engine)中。

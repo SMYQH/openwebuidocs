@@ -93,6 +93,7 @@ title: "导出与导入数据库"
 - 此导出/导入过程**仅适用于使用内置 SQLite 数据库（`webui.db`）的情况**。
 - 如果您使用的是外部 PostgreSQL 数据库，此方法不适用，因为数据库是在容器外部管理的。对于 PostgreSQL，需要使用 PostgreSQL 专用工具和流程来备份和恢复数据库。
 - 不要混用来自其它数据库副本的 `webui.db-wal` 或 `webui.db-shm` 文件。在目标端替换 `webui.db` 时，请先删除已有的附属文件，然后再启动 Open WebUI。
+
 ---
 
 ### 为什么这很重要 {#why-its-important}

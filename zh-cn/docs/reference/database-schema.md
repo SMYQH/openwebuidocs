@@ -541,7 +541,7 @@ docker exec -it open-webui /bin/sh
 
 - 对 (`chat_id`, `file_id`) 施加唯一约束，以防止重复条目
 - 带有 CASCADE 删除的外键关系
-- Indexed on `chat_id`, `file_id`, `message_id`, and `user_id` for performance
+- 对 `chat_id`、`file_id`、`message_id`、`user_id` 建立索引以提升性能
 
 **为何添加此表：**
 

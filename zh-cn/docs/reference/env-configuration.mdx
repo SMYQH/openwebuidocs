@@ -1978,7 +1978,7 @@ The format for the JSON response is strictly:
 
 - 类型：`str`（逗号分隔的模块名列表）
 - 默认值：空字符串（不阻止任何模块）
-- 描述：一个逗号分隔的 Python 模块名列表，代码解释器会拒绝导入这些模块。默认为空，此时不会安装拦截钩子，所有模块都可导入。设置之后，它只会拦截**被执行代码主作用域中直接书写的顶层 `import <名称>` 语句**；它不会把模块从运行时中移除，因此通过间接方式（辅助模块、`importlib`、`__import__` 或 `sys.modules`）到达的导入仍然会成功。请把它当作一种可选的便利过滤器，用于阻止随意使用特定模块，而不要当作安全边界：真正的隔离由执行引擎负责，即 `pyodide` 的浏览器沙箱或 `jupyter` 内核所在的你自己的服务器，而不是这份列表。
+- 描述：一个逗号分隔的 Python 模块名列表，代码解释器会拒绝导入这些模块。默认为空，此时不会安装拦截钩子，所有模块都可导入。设置之后，它只会拦截**被执行代码主作用域中直接书写的顶层 `import <name>` 语句**；它不会把模块从运行时中移除，因此通过间接方式（辅助模块、`importlib`、`__import__` 或 `sys.modules`）到达的导入仍然会成功。请把它当作一种可选的便利过滤器，用于阻止随意使用特定模块，而不要当作安全边界：真正的隔离由执行引擎负责，即 `pyodide` 的浏览器沙箱或 `jupyter` 内核所在的你自己的服务器，而不是这份列表。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 #### `CODE_INTERPRETER_PROMPT_TEMPLATE` {#code\_interpreter\_prompt\_template}
@@ -2865,7 +2865,7 @@ OpenAI、Ollama 和直连模型连接、工具服务器（OpenAPI 与 MCP）以�
 - 类型：`str`
 - 默认值：`""`（空字符串）
 - 描述：当用户密码未通过校验时显示的自定义提示信息。此消息会在注册、修改密码和管理员创建用户时的错误对话框中出现，前提是密码不符合 `PASSWORD_VALIDATION_REGEX_PATTERN` 定义的要求。可用它以更易懂的语言解释你的密码要求。
-- 示例：`密码必须至少 12 个字符，并包含大写字母、小写字母、数字和特殊字符。`
+- 示例：`Password must be at least 12 characters with uppercase, lowercase, number, and special character.`
 
 :::tip
 
@@ -3078,7 +3078,7 @@ CORS_ALLOW_ORIGIN: "https://yourdomain.com;http://yourdomain.com;https://yourhos
 
 | 变量 | 请求头 | 可接受取值 | 回退值 |
 |----------|--------|-----------------|----------|
-| `HSTS` | `Strict-Transport-Security` | `max-age=<秒数>`，可后接 `;includeSubDomains` 和 `;preload`（不含空格） | `max-age=31536000;includeSubDomains` |
+| `HSTS` | `Strict-Transport-Security` | `max-age=<seconds>`，可后接 `;includeSubDomains` 和 `;preload`（不含空格） | `max-age=31536000;includeSubDomains` |
 | `PERMISSIONS_POLICY` | `Permissions-Policy` | 以逗号分隔的 `feature=()` 或 `feature=(self)` 条目，不含空格，可用于 `accelerometer`、`autoplay`、`camera`、`clipboard-read`、`clipboard-write`、`fullscreen`、`geolocation`、`gyroscope`、`magnetometer`、`microphone`、`midi`、`payment`、`picture-in-picture`、`sync-xhr`、`usb` 和 `xr-spatial-tracking` | `none` |
 | `REFERRER_POLICY` | `Referrer-Policy` | `no-referrer`、`no-referrer-when-downgrade`、`origin`、`origin-when-cross-origin`、`same-origin`、`strict-origin`、`strict-origin-when-cross-origin`、`unsafe-url` | `no-referrer` |
 | `XCONTENT_TYPE` | `X-Content-Type-Options` | `nosniff`（任何取值都发送 `nosniff`） | `nosniff` |
@@ -4620,7 +4620,7 @@ Open WebUI 会向 `/marker` 端点发起请求，而 Datalab 的 API 参考文�
 
 - 类型：`str`
 - 默认值：`""`（空）
-- 描述：PaddleOCR-vl 服务器的认证令牌。在每个布局解析请求中以 `Authorization: token <值>` 的形式发送。**如果此值为空，PaddleOCR-vl 引擎将在运行时被跳过**：即使设置了 `CONTENT_EXTRACTION_ENGINE=paddleocr_vl`，加载器也会回退到当前文档的默认 PyPDFLoader。设置此值以激活该引擎。
+- 描述：PaddleOCR-vl 服务器的认证令牌。在每个布局解析请求中以 `Authorization: token <value>` 的形式发送。**如果此值为空，PaddleOCR-vl 引擎将在运行时被跳过**：即使设置了 `CONTENT_EXTRACTION_ENGINE=paddleocr_vl`，加载器也会回退到当前文档的默认 PyPDFLoader。设置此值以激活该引擎。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::info 支持的文件类型
@@ -5400,7 +5400,7 @@ Strictly return in JSON format:
 #### `GOOGLE_DRIVE_CLIENT_ID` {#google\_drive\_client\_id}
 
 - 类型：`str`
-- 描述：设置 Google Drive 的 OAuth 客户端 ID（客户端必须配置为启用 Drive API 和 Picker API）。请完全按照 Google Cloud 展示的形式填写客户端 ID，即 `<项目编号>-<id>.apps.googleusercontent.com`。文件选择器会从其前导数字中取出项目编号并发送给 Google，Google 需要它才能授予对所选文件的访问权限。选择器只申请 `drive.file` 权限范围，该范围涵盖用户所选的文件。
+- 描述：设置 Google Drive 的 OAuth 客户端 ID（客户端必须配置为启用 Drive API 和 Picker API）。请完全按照 Google Cloud 展示的形式填写客户端 ID，即 `<project number>-<id>.apps.googleusercontent.com`。文件选择器会从其前导数字中取出项目编号并发送给 Google，Google 需要它才能授予对所选文件的访问权限。选择器只申请 `drive.file` 权限范围，该范围涵盖用户所选的文件。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
@@ -6289,8 +6289,8 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 #### `WHISPER_COMPUTE_TYPE` {#whisper\_compute\_type}
 
 - 类型：`str`
-- 默认值：`int8` (CPU), `float16` (CUDA)
-- 描述：设置 Whisper 模型推理的计算类型。CPU 默认为 `int8`，CUDA 默认为 `float16`（可回退到 `int8/int8_float16`）。
+- 默认值：`int8`
+- 描述：设置 Whisper 模型推理的计算类型。所有设备上的默认值都是 `int8`，`:cuda` 镜像也不例外：Open WebUI 不会自动切换它。在 GPU 上请显式设置（例如 `float16`）。
 
 
 #### `WHISPER_VAD_FILTER` {#whisper\_vad\_filter}
