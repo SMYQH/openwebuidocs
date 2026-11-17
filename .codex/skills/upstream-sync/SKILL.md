@@ -31,7 +31,9 @@ Sync updates from the official English documentation submodule `en-us/` (`open-w
 
 Other conventions:
 
-- The Chinese version removes non-compliant external links (Discord, Reddit, X, etc.)
+- The Chinese version removes non-compliant external links (Discord, Reddit, X, etc.). The hosts are listed in `non_compliant_link_patterns` in `test/translation_config.json`; the verifier allows the link to be absent and reports `non-compliant-link` when a translation keeps one
+- An interface label that upstream marks with a code span (`Settings`, `Admin Panel`, `Image Generation Engine`) may be translated, because the Chinese site shows a Chinese interface. Identifiers, commands, paths, values and product names stay verbatim inside code spans
+- Code fence titles are prose: translate `title="..."` like any other label
 - `tab-*/` content is included via MDX `<Tabs>` and does not appear in the sidebar
 - Static assets (images, etc.) are copied from `en-us/static/` to `zh-cn/static/` at the same relative path
 - For site config differences see `AGENTS.MD` section 3; do not blindly overwrite `zh-cn` localized configuration
@@ -121,7 +123,7 @@ python test/translation_check.py --strict --report test/.reports/audit.json
 python test/translation_check.py --files path/to/page.mdx --review-bundle test/.reports/review.json
 ```
 
-The deterministic audit checks file/category coverage, code/literal preservation, heading structure/anchors, Markdown structure, metadata, terminology, untranslated prose, and omission signals. It compares matched sections even when heading counts differ. File coverage and matching headings **do not establish semantic completeness**. Do not invent a quality score or claim a semantic pass from static checks.
+The deterministic audit checks file/category coverage, code/literal preservation, heading structure/anchors, Markdown structure, metadata, terminology, untranslated prose, and omission signals. It compares matched sections even when heading counts differ. A dropped literal fails; an added or re-counted literal, a translated interface label and a repaired upstream fence are review signals. File coverage and matching headings **do not establish semantic completeness**. Do not invent a quality score or claim a semantic pass from static checks. Treat findings as leads, not proof: read the pair before changing a translation, and improve the checker when a finding turns out to be a tool defect.
 
 Read every English/Chinese pair in the review bundle in full. Assess omissions/additions, facts, negation, numbers, fluency, terminology, and heading/body alignment. Exclude protected terms, code, and markup from language judgments. Complete the bundle's `result_format` in a separate result file, including source evidence for every finding. Then validate review coverage and hashes:
 

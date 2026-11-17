@@ -21,7 +21,37 @@
 | Upstream inline code spans preserved | Current source-derived audit reports preservation findings; the previous **100%** claim is not a current certification. |
 | Explicit heading IDs matching upstream | No heading-structure findings in the current Python scan; upstream syntax defects still require review. |
 | Untranslated English prose | Current audit reports heuristic language warnings after literal/terminology exclusions; semantic review is pending. |
-| Production build | Previous translation pass: **passes** with zero broken links, anchors, Markdown links, or duplicate routes. This tooling-only task did not change or rebuild site sources. |
+| Production build | 2026-11-17: **passes** with zero broken links, anchors, Markdown links, or duplicate routes after the alternatives re-translation and the HAProxy, plugin-tools, Redis, Nginx Proxy Manager and env-configuration repairs. |
+
+### 2026-11-17 Alternatives re-translation and verification refinements
+
+**Document changes**
+
+- `alternatives/` (13 pages) - the pages had still mirrored the May 2026 upstream text. `anythingllm`, `chatgpt` and `claude` were re-translated against the current upstream structure (new "At a Glance" tables, rewritten comparison sections, revised "When to Use Each" text), and the remaining pages were updated for the August 2026 upstream revision (last-updated date, 13 vector databases / 8 extraction engines, Gemini 3.5 Pro). Every page now keeps a 1:1 block and heading structure with its English source.
+- `reference/https/haproxy.md` - the upstream base-configuration fence is never closed, so the "WebSocket and HTTP/2 Compatibility" section and its prose rendered inside one code block. The Chinese page closes the fence at the end of the base configuration, restores the section as a real heading with the upstream-derived ID `{#websocket-and-http2-compatibility}`, and turns the two malformed ` ```sudo ... ``` ` inline spans into proper shell blocks.
+- `features/extensibility/plugin/tools/index.mdx` - removed a leftover block (numbered items, a duplicated link and an orphan `:::`) that no longer exists upstream, and removed a misplaced duplicate of the "Why use these?" paragraph that belongs to the Native Mode section. The "Model Quality Matters" warning still recommended superseded models; it now follows upstream, links to "Model Requirements & Caveats" and keeps the `GPU` literal.
+- `features/administration/webhooks.md` - the "How it Works" section was an outdated condensed paragraph. It now follows upstream, including the `API` literal and the `(/features/channels#muting-a-channel)` link.
+- `tutorials/integrations/redis.md` - the page still carried the pre-August-2026 upstream structure. The "Overview", "When is Redis Required?", "Prerequisites", "Basic Configuration" and "Optional Configuration" sections now follow the current upstream; stale warning and danger blocks, an orphaned paragraph, a moved code block and a stale troubleshooting block were removed; the missing per-room-channel paragraph and the `#persistence` link were restored.
+- `reference/env-configuration.mdx`, `reference/tab-nginx/NginxProxyManager.md` - closed two admonitions that upstream closes and removed one orphan closing marker each; the DuckDNS token example now uses a proper shell block.
+- `features/administration/banners.md`, `features/administration/webhooks.md` - removed UTF-8 byte order marks from the frontmatter.
+- Terminology: `开放终端` was replaced by `Open Terminal` in 13 files (36 occurrences). Upstream treats it as a feature name, the Chinese page title is already "Open Terminal", and the side bar label is now `💻 Open Terminal`.
+- Six pages had lost the upstream `<ThemedImage>` banner (`features/authentication-access/index.mdx`, `features/calendar/index.md`, `features/chat-conversations/data-controls/index.mdx`, `features/chat-conversations/direct-connections.mdx`, `features/notes/index.md`, `features/workspace/knowledge.mdx`). The imports and the banner block were restored with translated alt text; the banner SVG files already exist under `zh-cn/static/images/banners/`.
+- Nine CVE disposition pages had lost the `<span className="badge badge--success cve-rejected">` badge and the emphasis on the REJECTED sentence; both were restored. Ten pages were missing the `---` separator before "What the CVE Claims"; it was restored with the blank lines that the Markdown rules require.
+- `troubleshooting/manual-database-migration.md` - nine code fence titles were still English; they are now translated like the rest of the file.
+- The last two Discord links were removed to follow the project policy; both now point at GitHub Discussions (`getting-started/quick-start/index.mdx`, `tutorials/integrations/redis.md`).
+
+**Tooling changes**
+
+- Literal comparison now separates dropped literals (failure) from added or re-counted literals (review signal); the previous count-based rule reported every re-counted term as a failure.
+- Link destinations are compared after resolution: relative and absolute forms, `.md` and `.mdx` suffixes and links that upstream points at the English site while the translation points at its own pages compare equal. A URL only has to survive as a bare URL, a link destination or inline code.
+- JSON-LD payloads are compared by structure, so translated FAQ text no longer fails the opaque-code check while a changed FAQ count still does.
+- Keyword lists and layout directives (`sidebar_position`, `position`, `collapsible`, `collapsed`) are no longer treated as prose or as structure.
+- Upstream parse defects are reported as warnings and downgrade block-level comparisons for that file, so a translation never has to inherit broken upstream structure. Admonition types may differ at the same position; a different admonition count still fails.
+- Document suffixes are stripped completely when a destination is resolved. The previous code removed two characters instead of the matched suffix, which produced 40 false "missing destination" errors.
+- Fence metadata is compared by language only, so a translated `title="..."` no longer counts as changed fence metadata; an English fence title is reported as a warning. Upstream that writes a fence marker inside a code span is a warning rather than a failure, so a translation may repair the markup.
+- An interface label that upstream marks with a code span (`Settings`, `Admin Panel`, `Image Generation Engine`) may be translated, because the Chinese site shows a Chinese interface; that is a review signal. Identifiers, commands, paths, values and product names stay verbatim inside code spans.
+- `non_compliant_link_patterns` in `test/translation_config.json` lists the community links the project policy removes. A listed link may be absent from the translation, a translation that keeps one is reported as `non-compliant-link`, and a code span that exists only in the removed sentence disappears with it.
+- Validation: **81 behavior tests passed** on Python 3.14. Strict working-tree audit covered **441/441** files, reporting **182 errors, 1422 warnings, 0 exceptions** (down from 646 errors / 1365 warnings when the tooling landed and 272 errors after the first repair pass). The remaining findings are historical drift outside this pass and need triage, not blanket suppression. The strict audit still returns failure and semantic review remains **required**.
 
 ### 2026-11-17 Translation verification tooling
 
