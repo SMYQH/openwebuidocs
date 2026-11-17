@@ -20,6 +20,7 @@
 | Verbatim code blocks | **1119 / 1372** byte-identical to upstream; **1315 / 1372** identical once comment lines are excluded. The 223 blocks that carry Chinese text date from the repository's initial import (comment prose was translated for readability) and were not touched by this sync |
 | Upstream inline code spans preserved | **100%** (0 endpoint / path / env-var / placeholder / command spans missing) |
 | Explicit heading IDs matching upstream | **100%** (0 mismatches, 0 headings without an ID) |
+| Untranslated English prose | **0** outside upstream-matching tables, verbatim CVE records and product/brand names |
 | Production build | **passes** - 0 broken links, 0 broken anchors, 0 broken markdown links, 0 duplicate routes |
 
 
@@ -62,6 +63,61 @@ Upstream moved "Settings > Admin > X" to "Settings > X (admin section)" across r
 
 - Production build passes: 0 broken links, 0 broken anchors, 0 broken markdown links, 0 duplicate routes.
 - Explicit heading IDs re-derived from the upstream English slugs and checked against `github-slugger`: 0 mismatches, 0 Chinese headings without an ID.
+### 2026-11-17 Fourth deep audit (en-us `3072f18`) — sync-omission repair and full repo re-check
+
+A second full pass over all 398 pages after the `36b7e50 -> 3072f18` sync. Two defect classes were found and fixed: omissions introduced by the sync itself, and pre-existing drift that the earlier audits had missed.
+
+**Sync-introduced omissions (fixed)**
+
+- `features/chat-conversations/audio/text-to-speech/openai-tts-integration.md` — the upstream `:::caution` block (tts-1 / tts-1-hd / gpt-4o-mini-tts retire on 2027-01-06, switch to the OpenAI Realtime engine) was missing.
+- `security/security-policy.mdx` — the Ground Truth block was inverted, the "other urgent issues" paragraph was missing, the tools/functions/pipelines section was stale, and the closing paragraph contradicted upstream (password change plus "sign out of all devices").
+- `security/vendor-dispositions/cve-2024-7036.mdx` — one missing upstream sentence and one stale rule bullet.
+- `security/vendor-dispositions/cve-2025-29446.mdx` and `cve-2025-63391.mdx` — missing rule bullets (1/6/8/12 and 1/3/7).
+- 10 further CVE pages — "NVD mirrors that state" replaced the older "propagates to NVD and downstream sources" phrasing.
+- `reference/env-configuration.mdx` — the `WHISPER_COMPUTE_TYPE` default and description now match upstream.
+- `troubleshooting/performance.md` — the Redis table had a header but no rows; four upstream rows and the WebSocket Pub/Sub buffer paragraph were added.
+- `getting-started/advanced-topics/hardening.md` — missing quick-reference row (`ENABLE_MFA=true`).
+- `features/chat-conversations/chat-features/code-execution/index.md` — the Pyodide persistence cell no longer claims unconditional refresh persistence.
+- `features/chat-conversations/image-generation-and-editing/usage.md` — the stale Image Edit requirement was replaced by the upstream toggle/edit-engine text.
+- `features/chat-conversations/rag/index.md` — "GPT-4 Turbo 128k" became "GPT-5.6, 1M token context window"; a duplicated "并，" was removed.
+
+**Explicit heading IDs re-derived from the upstream English slugs**
+
+- `enterprise/index.mdx` (7 IDs), `enterprise/deployment/index.md` (3 IDs), `security/index.mdx`, `security/accepted-risks/index.mdx` (`known--accepted-risks`), `chatterbox-tts-api-integration.md`, `openai-edge-tts-integration.md`.
+- `reference/api-flow.md` — the whole "API Reference" block was untranslated English without explicit IDs. It is now translated and uses `{#api-reference}`, `{#dto-structures}`, `{#chat-dto-complete-structure}`, `{#chatcompletionsrequest-dto}`, `{#chatcompletionmessage-dto}`, `{#history-dto}`, `{#message-dto-complete-structure}`.
+
+**Verbatim inline code spans restored**
+
+- `reference/env-configuration.mdx`, `features/chat-conversations/rag/index.md`, `features/extensibility/plugin/development/events.mdx`, `under-the-hood.mdx`, `tools/development.mdx`, `tools/index.mdx`, `features/extensibility/mcp.mdx`, `features/workspace/skills.md`, `features/chat-conversations/chat-features/chatshare.md`, `index.mdx`, `features/administration/banners.md`, `tutorials/integrations/dev-tools/jupyter.md`, `tutorials/maintenance/s3-storage.md`, `getting-started/advanced-topics/scaling.md`.
+- UI menu labels inside code spans (`设置`, `音频`, `Admin Panel`) stay translated by design; only technical literals were restored.
+
+**Pre-existing drift found by the re-check (fixed)**
+
+- `features/chat-conversations/memory.mdx` and `features/chat-conversations/web-search/agentic-search.mdx` — stale model-tier lists and a reversed recommendation (upstream asks for a minimum tier, the Chinese text asked for a frontier model).
+- `features/workspace/models.md` — stale base-model names.
+- `features/chat-conversations/rag/document-extraction/index.md` — the sentence listing the four engines that have no page of their own was missing.
+- `features/extensibility/plugin/tools/development.mdx` — the paragraph about the four rewritten import prefixes (`from utils`, `from apps`, `from main`, `from config`) was missing, and the pip note still claimed the UI freezes during installation.
+- `features/extensibility/plugin/development/events.mdx` — the "Return Value Persistence" section was stale: the Pipes text still described `ENABLE_REALTIME_CHAT_SAVE`, and the Actions table lacked the `{"messages": [...]}` row and the correct persistence values.
+- `getting-started/quick-start/connect-an-agent/hermes-agent.mdx` — "connection test passes but no models load" was replaced by upstream's current explanation.
+- `getting-started/quick-start/tab-kubernetes/Helm.md` — the paragraph about the chart's default Ollama/Pipelines/Redis deployments and the 2 GiB PVC was missing.
+- `troubleshooting/rag.mdx` and `faq.mdx` — the Ollama VRAM-based context-window defaults (4096 / 32768 / 262144) were missing or stale.
+- `reference/https/haproxy.md`, `reference/tab-nginx/NginxProxyManager.md`, `reference/database-schema.md` — untranslated English blocks.
+
+**Markdown structure repairs**
+
+- `getting-started/advanced-topics/hardening.md` and `tutorials/maintenance/database.mdx` — a missing blank line turned a thematic break into an accidental setext H2.
+- `troubleshooting/web-search.mdx` — same defect class.
+
+**Audit tooling**
+
+Ten independent detectors were run over all 398 pages: exact Docusaurus heading-ID comparison (MDX parse + github-slugger + parseMarkdownHeadingId), rendered-anchor comparison against `build/**/index.html`, upstream-added-line code-span diff, numeric-literal diff, inline code-span literal drift, table-row token diff, CVE rule-number parity, accidental setext-heading scan, untranslated-prose scan and a per-file prose-block parity diff.
+
+**Verification**
+
+- Heading audit: 0 issues across 398 files.
+- Rendered-anchor audit: 368 pages, 14 findings, all symmetric (upstream and Chinese agree).
+- `npm run build`: SUCCESS — 376 pages, 0 broken links, 0 broken anchors, 0 broken markdown links, 0 duplicate routes.
+
 ### 2026-11-14 Third deep audit (en-us `36b7e50`) — content-gap sweep, verbatim-span fidelity, heading/content realignment
 
 Third full pass over the same upstream snapshot `36b7e50`, aimed at the defect classes the token-level detectors could not see. Four independent detectors were run over all 461 page pairs; every finding below was fixed and re-verified.
@@ -289,6 +345,11 @@ Fourth pass over the same `36b7e50` snapshot. The previous passes had already re
 - **Content corrections**: Service Worker behaviour in `troubleshooting/connection-error.mdx` (upstream registers none), the "Open WebUI backend required" section that had lost its heading, the `PATCH operations` and `externalId` sections of `features/authentication-access/auth/scim.mdx`, the Gemini/OpenAI image-engine endpoint settings, the Redis persistence interval (30 seconds, not 30 minutes) and the vector-database placement in `troubleshooting/performance.md`.
 - **Verification**: production build (`onBrokenLinks`, `onBrokenAnchors`, `onDuplicateRoutes` all `throw`) completes with zero broken links and zero broken anchors; 1416 in-page links checked, 0 broken; heading parity check reports 0 missing upstream headings; 0 U+FFFD characters in the whole `zh-cn/docs` tree.
 - **Edit links fixed**: `zh-cn/docusaurus.config.ts` still pointed at the old `https://github.com/GamblerIX2/open-webui-docs/blob/main` fork, so every “编辑此页” button on the Chinese site linked to the wrong repository. `editUrl` is now `https://github.com/SMYQH/openwebuidocs/blob/main/zh-cn`, which renders as `https://github.com/SMYQH/openwebuidocs/blob/main/zh-cn/docs/<path>` for every Chinese page. The stale fork link in `zh-cn/docs/contributing.mdx` was removed as well, and `AGENTS.MD` now documents the Chinese edit-link target.
+
+## Outstanding
+
+- **`alternatives/` (13 pages)** — upstream rewrote the comparison pages in August 2026 (new "Last updated" dates, refreshed feature lists, restructured comparison tables); the Chinese pages still reflect the May 2026 revision. This is a pre-existing backlog, not sync fallout: no `docs/alternatives/` file changed inside the `36b7e50 -> 3072f18` range except for the admin-path normalization and `llama-cpp.mdx`. A dedicated re-translation pass is needed.
+- **`en-us` upstream defect (mirrored in `zh-cn`)** — `reference/https/haproxy.md` opens a code fence with ` ```sudo ... ` and never closes it, so lines 17-129 render as one code block on both sites. Kept byte-identical to upstream on purpose.
 
 ## Deployment Configuration
 
