@@ -156,15 +156,17 @@ def inline_protected(text: str, terms: list[str]) -> list[Protected]:
                 add(i + 1, end, "destination")
         i += 1
     for pattern, kind in [
+        (r"\[\^[^\]\n]+\]|!?\[[^\]\n]+\]\[\]", "reference"),
         (r"!?\[[^\]\n]*\](\[[^\]\n]*\])", "reference"),
         (r"(?m)^\s{0,3}(\[[^\]\n]+\]:\s*\S+)", "reference"),
         (URL.pattern, "url"),
         (r"&(?:[A-Za-z][A-Za-z0-9]+|#\d+|#x[0-9a-fA-F]+);", "entity"),
         (r"\\[!\"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~]", "escape"),
+        (r"(?m)^(?:[ \t]*>[ \t]*)*[ \t]*(?:#{1,6}(?:\s+|$)|[-+*]\s+|\d+[.)]\s+|:{3,}[a-zA-Z]*|[-=]{3,}\s*$)", "marker"),
+        (r"\[[ xX]\](?=\s)|(?m:(?<=\s)#{1,6}\s*$)", "marker"),
         (IDENTIFIER.pattern, "identifier"),
         (term_pattern(terms).pattern, "term"),
         (r"(?<![\w])\d+(?:[.,:/-]\d+)*(?:%|[a-zA-Z]+)?(?![\w])", "number"),
-        (r"(?m)^(?:[ \t]*>[ \t]*)*[ \t]*(?:#{1,6}(?:\s+|$)|[-+*]\s+|\d+[.)]\s+|:{3,}[a-zA-Z]*|[-=]{3,}\s*$)", "marker"),
         (r"(?m)^(?:[ \t]*>[ \t]*)+|!?(?=\[)\[|\*+|_+|~{2,}|[\]|]", "symbol"),
     ]:
         for m in re.finditer(pattern, text):

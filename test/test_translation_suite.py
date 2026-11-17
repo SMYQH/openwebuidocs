@@ -75,6 +75,11 @@ class ExtractionTests(Fixture):
         self.assertIn("OpenAIish", masked)
         self.assertNotIn("API_KEY", masked)
 
+    def test_ordered_list_and_checkbox_markers_are_indivisible(self):
+        for source, literal in [("1. Source prose", "1. "), ("- [x] Source prose", "[x]"), ("Source prose[^literal]", "[^literal]"), ("Source [reference][]", "[reference][]")]:
+            _, spans = mask(source, self.terms)
+            self.assertIn(literal, [s.value for s in spans])
+
     def test_multibacktick_inline_code(self):
         value = "Run ``literal ` command`` safely."
         _, spans = mask(value, self.terms)
