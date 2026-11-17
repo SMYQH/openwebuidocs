@@ -11,61 +11,17 @@ title: "Redis WebSocket 支持"
 
 ## 概述 {#overview}
 
-本文介绍将 Redis 与 Open WebUI 集成以支持 WebSocket 所需的步骤。按照这些步骤操作，您将能够在 Open WebUI 实例中启用 WebSocket 功能，实现客户端与应用之间的实时通信和更新。
+本文介绍如何为 Open WebUI 配置 Redis：所需的 Redis 服务器设置、Open WebUI 环境变量、Sentinel 与集群模式，以及故障排除。
 
 ## 何时需要 Redis？ {#when-is-redis-required}
-Redis 在 Open WebUI 中服务于两个不同的目的，了解何时需要它对于正确部署至关重要。有关所有扩展要求（PostgreSQL、Redis、向量数据库、存储）的高层概述，请参阅 [扩展 Open WebUI](/getting-started/advanced-topics/scaling) 指南。
 
-**单实例部署**
+只要运行了多个 Open WebUI 进程（多个 Uvicorn worker 或多个实例），就需要 Redis；它也是让登出能够撤销令牌的关键。[第 2 步：添加 Redis](/getting-started/advanced-topics/scaling#step-2-add-redis) 说明了 Redis 协调哪些内容，以及单实例何时需要它。
 
-如果您以**单实例**模式运行 Open WebUI，`UVICORN_WORKERS=1`（默认值），则**基本功能不需要 Redis**。大多数操作不依赖 Redis 就能正常运行。
-
-:::warning 安全性：令牌撤销需要 Redis
-
-没有 Redis 时，**登出不会使用户的 JWT 令牌失效**。该令牌将保持有效，直到自然过期（默认：4 周）。密码更改和管理员主动封禁账户也无法在没有 Redis 的情况下撤销现有令牌。
-
-对于面向生产的部署，请配置 Redis 或缩短 `JWT_EXPIRES_IN` 以限制暴露窗口。有关详情，请参阅 [安全加固指南](/getting-started/advanced-topics/hardening#token-revocation)。
-
-:::
-
-**多 Worker 和多实例部署**
-
-在以下场景中 Redis 是**必需的**：
-
-1. **多个 Uvicorn Worker**（`UVICORN_WORKERS > 1`）
-   - 在单一宿主机上运行多个 Worker 进程
-   - 需要 Redis 在 Worker 之间共享会话状态和应用配置
-
-2. **多节点部署**
-   - 具有多个 Pod 的 Kubernetes 集群
-   - 具有多个副本的 Docker Swarm
-   - 具有多个 Open WebUI 实例的负载均衡设置
-   - 需要 Redis 协调所有实例之间的状态
-
-3. **高可用设置**
-   - 任何多个 Open WebUI 进程同时运行的部署模式
-   - 需要 Redis 进行会话管理、WebSocket 协调和状态同步
-
-:::warning
-
-**关键要求**
-
-在多 Worker 或多实例场景中没有 Redis，您将会遇到：
-
-- 跨 Worker 的会话管理失败
-- 实例间应用状态不一致
-- WebSocket 连接无法正常工作
-- 间歇性认证失败
-- 实时聊天更新丢失
-
-:::
 ### 前提条件 {#prerequisites}
 
 - 一个 Redis 容器（本示例使用 `redis:7-alpine`）
 - Docker Compose v2
 - Open WebUI 与 Redis 共享的 Docker 网络
-- 一个有效的 Open WebUI 实例（运行 1.0 或更高版本）
-- 对 Docker、Redis 和 Open WebUI 有基本了解
 
 ### 关键：Redis 服务器配置 {#critical-redis-server-configuration}
 
@@ -132,6 +88,7 @@ redis-cli INFO clients | grep connected_clients
 :::
 
 ### 关键：内存驱逐策略 {#critical-memory-eviction-policy}
+
 :::danger
 
 **不要给 Open WebUI 的 Redis 配置 `allkeys-*` 驱逐策略。**
@@ -170,8 +127,6 @@ appendfsync everysec
 ```
 
 `appendfsync everysec` 每秒将 AOF 刷新到磁盘，在最坏情况下约丢失一秒钟的数据，对于 Open WebUI 适度的 Redis 工作负载来说，I/O 开销很小且通常可忽略。RDB 和 AOF 可以共存；同时保留两者既能实现快速重启，又能提供秒级持久化。下一节的示例 `command` 已包含 `--appendonly yes` 和 `--maxmemory-policy noeviction`。
-
-:::
 
 ## 设置 Redis {#setting-up-redis}
 
@@ -222,7 +177,7 @@ networks:
 
 上述配置会创建一个名为 `redis` 的 Redis 容器，并挂载一个持久化数据的卷。`healthcheck` 指令确保容器在无法响应 `ping` 命令时重启。`--save 30 1` 命令选项会在至少 1 个键发生更改时，每 30 分钟将 Redis 数据库保存到磁盘，而 `--appendonly yes` 则提供了秒级持久化。
 
-**重要提示：** `--maxclients 10000 --timeout 1800` 标志用于防止连接耗尽，而 `--maxmemory-policy noeviction` 可防止 Redis 静默驱逐 Open WebUI 的会话和令牌撤销键。详情请参阅上方的"关键：Redis 服务器配置"、"关键：内存驱逐策略"和"关键：持久化"部分。
+**重要提示：** `--maxclients 10000 --timeout 1800` 标志用于防止连接耗尽，而 `--maxmemory-policy noeviction` 可防止 Redis 静默驱逐 Open WebUI 的会话和令牌撤销键。详情请参阅上方的[关键：Redis 服务器配置](#critical-redis-server-configuration)、[关键：内存驱逐策略](#critical-memory-eviction-policy)和[关键：持久化](#persistence)部分。
 
 :::
 
@@ -253,6 +208,8 @@ client-output-buffer-limit normal 0 0 0 replica 268435456 67108864 60 pubsub 107
 
 上述配置将 Pub/Sub 硬上限设为 1 GB，软上限设为 256 MB，持续 180 秒。请根据你的 Redis 可用内存与预期的 WebSocket 负载大小调整这些数值。较高的限制会让 Redis 对临时较慢的订阅者更具容忍度，但同时也会让每个较慢的 Pub/Sub 客户端在被 Redis 断开前缓存更多内存。
 
+默认开启[按房间划分的 Redis 频道](../../getting-started/advanced-topics/scaling.md#per-room-redis-channels)后，Redis 只会把与该实例相连用户的更新发送给它，从而在多实例部署中让这些缓冲区保持更小。房间频道在慢日志中显示为 `PUBLISH socketio#...`。
+
 如果你是运行时修改的 Redis 配置，可通过以下命令验证当前生效的值：
 
 ``` bash
@@ -267,48 +224,17 @@ docker network create openwebui-network
 
 ## 配置 Open WebUI {#configuring-open-webui}
 
-要在 Open WebUI 中启用 Redis 支持，需要根据部署类型配置不同的环境变量。
-
 ### 基本配置（所有部署） {#basic-configuration-all-deployments}
-对于使用 Redis 的**所有部署**（单实例或多实例），设置以下基本环境变量：
 
-
-此变量配置用于应用状态管理、会话存储和实例间协调的主要 Redis 连接。
-
-如果在单台主机上运行多个 Uvicorn worker，添加此变量：
-
-
-:::danger
-
-**关键：UVICORN_WORKERS > 1 时必须使用 Redis**
-
-如果将 `UVICORN_WORKERS` 设置为大于 1 的值，则**必须**配置 `REDIS_URL`。否则将导致：
-
-- 请求之间会话状态丢失
-- 身份验证间歇性失败
-- 应用程序配置不一致
-- WebSocket 功能异常
-
-:::
-
-:::danger
-
-**关键：默认 ChromaDB（SQLite）与多 Worker 不兼容**
-
-除 Redis 外，您还必须处理**向量数据库**问题。默认 ChromaDB 使用本地 SQLite 支持的 `PersistentClient`，**不支持 fork 安全**。当 uvicorn 派生多个 worker 时，对同一 SQLite 文件的并发写入将在文档上传时立即导致 worker 崩溃（`Child process died`）。
-
-您必须：
-- 切换到客户端-服务器向量数据库（`VECTOR_DB=pgvector`、`mariadb-vector`、`milvus` 或 `qdrant`）
-- 将 ChromaDB 作为独立 HTTP 服务器运行并设置 `CHROMA_HTTP_HOST` / `CHROMA_HTTP_PORT`
-
-详情见 [扩展与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
-
-:::
 ``` bash
 REDIS_URL="redis://redis:6379/0"
 WEBSOCKET_MANAGER="redis"
 ```
+
+`REDIS_URL` 是用于令牌撤销、锁、任务跟踪、速率限制和共享缓存的连接。`WEBSOCKET_MANAGER=redis` 让 websocket 层也使用 Redis，因此实时更新能够到达连接到任意 worker 或实例的用户。
+
 ### WebSocket 配置 {#websocket-configuration}
+
 WebSocket 默认开启（[`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configuration#enable_websocket_support)）。websocket 层使用 `REDIS_URL`，并遵循 `REDIS_CLUSTER`。只有在需要把 websocket 流量放到不同的 Redis 服务器或数据库时（例如 `redis://redis:6379/1`），才设置 [`WEBSOCKET_REDIS_URL`](/reference/env-configuration#websocket_redis_url)（以及 `WEBSOCKET_REDIS_CLUSTER`）。
 
 :::warning CORS 与 websocket
@@ -317,13 +243,13 @@ WebSocket 默认开启（[`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configurati
 
 ### 可选配置 {#optional-configuration}
 
-
-`REDIS_KEY_PREFIX` 允许多个 Open WebUI 实例共享同一个 Redis 实例而不会发生键冲突。在 Redis 集群模式中，前缀格式为 `{prefix}:`（例如 `{open-webui}:config:*`），以确保配置键的多键操作在同一哈希槽内执行。
-
 ``` bash
 REDIS_KEY_PREFIX="open-webui"
 ```
+
+`REDIS_KEY_PREFIX` 允许多个 Open WebUI 实例共享同一个 Redis 实例而不会发生键冲突。`open-webui` 已经是默认值，因此只有在你修改它时这一行才有意义；在集群模式下前缀也会原样使用。
 ### Sentinel 故障转移配置 {#sentinel-failover-configuration}
+
 通过设置 `REDIS_SENTINEL_HOSTS`（逗号分隔）并可选地设置 `REDIS_SENTINEL_PORT`（默认 `26379`）来启用 Sentinel；同时也要设置 `WEBSOCKET_SENTINEL_HOSTS` 和 `WEBSOCKET_SENTINEL_PORT`，因为 websocket 管理器不读取 `REDIS_SENTINEL_*` 这一对变量。在该模式下，`REDIS_URL` 的主机部分是 Sentinel master（服务）名称，其数据库和凭据会被复用。master 名称区分大小写，请与 Sentinel 中的配置完全一致地书写（例如 `redis://:password@myMaster:6379/0`）。URL 中的用户名和密码也会被发送给 Sentinel，因此使用相同密码保护的 Sentinel 无需额外设置。
 
 :::danger 关键：Sentinel 部署的套接字超时
@@ -402,7 +328,6 @@ REDIS_CLUSTER="true"
 - `REDIS_CLUSTER` 启用集群感知连接处理
 - `REDIS_URL` 应指向集群的配置端点
 - 如果定义了 `REDIS_SENTINEL_HOSTS`，此选项无效（Sentinel 优先）
-- 使用集群模式时，`REDIS_KEY_PREFIX` 自动格式化为 `{prefix}:`，以确保多键操作在同一哈希槽内执行
 
 :::
 
@@ -423,10 +348,6 @@ Redis 集群模式与 OpenTelemetry 仪表完全兼容。启用 `ENABLE_OTEL` �
 
 ### 完整配置示例 {#complete-example-configuration}
 
-以下是显示所有 Redis 相关环境变量的完整示例：
-
-对于 Redis Sentinel 部署，请确保设置 `REDIS_SOCKET_CONNECT_TIMEOUT` 以防止主节点故障转移期间应用程序挂起。
-
 ``` bash
 # Required for multi-replica deployments
 REDIS_URL="redis://redis:6379/0"
@@ -443,19 +364,18 @@ REDIS_HEALTH_CHECK_INTERVAL=60
 # Recommended: enable TCP keepalive for dead-peer detection at the kernel level
 REDIS_SOCKET_KEEPALIVE=True
 ```
+
 #### Redis 集群模式示例 {#redis-cluster-mode-example}
-
-对于 Redis 集群部署（包括 AWS Elasticache Serverless）：
-
 
 ``` bash
 REDIS_URL="rediss://your-cluster-endpoint:6379/0"
 REDIS_CLUSTER="true"
 WEBSOCKET_MANAGER="redis"
 ```
+
 ### Docker 运行示例 {#docker-run-example}
 
-使用 Docker 运行 Open WebUI 时，将其连接到同一 Docker 网络并包含所有必要的 Redis 变量：
+将 Open WebUI 连接到与 Redis 相同的 Docker 网络：
 
 ``` bash
 docker run -d \
@@ -508,6 +428,7 @@ docker logs open-webui 2>&1 | grep -i redis
 ```
 
 #### 检查 WebSocket Redis 连接 {#check-for-websocket-redis-connection}
+
 如果你设置了 `WEBSOCKET_MANAGER=redis` 和 `GLOBAL_LOG_LEVEL=DEBUG`，你应当看到这条日志消息：
 
 ```
@@ -516,21 +437,11 @@ DEBUG:open_webui.socket.main:Using Redis to manage websockets.
 
 专门检查此项：
 
-
-**测试多 Worker 设置**
-
-如果运行 `UVICORN_WORKERS > 1`，测试会话是否在 worker 之间持久化：
-
-1. 登录 Open WebUI
-2. 多次刷新页面
-3. 您应始终保持登录状态
-
-如果随机被登出或看到身份验证错误，Redis 可能未正确配置。
-
 ``` bash
 docker logs open-webui 2>&1 | grep "Using Redis to manage websockets"
 ```
 ### 验证 Redis 键 {#verify-redis-keys}
+
 您还可以验证 Open WebUI 实际上正在向 Redis 写入数据：
 
 ``` bash
@@ -546,6 +457,7 @@ docker exec -it redis redis-cli --scan --pattern "open-webui*"
 ### 常见问题与解决方案 {#common-issues-and-solutions}
 
 #### 问题："Connection to Redis failed" {#issue-connection-to-redis-failed}
+
 **症状：**
 
 - 日志中出现关于 Redis 连接的错误消息
@@ -560,19 +472,8 @@ docker exec -it redis redis-cli --scan --pattern "open-webui*"
 4. 确保 `REDIS_URL` 使用正确的容器名称，而非 `127.0.0.1` 或 `localhost`
 5. 检查两个容器是否在同一 Docker 网络上
 
-**页面刷新后"会话丢失"（使用 UVICORN_WORKERS > 1 时）**
-
-**症状：**
-
-- 用户随机被登出
-- 身份验证有效但不持久
-- 每次刷新页面行为不同
-
-**原因：** 使用多个 worker 时未配置 `REDIS_URL`
-
-**解决方案：**
-添加 `REDIS_URL` 环境变量：
 #### 问题："WebSocket 不工作" {#issue-websockets-not-working}
+
 **症状：**
 
 - 实时聊天更新不显示
@@ -673,11 +574,7 @@ redis-cli INFO clients | grep connected_clients
 
 4. 通过添加到 `redis.conf` 或 Docker 命令使其永久生效：
 ``` conf
-# 允许足够的并发连接
 maxclients 10000
-
-# 30 分钟后关闭空闲连接（1800 秒）
-# 这不会影响会话有效性，只影响到 Redis 的 TCP 连接
 timeout 1800
 ```
 
@@ -734,12 +631,13 @@ REDIS_HEALTH_CHECK_INTERVAL=60
 - [sysctl 文档](https://man7.org/linux/man-pages/man8/sysctl.8.html)
 
 ### 获取帮助 {#getting-help}
+
 如果按照本指南操作后仍遇到问题：
 
 1. 查看 [Open WebUI GitHub Issues](https://github.com/open-webui/open-webui/issues)
 2. 检查完整配置是否有拼写错误
 3. 验证所有容器可以在 Docker 网络上通信
 4. 收集 Open WebUI 和 Redis 容器的相关日志
-5. 加入 [Open WebUI Discord](https://discord.gg/5rJgQTnV4s) 获取社区支持
+5. 在 [Open WebUI GitHub Discussions](https://github.com/open-webui/open-webui/discussions) 获取社区支持
 
 按照这些步骤和故障排除提示，您应该能够为 Open WebUI 配置 Redis，实现应用程序状态管理和 WebSocket 支持，从而实现可靠的多实例部署和客户端与应用程序之间的实时通信。

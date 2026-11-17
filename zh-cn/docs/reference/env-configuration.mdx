@@ -717,7 +717,7 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 
   按 ID 直接访问的端点（`GET /api/v1/<resource>/id/{id}` 以及相应的更新/删除/访问授权路由）**有意**不受该标志约束，从设计上也从未受其约束。对它们加以限制既防不住任何管理员无法通过当初获取资源 ID 时所用的数据库查询轻易做到的事情，又会破坏管理员在已知条目 ID 上操作的正常流程。完整的架构论证参见上文的管理姿态开关说明。
 
-  同一个标志还决定管理员在管理员配置的资源上是否绕过访问授权，这些资源包括外部工具服务器、MCP 服务器、开放终端连接和竞技场模型。为 `True` 时，管理员可以看到并使用全部这些资源。为 `False` 时，管理员需要与每个资源的访问名单逐一比对，但完全没有授权记录的资源仍为管理员专用，因为它没有可以回退的所有者。参见[私密对各类资源意味着什么](/features/authentication-access/rbac/groups#what-private-means-for-each-resource-type)。
+  同一个标志还决定管理员在管理员配置的资源上是否绕过访问授权，这些资源包括外部工具服务器、MCP 服务器、Open Terminal连接和竞技场模型。为 `True` 时，管理员可以看到并使用全部这些资源。为 `False` 时，管理员需要与每个资源的访问名单逐一比对，但完全没有授权记录的资源仍为管理员专用，因为它没有可以回退的所有者。参见[私密对各类资源意味着什么](/features/authentication-access/rbac/groups#what-private-means-for-each-resource-type)。
 
   本环境变量取代了 `ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS`。如果你仍在使用 `ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS`，请改用 `BYPASS_ADMIN_ACCESS_CONTROL`。
 
@@ -1889,7 +1889,7 @@ The format for the JSON response is strictly:
 ### 代码执行 {#code-execution}
 
 :::info 旧版功能
-代码执行及其两个引擎都**属于旧版功能**。`pyodide`（浏览器/WebAssembly）和 `jupyter`（服务端）都是旧版执行引擎，因此本节中的每个变量都是旧版配置。若需要完整的 Python 与 Shell 访问能力，请改用[开放终端](/features/open-terminal)，它在隔离的容器中运行代码。下面的变量仍然有效，为已有部署保留并记录。
+代码执行及其两个引擎都**属于旧版功能**。`pyodide`（浏览器/WebAssembly）和 `jupyter`（服务端）都是旧版执行引擎，因此本节中的每个变量都是旧版配置。若需要完整的 Python 与 Shell 访问能力，请改用[Open Terminal](/features/open-terminal)，它在隔离的容器中运行代码。下面的变量仍然有效，为已有部署保留并记录。
 :::
 
 #### `ENABLE_CODE_EXECUTION` {#enable\_code\_execution}
@@ -1957,7 +1957,7 @@ The format for the JSON response is strictly:
 ### 代码解释器 {#code-interpreter}
 
 :::info 旧版功能
-代码解释器与上文的[代码执行](#code-execution)一样，运行在同样的**旧版** `pyodide` 和 `jupyter` 引擎上，因此本节中的每个变量都是旧版配置。需要代码或 Shell 执行能力的新部署应使用[开放终端](/features/open-terminal)。下面的变量仍然有效，为已有部署保留并记录。
+代码解释器与上文的[代码执行](#code-execution)一样，运行在同样的**旧版** `pyodide` 和 `jupyter` 引擎上，因此本节中的每个变量都是旧版配置。需要代码或 Shell 执行能力的新部署应使用[Open Terminal](/features/open-terminal)。下面的变量仍然有效，为已有部署保留并记录。
 :::
 
 #### `ENABLE_CODE_INTERPRETER` {#enable\_code\_interpreter}
@@ -1971,7 +1971,7 @@ The format for the JSON response is strictly:
 #### `CODE_INTERPRETER_ENGINE` {#code\_interpreter\_engine}
 - 类型：`str`
 - 默认值：`pyodide`
-- 描述：指定要使用的代码解释器引擎。`pyodide` 和 `jupyter` 是**旧版**引擎；如果需要完整的 Python 和 Shell 访问能力，请改用[开放终端](/features/open-terminal)。
+- 描述：指定要使用的代码解释器引擎。`pyodide` 和 `jupyter` 是**旧版**引擎；如果需要完整的 Python 和 Shell 访问能力，请改用[Open Terminal](/features/open-terminal)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `CODE_INTERPRETER_BLOCKED_MODULES` {#code\_interpreter\_blocked\_modules}
@@ -2043,7 +2043,7 @@ The format for the JSON response is strictly:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：控制用户能否进入**设置**中的个人**集成**标签页，在那里添加自己的工具服务器和开放终端连接。默认关闭，因此在管理员于**设置 > 集成**（管理员区域）的**用户连接**部分开启之前，该标签页不会显示。开启后，管理员和拥有 `direct_tool_servers` 权限的用户都会看到该标签页，仅有权限并不够。关闭期间，用户和管理员在该标签页中保存的工具服务器与开放终端连接不会在聊天中被使用，即使请求中仍包含它们，服务器也会忽略。这些配置会保留保存，重新开启后再次生效。分组和默认权限中的**直接工具服务器**开关也仅在开启时显示。
+- 描述：控制用户能否进入**设置**中的个人**集成**标签页，在那里添加自己的工具服务器和Open Terminal连接。默认关闭，因此在管理员于**设置 > 集成**（管理员区域）的**用户连接**部分开启之前，该标签页不会显示。开启后，管理员和拥有 `direct_tool_servers` 权限的用户都会看到该标签页，仅有权限并不够。关闭期间，用户和管理员在该标签页中保存的工具服务器与Open Terminal连接不会在聊天中被使用，即使请求中仍包含它们，服务器也会忽略。这些配置会保留保存，重新开启后再次生效。分组和默认权限中的**直接工具服务器**开关也仅在开启时显示。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `TOOL_SERVER_CONNECTIONS` {#tool\_server\_connections}
@@ -2094,8 +2094,8 @@ The format for the JSON response is strictly:
 
 - 类型：`str`（JSON 数组）
 - 默认值：`[]`
-- 描述：指定终端服务器连接配置的 JSON 数组。每个连接定义连接到 [开放终端](/features/open-terminal)实例或[终端编排器](/features/open-terminal/terminals/)所需的参数。与用户级的工具服务器连接不同，这些连接由管理员配置并通过 Open WebUI 代理，因此终端 URL 和 API 密钥不会暴露给浏览器。支持通过 `access_grants` 进行基于用户组的访问控制。
-- 示例（直连开放终端）：
+- 描述：指定终端服务器连接配置的 JSON 数组。每个连接定义连接到 [Open Terminal](/features/open-terminal)实例或[终端编排器](/features/open-terminal/terminals/)所需的参数。与用户级的工具服务器连接不同，这些连接由管理员配置并通过 Open WebUI 代理，因此终端 URL 和 API 密钥不会暴露给浏览器。支持通过 `access_grants` 进行基于用户组的访问控制。
+- 示例（直连Open Terminal）：
 ```json
 [
   {
@@ -5028,6 +5028,8 @@ Provide a clear and direct response to the user's query, including inline citati
 :::tip
 
 当开启异步嵌入且同时有大量用户使用你的 Open WebUI 实例时，可能需要调高 `THREAD_POOL_SIZE` 的值，以避免
+
+:::
 
 :::warning
 
@@ -9782,7 +9784,7 @@ Open WebUI 使用以下环境变量：
 
 - 类型： `bool`
 - 默认值： `True`
-- 说明：Open WebUI 中所有来自其自身代码之外、用于运行代码或工具的总开关。设为 `False` 时，无论 [`ENABLE_TOOLS`](#enable_tools)、[`ENABLE_FUNCTIONS`](#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](#enable_tool_servers) 如何设置，都会同时关闭它们：工作区工具、函数（过滤器、操作、管道）、OpenAPI 与 MCP 工具服务器、开放终端连接以及用户自行添加的直接工具服务器都将停止工作。启动时的插件依赖安装也会被跳过。该值在启动时读取一次，因此修改它需要重启。
+- 说明：Open WebUI 中所有来自其自身代码之外、用于运行代码或工具的总开关。设为 `False` 时，无论 [`ENABLE_TOOLS`](#enable_tools)、[`ENABLE_FUNCTIONS`](#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](#enable_tool_servers) 如何设置，都会同时关闭它们：工作区工具、函数（过滤器、操作、管道）、OpenAPI 与 MCP 工具服务器、Open Terminal连接以及用户自行添加的直接工具服务器都将停止工作。启动时的插件依赖安装也会被跳过。该值在启动时读取一次，因此修改它需要重启。
 - 仍然可用：[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)（记忆、知识库、网页搜索、子代理等）、代码解释器以及直连模型，因为它们属于 Open WebUI 自身的一部分。
 - 注意：它决定插件和工具服务器是否*运行*。关闭后部分管理端点仍可访问，例如删除工具或函数、保存工具服务器列表，因此应将其视为执行开关，并把创建工具与函数的权限限制给你信任的人。
 
@@ -9803,7 +9805,7 @@ Open WebUI 使用以下环境变量：
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：开启或关闭所有外部工具连接：管理员配置的 OpenAPI 和 [MCP](/features/extensibility/mcp) 工具服务器、[开放终端](/features/open-terminal) 连接（管理员的个人的）以及用户自行添加的直接工具服务器。设为 `False` 后，它们都不会被加载或调用，**设置 > 集成**（管理员区域）中的**工具**和**开放终端**部分会变灰，终端选择器会从聊天中移除，且 [`ENABLE_DIRECT_INTEGRATIONS`](#enable_direct_integrations) 视为关闭。当 [`ENABLE_PLUGINS`](#enable_plugins) 为 `False` 时会被强制关闭。该值在启动时读取一次，因此修改它需要重启。
+- 描述：开启或关闭所有外部工具连接：管理员配置的 OpenAPI 和 [MCP](/features/extensibility/mcp) 工具服务器、[Open Terminal](/features/open-terminal) 连接（管理员的个人的）以及用户自行添加的直接工具服务器。设为 `False` 后，它们都不会被加载或调用，**设置 > 集成**（管理员区域）中的**工具**和**Open Terminal**部分会变灰，终端选择器会从聊天中移除，且 [`ENABLE_DIRECT_INTEGRATIONS`](#enable_direct_integrations) 视为关闭。当 [`ENABLE_PLUGINS`](#enable_plugins) 为 `False` 时会被强制关闭。该值在启动时读取一次，因此修改它需要重启。
 
 ### 安装必需的 Python 包 {#install-required-python-packages}
 

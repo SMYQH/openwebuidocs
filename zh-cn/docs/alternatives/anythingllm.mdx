@@ -12,7 +12,6 @@ import Head from '@docusaurus/Head';
 <script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Open WebUI 和 AnythingLLM 相比如何？", "acceptedAnswer": {"@type": "Answer", "text": "两者都提供聊天、文档问答、智能体和模型集成。AnythingLLM 通过工作区来组织对话和文档知识。Open WebUI 使用聊天、文件夹和知识库，并提供笔记和频道功能。两者各有自己的界面和配置方式。"}}, {"@type": "Question", "name": "我可以同时使用 Open WebUI 和 AnythingLLM 吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。你可以把它们作为两个独立的应用来使用，在尝试另一个的同时保留现有配置，按需选择使用其中一个或两者都用。"}}, {"@type": "Question", "name": "我该如何开始？", "acceptedAnswer": {"@type": "Answer", "text": "按照你想尝试的项目的安装指南操作，连接一个模型，然后开始对话。两个项目都提供了安装和配置的文档。"}}]})}</script>
 </Head>
 
-
 # Open WebUI & AnythingLLM {#open-webui--anythingllm}
 
 *最后更新时间：2026 年 9 月*
@@ -56,47 +55,46 @@ import Head from '@docusaurus/Head';
 - **部署与运维**：Kubernetes、水平扩展、Redis 后端会话、OpenTelemetry 和分析。
 
 ---
+
 ## 一览表 {#at-a-glance}
 
-| | Open WebUI | AnythingLLM |
+以下是两个项目中功能和选项的示例。配置细节请查阅 [AnythingLLM 文档](https://docs.anythingllm.com/) 和 [Open WebUI 文档](/getting-started)。
+
+| | AnythingLLM | Open WebUI |
 | :--- | :--- | :--- |
-| **焦点** | 具有知识、工具和团队功能的完整 AI 平台 | 文档问答和基于工作区的 RAG |
-| **RAG 方法** | 9 个向量数据库、5 个提取引擎、混合搜索、重新排名 | 内置向量数据库，直观的文档摄取 |
-| **组织方式** | 文件夹、标签、知识库、笔记、频道 | 带有专用知识的工作区 |
-| **多提供商** | Ollama、OpenAI、Anthropic、Google、Azure、Bedrock 等 | Ollama、OpenAI、Anthropic 等 |
-| **扩展性** | Python 工具、MCP、OpenAPI、管道 | 智能体工具和网络搜索 |
-| **桌面应用** | 是 | 是 |
-| **多用户** | SSO/OIDC、LDAP、SCIM 2.0、RBAC、组 | 带有权限的多用户 |
-| **许可证** | Open WebUI 许可证 | MIT |
+| **聊天与知识** | AI 聊天、文档问答、工作区 | AI 聊天、文档问答、知识库 |
+| **文档检索** | 嵌入和分块设置；向量数据库集成 | 嵌入和提取设置；向量数据库集成 |
+| **组织方式** | 包含文档知识和对话的工作区 | 文件夹、标签、知识库、笔记、频道 |
+| **模型提供商** | Ollama、OpenAI、Anthropic、Google、Azure、Bedrock 等 | Ollama、OpenAI、Anthropic、Google、Azure、Bedrock 等 |
+| **智能体与扩展性** | 内置和自定义技能、MCP、智能体流程、开发者 API | 内置工具和 Python 工具、MCP、OpenAPI、函数、管道 |
+| **音频与图像** | 语音转文字、文字转语音、图像生成 | 语音转文字、文字转语音、图像生成 |
+| **共享访问** | Docker 多用户模式，带基于角色的权限 | 多用户访问，带角色、群组和权限 |
 
 ---
 
-## 何时选择各个平台 {#using-both}
+## 同时使用两者 {#using-both}
 
-**选择 AnythingLLM**（如果）您主要想与文档对话。工作区模型可以清晰地分离不同项目，桌面应用使其无需任何服务器设置即可轻松上手。
+你可以同时使用 Open WebUI 和 AnythingLLM。如果你已经在用其中一个，可以在旁边试用另一个，同时保留自己用得顺手的配置。
 
-**选择 Open WebUI**（如果）您需要更广泛的平台，包括团队协作、多提供商支持、扩展性或企业功能以及文档问答。
+两者都支持文档问答、智能体以及多种模型提供商。用你自己的文档和日常任务试试它们，感受各自的界面。你可能会发现自己在不同项目里分别使用两者，或者只是针对某类任务偏好其中一个。
 
-**他们解决不同的问题。** AnythingLLM 专注于使文档问答尽可能简单。Open WebUI 采用更广阔的视角，包括聊天、知识、协作和工具。两者都擅长各自的领域。
-
----
-
-*两个项目使私密 AI 和文档问答易于使用。范围不同，但都致力于将您的数据保留在您的控制下。*
-
-**准备尝试 Open WebUI？** [开始使用 →](/getting-started)
-
-
+- [AnythingLLM 文档](https://docs.anythingllm.com/)
+- [Open WebUI 文档](/getting-started)
 
 ---
 
 ## 常见问题 {#frequently-asked-questions}
 
-**AnythingLLM 和 Open WebUI 如何比较？**
-AnythingLLM 使用其工作区模型专注于文档问答。Open WebUI 也有知识库、团队功能、扩展性和多提供商支持。它们各有优势。
+**Open WebUI 和 AnythingLLM 相比如何？**
+两者都提供聊天、文档问答、智能体和模型集成。AnythingLLM 通过工作区来组织对话和文档知识。Open WebUI 使用聊天、文件夹和知识库，并提供笔记和频道功能。两者各有自己的界面和配置方式。
 
-**AnythingLLM 是免费的吗？**
-是的。AnythingLLM 采用 MIT 许可证。有免费桌面应用和自托管 Docker 版本。
+**我可以同时使用 Open WebUI 和 AnythingLLM 吗？**
+可以。你可以把它们作为两个独立的应用来使用，在尝试另一个的同时保留现有配置，按需选择使用其中一个或两者都用。
 
+**我该如何开始？**
+按照你想尝试的项目的安装指南操作，连接一个模型，然后开始对话。两个项目都提供了安装和配置的文档。
+
+[Open WebUI 快速上手](/getting-started) · [AnythingLLM 文档](https://docs.anythingllm.com/)
 
 ---
 

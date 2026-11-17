@@ -1,4 +1,4 @@
-﻿---
+---
 sidebar_position: 13
 title: "可定制的横幅"
 ---

@@ -5,7 +5,19 @@ sidebar_label: "知识库"
 description: "向知识库上传文档、就其内容提问，并在 Open WebUI 中选择检索与共享方式。"
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 # 📚 知识库 {#knowledge}
+
+<ThemedImage
+  alt="工作区知识库：托盘里的书，其中一本被拉出一半"
+  sources={{
+    light: useBaseUrl('/images/banners/workspace-knowledge-light.svg'),
+    dark: useBaseUrl('/images/banners/workspace-knowledge-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
 
 **让您的 AI 访问文档，并找到最相关的内容。**
 
@@ -31,7 +43,7 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 | :--- | :--- |
 | 在一次对话中询问某一个文件 | [把文件上传到对话](/features/chat-conversations/data-controls/files#using-files-in-open-webui) |
 | 在多次对话中复用一组文档 | 知识库，按照上面的步骤操作 |
-| 分析电子表格或通过代码创建文件 | [开放终端的文件分析指南](/features/open-terminal/use-cases/file-analysis) |
+| 分析电子表格或通过代码创建文件 | [Open Terminal的文件分析指南](/features/open-terminal/use-cases/file-analysis) |
 
 一条[笔记](/features/notes)以完整文本的形式到达模型，而知识库可以按需检索相关段落。这使知识库适合那些如果完整发送就会超出模型上下文窗口的文档集合。知识库和笔记的附加位置相同，本页所说的“知识”同时涵盖两者，以及单个文件。若要纯本地地进行文档对话，请同时遵循[离线运行 Open WebUI](/tutorials/maintenance/offline-mode)。
 

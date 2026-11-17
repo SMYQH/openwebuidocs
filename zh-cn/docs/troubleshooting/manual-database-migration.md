@@ -382,7 +382,7 @@ sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM user;"
 
 <Tabs groupId="install-type">
   <TabItem value="docker" label="Docker" default>
-    ```bash title="Terminal"
+    ```bash title="终端"
     # 退出诊断容器
     exit
 
@@ -397,7 +397,7 @@ sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM user;"
     ```
   </TabItem>
   <TabItem value="local" label="本地安装">
-    ```bash title="Terminal"
+    ```bash title="终端"
     # 启动 Open WebUI
     open-webui serve
 
@@ -1116,7 +1116,7 @@ docker compose up -d
 
 <Tabs groupId="database-type">
   <TabItem value="sqlite" label="SQLite" default>
-    ``` bash title="Terminal - Preview Upgrade on a Copy"
+    ``` bash title="终端 - 在副本上预览升级"
     # Copy the database and save its current schema
     cp /path/to/webui.db /tmp/webui-preview.db
     sqlite3 /tmp/webui-preview.db ".schema" > /tmp/schema-before.sql
@@ -1130,7 +1130,7 @@ docker compose up -d
     ```
   </TabItem>
   <TabItem value="postgresql" label="PostgreSQL">
-    ``` bash title="Terminal - Preview Upgrade on a Copy"
+    ``` bash title="终端 - 在副本上预览升级"
     # Copy the database (stop Open WebUI first so the source has no open connections)
     createdb -h localhost -U your_user -T open_webui_db open_webui_preview
     pg_dump -h localhost -U your_user -d open_webui_preview --schema-only > /tmp/schema-before.sql
@@ -1161,7 +1161,7 @@ docker compose up -d
 
 如果你的数据库服务器是离线或隔离的：
 
-``` bash title="Terminal - Offline Migration Workflow"
+``` bash title="终端 - 离线迁移工作流"
 # 1. 立刻停止 Open WebUI
 scp production-server:/app/backend/data/webui.db /tmp/webui.db
 
@@ -1196,7 +1196,7 @@ SQLite 迁移是**非事务性的**。一旦迁移执行到一半失败，数据
 
 **恢复步骤：**
 
-``` bash title="Terminal - Restore from Backup"
+``` bash title="终端 - 从备份恢复"
 # 1. Stop Open WebUI immediately
 docker stop open-webui
 
@@ -1222,7 +1222,7 @@ docker logs open-webui > migration-failure-logs.txt
 
 <Tabs groupId="database-type">
   <TabItem value="sqlite" label="SQLite" default>
-``` bash title="Terminal - SQLite Integrity Check"
+``` bash title="终端 - SQLite 完整性检查"
     sqlite3 /app/backend/data/webui.db "PRAGMA integrity_check;"
 
     # Should output: ok
@@ -1230,7 +1230,7 @@ docker logs open-webui > migration-failure-logs.txt
 ```
   </TabItem>
   <TabItem value="postgresql" label="PostgreSQL">
-``` bash title="Terminal - PostgreSQL Integrity Check"
+``` bash title="终端 - PostgreSQL 完整性检查"
     # Check for table corruption
     psql -h localhost -U user -d dbname -c "SELECT * FROM pg_stat_database WHERE datname='open_webui_db';"
 
@@ -1281,7 +1281,7 @@ docker logs open-webui > migration-failure-logs.txt
 不要公开分享你的 `webui.db` 文件——里面有用户凭据和敏感数据。只分享文本形式的诊断输出。
 :::
 
-``` bash title="Terminal - Collect Diagnostic Data"
+``` bash title="终端 - 收集诊断数据"
 # Version information
 docker logs open-webui 2>&1 | head -20 > diagnostics.txt
 

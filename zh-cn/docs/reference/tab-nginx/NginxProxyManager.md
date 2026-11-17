@@ -60,7 +60,9 @@ docker compose up -d
 - 进入 **SSL 证书 → 添加 SSL 证书 → Let's Encrypt**。
 - 填写你从 DuckDNS 获得的邮箱和域名。一个域名带星号，另一个不带。例如：``*.hello.duckdns.org`` 和 ``hello.duckdns.org``。
 - 选择 **使用 DNS 验证**，选择 DuckDNS，然后粘贴你的 API token。例如：
-```dns_duckdns_token=f4e2a1b9-c78d-e593-b0d7-67f2e1c9a5b8```
+```bash
+dns_duckdns_token=f4e2a1b9-c78d-e593-b0d7-67f2e1c9a5b8
+```
 - 同意 Let's Encrypt 的服务条款并保存。变更传播时间**按需**调整（120 秒）。
 
 5. **创建代理主机：**
@@ -128,8 +130,6 @@ CORS_ALLOW_ORIGIN="https://openwebui.hello.duckdns.org"
 ```
 
 你也可以提供一个用分号分隔的允许域名列表。**不要跳过这一步。**
-
-:::
 
 6. **把你的 URL 添加到 open-webui（否则会出现 HTTPS 错误）：**
 

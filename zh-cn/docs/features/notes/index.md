@@ -3,7 +3,19 @@ sidebar_position: 2
 title: "笔记"
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 # 📝 笔记 {#notes}
+
+<ThemedImage
+  alt="笔记：一张顶部纸张被掀起的便笺本"
+  sources={{
+    light: useBaseUrl('/images/banners/notes-light.svg'),
+    dark: useBaseUrl('/images/banners/notes-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
 
 **在 AI 陪伴下写作、思考与打磨内容。**
 

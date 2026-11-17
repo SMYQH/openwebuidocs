@@ -44,7 +44,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 与工具组合使用 {#composable-with-tools}
 
-把技能与[开放终端](/features/open-terminal)或任意工具服务器搭配使用。技能教会模型*如何*使用该工具（检查退出码、处理错误、对长时间运行的命令使用流式输出），而工具提供*能力*本身。
+把技能与[Open Terminal](/features/open-terminal)或任意工具服务器搭配使用。技能教会模型*如何*使用该工具（检查退出码、处理错误、对长时间运行的命令使用流式输出），而工具提供*能力*本身。
 
 ---
 
@@ -117,7 +117,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 来自终端服务器的技能 {#skills-from-a-terminal-server}
 
-已连接的[开放终端](/features/open-terminal)服务器可以携带自己的技能，保存在工作区中它们所描述的文件旁边。Open WebUI 会从服务器读取这些技能，并在 `$` 选择器中与你的工作区技能并列提供，ID 形如 `terminal:<url-encoded name>`。它们与其他技能表现一致：`$` 提及会注入内容，否则它们会出现在同一份清单中并通过 `view_skill` 加载。被注入的内容包含技能所在目录及其附带文件，因此模型知道应从工作区的何处读取。`read_skill_file` 可分页浏览终端技能的 `SKILL.md`，`grep_skill_files` 可在其中搜索；其其他文件保留在终端上，模型使用终端自带的文件工具打开它们。技能编辑器、版本历史和 `update_skill_files` 仅适用于工作区技能。
+已连接的[Open Terminal](/features/open-terminal)服务器可以携带自己的技能，保存在工作区中它们所描述的文件旁边。Open WebUI 会从服务器读取这些技能，并在 `$` 选择器中与你的工作区技能并列提供，ID 形如 `terminal:<url-encoded name>`。它们与其他技能表现一致：`$` 提及会注入内容，否则它们会出现在同一份清单中并通过 `view_skill` 加载。被注入的内容包含技能所在目录及其附带文件，因此模型知道应从工作区的何处读取。`read_skill_file` 可分页浏览终端技能的 `SKILL.md`，`grep_skill_files` 可在其中搜索；其其他文件保留在终端上，模型使用终端自带的文件工具打开它们。技能编辑器、版本历史和 `update_skill_files` 仅适用于工作区技能。
 
 编写自己的终端服务器意味着需要响应两个端点：
 
@@ -369,7 +369,7 @@ GitHub 链接会按对应分支、标签或提交下载为仓库的 ZIP，因此
 
 ### 工具使用指南 {#tool-usage-instructions}
 
-将技能与开放终端配合使用，教模型如何更好地使用它。“始终检查退出码。在脚本中使用 `set -e`。对需要超过 10 秒的命令使用流式输出。”
+将技能与Open Terminal配合使用，教模型如何更好地使用它。“始终检查退出码。在脚本中使用 `set -e`。对需要超过 10 秒的命令使用流式输出。”
 
 ---
 
@@ -377,7 +377,7 @@ GitHub 链接会按对应分支、标签或提交下载为仓库的 ZIP，因此
 
 ### 纯文本 {#plain-text-only}
 
-Open WebUI 会存储技能的脚本供模型阅读。要运行它，需要能够执行代码的工具，例如[开放终端](/features/open-terminal)或代码解释器。对于计算、API 调用或系统访问，请使用[工具](/features/extensibility/plugin/tools)。
+Open WebUI 会存储技能的脚本供模型阅读。要运行它，需要能够执行代码的工具，例如[Open Terminal](/features/open-terminal)或代码解释器。对于计算、API 调用或系统访问，请使用[工具](/features/extensibility/plugin/tools)。
 
 ### $ 提及时的上下文窗口 {#context-window-with--mention}
 

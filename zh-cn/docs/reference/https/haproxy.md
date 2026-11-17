@@ -14,11 +14,15 @@ HAProxy（High Availability Proxy，高可用代理）是一款专门的负载�
 
 ### Red Hat 系发行版 {#redhat-derivatives}
 
-```sudo dnf install haproxy certbot openssl -y```
+```bash
+sudo dnf install haproxy certbot openssl -y
+```
 
 ### Debian 系发行版 {#debian-derivatives}
 
-```sudo apt install haproxy certbot openssl -y```
+```bash
+sudo apt install haproxy certbot openssl -y
+```
 
 ## HAProxy 配置基础 {#haproxy-configuration-basics}
 
@@ -113,7 +117,9 @@ backend owui_chat
  http-request set-header X-Forwarded-Proto https if { ssl_fc }
     server chat <ip>:3000
 
-## WebSocket 与 HTTP/2 兼容性
+```
+
+## WebSocket 与 HTTP/2 兼容性 {#websocket-and-http2-compatibility}
 
 从较新的版本开始（包括 HAProxy 3.x），HAProxy 可能默认启用 HTTP/2。虽然 HTTP/2 支持 WebSocket（RFC 8441），但当图标或数据开始通过 H2 隧道上的 WebSocket 加载时，某些客户端或后端配置可能会出现“卡死”或无响应。
 
@@ -122,6 +128,7 @@ backend owui_chat
 2. **后端版本**：确保你的后端连接使用 HTTP/1.1（`mode http` 的默认行为）。
 
 在 `defaults` 或 `frontend` 中添加的示例：
+
 ```shell
 defaults
     # ... other settings
@@ -148,7 +155,9 @@ openssl req -x509 -newkey rsa:2048 -keyout /tmp/haproxy.key -out /tmp/haproxy.cr
 
 然后把密钥和证书合并成 HAProxy 可用的 PEM 文件：
 
-```cat /tmp/haproxy.crt /tmp/haproxy.key > /etc/haproxy/certs/haproxy.pem```
+```bash
+cat /tmp/haproxy.crt /tmp/haproxy.key > /etc/haproxy/certs/haproxy.pem
+```
 
 :::info
 

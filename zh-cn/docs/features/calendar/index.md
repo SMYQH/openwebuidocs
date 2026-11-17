@@ -3,7 +3,19 @@ sidebar_position: 2
 title: "日历"
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 # 📅 日历 {#calendar}
+
+<ThemedImage
+  alt="日历：一个月的日期方格，其中一天被抬起"
+  sources={{
+    light: useBaseUrl('/images/banners/calendar-light.svg'),
+    dark: useBaseUrl('/images/banners/calendar-dark.svg'),
+  }}
+  style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
+/>
 
 **日程安排、事件跟踪与管理——AI 可以为您规划。**
 
