@@ -102,7 +102,7 @@ openwebui.com 从不连接你的服务器。所有内容都在用户浏览器的
 
 | 设置项 | 位置 | 默认值 |
 | :--- | :--- | :--- |
-| **Community Sharing** | **Settings > Admin > General** | 开启 |
+| **Community Sharing** | **Settings > General**（管理员区域） | 开启 |
 
 [`ENABLE_COMMUNITY_SHARING`](/reference/env-configuration#enable_community_sharing) 会在实例首次启动时设定它。此后以管理面板中保存的值为准。
 

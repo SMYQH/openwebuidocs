@@ -57,7 +57,7 @@ title: "音频"
 
 如果你有 OpenAI API 密钥，这是最简单的配置方式：
 
-**在 设置 → 管理 → 音频 中：**
+**在 设置 → 音频（管理员区域） 中：**
 - **STT 引擎:** `OpenAI` | **模型:** `gpt-transcribe`（或旧版的 `whisper-1`）
 - **TTS 引擎:** `OpenAI` | **模型:** `tts-1` | **音色:** `alloy`
 - 在两个部分都填入你的 OpenAI API 密钥
@@ -79,7 +79,7 @@ environment:
 
 如果你更喜欢 Mistral 的音频栈：
 
-**在 设置 → 管理 → 音频 中：**
+**在 设置 → 音频（管理员区域） 中：**
 - **STT 引擎:** `MistralAI` | **模型:** `voxtral-mini-latest`（或留空）
 - **TTS 引擎:** `MistralAI` | **模型:** `voxtral-mini-tts-2603` | **音色:** 从列表中选择
 - 在两个部分填入你的 Mistral API 密钥
@@ -248,7 +248,7 @@ services:
 ### TTS 音色不存在 / 没有音频输出 {#tts-voice-not-found--no-audio-output}
 
 **检查清单：**
-1. 确认 **管理面板 → 设置 → 音频** 中的 TTS 引擎配置正确
+1. 确认 **设置 → 音频**（管理员区域） 中的 TTS 引擎配置正确
 2. 确认音色名称与你所选引擎支持的音色完全匹配
 3. 如果使用外部 TTS 服务，确认 Open WebUI 容器可以访问该 API Base URL
 4. 查看容器日志，检查是否有具体错误信息
@@ -362,7 +362,7 @@ environment:
 
 Open WebUI 已原生支持 ElevenLabs。配置方法如下：
 
-1. 前往 **管理面板 → 设置 → 音频**
+1. 前往 **设置 → 音频**（管理员区域）
 2. 将 TTS 引擎选择为 **ElevenLabs**
 3. 输入你的 ElevenLabs API 密钥
 4. 选择音色与模型

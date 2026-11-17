@@ -44,7 +44,7 @@ podman run -d --network=slirp4netns:allow_host_loopback=true --name openwebui -p
 ```
 
 ### 连接配置 {#connection-configuration}
-进入 Open WebUI 后，打开 **设置 > 管理设置 > 连接**，将你的 Ollama API 连接设为：
+进入 Open WebUI 后，打开 **设置 > 连接**（管理员区域），将你的 Ollama API 连接设为：
 `http://host.containers.internal:11434`
 
 如果你希望在首次启动前就配置好，请在 `podman run` 命令中添加 `-e OLLAMA_BASE_URL=http://host.containers.internal:11434`。镜像的默认值 `http://host.docker.internal:11434` 在 Podman 下无法解析。

@@ -37,7 +37,7 @@ description: "通过 OAuth、OpenID Connect 或可信标头认证把 Open WebUI 
 |---------------------------------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | `WEBUI_URL` | — | **必填。** 您的公开 WebUI 地址，例如 `http://localhost:8080`。 |
 | `ENABLE_OAUTH_PERSISTENT_CONFIG` | `false` | 从数据库加载 OAuth 设置（当持久化配置开启时）。默认 `false` 保持环境变量对 OAuth 拥有权威性；设置为 `true` 以在管理面板中管理 OAuth。 |
-| `ENABLE_OAUTH` | `true` | 提供方登录的总开关。设为 `false` 可在保留客户端 ID、密钥和端点配置的同时关闭 SSO。它同时是**设置 > 管理 > 身份验证**中的一个开关，与 LDAP 的那个相邻。 |
+| `ENABLE_OAUTH` | `true` | 提供方登录的总开关。设为 `false` 可在保留客户端 ID、密钥和端点配置的同时关闭 SSO。它同时是**设置 > 身份验证**（管理员区域）中的一个开关，与 LDAP 的那个相邻。 |
 | `ENABLE_OAUTH_SIGNUP` | `false` | 允许在 OAuth 登录时创建账户（与 `ENABLE_SIGNUP` 独立）。 |
 | `OAUTH_AUTO_REDIRECT` | `false` | 将 `/auth` 上未认证的用户直接重定向到提供商登录页，跳过"Continue with SSO"界面。要求仅一个提供商、`ENABLE_LOGIN_FORM=false` 且无 LDAP；可通过访问 `/auth?form=true` 显示本地登录表单。 |
 | `OAUTH_MERGE_ACCOUNTS_BY_EMAIL` | `false` | 基于匹配邮箱合并 OAuth 登录（注意：如果提供商不验证邮箱，可能不安全）。 |
@@ -64,7 +64,7 @@ description: "通过 OAuth、OpenID Connect 或可信标头认证把 Open WebUI 
    - 设置 `ENABLE_OAUTH_PERSISTENT_CONFIG=false` 以始终从环境变量读取
    - 通过管理面板而不是环境变量更新设置
 
-   在默认的 `ENABLE_OAUTH_PERSISTENT_CONFIG=false` 下，**设置 > 管理 > 身份验证**中的 **OAuth / OIDC** 区域是只读的，因此在你把该变量设为 `true` 之前，管理面板并不是可用的配置途径。参见[管理面板中只读的 OAuth 设置](#read-only-oauth-settings-in-the-admin-panel)。
+   在默认的 `ENABLE_OAUTH_PERSISTENT_CONFIG=false` 下，**设置 > 身份验证**（管理员区域）中的 **OAuth / OIDC** 区域是只读的，因此在你把该变量设为 `true` 之前，管理面板并不是可用的配置途径。参见[管理面板中只读的 OAuth 设置](#read-only-oauth-settings-in-the-admin-panel)。
 
 3. **必需变量**：始终验证您使用的是[环境配置文档](/reference/env-configuration/)中的确切变量名。常见错误包括使用不存在的变量如 `OIDC_CONFIG`。
 
@@ -72,7 +72,7 @@ description: "通过 OAuth、OpenID Connect 或可信标头认证把 Open WebUI 
 
 ### 管理面板中的只读 OAuth 设置 {#read-only-oauth-settings-in-the-admin-panel}
 
-`ENABLE_OAUTH_PERSISTENT_CONFIG` 决定 OAuth 设置存放在哪里，管理面板会随之变化。默认值为 `false` 时，每次启动都会从环境变量读取它们，因此 **Settings > Admin > Authentication** 中的 **OAuth / OIDC** 区域显示为只读：
+`ENABLE_OAUTH_PERSISTENT_CONFIG` 决定 OAuth 设置存放在哪里，管理面板会随之变化。默认值为 `false` 时，每次启动都会从环境变量读取它们，因此 **Settings > Authentication**（管理员区域） 中的 **OAuth / OIDC** 区域显示为只读：
 
 - 所有取值仍然可见，但整个区域会被置灰，其中每个字段和开关都不可操作，包括 **OAuth / OIDC** 主开关。
 - 区域上方有一条说明，指出这些设置来自环境变量，并给出 `ENABLE_OAUTH_PERSISTENT_CONFIG`。

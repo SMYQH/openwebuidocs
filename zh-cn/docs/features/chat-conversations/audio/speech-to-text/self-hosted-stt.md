@@ -16,7 +16,7 @@ Open WebUI 可以将录音发送到实现了 OpenAI 兼容 `/v1/audio/transcript
 
 ## 配置 Open WebUI {#configure-open-webui}
 
-在你的转录服务器运行后，打开 **Settings > Admin > Audio** 并设置：
+在你的转录服务器运行后，打开 **Settings > Audio**（管理员区域） 并设置：
 
 | 设置 | 下方 LocalAI 示例中的值 |
 |---------|------------------------------------|
@@ -82,7 +82,7 @@ AUDIO_STT_OPENAI_API_KEY=replace-with-your-own-secret
 AUDIO_STT_MODEL=whisper-1
 ```
 
-请根据你的部署方式使用可访问的基础 URL，并与 LocalAI 使用相同的密钥。已保存在 Open WebUI 数据库中的设置可能会覆盖这些初始值；重启后请检查 **Settings > Admin > Audio**。
+请根据你的部署方式使用可访问的基础 URL，并与 LocalAI 使用相同的密钥。已保存在 Open WebUI 数据库中的设置可能会覆盖这些初始值；重启后请检查 **Settings > Audio**（管理员区域）。
 
 ## 测试与排查 {#test-and-troubleshoot}
 

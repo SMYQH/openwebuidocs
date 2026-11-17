@@ -43,7 +43,7 @@ title: "默认界面设置"
 ### 方式一：使用管理面板 {#option-1-using-the-admin-panel}
 
 1. 以管理员身份登录你的 Open WebUI 实例。
-2. 前往 **Settings** → **Admin** → **General**。
+2. 前往 **Settings** → **General**（管理员区域）。
 3. 找到 **UI** 区域，点击 **Default Interface Settings** 旁边的 **Configure**。
 4. 设置你想要的选项。该列表与用户在 **Settings > Interface** 中看到的完全相同。
 5. 点击页面底部的 **Save**。
@@ -201,7 +201,7 @@ services:
 
 ## 隐藏控件 {#hiding-controls}
 
-**Settings > Admin > Interface** 中的 **Visible controls** 可以对除管理员之外的所有人隐藏单个控件。隐藏只是把控件从界面上移除：它的取值和背后的功能依然生效，因此要阻止人们使用某项功能，请使用[权限](/features/authentication-access/rbac/permissions)。隐藏 **Archive** 也会一并隐藏取消归档和 **Archive All Chats**。如果某个区域或菜单项下的控件全被隐藏，它也会随之消失，例如聊天输入菜单中的 **Add Context** 或模型编辑器中的 **Capabilities** 区域。同一个列表也可以通过 [`UI_VISIBILITY`](/reference/env-configuration#ui_visibility) 设置。
+**Settings > Interface**（管理员区域） 中的 **Visible controls** 可以对除管理员之外的所有人隐藏单个控件。隐藏只是把控件从界面上移除：它的取值和背后的功能依然生效，因此要阻止人们使用某项功能，请使用[权限](/features/authentication-access/rbac/permissions)。隐藏 **Archive** 也会一并隐藏取消归档和 **Archive All Chats**。如果某个区域或菜单项下的控件全被隐藏，它也会随之消失，例如聊天输入菜单中的 **Add Context** 或模型编辑器中的 **Capabilities** 区域。同一个列表也可以通过 [`UI_VISIBILITY`](/reference/env-configuration#ui_visibility) 设置。
 
 ---
 

@@ -77,7 +77,7 @@ The script should do this: \(ai.prompt)
 ### 选择你的 LLM {#select-your-llm}
 
 由于 iTerm2 AI 插件不会自动列出你的自定义模型，你需要手动添加。
-在 Open WebUI 中进入 `Admin Panel` > `Settings` > `Models`，点击你要使用的 LLM。
+在 Open WebUI 中进入 `Settings` > `Models`（管理员区域），点击你要使用的 LLM。
 在模型显示名下方可以找到实际模型名，填写到 iTerm2 中（例如：name 为 Gemma3，对应 model name 为 `/models/gemma3-27b-it-Q4_K_M.gguf`）。
 
 ---

@@ -9,7 +9,7 @@ Open WebUI 会在后台进行一些规模较小的模型调用，与用户正在
 
 默认情况下，这些工作全部运行在用户正在对话的那个模型上。在昂贵的旗舰模型上，这是一笔没人预期的账单；在缓慢的本地模型上，它会让整个界面显得迟滞。把后台工作指向一个小而快的模型，是管理员在这里能做的最有价值的改动。
 
-以下设置位于 **Settings > Admin > Interface**。
+以下设置位于 **Settings > Interface**（管理员区域）。
 
 ---
 
@@ -74,7 +74,7 @@ Open WebUI 会在后台进行一些规模较小的模型调用，与用户正在
 
 **Web Search Query Generation** 只在开启 Web 搜索时才会显示。
 
-图像提示词生成改为在 **Settings > Admin > Images** 中关闭（[`ENABLE_IMAGE_PROMPT_GENERATION`](/reference/env-configuration#enable_image_prompt_generation)）。
+图像提示词生成改为在 **Settings > Images**（管理员区域） 中关闭（[`ENABLE_IMAGE_PROMPT_GENERATION`](/reference/env-configuration#enable_image_prompt_generation)）。
 
 :::tip 硬件较弱时
 第一个该关掉的就是自动补全。它随用户输入而触发，因此一个迟缓的任务模型会让提示框变得像糖浆一样黏滞。

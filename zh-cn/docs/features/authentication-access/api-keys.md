@@ -41,7 +41,7 @@ API Key 代表您行事。它继承您的角色和用户组权限——管理 We
 ### 第一步：全局启用 API Keys（管理员操作） {#step-1-enable-api-keys-globally-admin}
 
 1. 以**管理员**身份登录
-2. 打开 **管理面板 > 设置 > 通用**
+2. 打开 **设置 > 通用**（管理员区域）
 3. 滚动到 **认证** 部分
 4. 切换 **启用 API Keys** 为开
 5. 点击 **保存**
@@ -164,7 +164,7 @@ CUSTOM_API_KEY_HEADER=X-OpenWebUI-Key
 
 **在设置 > 账户中看不到 API Keys 部分？**
 
-- **检查全局开关：** 确认管理员已在 **管理面板 > 设置 > 通用 > 启用 API Keys** 中启用 API Keys。参见 [`ENABLE_API_KEYS`](/reference/env-configuration#enable_api_keys)。
+- **检查全局开关：** 确认管理员已在 **设置 > 通用 > 启用（管理员区域） API Keys** 中启用 API Keys。参见 [`ENABLE_API_KEYS`](/reference/env-configuration#enable_api_keys)。
 - **检查您的权限（非管理员用户）：** 确认您的账户或用户组在 **功能权限** 下具有 **API Keys** 功能权限。参见 [`USER_PERMISSIONS_FEATURES_API_KEYS`](/reference/env-configuration#user_permissions_features_api_keys)。
 
 **收到 `401 Unauthorized` 响应？**

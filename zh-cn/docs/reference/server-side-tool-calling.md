@@ -440,7 +440,7 @@ if __name__ == "__main__":
 | 完全没有调用任何工具，且 `stream` 为 `false` | 原生循环仅在流式路径上运行 | 发送 `stream: true` |
 | 发送了 `stream: true` 却没有任何流式输出 | 工作区模型的**流式聊天响应**参数覆盖了请求 | 在模型上清除该设置，或接受模型的设置 |
 | 网络搜索、代码解释器、记忆或图像生成始终不被提供 | 缺少 `session_id`、缺少 `features` 开关、缺少用户权限、被全局关闭，或模型的**内置工具**类别被关闭 | 这五项必须全部对齐，请按此顺序检查 |
-| `execute_code` 返回 “WebSocket connection required” | 代码解释器引擎是 `pyodide`，它在浏览器中运行 | 在 **设置 > 管理 > 代码执行** 中把引擎切换为 **Jupyter**，或从 `features` 中去掉 `code_interpreter` |
+| `execute_code` 返回 “WebSocket connection required” | 代码解释器引擎是 `pyodide`，它在浏览器中运行 | 在 **设置 > 代码执行**（管理员区域） 中把引擎切换为 **Jupyter**，或从 `features` 中去掉 `code_interpreter` |
 | 文件工具（`view_file`、`grep_chat_files` 等）缺失 | 它们需要请求体中有 `files`、有 `session_id`、开启模型的**文件上传**能力，并且**预加载文件**为关闭。API 请求会把预加载文件视为开启，除非模型将其保存为关闭 | 参见[提示词缓存与上下文优化](/features/chat-conversations/prompt-caching) |
 | `503 Terminal unavailable` | 终端服务器不可达、已被禁用，或你的用户没有访问授权 | 确认该 ID 出现在该密钥的 `GET /api/v1/terminals/` 结果中 |
 | `503`，聊天中终端不可用 | 该终端的 `contexts.chat` 为 `false`，说明管理员已把它从聊天中移除 | 换一个 `contexts.chat` 不为 `false` 的终端 |

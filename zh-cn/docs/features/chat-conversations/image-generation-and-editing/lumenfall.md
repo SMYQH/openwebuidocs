@@ -16,7 +16,7 @@ Open WebUI 还支持通过 [Lumenfall](https://lumenfall.ai) 进行图像生成�
 
 ### 配置图像生成 {#configuring-image-generation}
 
-1. 在 Open WebUI 中前往 **Settings** > **Admin** > **Images**
+1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
 2. 将 `图像生成引擎` 设置为 `Default (Open AI)`（Lumenfall 使用与 OpenAI 相同的语法）
 3. 将 `API Base URL` 改为 `https://api.lumenfall.ai/openai/v1`
 4. 输入你的 Lumenfall API 密钥

@@ -41,7 +41,7 @@ title: "SERPHouse"
 ### 2. 配置 Open WebUI {#2-configure-open-webui}
 
 1. 使用管理员账户登录 Open WebUI。
-2. 打开**管理面板 → 设置 → 网络搜索**。
+2. 打开**设置 → 网络搜索**（管理员区域）。
 3. 开启**网络搜索**开关。
 4. 从**网络搜索引擎**下拉菜单中选择 **serphouse**。
 5. 将你的 SERPHouse API 密钥粘贴到 **SERPHouse API 密钥**字段。

@@ -320,7 +320,7 @@ kubectl -n openwebui get pods,pvc,services
 kubectl -n openwebui port-forward service/openwebui 3000:80
 ```
 
-打开 [http://localhost:3000](http://localhost:3000)，创建第一个管理员账户，选择一个模型并发送一条消息。如果模型缺失，请检查 **Admin Panel → Settings → Connections**。
+打开 [http://localhost:3000](http://localhost:3000)，创建第一个管理员账户，选择一个模型并发送一条消息。如果模型缺失，请检查 **Settings → Connections**（管理员区域）。
 
 在对外开放服务之前，请禁用开放注册或配置你的[身份提供方](/features/authentication-access/auth/sso)。请阅读[加固指南](/getting-started/advanced-topics/hardening)。
 

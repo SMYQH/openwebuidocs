@@ -105,7 +105,7 @@ Valves 和 UserValves 用于定义工具的可配置项，你可以在专门的 
 - `__metadata__`：聊天元数据字典
 - `__messages__`：历史消息列表
 - `__files__`：附加文件（消息没有附件时为空列表）
-- `__model__`：模型信息字典。对工作区工具而言，如果 **设置 > 管理 > 界面** 下配置了任务模型，它就是该任务模型，否则是当前对话模型。若要获取用户正在对话的模型，请读取 `__metadata__["model"]`。
+- `__model__`：模型信息字典。对工作区工具而言，如果 **设置 > 界面**（管理员区域） 下配置了任务模型，它就是该任务模型，否则是当前对话模型。若要获取用户正在对话的模型，请读取 `__metadata__["model"]`。
 - `__id__`：工具自身的 id
 - `__chat_id__` 和 `__message_id__`：当前的聊天 id 和消息 id
 - `__request__`：FastAPI 请求
@@ -178,7 +178,7 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 
 你可以在两个位置配置函数调用模式：
 
-1. **管理员级别**：进入 **Admin Panel > Settings > Models > Model Specific Settings > Advanced Parameters > Function Calling**（设置为 `Default` 或 `Native`）。
+1. **管理员级别**：进入 **Settings > Models > Model Specific Settings > Advanced Parameters > Function Calling**（管理员区域）（设置为 `Default` 或 `Native`）。
 2. **按请求设置**：在 **Chat Controls > Advanced Params** 中设置 `params.function_calling = "native"` 或 `"default"`。
 
 如果模型似乎无法调用工具，请确认它已被启用（可在 Model 页面或聊天输入框旁边的 `+` 按钮中开启）。

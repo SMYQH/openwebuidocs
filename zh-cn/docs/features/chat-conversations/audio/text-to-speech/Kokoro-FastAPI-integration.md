@@ -112,7 +112,7 @@ services:
 
 按照以下步骤让 Open WebUI 使用 Kokoro-FastAPI：
 
-- 转到 `设置` -> `管理` -> `音频`
+- 转到 `设置` -> `音频`（管理员区域）
 - 将 TTS 设置为：
 - - 文本转语音引擎：OpenAI
     - API 基础 URL：`http://localhost:8880/v1` # 也可能需要改成 `host.docker.internal`

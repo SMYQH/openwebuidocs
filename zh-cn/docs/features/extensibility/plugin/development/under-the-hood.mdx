@@ -261,7 +261,7 @@ if run_once(f"signup-log:{event['actor']['id']}"):
 
 ## 容易踩的坑 {#footguns}
 
-- **没有沙箱。** Tools 和 Functions 在你的后端进程中、以后端用户的身份执行 Python 代码。安全策略（[Rule 10](/security/security-policy#reporting-guidelines)）将这种行为视为预期行为：授予 Tool 或 Function 创建权限等同于授予主机的 shell 访问权限。请把插件作者当作管理员来对待。
+- **没有沙箱。** Tools 和 Functions 在你的后端进程中、以后端用户的身份执行 Python 代码。安全策略（[Rule 9](/security/security-policy#reporting-guidelines)）将这种行为视为预期行为：授予 Tool 或 Function 创建权限等同于授予主机的 shell 访问权限。请把插件作者当作管理员来对待。
 - **Stream 钩子使用的是陈旧的缓存。** 对 `stream` 方法的编辑只有在另一个钩子（或一次进程重启）刷新了模块后才会生效。如果你修改了 stream filter 但变更似乎没生效，请触发一次 `inlet` / `outlet` 重新加载或重启进程。
 - **跨插件干扰不会被检测。** 两个插件 patch 同一个函数、注册同一条路由，或写入同一个 `app.state` key，会发生冲突。加载顺序不是确定性的。请优先采用加法式（additive）的模式（你自己的命名空间、会委托的包装器），而不是破坏性的模式。
 - **禁用不会卸载。** 模块会一直留在 `sys.modules` 中，所有模块级别的副作用也都会一直保留。要完全回滚请重启进程。
@@ -276,4 +276,4 @@ if run_once(f"signup-log:{event['actor']['id']}"):
 
 如果你的插件需要一个还不存在的接口，那么提一个上游 PR 会比 monkey-patch 更持久。
 
-如果你针对被你的插件 monkey-patch 过的代码路径提交了一个 bug 报告，请做好被关闭的准备。报告必须能在未经修改的 Open WebUI 上复现（[Rule 6](/security/security-policy#reporting-guidelines)）。
+如果你针对被你的插件 monkey-patch 过的代码路径提交了一个 bug 报告，请做好被关闭的准备。报告必须能在未经修改的 Open WebUI 上复现（[Rule 5](/security/security-policy#reporting-guidelines)）。

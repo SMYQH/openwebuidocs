@@ -207,7 +207,7 @@ cd frontend && npm install && npm run build
 
 让 Open WebUI 使用 Chatterbox TTS API 的步骤如下：
 
-- 转到 `设置` -> `管理` -> `音频`
+- 转到 `设置` -> `音频`（管理员区域）
 - 将 TTS 设置为：
 - - 文本转语音引擎：OpenAI
   - API 基础 URL：`http://localhost:4123/v1` # 也可尝试 `http://host.docker.internal:4123/v1`

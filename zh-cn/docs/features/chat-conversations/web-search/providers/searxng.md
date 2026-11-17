@@ -327,7 +327,7 @@ docker exec -it open-webui curl http://host.docker.internal:8080/search?q=this+i
 
 ## 4. 图形界面配置 {#4-gui-configuration}
 
-1. 前往：`Settings` -> `Admin` -> `Web Search`
+1. 前往：`Settings` -> `Web Search`（管理员区域）
 2. 打开 `启用 Web Search`
 3. 将 `Web Search 引擎` 从下拉框设为 `searxng`
 4. 将 `SearXNG 查询 URL` 设为以下格式之一：

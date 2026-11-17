@@ -19,13 +19,13 @@ Webhook 通知**默认关闭**，而且需要两次主动开启：管理员启�
 
 侧边栏顶部的铃铛按钮会打开你的收件箱，并显示一个徽标，标注自你上次打开以来新到的条目数量。它会列出：针对你条目的评论、对你评论的回复以及评论中的提及；频道中的提及与回复；失败的自动化运行（点击可打开该次运行）；以及你的日历提醒。被静音的频道只会送来提及。只有在你仍能打开其所指向的条目时，该条目才会显示。
 
-收件箱默认对所有用户开启。管理员可以在 **Admin Settings > General > Notifications** 中关闭它，或通过 [`ENABLE_NOTIFICATIONS`](/reference/env-configuration#enable_notifications) 关闭。
+收件箱默认对所有用户开启。管理员可以在 **设置 > 常规 > 通知**（管理员区域）中关闭它，或通过 [`ENABLE_NOTIFICATIONS`](/reference/env-configuration#enable_notifications) 关闭。
 
 ## 启用通知 {#enabling-notifications}
 
 | 要求 | 位置 |
 |---|---|
-| 已启用 [`ENABLE_USER_WEBHOOKS`](/reference/env-configuration#enable_user_webhooks)（默认：关闭） | **Settings > Admin > General** 中的 **User Webhooks** 开关 |
+| 已启用 [`ENABLE_USER_WEBHOOKS`](/reference/env-configuration#enable_user_webhooks)（默认：关闭） | **Settings > General**（管理员区域） 中的 **User Webhooks** 开关 |
 | `features.webhooks` 权限（[`USER_PERMISSIONS_FEATURES_USER_WEBHOOKS`](/reference/env-configuration#user_permissions_features_user_webhooks)，默认：关闭） | **Admin Panel > Users > Groups > Permissions** |
 
 管理员始终拥有该权限。在功能关闭期间，通知端点会返回 `404 Not Found`，因此看起来就像该功能并不存在。

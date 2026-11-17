@@ -5,64 +5,101 @@ title: "连接 Agent"
 
 # 🤖 连接 Agent {#connect-an-agent}
 
-**将 Open WebUI 作为自主 AI Agent 的聊天前端。**
+**用 Open Terminal 在 Open WebUI 中运行 Agent，或接入已有的 Agent 网关。**
 
-AI Agent 不只是普通模型提供商。它们可以执行终端命令、读写文件、搜索网页、维护记忆，并串联复杂工作流。由于许多 Agent 框架都提供**兼容 OpenAI 的 API**，因此 Open WebUI 可以在极低配置成本下，成为它们精致且功能完整的聊天前端。
+Agent 框架是围绕模型的一层软件，负责管理工具、指令、权限，以及"采取行动并检查结果"的循环。Open WebUI 可以用普通模型加 Open Terminal 跑起这个循环，也可以在同一个聊天界面中接入 Claude Code、Codex 或 Hermes 这样的独立框架。
 
----
+## 选择你的接入方式 {#choose-your-setup}
 
-## 它与“提供商”有什么不同？ {#how-is-this-different-from-a-provider}
+| 你想要 | 接入方式 | 在哪里连接 |
+| :--- | :--- | :--- |
+| 让现有模型拥有用于命令、文件和代码的工作区 | **Open WebUI + Open Terminal**：Open WebUI 管理模型的工具调用，Open Terminal 负责执行 | **Settings > Integrations > Open Terminal**（管理员区域） |
+| 在聊天中使用 Claude Code、Codex、Cursor、Gemini CLI、Hermes 或其他受支持的 Agent | **通过 Open Terminal 使用 Agent**：Agent CLI 在终端环境中运行，自带工具和 Agent 循环 | 同一个 **Open Terminal** 连接；先选终端，再选 Agent 模型 |
+| 使用你已经在运维的 Agent 服务 | **Agent 网关**：Open WebUI 把聊天请求发送到该服务的兼容 OpenAI API | **Settings > Connections > OpenAI**（管理员区域） |
 
-当你[连接提供商](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)时，你连接的是一个**模型**。它接收你的消息并返回回复，仅此而已。
+如果是全新接入，先从 **Open Terminal** 开始。一个连接就能同时为普通模型提供工作区，并让你访问其中安装的受支持 Agent CLI。
 
-而当你连接的是 **Agent**，你接入的是一个自主系统，它可以：
+## 用 Open Terminal 快速开始 {#quick-start-with-open-terminal}
 
-- 🖥️ **在你的机器上执行终端命令**
-- 📁 **在工作区中读写文件**
-- 🔍 **搜索网页**获取实时信息
-- 🧠 **跨对话维护记忆**
-- 🧩 **使用技能和插件**扩展能力
-- 🔗 **串联多个工具调用**解决复杂任务
+### 1. 准备终端环境 {#1-prepare-the-terminal-environment}
 
-Agent 会根据你的消息决定何时、如何使用这些工具，而 Open WebUI 会把结果呈现在熟悉的聊天界面中。
+按 [Open Terminal 安装指南](/features/open-terminal/setup/installation)操作。选择 Docker 以获得容器工作区，或选择裸机以使用宿主机上的文件和工具。
 
----
+如果你要用 **Codex 或 Claude Code**，`ghcr.io/open-webui/open-terminal:agents` 镜像已包含这两个 CLI。全新 Docker 安装示例：
 
-## 可用 Agent {#available-agents}
+```bash
+docker run -d \
+  --name open-terminal \
+  --restart unless-stopped \
+  -p 8000:8000 \
+  -v open-terminal:/home/user \
+  -e OPEN_TERMINAL_API_KEY=your-secret-key \
+  ghcr.io/open-webui/open-terminal:agents
+```
 
-对于新的部署，我们推荐 **Open WebUI 搭配 [Open Terminal](/features/open-terminal)** 用于 Agent 工作流。下面的集成连接的是独立的 Agent 运行时。
+把 `your-secret-key` 换成你自己的密钥。已有安装请按[更新指南](/features/open-terminal/setup/updating)操作，更换镜像时保留工作区卷。
 
-| Agent | 描述 | 指南 |
-|-------|-------------|-------|
-| **Hermes Agent** | Nous Research 的自主 Agent，支持终端、文件操作、网页搜索、记忆和可扩展技能 | [设置 Hermes Agent →](./hermes-agent) |
-| **OpenClaw** | 开源自托管 Agent 框架，支持 shell 访问、文件操作、网页浏览和消息频道集成 | [设置 OpenClaw →](./openclaw) |
+### 2. 安装并登录你的 Agent {#2-install-and-sign-in-to-your-agent}
 
----
+如果使用带终端工具的普通模型，继续第 3 步。如果使用 Agent CLI，请把它**安装在运行 Open Terminal 的环境内部**，并以终端的操作系统用户完成登录或提供商配置。装在你笔记本电脑上的 CLI 不会自动出现在 Docker 容器或远程终端里。
 
-[Open WebUI Computer](/getting-started/quick-start/connect-an-agent/cptr) 正在逐步弃用；其集成指南仍会为现有安装保留。
+对于上面的 Docker 容器，打开一个 shell：
 
-## 工作原理 {#how-it-works}
+```bash
+docker exec -it open-terminal bash
+```
 
-无论你连接的是哪个 Agent，整体架构都一样：
+运行 `codex` 或 `claude` 并完成设置。其他 Agent 请在同一个环境中按其安装说明操作。在接入聊天之前，先确认 Agent 能在那里回答一个提示。参见[受支持的 Agent](/features/open-terminal/coding-agents#supported-agents)和 [Agent 部署指南](https://github.com/open-webui/open-terminal/blob/main/docs/deployment.md#coding-agents)。
+
+**Open Terminal API 密钥**用于与终端服务器建立连接认证。每个 Agent 还需要各自的登录凭据或模型提供商凭据。请保持主目录卷处于挂载状态，这样基于文件的 Agent 设置和凭据在容器替换后依然保留。
+
+### 3. 连接 Open Terminal {#3-connect-open-terminal}
+
+在 Open WebUI 中打开 **Admin** 分区下的 **Settings > Integrations**。在 **Open Terminal** 中添加终端的 URL 和 API 密钥，保存并启用该连接。
+
+使用 Open WebUI 服务器能访问到的地址：例如在共享的 Docker Compose 网络上用 `http://open-terminal:8000`，两个进程直接运行在同一台机器上时用 `http://localhost:8000`。分离的容器、远程主机和访问授权请按[连接指南](/features/open-terminal/setup/connecting)操作。
+
+### 4. 选择终端和模型 {#4-select-a-terminal-and-model}
+
+开始一个已保存的聊天，点击**终端按钮**（云图标），然后选择你的终端。接着二选一：
+
+- **一个普通模型**，需具备足够强的原生工具调用能力。Open WebUI 会给它终端工具来执行命令、处理文件。如果工具缺失，请检查该模型的[Terminal 能力与绑定](/features/workspace/models#capabilities-and-bindings)。
+- **一个 Agent 模型**，命名为 `<agent>/<model>`。Open WebUI 会发现所选终端中可用的 Agent 和模型。只有能成功上报自身模型的 Agent 才会出现。
+
+Agent 会话一次只支持一个 Agent，并且要求是已保存的聊天。可以继续发新消息；不支持重新生成、编辑并重发之前的消息，也不支持分支。完整的聊天行为参见[编码智能体](/features/open-terminal/coding-agents)。
+
+### 5. 试一个任务 {#5-try-a-task}
+
+在[文件浏览器](/features/open-terminal/file-browser)中打开你的项目目录，开始一个新的 Agent 会话，然后提出要求：
+
+> 检查这个项目，说明如何运行它，并运行它已有的测试。报告所有失败项及相应输出。
+
+Agent 在该终端的工作区中工作。工具请求会出现在聊天里，并遵循所选的[工具权限模式](/features/extensibility/plugin/tools#tool-approval)。已存在的 Agent 会话在你浏览其他目录时会保留原有工作目录。
+
+## Open Terminal 如何对接不同的框架 {#how-open-terminal-connects-different-harnesses}
+
+Open Terminal 启动每个受支持的 Agent CLI，并通过它们各自的原生接口通信。**Agent Client Protocol (ACP)** 为许多 Agent 提供统一接口；Codex、Claude Code 和 Pi 则使用各自协议的专用集成。参见[协议与 Agent 列表](/features/open-terminal/coding-agents#supported-agents)。
 
 ```mermaid
 flowchart LR
-    A["Open WebUI<br/>(frontend)"]
-    B["Agent Gateway<br/>(API server)"]
-    C["Terminal,<br/>Files, Web"]
-
-    A -- HTTP --> B
-    B -- Tools --> C
-    C -- Results --> B
-    B -- Stream --> A
+    UI["Open WebUI chat"] <-->|"Session and streaming connection"| OT["Open Terminal"]
+    OT <-->|"ACP"| ACP["Cursor, Gemini CLI, Hermes, and other ACP agents"]
+    OT <-->|"Native protocols"| Native["Codex, Claude Code, Pi"]
+    ACP --> Workspace["Terminal workspace: files, tools, and commands"]
+    Native --> Workspace
 ```
 
-1. **你在 Open WebUI 中输入消息**
-2. Open WebUI 将消息发送给 Agent 的 API 服务器（就像它会发给 OpenAI 一样）
-3. Agent **决定使用哪些工具**、执行它们，并根据结果继续推理
-4. 最终回复**流式返回**到 Open WebUI，并可带上进度提示
-5. 你在熟悉的聊天界面中看到结果，同时保留完整会话历史、用户体系以及 Open WebUI 的全部功能
+Open Terminal 会发现已安装 Agent 的模型，并以终端用户的身份运行它们的进程。Open WebUI 把它们流式输出的内容、工具请求和提问转成聊天交互，把附件上传到工作区，并保存会话信息以便后续消息继续。可选模型和可选控制项取决于各个 Agent 的上报内容。
 
-:::tip
-由于多数 Agent 都实现了标准 OpenAI 聊天补全协议，因此添加一个 Agent 往往只需在 **管理面板 → 连接 → OpenAI** 中填入 URL 和 API 密钥。无需插件、无需 pipes、无需中间层。
-:::
+你也可以通过配置[注册另一个 ACP Agent](/features/open-terminal/coding-agents#add-another-acp-agent)。该 Agent 必须支持此集成所用的协议，并能在终端环境中成功运行。
+
+## 接入已有的 Agent 网关 {#connect-an-existing-agent-gateway}
+
+当你想让一个独立运行的 Agent 服务通过兼容 OpenAI 的 API 处理请求时，使用网关连接。
+
+| Agent | 连接方式 | 指南 |
+| :--- | :--- | :--- |
+| **Hermes Agent** | Hermes 网关的兼容 OpenAI API；Hermes 也可通过 Open Terminal 的 ACP 集成接入 | [配置 Hermes 网关](/getting-started/quick-start/connect-an-agent/hermes-agent) |
+| **OpenClaw** | OpenClaw 网关的兼容 OpenAI API | [配置 OpenClaw](/getting-started/quick-start/connect-an-agent/openclaw) |
+
+在这条路线上，Open WebUI 把对话发送给网关；远端 Agent 自行管理它的工作区、工具和执行循环。请按具体指南启用端点并配置其 URL、认证方式和模型 ID。仅兼容 Chat Completions 并不保证支持 Open WebUI 的全部功能，也不保证支持原生 Agent 审批和会话控制。

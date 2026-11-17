@@ -14,7 +14,7 @@ Open WebUI 也支持通过 **Image Router API** 进行图像生成。Image Route
 
 ### 配置 Open WebUI {#configuring-open-webui}
 
-1. 在 Open WebUI 中前往 **Settings** > **Admin** > **Images**
+1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
 2. 将 `图像生成引擎` 设置为 `Default (Open AI)`（Image Router 使用与 OpenAI 相同的语法）
 3. 将 `API Base URL` 改为 `https://api.imagerouter.io/v1/openai`
 4. 输入你的 Image Router API 密钥

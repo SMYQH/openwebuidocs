@@ -52,7 +52,7 @@ Open WebUI 并**不会**静默截断你的对话。它提供了一个可选且�
 
 Open WebUI 提供了一个可选的**上下文压缩**功能，帮你处理最常见的场景。当聊天的预估上下文超过 token 阈值时，它会请求一个模型对较旧的消息进行摘要，然后将对话从摘要加上最近的消息继续下去，让长聊天在不溢出窗口的情况下持续进行。
 
-它默认**处于禁用状态**。管理员可以在 **Admin Panel > Settings > Interface** 中启用和调整：
+它默认**处于禁用状态**。管理员可以在 **Settings > Interface**（管理员区域） 中启用和调整：
 
 - **Context Compaction**：开关（[`ENABLE_CONTEXT_COMPACTION`](/reference/env-configuration#enable_context_compaction)）。
 - **Context Compaction Model**：负责撰写摘要的模型（[`CONTEXT_COMPACTION_MODEL`](/reference/env-configuration#context_compaction_model)）。保持为 **Current Model** 即使用对话自身的模型。

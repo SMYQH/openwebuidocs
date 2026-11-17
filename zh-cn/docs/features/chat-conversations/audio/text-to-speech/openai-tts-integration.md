@@ -116,7 +116,7 @@ services:
 
 **OpenAI Realtime** 文本转语音引擎使用 OpenAI 的实时语音模型来生成语音，与[实时通话](/features/chat-conversations/chat-features/voice-mode#realtime-calls)所用的是同一批模型。对于每一段文本，Open WebUI 都会向 `<API Base URL>/realtime` 开启一个短暂的 WebSocket 会话，请模型朗读该文本，并把结果保存为一个完成的 WAV 片段。它像其他任何文本转语音引擎一样，为朗读（Read Aloud）和标准语音通话提供服务。
 
-1. 前往 **设置 > 管理 > 音频**。
+1. 前往 **设置 > 音频**（管理员区域）。
 2. 把 **文本转语音引擎** 设为 **OpenAI Realtime**。模型和语音会切换为 `gpt-realtime-2.1-mini` 和 `marin`。
 3. 填入 **API Base URL** 和 **API Key**。这与 `OpenAI` 引擎使用的是同一组字段。
 4. 可选地修改 **TTS 模型**、**TTS 语音** 或 **提示模板**，然后点击 **保存**。
@@ -213,7 +213,7 @@ OpenRouter 支持 `mp3` 和 `pcm` 两种输出格式。在 Open WebUI 中请始�
 
 ## 响应切分 {#response-splitting}
 
-在读取较长的响应时，Open WebUI 可以在把文本发送给 TTS 引擎之前将其切分为多个块。这在 **设置 > 管理 > 音频** 的 **响应切分** 中配置。
+在读取较长的响应时，Open WebUI 可以在把文本发送给 TTS 引擎之前将其切分为多个块。这在 **设置 > 音频**（管理员区域） 的 **响应切分** 中配置。
 
 | 选项 | 说明 |
 |--------|-------------|

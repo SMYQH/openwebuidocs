@@ -5,9 +5,47 @@ title: "Coding Agents"
 
 # Coding Agents {#coding-agents}
 
-当所选的 Open Terminal 列出了编码智能体时，它们会出现在模型选择器中，与你的常规模型并列。选中其中一个，该智能体就会在终端的工作区中工作，使用该环境的文件与工具。Open WebUI 支持 Claude Code、Codex、Cursor、Grok、OpenCode、Cline、Gemini CLI 和 Pi。
+当所选的 Open Terminal 列出了编码智能体时，它们会出现在模型选择器中，与你的常规模型并列。选中其中一个，该智能体就会在终端的工作区中工作，使用该环境的文件与工具。
 
 出现哪些智能体与模型取决于你选择的 Open Terminal。终端报告为不可用的智能体不会被列出。
+
+有关安装、登录和连接步骤，请先阅读[连接 Agent](/getting-started/quick-start/connect-an-agent#quick-start-with-open-terminal)。
+
+## 支持的智能体 {#supported-agents}
+
+Open Terminal 通过下表的接口启动已安装的 CLI。请以运行终端的用户身份安装 CLI 并完成其身份验证；对某个智能体的支持并不意味着每个终端镜像都包含它的可执行文件或凭据。`:agents` Docker 镜像包含 Codex 和 Claude Code。
+
+| 智能体 | 接口 | 可执行文件 |
+| :--- | :--- | :--- |
+| **Codex** | 原生 app-server 协议 | `codex` |
+| **Claude Code** | 原生流式 JSON 协议 | `claude` |
+| **Pi** | 原生 RPC 协议 | `pi` |
+| **Cursor** | ACP | `agent` |
+| **Grok** | ACP | `grok` |
+| **OpenCode** | ACP | `opencode` |
+| **Cline** | ACP | `cline` |
+| **Gemini CLI** | ACP | `gemini` |
+| **Hermes** | ACP | `hermes` |
+| **Antigravity** | ACP | `agy` |
+| **GitHub Copilot** | ACP | `copilot` |
+| **Goose** | ACP | `goose` |
+| **Qwen Code** | ACP | `qwen` |
+
+[Agent Client Protocol (ACP)](https://agentclientprotocol.com/get-started/introduction) 规范化了智能体与其客户端之间的通信。这些集成使用 ACP v1。Open Terminal 负责启动智能体进程，Open WebUI 负责处理其协议消息，包括聊天输出、工具审批和会话延续。其余三个智能体有专用的协议适配器。
+
+可用模型来自各 CLI 的发现响应。推理控制和会话恢复等功能取决于智能体及其版本。请使用支持目标集成的 Open WebUI、Open Terminal 和 CLI 版本。[Open Terminal 智能体参考](https://github.com/open-webui/open-terminal#coding-agents-in-chat)列出了启动命令和可执行文件覆盖方式。
+
+## 添加另一个 ACP 智能体 {#add-another-acp-agent}
+
+先在终端环境中安装并配置该智能体。然后在 **Open Terminal 服务器**上设置 `OPEN_TERMINAL_ACP_AGENTS`，其值为一个 JSON 对象，包含 ID、显示名称和启动命令。例如，对于已安装的 Kiro CLI：
+
+```bash
+export OPEN_TERMINAL_ACP_AGENTS='{"kiro":{"name":"Kiro","command":"kiro-cli acp"}}'
+```
+
+如果使用 Docker，请把同一个变量透传到容器环境中。重启 Open Terminal 以加载它，然后在 Open WebUI 中选择该终端。发现的模型显示为 `acp-kiro/<model>`。
+
+该命令必须通过标准输入/输出启动一个 ACP v1 智能体。它以终端用户的文件、环境和凭据运行。此设置只注册命令，不会安装智能体，也不会完成交互式登录。智能体必须在发现阶段成功报告模型，才会出现在选择器中。
 
 ## 选择智能体 {#picking-an-agent}
 

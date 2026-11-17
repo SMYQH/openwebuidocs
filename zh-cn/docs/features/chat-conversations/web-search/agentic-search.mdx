@@ -29,8 +29,8 @@ Agentic web search 最适合 GPT-5、Claude 4.5+、Gemini 3+、MiniMax M2.5 这�
 
 要解锁这些能力，你的模型必须支持原生工具调用，并具备合理的多步推理能力——最低限度需要类似 GPT-5.6 Luna、Gemini 3.5 Flash-Lite、MiniMax M3、Gemma 4 31B，或在本地运行的 Muse Glimmer 30B。这些内置系统工具的管理员级配置请参阅 [**Central Tool Calling Guide**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
 
-1.  **全局启用 Web Search**：确保已在 **Admin Panel → Settings → Web Search** 中配置搜索引擎
-2.  **启用模型能力**：前往 **Admin Panel → Settings → Models**，选中目标模型并启用 **Web Search** capability
+1.  **全局启用 Web Search**：确保已在 **Settings → Web Search**（管理员区域） 中配置搜索引擎
+2.  **启用模型能力**：前往 **Settings → Models**（管理员区域），选中目标模型并启用 **Web Search** capability
 3.  **启用默认功能**：在同一模型设置中，找到 **Default Features**，勾选 **Web Search**。这决定 `search_web` 与 `fetch_url` 是否会默认出现在新聊天中
 4.  **确认 Native Mode (Agentic Mode)**：
     *   Native 是默认的工具调用模式，因此除非模型被切换到 Legacy，否则它已经处于生效状态。在同一模型设置的 **Advanced Parameters** 中，确认 **Function Calling** 被设为 `Native`（而不是 `Legacy`）。
@@ -67,7 +67,7 @@ Agentic web search 最适合 GPT-5、Claude 4.5+、Gemini 3+、MiniMax M2.5 这�
 
 如果模型判断搜索 snippet 不足以回答问题，它就会调用 `fetch_url`：
 *   **直接访问**：该工具会访问指定 URL，并使用你配置的 **Web Loader** 提取主要文本。
-*   **原始上下文**：提取后的文本会被**直接注入模型上下文窗口**。默认情况下整页内容都会进入上下文。若要设置上限，可在 **设置 > 管理 > Web Search** 中调整 **Fetch URL Content Length Limit**，或设置 [`WEB_FETCH_MAX_CONTENT_LENGTH`](/reference/env-configuration#web_fetch_max_content_length)；超过该字符数的页面会被截断，并以 `[Content truncated...]` 结尾。
+*   **原始上下文**：提取后的文本会被**直接注入模型上下文窗口**。默认情况下整页内容都会进入上下文。若要设置上限，可在 **设置 > Web Search**（管理员区域） 中调整 **Fetch URL Content Length Limit**，或设置 [`WEB_FETCH_MAX_CONTENT_LENGTH`](/reference/env-configuration#web_fetch_max_content_length)；超过该字符数的页面会被截断，并以 `[Content truncated...]` 结尾。
 *   **文件**：在读取之前，Open WebUI 会检查该 URL 是网页还是文件。该检查发出的请求与网页加载器完全相同，使用相同的 [`USER_AGENT`](/reference/env-configuration#user_agent)、浏览器请求头和 **Verify SSL Certificate** 设置，因此那些屏蔽未知客户端的站点（例如 Wikimedia）会以同样的方式回应。PDF 或其他文档随后会进入文档提取流程，模型拿到的是它的文本。当文件名没有已知扩展名时（例如 `arxiv.org/pdf/1706.03762`），由服务器报告的文件类型决定该文件被如何读取。
 *   **可引用**：被抓取的页面会以 URL 命名的来源出现在引用面板中。在 Native 模式下，这是网页成为引用的唯一途径，而且它一定是模型真正读过的页面。
 *   **Agentic 优势**：由于不使用 RAG，模型拿到的是网页的“完整画面”，而不是零散片段。这使它能更好执行复杂页面级指令（例如：“Summarize the technical specifications table from this documentation link”）

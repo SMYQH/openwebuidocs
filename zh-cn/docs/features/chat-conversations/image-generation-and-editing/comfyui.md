@@ -42,15 +42,15 @@ docker run -d -p 3000:8080 \
 
 该功能会使用语言模型，根据你的初始输入自动生成更详细、更有创意的提示词，从而提升图像生成效果。
 
-**Image Prompt Generation** 开关位于 **Admin Panel > Settings > Images** 的 “Image Generation” 区域中，并且在选择图像生成引擎之前就可以设置。
+**Image Prompt Generation** 开关位于 **Settings > Images**（管理员区域） 的 “Image Generation” 区域中，并且在选择图像生成引擎之前就可以设置。
 
-若要自定义用于生成提示词的模板，请前往 **Admin Panel > Settings > Interface > Tasks**。
+若要自定义用于生成提示词的模板，请前往 **Settings > Interface > Tasks**（管理员区域）。
 
 ![Screenshot showing the Image Prompt Generation toggle location in Images settings](/images/image-generation-and-editing/image-prompt-generation-toggle.png)
 
 ## 创建图像（Image Generation） {#create-image-image-generation}
 
-1. **进入图像设置：** 在 Open WebUI 中前往 **Admin Panel** > **Settings** > **Images**
+1. **进入图像设置：** 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
 
 2. **启用并配置 ComfyUI：**
     - 确保页面顶部的 **Image Generation** 开关已启用
@@ -122,7 +122,7 @@ docker run -d -p 3000:8080 \
 
 Open WebUI 同样支持通过 ComfyUI 进行图像编辑，从而修改已有图片。
 
-1. **进入图像设置：** 在 Open WebUI 中前往 **Admin Panel** > **Settings** > **Images**。
+1. **进入图像设置：** 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）。
 
 2. **配置图像编辑：**
     - 在 **编辑图像** 部分，将 **图像编辑引擎** 设为 `ComfyUI`

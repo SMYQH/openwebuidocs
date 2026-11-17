@@ -26,7 +26,7 @@ docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -e AUTOM
 
 ### 配置 Open WebUI 连接 AUTOMATIC1111 {#setting-up-open-webui-with-automatic1111}
 
-1. 在 Open WebUI 中前往 **Settings** > **Admin** > **Images**
+1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
 2. 将 `图像生成引擎` 设置为 `Automatic1111`
 3. 在 `Base URL` 字段中，输入可访问 AUTOMATIC1111 API 的地址：
 

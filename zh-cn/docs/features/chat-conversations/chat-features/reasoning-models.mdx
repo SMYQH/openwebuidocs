@@ -46,7 +46,7 @@ Open WebUI 提供多项内置设置，用于配置推理模型行为。你可以
 
 - **Model controls**（消息输入框旁）→ **Controls** → **Advanced Params** —— 按聊天设置
 - **Workspace** → **Models** → **Edit Model** → **Advanced Parameters** —— 按模型设置（仅管理员）
-- **Settings** → **Admin** → **AI** → **Models** → 选择某个模型 → **Advanced Parameters** —— 另一个按模型设置入口
+- **Settings** → **AI** → **Models** → 选择某个模型 → **Advanced Parameters**（管理员区域） —— 另一个按模型设置入口
 
 ### 推理标签设置 {#reasoning-tags-setting}
 
@@ -113,7 +113,7 @@ Reasoning Effort 仅适用于支持该参数的特定提供商模型。在原生
 3. **在下一次调用时按连接所期望的格式把它发回**；参见[推理内容是如何被重新发回的](#how-reasoning-is-sent-back)
 
 ### 推理内容是如何被重新发回的 {#how-reasoning-is-sent-back}
-无论模型是用 `<think>` 风格的标签写入推理，还是通过单独的字段发送推理，Open WebUI 都会把推理与答案分开存储。当消息被重放时——无论是在工具调用循环内部，还是在下一轮——推理都会按照连接的 `Provider` 设置所指定的格式发回（**设置 → 管理 → 连接 → OpenAI → 高级 → Provider**，参见 [Provider 设置](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#the-provider-setting)；Ollama 连接会被自动识别）。同一轮内和跨轮次适用相同的规则。参见[提供商兼容性](#provider-compatibility)。关闭 **Stream Chat Response** 时，模型在回复中写入的 `<think>` 标签会作为回复正文存储，因此会随回复一起发回给模型。
+无论模型是用 `<think>` 风格的标签写入推理，还是通过单独的字段发送推理，Open WebUI 都会把推理与答案分开存储。当消息被重放时——无论是在工具调用循环内部，还是在下一轮——推理都会按照连接的 `Provider` 设置所指定的格式发回（**设置 → 连接 → OpenAI → 高级 → Provider**（管理员区域），参见 [Provider 设置](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#the-provider-setting)；Ollama 连接会被自动识别）。同一轮内和跨轮次适用相同的规则。参见[提供商兼容性](#provider-compatibility)。关闭 **Stream Chat Response** 时，模型在回复中写入的 `<think>` 标签会作为回复正文存储，因此会随回复一起发回给模型。
 
 大多数 Chat Completions API 会拒绝 assistant 消息上的未知字段，因此推理文本在那里会被略去。Pipe 函数和过滤器可以按提供商特定的形式把它加回去。
 

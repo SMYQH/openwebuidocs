@@ -53,7 +53,7 @@ Exa AI 采用按 credit 计费、按量付费模式。它不是永久免费服�
 接下来，在 Open WebUI 的管理员设置中配置 Exa AI 集成。
 
 1. **使用管理员账号登录：** 进入你的 Open WebUI 实例，并以管理员账号登录
-2. **进入网页搜索设置：** 前往 **Settings > Admin > Web Search**
+2. **进入网页搜索设置：** 前往 **Settings > Web Search**（管理员区域）
 3. **将搜索引擎设为 Exa：** 在 “网页搜索引擎” 下拉菜单中选择 **Exa**
 4. **填写 API 密钥：** 在出现的 **Exa API Key** 输入框中，粘贴你从 Exa AI 控制台复制的 API 密钥。可选的 **Max Content Length** 字段（`EXA_MAX_CONTENT_LENGTH`，默认不设置）用于限制每条结果返回的字符数
 5. **保存更改：** 向下滚动并点击 **保存**
@@ -82,7 +82,7 @@ docker run -d \\
 
 Exa 也可以充当 [web loader](/features/chat-conversations/web-search#search-engine-vs-web-loader)，即负责读取搜索结果背后的页面，以及你在聊天中分享的链接。Exa 会抓取每个页面，并返回其文本和标题。
 
-1. 在 **Settings > Admin > Web Search** 中，将 **Web Loader Engine** 设为 `exa`，或设置 `WEB_LOADER_ENGINE=exa`
+1. 在 **Settings > Web Search**（管理员区域） 中，将 **Web Loader Engine** 设为 `exa`，或设置 `WEB_LOADER_ENGINE=exa`
 2. 如果 Exa 同时也是你的搜索引擎，loader 会使用你上面输入的 API 密钥；若选择了其他搜索引擎，则会在 web loader 设置下出现 **Exa API Key** 字段，它设置的是同一个 `EXA_API_KEY`
 3. **Timeout** 字段（[`WEB_LOADER_TIMEOUT`](/reference/env-configuration#web_loader_timeout)）设置每次对 Exa 的请求最多可以耗时多少秒；该字段为空时，限制为 60 秒
 

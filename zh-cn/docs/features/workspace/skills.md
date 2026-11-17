@@ -88,7 +88,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 按需加载选中的技能 {#loading-selected-skills-on-demand}
 
-**管理设置 > 通用** 中的 **按需加载选中的技能**（[`ENABLE_SKILL_LAZY_LOADING`](/reference/env-configuration#enable_skill_lazy_loading)，默认关闭）会让选中的技能和模型附加的技能不再在模型回答前加载，而是等模型请求时才加载。对话中用 `$` 提及的技能仍会随消息加载。该设置需要技能工具。
+**Settings > General**（管理员区域）中的 **按需加载选中的技能**（[`ENABLE_SKILL_LAZY_LOADING`](/reference/env-configuration#enable_skill_lazy_loading)，默认关闭）会让选中的技能和模型附加的技能不再在模型回答前加载，而是等模型请求时才加载。对话中用 `$` 提及的技能仍会随消息加载。该设置需要技能工具。
 
 ### 技能工具 {#skill-tools}
 
@@ -106,7 +106,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 读取限制 {#read-limits}
 
-**管理设置 > 通用** 中的两项设置决定模型一次能获得多少技能内容：
+**Settings > General**（管理员区域）中的两项设置决定模型一次能获得多少技能内容：
 
 | 设置 | 默认值 | 作用 |
 | :--- | :--- | :--- |

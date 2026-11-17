@@ -88,9 +88,6 @@ AI 读取你的代码，识别问题，修复它，你可以在预览中验证�
 
 ## 还可以尝试这些 {#more-things-to-try}
 
-:::tip
-想从手机预览和迭代网站？[**Open WebUI Computer**](/ecosystem/computer) 将你的整台计算机放入浏览器标签页，可从任何设备访问。
-:::
 - **[从对话中运行代码 →](./code-execution.md)**：AI 编写、运行并调试代码
 - **[分析文档与数据 →](./file-analysis.md)**：电子表格、PDF、Word 文档、邮件
 - **[自动化任务 →](./system-automation.md)**：文件管理、备份、批量操作

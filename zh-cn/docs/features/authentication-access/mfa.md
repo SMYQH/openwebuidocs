@@ -25,14 +25,14 @@ title: "双因素登录（MFA）"
 
 ## 开启 {#turning-it-on}
 
-1. 打开 **Settings > Admin > Authentication**。
+1. 打开 **Settings > Authentication**（管理员区域）。
 2. 在 **Multi-factor authentication** 区域中，打开 **Require an authenticator for all users**。
 3. 可选地打开其下方出现的一项或两项豁免：
    - **Allow OAuth sign-in without an authenticator**：通过你的 OAuth 或 OIDC 提供方登录的用户可跳过验证码。当提供方本身已经强制要求第二因素时使用它。
    - **Allow trusted-header sign-in without an authenticator**：通过[可信标头认证](/features/authentication-access/auth/sso#trusted-header)进入的用户可跳过验证码。当你的认证代理已经强制要求第二因素时使用它。
 4. 点击 **Save**。
 
-![Settings > Admin > Authentication 中的 Multi-factor authentication 区域，其中 Require an authenticator for all users 已开启，下方是 OAuth 与可信标头豁免项](/images/features/auth/mfa-admin-setting.webp)
+![Settings > Authentication（管理员区域） 中的 Multi-factor authentication 区域，其中 Require an authenticator for all users 已开启，下方是 OAuth 与可信标头豁免项](/images/features/auth/mfa-admin-setting.webp)
 
 :::warning 保存改动会让所有人退出登录
 对这三个开关的任何改动都会让每位用户在所有设备上退出登录（包括你自己），你会回到登录页。已设置身份验证器的用户需要输入验证码；尚未设置的用户则当场完成设置。

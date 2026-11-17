@@ -272,7 +272,7 @@ title: "日历"
 | [`SCHEDULER_POLL_INTERVAL`](/reference/env-configuration#scheduler_poll_interval) | `10` | 调度器心跳间隔秒数（与自动化共享） |
 | [`CALENDAR_ALERT_LOOKAHEAD_MINUTES`](/reference/env-configuration#calendar_alert_lookahead_minutes) | `10` | 即将到来事件的默认提示窗口（分钟） |
 
-也可以从**管理面板 > 设置 > 通用**的功能部分切换日历。
+也可以从**设置 > 通用**（管理员区域）的功能部分切换日历。
 
 ---
 

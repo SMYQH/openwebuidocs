@@ -99,7 +99,7 @@ http://127.0.0.1:10000
 要在 Open WebUI 中直接控制并调用本地运行的模型：
 
 1. 在浏览器中打开 Open WebUI
-2. 进入 ⚙️ **Admin Settings → Connections → OpenAI**。
+2. 进入 **Settings → Connections → OpenAI**（管理员区域）。
 3. 点击 ➕ **Add Connection**。
 4. 填写以下内容（如果有标签页，请在 **Standard / Compatible** 下填写）：
    - **URL**：`http://127.0.0.1:10000/v1`
@@ -130,9 +130,9 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 
 当模型被你的 `llama-server` 实例加载到内存后，Open WebUI 会在模型选择器中为其加上一个绿色的 "Loaded" 指示符。管理员还会在该行看到一个 **Eject** 按钮——它会在不重启服务器的前提下卸载模型，方法是调用 `POST /api/models/unload`，进而访问 llama.cpp 在该 OpenAI 兼容连接根 URL 上的 `POST /models/unload` 端点。
 
-要使上述功能正常工作，**Admin Settings → Connections → OpenAI** 中对应的连接必须把 **Provider** 设为 `llama.cpp`（Open WebUI 用这个提示来选取正确的卸载机制）。仍保留默认 OpenAI 兼容 provider 类型的连接，在管理员尝试卸载模型时会返回错误。
+要使上述功能正常工作，**Settings → Connections → OpenAI**（管理员区域）中对应的连接必须把 **Provider** 设为 `llama.cpp`（Open WebUI 用这个提示来选取正确的卸载机制）。仍保留默认 OpenAI 兼容 provider 类型的连接，在管理员尝试卸载模型时会返回错误。
 
-同一个 **Provider** 设置还会在 **Settings > Admin > Models > ⋯ > Manage** 下为管理员提供一个管理面板，其中列出了服务器上的模型，并可以下载、加载、卸载和删除它们。参见[在 Open WebUI 中管理本地模型](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#managing-local-models-from-open-webui)。
+同一个 **Provider** 设置还会在 **Settings > Models > ⋯ > Manage**（管理员区域）下为管理员提供一个管理面板，其中列出了服务器上的模型，并可以下载、加载、卸载和删除它们。参见[在 Open WebUI 中管理本地模型](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#managing-local-models-from-open-webui)。
 
 ---
 

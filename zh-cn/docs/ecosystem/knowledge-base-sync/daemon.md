@@ -223,7 +223,7 @@ oikb history --clear --days 7   # prune entries older than 7 days
 连接方法：
 
 1. **首先确保安全。** 设置 `OIKB_API_KEY`，使 `/sync` 和 `/history` 不对任何能访问守护进程的人开放。
-2. 将守护进程的 URL（例如 `http://oikb:8080`）添加为工具服务器：**管理员设置 → 外部工具** 用于实例范围连接，或**设置 → 工具** 用于个人连接。提供相同的 `OIKB_API_KEY` 作为连接的 API 密钥。
+2. 将守护进程的 URL（例如 `http://oikb:8080`）添加为工具服务器：**设置 → 外部工具**（管理员区域） 用于实例范围连接，或**设置 → 工具** 用于个人连接。提供相同的 `OIKB_API_KEY` 作为连接的 API 密钥。
 
 这是一个标准的 OpenAPI 工具服务器连接，与 [OpenAPI / MCP 工具服务器](/features/extensibility/mcp)页面描述的机制相同；oikb 恰好是另一端的服务。
 

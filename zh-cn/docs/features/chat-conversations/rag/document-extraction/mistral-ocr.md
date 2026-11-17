@@ -44,11 +44,11 @@ title: "Mistral OCR"
 
 ### 可选：以 Base64 发送 PDF {#optional-send-pdfs-as-base64}
 
-默认情况下，Open WebUI 会先把 PDF 上传到 Mistral 的文件存储，然后对其运行 OCR。在 **设置 → 管理 → 文档** 中开启 **Use Base64**（或设置 [`MISTRAL_OCR_USE_BASE64=true`](/reference/env-configuration#mistral_ocr_use_base64)）后，PDF 会改为以 **base64 data URL** 的形式**内联在单个请求中**发送，从而跳过分步上传。这在代理或隔离网络环境中很有用，也能在上传步骤失败时派上用场；代价是单个请求会更大。
+默认情况下，Open WebUI 会先把 PDF 上传到 Mistral 的文件存储，然后对其运行 OCR。在 **设置 → 文档**（管理员区域） 中开启 **Use Base64**（或设置 [`MISTRAL_OCR_USE_BASE64=true`](/reference/env-configuration#mistral_ocr_use_base64)）后，PDF 会改为以 **base64 data URL** 的形式**内联在单个请求中**发送，从而跳过分步上传。这在代理或隔离网络环境中很有用，也能在上传步骤失败时派上用场；代价是单个请求会更大。
 
 ### 可选：选择 OCR 模型 {#optional-choose-the-ocr-model}
 
-**设置 → 管理 → 文档** 中的 **Parameters** 字段（或 [`MISTRAL_OCR_PARAMS`](/reference/env-configuration#mistral_ocr_params)）接受一个 JSON 对象，会被合并进每一次 OCR 请求。例如，`{"model": "mistral-ocr-2512"}` 会把默认的 `mistral-ocr-latest` 模型替换掉。
+**设置 → 文档**（管理员区域） 中的 **Parameters** 字段（或 [`MISTRAL_OCR_PARAMS`](/reference/env-configuration#mistral_ocr_params)）接受一个 JSON 对象，会被合并进每一次 OCR 请求。例如，`{"model": "mistral-ocr-2512"}` 会把默认的 `mistral-ocr-latest` 模型替换掉。
 
 ### 会发送什么，以及失败时会发生什么 {#what-is-sent-and-what-happens-on-failure}
 

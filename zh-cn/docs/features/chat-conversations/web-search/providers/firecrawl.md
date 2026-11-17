@@ -36,7 +36,7 @@ title: "Firecrawl"
 1. 获取 API 密钥：
    - **托管版**：在 [firecrawl.dev](https://firecrawl.dev) 注册并从仪表板复制密钥。
    - **自托管版**：使用你自己 Firecrawl 实例的密钥。
-2. 在 Open WebUI 中，打开 **管理面板 > 设置 > 网络搜索**。
+2. 在 Open WebUI 中，打开 **设置 > 网络搜索**（管理员区域）。
 3. 开启**启用网络搜索**开关。
 4. 从**网络搜索引擎**下拉菜单中选择 **Firecrawl**（引擎值为 `firecrawl`）。
 5. 将你的密钥粘贴到 **Firecrawl API 密钥**字段。

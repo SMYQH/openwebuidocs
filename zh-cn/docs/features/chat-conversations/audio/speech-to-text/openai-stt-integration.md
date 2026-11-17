@@ -28,7 +28,7 @@ title: "OpenAI 语音转文本集成"
 | **语音转文本引擎** | `OpenAI` |
 | **API 基础 URL** | `https://api.openai.com/v1` |
 | **API 密钥** | 你的 OpenAI API 密钥 |
-| **STT 模型** | `whisper-1` |
+| **STT 模型** | `gpt-transcribe` |
 | **支持的内容类型** | 可留空使用默认值，或设置为 `audio/wav,audio/mpeg,audio/webm` |
 
 5. 点击 **Save**
@@ -37,10 +37,16 @@ title: "OpenAI 语音转文本集成"
 
 | 模型 | 说明 |
 |-------|-------------|
-| `whisper-1` | OpenAI 在云端托管的 Whisper large-v2 模型 |
+| `gpt-transcribe` | OpenAI 当前的转录模型（推荐）——词错误率约为 `whisper-1` 的一半 |
+| `gpt-live-transcribe` | 低延迟流式转录 |
+| `whisper-1` | 旧版 Whisper large-v2 模型，将于 2027-02-26 退役 |
 
 :::info
-OpenAI 当前仅提供 `whisper-1`。如果你需要更多模型选择，可使用 Local Whisper（Open WebUI 内置）或 Deepgram 等其他提供商。
+OpenAI 推荐新部署使用 `gpt-transcribe`。`AUDIO_STT_MODEL` 默认为空，因此需要显式设置模型。若需要完全本地的转录，请使用本地 Whisper（内置于 Open WebUI）或 Deepgram 等其他提供商。
+:::
+
+:::caution OpenAI 正在退役旧的转录模型
+OpenAI 将于 2027-02-26 从其 API 中移除 `whisper-1`、`gpt-4o-transcribe`、`gpt-4o-mini-transcribe` 和 `gpt-4o-transcribe-diarize`。如果 **STT 模型**设为其中之一，请在此之前切换到 `gpt-transcribe`。详情参见 [OpenAI 弃用页面](https://developers.openai.com/api/docs/deprecations#2026-08-26-transcription-models)。
 :::
 
 ## 环境变量配置 {#environment-variables-setup}
@@ -66,7 +72,7 @@ services:
 | `AUDIO_STT_ENGINE` | 设置为 `openai` | empty（使用本地 Whisper） |
 | `AUDIO_STT_OPENAI_API_BASE_URL` | OpenAI API 基础 URL | `https://api.openai.com/v1` |
 | `AUDIO_STT_OPENAI_API_KEY` | 你的 OpenAI API 密钥 | empty |
-| `AUDIO_STT_MODEL` | STT 模型 | `gpt-transcribe` |
+| `AUDIO_STT_MODEL` | STT 模型 | empty |
 | `AUDIO_STT_SUPPORTED_CONTENT_TYPES` | 允许的音频 MIME 类型 | `audio/*,video/webm` |
 
 ### 支持的音频格式 {#supported-audio-formats}
@@ -97,10 +103,6 @@ OpenAI Whisper API 支持：`mp3`、`mp4`、`mpeg`、`mpga`、`m4a`、`wav`、`w
 | **需要 GPU** | 否 | 为了速度建议使用 |
 | **模型选项** | `gpt-transcribe`、`gpt-live-transcribe`、`whisper-1` | tiny、base、small、medium、large |
 
-:::info
-OpenAI 推荐新部署使用 `gpt-transcribe`；`whisper-1` 仍然可用，也是 `AUDIO_STT_MODEL` 未设置时 Open WebUI 所使用的模型。若需要完全本地的转录，请使用本地 Whisper（内置于 Open WebUI）或 Deepgram 等其他提供商。
-:::
-
 在以下情况下推荐选择 **OpenAI**：
 - 你没有 GPU
 - 你希望获得稳定一致的表现
@@ -124,6 +126,7 @@ OpenAI 推荐新部署使用 `gpt-transcribe`；`whisper-1` 仍然可用，也�
 1. 检查 OpenAI API key 是否有效
 2. 确认 API Base URL 是否正确
 3. 查看容器日志中的报错信息
+4. 如果 API Base URL 指向其他兼容 OpenAI 的服务，请将 **STT 模型**设为该服务支持的模型 ID
 
 ### 语言识别问题 {#language-issues}
 

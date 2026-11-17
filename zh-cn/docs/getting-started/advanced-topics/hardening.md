@@ -90,7 +90,7 @@ WEBUI_ADMIN_NAME=Admin
 ENABLE_LOGIN_FORM=false
 ```
 
-这会从 UI 中移除邮箱/密码登录入口，引导所有用户走 SSO 流程。你也可以在后端层面禁用本地密码认证：
+这会从 UI 中移除邮箱/密码登录入口，引导所有用户走 SSO 流程。同一个开关就是 **设置 > 认证**（管理员区域）中的 **登录表单**，因此 SSO 生效后无需重启即可将其关闭。你也可以在后端层面禁用本地密码认证：
 
 ```bash
 ENABLE_PASSWORD_AUTH=false
@@ -114,7 +114,7 @@ Open WebUI 可以要求所有用户在每次登录后提供来自身份验证器
 ENABLE_MFA=true
 ```
 
-同一个开关在 **设置 > 管理 > 认证** 的 **多因素身份验证** 部分中名为 **要求所有用户使用身份验证器**。当你的身份提供商或代理已经强制要求第二因素时，OAuth 和受信任请求头登录可以被豁免（`MFA_ALLOW_OAUTH_BYPASS`、`MFA_ALLOW_TRUSTED_HEADER_BYPASS`）。更改其中任何一项设置都会让所有用户退出登录。启用 MFA 期间，登录尝试还会按账户和按客户端地址进行限制。有关注册、恢复和这些限制，请参阅[双因素登录（MFA）](/features/authentication-access/mfa)。
+同一个开关在 **设置 > 认证**（管理员区域） 的 **多因素身份验证** 部分中名为 **要求所有用户使用身份验证器**。当你的身份提供商或代理已经强制要求第二因素时，OAuth 和受信任请求头登录可以被豁免（`MFA_ALLOW_OAUTH_BYPASS`、`MFA_ALLOW_TRUSTED_HEADER_BYPASS`）。更改其中任何一项设置都会让所有用户退出登录。启用 MFA 期间，登录尝试还会按账户和按客户端地址进行限制。有关注册、恢复和这些限制，请参阅[双因素登录（MFA）](/features/authentication-access/mfa)。
 
 ---
 
@@ -145,7 +145,7 @@ JWT_EXPIRES_IN=24h
 
 设置 `JWT_EXPIRES_IN=-1` 会完全关闭令牌过期。如果这样设置，Open WebUI 会记录一条警告。
 
-[Tether](/ecosystem/tether) 等原生应用改用可续期会话，这类会话在闲置 [`SESSION_EXPIRES_IN`](/reference/env-configuration#session_expires_in) 后结束（默认 `90d`）。退出应用、通过 [Session API](/ecosystem/tether#session-api) 删除会话，以及下文提到的每种全账户登出，都会立即吊销此类会话，无论是否使用 Redis。
+[Tether](/ecosystem/tether) 等原生应用改用可续期会话，这类会话在闲置 [`SESSION_EXPIRES_IN`](/reference/env-configuration#session_expires_in) 后结束（默认 `90d`）。退出应用、通过 [Session API](/reference/tether-client-protocol#session-api) 删除会话，以及下文提到的每种全账户登出，都会立即吊销此类会话，无论是否使用 Redis。
 
 ### Token 撤销 {#token-revocation}
 

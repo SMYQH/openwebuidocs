@@ -21,10 +21,10 @@ Open WebUI 会把自己的界面翻译成多种语言，但你在其中创建的
 | **Tools** | 名称、描述、valve 标签 | Workspace > Tools 中的工具编辑器 |
 | **技能** | 名称、描述 | Workspace > Skills 中的技能编辑器 |
 | **Functions** | 名称、描述、valve 标签、各动作标签 | Admin Panel > Functions 中的函数编辑器 |
-| **横幅** | 内容（不含标题） | Settings > Admin > General 中 Banners 标题旁 |
-| **竞技场模型** | 名称、描述 | Settings > Admin > Evaluations 中的竞技场模型对话框 |
-| **默认提示建议** | 建议内容本身 | Settings > Admin > Models > Model Defaults |
-| **Open WebUI 自身的界面** | 应用自带的任意字符串 | Settings > Admin > General 中的 UI Translations。参见[界面文本](#interface-text) |
+| **横幅** | 内容（不含标题） | Settings > General（管理员区域） 中 Banners 标题旁 |
+| **竞技场模型** | 名称、描述 | Settings > Evaluations（管理员区域） 中的竞技场模型对话框 |
+| **默认提示建议** | 建议内容本身 | Settings > Models > Model Defaults（管理员区域） |
+| **Open WebUI 自身的界面** | 应用自带的任意字符串 | Settings > General（管理员区域） 中的 UI Translations。参见[界面文本](#interface-text) |
 
 ---
 
@@ -107,7 +107,7 @@ Tool 和 Function 带有 [valves](/features/extensibility/plugin/development/val
 
 ## 横幅 {#banners}
 
-横幅内容在 **Settings > Admin > General** 中翻译，同样使用 Banners 标题旁的地球图标选择器。每条横幅都会保留其原始内容以及每种语言的一个版本，用户看到的是与其界面语言匹配的那一份。
+横幅内容在 **Settings > General**（管理员区域） 中翻译，同样使用 Banners 标题旁的地球图标选择器。每条横幅都会保留其原始内容以及每种语言的一个版本，用户看到的是与其界面语言匹配的那一份。
 
 ![正在以德语编辑的横幅，语言选择器位于 Banners 标题旁](/images/features/translations/banner-translations.png)
 
@@ -119,7 +119,7 @@ Tool 和 Function 带有 [valves](/features/extensibility/plugin/development/val
 
 以上内容都关于你自己创建的东西。这一节讲的是 Open WebUI 自身的措辞：应用自带的按钮、标签和提示信息。
 
-打开 **Settings > Admin > General** 并找到 **UI Translations**。每一行都是一对内容：左侧是应用实际使用的英文原文，右侧是你希望改为显示的内容。选择器决定右栏属于哪种语言，初始为当前阅读界面所用的语言。
+打开 **Settings > General**（管理员区域） 并找到 **UI Translations**。每一行都是一对内容：左侧是应用实际使用的英文原文，右侧是你希望改为显示的内容。选择器决定右栏属于哪种语言，初始为当前阅读界面所用的语言。
 
 这些覆盖项会合并到 Open WebUI 自带的语言文件之上。你覆盖的生效，未覆盖的保留原有措辞，因此改动一个词并不需要提供一整份目录。
 

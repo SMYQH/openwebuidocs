@@ -86,6 +86,3 @@ Docker 镜像预装了常用的工具：
 - **[分析文档和数据 →](./file-analysis)**：电子表格、PDF、Word 文档、邮件
 - **[构建和预览网站 →](./web-development)**：创建和迭代网页
 
-:::tip
-想要从任何地方自动化你的真实机器上的任务？[**Open WebUI Computer**](/ecosystem/computer) 将你的计算机放入浏览器标签页，可从任何设备访问。
-:::

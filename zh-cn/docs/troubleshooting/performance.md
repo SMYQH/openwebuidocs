@@ -28,7 +28,7 @@ title: "性能与内存"
 
 默认情况下，Open WebUI 会为标题生成、标签生成、自动补全等后台任务调用模型。这些任务虽然在后台执行，但如果与你的主聊天模型共用同一资源，往往会拖慢主对话体验。
 
-![管理面板 > 界面中的任务模型设置](/images/admin/admin-interface.png)
+![设置 > 界面（管理员区域）中的任务模型设置](/images/admin/admin-interface.png)
 
 **建议：** 为这些任务使用**非常快、体积小、成本低的非推理模型**。不要把大型 reasoning 模型用于这类简单后台任务——它们既慢又贵。在给出三个词的聊天标题之前，此类模型会先花上数秒进行思考，并为此收取思考 token 的费用。主流供应商都提供更适合此场景的小型档位，远胜于其旗舰模型。
 
@@ -37,7 +37,7 @@ title: "性能与内存"
 *   **本地**：`qwen3.5:2b`、`gemma4:e2b`、`llama3.2:3b`。
 
 **配置方式：**
-在 **管理面板 > 设置 > Interface** 中有两项独立设置，系统会根据你当前聊天模型类型自动选择：
+在 **设置 > Interface**（管理员区域） 中有两项独立设置，系统会根据你当前聊天模型类型自动选择：
 - **任务模型（外部）**：当你在使用外部模型（例如 OpenAI）聊天时使用
 - **任务模型（本地）**：当你在使用本地模型（例如 Ollama）聊天时使用
 
@@ -56,7 +56,7 @@ title: "性能与内存"
 如果你在使用 **OpenRouter** 或其他拥有数百/数千模型的提供商，**强烈建议**开启模型缓存。不启用缓存时，初次页面加载可能需要 **10-15+ 秒**；开启后通常接近瞬时完成。
 :::
 
-- **Admin Panel**：`Settings > Connections > Cache Base Model List`
+- **Admin Panel**：`Settings > Connections > Cache Base Model List`（管理员区域）
 - **Env Var**：`ENABLE_BASE_MODELS_CACHE=True`
   - 说明：在内存中缓存模型列表，只会在应用重启或你在 Connections 页面点击 **Save** 时刷新
 - **Env Var**：`MODELS_CACHE_TTL=300`
@@ -485,7 +485,7 @@ Open WebUI 会为 RAG 和 STT 等功能加载本地模型。**这一节只对本
   - **方案 A（最简单）**：保持默认 **SentenceTransformers**（all-MiniLM-L6-v2）。它运行在 CPU 上，通常比在同一台 Raspberry Pi 上再跑一个完整 Ollama 更省资源。
   - **方案 B（性能更好）**：改用**外部 API**（OpenAI/Cloud）。
 - **配置位置：**
-  - **Admin Panel**：`Settings > Documents > Embedding Model Engine`
+  - **Admin Panel**：`Settings > Documents > Embedding Model Engine`（管理员区域）
   - **Env Var**：`RAG_EMBEDDING_ENGINE=openai`
 
 #### Speech-to-Text（STT） {#speech-to-text-stt}
@@ -493,7 +493,7 @@ Open WebUI 会为 RAG 和 STT 等功能加载本地模型。**这一节只对本
 
 - **建议**：改用 **WebAPI**（浏览器端），让用户设备承担语音识别，服务器几乎零内存负担。
 - **配置方式：**
-  - **Admin Panel**：`Settings > Audio > STT Engine`
+  - **Admin Panel**：`Settings > Audio > STT Engine`（管理员区域）
   - **Env Var**：`AUDIO_STT_ENGINE=webapi`
 
 - **绕过音频预处理**：如果你使用的外部 STT 提供商（OpenAI、Deepgram、Azure、Mistral）本身就能接收原始音频并完成格式转换，可以设置 `BYPASS_PYDUB_PREPROCESSING=true`，跳过 Open WebUI 内部基于 pydub 的 MP3 转码、压缩与切块，减少 CPU 开销与 ffmpeg 依赖。
@@ -513,9 +513,12 @@ Open WebUI 会为 RAG 和 STT 等功能加载本地模型。**这一节只对本
 如果资源非常紧张，可以关闭那些会持续触发模型推理的自动功能。
 
 **建议关闭顺序（影响从高到低）：**
-1. **Autocomplete**：`ENABLE_AUTOCOMPLETE_GENERATION=False`
+1. **Autocomplete**：`ENABLE_AUTOCOMPLETE_GENERATION=False`（默认值；保持关闭，它会在每次按键时触发）
+   - 管理员：`Settings > Interface > Autocomplete`（管理员区域）
 2. **Follow-up Questions**：`ENABLE_FOLLOW_UP_GENERATION=False`
+   - 管理员：`Settings > Interface > Follow-up`（管理员区域）
 3. **Title Generation**：`ENABLE_TITLE_GENERATION=False`
+   - 管理员：`Settings > Interface > Chat Title`（管理员区域）
 4. **Tag Generation**：`ENABLE_TAGS_GENERATION=False`
 
 ### 4. 把 ChromaDB 换成 Milvus Lite（小型部署） {#4-swap-chromadb-for-milvus-lite-small-deployments}

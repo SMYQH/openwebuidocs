@@ -87,6 +87,3 @@ AI：
 - **[Web 开发 →](./web-development)**：构建和预览网站
 - **[系统自动化 →](./system-automation)**：文件管理、备份、批量操作
 
-:::tip
-想要在你的真实机器上拥有持久环境？[**Open WebUI Computer**](/ecosystem/computer) 将你的计算机放入浏览器标签页，可从任何设备访问。
-:::

@@ -22,7 +22,7 @@ title: "Staan"
 ## 配置步骤 {#configuration-steps}
 
 1. 在 [staan.ai](https://staan.ai/) 注册并创建一个 API key。
-2. 在 Open WebUI 中打开 **Settings > Admin > Web Search**。
+2. 在 Open WebUI 中打开 **Settings > Web Search**（管理员区域）。
 3. 打开 **Web Search**，并把 **Web Search Engine** 选为 **Staan**。
 4. 把该密钥粘贴到 **Staan API Key**。
 5. 按下 **Save**。

@@ -87,7 +87,7 @@ Open WebUI 让知识被发现、创建与共享，而频道则让这一切真正
 
 #### 回复出现在哪里 {#where-the-reply-appears}
 
-默认情况下，响应顶层提及的模型会在你的消息下**以线程形式**回复，这样冗长的回答不会把频道的对话挤出屏幕。管理员可以在 **Settings > Admin > General**（**Model Response Mode**，或 [`CHANNEL_MODEL_RESPONSE_MODE`](/reference/env-configuration#channel_model_response_mode)）中修改：设为 **Channel** 后，回复会直接发布到时间线中，团队无需打开线程即可阅读。无论如何设置，在线程内部 @ 模型总是在该线程内作答。
+默认情况下，响应顶层提及的模型会在你的消息下**以线程形式**回复，这样冗长的回答不会把频道的对话挤出屏幕。管理员可以在 **Settings > General**（管理员区域）（**Model Response Mode**，或 [`CHANNEL_MODEL_RESPONSE_MODE`](/reference/env-configuration#channel_model_response_mode)）中修改：设为 **Channel** 后，回复会直接发布到时间线中，团队无需打开线程即可阅读。无论如何设置，在线程内部 @ 模型总是在该线程内作答。
 
 ### 完整的 Chat Completion 流水线 {#full-chat-completion-pipeline}
 
@@ -129,7 +129,7 @@ Open WebUI 让知识被发现、创建与共享，而频道则让这一切真正
 
 ### Apps {#apps}
 
-外部服务也可以作为 [Apps](/features/channels/apps) 加入频道。管理员在 **Settings > Admin > Apps** 中安装它们，然后由频道创建者或管理员将其加入频道。它们会以 **App** 徽章出现在成员列表中，当你 `@mention` 它们时会作答，也可以发布带按钮的消息。
+外部服务也可以作为 [Apps](/features/channels/apps) 加入频道。管理员在 **Settings > Apps**（管理员区域） 中安装它们，然后由频道创建者或管理员将其加入频道。它们会以 **App** 徽章出现在成员列表中，当你 `@mention` 它们时会作答，也可以发布带按钮的消息。
 
 ### 私信 {#direct-messages}
 
@@ -139,7 +139,7 @@ Open WebUI 让知识被发现、创建与共享，而频道则让这一切真正
 
 ### 加密聊天 {#encrypted-chats}
 
-在私信或私有群组频道中，拥有 **Encrypted Channels** 权限的成员可以从对话的 **...** 菜单中用 **Encrypted Chat** 开始一段临时的[加密聊天](/features/channels/encrypted-chats)。消息在浏览器中端到端加密，绝不存储在服务器上。管理员在 **Settings > Admin > General**（**Encrypted channels**）中开启该功能并授予相应权限——默认关闭。
+在私信或私有群组频道中，拥有 **Encrypted Channels** 权限的成员可以从对话的 **...** 菜单中用 **Encrypted Chat** 开始一段临时的[加密聊天](/features/channels/encrypted-chats)。消息在浏览器中端到端加密，绝不存储在服务器上。管理员在 **Settings > General**（管理员区域）（**Encrypted channels**）中开启该功能并授予相应权限——默认关闭。
 
 ---
 
@@ -169,7 +169,7 @@ Open WebUI 让知识被发现、创建与共享，而频道则让这一切真正
 频道目前仍处于 **Beta** 阶段，必须由管理员启用。
 :::
 
-1. 前往 **Settings > Admin > General**
+1. 前往 **Settings > General**（管理员区域）
 2. 打开 **频道（Beta）** 开关并保存
 3. 侧边栏会出现频道入口，点击 **(+)** 创建你的第一个频道
 

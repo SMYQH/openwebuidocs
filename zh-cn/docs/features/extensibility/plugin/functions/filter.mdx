@@ -212,7 +212,7 @@ class Filter:
 
 - 以**浏览器 sessionStorage 草稿状态**形式存储，按聊天区分。
 - 在同一浏览器会话中页面刷新后仍然存在，但**不会持久化到服务器上的聊天记录**。
-- 初始状态来自模型的 `defaultFilterIds`（管理面板 → 模型设置 → 默认 Filters）——管理员决定每个模型的哪些可切换 Filter 默认**开启**或**关闭**。
+- 初始状态来自模型的 `defaultFilterIds`（Settings > Models → 编辑模型 → **Filters** → **在新对话中默认启用**（管理员区域））——管理员决定每个模型的哪些可切换 Filter 默认**开启**或**关闭**。
 - 切换到不同模型时会重置。
 
 ![Toggle Filter](/images/features/plugin/functions/toggle-filter.png)
@@ -221,9 +221,9 @@ class Filter:
 
 ### 🛠️ 通过 `file_handler` 接管检索 {#owning-retrieval-with-file\_handler}
 
-默认情况下，当用户在聊天中挂载知识集合或上传文件时，Open WebUI 会在**所有 inlet filter 全部返回之后**才运行内置 RAG 流程：chat-completion 处理程序会基于用户的最后一条消息在向量库中查询相关 chunk，把它们包进 `<source>` 标签，再追加到最后一条用户消息（或者，根据 `RAG_SYSTEM_CONTEXT`，追加到系统消息）中，最后才调用 LLM。
+默认情况下，当用户在聊天中挂载知识库或上传文件时，Open WebUI 会在**所有 inlet filter 全部返回之后**才运行内置 RAG 流程：chat-completion 处理程序会基于用户的最后一条消息在向量库中查询相关 chunk，把它们包进 `<source>` 标签，再追加到最后一条用户消息（或者，根据 `RAG_SYSTEM_CONTEXT`，追加到系统消息）中，最后才调用 LLM。
 
-这一点对 filter 编写者来说很关键：在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件/集合的**引用**（ID、名称、类型）。**真正的 chunk 文本此刻还不存在**——检索还没发生。因此，如果你想检查或改写这些 chunk 本体（PII / PHI 脱敏、重排序、自定义混合打分、翻译、chunk 级访问控制、匿名化），标准的 inlet 契约就不够了——你要的数据还没生成。
+这一点对 filter 编写者来说很关键：在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件和知识库的**引用**（ID、名称、类型）。**真正的 chunk 文本此刻还不存在**——检索还没发生。因此，如果你想检查或改写这些 chunk 本体（PII / PHI 脱敏、重排序、自定义混合打分、翻译、chunk 级访问控制、匿名化），标准的 inlet 契约就不够了——你要的数据还没生成。
 
 **`file_handler = True`** 正是为这种场景准备的“自助”开关。它被声明为 filter 文件顶部的**模块级属性**，含义是告诉 Open WebUI：“我自己来处理检索和 chunk 注入——请跳过内置 RAG 步骤。”一旦开启，后端会在你的 `inlet()` 返回后剥离 `body["metadata"]["files"]` 和 `body["files"]`，于是 chat-completion 处理程序找不到可检索的文件，就会带着你注入的内容直接调用 LLM。
 
@@ -247,7 +247,7 @@ class Filter:
         __user__: Optional[dict] = None,
         __model__: Optional[dict] = None,
     ) -> dict:
-        # body["metadata"]["files"] still contains the file/collection REFERENCES here.
+        # body["metadata"]["files"] still contains the file and knowledge base REFERENCES here.
         # After this method returns, Open WebUI strips them and does NOT run its own RAG.
         # Therefore: it is YOUR job to retrieve, transform, and inject chunks below.
         return body
@@ -293,7 +293,7 @@ Open WebUI 读取的是**模块对象**上的 `file_handler`（也就是 filter 
 
 #### 与“在 inlet 中改 `body['files']`”相比，这为什么重要 {#why-this-matters-compared-to-mutating-bodyfiles-in-inlet}
 
-另一种朴素做法是直接在 `inlet()` 里清空 `body["metadata"]["files"] = []` 和 `body["files"] = []` 来动态抑制内置 RAG。这在实践中是有效的，但很脆弱：未来 Open WebUI 版本可能会在新的键上挂更多文件/集合相关逻辑，而“我自己处理”的官方契约就是 `file_handler`。请优先使用文档化的开关。
+另一种朴素做法是直接在 `inlet()` 里清空 `body["metadata"]["files"] = []` 和 `body["files"] = []` 来动态抑制内置 RAG。这在实践中是有效的，但很脆弱：未来 Open WebUI 版本可能会在新的键上挂更多文件/知识库相关逻辑，而“我自己处理”的官方契约就是 `file_handler`。请优先使用文档化的开关。
 
 ---
 
@@ -799,7 +799,7 @@ class Filter:
 哈希化后的用户 UUID 会作为顶层 body 参数被添加，并直接转发到 OpenAI 的 API——不会发送任何 PII，只会发送一个不可读的哈希值。
 
 :::warning 不能注入 HTTP 标头
-Filter 只能修改 **请求体**（`form_data`）。出站 HTTP 标头是单独构造的，不能由 Filter 影响。若要为 API 请求添加自定义标头，请使用 **Admin Panel → Settings → Connections → OpenAI API** 中的 headers 配置。
+Filter 只能修改 **请求体**（`form_data`）。出站 HTTP 标头是单独构造的，不能由 Filter 影响。若要为 API 请求添加自定义标头，请使用 **Settings → Connections → OpenAI API**（管理员区域） 中的 headers 配置。
 :::
 
 #### 通过 Filter 注入 OpenAI 风格的 `tools` {#injecting-openai-style-tools-from-a-filter}
@@ -1076,7 +1076,7 @@ class Filter:
 修改并返回 `body`。LLM 处理的是修改后的 `body`，所以这是你为输入补充清晰度、结构和上下文的机会。
 
 :::info 想转换 RAG chunk？`inlet()` 在检索之前运行
-在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件/集合的**引用**——真正的 chunk 文本会在所有 inlet filter 全部返回之后才被取出并注入。如果你要检查或转换 chunk 本体（PII 脱敏、重排序、翻译、chunk 级 ACL），请参阅[通过 `file_handler` 接管检索](#owning-retrieval-with-file_handler) 了解官方支持的开关。
+在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件和知识库的**引用**——真正的 chunk 文本会在所有 inlet filter 全部返回之后才被取出并注入。如果你要检查或转换 chunk 本体（PII 脱敏、重排序、翻译、chunk 级 ACL），请参阅[通过 `file_handler` 接管检索](#owning-retrieval-with-file_handler) 了解官方支持的开关。
 :::
 
 ##### 🍳 为什么要使用 `inlet`？ {#why-would-you-use-the-inlet}

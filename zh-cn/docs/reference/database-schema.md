@@ -105,7 +105,7 @@ docker exec -it open-webui /bin/sh
 | 45 | function_history | Function 源代码和元数据的历史版本 |
 | 46 | skill_history | Skill 的历史版本，包含其配套文件 |
 | 47 | app | 已安装的 [App](/features/channels/apps) 及其加密凭据 |
-| 48 | auth_session | 为 [Tether](/ecosystem/tether) 等原生应用提供的可续期登录会话 |
+| 48 | auth_session | 为 [Tether 客户端协议](/reference/tether-client-protocol) 等原生应用提供的可续期登录会话 |
 | 49 | comment | 存储工作区条目、笔记和聊天上的评论与回复 |
 | 50 | comment_reaction | 记录对评论的表情回应 |
 | 51 | notification | 存储每位用户的收件箱通知 |
@@ -210,7 +210,7 @@ docker exec -it open-webui /bin/sh
 
 关于 auth_session 表的注意事项：
 
-- 由迁移 `8bc7e5a902d1` 创建。表中的一行要么是已登录用户创建的会话，要么是待处理的登录请求，在应用完成登录后即会成为会话。相关流程参见 [Tether](/ecosystem/tether)。
+- 由迁移 `8bc7e5a902d1` 创建。表中的一行要么是已登录用户创建的会话，要么是待处理的登录请求，在应用完成登录后即会成为会话。登录流程参见 [Tether 客户端协议](/reference/tether-client-protocol)。
 - `user_id` 不带外键。它与 `user` 的关系是一对多：一个用户可以持有多个会话，每个已登录应用一个。
 - 在 `user_id` 和 `expires_at` 上建有索引（`idx_auth_session_user`、`idx_auth_session_expires`）。
 - 待处理请求的 `expires_at` 为创建后 10 分钟。会话的 `expires_at` 为创建或上次令牌刷新后 [`SESSION_EXPIRES_IN`](/reference/env-configuration#session_expires_in)。每创建新行时，已过期的行都会被删除。

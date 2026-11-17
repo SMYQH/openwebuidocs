@@ -36,7 +36,7 @@ title: "Firefox 侧栏"
 3. 搜索 `browser.ml.chat.enabled`，若未在 Firefox Labs 启用则将其设为 `true`
 4. 搜索 `browser.ml.chat.hideLocalhost` 并设为 `false`
 
-### browser.ml.chat.prompts.{#}
+### browser.ml.chat.prompts.{#browsermlchatprompts}
 
 如需添加自定义提示词，请按以下步骤操作：
 

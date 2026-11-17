@@ -64,5 +64,5 @@ title: "将搜索结果保存到知识库"
 
 ## 故障排查 {#troubleshooting}
 
-- **内容质量**：最终保存内容的质量取决于你的 **Web Loader Engine** 设置（Admin > Settings > Documents）。对于重度依赖 JavaScript 的网站，建议使用 **Firecrawl** 或 **Playwright**
+- **内容质量**：最终保存内容的质量取决于你的 **Web Loader Engine** 设置（Settings > Documents（管理员区域））。对于重度依赖 JavaScript 的网站，建议使用 **Firecrawl** 或 **Playwright**
 - **未检测到 URL**：该操作会读取附加到消息上的来源。如果检测不到 URL，请确认 web search 已启用并确实返回了结果；在原生模式下还要确认模型确实用 `fetch_url` 打开过页面，因为搜索命中项本身不算来源

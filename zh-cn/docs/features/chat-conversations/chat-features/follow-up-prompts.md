@@ -7,7 +7,7 @@ title: "追问提示"
 
 Open WebUI 可以在每次模型响应后自动给出后续消息建议。这些建议会以可点击的标签形式显示在回复下方，帮助你无需重新输入提示词，就能进一步探索话题。
 
-使用内置提示词时，每条建议都会写成你可能接着发出的消息——一个问题或一个请求，并且最有力的一条排在最前。管理员可以在 **设置 > 管理 > 界面** 用 **Follow Up Generation Prompt** 替换它，也可以通过 [`FOLLOW_UP_GENERATION_PROMPT_TEMPLATE`](/reference/env-configuration#follow_up_generation_prompt_template) 替换。
+使用内置提示词时，每条建议都会写成你可能接着发出的消息——一个问题或一个请求，并且最有力的一条排在最前。管理员可以在 **设置 > 界面**（管理员区域） 用 **Follow Up Generation Prompt** 替换它，也可以通过 [`FOLLOW_UP_GENERATION_PROMPT_TEMPLATE`](/reference/env-configuration#follow_up_generation_prompt_template) 替换。
 
 ## 设置 {#settings}
 
@@ -21,7 +21,7 @@ Open WebUI 可以在每次模型响应后自动给出后续消息建议。这些
 - **开启**：每次模型响应后都会生成追问提示
 - **关闭**：不生成任何追问建议
 
-该开关仅在管理员于 **设置 > 管理 > 界面** 中开启 **Follow Up Generation** 时显示。在它被隐藏期间，你的选择会被保留，并在管理员重新开启生成后再次生效。下面的两个设置无论开关是否显示都保持可见，因为它们同样适用于已经保存在聊天中的追问。
+该开关仅在管理员于 **设置 > 界面**（管理员区域） 中开启 **Follow Up Generation** 时显示。在它被隐藏期间，你的选择会被保留，并在管理员重新开启生成后再次生效。下面的两个设置无论开关是否显示都保持可见，因为它们同样适用于已经保存在聊天中的追问。
 ### 在聊天中保留追问提示 {#keep-follow-up-prompts-in-chat}
 **默认：关闭**
 

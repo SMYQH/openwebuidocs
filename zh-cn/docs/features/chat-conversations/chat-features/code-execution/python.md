@@ -39,7 +39,7 @@ Code Interpreter 是一种模型能力，可让 LLM 在对话过程中自主编�
 
 **全局配置（Admin Panel）：**
 
-这些设置可以在 **Admin Panel → Settings → Code Execution** 中配置：
+这些设置可以在 **Settings → Code Execution**（管理员区域） 中配置：
 - 全局启用 / 禁用 code interpreter
 - 选择引擎：**Pyodide**（推荐）或 **Jupyter（旧版）**
 - 配置 Jupyter 连接设置

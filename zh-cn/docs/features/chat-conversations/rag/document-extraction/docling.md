@@ -84,7 +84,7 @@ services:
 ### 第 2 步：配置 Open WebUI {#step-2-configure-open-webui}
 
 1. 登录你的 Open WebUI 实例
-2. 前往 **设置** → **管理** → **文档**
+2. 前往 **设置** → **文档**（管理员区域）
 3. 将 **Content Extraction Engine** 设置为 **Docling**
 4. 将 **Docling Server URL** 设置为 `http://host.docker.internal:5001`（Docker）或 `http://localhost:5001`（原生部署）。默认值为 `http://docling:5001`。
 5. 可选：设置 **API Key**（`DOCLING_API_KEY`），它会作为 `X-Api-Key` 请求头发送给 docling-serve
@@ -152,7 +152,7 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 
 ## Docling 参数参考（Open WebUI） {#docling-parameters-reference-open-webui}
 
-可通过 **设置 > 管理 > 文档** 中的 `DOCLING_PARAMS` JSON，或通过环境变量进行配置。
+可通过 **设置 > 文档**（管理员区域） 中的 `DOCLING_PARAMS` JSON，或通过环境变量进行配置。
 
 | 参数 | 类型 | 说明 | 允许值 |
 | ----------- | ---- | ---- | ---------------- |
@@ -236,7 +236,7 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 
 **原因**：Docling 在其 Markdown 输出中只标记页码变化，因此空白页不会留下分页符。以这些分页符计数得到的页码会使空白页之后的每条引用都显示更早的页码。Open WebUI 从 Docling 与 Markdown 一同返回的 JSON 输出中获取页码。
 
-**解决方案**：在 **设置 > 管理 > 文档** 中运行 **重建知识库与记忆向量索引**，它会重新提取每个知识库文件；对于不在知识库中的受影响文件，请重新上传一次。页码是在 Docling 提取文件时确定的。
+**解决方案**：在 **设置 > 文档**（管理员区域） 中运行 **重建知识库与记忆向量索引**，它会重新提取每个知识库文件；对于不在知识库中的受影响文件，请重新上传一次。页码是在 Docling 提取文件时确定的。
 
 ### "Error calling Docling" 但没有具体细节 {#error-calling-docling-with-no-specific-details}
 

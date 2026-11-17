@@ -35,7 +35,7 @@ services:
 
 ### 2. 连接 Open WebUI（30 秒） {#2-connect-openwebui-30-seconds}
 
-1. 在 Open WebUI 中转到 `设置` → `管理` → `音频`
+1. 在 Open WebUI 中转到 `设置` → `音频`（管理员区域）
 2. 按如下方式配置：
 
     - 文本转语音引擎：`OpenAI`

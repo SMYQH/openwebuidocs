@@ -212,7 +212,7 @@ def wait_for_processing(token, file_id):
 
 **要确认你实际用的是哪个模型：**
 1. 查看 Open WebUI 界面中的模型选择器
-2. 查看 **Admin Panel > Settings > Connections**，确认实际 API endpoint
+2. 查看 **Settings > Connections**（管理员区域），确认实际 API endpoint
 3. 在提供商的仪表板或日志中核对真实发出的 API 调用
 
 直接问模型本身**不能**作为诊断路由问题的方法。如果你怀疑配置出错，请改查连接设置和 API key。
@@ -238,8 +238,8 @@ def wait_for_processing(token, file_id):
 默认情况下，这些任务会使用你当前对话中的**同一个模型**。如果你使用的是昂贵的 API 模型（例如 GPT-5.6 Sol 或 Claude Opus 5），成本就会明显升高。
 
 **降低 API 成本的方法：**
-1. 进入 **Admin Panel > Settings > Interface**（查看标题/标签生成设置）
-2. 在 **Settings > Admin > Interface > Tasks** 中配置一个 **Task Model**，让后台任务使用更小、更便宜的模型（例如 GPT-5.6 Luna）或本地模型
+1. 进入 **Settings > Interface**（管理员区域）（查看标题/标签生成设置）
+2. 在 **Settings > Interface > Tasks**（管理员区域） 中配置一个 **Task Model**，让后台任务使用更小、更便宜的模型（例如 GPT-5.6 Luna）或本地模型
 3. 关闭你不需要的功能（自动标题、自动标签等）
 4. 通过在同一个 **Tasks** 分区中的 **Task Model Parameters** 里设置 `max_tokens`，为这些请求限定可以花费的上限。否则标签、追问和搜索查询生成默认不会发送任何输出上限。参见[任务模型](/features/administration/task-models#task-model-parameters)
 

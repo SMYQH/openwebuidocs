@@ -9,7 +9,7 @@ title: "子 Agent"
 
 子智能体本身就是一次完整的聊天补全。它使用与派生它的聊天相同的工具、技能和筛选器，运行在当前模型或为它设置的某个[子智能体模型](/features/workspace/models#capabilities-and-bindings)上，独立完成任务，并把最终答案作为工具结果交回。相关工作发生在一个单独的聊天中，该聊天不会出现在你的聊天列表里，因此父对话保持可读。
 
-子智能体默认关闭。管理员可以通过 [`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents) 环境变量或 **Settings > Admin > Sub-agents** 开关来启用。它们之所以默认关闭，是因为每一次委派都意味着额外一次模型调用，而一条回复就可能同时启动好几个。
+子智能体默认关闭。管理员可以通过 [`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents) 环境变量或 **Settings > Sub-agents**（管理员区域） 开关来启用。它们之所以默认关闭，是因为每一次委派都意味着额外一次模型调用，而一条回复就可能同时启动好几个。
 
 ## 子智能体会收到什么指令 {#what-a-sub-agent-is-told}
 
@@ -33,7 +33,7 @@ title: "子 Agent"
 
 **前台（Foreground）** 是默认方式。父聊天会等待子智能体，并把它的答案作为工具结果接收，与其他任何工具调用一样。
 
-**后台（Background）** 必须单独启用，可通过 [`SUBAGENTS_BACKGROUND_ENABLED`](/reference/env-configuration#subagents_background_enabled) 或 **Settings > Admin > Sub-agents** 中的 **Enable background sub-agents**。模型会立刻拿到一个句柄而不是答案，然后继续往下走。子智能体完成后，其结果会被发回父聊天，**聊天会自行继续，无需你发送任何内容**。结果以一行可折叠的"Background sub-agent finished"呈现。如果父聊天此刻正忙，结果会等待，等聊天空闲后再送达。
+**后台（Background）** 必须单独启用，可通过 [`SUBAGENTS_BACKGROUND_ENABLED`](/reference/env-configuration#subagents_background_enabled) 或 **Settings > Sub-agents**（管理员区域） 中的 **Enable background sub-agents**。模型会立刻拿到一个句柄而不是答案，然后继续往下走。子智能体完成后，其结果会被发回父聊天，**聊天会自行继续，无需你发送任何内容**。结果以一行可折叠的"Background sub-agent finished"呈现。如果父聊天此刻正忙，结果会等待，等聊天空闲后再送达。
 
 在后台未启用期间，工具定义中的 `background` 选项会被完全移除，因此模型无法请求它。
 
@@ -51,15 +51,15 @@ title: "子 Agent"
 
 子智能体需要三件事同时到位：
 
-1. **全局启用**：[`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents)，或 **Settings > Admin > Sub-agents**。
-2. **为模型启用**：**Workspace > Models > Edit** 中 **Builtin Tools** 下的 **Sub-agents** 分类，功能开启后默认启用。
+1. **全局启用**：[`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents)，或 **Settings > Sub-agents**（管理员区域）。
+2. **为模型启用**：**Settings > Models > Edit**（管理员区域）（自己的模型则用 **Workspace > Models**）中 **Builtin Tools** 下的 **Sub-agents** 分类，功能开启后默认启用。
 3. **已保存聊天中的原生函数调用**：`delegate_task` 是内置工具，因此需要 Native 模式，以及像界面发起的每个聊天那样携带 `session_id` 的请求。在旧式函数调用和临时聊天中不会提供它。
 
 子智能体没有按用户划分的权限。一旦为某个模型启用，任何能使用该模型的人都可以通过它触发委派。
 
 ## 管理员限制 {#admin-limits}
 
-可在 **Settings > Admin > Sub-agents** 中配置这些项，或使用对应的环境变量：
+可在 **Settings > Sub-agents**（管理员区域） 中配置这些项，或使用对应的环境变量：
 
 | 设置项 | 环境变量 | 默认值 | 用途 |
 |---|---|---|---|

@@ -13,7 +13,7 @@ description: "排查 Open WebUI 中文档回答缺失、上传失败、上下文
 
 ## 按场景推荐设置 {#recommended-settings-by-scenario}
 
-RAG 性能很大程度上取决于你的模型配置。默认值较为保守以保证兼容性，但针对具体部署调优后效果会好得多。所有设置均在 **管理员面板 > 设置 > 文档** 中配置。
+RAG 性能很大程度上取决于你的模型配置。默认值较为保守以保证兼容性，但针对具体部署调优后效果会好得多。所有设置均在 **设置 > 文档**（管理员区域）中配置。
 
 :::tip Agentic 检索：启用 kb_exec
 如果你的模型使用 **原生函数调用**，设置 [`ENABLE_KB_EXEC=True`](/reference/env-configuration#enable_kb_exec) 会让知识库体验明显更好。它会给模型提供一套类 shell 的接口（`ls`、`tree`、`grep`、`cat`、按行读）来操作知识内容，能力强的模型会以一种比单一搜索工具更可靠的方式把它们串起来。在 Default 模式下它没有任何效果。参见 [类文件系统访问](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
@@ -65,7 +65,7 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 | **生产环境，有 API 预算** | 通过 OpenAI 使用 `text-embedding-3-small` | 性价比最高的检索质量 |
 | **离线 / 自托管** | 通过 Ollama 使用 `nomic-embed-text` 或 `mxbai-embed-large` | 无需外部 API 调用 |
 
-更换嵌入模型后，请在 **管理员面板 > 设置 > 文档** 中**重新索引所有现有文档**，使新嵌入生效。
+更换嵌入模型后，请在 **设置 > 文档**（管理员区域）中**重新索引所有现有文档**，使新嵌入生效。
 
 ---
 
@@ -77,7 +77,7 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 
 **解决方法：** 检查内容提取设置。
 
-- 前往：**Admin Settings > Documents**
+- 前往：**Settings > Documents**（管理员区域）
 - 确认你使用了可靠的内容提取引擎，例如：
   - Apache Tika
   - Docling
@@ -95,7 +95,7 @@ Open WebUI 在设计上默认与上下文窗口有限的模型配合使用。例
 
 **解决方法：**
 
-- 前往 **设置 > 管理 > 文档**
+- 前往 **设置 > 文档**（管理员区域）
 - 然后任选其一：
   - **启用 “Bypass Embedding and Retrieval”**——直接发送完整内容，不走检索过滤
   - **打开 “Always Use Full Text”**——把更完整的内容注入模型提示词
@@ -125,7 +125,7 @@ Open WebUI 在设计上默认与上下文窗口有限的模型配合使用。例
 **解决方法：**
 
 - **对于 Ollama 模型**：扩大模型上下文长度：
-  - 前往：**Admin Panel > Models > Settings**（选择你要编辑的模型）
+  - 前往：**Settings > Models**（管理员区域），然后点击要修改的模型的铅笔图标（**Edit**）
   - 进入 **Advanced Parameters**
   - 调整 context length（例如提高到 8192+，如果模型支持，最好 16000 token 以上）
 
@@ -148,7 +148,7 @@ Open WebUI 在设计上默认与上下文窗口有限的模型配合使用。例
 **解决方法：**
 
 - 切换到更高质量的嵌入模型（例如 all-MiniLM-L6-v2、Instructor X，或 OpenAI embeddings）
-- 前往：**Admin Settings > Documents**
+- 前往：**Settings > Documents**（管理员区域）
 - 更换模型后，请务必：
   - **重新索引全部现有文档**，让新的 embeddings 生效
 
@@ -166,7 +166,7 @@ Open WebUI 在设计上默认与上下文窗口有限的模型配合使用。例
 
 **解决方法：**
 
-- 前往：**Admin Settings > Documents > Embedding Model**
+- 前往：**Settings > Documents > Embedding Model**（管理员区域）
 - 即使该模型看起来已经选中，也请再保存一次，以强制重新检查/下载
 - 如果你使用的是远程/外部嵌入服务，请确认它正在运行，并且 Open WebUI 能访问它
 
@@ -181,9 +181,9 @@ Open WebUI 在设计上默认与上下文窗口有限的模型配合使用。例
 Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用。不同上传方式受限方式不同：
 
 - **聊天上传：** 受全局文件大小和文件数量限制
-  - **最大文件大小：** 由 `RAG_FILE_MAX_SIZE` 控制（默认不限），可在 **Admin Panel > Settings > Documents > General > Max Upload Size** 中配置
-  - **最大文件数量：** 由 `RAG_FILE_MAX_COUNT` 控制（默认不限），可在 **Admin Panel > Settings > Documents > General > Max Upload Count** 中配置
-  - **允许的文件扩展名：** 由 `RAG_ALLOWED_FILE_EXTENSIONS` 控制（默认全部允许），可在 **Admin Panel > Settings > Documents > General > Allowed File Extensions** 中配置
+  - **最大文件大小：** 由 `RAG_FILE_MAX_SIZE` 控制（默认不限），可在 **Settings > Documents > Files > Max Upload Size**（管理员区域） 中配置
+  - **最大文件数量：** 由 `RAG_FILE_MAX_COUNT` 控制（默认不限），可在 **Settings > Documents > Files > Max Upload Count**（管理员区域） 中配置
+  - **允许的文件扩展名：** 由 `RAG_ALLOWED_FILE_EXTENSIONS` 控制（默认全部允许），可在 **Settings > Documents > Files > Allowed File Extensions**（管理员区域） 中配置
 - **文件夹上传：** 受 `FOLDER_MAX_FILE_COUNT` [environment variable](/reference/env-configuration/#folder_max_file_count) 限制（默认 100），限制的是与文件夹直接关联的文件数
 - **知识库上传：**
   - **文件大小限制：** 与聊天上传相同，受 `RAG_FILE_MAX_SIZE` 约束
@@ -202,7 +202,7 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
 
 **解决方法：**
 
-- 前往 **Admin Settings > Documents**
+- 前往 **Settings > Documents**（管理员区域）
 - 提高 **Chunk Min Size Target**
 - 例如设置为 `1000`（或约为 `CHUNK_SIZE` 的 50-60%），这样系统会把过小碎片与相邻 chunk 合并，获得更好的语义一致性，也能减少总 chunk 数量
 
@@ -235,7 +235,7 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
 | 📷 PDF 图片无法提取 | 使用 Tika/Docling、启用 OCR、或更新 pypdf |
 | 💀 上传时 worker 瞬时死亡 | 在多 worker 下不要继续使用默认 ChromaDB（SQLite） |
 | 💀 上传时 worker 超时死亡 | 更新 Open WebUI，或提高 `--timeout-worker-healthcheck` |
-| 🧠 模型忽略已附加 KB | 启用 Builtin Tools、添加系统提示、或尝试使用整篇文档（Using Entire Document） |
+| 🧠 模型忽略已附加 KB | 启用 Builtin Tools、添加系统提示、或在聊天中以整篇文档模式（Using Entire Document）附加一个小文档 |
 | 📄 附加单个文件时没有返回内容 | 重新索引以重建单文件索引 |
 | 📄 Docling 引用指向了错误的页码 | [重新索引，或重新上传该文件](/features/chat-conversations/rag/document-extraction/docling#citations-point-to-the-wrong-page) |
 
@@ -343,7 +343,7 @@ Error generating embeddings: 429 Rate limit reached
    environment:
      RAG_EMBEDDING_CONCURRENT_REQUESTS: 5
    ```
-   也可以在 **Admin Panel > Settings > Documents > Concurrent Requests** 中设置。默认 `0` 表示不限制并发。
+   也可以在 **Settings > Documents > Embedding Concurrent Requests**（管理员区域） 中设置。默认 `0` 表示不限制并发。
 2. **降低 batch size**：
    调低 [`RAG_EMBEDDING_BATCH_SIZE`](/reference/env-configuration#rag_embedding_batch_size)，减少单次 API 调用发送的文本量。
 3. **关闭异步嵌入**：
@@ -358,10 +358,10 @@ Error generating embeddings: 429 Rate limit reached
 ✅ **解决方法：**
 
 1. **改用其他内容提取引擎**：
-   - 前往 **Admin Settings > Documents**
+   - 前往 **Settings > Documents**（管理员区域）
    - 尝试 **Apache Tika** 或 **Docling**，它们通常有更好的 OCR 支持
 2. **启用 PDF 图像提取**：
-   - 在 **设置 > 管理 > 文档** 中确认 **PDF Extract Images (OCR)** 已开启
+   - 在 **设置 > 文档**（管理员区域） 中确认 **PDF Extract Images (OCR)** 已开启
    - OCR 每次上传会占用一个处理器线程。如果你的服务器核心很多且处于空闲状态，可以提高 [`RAPIDOCR_PARAMS`](/reference/env-configuration#rapidocr_params) 中的 `intra_op_num_threads`，让单次上传的 OCR 更快完成
 3. **更新 pypdf**：
    新版本 pypdf（6.0.0+）对各类 PDF 格式处理更好
@@ -396,7 +396,7 @@ INFO:     Child process [pid] died
 
 ### 13. 模型附加的知识库不生效 {#13-knowledge-base-attached-to-model-not-working}
 
-你在 **Workspace > Models > Edit** 中把某个知识库附加到了模型上，但聊天时模型似乎完全不知道知识库里的内容。
+你在 **Settings > Models > Edit**（管理员区域）（自己的模型则用 **Workspace > Models**）中把某个知识库附加到了模型上，但聊天时模型似乎完全不知道知识库里的内容。
 
 **问题根源：** Open WebUI 现在有两种不同的 RAG 模式，而模型附加知识库在这两种模式下的工作方式完全不同：
 
@@ -409,15 +409,15 @@ INFO:     Child process [pid] died
 
 #### 知识检索行为矩阵 {#knowledge-retrieval-behavior-matrix}
 
-| | **模型附加了 KB** | **没有附加 KB** |
+| | **模型附加了知识** | **没有附加知识** |
 |---|---|---|
-| **Default Mode** | Open WebUI 只会自动注入**附加 KB** 的 RAG 结果 | 不会自动执行 RAG——用户必须通过 `#` 手动把知识库加入聊天 |
-| **Native Function Calling** | 模型收到的工具只允许访问**附加 KB**——仍需主动调用 | 如果启用了 Builtin Tools，模型会收到能访问**所有可访问 KB** 的工具——仍需主动调用 |
+| **Default Mode** | Open WebUI 只会自动注入**附加知识**的 RAG 结果 | 不会自动执行 RAG——用户必须通过 `#` 手动把知识库加入聊天 |
+| **Native Function Calling** | 模型收到的工具仅限于**附加知识**——仍需主动调用 | 如果启用了 Builtin Tools，模型会收到能访问**所有可访问 KB** 的工具——仍需主动调用 |
 
-关键结论：在 Native Mode（当前受支持模式）下，模型无论如何都必须使用知识工具；附加 KB 只是限制“可以搜索哪些 KB”。Default Mode 的自动注入行为只针对历史部署做兼容说明；Default Mode 已不再受支持，所有模型都应迁移到 Native Mode。
+关键结论：在 Native Mode（当前受支持模式）下，模型无论如何都必须使用知识工具；附加知识只会限制*可以搜索的内容*；[范围访问](/features/workspace/knowledge#scoped-access-keeps-things-organized)列出了所有算作已附加的内容。Default Mode 的自动注入行为只针对历史部署做兼容说明；Default Mode 已不再受支持，所有模型都应迁移到 Native Mode。
 
 :::tip 在 Native Mode 下阻止模型访问知识库
-如果你想阻止某个模型在 native mode 下访问**任何**知识库，不需要关闭整个 Builtin Tools。你只需在 **Workspace > Models > Edit > Builtin Tools** 中关闭 **Knowledge Base** 这个类别。这样会移除所有知识相关工具，但保留其他内置工具（web search、memory、notes 等）。完整分类请参阅 [细粒度内置工具分类](/features/extensibility/plugin/tools#granular-builtin-tool-categories-per-model)。
+如果你想阻止某个模型在 native mode 下访问**任何**知识库，不需要关闭整个 Builtin Tools。你只需在 **Settings > Models > Edit > Builtin Tools**（管理员区域）（自己的模型则用 **Workspace > Models**）中关闭 **Knowledge Base** 这个类别。这样会移除所有知识相关工具，但保留其他内置工具（web search、memory、notes 等）。完整分类请参阅 [细粒度内置工具分类](/features/extensibility/plugin/tools#granular-builtin-tool-categories-per-model)。
 :::
 
 ![模型编辑器中的 Builtin Tools 分类](/images/features/plugin/tools/builtin_tools.png)
@@ -425,18 +425,18 @@ INFO:     Child process [pid] died
 ✅ **建议按以下顺序检查：**
 
 1. **先检查全局模型设置：**
-   - 前往 **Admin Panel > Settings > Models > ⚙️（齿轮图标）**
+   - 前往 **Settings > Models**（管理员区域） > ⚙️（齿轮图标）
    - 展开 **Model Parameters**，确认 **Function Calling** 是否被设为 `native`
    - 如果是，它会**覆盖所有没有显式设置自身 `function_calling` 参数的模型**——即使你原本并不希望某个特定模型使用 native mode
    - 可以把全局设置改回 `default`，或者在每个模型的 **Advanced Params** 中显式设置 `function_calling` 来覆盖全局值
    - 同时检查 **Model Capabilities**，如果全局关闭了 **File Context**，那么未显式开启该能力的模型都不会处理 RAG 文件
 
 :::warning 全局设置会覆盖单模型默认行为
-这个问题最常见的根源，是 **Admin Panel > Settings > Models > ⚙️ > Model Parameters** 中把全局 `Function Calling` 设为了 `native`。这会悄悄应用到**每个没有显式设置 `function_calling` 的模型**上。只有在 **Workspace > Models > Edit > Advanced Params** 中为某个模型明确设置了值，才会覆盖全局默认。
+这个问题最常见的根源，是 **Settings > Models**（管理员区域） > ⚙️ > Model Parameters 中把全局 `Function Calling` 设为了 `native`。这会悄悄应用到**每个没有显式设置 `function_calling` 的模型**上。只有在 **Settings > Models > Edit > Advanced Params**（管理员区域）（自己的模型则用 **Workspace > Models**）中为某个模型明确设置了值，才会覆盖全局默认。
 :::
 
 2. **确认该模型已启用 Builtin Tools**（适用于 native mode）：
-   - 进入该模型的 **Workspace > Models > Edit**
+   - 进入该模型的 **Settings > Models > Edit**（管理员区域）（自己的模型则用 **Workspace > Models**）
    - 在 **Builtin Tools** 下确认 **Knowledge Base** 类别已启用（默认启用）
    - 如果被关闭，模型就没有任何途径去查询附加知识库
 
@@ -448,8 +448,8 @@ INFO:     Child process [pid] died
    - 在模型设置中关闭 Native Function Calling，恢复早期版本中经典的自动注入式 RAG 行为
 
 5. **或者使用 Full Context mode：**
-   - 点击已附加的知识库并选择 **“Use Entire Document”**
-   - 这样会完全绕过 RAG，无论 native function calling 设置如何，都会始终注入完整文档内容
+   - 在聊天中附加知识库，点击它并打开 **“Use Entire Document”**，同时开启模型的 **Preload files** 能力
+   - 对于附加到模型上的知识库，该开关只在 Legacy function calling 下生效
 
 :::info 为什么会这样变化？
 Open WebUI 正在转向 **agentic RAG**：由模型自主决定何时以及如何搜索知识库。相比传统 RAG，这种方式更强大，因为模型可以在第一次搜索效果不佳时改用不同查询重新尝试。但这也要求模型本身具备较好的工具使用能力。对于较小或较旧、工具调用能力不足的模型，推荐直接关闭 Native Function Calling。
@@ -477,7 +477,7 @@ YouTube 附加项就是视频的字幕，因此没有可用字幕的视频根本
 
 **解决方案：**
 
-1. 在 **设置 > 管理 > 文档 > 重建知识库与记忆向量索引** 处执行**重新索引**。这会重建每个知识库、其中每个文件的单文件索引，以及每位用户的记忆。它会重新提取并重新嵌入全部内容，因此请预留足够时间；如果使用的是付费嵌入模型，还要考虑相应费用。
+1. 在 **设置 > 文档 > 重建知识库与记忆向量索引**（管理员区域） 处执行**重新索引**。这会重建每个知识库、其中每个文件的单文件索引，以及每位用户的记忆。它会重新提取并重新嵌入全部内容，因此请预留足够时间；如果使用的是付费嵌入模型，还要考虑相应费用。
 2. 如果文件不属于任何知识库，请**重新上传**，因为重新索引只覆盖知识库。
 
 ---

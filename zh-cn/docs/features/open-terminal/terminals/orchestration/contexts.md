@@ -18,7 +18,7 @@ title: "Terminal Contexts"
 
 ## 配置 {#configure}
 
-1. 打开 **Settings > Admin > Integrations**，滚动到 **Terminal** 区域。
+1. 打开 **Settings > Integrations**（管理员区域），滚动到 **Terminal** 区域。
 2. 添加或编辑一个连接，然后使用 URL 旁边的 **Verify Connection**，以便 Open WebUI 识别服务器类型。只有当该连接被识别为编排器、或它已带有 **Policy ID** 时，**Orchestrator** 区域才会出现。
 3. 展开 **Orchestrator** 并设置 **Terminal Contexts**。
 

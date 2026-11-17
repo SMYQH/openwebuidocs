@@ -60,7 +60,7 @@ title: "加密聊天"
 
 ### 启用加密聊天 {#enable-encrypted-chats}
 
-1. 前往 **Settings > Admin > General**。
+1. 前往 **Settings > General**（管理员区域）。
 2. 打开 **Channels**。其下方会出现 **Encrypted channels** 开关。
 3. 打开 **Encrypted channels** 并保存。
 

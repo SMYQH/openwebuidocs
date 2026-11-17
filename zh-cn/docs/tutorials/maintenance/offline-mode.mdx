@@ -20,7 +20,7 @@ description: "Prepare local models and document processing, enable offline setti
 请从一套可正常运行的 Open WebUI 安装和管理员权限开始。在移除互联网访问之前，机器、容器以及它使用的任何服务都必须已经具备所需的文件和依赖：
 
 - **对话：** 一个本地推理服务器和已下载的模型。按照现有的 [Ollama 连接指南](/getting-started/quick-start/connect-a-provider/starting-with-ollama)操作，然后选择一个本地模型，而不是 Ollama 云模型或其他托管端点。
-- **文档检索：** 一个已下载的嵌入模型或可达的本地嵌入服务、本地文档提取，以及在启用重排序时的本地重排器。请检查 **管理设置 → 文档** 中选定的提供方；仅仅有一个本地对话模型，并不能让文档处理也留在本地。
+- **文档检索：** 一个已下载的嵌入模型或可达的本地嵌入服务、本地文档提取，以及在启用重排序时的本地重排器。请检查 **设置 → 文档**（管理员区域）中选定的提供方；仅仅有一个本地对话模型，并不能让文档处理也留在本地。
 - **安装与存储：** Open WebUI 镜像或软件包、所需依赖以及持久化的模型缓存。任何可选的提取服务或工具服务同样需要它自己的安装文件和依赖。
 - **登录：** 在隔离网络中仍然可达的认证方式。请在移除对外部身份提供方的访问之前先测试它。
 - **语音（如果需要）：** 本地语音模型、音色及其依赖。语音功能对于对话和文档检索来说是可选的。
@@ -39,7 +39,7 @@ description: "Prepare local models and document processing, enable offline setti
 
 ### 准备嵌入模型 {#ii-embedding-model}
 
-在**管理设置 → 文档**中选择你的本地嵌入模型，例如 [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)，并使用下载按钮。如果你使用独立的本地嵌入服务，请准备好它的模型并确认 Open WebUI 可以访问它。
+在**设置 → 文档**（管理员区域）中选择你的本地嵌入模型，例如 [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)，并使用下载按钮。如果你使用独立的本地嵌入服务，请准备好它的模型并确认 Open WebUI 可以访问它。
 
 上传一个小的纯文本 PDF 或文本文件，等待处理完成，然后提出一个答案就在文件中的问题。完整流程请参阅[文档问答快速入门](/features/workspace/knowledge#ask-your-first-document-question)。一次普通的对话成功并不能说明文档处理已经就绪。
 

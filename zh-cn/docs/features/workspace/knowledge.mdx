@@ -15,17 +15,39 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 ---
 
-## 为什么使用知识库？ {#ask-your-first-document-question}
+## 提出第一个文档问题 {#ask-your-first-document-question}
+
+先准备好三样东西：一个正在运行的 Open WebUI 实例、一个已连接的模型，以及创建知识库和上传文件的权限。要使用专注检索，请选择支持[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)的模型，并启用 **Builtin Tools** 和 **Knowledge Base** 工具类别。原生是默认模式；模型必须调用自己的工具来检索已附加的知识。
+
+1. 点击**Workspace > Knowledge**，然后点击**Create**。为知识库起一个名称并填写描述。
+2. 上传一个小的纯文本 PDF 或文本文件。在提问之前等待处理完成。
+3. 把知识库附加到该聊天，或附加到某个模型并用该模型开始对话。[附加知识与笔记](#attaching-knowledge-and-notes)说明了可以附加的位置。
+4. 提出一个答案就在文件里的问题，例如："使用附加的手册查找办公时间。引用相关段落。"
+5. 将回答和任何来源引用与原始文档比对。如果模型找不到内容，请参阅[知识库故障排查](/troubleshooting/rag#13-knowledge-base-attached-to-model-not-working)。
 
 ## 选择如何处理文件 {#choose-how-to-work-with-files}
 
 | 需求 | 使用 |
 | :--- | :--- |
 | 在一次对话中询问某一个文件 | [把文件上传到对话](/features/chat-conversations/data-controls/files#using-files-in-open-webui) |
-| 在多次对话中复用一个文档集合 | 知识库，按照上面的步骤操作 |
+| 在多次对话中复用一组文档 | 知识库，按照上面的步骤操作 |
 | 分析电子表格或通过代码创建文件 | [开放终端的文件分析指南](/features/open-terminal/use-cases/file-analysis) |
 
-与[笔记](/features/notes)（它会把完整内容注入每一条消息）不同，知识库可以按需检索相关段落。这使它适合那些如果完整发送就会超出模型上下文窗口的文档集合。若要纯本地地进行文档对话，请同时遵循[离线运行 Open WebUI](/tutorials/maintenance/offline-mode)。
+一条[笔记](/features/notes)以完整文本的形式到达模型，而知识库可以按需检索相关段落。这使知识库适合那些如果完整发送就会超出模型上下文窗口的文档集合。知识库和笔记的附加位置相同，本页所说的“知识”同时涵盖两者，以及单个文件。若要纯本地地进行文档对话，请同时遵循[离线运行 Open WebUI](/tutorials/maintenance/offline-mode)。
+
+## 附加知识与笔记 {#attaching-knowledge-and-notes}
+
+知识库、笔记和单个文件可以附加到聊天、附加到[文件夹](/features/chat-conversations/chat-features/conversation-organization#attached-knowledge)（对该文件夹中的每个聊天都生效），或附加到[模型](/features/workspace/models)。有些选择器把知识库标为 **Collections**（单个条目上标为 **Collection**）；这个标签指的就是知识库。
+
+**在聊天中：**
+
+- 在消息输入框中键入 `#`。列表会提供 **Folders**、**Collections**（知识库）和 **Files**（知识库中的单个文件），并接受网页或 YouTube URL。
+- 或点击 **+**（**More**）并打开 **Add Context**。**Attach Knowledge** 列出你的知识库，其中的 **Show Files** 可以从某个知识库中挑选单个文件。**Attach Notes** 列出你的笔记。同一个菜单还有 **Attach Webpage**、**Attach Files**（你之前上传的文件）和 **Reference Chats**。
+- 或把笔记、文件夹或聊天从侧边栏拖入消息输入框。
+
+**在模型或文件夹上：** 打开 **Knowledge** 字段，在模型编辑器中（**Workspace > Models**，或 **Settings > Models > Edit**（管理员区域）），或在文件夹的 **Edit** 对话框的 **Advanced** 下。其搜索会列出 **Notes**、**Collections**（知识库）和 **Files**（知识库中的单个文件），而 **Upload Files** 可以直接从你的电脑上添加文件。
+
+**Workspace > Knowledge** 只列出知识库。笔记在[笔记](/features/notes)中。
 
 ---
 
@@ -39,7 +61,7 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 ### 满足不同需求的两种检索模式 {#two-retrieval-modes-for-different-needs}
 
-选择**专注检索**（RAG）让 AI 高效搜索大型集合，或选择**全文上下文**在精度重要时逐字注入整个文档。
+选择**专注检索**（RAG）让 AI 高效搜索大型文档集，或选择**全文上下文**在精度重要时逐字注入整个文档。
 
 ### 通过原生函数调用自主探索 {#autonomous-exploration-with-native-function-calling}
 
@@ -47,7 +69,17 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 ### 有序范围访问 {#scoped-access-keeps-things-organized}
 
-将特定知识库附加到模型，使其只搜索相关内容。或不附加，让模型发现用户有权访问的所有内容。
+当你把知识附加到模型、文件夹或聊天时，就等于精确指定了该模型要搜索哪些知识。它的知识工具随后只列出并搜索已附加的条目。这样答案会保持聚焦且可预测，因为模型只依据你挑选的来源作答。这也让你能决定每个模型搜索哪些文档：云端提供商上的模型可以只拿到一份公开手册，而跑在你自有硬件上的模型还能拿到内部文档。用户自身的访问权限在此之上仍然生效。
+
+会收窄知识工具范围的有：
+
+- 模型 **Knowledge** 字段中的任何内容（知识库、笔记和文件），
+- 聊天所在文件夹的 **Knowledge** 字段中的任何内容，
+- 在模型 **Preload files** 能力关闭时，聊天中直接附加的知识库和笔记；开启该能力时，它们会被注入对话。
+
+在聊天中，上传的文件、从知识库中挑选的单个文件、文件夹、被引用的聊天和网页都以各自的方式到达模型，而不会改变知识工具的范围。
+
+要让模型浏览用户能读取的所有知识库，就什么都不要附加。要限制它，就精确附加它应当使用的内容，包括你希望它读取的笔记。笔记还可以通过独立的 **Notes** 工具类别访问，无论附加了什么，该类别都能覆盖用户的全部笔记；在模型的 **Builtin Tools** 下关闭 **Notes**，即可让它只使用已附加的笔记。[工具表](#agentic-knowledge-tools)显示了每种情况会得到哪些工具。
 
 ---
 
@@ -55,12 +87,13 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 | | |
 | :--- | :--- |
-| 📄 **9 种向量数据库** | ChromaDB 和 PGVector（官方维护），以及社区选项：Qdrant、Milvus、OpenSearch、Elasticsearch 等 |
+| 📄 **13 种向量数据库** | ChromaDB 和 PGVector（官方维护），以及非核心集成：Qdrant、Milvus、OpenSearch、Elasticsearch 等 |
 | 🔍 **混合搜索** | BM25 关键词搜索 + 向量搜索，配合交叉编码器重排序 |
 | 📑 **8 种提取引擎** | Tika、Docling、Azure、Mistral OCR、Datalab Marker、MinerU、PaddleOCR、自定义加载器 |
 | 🤖 **智能体检索** | 模型自主浏览、搜索和阅读您的文档 |
-| 📄 **全文上下文模式** | 无分块地注入整个文档 |
+| 📄 **始终使用全文** | 无分块地注入整个文档 |
 | 🗂️ **嵌套目录** | 用子目录组织文件，支持拖放重排 |
+| 📂 **带预览的文件浏览器** | 以树形浏览文件，在列表旁预览每个文件，并阅读或编辑 AI 所搜索的索引文本 |
 | 🔄 **增量目录同步** | 把本地文件夹镜像到知识库，只上传新增和修改过的文件，删除的内容会被移除，目录结构得以保留。也可镜像远程源（Git、Confluence、S3 等），使用 [oikb](/ecosystem/knowledge-base-sync) |
 | 📦 **导出和 API** | 将知识库备份为 zip 文件，通过 REST API 管理 |
 
@@ -68,9 +101,11 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 ## 检索模式 {#retrieval-modes}
 
+将文件或知识库附加到模型时，点击已附加项在两种模式之间切换：
+
 ![知识库列表](/images/workspace/knowledge-list.png)
 
-将文件或知识库附加到模型时，点击已附加项在两种模式之间切换：
+在打开的预览中，知识库的名称会在工作区中打开它，文件或链接名称会打开对应的文件或页面。两者都在新标签页中打开。
 
 ### 🔍 专注检索（默认） {#focused-retrieval-default}
 
@@ -80,9 +115,11 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 ### 📄 全文上下文 {#full-context}
 
-将文件的完整内容注入每条消息。无分块，无语义搜索。无论原生函数调用设置如何，始终注入，因此模型无需调用任何工具来访问它。
+将文件的完整内容注入每条消息。无分块，无语义搜索。对于在聊天中附加的文件和知识库，只要模型的 **Preload files** 能力开启，无论函数调用模式如何都会注入。而附加到模型上的知识库只在旧版函数调用模式下才注入：在原生函数调用下，模型通过知识工具访问附加到模型上的知识，无论是否使用全文上下文。
 
 最适合简短的参考文档、风格指南，或始终相关的上下文。
+
+**Settings** > **Documents**（管理员区域）中不超过 **Full Text Threshold (Characters)** 的文件和文本附件无需选择该模式即完整包含，而 **Always Use Full Text** 会把它应用到每个文档。知识库附件不受该阈值影响。
 
 ---
 
@@ -90,25 +127,27 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 
 ![知识库内的文件，带搜索和排序](/images/workspace/knowledge-detail.png)
 
-启用[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)后，模型使用内置工具与您的知识库交互。显示哪些工具取决于是否有特定知识库附加到模型：
+启用[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)后，模型使用 **Knowledge Base** 工具类别中的内置工具与您的知识库（下文简称 KB）交互。显示哪些工具取决于是否附加了知识，详见[范围访问](#scoped-access-keeps-things-organized)。
 
-| 工具 | 已附加知识库 | 未附加知识库 | 说明 |
+| 工具 | 已附加知识 | 未附加任何内容 | 说明 |
 |------|:-----------:|:--------------:|-------------|
-| `list_knowledge` | ✅ | ❌ | 列出附加到模型的知识库（带文件数量）、独立文件和笔记；传入 `knowledge_id`（含 `skip`/`count`，最多 200）可分页查看单个知识库的文件 |
+| `list_knowledge` | ✅ | ❌ | 列出已附加的知识库（带文件数量）、单个文件和笔记；传入 `knowledge_id`（含 `skip`/`count`，最多 200）可分页查看单个知识库的文件 |
 | `list_knowledge_bases` | ❌ | ✅ | 浏览可用知识库（带文件数量） |
 | `search_knowledge_bases` | ❌ | ✅ | 按名称或描述查找知识库 |
 | `query_knowledge_bases` | ❌ | ✅ | 通过语义相似度搜索知识库名称/描述 |
-| `search_knowledge_files` | ✅（有范围） | ✅（全部） | 按文件名搜索文件 |
-| `query_knowledge_files` | ✅（有范围） | ✅ | 使用 RAG 流水线搜索文件内容 |
-| `grep_knowledge_files` | ✅（有范围） | ✅ | 在知识库文件中进行精确文本/正则搜索（返回带行号的匹配行；自动检测正则如 `error\|warn`） |
-| `view_file` | ✅ | ❌ | 分页读取文件内容（`offset`/`max_chars`）或按行号范围（`start_line`/`end_line`，可选 `line_numbers`）读取 |
-| `view_knowledge_file` | ✅ | ✅ | 从任何可访问的知识库读取文件内容 |
-| `display_file` | ✅ | ✅ | 在聊天中以inline 方式向用户展示某个文件，可选择展示到某一页或某一张幻灯片 |
-| `view_note` | ✅ | ❌ | 读取附加的笔记 |
+| `search_knowledge_files` | ✅（仅已附加） | ✅（全部） | 按文件名搜索文件 |
+| `query_knowledge_files` | ✅（仅已附加） | ✅（全部） | 使用 RAG 流水线搜索文件内容；已附加的笔记会以完整文本返回 |
+| `grep_knowledge_files` | ✅（仅已附加） | ✅（全部） | 在知识库文件中进行精确文本/正则搜索（返回带行号的匹配行；自动检测正则如 `error\|warn`） |
+| `view_file` | 附加了知识库或文件时 | ❌ | 分页读取文件内容（`offset`/`max_chars`）或按行号范围（`start_line`/`end_line`，可选 `line_numbers`）读取 |
+| `view_knowledge_file` | 附加了知识库或文件时 | ✅ | 从任何可访问的知识库读取文件内容 |
+| `display_file` | 附加了知识库或文件时 | ✅ | 在聊天中以inline 方式向用户展示某个文件，可选择展示到某一页或某一张幻灯片 |
+| `view_note` | 附加了笔记时 | ❌ | 读取一条笔记 |
 
-这里的“已附加”涵盖模型上的知识、聊天所在文件夹上的知识，以及在模型 **Preload files** 能力关闭时直接附加到该聊天上的知识库或笔记。无论来源是什么，模型都会被告知自己拥有什么：你的消息之后会附带一个隐藏的 `list_attached_knowledge` 工具结果，其中以 `<attached_knowledge>` 列表给出这些条目及其 ID，模型用它来分页查看某个知识库的文件清单，或把文件名搜索限制在单一知识库内。使用 `query_knowledge_files` 的内容搜索会在一次排序中覆盖所有已附加的知识，并返回其中得分最高的分块，因此来自不同知识库的分块会争夺同一批结果位次。
+模型会被告知附加了什么：你的消息之后会附带一个隐藏的 `list_attached_knowledge` 工具结果，其中以 `<attached_knowledge>` 列表给出模型和文件夹的条目及其 ID，每条消息也会列出附加给它的条目。模型用这些 ID 分页查看某个知识库的文件清单，或把文件名搜索限制在单一知识库内。使用 `query_knowledge_files` 的内容搜索会在一次排序中覆盖所有已附加的知识，并返回其中得分最高的分块，因此来自不同知识库的分块会争夺同一批结果位次。
 
-关键区别：`list_knowledge` 和 `list_knowledge_bases` 互斥。附加知识库会将模型范围限定为只处理那些文档。不附加则让模型发现用户有权访问的所有内容。
+`list_knowledge` 和 `list_knowledge_bases` 互斥：附加了知识时，模型列出已附加的内容；什么都没附加时，它会发现用户能读取的每个知识库。
+
+**笔记工具。** **Notes** 工具类别与知识工具是分开的。只要用户启用了笔记，并且模型的 **Notes** 类别开启，模型就会在每个聊天中获得 `search_notes`、`view_note`、`write_note` 和 `replace_note_content`，无论是否附加了知识，而且这些工具能覆盖用户能读取的每一条笔记。这就是为什么在什么都没附加的聊天中 `view_note` 也会出现。参见[智能体笔记管理](/features/notes#agentic-note-management)。
 
 #### 何时优先使用 `grep_knowledge_files` 而非 `query_knowledge_files` {#when-to-prefer-grep\_knowledge\_files-over-query\_knowledge\_files}
 
@@ -147,8 +186,11 @@ description: "向知识库上传文档、就其内容提问，并在 Open WebUI 
 **仍然与 `kb_exec` 并存注入的工具**（因其能做 `kb_exec` 做不到的事）：
 
 - **`query_knowledge_files`** —— 语义/RAG 搜索（始终保留）
-- **`view_note`** —— 当笔记被附加到模型时（`kb_exec` 只处理文件，所以笔记需要专用读取器）
-- **`query_knowledge_bases`** 和 **`search_knowledge_bases`** —— 当没有知识库附加到模型时，让模型仍能按名称/描述发现并搜索知识库
+- **`display_file`** —— 始终保留
+- **`view_note`** —— 当附加了笔记时（`kb_exec` 只处理文件，所以笔记需要自己的读取器）
+- **`query_knowledge_bases`** 和 **`search_knowledge_bases`** —— 当什么都没附加时，让模型仍能按名称/描述发现并搜索知识库
+
+`kb_exec` 遵循同样的[范围划分](#scoped-access-keeps-things-organized)。什么都没附加时，`ls` 列出用户能读取的知识库。附加了知识时，`ls` 只列出已附加的知识库，随后在 **Attached Files** 下列出已附加的单个文件。笔记永远不会出现在 `kb_exec` 中：附加的笔记用 `view_note` 读取，或通过 `query_knowledge_files` 找到；当只附加了笔记时，`ls` 会回答 `No knowledge bases found.`
 
 该功能**默认关闭**且仍处于实验阶段，但为了获得增强的智能体 RAG 体验，我们建议为运行原生函数调用的强模型启用它（`ENABLE_KB_EXEC=True`）。它面向的是那些已经“用 Shell 思考”的前沿模型：相比编排一系列专用工具的扇出，它们往往更可靠地串联 `ls`、`grep` 和 `cat`。它只在使用原生函数调用时生效；对于设为 Legacy 的模型，它不会产生任何效果。
 
@@ -199,7 +241,7 @@ find docs/ "*.md" | head -10
 - 模型仍保留 `query_knowledge_files` 用于语义搜索；在字面命令无法找到改写后的概念时使用。
 - 构建于目录模型之上——`kb_exec` 是唯一完整体现 UI 中创建的目录结构的工具。
 
-自主探索在能够智能链接搜索、浏览和综合的前沿模型上效果最佳。较小的模型可能难以处理多步检索。管理员可以在**工作区 > 模型 > 编辑 > 内置工具**中按模型禁用**知识库**工具类别。
+自主探索在能够智能链接搜索、浏览和综合的前沿模型上效果最佳。较小的模型可能难以处理多步检索。管理员可以在**Settings > Models > Edit > Builtin Tools**（管理员区域）中按模型禁用 **Knowledge Base** 工具类别（对自己的模型则使用 **Workspace > Models**）。
 
 #### 在混合知识库之间引导工具选择 {#guiding-tool-choice-across-mixed-knowledge-bases}
 
@@ -221,26 +263,23 @@ find docs/ "*.md" | head -10
 启用原生函数调用时，附加的知识库**不会自动注入**。模型必须调用知识工具来搜索和检索。如果您的模型未使用附加的知识库：
 
 1. **添加系统提示词指令**，告诉模型使用 `list_knowledge` 和 `query_knowledge_files`。
-2. **禁用该模型的原生函数调用**，恢复自动 RAG 注入。
-3. **将附件切换为全文上下文模式**，完全绕过 RAG。
+2. **用[知识库故障排查](/troubleshooting/rag#13-knowledge-base-attached-to-model-not-working)检查模型的工具能力和检索设置**。保持原生模式开启，并使用能可靠调用工具的模型。
+3. **对于小文档，在聊天中以全文上下文模式附加它**，并开启模型的 **Preload files** 能力，这样它的完整文本会被注入。附加到模型或文件夹上的知识在原生函数调用下永远不会被注入。
 :::
 
 ---
 
 ## 设置知识库 {#setting-up-a-knowledge-base}
 
-1. 点击侧边栏中的**工作区**，然后选择**知识库**。
-2. 点击 **+ 新建知识库**，输入名称和描述。
-3. 上传文件或添加现有文档。
-4. 在**工作区 > 模型 > 编辑**中将知识库附加到模型，或在对话中用 `#` 引用它。
+关于最初的创建、上传和对话步骤，参见[提出第一个文档问题](#ask-your-first-document-question)。下面的章节介绍的是设置完成之后的知识库管理。
 
-关于最初的创建、上传和对话步骤，参见[提出你的第一个文档问题](#ask-your-first-document-question)。下面的章节介绍的是设置完成之后的集合管理。
+当知识库超过几个之后，可以通过点击 **Title** 或 **Updated at** 列标题对列表重新排序。点击当前正在排序的那个标题会反转方向。列表默认按 **Updated at** 排序，最新的在前。
 
 要更改谁可以查看或编辑某个知识库，请打开其所在行的三点菜单并选择**访问**。这会直接打开访问设置，无需先进入知识库，而且每次改动都会立即保存。管理员在每个知识库上都能看到该菜单；其他用户只在可以编辑的知识库上看到它，并且需要[**知识库共享**](/features/authentication-access/rbac/permissions#2-sharing-permissions)权限。知识库内部的**访问**按钮遵循同样的规则。在拥有写入权限的情况下保存知识库名称或描述不会改变它的共享设置，包括你本人无权设置的**公开**选项。[资源访问](/features/authentication-access/rbac/groups#resource-access-rbac)解释了可见性与访问授权。
 
 ### 文件数量上限 {#file-limits}
 
-管理员在**管理设置 > 文档**中设置全局上限：**知识库批量上传上限**（每次上传的文件数）、**知识库文件大小上限**（每个文件的 MB 数）和**知识库文件数量上限**（每个知识库的文件总数）。留空表示不限制。相同的值也可以通过 [`KNOWLEDGE_MAX_UPLOAD_COUNT`](/reference/env-configuration#knowledge_max_upload_count)、[`KNOWLEDGE_MAX_FILE_SIZE`](/reference/env-configuration#knowledge_max_file_size) 和 [`KNOWLEDGE_MAX_FILE_COUNT`](/reference/env-configuration#knowledge_max_file_count) 设置。
+管理员在 **Settings > Documents**（管理员区域）中设置全局上限：**知识库批量上传上限**（每次上传的文件数）、**知识库文件大小上限**（每个文件的 MB 数）和**知识库文件数量上限**（每个知识库的文件总数）。留空表示不限制。相同的值也可以通过 [`KNOWLEDGE_MAX_UPLOAD_COUNT`](/reference/env-configuration#knowledge_max_upload_count)、[`KNOWLEDGE_MAX_FILE_SIZE`](/reference/env-configuration#knowledge_max_file_size) 和 [`KNOWLEDGE_MAX_FILE_COUNT`](/reference/env-configuration#knowledge_max_file_count) 设置。
 
 知识库的所有者或管理员可以为单个知识库设置更低的**文件数量上限**和**文件大小上限（MB）**，在创建时的**高级**选项中设置，或之后通过知识库页面上的三点菜单 > **设置**设置。当全局上限和局部上限同时存在时，适用较低的那个。外部知识库没有局部上限。
 

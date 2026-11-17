@@ -25,7 +25,7 @@ title: "Yacy"
 
 ### 设置 {#setup}
 
-1. 前往：`Admin Panel` -> `Settings` -> `Web Search`
+1. 前往：`Settings` -> `Web Search`（管理员区域）
 2. 打开 `Enable Web Search`
 3. 将 `Web Search Engine` 从下拉框中设为 `yacy`
 4. 将 `Yacy Instance URL` 设为以下示例之一：

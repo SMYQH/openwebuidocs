@@ -49,7 +49,7 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 
 ### 添加外部知识源 {#adding-an-external-knowledge-source}
 
-在**管理设置 > 集成 > 外部知识源**中进行配置：
+在 **Settings > Integrations > External Knowledge Sources**（管理员区域）中进行配置：
 
 1. **创建连接**到你的向量数据库：
    - **提供商**（Qdrant / Milvus / pgvector）
@@ -88,7 +88,7 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 :::warning
 **致 Ollama 用户的上下文长度警告：** 即使经过内容提取，网页通常包含 4,000-8,000 多个 token，包括主要内容、导航元素、页眉、页脚和元数据。如果只有 2048 个可用 token，您获得的内容不到页面内容的一半，通常会丢失最相关的信息。甚至 4096 个 token 对于全面的网页内容分析也常常是不够的。
 
-**修复方法：** 导航至（您的 Ollama 模型的）**管理面板 > 模型 > 设置 (Admin Panel > Models > Settings)** > **高级参数 (Advanced Parameters)**，并**将上下文长度增加到 8192+（或最好超过 16000）个 token**。此设置特别适用于 Ollama 模型。对于 OpenAI 和其他集成模型，请确保您使用的是具有足够内置上下文长度的模型（例如，具有 128k token 的 GPT-4 Turbo）。
+**修复方法：** 导航至 **Settings > Models**（管理员区域）中（您的 Ollama 模型的）铅笔图标（**Edit**），打开 **Advanced Params** 并，并**将上下文长度增加到 8192+（或最好超过 16000）个 token**。此设置特别适用于 Ollama 模型。对于 OpenAI 和其他集成模型，请确保您使用的是具有足够内置上下文长度的模型（例如，具有 128k token 的 GPT-4 Turbo）。
 :::
 
 对于网页内容的集成，在聊天中以 `#` 开头开始查询，并紧跟目标 URL。点击聊天框上方出现的方框中的格式化 URL。选择后，`Send a message` 上方会出现一个文档图标，表示检索成功。如果可以，Open WebUI 将从该 URL 获取并解析信息。
@@ -101,7 +101,7 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 
 ## RAG 模板自定义 {#rag-template-customization}
 
-从 `管理面板 (Admin Panel)` > `设置 (Settings)` > `文档 (Documents)` 菜单自定义 RAG 模板。
+从 `Settings` > `Documents`（管理员区域）菜单自定义 RAG 模板。
 
 RAG 模板用于格式化**检索到的上下文**，并会在消息到达模型之前作为前缀附加到你的消息上。请使用 `{{CONTEXT}}` 占位符（或旧版的 `[context]`）来标记检索到的文档上下文插入的位置。没有它，检索到的上下文就无处安放。
 
@@ -115,7 +115,7 @@ RAG 模板用于格式化**检索到的上下文**，并会在消息到达模型
 
 :::tip
 
-使用 **最小块大小目标** 设置（位于 **设置 > 管理 > 文档**）可以在 Markdown 拆分之后智能合并过小的段落，从而提升检索连贯性并减少数据库中的向量总数。
+使用 **最小块大小目标** 设置（位于 **设置 > 文档**（管理员区域））可以在 Markdown 拆分之后智能合并过小的段落，从而提升检索连贯性并减少数据库中的向量总数。
 
 :::
 
@@ -197,7 +197,7 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 ### 性能特征 {#performance-characteristics}
 
-该算法的复杂度为语块数量的 O(n)——一次遍历，不进行前瞻或回溯。这使得即使对于大量文档集合，它也能保持快速。
+该算法的复杂度为语块数量的 O(n)——一次遍历，不进行前瞻或回溯。这使得即使对于大型文档集，它也能保持快速。
 
 在某些方面，合并带来的效率提升呈非线性扩展。在 45 个向量而不是 588 个向量中进行检索不只是计算速度加快约 13 倍，您还会获得更清晰的 top-k 结果，因为您已经消除了可能在部分关键字匹配中得分很高但对 LLM 没有有益贡献的近乎空白语块的噪音。质量的提升通常比速度的提升更重要。
 
@@ -207,7 +207,7 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 ## RAG 嵌入支持 {#rag-embedding-support}
 
-直接在 `管理面板 (Admin Panel)` > `设置 (Settings)` > `文档 (Documents)` 菜单中更改 RAG 嵌入模型。该功能支持 Ollama 和 OpenAI 模型，让您能够根据需求增强文档处理。
+直接在 `Settings` > `Documents`（管理员区域）菜单中更改 RAG 嵌入模型。该功能支持 Ollama 和 OpenAI 模型，让您能够根据需求增强文档处理。
 
 ## 初始设置后更改 RAG 设置 {#changing-rag-settings-after-initial-setup}
 
@@ -227,7 +227,7 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 更改嵌入模型**需要对所有知识库文档进行重新索引**。不同模型产生的嵌入存在于不同的向量空间，互不兼容。不重新建立索引，针对旧嵌入进行检索将产生糟糕甚至荒谬的结果。
 
-在 `管理面板 (Admin Panel)` > `设置 (Settings)` > `文档 (Documents)` 更改嵌入模型后，导航至 `管理面板 (Admin Panel)` > `设置 (Settings)` > `文档 (Documents)` 并点击 **Reindex** 按钮，使用新模型重嵌所有知识库文档。
+在 `Settings` > `Documents`（管理员区域）更改嵌入模型后，导航至 `Settings` > `Documents`（管理员区域）并点击 **Reindex** 按钮，使用新模型重嵌所有知识库文档。
 
 ### 重建索引会做什么？ {#what-does-re-indexing-do}
 
@@ -278,7 +278,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 :::
 
 :::tip 基于单个文件的检索模式
-各个文件和知识库也可通过 **"Using Entire Document（使用整篇文档）"** 开关设置为完全绕开 RAG。无论原生函数调用设置如何，它都会把完整文件内容注入每条消息。**管理设置** > **文档**中不超过**全文阈值（字符数）**的上传文件和文本附件会自动完整包含，而**始终使用全文**则对每个文档都应用这一规则。欲停止逐个选择，请在**设置 > 界面 > 文件**中设置**默认上传模式**：此后你附加的每个文件都会以你选定的模式开始，之后仍可单独切换。详情参阅[完全上下文 vs 重点检索](/features/workspace/knowledge#retrieval-modes)。
+在聊天中附加的各个文件和知识库也可通过 **"Using Entire Document（使用整篇文档）"** 开关设置为完全绕开 RAG。无论原生函数调用设置如何，它都会把完整文件内容注入每条消息。**Settings** > **Documents**（管理员区域）中不超过**全文阈值（字符数）**的上传文件和文本附件会自动完整包含，而**始终使用全文**则对每个文档都应用这一规则。欲停止逐个选择，请在**设置 > 界面 > 文件**中设置**默认上传模式**：此后你附加的每个文件都会以你选定的模式开始，之后仍可单独切换。详情参阅[完全上下文 vs 重点检索](/features/workspace/knowledge#retrieval-modes)。
 :::
 
 :::info
@@ -307,7 +307,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 |--------------|---------------|--------|
 | 启用 | 启用 | **全能代理模式**：注入 RAG 内容 + 模型能自发查询知识库 |
 | 启用 | 禁用 | **传统 RAG**：前期注入内容，不支持自动检索工具 |
-| 禁用 | 启用 | **纯工具模式**：不预先注入内容。模型按需查询知识库，并且会注入[内置 **Files** 工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)（`list_chat_files`、`query_chat_files`、`grep_chat_files`、`view_file`、`display_file`），让它能读取和搜索聊天自身的附件。该组合同时也是[提示缓存的最优配置](/features/chat-conversations/prompt-caching) |
+| 禁用 | 启用 | **纯工具模式**：不预先注入内容。模型按需查询知识库，并且会注入[内置 **Files** 工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)（`list_chat_files`、`query_chat_files`、`grep_chat_files`、`view_file`、`display_file`），让它能读取和搜索聊天自身的附件。在聊天中附加的知识库和笔记会[把知识工具限制在这些内容上](/features/workspace/knowledge#scoped-access-keeps-things-organized)。该组合同时也是[提示缓存的最优配置](/features/chat-conversations/prompt-caching) |
 | 禁用 | 禁用 | **无文件处理**：忽略附加文件，没有内容会传递给模型 |
 
 :::warning 附加到模型或文件夹上的知识表现不同
@@ -343,7 +343,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 
 通过视频 URL 总结 YouTube 视频的专用 RAG 流程让您能够顺畅地直接和视频转录文本互动。这项创新的特性允许您将视频内容纳入对话，进一步充实了您的聊天体验。
 
-视频以其转录文本的形式附加，因此没有可用转录的视频无法附加，错误信息会指出属于哪种情况：上传者关闭了字幕、视频有年龄限制或不可用、所请求的语言没有转录，或者 YouTube 因请求来源地址而拦截了请求。可通过 [`YOUTUBE_LOADER_LANGUAGE`](/reference/env-configuration#youtube_loader_language) 设置要尝试的语言，并通过**设置 > 管理 > Web Search > Youtube Proxy URL**（[`YOUTUBE_LOADER_PROXY_URL`](/reference/env-configuration#youtube_loader_proxy_url)）让被拦截的请求走代理。参见[附加链接或 YouTube 视频失败](/troubleshooting/rag#14-attaching-a-link-or-a-youtube-video-fails)。
+视频以其转录文本的形式附加，因此没有可用转录的视频无法附加，错误信息会指出属于哪种情况：上传者关闭了字幕、视频有年龄限制或不可用、所请求的语言没有转录，或者 YouTube 因请求来源地址而拦截了请求。可通过 [`YOUTUBE_LOADER_LANGUAGE`](/reference/env-configuration#youtube_loader_language) 设置要尝试的语言，并通过**设置 > Web Search > Youtube Proxy URL**（管理员区域）（[`YOUTUBE_LOADER_PROXY_URL`](/reference/env-configuration#youtube_loader_proxy_url)）让被拦截的请求走代理。参见[附加链接或 YouTube 视频失败](/troubleshooting/rag#14-attaching-a-link-or-a-youtube-video-fails)。
 
 ## 文档解析 {#document-parsing}
 多种不同的解析器能够提取本地及远程文档的内容：内置引擎如 Tika、Docling 和 Mistral OCR，或者在你需要按文件类型路由或自定义逻辑时，通过[外部引擎](/features/chat-conversations/rag/document-extraction/external)运行你自己的服务。完整列表和配置步骤请查阅[文档提取](/features/chat-conversations/rag/document-extraction)。
@@ -360,7 +360,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 
 ## Google Drive 集成 {#google-drive-integration}
 
-当与一个开启了 Google Picker API 以及 Google Drive API 的 Google Cloud 项目共同配置时，此项特性可以让用户直接从聊天界面接入他们的 Drive 文件并上传文档、幻灯片、表格等作为您的对话上下文。这能够在 `管理面板 (Admin Panel)` > `设置 (Settings)` > `文档 (Documents)` 菜单下启用。使用它必须要设定 [`GOOGLE_DRIVE_API_KEY 以及 GOOGLE_DRIVE_CLIENT_ID`](/reference/env-configuration) 的环境变量。
+当与一个开启了 Google Picker API 以及 Google Drive API 的 Google Cloud 项目共同配置时，此项特性可以让用户直接从聊天界面接入他们的 Drive 文件并上传文档、幻灯片、表格等作为您的对话上下文。这能够在 `Settings` > `Documents`（管理员区域）菜单下启用。使用它必须要设定 [`GOOGLE_DRIVE_API_KEY 以及 GOOGLE_DRIVE_CLIENT_ID`](/reference/env-configuration) 的环境变量。
 
 ### 详细说明 {#detailed-instructions}
 
@@ -376,6 +376,6 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 10. 将环境变量 `GOOGLE_DRIVE_API_KEY` 设为步骤 7 生成的 API Key 的值 (请注意**绝非**步骤 2 里的 OAuth client secret)。
 11. 建立 `GOOGLE_REDIRECT_URI` 设定为你 Open-WebUI 实例的 URL (包含端口)。
 12. 接着，在环境里携带着那三项变量重新启动你的 Open-WebUI。
-13. 完成之后，去确保 Google Drive 已经在 `管理面板 (Admin Panel)` < `设置 (Settings)` < `文档 (Documents)` < `Google Drive` 被开启。
+13. 完成之后，去确保 Google Drive 已经在 `Settings` > `Documents` > `Google Drive`（管理员区域）被开启。
 
 选择器以列表视图打开，因为 `drive.file` 作用域无法访问文件缩略图。

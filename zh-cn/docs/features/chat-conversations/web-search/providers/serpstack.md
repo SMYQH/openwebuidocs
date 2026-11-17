@@ -22,7 +22,7 @@ description: "在 Open WebUI 中配置 Serpstack 网页搜索，确认账号的 
 
 ## 在 Open WebUI 中配置 {#configure-in-open-webui}
 
-1. 打开 **Settings → Admin → Web Search**，启用网页搜索。
+1. 打开 **Settings → Web Search**（管理员区域），启用网页搜索。
 2. 将 **Web Search Engine** 设为 `serpstack`。
 3. 将密钥粘贴到 **Serpstack API Key**，并保存设置。
 4. 启用该模型的 **Web Search** 能力及其 **Web Search** 默认特性，或在当前对话中打开 Web Search。模型设置请参考 [原生搜索配置](/features/chat-conversations/web-search/agentic-search#how-to-enable-agentic-behavior)。

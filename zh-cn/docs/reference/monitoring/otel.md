@@ -103,6 +103,15 @@ WebUI 通过 OpenTelemetry 导出以下指标：
 | ----------------------- | -------- | ---- | -------------------------------------------- |
 | `http.server.requests`  | 计数器   | 1    | `http.method`、`http.route`、`http.status_code` |
 | `http.server.duration`  | 直方图   | ms   | 同上                                         |
+| `webui.users.total`    | 仪表     | users | 无                                  |
+| `webui.users.active`   | 仪表     | users | 无                                  |
+| `webui.users.active.today` | 仪表 | users | 无                              |
+
+这三个用户仪表盘在每次导出时从数据库读取：
+
+- `webui.users.total`：已注册用户数。
+- `webui.users.active`：最近 3 分钟内活跃的用户数。
+- `webui.users.active.today`：自今天 **UTC** 午夜以来活跃的用户数，而非本地午夜。
 
 如果希望让健康检查等路由不出现在 trace 和 HTTP 指标中，请将 `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS`（或 `OTEL_PYTHON_EXCLUDED_URLS`）设为逗号分隔的正则表达式。每个表达式都会在请求 URL 中的任意位置匹配，因此 `/health,/_app/immutable/.*` 也覆盖 `/health/db`。
 

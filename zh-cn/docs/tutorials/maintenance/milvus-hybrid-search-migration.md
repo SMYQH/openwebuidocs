@@ -17,7 +17,7 @@ Open WebUI 在 Milvus 2.5 及更高版本上使用原生混合搜索。旧版本
 - **迁移期间不要重启 Open WebUI。** 中断的运行会在下次启动时丢弃其部分副本，并从零重新开始。
 - 只有在所有副本都成功之后，你原有的集合才会被删除。如果某个副本失败，日志会显示 `Milvus migration to native hybrid search failed, all collections are kept unchanged.`，Open WebUI 会继续使用原有集合。
 - 如果你运行多个 Open WebUI 实例，升级时只启动其中一个，其余实例等出现 `Migrated` 那一行之后再启动。
-- 迁移完成后，只要 **Settings > Admin > Documents** 中开启了 **Hybrid Search**，混合搜索就会由 Milvus 自行执行。开启 **Enrich Hybrid Search Text**（或 [`ENABLE_RAG_HYBRID_SEARCH_ENRICHED_TEXTS`](/reference/env-configuration#enable_rag_hybrid_search_enriched_texts)）则会继续使用 Open WebUI 自己的关键词搜索。
+- 迁移完成后，只要 **Settings > Documents**（管理员区域） 中开启了 **Hybrid Search**，混合搜索就会由 Milvus 自行执行。开启 **Enrich Hybrid Search Text**（或 [`ENABLE_RAG_HYBRID_SEARCH_ENRICHED_TEXTS`](/reference/env-configuration#enable_rag_hybrid_search_enriched_texts)）则会继续使用 Open WebUI 自己的关键词搜索。
 
 ## 参考速度 {#reference-speeds}
 

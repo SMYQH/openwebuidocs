@@ -7,9 +7,6 @@ title: "软件开发"
 
 Open Terminal 使 AI 能够与真实的代码库交互：克隆仓库、运行测试、读取错误、安装依赖以及迭代修复。
 
-:::tip
-如需可从任何设备访问的完整开发环境，请参阅 [**Open WebUI Computer**](/ecosystem/computer)。你的计算机在浏览器标签页中。
-:::
 
 ---
 

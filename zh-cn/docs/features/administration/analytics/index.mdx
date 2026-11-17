@@ -8,7 +8,7 @@ title: "Analytics（分析）"
 Open WebUI 中的 **Analytics** 功能为管理员提供了关于实例使用模式、Token 消耗和模型性能的全面洞察。这一强大工具帮助您了解用户与 AI 模型的交互方式，并基于数据做出资源分配和模型选择决策。
 
 :::info 仅管理员可用
-Analytics 仅供拥有 **admin** 角色的用户访问。通过 **Settings > Admin > Analytics** 进入。
+Analytics 仅供拥有 **admin** 角色的用户访问。通过 **Settings > Analytics**（管理员区域） 进入。
 :::
 
 :::tip 禁用 Analytics
@@ -275,7 +275,7 @@ Token 数据在不同模型提供商（OpenAI、Ollama、llama.cpp 等）之间�
 
 每次对提供商的调用只计一次，即使提供商在每个流式数据块中都重新发送其用量。当一次回复因为模型使用工具而发起多次调用时，它们的用会被累加。没有用量数据的回复不会被记录，而只有部分调用上报用量的回复会被标记为部分。
 
-这些数字就是提供商所报告的数字，而大多数 OpenAI 兼容提供商在流式回复中除非被询问否则什么都不报告。**Workspace > Models > Edit** 中的 **Usage** 能力正是用来提出这一请求的，因此一个没有该能力的模型可能完全不显示 Token。参见[能力与绑定](/features/workspace/models#capabilities-and-bindings)。
+这些数字就是提供商所报告的数字，而大多数 OpenAI 兼容提供商在流式回复中除非被询问否则什么都不报告。**Settings > Models > Edit**（管理员区域）（自己的模型则用 **Workspace > Models**）中的 **Usage** 能力正是用来提出这一请求的，因此一个没有该能力的模型可能完全不显示 Token。参见[能力与绑定](/features/workspace/models#capabilities-and-bindings)。
 
 :::info 定时运行和委派运行同样会被计入
 获取 Token 计数的请求是在服务端添加的，因此启用了 **Usage** 的模型会在它运行的每个对话中报告 Token，包括 Open WebUI 通过[自动化](/features/chat-conversations/chat-features/automations)、[定时任务](/features/chat-conversations/chat-features/timers)、[子 agent](/features/chat-conversations/chat-features/subagents) 和 [channels](/features/channels) 代用户发起的那些运行。这些运行与用户手动输入的对话计入同一批总数。

@@ -35,7 +35,7 @@ curl "http://localhost:7000/mega/search?text=open+webui&limit=3"
 
 ## 2. 让 Open WebUI 指向它 {#2-point-open-webui-at-it}
 
-1. 前往 **Settings > Admin > Web Search**。
+1. 前往 **Settings > Web Search**（管理员区域）。
 2. 启用 **Web Search**。
 3. 将 **Web Search Engine** 设为 `openserp`。
 4. 将 **OpenSERP URL** 设为你自己的实例，例如 `http://localhost:7000`。只有在选中 `openserp` 后该字段才会出现。

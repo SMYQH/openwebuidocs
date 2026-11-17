@@ -164,10 +164,10 @@ Legacy 模式**已过时且不再受支持**。此处仅供参考。新部署必
 由于 v0.10.0 起 Native 是默认值，你永远不需要"开启 Native"。你可能需要的唯一工具调用切换是相反的：为那些依赖于旧的提示注入行为且无法迁移到更强的支持 Native 的模型的模型强制重新开启 **Legacy**。在你需要的任何作用域将**函数调用**设置为 `Legacy`（与下方 [Native 模式的控制方式](#how-to-enable-native-mode-agentic-mode) 相同）：
 
 1.  **一次性应用于所有模型（全局默认值，最快）**：
-    *   导航到**管理面板 → 设置 → 模型**。
+    *   导航到**设置 → 模型**（管理员区域）。
     *   点击模型列表**右上角**的**设置**按钮，打开**全局模型参数**（适用于*每个*模型，包括当前和未来的，除非特定模型覆盖它们）。
     *   在**模型参数**下，将**函数调用**设置为 `Legacy`，然后保存。每个未设置自己值的模型现在都将运行 Legacy。你**不需要**逐一编辑它们。
-2.  **按模型覆盖**：在**管理面板 → 设置 → 模型**中编辑特定模型，并在**模型参数**下将**函数调用**设置为 `Legacy`。仅覆盖该模型的全局默认值。
+2.  **按模型覆盖**：在**设置 → 模型**（管理员区域）中编辑特定模型，并在**模型参数**下将**函数调用**设置为 `Legacy`。仅覆盖该模型的全局默认值。
 3.  **按对话覆盖**：在对话中，打开**聊天控制 → 高级参数**，将**函数调用**设置为 `Legacy`。仅适用于该对话。
 
 :::info 更喜欢环境变量？使用 `DEFAULT_MODEL_PARAMS`
@@ -200,12 +200,12 @@ Native 模式（也称为 **Agentic 模式**）利用模型内置的能力处理
 Native 模式是**默认值**，因此新模型和现有模型都会使用它，除非明确设置为 Legacy。你仍然可以在以下层级显式设置 `Function Calling`（以固定为 Native，或将某个模型切换为 Legacy）：
 
 1.  **为所有模型固定 Native（可选，因为 Native 已经是默认值）**：
-    *   导航到 **设置 → 管理 → 模型**。
+    *   导航到 **设置 → 模型**（管理员区域）。
     *   点击模型列表顶部的 **模型默认值** 按钮。这会打开**全局模型参数**，它适用于实例中的*每个*模型（当前和未来），除非特定模型覆盖它们。
     *   在 **模型参数**下，将 **函数调用** 设置为 `Native`。
     *   保存。这只会重申既有的默认值；通常你无需设置它。只有在希望显式固定该值而不是依赖默认值时才使用它。
 2.  **按模型覆盖**：
-    *   在 **设置 → 管理 → 模型**中，选择特定模型并点击其编辑按钮。
+    *   在 **设置 → 模型**（管理员区域）中，选择特定模型并点击其编辑按钮。
     *   打开 **高级参数** 一行，将 **函数调用** 设置为 `Native`。此值仅覆盖该模型的全局默认值。
     *   当特定模型需要不同参数时使用此选项——否则优先使用全局设置。
 3.  **按对话覆盖**：
@@ -213,11 +213,11 @@ Native 模式是**默认值**，因此新模型和现有模型都会使用它，
     *   在 **高级参数** 下，将 **函数调用** 设置为 `Native`。仅适用于该对话。
 
 :::tip 一次性、全局地设置任意参数
-**设置 → 管理 → 模型** 中的 **模型默认值** 可一次性为每个模型（当前和未来）设置任意模型参数（`function_calling`、temperature、top_p、max_tokens 等），除非特定模型覆盖它。对应的环境变量是 `DEFAULT_MODEL_PARAMS`（参见[如何将所有模型切换到 Legacy 模式](#enable-legacy-for-all-models)）。
+**设置 → 模型**（管理员区域） 中的 **模型默认值** 可一次性为每个模型（当前和未来）设置任意模型参数（`function_calling`、temperature、top_p、max_tokens 等），除非特定模型覆盖它。对应的环境变量是 `DEFAULT_MODEL_PARAMS`（参见[如何将所有模型切换到 Legacy 模式](#enable-legacy-for-all-models)）。
 :::
 #### 工具调用标签 {#tool-call-labels}
 
-已完成的工具调用会在对话中显示为 **查看来自** 加工具名称。在 **设置 > 管理 > 界面** 中开启 **工具调用标签**（[`ENABLE_TOOL_CALL_LABELS`](/reference/env-configuration#enable_tool_call_labels)），可以让模型用用户的语言为每次调用写一段简短标签：调用进行中显示一个，完成后再显示一个。Open WebUI 会为每个工具添加一个必需的 `__labels__` 参数，并在工具运行前将其移除。隐藏的工具以及参数不是纯 JSON 对象的工具仍使用默认行。
+已完成的工具调用会在对话中显示为 **查看来自** 加工具名称。在 **设置 > 界面**（管理员区域） 中开启 **工具调用标签**（[`ENABLE_TOOL_CALL_LABELS`](/reference/env-configuration#enable_tool_call_labels)），可以让模型用用户的语言为每次调用写一段简短标签：调用进行中显示一个，完成后再显示一个。Open WebUI 会为每个工具添加一个必需的 `__labels__` 参数，并在工具运行前将其移除。隐藏的工具以及参数不是纯 JSON 对象的工具仍使用默认行。
 
 #### 模型要求与注意事项 {#model-requirements--caveats}
 
@@ -293,7 +293,7 @@ Open WebUI 在执行调用前会修复常见的参数问题：
 
 ### 工具审批 {#tool-approval}
 
-默认情况下，模型一旦发起工具调用就会立即执行。管理员可以在 **设置 > 管理 > 界面** 中开启 **工具权限**（[`ENABLE_TOOL_PERMISSIONS`](/reference/env-configuration#enable_tool_permissions)）来提供更多模式。该功能为**实验性**功能，默认关闭。
+默认情况下，模型一旦发起工具调用就会立即执行。管理员可以在 **设置 > 界面**（管理员区域） 中开启 **工具权限**（[`ENABLE_TOOL_PERMISSIONS`](/reference/env-configuration#enable_tool_permissions)）来提供更多模式。该功能为**实验性**功能，默认关闭。
 
 开启后，对话输入框的 **+** 菜单会新增 **工具权限** 项，包含两种选择；开启 **自动权限** 时则包含三种：
 
@@ -311,7 +311,7 @@ Open WebUI 在执行调用前会修复常见的参数问题：
 
 #### 自动 {#auto}
 
-管理员在 **设置 > 管理 > 界面** 的 **工具权限** 下方开启 **自动权限**（[`ENABLE_TOOL_PERMISSIONS_AUTO`](/reference/env-configuration#enable_tool_permissions_auto)），并选择决定哪些调用需要审批的 **引擎**：
+管理员在 **设置 > 界面**（管理员区域） 的 **工具权限** 下方开启 **自动权限**（[`ENABLE_TOOL_PERMISSIONS_AUTO`](/reference/env-configuration#enable_tool_permissions_auto)），并选择决定哪些调用需要审批的 **引擎**：
 
 | 设置 | 默认值 |
 | :--- | :--- |
@@ -338,7 +338,7 @@ Open WebUI 在执行调用前会修复常见的参数问题：
 
 启用大量工具后，仅工具定义就可能占据每个请求的很大一部分。**工具搜索** 会把庞大的工具定义排除在请求之外，直到模型主动索取。该功能为**实验性**功能，默认关闭，仅适用于原生模式下的对话。
 
-管理员在 **设置 > 管理 > 界面** 的 **对话** 部分开启它。这些设置适用于所有模型和所有用户：
+管理员在 **设置 > 界面**（管理员区域） 的 **对话** 部分开启它。这些设置适用于所有模型和所有用户：
 
 | 设置 | 默认值 | 作用 |
 | :--- | :--- | :--- |
@@ -348,7 +348,7 @@ Open WebUI 在执行调用前会修复常见的参数问题：
 | **延迟阈值（字符数）**（[`TOOL_SEARCH_DEFER_THRESHOLD`](/reference/env-configuration#tool_search_defer_threshold)） | `400` | 定义（名称、描述和参数 schema，以 JSON 表示）超过该字符数的工具会被延迟。设为 `0` 会延迟所有工具。 |
 | **始终加载的工具**（[`TOOL_SEARCH_ALWAYS_LOADED`](/reference/env-configuration#tool_search_always_loaded)） | 空 | 以逗号分隔的工具名称或通配模式，例如 `jira_create_issue, github_*`，这些工具始终完整发送。匹配区分大小写。 |
 
-![设置 > 管理 > 界面中的对话部分，已开启工具搜索，延迟内置工具，延迟阈值（字符数）设为 400，始终加载的工具为空](/images/features/plugin/tools/tool-search-settings.webp)
+![设置 > 界面中的对话部分（管理员区域），已开启工具搜索，延迟内置工具，延迟阈值（字符数）设为 400，始终加载的工具为空](/images/features/plugin/tools/tool-search-settings.webp)
 
 工作原理：
 
@@ -388,7 +388,7 @@ Open WebUI 在执行调用前会修复常见的参数问题：
 | **搜索与网络** | *需要启用 `ENABLE_WEB_SEARCH`，并且开启对话级别的 "Web Search" 开关。* |
 | `search_web` | 在公网上搜索信息。适合时事、外部资料或内部文档未覆盖的话题。 |
 | `fetch_url` | 访问 URL，并通过 Web Loader 提取文本内容。 |
-| **知识库** | *需要在模型级别启用 "Knowledge Base" 类别（默认开启）。实际注入哪些工具取决于模型是否附加了知识；参见下方说明。* |
+| **知识库** | *需要在模型级别启用 "Knowledge Base" 类别（默认开启）。实际注入哪些工具取决于知识是否附加到模型、文件夹或对话；参见下方说明。* |
 | `list_knowledge` | 列出附加的知识（知识库、文件、笔记）。存在附件时从这里开始。 |
 | `list_knowledge_bases` | 列出可访问的知识库及其文件数量。 |
 | `query_knowledge_bases` | 对知识库名称和描述做语义搜索，以找到合适的知识库。 |
@@ -488,19 +488,21 @@ Open WebUI 在执行调用前会修复常见的参数问题：
 
 用这张速查表即可，无需死记每一行的注释说明。
 
-| 工具 | 模型附加了知识 | 模型没有附加知识 |
+| 工具 | 已附加知识 | 未附加任何内容 |
 |------|------------------------------|---------------------------------|
 | `list_knowledge` | 是 | 否 |
 | `list_knowledge_bases` | 否 | 是 |
 | `search_knowledge_bases` | 否 | 是 |
 | `query_knowledge_bases` | 否 | 是 |
-| `search_knowledge_files` | 是（自动限定范围） | 是（所有可访问的知识库） |
-| `query_knowledge_files` | 是（自动限定范围） | 是 |
-| `grep_knowledge_files` | 是（自动限定范围） | 是 |
-| `view_file` | 是（附加项包含文件 / 集合时） | 否 |
-| `view_knowledge_file` | 是（附加项包含文件 / 集合时） | 是 |
-| `display_file` | 是（附加项包含文件 / 集合时） | 是 |
-| `view_note` | 是（附加项包含笔记时） | 否 |
+| `search_knowledge_files` | 是（仅已附加） | 是（所有可访问的知识库） |
+| `query_knowledge_files` | 是（仅已附加） | 是（所有可访问的知识库） |
+| `grep_knowledge_files` | 是（仅已附加） | 是（所有可访问的知识库） |
+| `view_file` | 附加了知识库或文件时 | 否 |
+| `view_knowledge_file` | 附加了知识库或文件时 | 是 |
+| `display_file` | 附加了知识库或文件时 | 是 |
+| `view_note` | 附加了笔记时 | 否 |
+
+`view_note` 还会随独立的 **笔记** 类别提供，无论附加了什么内容，每个对话中都有。
 
 快速规则：`list_knowledge` 和 `list_knowledge_bases` 是互斥的。
 
@@ -510,10 +512,12 @@ Open WebUI 在执行调用前会修复常见的参数问题：
 - 附加到该对话所属[文件夹](/features/chat-conversations/chat-features/conversation-organization)的知识；
 - 附加到对话本身的知识库和笔记——只有在模型的 **预加载文件** 能力关闭时才会计入，因为开启时内容已经在对话里了。
 
-当 **知识库** 类别已启用且上述内容存在时，用户消息之后会附带一条隐藏的 `list_attached_knowledge` 工具结果，其中包含一个 `<attached_knowledge>` 块，列出每一项的类型、ID 和名称，以及它来自模型还是文件夹。对话附件不会被列出，因为每条用户消息本身都会指明自己的附件。如果没有任何附加内容，或回复是延续上一轮，该结果会被跳过。这只是一份目录而不是内容本身：它告诉模型可以取用哪些东西，并把 ID 提供给 `query_knowledge_files` 等工具，使模型能够把搜索限定到某个知识库，而不必盲猜或全量搜索。
+[范围访问](/features/workspace/knowledge#scoped-access-keeps-things-organized)解释了原因，以及如何选择模型获得哪些内容。
+
+当 **知识库** 类别已启用且上述内容存在时，用户消息之后会附带一条隐藏的 `list_attached_knowledge` 工具结果，其中包含一个 `<attached_knowledge>` 块，列出每一项的类型、ID 和名称，以及它来自模型还是文件夹。对话附件不会被列出，因为每条用户消息本身都会指明自己的附件。如果没有任何附加内容，或回复是延续上一轮，该结果会被跳过。这只是一份目录而不是内容本身：它告诉模型可以取用哪些东西，并把 ID 提供给 `list_knowledge` 和 `search_knowledge_files` 等工具，使模型能够翻页或搜索某个知识库。
 
 :::info 启用后 `kb_exec` 会取代这张矩阵
-设置 [`ENABLE_KB_EXEC`](/reference/env-configuration#enable_kb_exec) 后，Open WebUI 会用 `kb_exec` 取代上面列出的面向文件的工具。仍然与它一同注入的有：`query_knowledge_files` 和 `display_file`（始终注入）、`view_note`（附加了笔记时），以及 `query_knowledge_bases` + `search_knowledge_bases`（没有附加知识库时）。模型通过熟悉的 shell 命令与文件交互。详情参见[知识功能页面](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
+设置 [`ENABLE_KB_EXEC`](/reference/env-configuration#enable_kb_exec) 后，Open WebUI 会用 `kb_exec` 取代上面列出的面向文件的工具。仍然与它一同注入的有：`query_knowledge_files` 和 `display_file`（始终注入）、`view_note`（附加了笔记时），以及 `query_knowledge_bases` + `search_knowledge_bases`（什么都没附加时）。模型通过熟悉的 shell 命令与文件交互。详情参见[知识功能页面](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
 :::
 #### 工具参考 {#tool-reference}
 
@@ -617,7 +621,7 @@ Open WebUI 在你登录时自动检测并存储你的时区。这允许与时间
 :::
 
 :::warning 知识工具注入取决于附件
-知识工具的可用性根据模型是否有附加知识而变化。使用上面的**知识工具可用性**矩阵作为参考依据。
+知识工具的可用性根据知识是否附加到模型、文件夹或对话而变化。使用上面的**知识工具可用性**矩阵作为参考依据。
 
 - 有附件时：模型获得范围限定的知识工具。
 - 无附件时：模型获得知识库发现工具。
@@ -631,7 +635,7 @@ Open WebUI 在你登录时自动检测并存储你的时区。这允许与时间
 
 | 附加类型 | 用户所需权限 |
 |---------------|-----------|
-| **知识库**（集合） | 所有者、管理员，或显式的读取访问授权 |
+| **知识库** | 所有者、管理员，或显式的读取访问授权 |
 | **单个文件** | 任何能使用该模型的人（附加时会以模型作者的身份校验） |
 | **笔记** | 所有者、管理员，或显式的读取访问授权 |
 
@@ -664,7 +668,7 @@ Open WebUI 在你登录时自动检测并存储你的时区。这允许与时间
 **如果你的模型没有使用附加知识：**
 1. **在系统提示词中加入明确指令**，要求模型先发现再查询知识库。例如：*“当用户提问时，先使用 list_knowledge 查看可用知识，再用 query_knowledge_files 搜索相关知识库后再回答。如果该模型未附加知识，请先调用 list_knowledge_bases 来发现可用 KB。”*
 2. **或者为该模型关闭 Native 函数调用**，恢复自动的 RAG 注入行为。
-3. **或者对附加知识使用"使用整篇文档"**（点击附件并切换其模式），它始终会注入完整内容。
+3. **或者在聊天中以"使用整篇文档"模式附加一个小文档**（点击附件并切换其模式），同时开启模型的 **预加载文件** 能力，这样会注入其完整内容。附加到模型或文件夹上的知识在原生模式下永远不会被注入。
 
 更多细节请参见[使用原生函数调用时的知识限定范围](/features/workspace/knowledge#scoped-access-keeps-things-organized)。
 :::
@@ -702,7 +706,7 @@ Open WebUI 在你登录时自动检测并存储你的时区。这允许与时间
 | **记忆** | `search_memories`、`list_memory_paths`、`read_memory_path`、`list_memories`、`update_memory`、`add_memory`、`replace_memory_content`、`delete_memory` | 搜索并管理用户记忆 |
 | **聊天历史** | `search_chats`、`view_chat` | 搜索并查看用户的聊天历史 |
 | **笔记** | `search_notes`、`view_note`、`write_note`、`replace_note_content` | 搜索、查看并管理用户笔记 |
-| **知识库** | `list_knowledge`、`list_knowledge_bases`、`search_knowledge_bases`、`query_knowledge_bases`、`search_knowledge_files`、`query_knowledge_files`、`grep_knowledge_files`、`view_file`、`view_knowledge_file`、`display_file`（或启用 [`ENABLE_KB_EXEC`](/reference/env-configuration#enable_kb_exec) 后按需使用 `kb_exec` + `query_knowledge_files` + `display_file` + `view_note`/`query_knowledge_bases`/`search_knowledge_bases`） | 浏览并查询知识库 |
+| **知识库** | `list_knowledge`、`list_knowledge_bases`、`search_knowledge_bases`、`query_knowledge_bases`、`search_knowledge_files`、`query_knowledge_files`、`grep_knowledge_files`、`view_file`、`view_knowledge_file`、`display_file`，附加了笔记时还有 `view_note`（或启用 [`ENABLE_KB_EXEC`](/reference/env-configuration#enable_kb_exec) 后按需使用 `kb_exec` + `query_knowledge_files` + `display_file` + `view_note`/`query_knowledge_bases`/`search_knowledge_bases`） | 浏览并查询知识库 |
 | **网页搜索** | `search_web`、`fetch_url` | 搜索网页并抓取 URL 内容 |
 | **图像生成** | `generate_image`、`edit_image` | 生成和编辑图像 |
 | **代码解释器** | `execute_code` | 在沙箱环境中执行代码 |
@@ -773,7 +777,7 @@ Open WebUI 在你登录时自动检测并存储你的时区。这允许与时间
 :::
 
 :::tip 完整的 Agentic 体验
-如果希望用户开箱即拥有完整的 Agentic 体验，管理员可以把**网页搜索**、**图像生成**和**代码解释器**设为某个模型的默认功能。在 **设置 > 管理 > 模型** 中点击目标模型的铅笔图标（**编辑**），并在 **Default Features** 下打开这三项。这样它们默认在每个新对话中生效，用户无需逐一手动开启。若有需要，用户仍然可以按对话将其关闭。
+如果希望用户开箱即拥有完整的 Agentic 体验，管理员可以把**网页搜索**、**图像生成**和**代码解释器**设为某个模型的默认功能。在 **设置 > 模型**（管理员区域） 中点击目标模型的铅笔图标（**编辑**），并在 **Default Features** 下打开这三项。这样它们默认在每个新对话中生效，用户无需逐一手动开启。若有需要，用户仍然可以按对话将其关闭。
 :::
 
 :::tip 内置工具与预加载文件的区别

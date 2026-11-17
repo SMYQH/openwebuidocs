@@ -43,7 +43,7 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 | **Memory** | 在 Native 函数调用下，召回的记忆会作为隐藏的 `recall_memories` 工具结果在每条回复中于你的消息之后加入一次；否则它们会在每一轮被追加到你的消息上 | Native 下无影响；Legacy 下影响高：记忆一变就会变化 |
 | **"Using Entire Document"** | 把整个文件注入每一条消息 | 极高：但它是 **Preload files** 的一个子模式，只在 Preload files 开启时才会触发 |
 | **动态语音模式提示** | 在系统消息前附加一条简短的语音指令 | 低：语音模式开启期间保持不变 |
-| **附件元数据块** | 在该消息中以元数据（id 和名称）的形式列出所附带的文件、集合、笔记和聊天 | 低：只要附件不变就保持稳定 |
+| **附件元数据块** | 在该消息中以元数据（id 和名称）的形式列出所附带的文件、知识库、笔记和聊天 | 低：只要附件不变就保持稳定 |
 | **已附加的知识库列表** | 在 Native 函数调用下，附着于模型或文件夹的知识会在每条回复中作为隐藏的 `list_attached_knowledge` 工具结果于你的消息之后列出一次。没有可列内容时会跳过 | 无影响：随回复保存并原样重放 |
 | **Open Terminal `AGENTS.md`** | 在每一轮读取终端用户主目录下的 `AGENTS.md`，并把它作为一条用户消息加在第一条用户消息之前 | 只要该文件发生变化（例如模型在对话中途编辑了它），从第一条用户消息起的所有内容都会失效。系统消息与工具仍保持缓存 |
 | **Open Terminal 技能** | 把终端技能加入技能列表；在 Native 函数调用下，它是每条回复中一次的隐藏 `list_available_skills` 工具结果（没有技能时跳过）。在 Legacy 下，只有你选中的技能会被写入系统消息 | 只在添加或移除技能的那一轮改变请求的尾部。工具列表仅在第一个技能出现或最后一个技能消失时才会改变，因为只要列表中至少有一个技能，技能工具就会提供 |
@@ -92,7 +92,7 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 
 ### 2. 关闭 Preload files（这正是启用文件工具的开关） {#2-turn-preload-files-off-this-is-what-switches-the-file-tools-on}
 
-在模型上禁用 **Preload files** 能力（在 Native 函数调用下它默认关闭），同时保持 **File Upload** 启用。所附带的文件、集合、笔记和被引用的聊天仍会**以稳定的元数据形式呈现给模型**，放在携带它们的那条消息的 `<attached_files>` 块中，但它们的**内容不再被自动检索或注入**。参见 [Preload files 与 Builtin Tools 的对比](/features/chat-conversations/rag#preload-files-vs-builtin-tools)。
+在模型上禁用 **Preload files** 能力（在 Native 函数调用下它默认关闭），同时保持 **File Upload** 启用。所附带的文件、知识库、笔记和被引用的聊天仍会**以稳定的元数据形式呈现给模型**，放在携带它们的那条消息的 `<attached_files>` 块中，但它们的**内容不再被自动检索或注入**。参见 [Preload files 与 Builtin Tools 的对比](/features/chat-conversations/rag#preload-files-vs-builtin-tools)。
 
 关闭 Preload files 还会让内置的文件工具变得可用，模型可以自行读取和搜索聊天附件：
 
@@ -107,8 +107,8 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 
 此时检索变为**按需进行**：由模型决定取什么并调用工具。工具结果被追加到对话的**末尾**，因此永远不会重写缓存前缀。
 
-:::info 聊天附带的集合与笔记不会成为孤儿
-关闭 Preload files 还会把聊天附带的任何知识库集合或笔记重新路由到知识工具路径，使它们仍可通过 `query_knowledge_files` 等工具检索，而不会变得无从访问。
+:::info 聊天附带的知识库与笔记不会成为孤儿
+关闭 Preload files 还会把聊天附带的任何知识库或笔记重新路由到知识工具路径，使它们仍可通过 `query_knowledge_files` 等工具检索。随后这些知识工具将[仅检索已附加的知识](/features/workspace/knowledge#scoped-access-keeps-things-organized)。
 
 用 `#` 附带或拖入输入框的**聊天文件夹**只能通过 Preload files 抵达模型，而后者是从该文件夹附带的知识中检索的。关闭 Preload files 后，请直接用 `#` 附带该文件夹的知识库和文件，或者在文件夹内部开启聊天，此时其中的知识会经由知识工具处理。
 :::
@@ -143,7 +143,7 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 | 资源 | 工具 | 分类 |
 |---|---|---|
 | 聊天附带的文件 | `list_chat_files`、`query_chat_files`、`grep_chat_files`、`view_file`、`display_file` | **Files** |
-| 知识库与集合，包括聊天所在文件夹的知识 | `query_knowledge_files`、`search_knowledge_files`、`grep_knowledge_files`、`view_knowledge_file`、`display_file`，以及在模型未附加知识时用于发现的工具 | **Knowledge Base** |
+| 知识库，包括聊天所在文件夹的知识 | `query_knowledge_files`、`search_knowledge_files`、`grep_knowledge_files`、`view_knowledge_file`、`display_file`，以及在模型未附加知识时用于发现的工具 | **Knowledge Base** |
 | 笔记 | `search_notes`、`view_note` | **Notes** |
 | 用户的聊天 | `search_chats`、`view_chat` | **Chat History** |
 
@@ -195,7 +195,7 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 
 ## 汇总检查清单 {#summary-checklist}
 
-在 **Settings > Admin > Models** 中针对模型，点击铅笔图标（**Edit**），然后进入 **Capabilities** 与 **Builtin Tools**：
+在 **Settings > Models**（管理员区域） 中针对模型，点击铅笔图标（**Edit**），然后进入 **Capabilities** 与 **Builtin Tools**：
 
 - [ ] 静态系统提示（不每轮重新生成）
 - [ ] 开启 **File Upload**，关闭 **Preload files**，不做自动内容注入（这也会禁用 "Using Entire Document"），**并且**正是它负责注入文件工具

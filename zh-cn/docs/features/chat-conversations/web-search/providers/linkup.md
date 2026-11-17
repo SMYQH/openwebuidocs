@@ -47,7 +47,7 @@ Linkup 支持已在 Open WebUI v0.9.6 中加入。
 ### 2. 配置 Open WebUI {#2-configure-open-webui}
 
 1. 使用管理员账号登录 Open WebUI。
-2. 打开 **Admin Panel → Settings → Web Search**。
+2. 打开 **Settings → Web Search**（管理员区域）。
 3. 将 **Web Search** 切换为 **On**。
 4. 在 **Web Search Engine** 下拉框中选择 **linkup**。
 5. 将你的 Linkup API key 粘贴到 **Linkup API Key** 字段。

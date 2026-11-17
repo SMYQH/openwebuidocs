@@ -5,6 +5,10 @@ title: "Hermes Agent"
 
 # Hermes Agent {#hermes-agent}
 
+:::tip 通过 Open Terminal 使用 Hermes
+如果你希望 Hermes 在你选定的终端工作区中运行，并在聊天中进行智能体交互，请使用 [Open Terminal 快速开始](/getting-started/quick-start/connect-an-agent#quick-start-with-open-terminal)。在那里安装并配置 Hermes；Open Terminal 通过 `hermes acp` 连接。下文指南介绍的是另一条独立的网关 API 接入路径。
+:::
+
 **把 Open WebUI 作为 Nous Research 自主 AI Agent 的聊天前端。**
 
 [Hermes Agent](https://github.com/NousResearch/hermes-agent) 是 **Nous Research** 开发的自主 AI Agent，内置终端访问、文件操作、网页搜索、记忆和可扩展技能。它会暴露一个**兼容 OpenAI 的 API 服务**，因此接入 Open WebUI 只需几分钟。
@@ -71,7 +75,7 @@ Open WebUI 需要依赖该 gateway 与你的 Agent 通信。对于长期部署�
 ## 第 4 步：在 Open WebUI 中添加连接 {#step-4-add-the-connection-in-open-webui}
 
 1. 在浏览器中打开 Open WebUI。
-2. 进入 ⚙️ **管理面板** → **连接** → **OpenAI**。
+2. 进入 **Settings > Connections**（管理员区域），找到 **Manage OpenAI API Connections** 列表。
 3. 点击 ➕ **添加连接**。
 4. 填写以下内容：
 

@@ -47,7 +47,7 @@ services:
 ### Admin Panel 设置 {#admin-panel-setup}
 
 1. 使用管理员账号登录 Open WebUI
-2. 前往 **Admin Panel** → **Settings** → **Web Search**
+2. 前往 **Settings** → **Web Search**（管理员区域）
 3. 将 **Web Search** 切换为 **On**
 4. 在 **Web Search Engine** 下拉框中选择 **youcom**
 5. 将你的 You.com API key 粘贴到 **You.com API Key** 字段

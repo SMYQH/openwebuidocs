@@ -25,7 +25,7 @@ title: "备份"
 
 :::note
 
-**管理设置 > 数据库**中的 **Database** 下载并不是推荐的数据库备份方式。它按磁盘上的原样流式传输 `webui.db`；在 SQLite WAL 模式下，最近的写入可能仍保存在 `webui.db-wal` 中，因此该文件可能缺少近期数据。请按照[导出与导入数据库](/tutorials/maintenance/database)中的说明自行复制数据库文件，或在 PostgreSQL 上使用 `pg_dump`。
+**设置 > 数据库**（管理员区域）中的 **Database** 下载并不是推荐的数据库备份方式。它按磁盘上的原样流式传输 `webui.db`；在 SQLite WAL 模式下，最近的写入可能仍保存在 `webui.db-wal` 中，因此该文件可能缺少近期数据。请按照[导出与导入数据库](/tutorials/maintenance/database)中的说明自行复制数据库文件，或在 PostgreSQL 上使用 `pg_dump`。
 
 :::
 

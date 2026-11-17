@@ -7,6 +7,8 @@ title: "Google PSE"
 
 **新的 Google PSE 项目已不再受支持。** Google 已将旧版 JSON API 限制为仅面向现有客户开放。新用户在使用 Google PSE 时会收到 `403 Forbidden` 错误。
 
+现有项目同样有终止日期。Google 的 [Custom Search JSON API 概览](https://developers.google.com/custom-search/v1/overview)写道："现有 Custom Search JSON API 客户可过渡到替代方案，期限为 2027 年 1 月 1 日。"Open WebUI 中的 `google_pse` 引擎会把搜索请求发送到该 API，因此如果你正在使用它，请在该日期之前从[网页搜索](/features/chat-conversations/web-search)页面选择其他引擎。
+
 :::
 
 :::warning

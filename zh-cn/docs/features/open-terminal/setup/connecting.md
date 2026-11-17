@@ -19,13 +19,13 @@ Open Terminal 已[安装并运行](./installation.mdx)。本指南介绍如何�
 
 ![显示 Settings 选项的用户菜单](/images/open-terminal-user-menu.png)
 
-### 2. 进入 Settings > Admin > Integrations {#2-go-to-settings--admin--integrations}
+### 2. 进入 Settings > Integrations（管理员区域） {#2-go-to-settings--integrations-admin-section}
 
 在设置侧边栏中找到 **Admin** 区域，然后点击 **Integrations**。
 
 设置侧边栏会列出两次 **Integrations**：一次在 *Services* 分组下的 **Personal** 中，一次在 *Tools* 分组下的 **Admin** 中。Open Terminal 属于后者。配置 Personal 那一项只会把终端连接到你自己账户，本文档所描述的部署方式将无法工作。
 
-![Settings > Admin > Integrations](/images/open-terminal-integrations-page.png)
+![Settings > Integrations（管理员区域）](/images/open-terminal-integrations-page.png)
 
 ### 3. 找到 "Open Terminal" 区域 {#3-find-the-open-terminal-section}
 
@@ -123,7 +123,7 @@ AI 应该会使用 Open Terminal 运行一条命令，然后告诉你答案。
 
 如果需要在没有管理员权限的情况下测试连接，可以从设置的 **Personal** 部分、*Services* 分组下的 **Integrations → Open Terminal** 添加。URL 和 API Key 字段相同，但该连接只属于你自己，而不属于整个实例。
 
-个人的 **Integrations** 标签页只有在管理员于 **Settings > Admin > Integrations** 的 **User Connections** 区域开启了 **Direct Integrations**（或 [`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)）时才会显示。在它关闭期间，保存在那里的连接不会在聊天中生效。
+个人的 **Integrations** 标签页只有在管理员于 **Settings > Integrations**（管理员区域） 的 **User Connections** 区域开启了 **Direct Integrations**（或 [`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)）时才会显示。在它关闭期间，保存在那里的连接不会在聊天中生效。
 
 ---
 

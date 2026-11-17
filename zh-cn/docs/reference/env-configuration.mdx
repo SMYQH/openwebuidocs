@@ -169,7 +169,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 - 类型：`bool`
 - 默认值：`True`
 - 描述：控制登录页上是否显示邮箱和密码字段、登录按钮以及“或”分隔元素（该分隔元素仅在 `ENABLE_OAUTH_SIGNUP` 开启时显示）。关闭它还会拒绝 `POST /api/v1/auths/signup` 上的本地注册，因此仅使用 SSO 的实例无法通过该方式创建账户；引导创建首位管理员请参阅 [`ENABLE_INITIAL_ADMIN_SIGNUP`](#enable_initial_admin_signup)。通过 API 的密码登录不受影响，它遵循 `ENABLE_PASSWORD_AUTH`。在关闭此项之前请先配置好 SSO 或 LDAP，否则任何人都无法登录。
-- 同时也是一个开关：**设置 > 管理 > 身份验证**中的**登录表单**，立即生效，无需重启。
+- 同时也是一个开关：**设置 > 身份验证**（管理员区域）中的**登录表单**，立即生效，无需重启。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `ENABLE_PASSWORD_CHANGE_FORM` {#enable\_password\_change\_form}
@@ -217,7 +217,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`str`
 - 默认值：空字符串（`''`）
-- 描述：设置默认语言模型。可接受用逗号分隔的多个 ID，在新聊天中预先选中这组模型。已不存在或被隐藏的模型会从新聊天的选择中剔除，并由这些默认值替代，因此上次使用的模型已被移除的用户仍会以一个可用的模型开始。用户自己设置的默认模型，以及 `model` 或 `models` [URL 参数](/features/chat-conversations/chat-features/url-params)都优先于此项，且不受其影响。[在群组上设置的默认模型](/features/authentication-access/rbac/groups#default-models-per-group)会为该群组成员替换此列表。在界面中，该列表按模型在**设置 > 管理 > 模型**下的**设为选中模型**进行管理，参见[已选与保留的模型](/features/workspace/models#selected-and-pinned-models-admin)。
+- 描述：设置默认语言模型。可接受用逗号分隔的多个 ID，在新聊天中预先选中这组模型。已不存在或被隐藏的模型会从新聊天的选择中剔除，并由这些默认值替代，因此上次使用的模型已被移除的用户仍会以一个可用的模型开始。用户自己设置的默认模型，以及 `model` 或 `models` [URL 参数](/features/chat-conversations/chat-features/url-params)都优先于此项，且不受其影响。[在群组上设置的默认模型](/features/authentication-access/rbac/groups#default-models-per-group)会为该群组成员替换此列表。在界面中，该列表按模型在**设置 > 模型**（管理员区域）下的**设为选中模型**进行管理，参见[已选与保留的模型](/features/workspace/models#selected-and-pinned-models-admin)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -232,7 +232,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`str`
 - 默认值：空字符串（`''`）
-- 描述：为尚未自行置顶任何模型的用户预置默认置顶模型的 ID 列表，以逗号分隔。这会为新账户在侧边栏中准备一组现成的模型快捷方式。它只在首次为用户自身的置顶列表做种子填充；之后用户的置顶优先。在界面中，该列表按模型在**设置 > 管理 > 模型**下的**设为置顶模型**进行管理，参见[已选与保留的模型](/features/workspace/models#selected-and-pinned-models-admin)。
+- 描述：为尚未自行置顶任何模型的用户预置默认置顶模型的 ID 列表，以逗号分隔。这会为新账户在侧边栏中准备一组现成的模型快捷方式。它只在首次为用户自身的置顶列表做种子填充；之后用户的置顶优先。在界面中，该列表按模型在**设置 > 模型**（管理员区域）下的**设为置顶模型**进行管理，参见[已选与保留的模型](/features/workspace/models#selected-and-pinned-models-admin)。
 - 示例：`gpt-5.6-sol,claude-opus-5,muse-glimmer:30b-q4_K_M`
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -241,7 +241,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`dict`（JSON 对象）
 - 默认值：`{}`
-- 描述：设置所有模型的全局默认元数据（能力以及其它模型信息）。这些默认值作为基线，按模型覆盖项始终优先。对于能力，默认值与按模型的取值会合并（冲突时以按模型的取值为准）。对于其它元数据字段，只有当模型没有设置对应取值时才会应用默认值。可通过 **设置 → 管理 → 模型** 配置。
+- 描述：设置所有模型的全局默认元数据（能力以及其它模型信息）。这些默认值作为基线，按模型覆盖项始终优先。对于能力，默认值与按模型的取值会合并（冲突时以按模型的取值为准）。对于其它元数据字段，只有当模型没有设置对应取值时才会应用默认值。可通过 **设置 → 模型**（管理员区域） 配置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `models.default_metadata`。
 
 :::info
@@ -257,7 +257,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 #### `DEFAULT_MODEL_PARAMS` {#default\_model\_params}
 - 类型：`dict`（JSON 对象）
 - 默认值：`{}`
-- 描述：为所有模型设置全局默认参数（temperature、top_p、max_tokens、seed 等）。这些默认值会在聊天补全时作为基线应用。按模型设置的参数覆盖始终优先生效。可通过**设置 > 管理 > 模型**（**模型默认值** > **模型参数**）进行配置。
+- 描述：为所有模型设置全局默认参数（temperature、top_p、max_tokens、seed 等）。这些默认值会在聊天补全时作为基线应用。按模型设置的参数覆盖始终优先生效。可通过**设置 > 模型**（管理员区域）（**模型默认值** > **模型参数**）进行配置。
 - 持久化：这是一个 `ConfigVar` 变量。存储在配置键 `models.default_params`。
 
 :::info
@@ -275,7 +275,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`dict`（JSON 对象）
 - 默认值：`{}`
-- 描述：设置 **设置 > 界面** 中个人选项的实例级初始值，使每个账户打开时都使用你的偏好而不是内置默认值，例如 `{"chatBubble": false, "widescreenMode": true, "chatHoverPreview": false}`。用户自己的选择始终优先。没有人改动过的选项会继续跟随默认值，因此之后修改默认值会同时影响所有未覆盖过它的用户。这些默认值也会作用于在**界面**页面之外写入的个人设置，例如 `system` 和 `params`，而管理编辑器并不提供这些项。可在 **设置 > 管理 > 常规 > UI > 默认界面设置** 中配置。完整的键列表、标签和内置值参见[默认界面设置](/features/administration/interface-defaults)。
+- 描述：设置 **设置 > 界面** 中个人选项的实例级初始值，使每个账户打开时都使用你的偏好而不是内置默认值，例如 `{"chatBubble": false, "widescreenMode": true, "chatHoverPreview": false}`。用户自己的选择始终优先。没有人改动过的选项会继续跟随默认值，因此之后修改默认值会同时影响所有未覆盖过它的用户。这些默认值也会作用于在**界面**页面之外写入的个人设置，例如 `system` 和 `params`，而管理编辑器并不提供这些项。可在 **设置 > 常规 > UI > 默认界面设置**（管理员区域） 中配置。完整的键列表、标签和内置值参见[默认界面设置](/features/administration/interface-defaults)。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `ui.default_interface_settings`。
 
 :::info
@@ -291,7 +291,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`dict`（JSON 对象）
 - 默认值：`{}`（显示所有控件）
-- 描述：向非管理员用户隐藏控件。将某个控件 ID 设为 `false` 即可隐藏它，例如 `{"chat.fork": false, "models.pin": false, "settings.usage": false}`。管理员始终能看到所有控件。隐藏只是把控件从界面上移除，其背后的功能仍然可用。也可在 **管理面板 > 设置 > 界面** 的**可见控件**中配置。
+- 描述：向非管理员用户隐藏控件。将某个控件 ID 设为 `false` 即可隐藏它，例如 `{"chat.fork": false, "models.pin": false, "settings.usage": false}`。管理员始终能看到所有控件。隐藏只是把控件从界面上移除，其背后的功能仍然可用。也可在 **设置 > 界面**（管理员区域） 的**可见控件**中配置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `ui.visibility`。
 
 :::info
@@ -442,14 +442,14 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：在私信和私有群组频道中启用临时的端到端[加密聊天](/features/channels/encrypted-chats)。消息在浏览器中加密，服务器只负责转发而不做存储。同时需要开启 [`ENABLE_CHANNELS`](#enable_channels)。用户还需要 [`USER_PERMISSIONS_FEATURES_ENCRYPTED_CHANNELS`](#user_permissions_features_encrypted_channels) 和 [`USER_PERMISSIONS_FEATURES_CHANNELS`](#user_permissions_features_channels) 权限；管理员始终具备。加密聊天需要 websocket 连接（HTTP 长轮询会被拒绝）、需要关闭 [`WEBSOCKET_SERVER_LOGGING`](#websocket_server_logging) 和 [`WEBSOCKET_SERVER_ENGINEIO_LOGGING`](#websocket_server_engineio_logging)，并且当 [`ENV`](#env) 为 `prod` 时需要 HTTPS。也可在**设置 > 管理 > 常规**（**加密频道**）中设置，启用频道后该选项才会出现。
+- 描述：在私信和私有群组频道中启用临时的端到端[加密聊天](/features/channels/encrypted-chats)。消息在浏览器中加密，服务器只负责转发而不做存储。同时需要开启 [`ENABLE_CHANNELS`](#enable_channels)。用户还需要 [`USER_PERMISSIONS_FEATURES_ENCRYPTED_CHANNELS`](#user_permissions_features_encrypted_channels) 和 [`USER_PERMISSIONS_FEATURES_CHANNELS`](#user_permissions_features_channels) 权限；管理员始终具备。加密聊天需要 websocket 连接（HTTP 长轮询会被拒绝）、需要关闭 [`WEBSOCKET_SERVER_LOGGING`](#websocket_server_logging) 和 [`WEBSOCKET_SERVER_ENGINEIO_LOGGING`](#websocket_server_engineio_logging)，并且当 [`ENV`](#env) 为 `prod` 时需要 HTTPS。也可在**设置 > 常规**（管理员区域）（**加密频道**）中设置，启用频道后该选项才会出现。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `ENABLE_APPS` {#enable\_apps}
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用[应用](/features/channels/apps)：以外部服务的身份作为成员加入频道、响应提及并发布带按钮的消息。在管理设置中新增**应用**标签页，管理员可在其中安装和连接应用。应用只在频道中起作用，因此还必须开启 [`ENABLE_CHANNELS`](#enable_channels)。关闭它会断开所有应用连接。实验性功能。也可在**设置 > 管理 > 常规**（**应用**）中设置。
+- 描述：启用[应用](/features/channels/apps)：以外部服务的身份作为成员加入频道、响应提及并发布带按钮的消息。在管理设置中新增**应用**标签页，管理员可在其中安装和连接应用。应用只在频道中起作用，因此还必须开启 [`ENABLE_CHANNELS`](#enable_channels)。关闭它会断开所有应用连接。实验性功能。也可在**设置 > 常规**（管理员区域）（**应用**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `APP_ALLOWED_PRIVATE_ORIGINS` {#app\_allowed\_private\_origins}
@@ -464,7 +464,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 - 类型：`str`
 - 选项：`thread`（默认）、`channel`
 - 默认值：`thread`
-- 描述：当模型在频道顶层发布的消息中被提及时，它的回复发到哪里。`thread` 会在该消息下开启一个话题串，从而让长回答不占用主时间线。`channel` 则把回复直接发到频道中，所有人无需展开任何内容即可阅读。发生在已有话题串**内部**的提及始终会在该话题串中作答，与当前模式无关。也可在**设置 > 管理 > 常规**（**模型回复模式**）中设置，启用频道后该选项才会出现；无法识别的取值会被忽略并保留当前设置。
+- 描述：当模型在频道顶层发布的消息中被提及时，它的回复发到哪里。`thread` 会在该消息下开启一个话题串，从而让长回答不占用主时间线。`channel` 则把回复直接发到频道中，所有人无需展开任何内容即可阅读。发生在已有话题串**内部**的提及始终会在该话题串中作答，与当前模式无关。也可在**设置 > 常规**（管理员区域）（**模型回复模式**）中设置，启用频道后该选项才会出现；无法识别的取值会被忽略并保留当前设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `ENABLE_FOLDERS` {#enable\_folders}
@@ -480,7 +480,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 - 类型：`int`
 - 默认值：空字符串（无限制）
 - 描述：设置每个文件夹允许处理的最大文件数。
-- 持久化：这是一个 `ConfigVar` 变量。可在 **Admin Panel > Settings > General > Folder Max File Count** 中配置。
+- 持久化：这是一个 `ConfigVar` 变量。可在 **Settings > General > Folder Max File Count**（管理员区域） 中配置。
 
 
 #### `ENABLE_SKILL_LAZY_LOADING` {#enable\_skill\_lazy\_loading}
@@ -488,28 +488,28 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 - 类型：`bool`
 - 默认值：`False`
 - 描述：在技能清单中列出为某个聊天选中的技能（包括模型技能），这样模型只在需要时才加载它们。用 `$` 显式提及的技能仍会随每条消息一起发送。需要技能工具支持。参见[技能](/features/workspace/skills#loading-selected-skills-on-demand)。
-- 持久化：这是一个 `ConfigVar` 变量，可在 **设置 > 管理 > 常规 > 按需加载已选技能** 中配置。
+- 持久化：这是一个 `ConfigVar` 变量，可在 **设置 > 常规 > 按需加载已选技能**（管理员区域） 中配置。
 
 #### `SKILL_CONTENT_MAX_CHARS` {#skill\_content\_max\_chars}
 
 - 类型：`int`
 - 默认值：空，即使用 `20000`
 - 描述：模型在一次读取中能获得的技能文本字符数上限。更长的 `SKILL.md` 会以 `SKILL_PREVIEW_MAX_CHARS` 个字符的预览形式发送。必须是正整数，否则 Open WebUI 会在启动时停止。参见[技能](/features/workspace/skills)。
-- 持久化：这是一个 `ConfigVar` 变量，可在 **设置 > 管理 > 常规 > 技能读取上限** 中配置。留空则使用默认值。
+- 持久化：这是一个 `ConfigVar` 变量，可在 **设置 > 常规 > 技能读取上限**（管理员区域） 中配置。留空则使用默认值。
 
 #### `SKILL_PREVIEW_MAX_CHARS` {#skill\_preview\_max\_chars}
 
 - 类型：`int`
 - 默认值：空，即使用 `5000`
 - 描述：当 `SKILL.md` 长于 `SKILL_CONTENT_MAX_CHARS` 时，模型能获得的技能说明字符数上限。以 `SKILL_CONTENT_MAX_CHARS` 为上限。必须是正整数，否则 Open WebUI 会在启动时停止。
-- 持久化：这是一个 `ConfigVar` 变量，可在 **设置 > 管理 > 常规 > 技能预览长度** 中配置。留空则使用默认值。
+- 持久化：这是一个 `ConfigVar` 变量，可在 **设置 > 常规 > 技能预览长度**（管理员区域） 中配置。留空则使用默认值。
 
 #### `VIEW_CHAT_MAX_CHARS` {#view\_chat\_max\_chars}
 
 - 类型：`int`
 - 默认值：空，即不限制
 - 描述：模型读取之前的聊天时，`view_chat` 工具返回的消息文本字符数上限。会保留最新的若干条消息，并在结果中告知模型内容被截断以及包含多少条消息。必须是正整数，否则 Open WebUI 会在启动时停止。参见[内置系统工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
-- 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chats.view_max_chars`。可在 **设置 > 管理 > 常规 > 聊天读取上限** 中配置。留空表示不限制。
+- 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chats.view_max_chars`。可在 **设置 > 常规 > 聊天读取上限**（管理员区域） 中配置。留空表示不限制。
 
 #### `ENABLE_AUTOMATIONS` {#enable\_automations}
 
@@ -557,7 +557,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用**子智能体**，让模型可以通过 `delegate_task` 内置工具把一个聚焦的任务委派给并行的子智能体。子智能体会使用相同的工具和技能运行自己的一整轮聊天补全，并把最终答案返回给父级聊天。默认关闭，因为每次委派都会产生额外的模型调用。它同时也是 `timer` 工具的开关，二者共用同一个**子智能体**内置类别。可在 **设置 > 管理 > 子智能体** 中设置。参见[子智能体](/features/chat-conversations/chat-features/subagents)。
+- 描述：启用**子智能体**，让模型可以通过 `delegate_task` 内置工具把一个聚焦的任务委派给并行的子智能体。子智能体会使用相同的工具和技能运行自己的一整轮聊天补全，并把最终答案返回给父级聊天。默认关闭，因为每次委派都会产生额外的模型调用。它同时也是 `timer` 工具的开关，二者共用同一个**子智能体**内置类别。可在 **设置 > 子智能体**（管理员区域） 中设置。参见[子智能体](/features/chat-conversations/chat-features/subagents)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `SUBAGENTS_BACKGROUND_ENABLED` {#subagents\_background\_enabled}
@@ -638,14 +638,14 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：开启[评论](/features/chat-conversations/chat-features/comments)。也可在**管理设置 > 常规 > 评论**中设置。
+- 描述：开启[评论](/features/chat-conversations/chat-features/comments)。也可在**设置 > 常规 > 评论**（管理员区域）中设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `ENABLE_NOTIFICATIONS` {#enable\_notifications}
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：为所有用户开启[通知收件箱](/features/chat-conversations/chat-features/notifications#inbox)。也可在**管理设置 > 常规 > 通知**中设置。
+- 描述：为所有用户开启[通知收件箱](/features/chat-conversations/chat-features/notifications#inbox)。也可在**设置 > 常规 > 通知**（管理员区域）中设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `ENABLE_MEMORIES` {#enable\_memories}
@@ -657,7 +657,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 #### `ENABLE_MEMORY_SYSTEM_CONTEXT` {#enable\_memory\_system\_context}
 - 类型：`bool`
 - 默认值：`True`
-- 描述：当[记忆功能](/features/chat-conversations/memory)开启时，控制是否将存储的记忆注入到模型的系统上下文中。设为 `False` 可保持记忆工具可用（模型仍然可以添加、更新和删除记忆），同时不再向提示词中添加已记住的上下文。注入还要求用户拥有 `features.memories` 权限（[`USER_PERMISSIONS_FEATURES_MEMORIES`](#user_permissions_features_memories)；管理员不受此限制）。启用记忆功能时，会显示为**设置 > 管理 > 常规**下的“记忆系统上下文”开关。
+- 描述：当[记忆功能](/features/chat-conversations/memory)开启时，控制是否将存储的记忆注入到模型的系统上下文中。设为 `False` 可保持记忆工具可用（模型仍然可以添加、更新和删除记忆），同时不再向提示词中添加已记住的上下文。注入还要求用户拥有 `features.memories` 权限（[`USER_PERMISSIONS_FEATURES_MEMORIES`](#user_permissions_features_memories)；管理员不受此限制）。启用记忆功能时，会显示为**设置 > 常规**（管理员区域）下的“记忆系统上下文”开关。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `WEBHOOK_URL` {#webhook\_url}
@@ -733,7 +733,7 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 
 - 类型：`str`
 - 默认值：`""`（为空，不添加任何文本）
-- 描述：设置一段文本，当用户通过**复制**按钮复制助手回复时，会在空行之后追加到末尾。例如 `"This text was generated by AI."` 会添加到每条以这种方式复制的回复末尾。也可在**设置 > 管理 > 常规**的**回复水印**中设置。
+- 描述：设置一段文本，当用户通过**复制**按钮复制助手回复时，会在空行之后追加到末尾。例如 `"This text was generated by AI."` 会添加到每条以这种方式复制的回复末尾。也可在**设置 > 常规**（管理员区域）的**回复水印**中设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::info 这个名字只是设置名称
@@ -804,7 +804,7 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 - 类型：`bool`
 - 默认值：`True`
 - 描述：控制用户状态功能：用户在自己的账号上设置的表情、消息和过期时间，用来告诉别人自己正在做什么。启用时，该控件位于用户菜单中，在那里设置的状态会显示在该用户名字旁边。禁用时，该控件消失，其背后的两个端点（`GET /api/v1/users/user/status` 和 `POST /api/v1/users/user/status/update`）会返回 `403`。
-- 持久化：这是一个 `ConfigVar` 变量。可在 **Admin Panel > Settings > General > User Status** 中切换。
+- 持久化：这是一个 `ConfigVar` 变量。可在 **Settings > General > User Status**（管理员区域） 中切换。
 
 
 #### `ENABLE_EASTER_EGGS` {#enable\_easter\_eggs}
@@ -1149,7 +1149,7 @@ WEBUI_BANNERS="[{\"id\": \"1\", \"type\": \"warning\", \"title\": \"Your message
 [{"title": ["Title part 1", "Title part 2"], "content": "prompt"}]
 ```
 
-  这些提示建议的多语言版本需在管理面板中设置，而非在此处，位置为**设置 > 管理 > 模型 > 模型默认值**。参见[翻译](/features/workspace/models#translations)。
+  这些提示建议的多语言版本需在管理面板中设置，而非在此处，位置为**设置 > 模型 > 模型默认值**（管理员区域）。参见[翻译](/features/workspace/models#translations)。
 
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -1588,7 +1588,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`dict`（JSON 对象）
 - 默认值：`{}`
-- 描述：随后台任务请求一起发送的生成参数，取键方式与模型的高级参数相同。留空时，标题生成会停在 1000 个输出 token，其他任务不发送任何参数。在这里设置任何值都会取消标题长度上限，因此如果仍想要上限请自行加入 `max_tokens`；调高它可以解决推理型任务模型把预算都花在思考上、结果标题在半句处中断的问题。除非在这里设置了 `max_tokens`，上下文压缩摘要没有输出长度上限。也可在 **设置 > 管理 > 界面** 的**任务**下设置。参见[任务模型](/features/administration/task-models)。
+- 描述：随后台任务请求一起发送的生成参数，取键方式与模型的高级参数相同。留空时，标题生成会停在 1000 个输出 token，其他任务不发送任何参数。在这里设置任何值都会取消标题长度上限，因此如果仍想要上限请自行加入 `max_tokens`；调高它可以解决推理型任务模型把预算都花在思考上、结果标题在半句处中断的问题。除非在这里设置了 `max_tokens`，上下文压缩摘要没有输出长度上限。也可在 **设置 > 界面**（管理员区域） 的**任务**下设置。参见[任务模型](/features/administration/task-models)。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `task.model.params`。
 
 :::info
@@ -1603,76 +1603,76 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：在原生函数调用模式下，要求模型用用户的语言为每次工具调用写一条简短的“进行中”和“已完成”标签，聊天会用它代替默认的工具调用文字显示。每个工具都会多出一个必需的 `__labels__` 参数，Open WebUI 会在工具运行前移除它。隐藏的工具以及参数不是普通 JSON 对象的工具会被跳过。参见[工具调用标签](/features/extensibility/plugin/tools#tool-call-labels)。也可在 **设置 > 管理 > 界面 > 工具调用标签** 中切换。
+- 描述：在原生函数调用模式下，要求模型用用户的语言为每次工具调用写一条简短的“进行中”和“已完成”标签，聊天会用它代替默认的工具调用文字显示。每个工具都会多出一个必需的 `__labels__` 参数，Open WebUI 会在工具运行前移除它。隐藏的工具以及参数不是普通 JSON 对象的工具会被跳过。参见[工具调用标签](/features/extensibility/plugin/tools#tool-call-labels)。也可在 **设置 > 界面 > 工具调用标签**（管理员区域） 中切换。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_call_labels.enable`。
 
 #### `ENABLE_TOOL_PERMISSIONS` {#enable\_tool\_permissions}
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：在聊天输入框的 **+** 菜单中新增**工具权限**条目，用户可在此选择**完全访问**（无需询问即运行工具；当未提供**自动**时为默认）、**请求批准**（每次工具调用前都停下，直到被允许或拒绝），或在 [`ENABLE_TOOL_PERMISSIONS_AUTO`](#enable_tool_permissions_auto) 开启时选择**自动**。实验性功能。该设置关闭时，所有请求都以完全访问运行，`tool_approval_mode` 参数会被忽略。频道回复始终以完全访问运行。自动化没有选定模式，因此在提供**自动**时按**自动**运行，否则以完全访问运行。也可在 **设置 > 管理 > 界面** 中切换。
+- 描述：在聊天输入框的 **+** 菜单中新增**工具权限**条目，用户可在此选择**完全访问**（无需询问即运行工具；当未提供**自动**时为默认）、**请求批准**（每次工具调用前都停下，直到被允许或拒绝），或在 [`ENABLE_TOOL_PERMISSIONS_AUTO`](#enable_tool_permissions_auto) 开启时选择**自动**。实验性功能。该设置关闭时，所有请求都以完全访问运行，`tool_approval_mode` 参数会被忽略。频道回复始终以完全访问运行。自动化没有选定模式，因此在提供**自动**时按**自动**运行，否则以完全访问运行。也可在 **设置 > 界面**（管理员区域） 中切换。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_permissions.enable`。
 
 #### `ENABLE_TOOL_PERMISSIONS_AUTO` {#enable\_tool\_permissions\_auto}
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：当 [`ENABLE_TOOL_PERMISSIONS`](#enable_tool_permissions) 开启时，在**工具权限**条目的**完全访问**和**请求批准**之外增加**自动**。在**自动**模式下，由 [`TOOL_PERMISSIONS_AUTO_ENGINE`](#tool_permissions_auto_engine) 设定的引擎逐次决定工具调用是直接运行还是等待批准。未选择模式的用户会得到**自动**。频道聊天中不可用。参见[工具批准](/features/extensibility/plugin/tools#tool-approval)。也可在 **设置 > 管理 > 界面**（**自动权限**）中切换。
+- 描述：当 [`ENABLE_TOOL_PERMISSIONS`](#enable_tool_permissions) 开启时，在**工具权限**条目的**完全访问**和**请求批准**之外增加**自动**。在**自动**模式下，由 [`TOOL_PERMISSIONS_AUTO_ENGINE`](#tool_permissions_auto_engine) 设定的引擎逐次决定工具调用是直接运行还是等待批准。未选择模式的用户会得到**自动**。频道聊天中不可用。参见[工具批准](/features/extensibility/plugin/tools#tool-approval)。也可在 **设置 > 界面**（管理员区域）（**自动权限**）中切换。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_permissions.auto.enable`。
 
 #### `TOOL_PERMISSIONS_AUTO_ENGINE` {#tool\_permissions\_auto\_engine}
 
 - 类型：`str`（空或 `decisions`）
 - 默认值：空字符串
-- 描述：在**自动**模式下由什么来决定哪些工具调用需要批准。留空则由聊天模型决定：Open WebUI 会把批准策略加入系统提示词，并为每个工具添加一个必需的 `__approval__` 参数。`decisions` 则把每次工具调用发送给位于 [`TOOL_PERMISSIONS_AUTO_DECISIONS_API_BASE_URL`](#tool_permissions_auto_decisions_api_base_url) 的审核服务。其它任何取值都会让**自动**模式下的每次调用都请求批准。参见[自动](/features/extensibility/plugin/tools#auto)。也可在 **设置 > 管理 > 界面**（**引擎**：**默认**或**决策 API**）中设置。
+- 描述：在**自动**模式下由什么来决定哪些工具调用需要批准。留空则由聊天模型决定：Open WebUI 会把批准策略加入系统提示词，并为每个工具添加一个必需的 `__approval__` 参数。`decisions` 则把每次工具调用发送给位于 [`TOOL_PERMISSIONS_AUTO_DECISIONS_API_BASE_URL`](#tool_permissions_auto_decisions_api_base_url) 的审核服务。其它任何取值都会让**自动**模式下的每次调用都请求批准。参见[自动](/features/extensibility/plugin/tools#auto)。也可在 **设置 > 界面**（管理员区域）（**引擎**：**默认**或**决策 API**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_permissions.auto.engine`。
 
 #### `TOOL_PERMISSIONS_AUTO_PROMPT` {#tool\_permissions\_auto\_prompt}
 
 - 类型：`str`
 - 默认值：空字符串（使用内置的批准策略）
-- 描述：描述哪些工具调用需要批准的批准策略。两种引擎都会使用它。也可在 **设置 > 管理 > 界面**（**批准策略**）中设置。
+- 描述：描述哪些工具调用需要批准的批准策略。两种引擎都会使用它。也可在 **设置 > 界面**（管理员区域）（**批准策略**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_permissions.auto.prompt`。
 
 #### `TOOL_PERMISSIONS_AUTO_DECISIONS_API_BASE_URL` {#tool\_permissions\_auto\_decisions\_api\_base\_url}
 
 - 类型：`str`
 - 默认值：`https://api.openai.com/v1`
-- 描述：当 [`TOOL_PERMISSIONS_AUTO_ENGINE`](#tool_permissions_auto_engine) 为 `decisions` 时使用的审核服务的基础 URL。Open WebUI 会把每次审核请求发送到 `<base URL>/decisions`。它必须是不含凭据、查询参数或片段的 HTTP(S) URL。也可在 **设置 > 管理 > 界面**（**API 基础 URL**）中设置。
+- 描述：当 [`TOOL_PERMISSIONS_AUTO_ENGINE`](#tool_permissions_auto_engine) 为 `decisions` 时使用的审核服务的基础 URL。Open WebUI 会把每次审核请求发送到 `<base URL>/decisions`。它必须是不含凭据、查询参数或片段的 HTTP(S) URL。也可在 **设置 > 界面**（管理员区域）（**API 基础 URL**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_permissions.auto.decisions.api_base_url`。
 
 #### `TOOL_PERMISSIONS_AUTO_DECISIONS_API_KEY` {#tool\_permissions\_auto\_decisions\_api\_key}
 
 - 类型：`str`
 - 默认值：空字符串
-- 描述：作为 Bearer 令牌发送给审核服务的 API 密钥。没有密钥时不会发送 `Authorization` 请求头。也可在 **设置 > 管理 > 界面**（**API 密钥**）中设置。
+- 描述：作为 Bearer 令牌发送给审核服务的 API 密钥。没有密钥时不会发送 `Authorization` 请求头。也可在 **设置 > 界面**（管理员区域）（**API 密钥**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_permissions.auto.decisions.api_key`。
 
 #### `TOOL_PERMISSIONS_AUTO_DECISIONS_MODEL` {#tool\_permissions\_auto\_decisions\_model}
 
 - 类型：`str`
 - 默认值：`gpt-6-luna`
-- 描述：发送给审核服务的模型名称。也可在 **设置 > 管理 > 界面**（**模型**）中设置。
+- 描述：发送给审核服务的模型名称。也可在 **设置 > 界面**（管理员区域）（**模型**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_permissions.auto.decisions.model`。
 
 #### `TOOL_PERMISSIONS_AUTO_DECISIONS_THRESHOLD` {#tool\_permissions\_auto\_decisions\_threshold}
 
 - 类型：`float`
 - 默认值：`0.5`
-- 描述：取值范围为 `0` 到 `1`。当审核服务判定某次工具调用需要批准的概率达到或超过该值时，该调用会请求批准。超出该范围的取值会让每次调用都请求批准。也可在 **设置 > 管理 > 界面**（**批准阈值**）中设置。
+- 描述：取值范围为 `0` 到 `1`。当审核服务判定某次工具调用需要批准的概率达到或超过该值时，该调用会请求批准。超出该范围的取值会让每次调用都请求批准。也可在 **设置 > 界面**（管理员区域）（**批准阈值**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_permissions.auto.decisions.threshold`。
 
 #### `ENABLE_CONTEXT_COMPACTION` {#enable\_context\_compaction}
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用自动[上下文压缩](/troubleshooting/context-window#the-built-in-option-context-compaction)。当某个聊天的估算上下文超过 `CONTEXT_COMPACTION_TOKEN_THRESHOLD` 时，较早的消息会被总结为一个检查点，并从发送给模型的内容中移除，同时保留较近的消息，从而让长对话始终处于模型的上下文窗口之内。该检查会在每一轮对话开始时运行，并在原生工具循环的各工具轮次之间再次运行。也可在**设置 > 管理 > 界面**中切换。
+- 描述：启用自动[上下文压缩](/troubleshooting/context-window#the-built-in-option-context-compaction)。当某个聊天的估算上下文超过 `CONTEXT_COMPACTION_TOKEN_THRESHOLD` 时，较早的消息会被总结为一个检查点，并从发送给模型的内容中移除，同时保留较近的消息，从而让长对话始终处于模型的上下文窗口之内。该检查会在每一轮对话开始时运行，并在原生工具循环的各工具轮次之间再次运行。也可在**设置 > 界面**（管理员区域）中切换。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `CONTEXT_COMPACTION_MODEL` {#context\_compaction\_model}
 
 - 类型：`str`
 - 默认值：空字符串（使用聊天自身的模型）
-- 描述：用于撰写上下文压缩摘要的模型。留空则使用聊天自身的模型。设置它即可为摘要任务指定专用模型。不可用的模型 ID 会回退到聊天模型，因此过期的取值不会阻塞压缩。也可在 **设置 > 管理 > 界面**（**上下文压缩模型**）中设置，其中**当前模型**表示跟随聊天。
+- 描述：用于撰写上下文压缩摘要的模型。留空则使用聊天自身的模型。设置它即可为摘要任务指定专用模型。不可用的模型 ID 会回退到聊天模型，因此过期的取值不会阻塞压缩。也可在 **设置 > 界面**（管理员区域）（**上下文压缩模型**）中设置，其中**当前模型**表示跟随聊天。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `CONTEXT_COMPACTION_TOKEN_THRESHOLD` {#context\_compaction\_token\_threshold}
@@ -1687,7 +1687,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型： `int`
 - 默认值： falls back to `CONTEXT_COMPACTION_TOKEN_THRESHOLD` when unset
-- 说明： 任何按模型上下文压缩阈值的绝对上限（以 token 计）。模型可以通过 `compact_token_threshold` 高级参数提高或降低自己的阈值，但有效值会被限制在此上限内。未设置时等同于 `CONTEXT_COMPACTION_TOKEN_THRESHOLD`，重现了以前按模型阈值只能降低的行为。也可在**管理面板 > 设置 > 界面**（**Token Cap**）中设置。
+- 说明： 任何按模型上下文压缩阈值的绝对上限（以 token 计）。模型可以通过 `compact_token_threshold` 高级参数提高或降低自己的阈值，但有效值会被限制在此上限内。未设置时等同于 `CONTEXT_COMPACTION_TOKEN_THRESHOLD`，重现了以前按模型阈值只能降低的行为。也可在**设置 > 界面**（管理员区域）（**Token Cap**）中设置。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -1695,7 +1695,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`int`
 - 默认值：`40`
-- 描述：执行上下文压缩时原样保留最近消息的百分比；比这更早的内容都会被摘要替换。取值被限制在 `10` 到 `50` 之间，因此至少保留对话的十分之一、至多保留一半。在一轮开始时，压缩会按用户消息切分，因此保留部分从一个轮次边界开始；在长时间工具循环的工具轮次之间，它按工具轮次的起点切分，从而让每次工具调用与其结果保持在一起。也可在 **设置 > 管理 > 界面**（**保留的消息**）中设置。
+- 描述：执行上下文压缩时原样保留最近消息的百分比；比这更早的内容都会被摘要替换。取值被限制在 `10` 到 `50` 之间，因此至少保留对话的十分之一、至多保留一半。在一轮开始时，压缩会按用户消息切分，因此保留部分从一个轮次边界开始；在长时间工具循环的工具轮次之间，它按工具轮次的起点切分，从而让每次工具调用与其结果保持在一起。也可在 **设置 > 界面**（管理员区域）（**保留的消息**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `CONTEXT_COMPACTION_PROMPT_TEMPLATE` {#context\_compaction\_prompt\_template}
@@ -1708,70 +1708,70 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：为原生模式下的聊天启用[工具搜索](/features/extensibility/plugin/tools#tool-search)。定义体量较大的工具会被排除在请求之外，模型使用内置的 `search_tools` 工具按需加载所需工具，再通过内置的 `call_tool` 工具运行它们。实验性功能。也可在 **设置 > 管理 > 界面**（**工具搜索**）中切换。
+- 描述：为原生模式下的聊天启用[工具搜索](/features/extensibility/plugin/tools#tool-search)。定义体量较大的工具会被排除在请求之外，模型使用内置的 `search_tools` 工具按需加载所需工具，再通过内置的 `call_tool` 工具运行它们。实验性功能。也可在 **设置 > 界面**（管理员区域）（**工具搜索**）中切换。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.enable`。
 
 #### `TOOL_SEARCH_ENGINE` {#tool\_search\_engine}
 
 - 类型：`str`（`bm25`、`embeddings` 或 `decisions`）
 - 默认值：`bm25`
-- 描述：[工具搜索](/features/extensibility/plugin/tools#tool-search)如何把一次搜索匹配到被延迟加载的工具。`bm25` 按关键词排序，`embeddings` 使用 Documents 嵌入模型，`decisions` 则询问 [Decisions API](/features/extensibility/plugin/tools#search-engines) 服务。只有被选中的引擎会运行。也可在 **设置 > 管理 > 界面**（**搜索引擎**）中设置。
+- 描述：[工具搜索](/features/extensibility/plugin/tools#tool-search)如何把一次搜索匹配到被延迟加载的工具。`bm25` 按关键词排序，`embeddings` 使用 Documents 嵌入模型，`decisions` 则询问 [Decisions API](/features/extensibility/plugin/tools#search-engines) 服务。只有被选中的引擎会运行。也可在 **设置 > 界面**（管理员区域）（**搜索引擎**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.engine`。
 
 #### `TOOL_SEARCH_DECISIONS_API_BASE_URL` {#tool\_search\_decisions\_api\_base\_url}
 
 - 类型：`str`
 - 默认值：`https://api.openai.com/v1`
-- 描述：当 [`TOOL_SEARCH_ENGINE`](#tool_search_engine) 为 `decisions` 时所用服务的基础 URL。Open WebUI 会把每次搜索请求发送到 `<base URL>/decisions`。它必须是不含凭据、查询参数或片段的 HTTP(S) URL。也可在 **设置 > 管理 > 界面**（**API 基础 URL**）中设置。
+- 描述：当 [`TOOL_SEARCH_ENGINE`](#tool_search_engine) 为 `decisions` 时所用服务的基础 URL。Open WebUI 会把每次搜索请求发送到 `<base URL>/decisions`。它必须是不含凭据、查询参数或片段的 HTTP(S) URL。也可在 **设置 > 界面**（管理员区域）（**API 基础 URL**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.decisions.api_base_url`。
 
 #### `TOOL_SEARCH_DECISIONS_API_KEY` {#tool\_search\_decisions\_api\_key}
 
 - 类型：`str`
 - 默认值：空字符串
-- 描述：作为 Bearer 令牌发送给工具搜索 Decisions 服务的 API 密钥。没有密钥时不会发送 `Authorization` 请求头。也可在 **设置 > 管理 > 界面**（**API 密钥**）中设置。
+- 描述：作为 Bearer 令牌发送给工具搜索 Decisions 服务的 API 密钥。没有密钥时不会发送 `Authorization` 请求头。也可在 **设置 > 界面**（管理员区域）（**API 密钥**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.decisions.api_key`。
 
 #### `TOOL_SEARCH_DECISIONS_MODEL` {#tool\_search\_decisions\_model}
 
 - 类型：`str`
 - 默认值：`gpt-6-luna`
-- 描述：发送给工具搜索 Decisions 服务的模型名称。也可在 **设置 > 管理 > 界面**（**模型**）中设置。
+- 描述：发送给工具搜索 Decisions 服务的模型名称。也可在 **设置 > 界面**（管理员区域）（**模型**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.decisions.model`。
 
 #### `TOOL_SEARCH_DECISIONS_THRESHOLD` {#tool\_search\_decisions\_threshold}
 
 - 类型：`float`
 - 默认值：`0.5`
-- 描述：取值范围为 `0` 到 `1`。只有相关度概率达到或超过该值的工具才会被返回。也可在 **设置 > 管理 > 界面**（**相关度阈值**）中设置。
+- 描述：取值范围为 `0` 到 `1`。只有相关度概率达到或超过该值的工具才会被返回。也可在 **设置 > 界面**（管理员区域）（**相关度阈值**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.decisions.threshold`。
 
 #### `TOOL_SEARCH_DECISIONS_PROMPT` {#tool\_search\_decisions\_prompt}
 
 - 类型：`str`
 - 默认值：空字符串（使用内置的相关度说明）
-- 描述：Decisions 服务在评估工具相关度时遵循的说明。搜索查询和工具定义会自动附加。也可在 **设置 > 管理 > 界面**（**提示词**）中设置。
+- 描述：Decisions 服务在评估工具相关度时遵循的说明。搜索查询和工具定义会自动附加。也可在 **设置 > 界面**（管理员区域）（**提示词**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.decisions.prompt`。
 
 #### `TOOL_SEARCH_DEFER_THRESHOLD` {#tool\_search\_defer\_threshold}
 
 - 类型：`int`
 - 默认值：`400`
-- 描述：当 [`ENABLE_TOOL_SEARCH`](#enable_tool_search) 开启时，工具的 JSON 定义（名称、描述和参数结构）超过该字符数时会被延迟加载。`0` 表示延迟加载所有工具。也可在 **设置 > 管理 > 界面**（**延迟阈值（字符数）**）中设置。
+- 描述：当 [`ENABLE_TOOL_SEARCH`](#enable_tool_search) 开启时，工具的 JSON 定义（名称、描述和参数结构）超过该字符数时会被延迟加载。`0` 表示延迟加载所有工具。也可在 **设置 > 界面**（管理员区域）（**延迟阈值（字符数）**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.defer_threshold`。
 
 #### `TOOL_SEARCH_ALWAYS_LOADED` {#tool\_search\_always\_loaded}
 
 - 类型：`str`（逗号分隔）
 - 默认值：空字符串
-- 描述：当 [`ENABLE_TOOL_SEARCH`](#enable_tool_search) 开启时，始终完整发送的工具名称或通配符模式，例如 `jira_create_issue,github_*`。模式匹配模型看到的工具名称，且区分大小写；MCP 工具带有其服务器 ID 前缀。也可在 **设置 > 管理 > 界面**（**始终加载的工具**）中设置。
+- 描述：当 [`ENABLE_TOOL_SEARCH`](#enable_tool_search) 开启时，始终完整发送的工具名称或通配符模式，例如 `jira_create_issue,github_*`。模式匹配模型看到的工具名称，且区分大小写；MCP 工具带有其服务器 ID 前缀。也可在 **设置 > 界面**（管理员区域）（**始终加载的工具**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.always_loaded`。
 
 #### `TOOL_SEARCH_DEFER_BUILTIN_TOOLS` {#tool\_search\_defer\_builtin\_tools}
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：允许[工具搜索](/features/extensibility/plugin/tools#tool-search)像对待其它工具一样延迟加载内置工具。设为 `False` 则始终完整发送内置工具。也可在 **设置 > 管理 > 界面**（**延迟加载内置工具**）中切换。
+- 描述：允许[工具搜索](/features/extensibility/plugin/tools#tool-search)像对待其它工具一样延迟加载内置工具。设为 `False` 则始终完整发送内置工具。也可在 **设置 > 界面**（管理员区域）（**延迟加载内置工具**）中切换。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.defer_builtin_tools`。
 
 #### `TITLE_GENERATION_PROMPT_TEMPLATE` {#title\_generation\_prompt\_template}
@@ -2043,7 +2043,7 @@ The format for the JSON response is strictly:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：控制用户能否进入**设置**中的个人**集成**标签页，在那里添加自己的工具服务器和开放终端连接。默认关闭，因此在管理员于**设置 > 管理 > 集成**的**用户连接**部分开启之前，该标签页不会显示。开启后，管理员和拥有 `direct_tool_servers` 权限的用户都会看到该标签页，仅有权限并不够。关闭期间，用户和管理员在该标签页中保存的工具服务器与开放终端连接不会在聊天中被使用，即使请求中仍包含它们，服务器也会忽略。这些配置会保留保存，重新开启后再次生效。分组和默认权限中的**直接工具服务器**开关也仅在开启时显示。
+- 描述：控制用户能否进入**设置**中的个人**集成**标签页，在那里添加自己的工具服务器和开放终端连接。默认关闭，因此在管理员于**设置 > 集成**（管理员区域）的**用户连接**部分开启之前，该标签页不会显示。开启后，管理员和拥有 `direct_tool_servers` 权限的用户都会看到该标签页，仅有权限并不够。关闭期间，用户和管理员在该标签页中保存的工具服务器与开放终端连接不会在聊天中被使用，即使请求中仍包含它们，服务器也会忽略。这些配置会保留保存，重新开启后再次生效。分组和默认权限中的**直接工具服务器**开关也仅在开启时显示。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `TOOL_SERVER_CONNECTIONS` {#tool\_server\_connections}
@@ -2255,14 +2255,14 @@ Output:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用或禁用评测竞技场模型。新的默认值仅适用于全新安装；已有安装在管理员于**设置 > 管理 > 评测**中修改之前，会一直沿用数据库中已存储的值。
+- 描述：启用或禁用评测竞技场模型。新的默认值仅适用于全新安装；已有安装在管理员于**设置 > 评测**（管理员区域）中修改之前，会一直沿用数据库中已存储的值。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `EVALUATION_ARENA_MODELS` {#evaluation\_arena\_models}
 
 - 类型：`str`（JSON）
 - 默认值：`[]`
-- 描述：以 JSON 对象列表的形式定义评测竞技场模型。用于在启动时初始化竞技场模型配置，与管理评测设置中可配置的内容一致。对象中 `meta.model_ids` 里的每个 ID 只应列出一次：在默认的 `include` 过滤模式下，每条消息会从其中随机抽取一个，而出现两次的 ID 被抽中的概率也是两倍。在[设置 > 管理 > 评测](/features/administration/evaluation/#configuring-an-arena-model)中编辑此类竞技场模型并保存后，重复项会被合并。
+- 描述：以 JSON 对象列表的形式定义评测竞技场模型。用于在启动时初始化竞技场模型配置，与管理评测设置中可配置的内容一致。对象中 `meta.model_ids` 里的每个 ID 只应列出一次：在默认的 `include` 过滤模式下，每条消息会从其中随机抽取一个，而出现两次的 ID 被抽中的概率也是两倍。在[设置 > 评测（管理员区域）](/features/administration/evaluation/#configuring-an-arena-model)中编辑此类竞技场模型并保存后，重复项会被合并。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `AUXILIARY_EMBEDDING_MODEL` {#auxiliary\_embedding\_model}
@@ -2440,7 +2440,7 @@ ASGI 层在比对头名时不区分大小写，所以可以按你的命名规范
 #### `ENABLE_BASE_MODELS_CACHE` {#enable\_base\_models\_cache}
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用后，会缓存已连接的 Ollama 和 OpenAI 兼容端点返回的基础模型列表。这样在加载模型选择器时，可以减少对外部模型提供方的 API 调用，尤其对用户较多或模型端点连接较慢的部署提升明显。也可以在 设置 > 管理 > 连接 >“缓存基础模型列表”中配置。
+- 描述：启用后，会缓存已连接的 Ollama 和 OpenAI 兼容端点返回的基础模型列表。这样在加载模型选择器时，可以减少对外部模型提供方的 API 调用，尤其对用户较多或模型端点连接较慢的部署提升明显。也可以在 设置 > 连接（管理员区域） >“缓存基础模型列表”中配置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 **缓存的工作方式：**
@@ -2450,7 +2450,7 @@ ASGI 层在比对头名时不区分大小写，所以可以按你的命名规范
 - **缓存命中**：后续的模型请求会直接返回缓存列表，而不会联系外部端点。
 - **缓存刷新**：缓存会在以下情况刷新：
   - 应用重启（未使用 Redis 时；存储在 Redis 中的列表可跨重启保留）
-  - 在 **设置 > 管理 > 连接** 中保存连接设置（点击右下角的**保存**按钮会触发刷新，并用新获取的模型更新缓存）
+  - 在 **设置 > 连接**（管理员区域） 中保存连接设置（点击右下角的**保存**按钮会触发刷新，并用新获取的模型更新缓存）
   - 管理员在某个连接上下载、删除、加载或卸载模型
 - **无 TTL**：没有基于时间的自动过期机制。
 
@@ -2661,7 +2661,7 @@ FORWARD_SESSION_INFO_HEADER_MESSAGE_ID=X-Amzn-Bedrock-AgentCore-Runtime-Custom-M
 
 除了上面固定的用户与会话请求头之外，每个连接还可以转发**任意自定义请求头**，其取值中可嵌入**模板占位符**，Open WebUI 会在每次请求时替换。与上面的变量不同，这项配置是**按连接**而非通过环境变量设置的，并且**独立于 `ENABLE_FORWARD_USER_INFO_HEADERS`** 生效（即使该开关为 `false`，自定义请求头仍会发送）。它们**最后**生效，因此自定义请求头的优先级高于同名的内置转发请求头。
 
-在**设置 > 管理 > 连接**中编辑某个连接，填写**请求头**字段（内容为一个 JSON 对象）即可设置；也可以在 [`OPENAI_API_CONFIGS`](#openai_api_configs) / [`OLLAMA_API_CONFIGS`](#ollama_api_configs) 中该连接的 `headers` 对象里设置。例如：
+在**设置 > 连接**（管理员区域）中编辑某个连接，填写**请求头**字段（内容为一个 JSON 对象）即可设置；也可以在 [`OPENAI_API_CONFIGS`](#openai_api_configs) / [`OLLAMA_API_CONFIGS`](#ollama_api_configs) 中该连接的 `headers` 对象里设置。例如：
 
 ```json
 {
@@ -2787,7 +2787,7 @@ OpenAI、Ollama 和直连模型连接、工具服务器（OpenAPI 与 MCP）以�
 - 类型：`bool`
 - 默认值：`False`
 - 描述：要求每位用户在密码、LDAP、OAuth 或可信请求头登录之后，再输入一次身份验证器应用生成的验证码。尚未设置身份验证器的用户会在下次登录时设置。**设置 > 账户**中的**多因素认证**部分只对登录需要身份验证器的用户显示，因此在关闭期间对所有人隐藏。它需要 [`WEBUI_AUTH`](#webui_auth) 和 [`ENABLE_PERSISTENT_CONFIG`](#enable_persistent_config) 都开启；开启期间，只要其中之一关闭，或已存储的身份验证器密钥无法用当前密钥解密，Open WebUI 就会拒绝启动（参见 [`MFA_ENCRYPTION_KEY`](#mfa_encryption_key)）。参见[双因素登录 (MFA)](/features/authentication-access/mfa)。
-- 另有开关：**设置 > 管理 > 认证**的**多因素认证**部分中的**要求所有用户使用身份验证器**，它立即生效且无需重启。
+- 另有开关：**设置 > 认证**（管理员区域）的**多因素认证**部分中的**要求所有用户使用身份验证器**，它立即生效且无需重启。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::warning
@@ -2799,7 +2799,7 @@ OpenAI、Ollama 和直连模型连接、工具服务器（OpenAPI 与 MCP）以�
 - 类型：`bool`
 - 默认值：`False`
 - 描述：允许通过 OAuth 或 OIDC 登录的用户在 [`ENABLE_MFA`](#enable_mfa) 开启时跳过身份验证器验证码。当你的身份提供方已经强制执行了自己的第二因素时，可以使用它。它同时允许 [OAuth 令牌交换](#enable_oauth_token_exchange)端点直接返回会话令牌。
-- 另有开关：**设置 > 管理 > 认证**中的**允许不使用身份验证器的 OAuth 登录**，在 MFA 开启时显示。参见[开启方式](/features/authentication-access/mfa#turning-it-on)。
+- 另有开关：**设置 > 认证**（管理员区域）中的**允许不使用身份验证器的 OAuth 登录**，在 MFA 开启时显示。参见[开启方式](/features/authentication-access/mfa#turning-it-on)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `MFA_ALLOW_TRUSTED_HEADER_BYPASS` {#mfa\_allow\_trusted\_header\_bypass}
@@ -2807,7 +2807,7 @@ OpenAI、Ollama 和直连模型连接、工具服务器（OpenAPI 与 MCP）以�
 - 类型：`bool`
 - 默认值：`False`
 - 描述：允许通过[可信请求头认证](/features/authentication-access/auth/sso#trusted-header)登录的用户在 [`ENABLE_MFA`](#enable_mfa) 开启时跳过身份验证器验证码。当你的认证代理已经强制执行了第二因素时，可以使用它。
-- 另有开关：**设置 > 管理 > 认证**中的**允许不使用身份验证器的可信请求头登录**，在 MFA 开启时显示。参见[开启方式](/features/authentication-access/mfa#turning-it-on)。
+- 另有开关：**设置 > 认证**（管理员区域）中的**允许不使用身份验证器的可信请求头登录**，在 MFA 开启时显示。参见[开启方式](/features/authentication-access/mfa#turning-it-on)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `MFA_ENCRYPTION_KEY` {#mfa\_encryption\_key}
@@ -2965,7 +2965,7 @@ openssl rand -hex 32
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用后，应用程序会自动检查更新并通知你版本更新。只有发布版构建才会检查：由 `main` 或发布标签构建的官方镜像，以及 pip 包。由 `dev` 构建的镜像以及来源不明的构建则永远不会检查。Docker 镜像通过 `BUILD_CHANNEL` 构建参数（`main`、`dev` 或 `unknown`，默认 `unknown`）获得其通道，因此请使用 `--build-arg BUILD_CHANNEL=main` 构建自己的发布镜像以保留更新检查。如果检查无法在一秒内连上 GitHub，**管理面板 > 设置 > 常规**和**设置 > 关于**会显示**无法检查更新**，服务器日志会以警告级别记录 `Version update check failed`。
+- 描述：启用后，应用程序会自动检查更新并通知你版本更新。只有发布版构建才会检查：由 `main` 或发布标签构建的官方镜像，以及 pip 包。由 `dev` 构建的镜像以及来源不明的构建则永远不会检查。Docker 镜像通过 `BUILD_CHANNEL` 构建参数（`main`、`dev` 或 `unknown`，默认 `unknown`）获得其通道，因此请使用 `--build-arg BUILD_CHANNEL=main` 构建自己的发布镜像以保留更新检查。如果检查无法在一秒内连上 GitHub，**设置 > 常规**（管理员区域）和**设置 > 关于**会显示**无法检查更新**，服务器日志会以警告级别记录 `Version update check failed`。
 
 :::info
 
@@ -3467,7 +3467,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 **从普通 Milvus 干净地迁移到多租户 milvus：**
 - 启用多租户之前，尽可能从界面导出重要的知识内容
 - 设置 `ENABLE_MILVUS_MULTITENANCY_MODE=true` 并重启 Open WebUI
-- 进入 **设置 > 管理 > 文档**，在**重建知识与记忆向量**旁点击**重建索引**
+- 进入 **设置 > 文档**（管理员区域），在**重建知识与记忆向量**旁点击**重建索引**
 
 **这会把知识库向量和用户记忆向量重建到新的多租户集合中，同时包含这些知识库内每个文件的按文件向量**
 **网络搜索历史以及从未加入知识库的文件不会被该操作迁移**
@@ -3482,7 +3482,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 
 **当前界面的限制：**
 - 没有一键式的"迁移并清理"按钮
-- 界面中的向量数据库重置（设置 > 管理 > 文档 > 重置向量存储/知识库）只影响当前模式的集合
+- 界面中的向量数据库重置（设置 > 文档 > 重置向量存储（管理员区域）/知识库）只影响当前模式的集合
 - 旧集合需要通过 Milvus 客户端工具手动清理
 
 :::
@@ -3506,7 +3506,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 
 **要执行完整重置并切换到多租户：**
 - 在外部备份任何重要的知识库内容
-- 进入 **设置 > 管理 > 文档**
+- 进入 **设置 > 文档**（管理员区域）
 - 点击**重置向量存储/知识库**（这会删除当前模式的所有集合和已存储的知识元数据）
 - 设置 `ENABLE_MILVUS_MULTITENANCY_MODE=true`
 - 重启 Open WebUI
@@ -3954,21 +3954,21 @@ Qdrant 目前并未由 Open WebUI 团队积极维护。它是社区添加的功�
 
 :::info
 
-这会断开所有先前非多租户模式下创建的 Qdrant 集合。前往 `Admin Settings` > `Documents` > `Reindex Knowledge Base` 迁移现有知识。
+这会断开所有先前非多租户模式下创建的 Qdrant 集合。前往 `Settings` > `Documents` > `Reindex Knowledge and Memory Vectors`（管理员区域）迁移现有知识库和记忆。
 
 之前模式下创建的 Qdrant 集合仍会继续占用资源。
 
 目前 UI 中没有仅重置向量数据库的按钮。如果你想迁移知识到多租户模式：
 - 使用原生 Qdrant 客户端移除所有带有 `open_webui-knowledge` 前缀的集合（或者移除带有 `open_webui` 前缀的所有集合，以删除所有与 Open WebUI 相关的集合）
-- 前往 `Admin Settings` > `Documents` > `Reindex Knowledge Base` 迁移现有知识库
+- 前往 `Settings` > `Documents` > `Reindex Knowledge and Memory Vectors`（管理员区域）迁移现有知识库和记忆
 
-`Reindex Knowledge Base` 只会迁移知识库
+`Reindex Knowledge and Memory Vectors` 会迁移知识库、其中所含文件的按文件向量以及用户记忆。从未加入知识库的文件和缓存的网页搜索结果会留在旧集合中。
 
 :::
 
 :::danger
 
-如果你决定将多租户模式作为默认模式，并且不需要迁移旧知识，请前往 `Admin Settings` > `Documents` 重置向量与知识，这会删除所有带有 `open_webui` 前缀的集合以及所有已存储的知识。
+如果你决定将多租户模式作为默认模式，并且不需要迁移旧知识，请前往 `Settings` > `Documents`（管理员区域）重置向量与知识，这会删除所有带有 `open_webui` 前缀的集合以及所有已存储的知识。
 
 :::
 
@@ -4293,7 +4293,7 @@ pip install --upgrade "valkey-glide-sync>=2.5.2"
 
 - 类型：`str`（逗号分隔的 MIME 类型，允许使用通配符）
 - 默认值：未设置
-- 描述：决定哪些上传的**图片和视频**会交给内容提取引擎。设置为类似 `image/*` 的值可让支持 OCR 的引擎读取图片，也可逐个列出类型（`image/png, image/jpeg`）以便精确控制。只有在选定了内容提取引擎时才生效。未设置时，只有当引擎为 `external` 时媒体才会进入提取引擎。未被转交的媒体会被存储但不做文本提取：图片将无法处理，视频则会保留给视觉模型。空列表会对所有引擎（包括 `external`）禁用媒体提取。`video/*` 会在你的引擎能够处理视频时把视频上传转交给它。音频则遵循语音转文字的设置。也可在**设置 > 管理 > 文档**（**支持的媒体 MIME 类型**）中设置。
+- 描述：决定哪些上传的**图片和视频**会交给内容提取引擎。设置为类似 `image/*` 的值可让支持 OCR 的引擎读取图片，也可逐个列出类型（`image/png, image/jpeg`）以便精确控制。只有在选定了内容提取引擎时才生效。未设置时，只有当引擎为 `external` 时媒体才会进入提取引擎。未被转交的媒体会被存储但不做文本提取：图片将无法处理，视频则会保留给视觉模型。空列表会对所有引擎（包括 `external`）禁用媒体提取。`video/*` 会在你的引擎能够处理视频时把视频上传转交给它。音频则遵循语音转文字的设置。也可在**设置 > 文档**（管理员区域）（**支持的媒体 MIME 类型**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `MISTRAL_OCR_API_KEY` {#mistral\_ocr\_api\_key}
@@ -4313,14 +4313,14 @@ pip install --upgrade "valkey-glide-sync>=2.5.2"
 #### `MISTRAL_OCR_USE_BASE64` {#mistral\_ocr\_use\_base64}
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用后，PDF 会**以 base64 数据 URL 的形式内联**发送到 Mistral OCR API，而不是先上传到 Mistral 的文件存储。当不希望或无法完成单独的上传步骤时（代理/隔离网络环境）很有用；它以一次更大的请求取代了额外的上传请求。也可在**设置 → 管理 → 文档**中通过**使用 Base64**进行配置。
+- 描述：启用后，PDF 会**以 base64 数据 URL 的形式内联**发送到 Mistral OCR API，而不是先上传到 Mistral 的文件存储。当不希望或无法完成单独的上传步骤时（代理/隔离网络环境）很有用；它以一次更大的请求取代了额外的上传请求。也可在**设置 → 文档**（管理员区域）中通过**使用 Base64**进行配置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `MISTRAL_OCR_PARAMS` {#mistral\_ocr\_params}
 
 - 类型：`str`（JSON 对象）
 - 默认值：空（请求原样发送）
-- 描述：合并到每个 Mistral OCR 请求中的 JSON 对象，例如 `{"model": "mistral-ocr-2512"}` 用来指定 OCR 模型。当提取引擎为 Mistral OCR 时，也可在**设置 → 管理 → 文档**中以**参数**形式配置。
+- 描述：合并到每个 Mistral OCR 请求中的 JSON 对象，例如 `{"model": "mistral-ocr-2512"}` 用来指定 OCR 模型。当提取引擎为 Mistral OCR 时，也可在**设置 → 文档**（管理员区域）中以**参数**形式配置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `EXTERNAL_DOCUMENT_LOADER_URL` {#external\_document\_loader\_url}
@@ -4598,7 +4598,7 @@ Open WebUI 会向 `/marker` 端点发起请求，而 Datalab 的 API 参考文�
 #### `MINERU_PARAMS` {#mineru\_params}
 - 类型：`dict`（JSON 对象）
 - 默认值：`{}`（引擎默认值）
-- 描述：传递给 **MinerU** 文档加载器的额外选项，以 JSON 对象形式提供。已识别的键包括 `enable_ocr`（默认 `false`）、`enable_formula`（`true`）、`enable_table`（`true`）、`language`（`en`）和 `model_version`（`pipeline`）。当内容提取引擎为 MinerU 时，也可在**设置 → 管理 → 文档**（**参数**）中配置。
+- 描述：传递给 **MinerU** 文档加载器的额外选项，以 JSON 对象形式提供。已识别的键包括 `enable_ocr`（默认 `false`）、`enable_formula`（`true`）、`enable_table`（`true`）、`language`（`en`）和 `model_version`（`pipeline`）。当内容提取引擎为 MinerU 时，也可在**设置 → 文档**（管理员区域）（**参数**）中配置。
 
   对于自托管的 MinerU 4.x 服务器，Open WebUI 仅使用以下键：
   - `tier`：解析质量，可选 `flash`、`basic`、`standard` 或 `advanced`。留空则使用服务器默认值。
@@ -4888,7 +4888,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：加载文档时使用 OCR 从 PDF 中提取图像。也可在**管理面板 > 设置 > 文档**中通过 **PDF 提取图像（OCR）**进行配置。OCR 在 Open WebUI 服务器上使用 RapidOCR 运行，其参数由 [`RAPIDOCR_PARAMS`](#rapidocr_params) 调节。
+- 描述：加载文档时使用 OCR 从 PDF 中提取图像。也可在**设置 > 文档**（管理员区域）中通过 **PDF 提取图像（OCR）**进行配置。OCR 在 Open WebUI 服务器上使用 RapidOCR 运行，其参数由 [`RAPIDOCR_PARAMS`](#rapidocr_params) 调节。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4935,21 +4935,21 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`int`
 - 默认值：未设置（不限制）
-- 描述：设置每批上传到知识库的文件数量上限。涵盖文件和文件夹上传、目录同步以及批量添加端点。必须是正整数；`0` 或负值会让 Open WebUI 在启动时停止。也可在**管理设置 > 文档 > 知识库批量上传上限**中设置。
+- 描述：设置每批上传到知识库的文件数量上限。涵盖文件和文件夹上传、目录同步以及批量添加端点。必须是正整数；`0` 或负值会让 Open WebUI 在启动时停止。也可在**设置 > 文档 > 知识库批量上传上限**（管理员区域）中设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `KNOWLEDGE_MAX_FILE_COUNT` {#knowledge\_max\_file\_count}
 
 - 类型：`int`
 - 默认值：未设置（不限制）
-- 描述：设置每个知识库中文件总数量的上限。知识库自身可以设置更低的上限，参见[文件上限](/features/workspace/knowledge#file-limits)。必须是正整数；`0` 或负值会让 Open WebUI 在启动时停止。也可在**管理设置 > 文档 > 知识库文件数量上限**中设置。
+- 描述：设置每个知识库中文件总数量的上限。知识库自身可以设置更低的上限，参见[文件上限](/features/workspace/knowledge#file-limits)。必须是正整数；`0` 或负值会让 Open WebUI 在启动时停止。也可在**设置 > 文档 > 知识库文件数量上限**（管理员区域）中设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `KNOWLEDGE_MAX_FILE_SIZE` {#knowledge\_max\_file\_size}
 
 - 类型：`int`
 - 默认值：未设置（不限制）
-- 描述：设置添加到知识库中的单个文件大小上限（兆字节）。[`RAG_FILE_MAX_SIZE`](#rag_file_max_size) 同样适用，知识库自身也可以设置更低的上限，参见[文件上限](/features/workspace/knowledge#file-limits)。必须是正整数；`0` 或负值会让 Open WebUI 在启动时停止。也可在**管理设置 > 文档 > 知识库文件大小上限**中设置。
+- 描述：设置添加到知识库中的单个文件大小上限（兆字节）。[`RAG_FILE_MAX_SIZE`](#rag_file_max_size) 同样适用，知识库自身也可以设置更低的上限，参见[文件上限](/features/workspace/knowledge#file-limits)。必须是正整数；`0` 或负值会让 Open WebUI 在启动时停止。也可在**设置 > 文档 > 知识库文件大小上限**（管理员区域）中设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `RAG_FILE_CONTENT_SEARCH_MAX_CHARS` {#rag\_file\_content\_search\_max\_chars}
@@ -5629,7 +5629,7 @@ Example:
 - 默认值：`auto`
 - 选项： `auto` (Random), `bing`, `brave`, `duckduckgo`, `google`, `grokipedia`, `mojeek`, `wikipedia`, `yahoo`, `yandex`.
 - 描述：指定 DDGS 引擎使用的后端。
-- 持久化：这是一个 `ConfigVar` 变量。可在**管理面板 > 设置 > Web 搜索 > DDGS 后端**中配置（当 DDGS 被选为搜索引擎时）。
+- 持久化：这是一个 `ConfigVar` 变量。可在**设置 > Web 搜索 > DDGS 后端**（管理员区域）中配置（当 DDGS 被选为搜索引擎时）。
 
 
 #### `BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL` {#bypass\_web\_search\_embedding\_and\_retrieval}
@@ -5653,7 +5653,7 @@ Example:
 - 类型：`str`
 - 默认值：`http://localhost:7000`
 - 描述：自托管 [OpenSERP](https://github.com/karust/openserp) 实例的基础 URL，在网络搜索引擎设置为 `openserp` 时使用。Open WebUI 会调用它的 `/mega/search` 端点，该端点一并返回来自 Google、Bing、Yandex、Baidu、DuckDuckGo 和 Ecosia 的结果。不涉及 API 密钥，基础 URL 是唯一必需的设置。参见 [OpenSERP 提供方指南](/features/chat-conversations/web-search/providers/openserp)。
-- 持久化：这是一个 `ConfigVar` 变量。在搜索引擎选择 `openserp` 时，可在 **设置 > 管理 > 网络搜索 > OpenSERP URL** 中配置。
+- 持久化：这是一个 `ConfigVar` 变量。在搜索引擎选择 `openserp` 时，可在 **设置 > 网络搜索 > OpenSERP URL**（管理员区域） 中配置。
 
 #### `SEARXNG_QUERY_URL` {#searxng\_query\_url}
 
@@ -5719,7 +5719,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`int`
 - 默认值：`8192`
-- 描述：当 `WEB_SEARCH_ENGINE=brave_llm_context` 时，每次查询所拉取的最大 token 总数。会以 `maximum_number_of_tokens` 发送给 Brave 的 LLM Context API。有效范围 `1024`–`32768`。值越大获取的提取段落越丰富，相应消耗的 API 配额也越多；值越小响应越精简。可在 **管理面板 → 设置 → 网页搜索 → Context Tokens** 中配置（仅在选择 `brave_llm_context` 引擎时显示）。
+- 描述：当 `WEB_SEARCH_ENGINE=brave_llm_context` 时，每次查询所拉取的最大 token 总数。会以 `maximum_number_of_tokens` 发送给 Brave 的 LLM Context API。有效范围 `1024`–`32768`。值越大获取的提取段落越丰富，相应消耗的 API 配额也越多；值越小响应越精简。可在 **设置 → 网页搜索 → Context Tokens**（管理员区域） 中配置（仅在选择 `brave_llm_context` 引擎时显示）。
 - 持久化：这是一个 `ConfigVar` 变量。存储于配置键 `rag.web.search.brave_search_context_tokens`。
 
 
@@ -5826,7 +5826,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`str`（JSON 对象）
 - 默认值：`''`（解析为 `{}`；实际默认值为 `{"url": "https://api.linkup.so/v1/search", "depth": "standard", "outputType": "sourcedAnswer"}`）
-- 描述：可选的 JSON 对象，会合并到 Linkup 请求默认值之上。已识别的键包括 `depth`（`standard` 或 `deep`）、`outputType`（`sourcedAnswer` 或 `searchResults`）以及 `url`（覆盖 API 端点）。`q`（查询词）和 `maxResults` 会自动注入，无法被覆盖。无效的 JSON 会回退到 `{}`。选中 `linkup` 引擎时，可在**设置 → 管理 → Web Search**中配置。
+- 描述：可选的 JSON 对象，会合并到 Linkup 请求默认值之上。已识别的键包括 `depth`（`standard` 或 `deep`）、`outputType`（`sourcedAnswer` 或 `searchResults`）以及 `url`（覆盖 API 端点）。`q`（查询词）和 `maxResults` 会自动注入，无法被覆盖。无效的 JSON 会回退到 `{}`。选中 `linkup` 引擎时，可在**设置 → Web Search**（管理员区域）中配置。
 - 持久化：这是一个 `ConfigVar` 变量。存储在配置键 `rag.web.search.linkup_search_params`。
 
 
@@ -5842,7 +5842,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 - 类型：`str`
 - 默认值：`https://s.jina.ai/`
 - 描述：设置 Jina Search API 的基础 URL。用于指定自定义或区域端点（例如 `https://eu-s-beta.jina.ai/`）。
-- 持久化：这是一个 `ConfigVar` 变量。可在**管理面板 > 设置 > Web 搜索 > Jina API 基础 URL** 中配置。
+- 持久化：这是一个 `ConfigVar` 变量。可在**设置 > Web 搜索 > Jina API 基础 URL**（管理员区域）中配置。
 
 
 #### `BING_SEARCH_V7_ENDPOINT` {#bing\_search\_v7\_endpoint}
@@ -5873,7 +5873,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`str`
 - 默认值：`None`
-- 描述：设置 [Exa](/features/chat-conversations/web-search/providers/exa) 的 API 密钥。同一个密钥同时用于 Exa 搜索引擎（`WEB_SEARCH_ENGINE=exa`）和 Exa 网页加载器（[`WEB_LOADER_ENGINE=exa`](#web_loader_engine)）。当 Exa 是网页加载器但选择了其它搜索引擎时，**设置 > 管理 > Web Search**中的网页加载器设置会显示自己的 **Exa API Key** 字段，它设置的也是同一个密钥。
+- 描述：设置 [Exa](/features/chat-conversations/web-search/providers/exa) 的 API 密钥。同一个密钥同时用于 Exa 搜索引擎（`WEB_SEARCH_ENGINE=exa`）和 Exa 网页加载器（[`WEB_LOADER_ENGINE=exa`](#web_loader_engine)）。当 Exa 是网页加载器但选择了其它搜索引擎时，**设置 > Web Search**（管理员区域）中的网页加载器设置会显示自己的 **Exa API Key** 字段，它设置的也是同一个密钥。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5881,7 +5881,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`int`
 - 默认值：`None`（保留每条结果的全文）
-- 描述：限制 Exa 为每条结果返回的页面文本字符数，这是避免宽泛搜索塞满上下文窗口的调节手段。留空表示不限制。非正整数的取值会让服务器在启动时停止，而不是被忽略，因此这里的笔误会立刻暴露而不是悄悄生效。同样的设置也位于 **设置 > 管理 > 网络搜索** 中，引擎选择 Exa 后即会出现。
+- 描述：限制 Exa 为每条结果返回的页面文本字符数，这是避免宽泛搜索塞满上下文窗口的调节手段。留空表示不限制。非正整数的取值会让服务器在启动时停止，而不是被忽略，因此这里的笔误会立刻暴露而不是悄悄生效。同样的设置也位于 **设置 > 网络搜索**（管理员区域） 中，引擎选择 Exa 后即会出现。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `SERPAPI_API_KEY` {#serpapi\_api\_key}
@@ -5963,7 +5963,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 - 类型：`str`
 - 默认值：`basic`
 - 选项：`ultra-fast`、`fast`、`basic`、`advanced`
-- 描述：设置每次 [Tavily](/features/chat-conversations/web-search/providers/tavily#optional-configurations) 搜索所发送的 `search_depth`，从 `ultra-fast`（最快）到 `advanced`（最详尽）。也可在**设置 > 管理 > 网络搜索**的 **Tavily 搜索深度**中设置。它与 `TAVILY_EXTRACT_DEPTH` 相互独立，因此搜索深度和提取深度可以分别配置。
+- 描述：设置每次 [Tavily](/features/chat-conversations/web-search/providers/tavily#optional-configurations) 搜索所发送的 `search_depth`，从 `ultra-fast`（最快）到 `advanced`（最详尽）。也可在**设置 > 网络搜索**（管理员区域）的 **Tavily 搜索深度**中设置。它与 `TAVILY_EXTRACT_DEPTH` 相互独立，因此搜索深度和提取深度可以分别配置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `YACY_QUERY_URL` {#yacy\_query\_url}
@@ -6211,7 +6211,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 - 类型：`int`
 - 默认值：`None`
 - 描述：指定 Firecrawl 请求的超时时间（毫秒）。未设置时使用 Firecrawl 默认超时。
-- 持久化：这是一个 `ConfigVar` 变量。可在**管理面板 > 设置 > Web 搜索 > Firecrawl 超时**中配置。
+- 持久化：这是一个 `ConfigVar` 变量。可在**设置 > Web 搜索 > Firecrawl 超时**（管理员区域）中配置。
 
 
 #### `PLAYWRIGHT_TIMEOUT` {#playwright\_timeout}
@@ -6243,7 +6243,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 - 类型：`str`
 - 默认值：未设置（请求由服务器自身的地址发出）
 - 描述：用于获取 YouTube 视频转录的请求所使用的代理，形式为 `https://user:password@host:port`。HTTP 和 HTTPS 使用同一个 URL。YouTube 会拦截来自许多数据中心和云服务商地址的转录请求；一旦被拦截，附加 YouTube 视频就会失败，错误信息会说明 YouTube 阻止了该请求并指出此设置。
-- 持久化：这是一个 `ConfigVar` 变量。可在**设置 > 管理 > Web Search > Youtube Proxy URL**中配置。
+- 持久化：这是一个 `ConfigVar` 变量。可在**设置 > Web Search > Youtube Proxy URL**（管理员区域）中配置。
 
 
 #### `YOUTUBE_LOADER_LANGUAGE` {#youtube\_loader\_language}
@@ -6539,7 +6539,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：语音模式系统提示词的总开关。设为 `True` 时，语音模式聊天会在前面追加自定义的 `VOICE_MODE_PROMPT_TEMPLATE`（若已设置）或 `DEFAULT_VOICE_MODE_PROMPT_TEMPLATE`。设为 `False` 时不注入任何语音专用系统提示——模型只使用常规系统提示和聊天历史。可在 **Admin Settings → Interface → Voice Mode Custom Prompt** 中通过开关配置。
+- 描述：语音模式系统提示词的总开关。设为 `True` 时，语音模式聊天会在前面追加自定义的 `VOICE_MODE_PROMPT_TEMPLATE`（若已设置）或 `DEFAULT_VOICE_MODE_PROMPT_TEMPLATE`。设为 `False` 时不注入任何语音专用系统提示——模型只使用常规系统提示和聊天历史。可在 **设置 → 界面 → 语音模式提示词**（管理员区域）中通过开关配置。
 - 持久化：这是一个 `ConfigVar` 变量。存储于配置键 `task.voice.prompt.enable`。
 
 
@@ -6552,7 +6552,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 ### 实时语音通话 {#realtime-voice-calls}
 
-这些变量用于配置[语音模式](/features/chat-conversations/chat-features/voice-mode#realtime-calls)的**实时**通话模式，在 **设置 > 管理 > 音频 > 语音通话** 中设置。
+这些变量用于配置[语音模式](/features/chat-conversations/chat-features/voice-mode#realtime-calls)的**实时**通话模式，在 **设置 > 音频 > 语音通话**（管理员区域） 中设置。
 
 #### `AUDIO_REALTIME_ENABLED` {#audio\_realtime\_enabled}
 
@@ -7160,7 +7160,7 @@ Strictly return in JSON format:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：通过 OAuth 或 OIDC 提供方登录的总开关。设为 `False` 时，提供方登录和回调都会被拒绝，因此可以在不删除客户端 ID、密钥和端点设置的情况下关闭单点登录。对应的开关位于 **设置 > 管理 > 认证**，与 LDAP 的开关并列。除非你想在保留配置的同时暂停 SSO，否则请保持启用。
+- 描述：通过 OAuth 或 OIDC 提供方登录的总开关。设为 `False` 时，提供方登录和回调都会被拒绝，因此可以在不删除客户端 ID、密钥和端点设置的情况下关闭单点登录。对应的开关位于 **设置 > 认证**（管理员区域），与 LDAP 的开关并列。除非你想在保留配置的同时暂停 SSO，否则请保持启用。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `ENABLE_OAUTH_SIGNUP` {#enable\_oauth\_signup}
@@ -7198,7 +7198,7 @@ Strictly return in JSON format:
 
 :::info 该项为 `False` 时管理面板只读
 
-由于环境变量具有权威性，**设置 > 管理 > 认证**中的 **OAuth / OIDC** 部分会以只读方式显示：数值依然可见，但没有任何控件接受输入，保存页面也不会改动它们。请在环境中修改并重启，或把该项设为 `True` 以便在管理面板中管理。
+由于环境变量具有权威性，**设置 > 认证**（管理员区域）中的 **OAuth / OIDC** 部分会以只读方式显示：数值依然可见，但没有任何控件接受输入，保存页面也不会改动它们。请在环境中修改并重启，或把该项设为 `True` 以便在管理面板中管理。
 
 [`ENABLE_PERSISTENT_CONFIG`](#enable_persistent_config) 才是真正起决定作用的。只要它是 `False`，无论这个变量怎么设置都不会保存任何内容，因此两者都必须为 `True`，修改才会持久生效。
 
@@ -7958,7 +7958,7 @@ environment:
 
 - 类型：`str`
 - 默认值：空字符串（`''`）
-- 描述：为没有邮箱地址的 LDAP 用户生成一个由其登录名构成的邮箱。当 `LDAP_ATTRIBUTE_FOR_MAIL` 所指定的属性对某个用户为空时，Open WebUI 使用 `username@domain`，其中 `username` 是登录页上输入的名称。留空表示关闭这一功能；这类用户将无法登录，并收到 `User does not have a valid email address.` 错误。如果已经存在使用该地址的 Open WebUI 账户（例如通过注册或 SSO 创建的），该 LDAP 用户将登录到那个账户。请设置一个你掌控的域名，这样 LDAP 用户就无法接管属于他人的账户。也可在**管理面板 > 设置 > 认证 > LDAP**中以**默认邮箱域名**形式配置。
+- 描述：为没有邮箱地址的 LDAP 用户生成一个由其登录名构成的邮箱。当 `LDAP_ATTRIBUTE_FOR_MAIL` 所指定的属性对某个用户为空时，Open WebUI 使用 `username@domain`，其中 `username` 是登录页上输入的名称。留空表示关闭这一功能；这类用户将无法登录，并收到 `User does not have a valid email address.` 错误。如果已经存在使用该地址的 Open WebUI 账户（例如通过注册或 SSO 创建的），该 LDAP 用户将登录到那个账户。请设置一个你掌控的域名，这样 LDAP 用户就无法接管属于他人的账户。也可在**设置 > 认证 > LDAP**（管理员区域）中以**默认邮箱域名**形式配置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `LDAP_ATTRIBUTE_FOR_USERNAME` {#ldap\_attribute\_for\_username}
@@ -9803,7 +9803,7 @@ Open WebUI 使用以下环境变量：
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：开启或关闭所有外部工具连接：管理员配置的 OpenAPI 和 [MCP](/features/extensibility/mcp) 工具服务器、[开放终端](/features/open-terminal) 连接（管理员的个人的）以及用户自行添加的直接工具服务器。设为 `False` 后，它们都不会被加载或调用，**设置 > 管理 > 集成**中的**工具**和**开放终端**部分会变灰，终端选择器会从聊天中移除，且 [`ENABLE_DIRECT_INTEGRATIONS`](#enable_direct_integrations) 视为关闭。当 [`ENABLE_PLUGINS`](#enable_plugins) 为 `False` 时会被强制关闭。该值在启动时读取一次，因此修改它需要重启。
+- 描述：开启或关闭所有外部工具连接：管理员配置的 OpenAPI 和 [MCP](/features/extensibility/mcp) 工具服务器、[开放终端](/features/open-terminal) 连接（管理员的个人的）以及用户自行添加的直接工具服务器。设为 `False` 后，它们都不会被加载或调用，**设置 > 集成**（管理员区域）中的**工具**和**开放终端**部分会变灰，终端选择器会从聊天中移除，且 [`ENABLE_DIRECT_INTEGRATIONS`](#enable_direct_integrations) 视为关闭。当 [`ENABLE_PLUGINS`](#enable_plugins) 为 `False` 时会被强制关闭。该值在启动时读取一次，因此修改它需要重启。
 
 ### 安装必需的 Python 包 {#install-required-python-packages}
 

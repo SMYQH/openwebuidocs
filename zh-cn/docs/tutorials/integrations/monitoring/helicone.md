@@ -62,7 +62,7 @@ Helicone 是一个开源 LLM 可观测性平台，帮助开发者监控、调试
      ghcr.io/open-webui/open-webui
 ```
 
-如果你已部署 Open WebUI，可进入 `Admin Panel` > `Settings` > `Connections`，点击 “Managing OpenAI API Connections” 的 `+` 号，并更新以下字段：
+如果你已部署 Open WebUI，可进入 `Settings` > `Connections`（管理员区域），点击 “Managing OpenAI API Connections” 的 `+` 号，并更新以下字段：
 
 - `API Base URL` 设置为 ``https://oai.helicone.ai/v1/<YOUR_HELICONE_API_KEY>``
 - `API KEY` 设置为你的 OpenAI API key。

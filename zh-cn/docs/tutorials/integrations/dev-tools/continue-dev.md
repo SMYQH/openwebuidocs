@@ -127,7 +127,7 @@ provider: openai
 
 ### 模型 {#model}
 
-这是您在 Open WebUI 中模型的实际名称。导航至 `Admin Panel` > `Settings` > `Models`，然后点击您偏好的 LLM。
+这是您在 Open WebUI 中模型的实际名称。导航至 `Settings` > `Models`（管理员区域），然后点击您偏好的 LLM。
 在用户指定的名称下方，您会找到实际的模型名称。
 
 ```yaml

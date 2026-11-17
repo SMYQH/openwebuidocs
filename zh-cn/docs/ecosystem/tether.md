@@ -1,75 +1,86 @@
 ---
-title: "Tether"
+title: "Open WebUI Tether"
+description: "让你的 AI 在你自己的电脑上干活，用手机查看结果，并接入你自己的模型与工具。Tether 提供 macOS、Windows 和 Linux 版本。"
 sidebar_position: 3
 ---
 
-# Tether {#tether}
+# Open WebUI Tether {#open-webui-tether}
 
-Tether 是 Open WebUI 的桌面伴侣应用，提供 macOS、Windows 和 Linux 版本。它会登录到你的实例并把你的电脑连接上去，这样聊天就可以把这台电脑当作终端使用，应用也能显示桌面通知。项目位于 [github.com/open-webui/tether](https://github.com/open-webui/tether)。个人非商业用途免费。商业或组织性的生产使用需要 [Open WebUI 企业版许可证](https://docs.openwebui.com/enterprise)。
+**即使你不在电脑前，也让 AI 在你的电脑上干活。**
 
-## 连接 {#connecting}
+让它把一批导出文件整理成报告、修掉项目里的一个 bug，或者归类你的文件。用手机查看结果。回来继续处理它在电脑上创建的文件。
 
-所有设置都在 Tether 应用中完成，在那台你想从聊天中使用的电脑上。只要实例满足[环境要求](#requirements)，它就能直接接受该应用，无需在管理面板中开启任何开关。
+Tether 是把你的电脑连接到你的 Open WebUI 的桌面应用。它把你的文件、工具和本地模型带进聊天，并提供可选的工作区沙箱，用来限定 AI 可以在哪里工作。
 
-1. 从[发布页](https://github.com/open-webui/tether/releases/latest)在那台电脑上安装 Tether。
-2. 在 Tether 中输入你的 Open WebUI 实例地址。若要添加另一个实例或账户，点击 **Add connection**。请输入实例最终所处的地址：如果 `http://` 会重定向到 `https://`，就填写 `https://` 的地址。
-3. Tether 会在该实例上用浏览器打开 `/auth/sessions/<id>`。如果你尚未登录，请先用你用来聊天的账户登录。登录后该页面会把你送回 Tether。
-4. Tether 会提示安装 Open Terminal——正是它让聊天能够在这台电脑上工作。请接受安装。若选择了 **Not now**，之后可在 Tether 的 **Settings > Open Terminal** 中安装。
-5. Tether 中的终端指示器会显示 **Connected to WebUI**。Tether 会保持登录状态，并在后台续期其会话。
+**[下载 macOS、Windows 和 Linux 版本](https://github.com/open-webui/tether/releases/latest)** · **[开始使用](#get-started)**
 
-## 在聊天中使用你的电脑 {#using-your-computer-in-a-chat}
+## 触手可及的工作区 {#your-workspace-within-reach}
 
-用任意设备上的任意浏览器打开你的实例，并登录与 Tether 相同的账户。点击聊天输入框中的**终端按钮**（云图标），在 **Your devices** 下选择你的电脑。它会按电脑名称列出，或按你在 Tether 设置中设定的 **Device name** 列出。之后它的用法与其他终端完全相同，参见[在聊天中选择终端](/features/open-terminal/setup/connecting#7-select-a-terminal-in-chat)。
+你的项目早就有了依赖，文档各在各位的工具都装好了。Tether 让你的 AI 通过 **Open Terminal** 在这个环境中工作。跟随命令、检查文件，并在 Open WebUI 中提出修改。你也可以在终端环境里安装并登录[受支持的智能体，例如 Claude Code 和 Codex](/getting-started/quick-start/connect-an-agent)后使用它们。
 
-只要你拥有至少一个终端，终端按钮就会显示出来。如果 Tether 是你唯一的终端，该按钮会在 Tether 连接后立刻出现，并在 Tether 断开后消失。
+在另一台设备上打开同一个 Open WebUI 实例，用相同账户登录，然后在终端菜单的 **Your devices** 下选择你的电脑。工作会运行在已连接的电脑上。对团队来说，每个人的设备各自连接到共享实例上的自己的账户。
 
-每个已登录的应用都是一个独立的会话。从应用中退出会结束其会话。会话也会在通过 API 被删除、或在 [`SESSION_EXPIRES_IN`](/reference/env-configuration#session_expires_in)（默认 `90d`）期限内无人使用时结束。访问令牌有效期为 15 分钟，每次续期都会替换刷新令牌。
+Tether 是向外连接的，所以你不需要入站端口，也不需要路由器端口转发。让电脑保持唤醒、联网并运行 Tether。启用 **Run in background**，这样关闭窗口后仍能保持连接；再在 Open WebUI 中开启 **Browser Notifications**，聊天完成或失败时就能收到提醒。系统层面也要允许通知。
 
-## 这个应用能获得什么 {#what-the-app-gets}
+## 询问你屏幕上的内容 {#ask-about-whats-on-your-screen}
 
-- **把你的电脑当作终端。** 在 Tether 连接期间，你的电脑会以 `tether:<connection id>` 的形式出现在终端列表中。只有你能看到它，而且只有当 Tether 提供 `open_terminal` 服务时才会出现。如果连接中断，已打开的终端会显示"Connection interrupted. Reconnecting to the same terminal…"，并在 Tether 恢复后继续使用同一个终端。每个连接最多同时处理 16 个活跃操作。
-- **通知。** 当聊天完成或失败、发生日历提醒或收到频道消息时，服务器会向已选择接收通知的已连接应用发送通知。只有当你在 **Settings > Notifications** 中开启了 **Browser Notifications** 时，才会发送这些通知。
+一个你认不出来的报错。一张你想让人解释的图表。一段你原本得从头描述的东西。
 
-## 环境要求 {#requirements}
+在 macOS 上按 **Cmd+Shift+I**，在 Windows 和 Linux 上按 **Ctrl+Shift+I**，在当前应用之上打开 **Spotlight**。截取一块屏幕区域或附上剪贴板图片，提出你的问题，然后发给 Open WebUI。截图请使用支持图像的模型；快捷键可在 **Tether Settings > General** 中自定义。
 
-- [`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configuration#enable_websocket_support) 已开启。
-- Open WebUI 以单个工作进程运行，或者在 [`UVICORN_WORKERS`](/reference/env-configuration#uvicorn_workers) 大于 1 时搭配使用 [Redis](/reference/env-configuration#redis_url)。没有 Redis 时，多工作进程实例会拒绝 Tether 连接，对 Tether 终端的请求会失败并提示"Tether requires Redis with multiple WebUI workers."。
-- [`ENABLE_TOOL_SERVERS`](/reference/env-configuration#enable_tool_servers) 已开启（这是默认设置）。它是实例上所有终端的总开关，Tether 电脑也包含在内。
-- 运行 Tether 的电脑能够访问实例的地址。Tether 是从电脑向实例发起连接的，因此这台电脑无需开放端口，也不需要实例能够反向访问它的地址。
+## 给它一个可以工作的文件夹 {#give-it-a-folder-to-work-in}
 
-当满足前两项要求时，`/api/config` 中的应用配置会报告 `features.tether`；而 `features.auth_sessions` 则在每个实例上都会出现。
+Tether 可选的**工作区沙箱**让你从一个明确的文件集合开始。操作系统层面的限制会把 Open Terminal 及其命令限定在选定的工作区、临时存储和必要的程序文件内。沙箱中的命令默认关闭网络访问；任务需要时再打开。
 
-访问权限随账户而定：每个能够登录的用户都可以连接自己的电脑，并且它只对该账户列出。
+沙箱原生运行在 **macOS 和受支持的 Windows 设备**上，不需要 Docker 或虚拟机，在 **Linux** 上**不可用**。在 **Tether Settings > Open Terminal > Sandbox** 下选择 **Restrict file access**，选定文件夹，然后点击 **Apply and restart**。Tether 会在启动前检查这些限制；等到出现 **Sandbox active** 再继续。
 
-## 故障排查 {#troubleshooting}
+<details>
+<summary>沙箱范围</summary>
 
-如果聊天输入框中缺少终端按钮或你的电脑，请按顺序检查以下各项：
+工作区内的文件仍然可以被修改或删除。该 Tether 安装中的所有 WebUI 连接共享同一个选定文件夹。沙箱生效期间，浏览器控制、桌面控制和直接 HTTP 访问都会被禁用。
 
-| 检查项 | 修复方式 |
-| --- | --- |
-| Tether 显示 **Running locally · Not connected to WebUI** | Tether 尚未连接到该实例。把实例地址添加为一个连接并登录。 |
-| 浏览器登录的账户与 Tether 不同 | 在两处都登录同一个账户。 |
-| Tether 中尚未安装 Open Terminal | 在 Tether 的 **Settings > Open Terminal** 中安装它。 |
-| 实例的 `/api/config` 中没有 `"tether":true` | 由管理员让实例符合[环境要求](#requirements)。 |
-| **Settings > Admin > Integrations** 中的 **Tools** 与 **Open Terminal** 分区呈灰色不可用 | 由管理员从实例环境中移除 `ENABLE_TOOL_SERVERS=False` 与 `ENABLE_PLUGINS=False`，然后重启实例。 |
+本地 MCP 命令、单独连接的终端，以及 **Host shell (unrestricted)** 都在这个沙箱之外。仅设置文件浏览器的起始目录并不能限制访问。各平台和进程生命周期的细节见[沙箱指南](https://github.com/open-webui/tether/blob/main/docs/sandbox.md)。
 
-如果电脑已被选中但模型没有使用它，说明该模型的 **Terminal** 能力处于关闭状态。请在模型编辑器中开启它，参见[能力与绑定](/features/workspace/models#capabilities-and-bindings)。
+</details>
 
-## 会话 API {#session-api}
+## 接入你自己的模型和工具 {#bring-your-own-models-and-tools}
 
-这些端点面向原生客户端的开发者。`requests`、`exchange` 和 `refresh` 无需登录；其他每个端点都需要已登录用户的 bearer 令牌。对 create、requests、exchange、refresh 和 authorize 的调用，按 IP 地址限制为每分钟 30 次。
+在 Open WebUI 中使用你在 Ollama 或 LM Studio 里运行的模型。把已安装的 MCP 服务器的工具带进聊天，或通过 OpenAPI 连接内部服务。在 **Tether Settings > Integrations** 中添加它们；Tether 通过已有的连接从你的电脑访问它们。本地 MCP 命令不需要单独的 HTTP 桥接。参见 [MCP 配置](https://github.com/open-webui/tether/blob/main/docs/mcp.md)。
 
-| 方法 | 路径 | 用途 |
-| --- | --- | --- |
-| `POST` | `/api/v1/auths/sessions/requests` | 发起浏览器登录。需提交应用的 `name`、一个回环地址 `redirect_uri`（例如 `http://127.0.0.1:<port>/callback`，主机为 `127.0.0.1`、端口明确、无 query 或 fragment）、32 到 256 个 URL 安全字符组成的 `state`，以及一个 PKCE `code_challenge`（S256，43 个字符）。该请求有效期为 10 分钟。返回 `session_id`，用于打开 `/auth/sessions/<id>`。 |
-| `GET` | `/api/v1/auths/sessions/{id}/request` | 返回一个等待中请求的名称与有效期。 |
-| `POST` | `/api/v1/auths/sessions/{id}/authorize` | 以已登录用户的身份批准该请求，并返回一个回调地址及一次性 `code`（有效期 60 秒）。`/auth/sessions/<id>` 页面会调用它。 |
-| `POST` | `/api/v1/auths/sessions/exchange` | 用 `session_id`、`code`、`redirect_uri` 和 `code_verifier` 换取访问令牌与刷新令牌。 |
-| `POST` | `/api/v1/auths/sessions/refresh` | 用刷新令牌换取新的令牌。可选地提交一个 `request_id`，以便在响应丢失时找回新令牌：使用相同的 `request_id` 重复调用会再次返回它们。 |
-| `POST` | `/api/v1/auths/sessions` | 直接从一个已登录的请求创建会话。 |
-| `GET` | `/api/v1/auths/sessions` | 列出你的会话。 |
-| `DELETE` | `/api/v1/auths/sessions/{id}` | 吊销你的某个会话。 |
+对于浏览器相关的工作，Open Terminal 可以使用独立的 Chrome 配置文件，或者在你开启远程调试并同意后使用你正在运行的 Chrome 会话。桌面控制在受支持的系统上可用。两者都要求关闭工作区沙箱。
 
-### 连接 {#connection}
+集成用的密钥留在 Tether 电脑上。聊天中使用的提示、文件内容和工具结果仍会经过 Open WebUI 以及相关的模型服务。
 
-客户端连接到 websocket `/api/v1/tether/connect`，并发送一条 `hello` 消息，其中包含 `version`（`1` 或 `2`）、某个会话的访问 `token`、`connection_id`、`name` 以及一份 `services` 列表。把 `notifications` 设为 `true` 可让该连接选择接收通知。服务器以 `ready` 作为回应。
+## 开始使用 {#get-started}
+
+你需要一个现成的 Open WebUI 实例和一个账户。
+
+1. 在你想使用的电脑上**[安装 Tether](https://github.com/open-webui/tether/releases/latest)**。
+2. **输入你的 Open WebUI 地址**并登录。
+3. 选择 **Install and connect** 以启用本地文件和命令，Tether 会为你安装 Open Terminal。选择 **Not now** 则可以在不启用本地执行的情况下使用桌面聊天。
+4. **设置你的访问偏好**，然后在聊天的 **Your devices** 下选择这台电脑。选一个能力足够的工具调用模型，并在[文件浏览器](/features/open-terminal/file-browser)中打开你的文件夹。
+
+![Tether 连接界面，显示 Open WebUI 地址和可选的连接名称](/images/tether-connect.png)
+
+拿工作区里的几份文本文档试试：
+
+> 阅读这些文件，创建 summary.md，为每一份写一段简短摘要。带上源文件名，并保持原文件不变。
+
+打开结果，检查一下，再提出下一步的修改。
+
+个人非商业用途按[个人使用例外条款](https://github.com/open-webui/tether/blob/main/LICENSE)免费。商业或组织内部的生产使用需要 [Open WebUI 企业版许可证](/enterprise)。
+
+## 环境要求与帮助 {#requirements}
+
+<details>
+<summary>连接要求与故障排查</summary>
+
+请使用相互兼容的 Tether、Open WebUI 和 Open Terminal 版本。实例需要 [`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configuration#enable_websocket_support)；若要访问终端，还需要 [`ENABLE_TOOL_SERVERS`](/reference/env-configuration#enable_tool_servers)。当 [`UVICORN_WORKERS`](/reference/env-configuration#uvicorn_workers) 大于 1 时，还需要 [Redis](/reference/env-configuration#redis_url)。
+
+如果你的电脑没有出现，检查 Tether 和 Open Terminal 是否都在运行并已连接，以及两台设备是否使用同一个实例和账户。如果模型没有使用它，检查模型的 [Terminal 能力](/features/workspace/models#capabilities-and-bindings)和[原生工具调用模式](/features/open-terminal/setup/connecting#8-enable-native-function-calling)。
+
+如果缺少模型或工具，在 Tether 中启用对应的连接，并确认这些服务从那台电脑可以访问。MCP 需要中继支持匹配，并在 Open WebUI 中启用外部工具。
+
+</details>
+
+[GitHub](https://github.com/open-webui/tether) · [客户端协议参考](/reference/tether-client-protocol) · [反馈问题](https://github.com/open-webui/tether/issues)

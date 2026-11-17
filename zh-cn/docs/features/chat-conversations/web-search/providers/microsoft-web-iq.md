@@ -40,7 +40,7 @@ title: "Microsoft Web IQ"
 ### 2. 配置 Open WebUI {#2-configure-open-webui}
 
 1. 使用管理员账户登录 Open WebUI。
-2. 打开**管理面板 → 设置 → 网络搜索**。
+2. 打开**设置 → 网络搜索**（管理员区域）。
 3. 开启**网络搜索**开关。
 4. 从**网络搜索引擎**下拉菜单中选择 **microsoft_web_iq**。
 5. 将你的 API 密钥粘贴到 **Microsoft Web IQ API 密钥**字段。

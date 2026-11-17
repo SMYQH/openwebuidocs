@@ -50,7 +50,7 @@ Open WebUI 会把每个查询发送到 Jina 的 Search API，并把结果以链�
 要在 Open WebUI 中启用 Jina 搜索集成，请在 Open WebUI 管理员设置中按以下步骤操作：
 
 1. **以管理员身份登录：** 进入你的 Open WebUI 实例，并使用管理员账号登录
-2. **进入 Web Search 设置：** 前往 **Settings > Admin > Web Search**
+2. **进入 Web Search 设置：** 前往 **Settings > Web Search**（管理员区域）
 3. **将搜索引擎设为 Jina：** 在 “Web Search Engine” 下拉框中选择 **Jina**
 4. **输入 API Key：** 将你的 Jina API key 粘贴到 **Jina API Key** 输入框中
 5. **（可选）填写 Jina API Base URL：** 如果你需要使用某个特定端点（例如欧盟数据处理节点），可在 **Jina API Base URL** 中填写；默认值为 `https://s.jina.ai/`

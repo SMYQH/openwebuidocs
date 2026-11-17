@@ -84,7 +84,7 @@ docker compose up -d
 
 # 第 2 步：为 Jupyter 配置代码执行 {#step-2-configure-code-execution-for-jupyter}
 
-Open-WebUI 和 Jupyter 都运行后，我们需要在 Admin Panel -> Settings -> Code Execution 中配置 Open-WebUI 的代码执行以使用 Jupyter。由于 Open-WebUI 持续发布和改进该功能，建议始终查看 [`configs.py` 文件](https://github.com/open-webui/open-webui/blob/6fedd72e3973e1d13c9daf540350cd822826bf27/backend/open_webui/routers/configs.py#L72)以获取最新配置。截至 v0.5.16，包含以下配置：
+Open-WebUI 和 Jupyter 都运行后，我们需要在 Settings -> Code Execution（管理员区域） 中配置 Open-WebUI 的代码执行以使用 Jupyter。由于 Open-WebUI 持续发布和改进该功能，建议始终查看 [`configs.py` 文件](https://github.com/open-webui/open-webui/blob/6fedd72e3973e1d13c9daf540350cd822826bf27/backend/open_webui/routers/configs.py#L72)以获取最新配置。截至 v0.5.16，包含以下配置：
 
 | Open-WebUI 环境变量 | 值 |
 | ------------------------------------- | -------------------------------- |
@@ -100,7 +100,7 @@ Open-WebUI 和 Jupyter 都运行后，我们需要在 Admin Panel -> Settings ->
 | `CODE_INTERPRETER_JUPYTER_AUTH_TOKEN` | 123456 |
 | `CODE_INTERPRETER_JUPYTER_TIMEOUT` | 60 |
 
-这些都是持久化的管理端设置：环境变量只在针对全新数据库的首次启动时生效；此后以数据库中保存的值为准（在 设置 > 管理 > 代码执行 中修改），除非设置 `ENABLE_PERSISTENT_CONFIG=False`。`CODE_EXECUTION_JUPYTER_AUTH` 只接受 `token` 或 `password` 两种取值；填入其他值则不会发送任何凭据，而密码模式会通过 Jupyter 的 `/login` 表单登录。`CODE_INTERPRETER_JUPYTER_*` 系列变量默认取其 `CODE_EXECUTION_JUPYTER_*` 对应项的值，但 `CODE_INTERPRETER_ENGINE` 并非如此（它默认是 `pyodide`），因此请同时设置这两个引擎变量。
+这些都是持久化的管理端设置：环境变量只在针对全新数据库的首次启动时生效；此后以数据库中保存的值为准（在 设置 > 代码执行（管理员区域） 中修改），除非设置 `ENABLE_PERSISTENT_CONFIG=False`。`CODE_EXECUTION_JUPYTER_AUTH` 只接受 `token` 或 `password` 两种取值；填入其他值则不会发送任何凭据，而密码模式会通过 Jupyter 的 `/login` 表单登录。`CODE_INTERPRETER_JUPYTER_*` 系列变量默认取其 `CODE_EXECUTION_JUPYTER_*` 对应项的值，但 `CODE_INTERPRETER_ENGINE` 并非如此（它默认是 `pyodide`），因此请同时设置这两个引擎变量。
 
 当 Jupyter 成为执行引擎后，默认开启的 [`ENABLE_ORJSON`](/reference/env-configuration#enable_orjson) 能更快地把一次运行的输出送进聊天，在代码打印大量内容或生成图片时尤其明显。请保持它为 `True`；它只在启动时读取一次，修改后需要重启。
 

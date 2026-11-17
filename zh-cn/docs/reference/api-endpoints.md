@@ -86,7 +86,7 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
 
 :::
 
-**请求中的参数会被保留。** 工作区模型自带自己的高级参数，管理员也可以在**设置 > 管理 > 模型**的**模型默认值**下设置实例级的参数。两者都只会补全你的请求中未指定的部分，因此 `temperature`、`max_tokens`、`top_p`、`seed`、`stop`、`reasoning_effort`、`response_format`、`logit_bias` 以及 Ollama 模型的 `options` 对象都会保留你传入的值。对于 Ollama 模型，`max_tokens` 会以 `num_predict` 的形式传给 Ollama。某个参数未传入时，仍按之前的做法使用模型已保存的值。唯一的例外是**流式聊天响应**，它依然由你的请求中携带的 `stream` 决定回复是否流式返回。下文的 [Anthropic 消息 API](#anthropic-messages-api) 也经由该端点运行，因此在那里同样成立，SDK 的 `max_tokens` 会完整地传到提供方。
+**请求中的参数会被保留。** 工作区模型自带自己的高级参数，管理员也可以在**设置 > 模型**（管理员区域）的**模型默认值**下设置实例级的参数。两者都只会补全你的请求中未指定的部分，因此 `temperature`、`max_tokens`、`top_p`、`seed`、`stop`、`reasoning_effort`、`response_format`、`logit_bias` 以及 Ollama 模型的 `options` 对象都会保留你传入的值。对于 Ollama 模型，`max_tokens` 会以 `num_predict` 的形式传给 Ollama。某个参数未传入时，仍按之前的做法使用模型已保存的值。唯一的例外是**流式聊天响应**，它依然由你的请求中携带的 `stream` 决定回复是否流式返回。下文的 [Anthropic 消息 API](#anthropic-messages-api) 也经由该端点运行，因此在那里同样成立，SDK 的 `max_tokens` 会完整地传到提供方。
 
 **模型控制项。** 带有[模型控制项](/features/workspace/models#model-controls)的模型，也会把每个控制项的默认选项应用到 API 请求上，这些参数同样只补全请求中未指定的部分。若要选择其他选项，请在 `params.model_controls` 下按模型 ID 发送控制项 ID 和选项 ID。`GET /api/models` 会在 `info.params.model_controls` 下列出模型的各个控制项，其中包含每个控制项的 ID、标签、默认值，以及其各选项的 ID 和标签：
 

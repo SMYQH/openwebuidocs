@@ -17,7 +17,7 @@ title: "外部文档提取"
 
 ## 配置 {#configuration}
 
-在 **Settings > Admin > Documents** 中把 **Content Extraction Engine** 设为 **External**，然后填写：
+在 **Settings > Documents**（管理员区域） 中把 **Content Extraction Engine** 设为 **External**，然后填写：
 
 - **Document Loader URL**：你的服务的基础 URL。Open WebUI 会在其后追加 `/process`。
 - **API Key**：以 bearer 令牌形式发送。这是必填项。当引擎设为 External 但没有保存密钥时，Open WebUI 会悄悄回退到内置加载器、永远不会调用你的服务，而管理面板也不会就此发出警告。
