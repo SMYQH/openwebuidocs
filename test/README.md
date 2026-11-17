@@ -23,10 +23,35 @@ duplicate anchors, malformed fences/admonitions, and replacement characters.
 Localizable metadata values and quoted `alt`, `title`, `label`, `placeholder`,
 and `aria-label` attributes are prose; other attributes and expressions are code.
 
+A literal that upstream uses and the translation never uses is a failure. A
+literal the translation adds, or mentions a different number of times, is a
+review signal instead: translations legitimately repeat a term a different
+number of times. Link destinations are compared after resolving them, so
+relative and absolute forms, `.md`/`.mdx` suffixes, and links that upstream
+points at the English site while the translation points at its own pages
+compare equal.
+A URL only has to survive somewhere in the target, as a bare URL, a link
+destination, or inline code. JSON-LD payloads are compared by structure, so
+translated FAQ text is allowed while a changed FAQ count is not. Keyword lists
+and layout directives such as `sidebar_position` are not prose and not
+structure, so they never fail a file.
+
+Two literal classes are not failures. A code span that holds an interface
+label (`Settings`, `Admin Panel`, `Image Generation Engine`) may be translated,
+because the translated site shows a translated interface; that is reported as a
+review signal. A link to a host listed in `non_compliant_link_patterns` may be
+dropped, because project policy removes Discord, Reddit and similar community
+links from the Chinese site; keeping one is reported as `non-compliant-link`,
+and a code span that exists only in the removed sentence disappears with it.
+
 Warnings cover untranslated English after exclusions, verbatim copied prose,
 number drift, Markdown/list/table differences, and unusually short sections.
 An empty section is an error. Section checks continue when heading counts differ.
 English terminology alone never triggers untranslated-prose warnings.
+Admonition types may differ at the same position; a different number of
+admonitions is a failure. An upstream parse defect is reported as a warning:
+the translation must not inherit broken upstream structure, so block-level
+comparisons for that file become review signals.
 
 Use `--files` for paths, directory prefixes, or globs relative to `docs/`:
 
@@ -40,8 +65,9 @@ An empty selection fails. JSON records contain file, line, rule, severity,
 message, and an exact exception fingerprint. File coverage includes category
 JSON; it measures counterpart existence, never semantic completeness.
 
-`translation_config.json` defines English terminology/exclusions and heuristic
-thresholds. Add project-specific terms there; do not add expected translations.
+`translation_config.json` defines English terminology/exclusions, heuristic
+thresholds, and `non_compliant_link_patterns` (URL globs the translation may
+drop). Add project-specific terms there; do not add expected translations.
 Intentional localization differences need an `exceptions` entry containing an
 issue's `fingerprint` and a specific `reason`. Fingerprints bind both documents,
 the path, rule, line, and finding. Editing either document expires the exception.

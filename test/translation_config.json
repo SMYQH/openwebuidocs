@@ -10,5 +10,12 @@
   ],
   "untranslated_min_words": 6,
   "length_ratio_warning": 0.15,
+  "non_compliant_link_patterns": [
+    "https://discord.gg/*", "http://discord.gg/*",
+    "https://discord.com/*", "http://discord.com/*",
+    "https://www.reddit.com/*", "https://reddit.com/*",
+    "http://chatterboxtts.com/discord*", "https://tts.travisvn.com/discord*",
+    "https://img.shields.io/badge/Discord-*"
+  ],
   "exceptions": []
 }

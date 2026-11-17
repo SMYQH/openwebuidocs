@@ -20,7 +20,14 @@ from yaml.nodes import MappingNode, ScalarNode, SequenceNode
 
 
 PARSER = MarkdownIt("commonmark").enable("table").disable("html_block")
-TEXT_FIELDS = {"title", "sidebar_label", "description", "keywords", "label"}
+# Metadata fields whose values are prose and must be translated.
+TEXT_FIELDS = {"title", "sidebar_label", "description", "label"}
+# Search-term lists. Translations may localize them, but keyword lists are
+# not prose: keeping them in the upstream language is a deliberate choice,
+# so they never trigger untranslated-prose or unchanged-prose findings.
+KEYWORD_FIELDS = {"keywords"}
+# Ordering and layout directives may be adjusted for the translated site.
+LAYOUT_FIELDS = {"sidebar_position", "position", "collapsible", "collapsed", "hidden", "link", "custom", "className"}
 ATTRIBUTE = re.compile(r'''\b(alt|title|label|placeholder|aria-label)\s*=\s*("[^"\n]*"|'[^'\n]*')''')
 PLACEHOLDER = re.compile(r"⟦P\d+⟧")
 CJK = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\U00020000-\U0002fa1f]")
@@ -201,6 +208,7 @@ class Document:
         self._line_offsets = [0] + [m.end() for m in re.finditer("\n", text)]
         self.segments: list[Segment] = []
         self.code: list[tuple[int, str]] = []
+        self.hidden_headings: list[tuple[int, int, str, str]] = []
         self.opaque_code: list[str] = []
         self.fences: list[tuple[str, str]] = []
         self.errors: list[tuple[int, str]] = []
@@ -214,6 +222,22 @@ class Document:
     def line(self, offset: int) -> int:
         return bisect_right(self._line_offsets, offset)
 
+    def _hidden_headings(self, lines: list[str], offset: int) -> None:
+        """Record headings that an unclosed code fence swallows.
+
+        Upstream sometimes leaves a fence open, so a real section heading is
+        rendered as code. The translation restores the heading; the verifier
+        must compare it instead of reporting a heading-count difference.
+        """
+        for index, line in enumerate(lines):
+            match = re.match(r"^[ \t]*(#{1,6})\s+(.+?)\s*$", line)
+            if not match or match.group(2).startswith("#"):
+                continue
+            title = re.sub(r"\s+#+\s*$", "", match.group(2))
+            explicit = EXPLICIT_ID.search(title)
+            base = explicit[1].replace("\\_", "_") if explicit else slug(title)
+            self.hidden_headings.append((len(match.group(1)), self.line(offset + index), title, base))
+
     def _yaml_segments(self, node, offset: int, path: tuple = ()) -> None:
         if isinstance(node, MappingNode):
             for key, value in node.value:
@@ -221,8 +245,9 @@ class Document:
         elif isinstance(node, SequenceNode):
             for value in node.value:
                 self._yaml_segments(value, offset, path)
-        elif isinstance(node, ScalarNode) and node.tag.endswith(":str") and path and path[-1] in TEXT_FIELDS:
-            self.segments.append(Segment(offset + node.start_mark.index, offset + node.end_mark.index, node.value, "yaml"))
+        elif isinstance(node, ScalarNode) and node.tag.endswith(":str") and path and (path[-1] in TEXT_FIELDS or path[-1] in KEYWORD_FIELDS):
+            kind = "keyword" if path[-1] in KEYWORD_FIELDS else "yaml"
+            self.segments.append(Segment(offset + node.start_mark.index, offset + node.end_mark.index, node.value, kind))
 
     def _parse(self) -> None:
         if PLACEHOLDER.search(self.text):
@@ -275,6 +300,7 @@ class Document:
                     protect(offsets[begin], offsets[index + 1])
                     self.code.append((self.line(offsets[begin]), "".join(body_lines[begin + 1:index])))
                     self.fences.append((marker, info))
+                    self._hidden_headings(body_lines[begin + 1:index], offsets[begin + 1])
                     opened = None
             elif candidate and not (candidate[1][0] == "`" and "`" in candidate[2]):
                 opened = (index, candidate[1], candidate[2].strip())
@@ -395,7 +421,7 @@ class Document:
                 raise ValueError("Translation must be nonempty and preserve prose line boundaries")
             masked, spans = mask(segment.text, self.terms)
             restored = unmask(value, spans)
-            if segment.kind in {"yaml", "json"}:
+            if segment.kind in {"yaml", "keyword", "json"}:
                 restored = json.dumps(restored, ensure_ascii=False)
             elif segment.kind == "attribute":
                 restored = '"' + html.escape(restored, quote=True) + '"'
@@ -425,6 +451,35 @@ class Document:
 
 def markup_signature(text: str, terms: list[str]) -> list[str]:
     return [p.value for p in inline_protected(text, terms) if p.kind != "term"]
+
+
+JSON_LD = re.compile(r"<script\b[^>]*type=[\"\']application/ld\+json[\"\'][^>]*>\s*\{JSON\.stringify\((?P<payload>.*?)\)\}\s*</script>", re.S)
+
+
+def opaque_signature(block: str) -> str:
+    """Structural signature of an MDX import/export or script/style block.
+
+    JSON-LD payloads carry translated prose, so only their structure is
+    compared. Everything else must match byte for byte.
+    """
+    match = JSON_LD.search(block)
+    if not match:
+        return block
+    try:
+        payload = json.loads(match.group("payload"))
+    except ValueError:
+        return block
+
+    def shape(value):
+        if isinstance(value, dict):
+            return {k: shape(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [shape(v) for v in value]
+        if isinstance(value, str):
+            return "<prose>" if value not in {"@type", "@context"} else value
+        return value
+
+    return json.dumps(shape(payload), ensure_ascii=False, sort_keys=True)
 
 
 def slug(text: str) -> str:

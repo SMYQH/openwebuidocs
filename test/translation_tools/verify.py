@@ -7,9 +7,11 @@ from dataclasses import asdict, dataclass
 from fnmatch import fnmatchcase
 import json
 from pathlib import Path
+import posixpath
 import re
 
-from .document import ATTRIBUTE, CJK, WORDS, Document, digest, inline_protected, prose
+from .document import (ATTRIBUTE, CJK, KEYWORD_FIELDS, LAYOUT_FIELDS, TEXT_FIELDS, URL, WORDS,
+                     Document, digest, inline_protected, opaque_signature, prose)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -19,7 +21,7 @@ SUFFIXES = {".md", ".mdx"}
 
 def load_config(path: Path = DEFAULT_CONFIG) -> dict:
     config = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(config, dict) or set(config) - {"terms", "untranslated_min_words", "length_ratio_warning", "exceptions"}:
+    if not isinstance(config, dict) or set(config) - {"terms", "untranslated_min_words", "length_ratio_warning", "exceptions", "non_compliant_link_patterns"}:
         raise ValueError("Invalid verifier configuration keys")
     if not isinstance(config.get("terms"), list) or not all(isinstance(t, str) and t for t in config["terms"]):
         raise ValueError("Configuration terms must be nonempty strings")
@@ -27,6 +29,9 @@ def load_config(path: Path = DEFAULT_CONFIG) -> dict:
         raise ValueError("untranslated_min_words must be a positive integer")
     if not isinstance(config.get("length_ratio_warning"), (int, float)) or not 0 < config["length_ratio_warning"] < 1:
         raise ValueError("length_ratio_warning must be between 0 and 1")
+    if not isinstance(config.get("non_compliant_link_patterns", []), list) or not all(
+            isinstance(p, str) and p.strip() for p in config.get("non_compliant_link_patterns", [])):
+        raise ValueError("non_compliant_link_patterns must be an array of nonempty strings")
     if not isinstance(config.get("exceptions"), list):
         raise ValueError("exceptions must be an array")
     for exception in config["exceptions"]:
@@ -62,8 +67,15 @@ class Issue:
 
 
 def metadata_literals(value):
+    """Metadata that must match upstream exactly.
+
+    Prose fields, keyword lists and layout directives are excluded: prose is
+    translated, keyword lists are optional search terms, and sidebar ordering
+    is a local layout decision.
+    """
+    skip = TEXT_FIELDS | KEYWORD_FIELDS | LAYOUT_FIELDS
     if isinstance(value, dict):
-        return {k: metadata_literals(v) for k, v in value.items() if k not in {"title", "sidebar_label", "description", "keywords", "label"}}
+        return {k: metadata_literals(v) for k, v in value.items() if k not in skip}
     if isinstance(value, list):
         return [metadata_literals(v) for v in value]
     return value
@@ -90,6 +102,179 @@ def difference(a: Counter, b: Counter) -> str:
     return f"Missing: {brief(missing)}; added: {brief(added)}"
 
 
+def literal_difference(a: Counter, b: Counter) -> tuple[list[str], list[str], dict[str, tuple[int, int]]]:
+    """Split literal drift into dropped, added and re-counted literals.
+
+    A literal that upstream uses and the target never uses is a preservation
+    failure. A target-only literal or a changed occurrence count is a review
+    signal, not a failure: translations legitimately mention a term a
+    different number of times.
+    """
+    missing = sorted(set(a) - set(b))
+    added = sorted(set(b) - set(a))
+    shifted = {v: (a[v], b[v]) for v in set(a) & set(b) if a[v] != b[v]}
+    return missing, added, shifted
+
+
+def brief_literals(values: list[str], counts: Counter | None = None) -> str:
+    if not values:
+        return "none"
+    out = []
+    for value in values[:5]:
+        count = counts[value] if counts is not None else 1
+        out.append(f"{value[:100]!r} ×{count}")
+    return ", ".join(out)
+
+
+UPSTREAM_SITE = ("https://docs.openwebui.com", "http://docs.openwebui.com")
+DOCUMENT_SUFFIX = (".md", ".mdx")
+
+
+def canonical_destination(value: str, base: str) -> str:
+    """Resolve a link destination so equivalent forms compare equal.
+
+    Markdown destinations are captured with their parentheses, so the wrapper
+    is removed first. Absolute paths, relative paths, ``.md`` suffixes and
+    links that upstream points at the English site while the translation
+    points at its own pages all resolve to the same canonical form.
+    """
+    stripped = value.strip()
+    wrapped = stripped.startswith("(") and stripped.endswith(")")
+    if wrapped:
+        stripped = stripped[1:-1].strip()
+    if not stripped or stripped.startswith("#") or stripped.startswith("mailto:"):
+        return value
+    for prefix in UPSTREAM_SITE:
+        if stripped.startswith(prefix + "/"):
+            stripped = stripped[len(prefix):]
+            break
+    else:
+        if "://" in stripped:
+            return value
+    target, sep, anchor = stripped.partition("#")
+    for suffix in sorted(DOCUMENT_SUFFIX, key=len, reverse=True):
+        if target.endswith(suffix):
+            target = target[: -len(suffix)]
+            break
+    if target.startswith("/"):
+        canonical = posixpath.normpath(target)
+    else:
+        canonical = posixpath.normpath(posixpath.join(base, target))
+    result = canonical + (sep + anchor if sep else "")
+    return "(" + result + ")" if wrapped else result
+
+
+COMMENT_LINE = re.compile(r"^\s*(#|//|<!--)")
+STRING_LITERAL = re.compile(r"\"[^\"\n]*\"|\'[^\'\n]*\'")
+
+
+def code_signature(block: str) -> str:
+    """Structural signature of a code block.
+
+    Comment lines and the contents of string literals are prose in practice:
+    the project localizes them on purpose. Commands, identifiers, options and
+    structure stay in the signature, so a changed command still fails.
+    """
+    lines = []
+    for line in block.split("\n"):
+        if COMMENT_LINE.match(line):
+            continue
+        lines.append(STRING_LITERAL.sub('""', line))
+    return "\n".join(lines)
+
+
+def canonical_url(value: str) -> str:
+    """Normalize a URL literal for comparison.
+
+    Trailing sentence punctuation is not part of the URL, and links to the
+    upstream English site are localized to the translated site's own pages.
+    """
+    value = value.rstrip(".,;:!?")
+    for prefix in UPSTREAM_SITE:
+        if value.startswith(prefix + "/"):
+            return value[len(prefix):]
+    return value
+
+
+def strip_destination(value: str) -> str:
+    """Markdown destinations are captured with their parentheses."""
+    value = value.strip()
+    if value.startswith("(") and value.endswith(")"):
+        value = value[1:-1].strip()
+    return value
+
+
+def non_compliant(url: str, patterns: list[str]) -> bool:
+    """True when a link is one the project policy removes from the translation."""
+    return any(fnmatchcase(url, pattern) for pattern in patterns)
+
+
+def policy_removed_destinations(counter: Counter, patterns: list[str]) -> Counter:
+    """Source destinations the translation is allowed to drop."""
+    result = Counter()
+    for value, count in counter.items():
+        if non_compliant(strip_destination(value), patterns):
+            continue
+        result[value] += count
+    return result
+
+
+def policy_removed_inline_codes(text: str, patterns: list[str]) -> set[str]:
+    """Code spans that exist only in a paragraph carrying a removed link.
+
+    Removing the non-compliant link removes the sentence around it, so the
+    code spans inside that sentence disappear with it. A code span that also
+    occurs outside such a paragraph stays required.
+    """
+    inside, outside = Counter(), Counter()
+    for block in re.split(r"\n[ \t]*\n", text):
+        linked = any(non_compliant(url, patterns) for url in URL.findall(block))
+        for code in set(re.findall(r"`([^`\n]+)`", block)):
+            (inside if linked else outside)[code] += 1
+    return {code for code in inside if not outside[code]}
+
+
+def ui_label(value: str) -> bool:
+    """True when a code span holds a UI label that the translation may rename.
+
+    Upstream marks interface labels with code spans. The translated site shows
+    a Chinese interface, so the label itself is translated. Identifiers,
+    commands, paths, values and product names keep their literal spelling.
+    """
+    base = value.strip().split(" (", 1)[0]
+    if not re.fullmatch(r"[A-Za-z]+(?: [A-Za-z]+)*", base):
+        return False
+    words = base.split(" ")
+    return (any(re.fullmatch(r"[A-Z][a-z]+", w) for w in words)
+            and all(re.fullmatch(r"[A-Z][A-Za-z]*", w) or re.fullmatch(r"[a-z]+", w) for w in words))
+
+
+FENCE_MARKER = re.compile(r"```|~~~")
+
+
+def fence_language(info: str) -> str:
+    """The language of a fence info string; the rest is a localizable title."""
+    return info.strip().split()[0] if info.strip() else ""
+
+
+def fence_titles(doc: Document) -> list[str]:
+    """Titles carried by code fences. They are prose, not fence metadata."""
+    return re.findall(r'title="([^"]*)"', " ".join(info for _, info in doc.fences))
+
+
+def malformed_fence_markup(doc: Document) -> bool:
+    """True when upstream wrote a fence marker inside a code span."""
+    return any(FENCE_MARKER.search(value) for value in count_literals(doc, "inline_code"))
+
+
+def canonical_destinations(counter: Counter, path: str) -> Counter:
+    base = posixpath.dirname("/" + path)
+    result = Counter()
+    for value, count in counter.items():
+        result[canonical_destination(value, base)] += count
+    return result
+
+
 def compare(path: str, source: Document, target: Document, config: dict) -> list[Issue]:
     issues: list[Issue] = []
 
@@ -97,7 +282,8 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
         issues.append(Issue(path, line, severity, code, message))
 
     for line, error in source.errors:
-        add("source-parse", error, line)
+        # Upstream defects stay visible, but the translation must not inherit them.
+        add("source-parse", f"Upstream defect: {error}", line, severity="warning")
     for line, error in target.errors:
         add("target-parse", error, line)
     if metadata_literals(source.metadata) != metadata_literals(target.metadata):
@@ -106,32 +292,107 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
     if isinstance(source.metadata, dict) and isinstance(target.metadata, dict):
         if set(source.metadata) != set(target.metadata):
             add("metadata-fields", "Metadata field set differs from upstream")
+    # An upstream parse defect makes block-level comparison unreliable: the
+    # translation must not inherit broken upstream structure, so those findings
+    # stay visible but do not fail the file.
+    source_broken = bool(source.errors)
+    structural = "warning" if source_broken else "error"
     src_code, dst_code = [v for _, v in source.code], [v for _, v in target.code]
     if src_code != dst_code:
-        add("code-changed", "Code block content/order differs from upstream; comments are literal too")
-    if source.opaque_code != target.opaque_code:
-        add("opaque-code-changed", "MDX imports/exports or script/style content changed")
-    if source.fences != target.fences:
-        add("fence-structure", "Code fence delimiters or language metadata changed")
+        if [code_signature(v) for v in src_code] != [code_signature(v) for v in dst_code]:
+            add("code-changed", "Code block content/order differs from upstream; commands and identifiers are literal too")
+        else:
+            add("code-text-changed", "Code blocks differ only in comments or string values", severity="warning")
+    if [opaque_signature(v) for v in source.opaque_code] != [opaque_signature(v) for v in target.opaque_code]:
+        add("opaque-code-changed", "MDX imports/exports or script/style structure changed")
+    if [(d, fence_language(i)) for d, i in source.fences] != [(d, fence_language(i)) for d, i in target.fences]:
+        # Upstream that writes a fence marker inside a code span has broken
+        # markup; a translation that repairs it must not inherit the defect.
+        severity = "warning" if malformed_fence_markup(source) else structural
+        add("fence-structure", "Code fence delimiters or language metadata changed", severity=severity)
+    for title in fence_titles(target):
+        if len(WORDS.findall(title)) >= 4 and not CJK.search(title):
+            add("untranslated-prose", "Code fence title remains English after exclusions", severity="warning")
     src_head, dst_head = [(v[0], v[3]) for v in source.headings], [(v[0], v[3]) for v in target.headings]
     if src_head != dst_head:
-        add("heading-structure", f"Heading levels/order/anchors differ (source {len(src_head)}, target {len(dst_head)}). "
-            + difference(Counter(src_head), Counter(dst_head)))
+        # A target heading that upstream renders as code (a section heading a
+        # broken fence swallows) is a restoration, not a structural difference.
+        hidden = Counter((v[0], v[3]) for v in source.hidden_headings)
+        extra = Counter(dst_head) - Counter(src_head)
+        if extra and not (extra - hidden):
+            add("heading-structure", "Target restores a section heading that upstream renders as code", severity="warning")
+        else:
+            add("heading-structure", f"Heading levels/order/anchors differ (source {len(src_head)}, target {len(dst_head)}). "
+                + difference(Counter(src_head), Counter(dst_head)), severity=structural)
     anchors = [v[3] for v in target.headings]
     if len(anchors) != len(set(anchors)):
         add("duplicate-anchor", "Target has duplicate explicit heading anchors")
     if source.structure != target.structure:
         add("markdown-structure", "Lists, table cells, blockquotes, or thematic breaks differ", severity="warning")
     if source.admonitions != target.admonitions:
-        add("admonition-structure", "Admonition types/order differ")
+        if len(source.admonitions) != len(target.admonitions):
+            add("admonition-structure", f"Admonition count differs (source {len(source.admonitions)}, "
+                f"target {len(target.admonitions)})", severity=structural)
+        else:
+            changed = [f"{i + 1}:{a}->{b}" for i, (a, b) in enumerate(zip(source.admonitions, target.admonitions)) if a != b]
+            add("admonition-structure", "Admonition types differ at " + ", ".join(changed[:5]), severity="warning")
+    patterns = config.get("non_compliant_link_patterns", [])
     for kind in ["marker", "symbol"]:
         a, b = count_literals(source, kind), count_literals(target, kind)
         if a != b:
             add("markdown-" + kind, difference(a, b), severity="warning")
-    for kind in ["inline_code", "identifier", "term", "destination", "url", "reference", "jsx", "expression", "math", "comment"]:
+    for kind in ["inline_code", "identifier", "term", "destination", "reference", "jsx", "expression", "math", "comment"]:
         a, b = count_literals(source, kind), count_literals(target, kind)
-        if a != b:
-            add("literal-" + kind.replace("_", "-"), difference(a, b))
+        if kind == "destination":
+            a, b = canonical_destinations(a, path), canonical_destinations(b, path)
+            a = policy_removed_destinations(a, patterns)
+            kept = sorted({strip_destination(v) for v in b if non_compliant(strip_destination(v), patterns)})
+            if kept:
+                add("non-compliant-link", "Target keeps external links that project policy removes: " + ", ".join(kept[:5]))
+        if kind == "inline_code" and patterns:
+            dropped = policy_removed_inline_codes(source.text, patterns)
+            a = Counter({v: n for v, n in a.items() if v.strip("`") not in dropped})
+        missing, added, shifted = literal_difference(a, b)
+        code = "literal-" + kind.replace("_", "-")
+        if kind == "inline_code":
+            # A code span that upstream wrote with a fence marker is broken
+            # markup; the translation repairs it as a real code block.
+            a = Counter({v: n for v, n in a.items() if not FENCE_MARKER.search(v)})
+            missing, added, shifted = literal_difference(a, b)
+            # A translated interface label is expected, not a dropped literal.
+            relaxed = {v for v in missing if ui_label(v.strip("`")) and v.strip("`") not in config["terms"]}
+            hard = [v for v in missing if v not in relaxed]
+            if hard:
+                add(code, "Missing: " + brief_literals(hard, a))
+            if relaxed:
+                add(code, "Missing: " + brief_literals(sorted(relaxed), a) + " (interface label, may be translated)",
+                    severity="warning")
+        elif missing:
+            add(code, "Missing: " + brief_literals(missing, a))
+        elif added or shifted:
+            parts = []
+            if added:
+                parts.append("Added: " + brief_literals(added, b))
+            if shifted:
+                parts.append("Count differs: " + ", ".join(f"{v[:100]!r} {a[v]}->{b[v]}" for v in sorted(shifted)[:5]))
+            add(code, "; ".join(parts), severity="warning")
+    source_urls = Counter({canonical_url(v): n for v, n in count_literals(source, "url").items()
+                           if not non_compliant(canonical_url(v), patterns)})
+    target_urls = Counter({canonical_url(v): n for v, n in count_literals(target, "url").items()})
+    # A URL may survive as a link destination or inline code instead of a bare
+    # URL, so the target surface is the union of all literal forms.
+    surface = set(target_urls)
+    for value in count_literals(target, "inline_code"):
+        surface.add(canonical_url(value.strip("`")))
+    for value in count_literals(target, "destination"):
+        surface.add(canonical_url(value.strip("()")))
+    lost = sorted(set(source_urls) - surface)
+    if lost:
+        add("literal-url", "Missing: " + brief_literals(lost, source_urls))
+    else:
+        extra = sorted(set(target_urls) - set(source_urls))
+        if extra:
+            add("literal-url", "Added: " + brief_literals(extra, target_urls), severity="warning")
     a, b = count_literals(source, "number"), count_literals(target, "number")
     if a != b:
         add("numbers", difference(a, b), severity="warning")
@@ -144,6 +405,9 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
         value = prose(segment.text, target.terms)
         words = WORDS.findall(value)
         normalized = re.sub(r"\s+", " ", value).strip().lower()
+        if segment.kind == "keyword":
+            # Search-term lists may stay in the upstream language on purpose.
+            continue
         if len(words) >= config["untranslated_min_words"] and not CJK.search(value):
             add("untranslated-prose", "English prose remains after excluding terminology, code, and markup", target.line(segment.start), "warning")
         elif len(words) >= 3 and normalized in normalized_source and not CJK.search(value):

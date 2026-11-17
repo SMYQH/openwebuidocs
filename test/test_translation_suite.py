@@ -228,9 +228,12 @@ class VerificationTests(Fixture):
         target = self.translate(source).replace("OpenAI", "")
         self.assertIn("literal-term", self.codes(source, target))
 
-    def test_code_comments_must_stay_verbatim(self):
+    def test_code_structure_must_stay_identical(self):
         source = "```python\n# literal comment\nrun()\n```\n"
-        self.assertIn("code-changed", self.codes(source, source.replace("literal comment", "different comment")))
+        # Comments and example strings are localized on purpose: a review signal.
+        self.assertIn("code-text-changed", self.codes(source, source.replace("literal comment", "different comment")))
+        # Commands and identifiers are literal: a failure.
+        self.assertIn("code-changed", self.codes(source, source.replace("run()", "other()")))
 
     def test_heading_count_difference_does_not_skip_section_checks(self):
         source = "# First\n\n" + "source word " * 20 + "\n\n## Second\n\nAnother source paragraph.\n"
@@ -284,6 +287,170 @@ class VerificationTests(Fixture):
             ("```python\nrun()\n```\n", "```javascript\nrun()\n```\n", "fence-structure"),
         ]:
             self.assertIn(code, self.codes(source, target))
+
+    def issues(self, source, target, path="fixture.mdx", suffix=".mdx"):
+        return compare(path, Document(source, suffix, self.terms), Document(target, suffix, self.terms), self.config)
+
+    def test_keyword_lists_in_source_language_are_not_prose_findings(self):
+        source = '---\ntitle: "Source"\nkeywords: ["OpenAI API reference", "second keyword phrase here"]\n---\n\nThis paragraph has several english words that differ from the translation.\n'
+        target = source.replace('title: "Source"', 'title: "\u8bd1\u6587"').replace(
+            "This paragraph has several english words that differ from the translation.",
+            "\u8fd9\u4e9b\u6bb5\u843d\u5305\u542b\u4e0e\u8bd1\u6587\u4e0d\u540c\u7684\u82e5\u5e72\u82f1\u6587\u5355\u8bcd\u3002")
+        codes = {i.code for i in self.issues(source, target)}
+        self.assertNotIn("untranslated-metadata", codes)
+        self.assertNotIn("unchanged-prose", codes)
+
+    def test_literal_recount_is_a_review_signal_not_a_failure(self):
+        source = "Use OpenAI once for the source task.\n"
+        target = "\u4f7f\u7528 OpenAI \u5b8c\u6210\u6e90\u4efb\u52a1\uff0c\u7136\u540e\u518d\u6b21\u4f7f\u7528 OpenAI \u8fdb\u884c\u9a8c\u8bc1\u3002\n"
+        found = [i for i in self.issues(source, target) if i.code == "literal-term"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "warning")
+
+    def test_dropped_literal_is_still_a_failure(self):
+        source = "Use `OPENAI_TOKEN` for the source task.\n"
+        target = "\u4f7f\u7528\u4ee4\u724c\u5b8c\u6210\u6e90\u4efb\u52a1\u3002\n"
+        found = [i for i in self.issues(source, target) if i.code == "literal-inline-code"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "error")
+
+    def test_relative_and_absolute_destinations_compare_equal(self):
+        source = "See [guide](/guide) for details.\n"
+        target = "See [guide](../guide) for details.\n"
+        codes = {i.code for i in self.issues(source, target, path="features/page.mdx")}
+        self.assertNotIn("literal-destination", codes)
+
+    def test_upstream_self_link_localized_to_local_path(self):
+        source = "See [guide](https://docs.openwebui.com/guide) for details.\n"
+        target = "See [guide](/guide) for details.\n"
+        codes = {i.code for i in self.issues(source, target)}
+        self.assertNotIn("literal-destination", codes)
+        self.assertNotIn("literal-url", codes)
+
+    def test_url_surviving_as_inline_code_is_not_missing(self):
+        source = "Use https://example.com/path in the source text.\n"
+        target = "\u5728\u6587\u672c\u4e2d\u4f7f\u7528 `https://example.com/path`\u3002\n"
+        codes = {i.code for i in self.issues(source, target)}
+        self.assertNotIn("literal-url", codes)
+
+    def test_document_suffix_is_stripped_completely(self):
+        source = "See [policy](/security/security-policy.md) for details.\n"
+        target = "See [policy](/security/security-policy) for details.\n"
+        codes = {i.code for i in self.issues(source, target)}
+        self.assertNotIn("literal-destination", codes)
+
+    def test_interface_label_may_be_translated(self):
+        source = "Open the `Settings` panel and check `Admin Panel`.\n"
+        target = "\u6253\u5f00 `\u8bbe\u7f6e` \u9762\u677f\u5e76\u67e5\u770b `\u7ba1\u7406\u9762\u677f`\u3002\n"
+        found = [i for i in self.issues(source, target) if i.code == "literal-inline-code"]
+        self.assertTrue(found)
+        self.assertTrue(all(i.severity == "warning" for i in found))
+
+    def test_identifier_code_span_still_required(self):
+        source = "Set `OPENAI_TOKEN` for the source task.\n"
+        target = "\u8bbe\u7f6e\u4ee4\u724c\u5b8c\u6210\u6e90\u4efb\u52a1\u3002\n"
+        found = [i for i in self.issues(source, target) if i.code == "literal-inline-code"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "error")
+
+    def test_fence_title_may_be_translated(self):
+        source = '```bash title="Start the Docker Compose Project Here"\necho start\n```\n\nProse about the command.\n'
+        target = '```bash title="\u542f\u52a8 Docker Compose \u9879\u76ee"\necho start\n```\n\n\u5173\u4e8e\u8be5\u547d\u4ee4\u7684\u8bf4\u660e\u3002\n'
+        codes = {i.code for i in self.issues(source, target)}
+        self.assertNotIn("fence-structure", codes)
+
+    def test_fence_language_must_match(self):
+        source = '```bash\necho start\n```\n\nProse about the command.\n'
+        target = '```python\necho start\n```\n\n\u5173\u4e8e\u8be5\u547d\u4ee4\u7684\u8bf4\u660e\u3002\n'
+        codes = {i.code for i in self.issues(source, target)}
+        self.assertIn("fence-structure", codes)
+
+    def test_untranslated_fence_title_is_a_warning(self):
+        source = '```bash title="Start the Docker Compose Project Here"\necho start\n```\n\nProse about the command.\n'
+        target = '```bash title="Start the Docker Compose Project Here"\necho start\n```\n\n\u5173\u4e8e\u8be5\u547d\u4ee4\u7684\u8bf4\u660e\u3002\n'
+        found = [i for i in self.issues(source, target) if i.code == "untranslated-prose"]
+        self.assertTrue(found)
+        self.assertTrue(all(i.severity == "warning" for i in found))
+
+    def test_repaired_upstream_fence_is_a_warning(self):
+        source = "Run ```sudo dnf install haproxy``` to install it.\n\nProse about the installation.\n"
+        target = "```bash\nsudo dnf install haproxy\n```\n\n\u5173\u4e8e\u5b89\u88c5\u7684\u8bf4\u660e\u3002\n"
+        found = [i for i in self.issues(source, target) if i.code == "fence-structure"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "warning")
+        self.assertNotIn("literal-inline-code", {i.code for i in self.issues(source, target)})
+
+    def test_policy_removed_link_may_be_dropped(self):
+        source = "- [Community](https://discord.gg/abcdef) for support.\n"
+        target = "- \u652f\u6301\u8bf7\u63d0\u4ea4\u95ee\u9898\u3002\n"
+        codes = {i.code for i in self.issues(source, target)}
+        self.assertNotIn("literal-destination", codes)
+
+    def test_policy_removed_link_still_reported_when_target_keeps_it(self):
+        source = "- [Community](https://discord.gg/abcdef) for support.\n"
+        target = "- [\u793e\u533a](https://discord.gg/abcdef) \u83b7\u5f97\u652f\u6301\u3002\n"
+        found = [i for i in self.issues(source, target) if i.code == "non-compliant-link"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "error")
+
+    def test_code_span_in_removed_paragraph_may_disappear(self):
+        source = "- [Community](https://discord.gg/abcdef) channel `#support`.\n"
+        target = "- \u652f\u6301\u8bf7\u63d0\u4ea4\u95ee\u9898\u3002\n"
+        codes = {i.code for i in self.issues(source, target)}
+        self.assertNotIn("literal-inline-code", codes)
+
+    def test_code_span_outside_removed_paragraph_still_required(self):
+        source = "- [Community](https://discord.gg/abcdef) channel `#support`.\n\nAlso `#support`.\n"
+        target = "- \u652f\u6301\u8bf7\u63d0\u4ea4\u95ee\u9898\u3002\n\n\u4e5f\u8bf7\u63d0\u4ea4\u95ee\u9898\u3002\n"
+        found = [i for i in self.issues(source, target) if i.code == "literal-inline-code"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "error")
+
+    def test_json_ld_prose_may_be_translated_but_structure_may_not_change(self):
+        payload = '{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Source question","acceptedAnswer":{"@type":"Answer","text":"Source answer text."}}]}'
+        script = '<script type="application/ld+json">{JSON.stringify(' + payload + ')}</script>\n'
+        translated = script.replace("Source question", "translated question").replace("Source answer text.", "translated answer text.")
+        self.assertNotIn("opaque-code-changed", {i.code for i in self.issues(script, translated)})
+        shortened = translated.replace('{"@type":"Question","name":"translated question","acceptedAnswer":{"@type":"Answer","text":"translated answer text."}}', "")
+        self.assertIn("opaque-code-changed", {i.code for i in self.issues(script, shortened)})
+
+    def test_upstream_parse_defect_is_reported_as_warning(self):
+        source = "Body text.\n\n:::\n"
+        target = "\u6b63\u6587\u6587\u672c\u3002\n"
+        found = [i for i in self.issues(source, target) if i.code == "source-parse"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "warning")
+
+    def test_source_defect_downgrades_structural_findings(self):
+        source = "# Source\n\n:::\n"
+        target = "# \u7ffb\u8bd1\n"
+        found = [i for i in self.issues(source, target) if i.code == "heading-structure"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "warning")
+
+    def test_section_heading_swallowed_by_upstream_fence_is_restored(self):
+        source = "```bash\nrun()\n\n## Section Title\n\nBody.\n\n```\n"
+        target = "```bash\nrun()\n```\n\n## \u90e8\u5206\u6807\u9898 {#section-title}\n\n\u6b63\u6587\u3002\n"
+        found = [i for i in self.issues(source, target) if i.code == "heading-structure"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "warning")
+
+    def test_layout_metadata_may_differ(self):
+        source = '---\nsidebar_position: 10\ntitle: "Source"\n---\n\nBody prose for the source.\n'
+        target = '---\nsidebar_position: 3\ntitle: "\u8bd1\u6587"\n---\n\n\u6b63\u6587\u6bb5\u843d\u3002\n'
+        codes = {i.code for i in self.issues(source, target)}
+        self.assertNotIn("metadata-literal", codes)
+
+    def test_admonition_types_may_differ_but_their_count_may_not(self):
+        source = "Body.\n\n:::tip\n\nTip body.\n\n:::\n"
+        target = "\u6b63\u6587\u3002\n\n:::info\n\n\u63d0\u793a\u6b63\u6587\u3002\n\n:::\n"
+        found = [i for i in self.issues(source, target) if i.code == "admonition-structure"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "warning")
+        longer = source + "\n:::danger\n\nMore.\n\n:::\n"
+        found = [i for i in self.issues(longer, target) if i.code == "admonition-structure"]
+        self.assertTrue(found)
+        self.assertEqual(found[0].severity, "error")
 
     def review_result(self):
         source = "# Source heading\n\nSource body.\n"
