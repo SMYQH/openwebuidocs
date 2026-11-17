@@ -3,3 +3,10 @@ node_modules/
 .DS_Store
 .tmpwork/
 .tmp_changed_docs.txt
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
+test/.reports/

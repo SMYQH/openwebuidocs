@@ -1,0 +1,30 @@
+name: Translation tooling
+
+on:
+  pull_request:
+    paths:
+      - "test/**"
+      - ".codex/skills/upstream-sync/**"
+      - ".env.example"
+      - ".github/workflows/translation-tools.yml"
+  push:
+    branches: [main]
+    paths:
+      - "test/**"
+      - ".codex/skills/upstream-sync/**"
+      - ".github/workflows/translation-tools.yml"
+  workflow_dispatch:
+
+jobs:
+  behavior:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r test/requirements.txt
+      - run: python -m unittest discover -s test -p "test_*.py" -v

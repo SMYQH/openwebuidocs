@@ -1,0 +1,14 @@
+{
+  "terms": [
+    "Open WebUI", "OpenAI", "ChatGPT", "Claude", "Anthropic", "Gemini",
+    "Ollama", "DeepL", "Docusaurus", "Cloudflare", "GitHub", "Docker",
+    "Kubernetes", "Python", "JavaScript", "TypeScript", "PostgreSQL", "SQLite",
+    "Redis", "Valkey", "HAProxy", "NGINX", "Nginx", "AnythingLLM", "LibreChat",
+    "LangChain", "LlamaIndex", "Open Terminal", "Tether", "MCP", "API", "RAG",
+    "RBAC", "SSO", "OIDC", "LDAP", "SCIM", "OAuth", "JWT", "HTTP", "HTTPS",
+    "WebSocket", "JSON", "YAML", "MDX", "HTML", "CSS", "SQL", "GPU", "CPU"
+  ],
+  "untranslated_min_words": 6,
+  "length_ratio_warning": 0.15,
+  "exceptions": []
+}
