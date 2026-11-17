@@ -16,12 +16,21 @@
 | en-us `_category_.json` | 43 |
 | zh-cn `_category_.json` | 43 |
 | File coverage | **100%** (all 398 en-us documents have corresponding zh-cn translations) |
-| Content completeness | **100%** (every upstream heading has a matching Chinese section) |
-| Verbatim code blocks | **1119 / 1372** byte-identical to upstream; **1315 / 1372** identical once comment lines are excluded. The 223 blocks that carry Chinese text date from the repository's initial import (comment prose was translated for readability) and were not touched by this sync |
-| Upstream inline code spans preserved | **100%** (0 endpoint / path / env-var / placeholder / command spans missing) |
-| Explicit heading IDs matching upstream | **100%** (0 mismatches, 0 headings without an ID) |
-| Untranslated English prose | **0** outside upstream-matching tables, verbatim CVE records and product/brand names |
-| Production build | **passes** - 0 broken links, 0 broken anchors, 0 broken markdown links, 0 duplicate routes |
+| Content completeness | **Not certified**. File/heading coverage cannot establish semantic completeness; full source/target review is required. |
+| Verbatim code blocks | Historical audit: **1119 / 1372** byte-identical; **1315 / 1372** when comments were excluded. The new verifier includes comments and reports unresolved preservation differences. |
+| Upstream inline code spans preserved | Current source-derived audit reports preservation findings; the previous **100%** claim is not a current certification. |
+| Explicit heading IDs matching upstream | No heading-structure findings in the current Python scan; upstream syntax defects still require review. |
+| Untranslated English prose | Current audit reports heuristic language warnings after literal/terminology exclusions; semantic review is pending. |
+| Production build | Previous translation pass: **passes** with zero broken links, anchors, Markdown links, or duplicate routes. This tooling-only task did not change or rebuild site sources. |
+
+### 2026-11-17 Translation verification tooling
+
+- Added the Python suite under `test/`, including source-derived completeness/preservation checks, quality warnings, full-pair AI review bundles, and validation of hash-bound semantic review results.
+- Translation expectations are never hard-coded. Behavior tests use generated CJK text; only terminology and other literal exclusions are stored verbatim.
+- Added autonomous AI translation tasks requiring no configuration, plus optional DeepL mode requiring only `DEEPL_AUTH_KEY` in root `.env`. Both use protected placeholders and the same guarded apply path. No live translation requests were made.
+- Updated `.codex/skills/upstream-sync/SKILL.md` and fixed `AGENTS.MD` pointers for the user's `.github/` to `.codex/` skill/agent move.
+- Validation: **58 behavior tests passed** on Python 3.14. CI tests Python 3.10 and 3.14. Strict working-tree audit covered **441/441** files (398 documents and 43 categories), reporting **646 errors, 1365 warnings, 0 exceptions**. These include historical differences and possible intentional localization; they require triage, not blanket suppression. Reproduce with `python test/translation_check.py --strict --report test/.reports/full-audit.json`.
+- The strict audit returns failure and semantic review remains **required**. No translation edits were made or included in the tooling task; earlier uncommitted document edits remain separate. All prior audit narrative below describes historical runs, not a new semantic certification.
 
 
 ### 2026-11-17 Sync (en-us `36b7e50` -> `3072f18`)
@@ -348,8 +357,8 @@ Fourth pass over the same `36b7e50` snapshot. The previous passes had already re
 
 ## Outstanding
 
-- **`alternatives/` (13 pages)** — upstream rewrote the comparison pages in August 2026 (new "Last updated" dates, refreshed feature lists, restructured comparison tables); the Chinese pages still reflect the May 2026 revision. This is a pre-existing backlog, not sync fallout: no `docs/alternatives/` file changed inside the `36b7e50 -> 3072f18` range except for the admin-path normalization and `llama-cpp.mdx`. A dedicated re-translation pass is needed.
-- **`en-us` upstream defect (mirrored in `zh-cn`)** — `reference/https/haproxy.md` opens a code fence with ` ```sudo ... ` and never closes it, so lines 17-129 render as one code block on both sites. Kept byte-identical to upstream on purpose.
+- **`alternatives/` (13 pages)** — the earlier audit recorded pre-existing drift against the August 2026 rewrite. Correction edits from before the tooling task remain uncommitted; a complete semantic re-review is still pending. No translation work was authorized in the tooling task.
+- **HAProxy rendering** — the earlier audit recorded malformed upstream fences in `reference/https/haproxy.md`. Uncommitted Chinese rendering repairs predate the tooling task and still need rendered-content verification. The upstream submodule was not modified.
 
 ## Deployment Configuration
 

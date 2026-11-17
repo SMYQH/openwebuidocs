@@ -1,7 +1,7 @@
 ---
 name: upstream-sync
 description: "Sync and translate upstream English docs (en-us) to simplified Chinese (zh-cn). Use when: upstream sync, sync upstream, en-us update, submodule update, translation sync, pull open-webui/docs, update STATUS.md coverage, detect new en-us commits."
-argument-hint: "[optional: detect only | full sync | specific files]"
+argument-hint: "[detect only | verify only | full sync | specific files] [autonomous | deepl]"
 user-invocable: true
 ---
 
@@ -20,6 +20,8 @@ Sync updates from the official English documentation submodule `en-us/` (`open-w
 - Workspace root is `openwebuidocs` (contains `en-us/`, `zh-cn/`, `AGENTS.MD`, `STATUS.md`)
 - The translation principles and site differences in the root `AGENTS.MD` have been reviewed
 - On Windows, prefer PowerShell; `git -C` must be available
+- Python 3.10+ with `python -m pip install -r test/requirements.txt`
+- Read [`test/README.md`](../../../test/README.md) for verifier rules, review result schemas, and provider commands
 
 ## Translation Principles (must follow during execution)
 
@@ -45,7 +47,7 @@ git -C en-us fetch origin main
 git -C en-us log HEAD..origin/main --oneline
 ```
 
-- **No output**: `en-us/` is already up to date → inform user and stop
+- **No output**: `en-us/` is already up to date. Stop for detection-only requests; run requested verification or backlog work when explicitly requested.
 - **Has output**: record the commit list and proceed to step 2
 
 Optional: stop here for detection-only mode (no pull).
@@ -77,6 +79,26 @@ Briefly report to the user: list of P0–P3 files and the planned handling.
 
 ### 4. Execute Translation & Sync
 
+When the user requests verification/tooling only, do not translate or apply translation tasks. Verification never requires a provider key. Never encode expected Chinese wording, bilingual answer tables, or translated-answer snapshots into `test/`; only terminology and other literal exclusions may be stored verbatim. Behavior fixtures use generated text rather than translations.
+
+Choose the translation mode from the user's request. Default to **autonomous**; the current AI translates without API configuration. **DeepL** requires only `DEEPL_AUTH_KEY` in root `.env` (see `.env.example`); do not ask for an endpoint or model setting. Never display or commit the key. Do not silently switch providers after a failure.
+
+Prepare small, explicit file batches. Paths are relative to `en-us/docs/`:
+
+```powershell
+# Autonomous: fill only translation fields in this task JSON, preserving placeholders.
+python test/translation_update.py --files path/to/page.mdx --bundle test/.reports/task.json
+
+# DeepL: make API requests only when this mode is requested.
+python test/translation_update.py --mode deepl --files path/to/page.mdx --bundle test/.reports/task.json
+
+# Both providers use the same validation and guarded apply path.
+python test/translation_update.py --apply test/.reports/task.json
+python test/translation_update.py --apply test/.reports/task.json --write
+```
+
+Task bundles bind source/target bytes, configuration, and segment identities. Keep ordered `⟦Pn⟧` placeholders verbatim. They protect terminology, code, identifiers, link destinations, numbers, and Markdown symbols. Automated updates reconstruct selected source documents; review local-only content before applying. Malformed upstream syntax stops generation: report/repair the specific defect rather than bypassing preservation checks.
+
 1. Compare `en-us/docs/` with `zh-cn/docs/` file by file; process all P0 items
 2. Adhere to the "Translation Principles" above
 3. When upstream adds new MDX `<Tabs>`, ensure the corresponding `tab-*/` directories are added to `zh-cn`
@@ -88,6 +110,27 @@ For large-scale changes:
 
 - Translate in batches by directory (`features/`, `ecosystem/`, `reference/`, etc.)
 - For very long files like `reference/env-configuration.mdx`: translate only descriptive text, **never** modify environment variable names or code examples
+
+#### 4.1 Verify completeness and quality before committing
+
+All translation verification scripts live under root `test/`. Run behavior tests after changing them, then audit the requested scope:
+
+```powershell
+python -m unittest discover -s test -p "test_*.py"
+python test/translation_check.py --strict --report test/.reports/audit.json
+python test/translation_check.py --files path/to/page.mdx --review-bundle test/.reports/review.json
+```
+
+The deterministic audit checks file/category coverage, code/literal preservation, heading structure/anchors, Markdown structure, metadata, terminology, untranslated prose, and omission signals. It compares matched sections even when heading counts differ. File coverage and matching headings **do not establish semantic completeness**. Do not invent a quality score or claim a semantic pass from static checks.
+
+Read every English/Chinese pair in the review bundle in full. Assess omissions/additions, facts, negation, numbers, fluency, terminology, and heading/body alignment. Exclude protected terms, code, and markup from language judgments. Complete the bundle's `result_format` in a separate result file, including source evidence for every finding. Then validate review coverage and hashes:
+
+```powershell
+python test/translation_check.py --strict --files path/to/page.mdx --review-results test/.reports/review-results.json --report test/.reports/reviewed-audit.json
+npm --prefix zh-cn run build
+```
+
+Resolve findings within the authorized scope. Intentional localization differences need a specific reason and exact issue fingerprint in `test/translation_config.json`; source/target changes expire that exception. Never blanket-suppress a directory, hard-code a preferred translation, weaken anchor/link checks, or silently call an incomplete review passed. Keep unresolved pre-existing findings separate from newly introduced defects. A production build with zero broken links, anchors, Markdown links, and duplicate routes remains required after translation changes.
 
 ### 5. Commit Translation Changes (excluding metadata files)
 
@@ -163,19 +206,22 @@ Only execute `git push` when the user explicitly requests it. If the user does n
 ## Completion Checklist
 
 - [ ] `en-us` is updated to `origin/main`
-- [ ] All P0 docs have been translated into `zh-cn/docs/`
+- [ ] All requested P0 docs have been translated into `zh-cn/docs/` using the selected provider (skip for verification/tooling-only requests)
 - [ ] P1 `_category_.json` files are aligned
 - [ ] Necessary static/src assets have been synced
 - [ ] Renames/deletions have equivalent handling in zh-cn
 - [ ] Translation commit and metadata commit are separated
 - [ ] `STATUS.md` counts and coverage have been updated
 - [ ] `AGENTS.MD` snapshot hash/timestamp has been updated (if applicable)
+- [ ] Python checks and complete semantic review cover the requested scope; unresolved findings are reported honestly
+- [ ] Production build passes with zero broken-link/anchor/duplicate-route diagnostics after translation changes
 
 ## FAQ
 
 | Situation | Handling |
 | --------- | -------- |
-| No new upstream commits | Stop immediately; do not modify any files |
+| No new upstream commits | Stop for detection only; still perform explicitly requested verification/backlog work |
+| DeepL key absent | Explain that only `DEEPL_AUTH_KEY` in `.env` is needed; autonomous mode needs no key |
 | Config/CI changes only (all P4) | Still update submodule pointer; may have no translation commit, or commit only `en-us` pointer + STATUS |
 | zh-cn intentionally retains local differences | Follow `AGENTS.MD` section 3; do not overwrite with en-us |
 | Conflicting or uncertain product terminology | Keep the en-us term; confirm with user before changing |

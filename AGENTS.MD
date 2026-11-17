@@ -2,7 +2,7 @@
 
 > AGENTS.MD (this document) is time-sensitive. Agent assistants **must** update this document synchronously as the project evolves. See Section 8.
 > Do not blindly trust this document; content may be out of date.
-> Current document snapshot `Git Commit Hash`: `4f659e050098053e04e040b5ae2ab71cd7accc12`, `Commit` timestamp: `2026-11-17T18:44:53+08:00`
+> Current document snapshot `Git Commit Hash`: `3af144655c67a4c532615628ac30365083c0a799`, `Commit` timestamp: `2026-11-17T22:15:35+08:00`
 
 ---
 
@@ -37,6 +37,8 @@ Built on Docusaurus. Documentation formats are primarily MDX, with some `.md` fi
 **Sitemap generation**: The Chinese site intentionally disables Docusaurus's built-in sitemap output. During `postbuild`, `zh-cn/scripts/sync-sitemap.mjs` downloads `https://docs.openwebui.com/sitemap.xml`, rewrites the upstream origin to the origin parsed from `DOMAIN` (defaulting to HTTPS when the scheme is omitted), and writes `zh-cn/build/sitemap.xml`. Deployment builds must pass `DOMAIN`; local or pull-request builds without `DOMAIN` skip synchronization. Download, validation, or write failures must fail the deployment build rather than publish a missing/stale sitemap.
 
 **Link validation**: `zh-cn/docusaurus.config.ts` sets `onBrokenLinks: "throw"`, `onBrokenAnchors: "throw"`, `onDuplicateRoutes: "throw"` and `markdown.hooks.onBrokenMarkdownLinks: "throw"`. Production and CI builds must contain zero broken links, zero broken anchors, zero broken markdown links and zero duplicate routes.
+
+**Translation verification and providers**: All Python translation checks and update helpers live in `test/`; see [`test/README.md`](test/README.md). Install `test/requirements.txt`, run the behavior tests, then run `python test/translation_check.py --strict --report test/.reports/audit.json`. Deterministic checks distinguish hard preservation failures from heuristic quality warnings; file/heading coverage does not prove semantic completeness. Full source/target review bundles and hash-bound review results support autonomous AI review without configuration. Translation updates default to autonomous AI tasks with protected placeholders. Optional DeepL mode requires only `DEEPL_AUTH_KEY` in root `.env`; both providers share validation before writes. `.github/workflows/translation-tools.yml` tests the tooling on Python 3.10 and 3.14 without calling DeepL.
 
 **Upstream site-code sync**: `zh-cn/src/`, `zh-cn/scripts/`, `zh-cn/package.json` and the localized `zh-cn/docusaurus.config.ts` are re-synced from the `en-us` submodule on every upstream sync, but the zh-cn localization of `docusaurus.config.ts` (tagline, url, i18n locale, navbar/footer labels, `editUrl`, `exclude` rules, `sitemap: false` and the Google Analytics setup) is preserved — never overwrite it with the upstream file. Upstream's PostHog module (`src/clientModules/analytics.js`) is vendored so the newly ported components compile, but it is inert on the Chinese host because `isProductionHost()` only matches `docs.openwebui.com`; the Chinese site keeps its own GA4 setup (`src/clientModules/ensure-gtag.js`). Upstream's `scripts/check-index-links.mjs` is vendored as `npm run check-index-links` but is **not** wired into `prebuild`: the Chinese pages intentionally use relative links on index pages, which that script rejects.
 
@@ -73,6 +75,8 @@ Built on Docusaurus. Documentation formats are primarily MDX, with some `.md` fi
 open-webui-docs/                # Root repository
 ├── AGENTS.MD                   # This document
 ├── Readme.md
+├── test/                      # Python translation checks, provider helpers and behavior tests
+├── .codex/                    # Upstream-sync skill and documentation agent definitions
 ├── en-us/                      # English upstream (Git submodule → open-webui/docs)
 │   └── docs/                   # English documentation source (translation baseline)
 └── zh-cn/                      # Chinese translation (directly maintained)
@@ -133,6 +137,7 @@ docs/
 * **The heading-structure audit must not be skipped when the section counts differ.** Compare the Chinese heading list against the English one section by section even if the two files have different numbers of headings; a count mismatch is itself the defect signal (a stale, duplicated or deleted section) and hides every anchor mismatch below it.
 * A thematic break must be preceded by a blank line. A `---` line that directly follows a paragraph is parsed as a **setext H2**, which silently turns the rule into an empty heading and drops the horizontal rule. This applies after `:::` admonition blocks and after list items too.
 * Before completing documentation changes, run a production build and require zero broken-link and broken-anchor diagnostics. Do not suppress failures with `onBrokenAnchors: "warn"` or `"ignore"`.
+* Translation verification must derive checks from the current source and structure. Never hard-code translations, bilingual answer tables, or expected translated-answer snapshots in `test/`; terminology and other literal exclusions are the only exceptions. Behavior tests use generated text. Semantic completeness, accuracy, fluency, and heading/body alignment require full pair review. Exact-fingerprint exceptions need specific reasons and expire when either document changes.
 
 ### Translation Principles
 
@@ -157,7 +162,7 @@ When the following changes occur in the project, `AGENTS.MD` and `STATUS.md` **m
 
 1. Adding or deleting documentation directories/categories → Update AGENTS.MD "Documentation Domains Overview".
 2. Modifying build tools or site configurations → Update AGENTS.MD "Tech Stack" and "Key Differences Between EN and ZH Sites".
-3. Modifying translation conventions → Update AGENTS.MD "Content Conventions"; modifying upstream sync procedures → Update `.github/skills/upstream-sync/SKILL.md`.
+3. Modifying translation conventions → Update AGENTS.MD "Content Conventions"; modifying upstream sync procedures → Update `.codex/skills/upstream-sync/SKILL.md`.
 4. Adding new language sites → Update AGENTS.MD "Project Overview".
 5. Changes in the `en-us` submodule snapshot → Update the commit hash, file count, and coverage rate data in STATUS.md.
 
@@ -167,8 +172,9 @@ When the following changes occur in the project, `AGENTS.MD` and `STATUS.md` **m
 
 When new commits appear in the official English documentation (`en-us/` submodule), updates will be synchronized and translated into `zh-cn/`.
 
-**The full procedure has migrated to a Skill**: [`.github/skills/upstream-sync/SKILL.md`](https://www.google.com/search?q=.github/skills/upstream-sync/SKILL.md)
+**The full procedure has migrated to a Skill**: [`.codex/skills/upstream-sync/SKILL.md`](.codex/skills/upstream-sync/SKILL.md)
 
 * Trigger method: Type `/upstream-sync` in Chat, or describe "sync upstream / sync upstream / pull en-us updates".
 * This file only retains project-level conventions (translation principles, directory structure, EN-ZH differences); step-level operations follow that Skill.
 * When modifying the sync workflow, you **must** update that Skill simultaneously and adjust the pointers in this section accordingly.
+* Verification/tooling-only requests must not trigger translation. Autonomous translation needs no provider configuration; DeepL requires only the root `.env` key. Follow the Skill's shared verification, semantic-review, and production-build gates.
