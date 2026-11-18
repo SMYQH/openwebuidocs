@@ -17,11 +17,21 @@
 | zh-cn `_category_.json` | 43 |
 | File coverage | **100%** (all 398 en-us documents have corresponding zh-cn translations) |
 | Content completeness | **Not certified**. File/heading coverage cannot establish semantic completeness; full source/target review is required. |
-| Verbatim code blocks | Historical audit: **1119 / 1372** byte-identical; **1315 / 1372** when comments were excluded. The new verifier includes comments and reports unresolved preservation differences. |
+| Verbatim code blocks | Current audit reports hard code-preservation differences in **28 pages**, including comments and strings. Broken upstream fence boundaries require direct review rather than copying malformed structure. |
 | Upstream inline code spans preserved | Current source-derived audit reports preservation findings; the previous **100%** claim is not a current certification. |
 | Explicit heading IDs matching upstream | No heading-structure findings in the current Python scan; upstream syntax defects still require review. |
 | Untranslated English prose | Current audit reports heuristic language warnings after literal/terminology exclusions; semantic review is pending. |
-| Production build | 2026-11-17: **passes** with zero broken links, anchors, Markdown links, or duplicate routes after the alternatives re-translation and the HAProxy, plugin-tools, Redis, Nginx Proxy Manager and env-configuration repairs. |
+| Production build | 2026-11-18: **passes** with zero broken links, anchors, Markdown links, or duplicate routes after the current translation repair pass. Local sitemap synchronization is skipped without `DOMAIN`, as designed. |
+
+### 2026-11-18 Translation repairs and focused verifier improvements
+
+- Updated 89 Chinese documents across authentication/access, enterprise, chat/audio/search, extensibility, getting started, reference, and troubleshooting. Repairs restore upstream code comments, string values and literals; align stale navigation and instructions; and remove obsolete or duplicated content. The upstream submodule remains at `3072f18`; both trees still contain 398 documents and 43 categories.
+- OpenAPI server guides restore model-reliability guidance and array-query support, and follow current integration, MCP and OAuth instructions. SSO troubleshooting distinguishes signup controls and logout scope. Manual database migration restores the revision-history explanation and matching-version requirement for offline migration. A quoted Mistral diagnostic was restored verbatim from upstream.
+- Preservation checks now reject changed code comments/strings, preserve all fence directives except prose titles, protect JSON-LD technical values, and check literal-only lines. Both translation providers receive prose fence titles; filename/path titles remain literal. Source-derived quoted diagnostics inside troubleshooting/error sections stay verbatim. No translations or bilingual answer tables are hard-coded in tests; fixtures use generated CJK characters.
+- Fixed demonstrated parser false positives involving dollar prices, bare-path sentence punctuation, keyword lists, backticked identifiers/product names, indented JSX children, and inline HTML examples. Broken upstream fence boundaries produce visible review signals when code comparison is unreliable; unrelated upstream parse defects never relax code preservation. No fingerprint exceptions were added.
+- Validation: **99 behavior tests passed**. Full audit: **441/441 counterparts, 79 errors, 1195 warnings, 0 exceptions**. The 89 edited documents have **0 errors and 289 heuristic warnings**. The full strict audit still fails; remaining findings need triage and cannot be treated as a semantic certification. Production build passes with zero broken-link, anchor, Markdown-link, or duplicate-route diagnostics.
+- Hash-bound full-pair semantic review passes for **20 edited authentication/enterprise pages**. The other **69 edited pages remain pending full semantic review** after translation agents encountered service-capacity errors. Subsequent retries ran sequentially as requested and also failed; no unfinished review was marked passed. Local audit and review artifacts are under ignored `test/.reports/`. No live DeepL requests were made.
+- Updated `upstream-sync` and tooling documentation for the preservation rules and user-directed delegation/concurrency limits. The parent performs tooling, integration and verification when translation edits are assigned to sub-agents.
 
 ### 2026-11-17 Alternatives re-translation and verification refinements
 
