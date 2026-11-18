@@ -44,12 +44,12 @@ class Action:
         self.valves = self.Valves()
 
     class Valves(BaseModel):
-        # 配置参数
+        # Configuration parameters
         parameter_name: str = "default_value"
         priority: int = 0  # Controls button display order (lower = appears first)
 
     async def action(self, body: dict, __user__=None, __event_emitter__=None, __event_call__=None):
-        # Action 逻辑
+        # Action implementation
         return {"messages": [{"id": body["id"], "content": "Modified message content"}]}
 ```
 
@@ -80,13 +80,13 @@ Actions 可以使用 Open WebUI 的实时事件系统构建交互体验：
 
 ``` python
 async def action(self, body: dict, __event_emitter__=None):
-    # 发送状态更新
+    # Send status updates
     await __event_emitter__({
         "type": "status",
         "data": {"description": "Processing request..."}
     })
 
-    # 发送通知
+    # Send notifications
     await __event_emitter__({
         "type": "notification",
         "data": {"type": "info", "content": "Action completed successfully"}
@@ -99,7 +99,7 @@ async def action(self, body: dict, __event_emitter__=None):
 
 ``` python
 async def action(self, body: dict, __event_call__=None):
-    # 请求用户确认
+    # Request user confirmation
     response = await __event_call__({
         "type": "confirmation",
         "data": {
@@ -108,7 +108,7 @@ async def action(self, body: dict, __event_call__=None):
         }
     })
 
-    # 请求用户输入
+    # Request user input
     user_input = await __event_call__({
         "type": "input",
         "data": {
@@ -128,13 +128,13 @@ async def action(self, body: dict, __event_call__=None):
 
 ``` python
 async def action(self, body: dict, **kwargs):
-    # 单 Action 实现
+    # Single action implementation
     return {"messages": [{"id": body["id"], "content": "Action result"}]}
 ```
 
 ### 多重 Action {#multi-actions}
 
-Functions 可以通过 `actions` 数组定义多个子 action：
+Functions 可以通过 `actions` 数组定义多个子 action。它必须是 `Action` 类的属性，可以是类属性，也可以在 `__init__` 中设置在 `self` 上。模块级的列表永远不会被读取。
 
 ``` python
 class Action:
@@ -160,6 +160,8 @@ class Action:
             return {"messages": [{"id": body["id"], "content": "Translation: ..."}]}
 ```
 
+没有 `name` 的子 action 会显示为 `<function name> (<sub id>)`。它的图标依次取自：子 action 自己的 `icon_url`、frontmatter 的 `icon_url`、类上的 `icon_url` 或 `icon` 属性，最后是默认图标。
+
 ### 全局 Action 与模型级 Action {#global-vs-model-specific-actions}
 - **全局 Action** —— 在 Action 的设置中打开开关，即可为所有用户和所有模型全局启用它。
 - **模型专属 Action** —— 在模型设置中为特定模型配置已启用的 Action。
@@ -181,19 +183,19 @@ class Valves(BaseModel):
 
 ## 高级能力 {#advanced-capabilities}
 
-### 后台任务执行 {#long-running-actions}
+### 长时间运行的操作 {#long-running-actions}
 
-对于耗时较长的操作，actions 可以与任务系统结合：
+action 在按钮点击发出的 HTTP 请求内同步执行。没有任务系统钩子，因此请通过 `__event_emitter__` 上报进度，并将工作量控制在客户端愿意等待的范围内：
 
 ``` python
 async def action(self, body: dict, __event_emitter__=None):
-    # 开始长任务
+    # Start long-running process
     await __event_emitter__({
         "type": "status",
         "data": {"description": "Starting background processing..."}
     })
 
-    # 执行耗时操作
+    # Perform time-consuming operation
     result = await some_long_running_function()
 
     return {"messages": [{"id": body["id"], "content": f"Processing completed: {result}"}]}
@@ -337,7 +339,7 @@ async def action(self, body: dict, __event_emitter__=None):
 Actions 可以与其他 Open WebUI 能力无缝协作：
 - **Models** —— Actions 可按模型启用，也可全局启用
 - **Tools** —— Actions 可调用外部 tools 与 API
-- **Files** —— Actions 可处理上传文件并生成新文件
+- **Files** —— Action payload 不携带附件。当 action 需要文件时，请结合文件 API 使用 `body["chat_id"]` 获取某个聊天的文件
 - **Memory** —— Actions 可访问对话历史与上下文
 - **Permissions** —— Actions 遵守用户角色与访问控制
 - **[Rich UI Embedding](/features/extensibility/plugin/development/rich-ui)** —— Actions 可以返回 HTML 内容，并在聊天中渲染为交互式 iframe

@@ -79,15 +79,15 @@ Caddy 是一个强大的 Web 服务器，会自动替你管理 TLS 证书，因�
 
 ### 配置 Caddy {#configure-caddy}
 
-接下来需要修改 `Caddyfile`，将其替换为你的域名。
+接下来需要修改 `CaddyFile`，将其替换为你的域名。
 
-编辑 `/etc/caddy/Caddyfile` 文件：
+要完成修改，请编辑 `/etc/caddy/Caddyfile` 文件：
 
 ```bash
 sudo nano /etc/caddy/Caddyfile
 ```
 
-然后将配置更新为如下内容（确保将 `your-domain.com` 替换为你的真实域名）：
+然后配置应如下所示：
 
 ```caddyfile
 your-domain.com {

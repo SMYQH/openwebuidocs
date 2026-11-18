@@ -9,7 +9,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 # 开始使用 Open WebUI {#getting-started-with-open-webui}
 
 <ThemedImage
-  alt="开始使用 Open WebUI：安装、连接提供商、开始聊天，然后扩展到应用安装、代理、分享和更新"
+  alt="开始使用：一排逐级升高的台阶，第一级被标记出来"
   sources={{
     light: useBaseUrl('/images/banners/getting-started-light.svg'),
     dark: useBaseUrl('/images/banners/getting-started-dark.svg'),
@@ -62,7 +62,7 @@ Open WebUI 是一个渐进式 Web 应用（PWA）。你可以把它添加到手�
 
 **已经安装并开始聊天了——接下来呢？**
 
-五个简短部分，带你了解每位新用户最终都会想早点知道的事情：什么是插件、如何安装；为什么长对话最终会报错（以及如何用过滤器解决）；驱动标题与自动补全的“隐形” Task Model；如何开始基于自己文档做 RAG；以及如何启用原生工具调用。
+若干简短小节，讲的正是每位新用户最终都会希望第一天就知道的事：插件是什么以及如何安装、长对话最终为什么会报错（以及上下文压缩如何应对）、驱动标题与自动补全的“隐形”任务模型、如何基于自己的文档开始 RAG、网页搜索、原生工具调用，以及 Open Terminal。
 
 | | |
 | :--- | :--- |
@@ -71,6 +71,8 @@ Open WebUI 是一个渐进式 Web 应用（PWA）。你可以把它添加到手�
 | 🤖 **任务模型** | 让标题、标签和自动补全不再占用主模型 |
 | 📚 **基础 RAG** | 与你自己的文档对话 |
 | 🔧 **工具调用** | 原生模式 + 首批推荐安装的 Tools |
+| 🌐 **Web 搜索** | 选择一个搜索提供商，需要时模型就会自行搜索 |
+| 🧰 **Open Terminal** | 模型可以在其中构建并运行内容的沙箱化 shell |
 
 [**阅读必读内容 →**](/getting-started/essentials)
 

@@ -41,13 +41,14 @@ openssl rand -base64 32
 ### 配置示例 {#example-configuration}
 
 ```bash
-# 启用 SCIM
+
+# Enable SCIM
 export SCIM_ENABLED=true
 
-# 设置安全 token（替换为您自己生成的 token）
+# Set a secure token (replace with your own generated token)
 export SCIM_TOKEN="your-secure-token-here"
 
-# 设置用于 externalId 关联的 OAuth 提供商名称
+# Set the OAuth provider name for externalId linking
 export SCIM_AUTH_PROVIDER="microsoft"
 ```
 
@@ -192,15 +193,16 @@ GET /api/v1/scim/v2/Groups?filter=displayName eq "Engineering"
 您可以使用 curl 测试 SCIM 端点：
 
 ```bash
-# 测试身份认证并列出用户
+
+# Test authentication and list users
 curl -H "Authorization: Bearer your-scim-token" \
   https://your-domain.com/api/v1/scim/v2/Users
 
-# 获取特定用户
+# Get a specific user
 curl -H "Authorization: Bearer your-scim-token" \
   https://your-domain.com/api/v1/scim/v2/Users/user-id
 
-# 创建测试用户
+# Create a test user
 curl -X POST \
   -H "Authorization: Bearer your-scim-token" \
   -H "Content-Type: application/scim+json" \

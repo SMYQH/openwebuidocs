@@ -97,7 +97,7 @@ class Tools:
     class UserValves(BaseModel):
         service_password: str = Field(
             default="",
-            description="你的服务密码",
+            description="Your service password",
             json_schema_extra={"input": {"type": "password"}}
         )
 ```
@@ -131,7 +131,7 @@ class Tools:
     class Valves(BaseModel):
         priority: str = Field(
             default="medium",
-            description="处理优先级级别",
+            description="Processing priority level",
             json_schema_extra={
                 "input": {
                     "type": "select",
@@ -150,15 +150,15 @@ class Tools:
     class Valves(BaseModel):
         log_level: str = Field(
             default="info",
-            description="日志详细程度",
+            description="Logging verbosity",
             json_schema_extra={
                 "input": {
                     "type": "select",
                     "options": [
-                        {"value": "debug", "label": "调试（详细）"},
-                        {"value": "info", "label": "信息（标准）"},
-                        {"value": "warn", "label": "警告（最简）"},
-                        {"value": "error", "label": "错误（仅严重）"}
+                        {"value": "debug", "label": "Debug (Verbose)"},
+                        {"value": "info", "label": "Info (Standard)"},
+                        {"value": "warn", "label": "Warning (Minimal)"},
+                        {"value": "error", "label": "Error (Critical Only)"}
                     ]
                 }
             }
@@ -176,7 +176,7 @@ class Tools:
     class Valves(BaseModel):
         selected_model: str = Field(
             default="",
-            description="选择一个要使用的模型",
+            description="Choose a model to use",
             json_schema_extra={
                 "input": {
                     "type": "select",
@@ -191,7 +191,7 @@ class Tools:
             Dynamically fetch available models.
             Called when the Valves configuration UI is opened.
             """
-            # 示例：根据运行时状态返回选项
+            # Example: Return options based on runtime state
             return [
                 {"value": "gpt-5.6-sol", "label": "GPT-5.6 Sol"},
                 {"value": "gpt-5.6-luna", "label": "GPT-5.6 Luna"},
@@ -208,7 +208,7 @@ class Tools:
     class UserValves(BaseModel):
         workspace: str = Field(
             default="",
-            description="选择你的工作区",
+            description="Select your workspace",
             json_schema_extra={
                 "input": {
                     "type": "select",
@@ -227,10 +227,10 @@ class Tools:
                 return []
 
             user_id = __user__.get("id")
-            # 从你的数据源获取与用户相关的工作区
+            # Fetch user-specific workspaces from your data source
             return [
-                {"value": "ws-1", "label": "个人工作区"},
-                {"value": "ws-2", "label": "团队工作区"}
+                {"value": "ws-1", "label": "Personal Workspace"},
+                {"value": "ws-2", "label": "Team Workspace"}
             ]
 ```
 
@@ -245,14 +245,14 @@ class Tools:
     class Valves(BaseModel):
         enabled_regions: list[str] = Field(
             default=["eu-west-1"],
-            description="要查询的区域",
+            description="Regions to query",
             json_schema_extra={
                 "input": {
                     "type": "multiselect",
                     "options": [
-                        {"value": "eu-west-1", "label": "欧洲（爱尔兰）"},
-                        {"value": "us-east-1", "label": "美国东部（弗吉尼亚）"},
-                        {"value": "ap-south-1", "label": "亚太（孟买）"}
+                        {"value": "eu-west-1", "label": "Europe (Ireland)"},
+                        {"value": "us-east-1", "label": "US East (N. Virginia)"},
+                        {"value": "ap-south-1", "label": "Asia Pacific (Mumbai)"}
                     ]
                 }
             }
@@ -284,7 +284,7 @@ class Tools:
             default=0.7,
             ge=0,
             le=2,
-            description="采样温度",
+            description="Sampling temperature",
             json_schema_extra={"input": {"type": "range", "step": 0.1}}
         )
 ```

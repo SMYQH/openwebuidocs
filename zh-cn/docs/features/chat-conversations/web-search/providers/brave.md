@@ -43,7 +43,7 @@ services:
       ENABLE_WEB_SEARCH: True
       WEB_SEARCH_ENGINE: "brave"             # or "brave_llm_context"
       BRAVE_SEARCH_API_KEY: "YOUR_API_KEY"
-      # BRAVE_SEARCH_CONTEXT_TOKENS: 8192    # 仅用于 brave_llm_context
+      # BRAVE_SEARCH_CONTEXT_TOKENS: 8192    # only for brave_llm_context
       WEB_SEARCH_RESULT_COUNT: 3
       WEB_SEARCH_CONCURRENT_REQUESTS: 1
 ```

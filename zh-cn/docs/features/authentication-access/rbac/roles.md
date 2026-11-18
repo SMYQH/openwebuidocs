@@ -56,7 +56,7 @@ Open WebUI 定义了三种主要的**系统角色**，用于确定用户账户�
 
 ```bash
 DEFAULT_USER_ROLE=pending
-# 选项：'pending'、'user'、'admin'
+# Options: 'pending', 'user', 'admin'
 ```
 *   **pending（推荐用于公共/共享实例）：** 新用户在管理员于管理面板中明确激活之前无法登录。
 *   **user：** 新用户以默认权限立即获得访问权限。
@@ -148,7 +148,7 @@ services:
       - WEBUI_ADMIN_EMAIL=admin@example.com
       - WEBUI_ADMIN_PASSWORD=${ADMIN_PASSWORD}  # Use secrets management
       - WEBUI_ADMIN_NAME=System Administrator
-    # ... 其他配置
+    # ... other configuration
 ```
 
 #### Kubernetes Secret {#kubernetes-secret}

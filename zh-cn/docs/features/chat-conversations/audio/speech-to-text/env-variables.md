@@ -37,7 +37,7 @@ title: "环境变量"
 | `WHISPER_MODEL_AUTO_UPDATE` | 自动下载模型更新 | `false` |
 | `WHISPER_VAD_FILTER` | 启用语音活动检测过滤器 | `false` |
 
-:::info `WHISPER_COMPUTE_TYPE` 可选值
+:::info WHISPER_COMPUTE_TYPE 可选值
 - `int8` —— CPU 默认值，速度最快，但在较老的 GPU 上可能不可用
 - `float16` —— **CUDA / GPU 推荐值**
 - `int8_float16` —— 混合模式（int8 权重，float16 计算）

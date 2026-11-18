@@ -19,29 +19,29 @@ LLM 模型如何提供服务，与 Open WebUI 如何部署是两个独立问题�
 
 ## 共享基础设施要求 {#shared-infrastructure-requirements}
 
-无论你选择哪一种部署模式，任何需要扩展的 Open WebUI 部署都依赖同一组后端服务。在从单实例扩展之前，请先完成这些基础设施配置。
+无论你选择哪一种部署模式，任何需要扩展的 Open WebUI 部署都依赖同一组后端服务。在扩展到多实例**之前**，请先完成这些配置。
 
 | 组件 | 为什么必需 | 可选方案 |
 | :--- | :--- | :--- |
 | **PostgreSQL** | 多实例部署必须使用真正的数据库。SQLite 不支持多个进程并发写入。 | 自托管、Amazon RDS、Azure Database for PostgreSQL、Google Cloud SQL |
-| **Redis** | 用于会话管理、WebSocket 协调和实例间配置同步。 | 自托管、Amazon ElastiCache、Azure Cache for Redis、Google Memorystore |
+| **Redis** | WebSocket 协调、令牌吊销以及实例间的共享缓存（配置通过 PostgreSQL 共享）。 | 自托管、Amazon ElastiCache、Azure Cache for Redis、Google Memorystore |
 | **向量数据库** | 默认 ChromaDB 使用本地 SQLite 后端，不适合多进程访问。 | PGVector（复用 PostgreSQL）、Milvus、Qdrant，或 HTTP Server 模式的 ChromaDB |
 | **共享存储** | 上传文件必须能被所有实例访问。 | 共享文件系统（NFS、EFS、CephFS）或对象存储（`S3`、`GCS`、`Azure Blob`） |
-| **内容提取** | 默认 `pypdf` 提取器在持续负载下会发生内存泄漏。 | 以 Sidecar 方式运行 Apache Tika 或 Docling |
-| **Embedding 引擎** | 默认 SentenceTransformers 模型会为每个 worker 进程加载约 500 MB 内存。 | OpenAI Embeddings API，或运行 embedding 模型的 Ollama |
+| **内容提取** | 默认提取器在 Open WebUI 进程内解析文档，消耗该进程的 CPU 和内存。 | 作为独立服务运行 Apache Tika 或 Docling |
+| **Embedding 引擎** | 默认 SentenceTransformers 模型在启动时加载到每个 worker 进程中，并在其 CPU 上运行。 | OpenAI Embeddings API，或运行 embedding 模型的 Ollama |
 
 ### 关键配置 {#critical-configuration}
 
 以下环境变量**必须**在所有实例中保持一致：
 
-``` bash
-# 共享密钥 —— 所有实例必须完全一致
+```bash
+# Shared secret: MUST be identical on all instances
 WEBUI_SECRET_KEY=your-secret-key-here
 
 # Database
 DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
 
-# Vector Database（PGVector 默认使用 DATABASE_URL，除非设置了 PGVECTOR_DB_URL）
+# Vector Database (PGVector uses DATABASE_URL unless PGVECTOR_DB_URL is set)
 VECTOR_DB=pgvector
 
 # Redis
@@ -55,15 +55,15 @@ TIKA_SERVER_URL=http://tika:9998
 # Embeddings
 RAG_EMBEDDING_ENGINE=openai
 
-# 存储 —— 二选一：
-# 方案 A：共享文件系统（为所有实例挂载同一个卷，无需额外环境变量）
-# 方案 B：对象存储（所有所需变量见 https://docs.openwebui.com/reference/env-configuration#cloud-storage）
+# Storage: choose ONE
+# Option A: shared filesystem (mount the same volume to all instances, no env var needed)
+# Option B: object storage (see https://docs.openwebui.com/reference/env-configuration#cloud-storage for all required vars)
 # STORAGE_PROVIDER=s3
 
-# Workers —— 让编排器负责扩缩容
+# Workers: let the orchestrator handle scaling
 UVICORN_WORKERS=1
 
-# 数据库迁移 —— 只能有一个实例负责执行迁移
+# Migrations: only ONE instance should run migrations
 ENABLE_DB_MIGRATIONS=false
 ```
 
@@ -91,7 +91,7 @@ Open WebUI 支持三种生产级部署模式。每份指南都涵盖该模式对
 
 ### [使用 Helm 的 Kubernetes](./kubernetes-helm) {#kubernetes-with-helm}
 
-在任意 Kubernetes 发行版（EKS、AKS、GKE、OpenShift、Rancher、自建集群）上使用官方 Open WebUI Helm Chart 部署。适合需要声明式基础设施、进阶自动扩缩容与 GitOps 工作流的大规模关键任务级场景。
+在任意 Kubernetes 发行版（EKS、AKS、GKE、OpenShift、Rancher、自建集群）上使用官方 Open WebUI Helm Chart 部署。适合需要声明式基础设施即代码、进阶自动扩缩容与 GitOps 工作流的大规模关键任务部署。
 
 ---
 
@@ -102,7 +102,7 @@ Open WebUI 支持三种生产级部署模式。每份指南都涵盖该模式对
 | **运维复杂度** | 中等 —— 需管理 OS 补丁和 Python 运行环境 | 低 —— 容器由平台托管 | 较高 —— 需要 K8s 专业能力 |
 | **自动扩缩容** | 云 ASG/VMSS + 健康检查 | 平台原生，配置较少 | HPA，控制更精细 |
 | **容器隔离** | 无 —— 进程直接运行在 OS 上 | 完整容器隔离 | 完整容器 + namespace 隔离 |
-| **滚动更新** | 手动（缩容、更新、再扩容） | 平台托管滚动部署 | 声明式滚动更新，并支持回滚 |
+| **更新** | 手动（缩容、更新、再扩容） | 停止所有任务，运行一个迁移任务，然后重启 | 由 Helm 脚本化执行；回滚不会撤销迁移 |
 | **基础设施即代码** | Terraform/Pulumi + 配置管理 | 任务/服务定义（CloudFormation、Bicep、Terraform） | Helm Chart + GitOps（Argo CD、Flux） |
 | **最适用场景** | 以虚拟机为核心的团队，或受监管限制的环境 | 想要容器收益但不想承担 K8s 复杂度的团队 | 大规模、关键任务级部署 |
 | **团队最低能力要求** | Linux 运维、Python | 容器基础、云平台 | Kubernetes、Helm、云原生模式 |
@@ -117,7 +117,7 @@ Open WebUI 支持三种生产级部署模式。每份指南都涵盖该模式对
 
 - **`/health`** —— 基础存活检查。应用正常运行时返回 HTTP 200。可用于负载均衡器和自动扩缩容健康检查。
 - **`/ready`** —— 就绪检查。在启动完成、且数据库与 Redis（如果已配置）响应 ping 之前返回 503。用于就绪探测和负载均衡器健康检查。
-- **`/api/models`** —— 列出调用者可用的模型。当模型后端不可达时它仍会返回 200，因此并不能证明后端的健康状况。需要已认证的用户令牌；只有管理员启用 API 密钥后（`ENABLE_API_KEYS`，默认关闭），API 密钥才可用。
+- **`/api/models`** —— 列出调用者可用的模型。当模型后端不可达时它仍会返回 200，因此并不能证明后端的健康状况。需要已认证的用户令牌；只有管理员启用 API 密钥后（`ENABLE_API_KEYS`，默认关闭），这类密钥才可用。
 
 ### OpenTelemetry {#opentelemetry}
 

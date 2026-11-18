@@ -54,8 +54,8 @@ Open WebUI 从设计之初就把安全放在核心优先级上。无论你面对
 Open WebUI 可接入你组织已经在使用的身份系统：
 
 * **LDAP 与 Active Directory**：直接连接你现有的目录服务，实现用户认证与管理。
-* **单点登录（SSO）**：支持 SAML 与 OIDC 协议，让用户使用现有企业凭证访问 Open WebUI。
-* **多因素认证（MFA）**：当登录通过 SSO 委托给你的身份提供方时由其强制执行；或者通过 Open WebUI 自身的[双因素登录](/features/authentication-access/mfa)配合验证器应用，为密码、LDAP、SSO 和可信请求头登录提供多因素认证。
+* **单点登录（SSO）**：支持 OIDC 和 OAuth 2.0（Google、Microsoft Entra、GitHub，以及任意 OIDC 提供商），让用户使用现有企业凭证访问 Open WebUI。
+* **多因素认证（MFA）**：当通过 SSO 把登录委托给 Open WebUI 时，由你的身份提供方强制执行；或者由其自身的[双因素登录](/features/authentication-access/mfa)配合验证器应用，为密码、LDAP、SSO 和可信请求头登录强制执行多因素认证。
 
 #### 访问控制与权限 {#access-control--permissions}
 

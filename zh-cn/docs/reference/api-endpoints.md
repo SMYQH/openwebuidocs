@@ -5,6 +5,10 @@ title: "API 接口"
 
 本指南提供了有效使用 API 接口所需的关键信息，帮助你实现与模型的无缝集成和自动化。请注意，该配置目前处于实验阶段，未来可能会有更新和改进。
 
+:::note 接口不再被文档化
+API 变化频繁，为它编写文档意义不大。要查找最新的接口和规范，可以让 AI Agent 指向 Open WebUI 后端并让它自行读取。下面的接口仅供参考。
+:::
+
 ## 认证 {#authentication}
 
 为确保 API 的安全访问，需要进行身份认证 🛡️。你可以使用 Bearer Token 机制对 API 请求进行认证。在 Open WebUI 的**设置 > 账户**中获取你的 API Key，或者使用 JWT（JSON Web Token）进行认证。有关启用和生成 API Key 的完整说明（包括管理员开关和非管理员用户所需的群组权限），请参阅 [API 密钥](/features/authentication-access/api-keys)。
@@ -55,19 +59,19 @@ title: "API 接口"
 
 **认证：** 需要管理员 [API Key](/features/authentication-access/api-keys)（或对于 `import`，具有 `workspace.models_import` 权限的用户）。`sync` 仅限管理员。`import` 和 `sync` 都接受形如 `{"models": [ ... ]}` 的请求体，其中数组正是 `export` 返回的内容。
 
-**背景图片以数据形式随行。** 模型的背景会以文件形式存储在实例上，因此 `export` 会读取该文件并以 `background_image_data`（一个 `data:image/...;base64,...` URI）的形式放入记录中，同时把 `meta.background_image_url` 留空。`import` 则反向处理：解码该 data URI，在目标实例上重新上传为文件，并把新的文件 URL 写回 `meta`。这使导出的模型可以在实例之间移植。编写脚本时有两个值得注意的结果：导出一个背景文件已丢失的模型会使整个请求以 `400` 失败；超出限制（5 MiB、2500 万像素、PNG/JPEG/WebP/GIF）的图片会在导入时被拒绝。
+**背景图片以数据形式随行。** 模型的背景会以文件形式存储在实例上，因此 `export` 会读取该文件并以 `background_image_data`（一个 `data:image/...;base64,...` URI）的形式放入记录中，同时把 `meta.background_image_url` 留空。`import` 则反向处理：解码该 data URI，在目标实例上重新上传为文件，并把新的文件 URL 写回 `meta`。这使导出的模型可以在实例之间移植。编写脚本时有两个值得注意的结果：导出一个背景文件已丢失的模型会使整个请求以 `400` 失败；超出限制（5 MiB、25 百万像素、PNG/JPEG/WebP/GIF）的图片会在导入时被拒绝。
 
-**语音头像以引用的形式随行。** 语音头像存储在实例上，因此在 `export` 和 `import` 之间传递的是文件引用而不是数据。在导入的实例上，如果对应的文件尚未上传，头像会显示为占位图；模型记录中保存的是该文件 URL。请参见[语音头像](/features/chat-conversations/chat-features/voice-mode#voice-avatars)。
+**语音头像以引用的形式随行。** [语音头像](/features/chat-conversations/chat-features/voice-mode#voice-avatars) 及其动画始终以文件形式保存在源实例上，导出时只会带上它们的文件 ID。导入或同步一个头像或动画文件在目标实例上缺失或不可访问的模型时，请求会失败并返回 `403`（`Avatar or animation file is not accessible. Upload it again.`）。请先在目标实例上上传头像。
 
 **版本控制、代码驱动的工作流：**
 
 ```bash
-# 1. 将当前模型快照保存到文件（可提交到 Git）
+# 1. Snapshot your live models into a file you can commit to git
 curl -H "Authorization: Bearer YOUR_API_KEY" \
   http://localhost:3000/api/v1/models/export > models.json
 
-# 2. 用脚本或 Agent 编辑或生成 models.json，提交，然后
-#    调谐实例使其与文件完全匹配（创建、更新、清理）
+# 2. Edit or generate models.json with your scripts or an agent, commit it, then
+#    reconcile the instance to match the file exactly (creates, updates, prunes)
 curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d "{\"models\": $(cat models.json)}" \
@@ -77,6 +81,7 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
 这样就得到了可重现、受版本控制的模型定义。使用 `/import` 替代 `/sync` 进行仅增加且从不删除现有模型的更新。在部署、CI 或容器启动时运行同步步骤，以自动加载你的模型。
 
 ### 聊天补全 {#chat-completions}
+
 - **接口**：`POST /api/chat/completions`
 - **说明**：作为兼容 OpenAI API 的聊天补全接口，为 Open WebUI 上的模型提供服务，包括 Ollama 模型、OpenAI 模型以及 Open WebUI Function 模型。位于 Responses API 连接上的模型同样会以 Chat Completions 格式作答（无论是否流式）；当回复被截断时，`finish_reason` 会被设为 `length` 或 `content_filter`。
 
@@ -106,13 +111,13 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
 
 #### 通过 API 使用 Open WebUI 工具（包括 MCP） {#using-open-webui-tools-including-mcp-from-the-api}
 
-`/api/chat/completions` 接口可以在请求体中传入 Open WebUI 工具 ID 时，服务端执行这些工具——包括已配置并启用的原生 Python 工具、OpenAPI 工具服务器和 MCP 工具服务器。
+`/api/chat/completions` 接口可以在请求体中传入 Open WebUI 工具 ID 时，服务端执行这些工具——包括已在 Open WebUI 中配置并启用的原生 Python 工具、OpenAPI 工具服务器和 MCP 工具服务器。
 
 1. 先在 Open WebUI 中配置好工具服务器。MCP 相关内容参见 [Model Context Protocol (MCP)](/features/extensibility/mcp)。
 2. 从工具列表接口获取工具 ID，或在聊天中启用该工具时通过浏览器网络请求获取。MCP 工具服务器的 ID 形如 `server:mcp:<server-id>`。
 3. 调用 `/api/chat/completions` 时，在 `tool_ids` 中传入该 ID：
 
-``` bash
+```bash
 curl -X POST http://localhost:3000/api/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
@@ -137,7 +142,7 @@ Open WebUI 会在解析工具之前检查调用者对每个所选工具服务器
 
 - **Curl 示例**：
 
-``` bash
+  ```bash
   curl -X POST http://localhost:3000/api/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
@@ -150,7 +155,7 @@ Open WebUI 会在解析工具之前检查调用者对每个所选工具服务器
           }
         ]
       }'
-```
+  ```
 
 - **Python 示例**：
 
@@ -236,7 +241,7 @@ Open WebUI 提供兼容 Anthropic 消息 API 的接口。这允许为 Anthropic 
 
 - **Python 示例**（使用 Anthropic SDK）：
 
-``` python
+  ```python
   from anthropic import Anthropic
 
   client = Anthropic(
@@ -252,7 +257,7 @@ Open WebUI 提供兼容 Anthropic 消息 API 的接口。这允许为 Anthropic 
       ],
   )
   print(message.content[0].text)
-```
+  ```
 
   :::warning
   `base_url` 必须是 `http://localhost:3000/api`（而非 `/api/v1`）。Anthropic SDK 会自动将 `/v1/messages` 附加到 base URL 后面。
@@ -263,11 +268,11 @@ Open WebUI 提供兼容 Anthropic 消息 API 的接口。这允许为 Anthropic 
   要将 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 与 Open WebUI 作为代理一起使用，请将其配置为指向你的 Open WebUI 实例：
 
   ```bash
-  # 设置 Claude Code 的环境变量
+  # Set environment variables for Claude Code
   export ANTHROPIC_BASE_URL="http://localhost:3000/api"
   export ANTHROPIC_API_KEY="YOUR_OPEN_WEBUI_API_KEY"
 
-  # 然后正常运行 Claude Code
+  # Then run Claude Code as normal
   claude
   ```
 
@@ -350,9 +355,9 @@ Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** �
 | `outlet()` | 执行 | 默认内联执行，由 `ENABLE_API_OUTLET_FILTERS` 控制（见下文） |
 
 `inlet()` 函数始终执行，非常适合用于：
-- **速率限制** - 追踪并限制每用户的请求数
-- **请求日志** - 记录所有 API 使用情况以供监控
-- **输入验证** - 在请求到达模型之前拒绝无效请求
+- **速率限制**：追踪并限制每用户的请求数
+- **请求日志**：记录所有 API 使用情况以供监控
+- **输入验证**：在请求到达模型之前拒绝无效请求
 
 :::danger 直接 API 调用的 Outlet 行为——请仔细阅读
 `outlet()` 在 `/api/chat/completions` 之后**默认**内联运行，在**流式与非流式两条路径上**都会运行，由 [`ENABLE_API_OUTLET_FILTERS`](/reference/env-configuration#enable_api_outlet_filters) 控制（默认 `True`）。请求体中**不需要** `chat_id` 和消息 `id`：两者都不在时，对话会根据你发送的 `messages` 加上助手回复重建，并为它生成一个消息 ID。把 `ENABLE_API_OUTLET_FILTERS=False` 即可为直接 API 流量关闭内联执行。
@@ -366,14 +371,14 @@ Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** �
 
 #### 旧版/API 支持接口：`/api/chat/completed` {#legacy--supported-for-api-endpoint-apichatcompleted}
 
-`POST /api/chat/completed` 是为直接 API 集成可靠运行 `outlet()` 的接口。在 `dev` 版本中，它被标记为已弃用，以支持内联执行，但如上所述，内联执行目前不会向纯 API 调用者返回过滤后的响应体——因此在实践中，`/api/chat/completed` 仍是当今大多数 API 集成的正确选择。
+`POST /api/chat/completed` 是为直接 API 集成可靠运行 `outlet()` 的接口。它被标记为已弃用，但如上所述，内联执行目前不会向纯 API 调用者返回过滤后的响应体——因此在实践中，`/api/chat/completed` 仍是当今大多数 API 集成的正确选择。
 
 - **接口**：`POST /api/chat/completed`
 - **说明**：对已完成的聊天载荷无条件运行 `outlet()` 过滤器（以及流水线 outlet 过滤器）。返回过滤后的载荷。
 
 - **Curl 示例**：
 
-``` bash
+  ```bash
   curl -X POST http://localhost:3000/api/chat/completed \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
@@ -386,7 +391,7 @@ Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** �
         "chat_id": "optional-uuid",
         "session_id": "optional-session-id"
       }'
-```
+  ```
 
 - **Python 示例**：
 
@@ -417,7 +422,7 @@ Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** �
   ```
 
 :::tip
-如果你今天需要通过 HTTP 获取 `outlet()` 的输出，请先调用 `/api/chat/completions`，再调用 `/api/chat/completed`。`dev` 版本上的内联执行主要面向从 WebSocket 读取数据的 WebUI 形态客户端。有关过滤器行为的更多详情，请参阅[过滤器 Function 文档](/features/extensibility/plugin/functions/filter#filter-behavior-with-api-requests)。
+如果你今天需要通过 HTTP 获取 `outlet()` 的输出，请先调用 `/api/chat/completions`，再调用 `/api/chat/completed`。`dev` 版本上的内联执行仍会运行你的 outlet 过滤器及其副作用（持久化消息、`chat:outlet` WebSocket 事件、日志或追踪调用），但过滤后的文本不会在 HTTP 响应中返回。有关过滤器行为的更多详情，请参阅[过滤器 Function 文档](/features/extensibility/plugin/functions/filter#filter-behavior-with-api-requests)。
 :::
 
 ### 🦙 Ollama API 代理支持 {#ollama-api-proxy-support}
@@ -429,7 +434,7 @@ Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** �
 
 #### 🔁 生成补全（流式） {#generate-completion-streaming}
 
-``` bash
+```bash
 curl http://localhost:3000/ollama/api/generate \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
@@ -448,7 +453,7 @@ curl http://localhost:3000/ollama/api/tags \
 
 #### 🧠 生成嵌入向量 {#generate-embeddings}
 
-``` bash
+```bash
 curl -X POST http://localhost:3000/ollama/api/embed \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
@@ -496,8 +501,6 @@ curl -X POST http://localhost:3000/ollama/v1/embeddings \
 
 可以用 `/ollama/v1/embeddings/{url_idx}` 指定某个具体后端。如果 Ollama 集成被禁用，该端点会返回 `503`。
 
-
-<a id="-retrieval-augmented-generation-rag"></a>
 ### 🧩 检索增强生成（RAG） {#retrieval-augmented-generation-rag}
 
 检索增强生成（RAG）功能允许你将外部数据源内容融入到响应中。以下介绍如何通过 API 管理文件和知识库集合，以及如何在聊天补全中有效使用它们。
@@ -517,8 +520,8 @@ curl -X POST http://localhost:3000/ollama/v1/embeddings \
   -F "file=@/path/to/your/file" http://localhost:3000/api/v1/files/
   ```
 
-- **Python 示例**:
-``` python
+- **Python 示例**：
+  ```python
   import requests
 
   def upload_file(token, file_path):
@@ -530,7 +533,7 @@ curl -X POST http://localhost:3000/ollama/v1/embeddings \
       files = {'file': open(file_path, 'rb')}
       response = requests.post(url, headers=headers, files=files)
       return response.json()
-```
+  ```
 
 :::warning 异步处理与竞争条件
 
@@ -554,7 +557,7 @@ The content provided is empty. Please ensure that there is text or data present 
 - **查询参数**：
   - `stream`（布尔型，默认：`false`）：如果为 `true`，则返回服务器发送事件（SSE）流
 
-**状态値：**
+**状态值：**
 | 状态 | 说明 |
 |--------|-------------|
 | `pending` | 文件仍在处理中 |
@@ -644,7 +647,7 @@ The content provided is empty. Please ensure that there is text or data present 
   -d '{"file_id": "your-file-id-here"}'
   ```
 
-- **Python 示例**:
+- **Python 示例**：
 
   ```python
   import requests
@@ -673,7 +676,7 @@ The content provided is empty. Please ensure that there is text or data present 
   - `overwrite`（布尔型，默认：`true`）：是否在保存新块之前替换目标集合中现有的向量，即清空给定集合并用给定 URL 的内容替换它
 - **请求体**：
   - `url`（字符串，必需）：要获取和解析的网页 URL
-  - `collection_name`（字符串，可选）：目标集合名称。如果省略， Open WebUI 会根据 URL 自动生成
+  - `collection_name`（字符串，可选）：目标集合名称。如果省略，Open WebUI 会根据 URL 自动生成
 - **错误**：无法获取或没有返回内容的链接（例如主机拒绝连接）会返回 `400`，detail 为 `[ERROR: Could not read content from <url>]`；在 `process=false` 时同样如此。
 
 **`overwrite` 行为：**
@@ -743,7 +746,7 @@ def upload_and_add_to_knowledge(file_path, knowledge_id, timeout=300):
         'Accept': 'application/json'
     }
     
-    # 第一步：上传文件
+    # Step 1: Upload the file
     with open(file_path, 'rb') as f:
         response = requests.post(
             f'{WEBUI_URL}/api/v1/files/',
@@ -758,8 +761,8 @@ def upload_and_add_to_knowledge(file_path, knowledge_id, timeout=300):
     file_id = file_data['id']
     print(f"File uploaded with ID: {file_id}")
     
-    # 第二步：等待处理完成
-    print("正在等待文件处理...")
+    # Step 2: Wait for processing to complete
+    print("Waiting for file processing...")
     start_time = time.time()
     
     while time.time() - start_time < timeout:
@@ -771,16 +774,16 @@ def upload_and_add_to_knowledge(file_path, knowledge_id, timeout=300):
         status = status_data.get('status')
         
         if status == 'completed':
-            print("文件处理完成！")
+            print("File processing completed!")
             break
         elif status == 'failed':
             raise Exception(f"Processing failed: {status_data.get('error')}")
         
         time.sleep(2)  # Poll every 2 seconds
     else:
-        raise TimeoutError("文件处理超时")
+        raise TimeoutError("File processing timed out")
     
-    # 第三步：添加到知识库
+    # Step 3: Add to knowledge base
     add_response = requests.post(
         f'{WEBUI_URL}/api/v1/knowledge/{knowledge_id}/file/add',
         headers={**headers, 'Content-Type': 'application/json'},
@@ -790,25 +793,25 @@ def upload_and_add_to_knowledge(file_path, knowledge_id, timeout=300):
     if add_response.status_code != 200:
         raise Exception(f"Failed to add to knowledge: {add_response.text}")
     
-    print(f"文件成功添加到知识库！")
+    print(f"File successfully added to knowledge base!")
     return add_response.json()
 
-# 使用方式
+# Usage
 result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id')
 ```
 
 #### 在聊天补全中使用文件和集合 {#using-files-and-collections-in-chat-completions}
 
-你可以在 RAG 查询中引用单个文件或整个集合，以丰富响应内容。
+你可以在 RAG 查询中引用单个文件或整个知识库，以丰富响应内容。
 
 ##### 在聊天补全中使用单个文件 {#using-an-individual-file-in-chat-completions}
 
-当你希望肊天模型的响应聚焦在特定文件的内容上时，此方法非常适用。
+当你希望聊天模型的响应聚焦在特定文件的内容上时，此方法非常适用。
 
 - **接口**：`POST /api/chat/completions`
 - **Curl 示例**：
 
-``` bash
+  ```bash
   curl -X POST http://localhost:3000/api/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
@@ -821,7 +824,7 @@ result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id
           {"type": "file", "id": "your-file-id-here"}
         ]
       }'
-```
+  ```
 
 - **Python 示例**：
 
@@ -850,22 +853,22 @@ result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id
 - **接口**：`POST /api/chat/completions`
 - **Curl 示例**：
 
-``` bash
+  ```bash
   curl -X POST http://localhost:3000/api/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
         "model": "gpt-5.6-terra",
         "messages": [
-          {"role": "user", "content": "Provide insights on the historical perspectives covered in the collection."}
+          {"role": "user", "content": "Provide insights on the historical perspectives covered in the knowledge base."}
         ],
         "files": [
           {"type": "collection", "id": "your-collection-id-here"}
         ]
       }'
-```
+  ```
 
-- **Python 示例**:
+- **Python 示例**：
 
   ```python
   import requests
@@ -885,7 +888,7 @@ result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id
       return response.json()
   ```
 
-这些方法可以通过上传的文件和粿展的知识库集合有效利用外部知识，增强聊天应用的能力。无论是单独使用文件还是将其纳入集合，你都可以根据具体需要自定义集成方式。
+这些方法可以通过上传的文件和精心整理的知识库有效利用外部知识，增强聊天应用的能力。无论是单独使用文件还是将其纳入知识库，你都可以根据具体需要自定义集成方式。
 
 ## 将 Open WebUI 作为统一 LLM 提供商的优势 {#advantages-of-using-open-webui-as-a-unified-llm-provider}
 

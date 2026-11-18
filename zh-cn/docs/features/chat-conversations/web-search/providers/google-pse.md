@@ -36,10 +36,10 @@ title: "Google PSE"
 1. 前往 Google Developers，使用 [Programmable Search Engine](https://developers.google.com/custom-search)，登录或创建账号
 2. 前往 [control panel](https://programmablesearchengine.google.com/controlpanel/all)，点击 `添加`
 3. 输入搜索引擎名称，根据需要设置其他属性，通过机器人验证后点击 `创建`
-4. 生成 `API 密钥` 并获取 `搜索引擎 ID`（创建完成后可用）
-5. 拿到 `API 密钥` 与 `搜索引擎 ID` 后，打开 `Open WebUI 管理面板`，点击 `设置`，再进入 `网页搜索`
+4. 生成 `API key` 并获取 `搜索引擎 ID`（创建完成后可用）
+5. 拿到 `API key` 与 `搜索引擎 ID` 后，打开 `Open WebUI 管理面板`，点击 `设置`，再进入 `网页搜索`
 6. 启用 `网页搜索`，并将 `网页搜索引擎` 设为 `google_pse`
-7. 将 `Google PSE API Key` 填为 `API 密钥`，将 `Google PSE Engine Id` 填为第 4 步得到的值
+7. 将 `Google PSE API Key` 填为 `API key`，将 `Google PSE Engine Id` 填为第 4 步得到的值
 8. 点击 `保存`
 
 ![Open WebUI 管理面板](/images/tutorial_google_pse1.png)

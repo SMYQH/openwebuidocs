@@ -1,12 +1,11 @@
-
 # Kubernetes 上的 Helm 配置 {#helm-setup-for-kubernetes}
 
-Helm 可以帮助你管理 Kubernetes 应用。
+这是在集群上试用 Open WebUI 最快的方式。如果需要持久化或生产级安装（版本锁定、密钥、PostgreSQL、Redis、对象存储、ingress 以及安全更新），请参阅 [Kubernetes 部署](/deployment/kubernetes) 指南。
 
 ## 前置要求 {#prerequisites}
 
-- 已准备好 Kubernetes 集群
-- 已安装 Helm
+- 一个正在运行的 Kubernetes 集群，并且已针对它配置好 `kubectl`。
+- Helm 3。
 
 ## Helm 步骤 {#helm-steps}
 
@@ -31,35 +30,17 @@ Helm 可以帮助你管理 Kubernetes 应用。
    kubectl get pods
    ```
 
-:::warning
-
-如果你计划在集群环境中通过多个节点 / pods / workers 扩展 Open WebUI，就需要配置 NoSQL 键值数据库（Redis）。
-另外还有一些[环境变量](/reference/env-configuration/)必须在所有服务实例之间保持一致，否则会出现一致性问题、会话异常和其他故障！
-
-**重要：** 默认向量数据库（ChromaDB）使用的是本地基于 SQLite 的客户端，**不适用于多副本或多 worker 部署**。SQLite 连接不具备 fork 安全性，多个进程并发写入会直接导致 worker 崩溃。你**必须**通过 [`VECTOR_DB`](/reference/env-configuration#vector_db) 切换到外部向量数据库（PGVector、Milvus、Qdrant），或者通过 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) 将 ChromaDB 作为独立 HTTP 服务运行。
-
-关于完整扩展流程，请参见 [扩展 Open WebUI](/getting-started/advanced-topics/scaling)。若需排查多副本问题，请查看 [扩展与高可用指南](/troubleshooting/multi-replica)。
-
-:::
-
-:::danger 更新时的关键要求
-如果你运行的是多副本 / 多 pod（`replicaCount > 1`）或设置了 `UVICORN_WORKERS > 1`，那么在更新期间你**必须**先缩容到单副本 / 单 pod。
-1. 将部署缩容到 1 个副本。
-2. 应用更新（新镜像版本）。
-3. 等待 pod 完全就绪（数据库迁移完成）。
-4. 再扩容回目标副本数。
-
-**如果不这样做，可能会因为并发迁移导致数据库损坏。**
-:::
+在运行多个副本或 worker 之前，请阅读[扩展 Open WebUI](/getting-started/advanced-topics/scaling)。多副本环境下的更新请参阅[更新与恢复](/deployment/kubernetes#updates-and-recovery)。
 
 ## 访问 WebUI {#access-the-webui}
+
 将服务转发到你的机器，然后打开 [http://localhost:3000](http://localhost:3000)：
 
 ```bash
 kubectl port-forward service/openwebui-open-webui 3000:80
 ```
 
-如需通过 ingress controller 暴露它，请参见[完成生产环境安装](/deployment/kubernetes#finish-the-production-installation)。
+如需通过 ingress controller 暴露它，请参阅[完成生产环境安装](/deployment/kubernetes#finish-the-production-installation)。
 
 ## 卸载 {#uninstall}
 
@@ -67,9 +48,10 @@ kubectl port-forward service/openwebui-open-webui 3000:80
     ```bash
     helm uninstall openwebui
     ```
+    使用默认值时，这也会删除 Open WebUI 的 PVC 及其上的数据。若想在卸载后保留数据，请参阅[卸载时避免误删数据](/deployment/kubernetes#uninstall-without-accidentally-deleting-data)。
 
-2.  **删除 Persistent Volume Claims（警告：会删除所有数据）：**
-    Helm 默认不会自动删除 PVC，以防止误删数据。如果你想彻底清除，需要手动删除：
+2.  **删除剩余的 Persistent Volume Claims（警告：会删除所有数据）：**
+    为了确保该 release 没有遗留任何卷：
     ```bash
     kubectl delete pvc -l app.kubernetes.io/instance=openwebui
     ```

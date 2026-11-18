@@ -54,7 +54,7 @@ Open WebUI 提供的是单页应用，因此请求应用不认识的路径时，
 新账户的默认角色是 `pending`，这意味着管理员批准之前，用户无法访问任何功能。即使管理员重新启用注册（`ENABLE_SIGNUP=true`），`pending` 这一默认角色仍可确保新用户不会在未批准前直接进入系统。
 
 ```bash
-# 新用户会先进入 "pending" 状态，等待管理员批准（默认行为）
+# New users are placed in "pending" status until an admin approves them (this is the default)
 DEFAULT_USER_ROLE=pending
 ```
 
@@ -215,33 +215,33 @@ Open WebUI 内置了 `SecurityHeadersMiddleware`，它会向响应中注入 HTTP
 以下是面向生产部署的推荐起始配置：
 
 ```bash
-# HTTP Strict Transport Security：告诉浏览器只使用 HTTPS
+# HTTP Strict Transport Security: tells browsers to only use HTTPS
 HSTS=max-age=31536000;includeSubDomains
 
-# 防止页面被嵌入其他站点的 iframe
+# Prevents the page from being embedded in iframes on other sites
 XFRAME_OPTIONS=DENY
 
-# 防止浏览器进行 MIME 类型嗅探
+# Prevents browsers from MIME-type sniffing
 XCONTENT_TYPE=nosniff
 
-# 控制随请求发送多少引用来源信息
+# Controls how much referrer information is sent with requests
 REFERRER_POLICY=strict-origin-when-cross-origin
 
-# 限制对浏览器功能的访问
+# Restricts access to browser features
 PERMISSIONS_POLICY=camera=(),microphone=(),geolocation=()
 
-# 内容安全策略
+# Content Security Policy
 CONTENT_SECURITY_POLICY=default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'
 
-# 仅报告模式的内容安全策略（记录违规但不强制执行）
+# Content Security Policy in report-only mode (logs violations without enforcing)
 CONTENT_SECURITY_POLICY_REPORT_ONLY=default-src 'self'; report-uri /csp-report
 
-# 跨源隔离响应头
-CROSS_ORIGIN_EMBEDDER_POLICY=require-corp    # 可选值：unsafe-none, require-corp, credentialless
-CROSS_ORIGIN_OPENER_POLICY=same-origin       # 可选值：unsafe-none, same-origin-allow-popups, same-origin
-CROSS_ORIGIN_RESOURCE_POLICY=same-origin     # 可选值：same-site, same-origin, cross-origin
+# Cross-Origin isolation headers
+CROSS_ORIGIN_EMBEDDER_POLICY=require-corp    # Options: unsafe-none, require-corp, credentialless
+CROSS_ORIGIN_OPENER_POLICY=same-origin       # Options: unsafe-none, same-origin-allow-popups, same-origin
+CROSS_ORIGIN_RESOURCE_POLICY=same-origin     # Options: same-site, same-origin, cross-origin
 
-# 上报 API 端点配置
+# Reporting API endpoint configuration
 REPORTING_ENDPOINTS=default="https://your-report-collector.example/reports"
 ```
 
@@ -286,10 +286,10 @@ FORWARDED_ALLOW_IPS=192.168.1.100
 ### 域名与组限制 {#domain-and-group-restrictions}
 
 ```bash
-# 只允许特定邮箱域名的用户登录
+# Only allow users with email addresses from specific domains
 OAUTH_ALLOWED_DOMAINS=yourcompany.com
 
-# 阻止特定 IdP 组
+# Keep specific IdP groups out of group sync: never created, joined or left
 OAUTH_BLOCKED_GROUPS='["contractors-external", "temp-accounts"]'
 ```
 
@@ -315,10 +315,10 @@ OAUTH_MERGE_ACCOUNTS_BY_EMAIL=false
 ### 会话限制 {#session-limits}
 
 ```bash
-# 每个用户、每个提供商允许的最大并发 OAuth 会话数（默认：10）
+# Maximum concurrent OAuth sessions per user per provider (default: 10)
 OAUTH_MAX_SESSIONS_PER_USER=5
 
-# 启用 IdP 发起的后端通道登出（需要 Redis）
+# Enable IdP-initiated back-channel logout (requires Redis)
 ENABLE_OAUTH_BACKCHANNEL_LOGOUT=true
 ```
 
@@ -391,7 +391,7 @@ DATABASE_POOL_RECYCLE=3600
 API 密钥允许以创建者本人的权限，以编程方式访问 Open WebUI。
 
 ```bash
-# 启用 API 密钥创建（默认：非管理员不可创建）
+# Enable API key creation (default: disabled for non-admin users)
 ENABLE_API_KEYS=true
 ```
 
@@ -431,16 +431,16 @@ Open WebUI 使用分层权限模型：角色、用户组以及资源级访问授
 ### 关键设置 {#key-settings}
 
 ```bash
-# 新用户默认角色（默认：pending）
+# Default role for new users (default: pending)
 DEFAULT_USER_ROLE=pending
 
-# 管理员是否绕过资源级访问控制（默认：true）
+# Whether admins bypass resource-level access control (default: true)
 BYPASS_ADMIN_ACCESS_CONTROL=true
 
-# 管理员是否可查看所有用户聊天（默认：true）
+# Whether admins can view all user chats (default: true)
 ENABLE_ADMIN_CHAT_ACCESS=true
 
-# 是否所有用户都能访问所有模型，而不受组限制（默认：false）
+# Whether all users can access all models regardless of group restrictions (default: false)
 BYPASS_MODEL_ACCESS_CONTROL=false
 ```
 
@@ -456,13 +456,14 @@ OpenAI 路由器包含一个兜底代理端点（`/{path:path}`），可以使�
 有若干功能控制着数据可以如何被共享或导出：
 
 ```bash
-# 显示 Open WebUI 社区的分享与发现选项（默认：true）
+# Show the Open WebUI Community share and discover options (default: true)
 ENABLE_COMMUNITY_SHARING=true
 
-# 允许管理员从数据库批量导出所有用户聊天（默认：true）
+# Allow admins to bulk export all user chats from the database (default: true)
 ENABLE_ADMIN_EXPORT=true
 
-# 允许用户使用自己的 API 密钥直接连接模型提供商，绕过服务端代理（默认：false）
+# Allow users to connect directly to model providers with their own API keys,
+# bypassing the server-side proxy (default: false)
 ENABLE_DIRECT_CONNECTIONS=false
 ```
 
@@ -503,24 +504,24 @@ AUDIT_LOG_LEVEL=METADATA
 ### 输出配置 {#output-configuration}
 
 ```bash
-# 写入文件（默认路径：/app/backend/data/audit.log）
+# Write to a file (default path: /app/backend/data/audit.log)
 ENABLE_AUDIT_LOGS_FILE=true
 AUDIT_LOGS_FILE_PATH=/app/backend/data/audit.log
 AUDIT_LOG_FILE_ROTATION_SIZE=10MB
 
-# 同时输出到 stdout，适合日志聚合器
+# Also send to stdout, useful for log aggregators
 ENABLE_AUDIT_STDOUT=true
 
-# 每个请求/响应体最多记录的字节数（默认：2048）
+# Maximum bytes captured per request/response body (default: 2048)
 MAX_BODY_LOG_SIZE=2048
 ```
 
 ### 路径过滤 {#path-filtering}
 ```bash
-# 仅审计特定路径（白名单模式）
+# Only audit specific paths (whitelist mode)
 AUDIT_INCLUDED_PATHS=auths,users,configs
 
-# 排除特定路径（黑名单模式，默认）
+# Exclude specific paths (blacklist mode, default)
 AUDIT_EXCLUDED_PATHS=/chats,/chat,/folders
 ```
 
@@ -621,13 +622,13 @@ IFRAME_CSP=default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect
 默认情况下，上传文件既没有大小限制，也没有数量限制。为防止存储被占满，建议设置：
 
 ```bash
-# 单文件最大大小（MB，默认无限制）
+# Maximum file size in MB (no default limit)
 RAG_FILE_MAX_SIZE=50
 
-# 单次上传操作的最大文件数（默认无限制）
+# Maximum number of files per upload operation (no default limit)
 RAG_FILE_MAX_COUNT=10
 
-# 限制允许的文件扩展名（留空 = 全部允许）
+# Restrict allowed file extensions (empty = all allowed)
 RAG_ALLOWED_FILE_EXTENSIONS=.pdf,.txt,.md,.docx,.csv
 ```
 
@@ -645,10 +646,10 @@ Tools 和 Functions 会在你的服务器上执行任意 Python 代码，权限�
 如果你的部署根本不使用 Tools 或 Functions，那就把这一整面移除：
 
 ```bash
-# 总开关：Tools、Functions、工具服务器和 Open Terminal
+# Master switch: Tools, Functions, tool servers and Open Terminal
 ENABLE_PLUGINS=false
 
-# 或只关闭其中一部分
+# Or switch off one part only
 ENABLE_TOOLS=false
 ENABLE_FUNCTIONS=false
 ENABLE_TOOL_SERVERS=false
@@ -660,11 +661,11 @@ ENABLE_TOOL_SERVERS=false
 Open WebUI 默认启用两项代码执行功能：
 
 ```bash
-# 允许执行聊天回复中的代码块（默认：true；引擎 pyodide，旧版）
+# Allows code blocks in chat responses to be executed (default: true; engine pyodide, legacy)
 ENABLE_CODE_EXECUTION=true
 CODE_EXECUTION_ENGINE=pyodide
 
-# 允许模型在其推理过程中运行代码（默认：true；引擎 pyodide，旧版）
+# Allows the model to run code as part of its reasoning (default: true; engine pyodide, legacy)
 ENABLE_CODE_INTERPRETER=true
 CODE_INTERPRETER_ENGINE=pyodide
 ```
@@ -686,7 +687,7 @@ SAFE_MODE=true
 Tools 和 Functions 可以在 frontmatter 中声明 Python 依赖。默认情况下，这些依赖会通过 pip 自动安装：
 
 ```bash
-# 设为 false 可阻止根据 tool/function frontmatter 自动执行 pip install
+# Set to false to prevent automatic pip installs from tool/function frontmatter
 ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false
 ```
 
@@ -808,6 +809,7 @@ docker pull ghcr.io/open-webui/open-webui:main
 | [启用审计日志](#audit-logging) | `NONE` | `METADATA` 或更高 |
 | [限制 API 密钥端点](#endpoint-restrictions) | 所有端点 | `ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS=true` |
 | [保持 OpenAI API 透传关闭](#openai-api-passthrough) | 已关闭 | 继续保持 `ENABLE_OPENAI_API_PASSTHROUGH=false` |
+| [不使用时禁用 Tools 与 Functions](#disabling-the-feature-entirely) | 已启用 | `ENABLE_PLUGINS=false` |
 | [禁用自动 pip 安装](#dependency-installation) | 已启用 | `ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false` |
 | [检查社区共享](#data-sharing-and-export) | `true` | 有敏感数据时关闭 |
 | [检查 direct connections](#data-sharing-and-export) | `false` | 非必要不要开启 |

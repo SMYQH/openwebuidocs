@@ -51,7 +51,7 @@ Linkup 支持已在 Open WebUI v0.9.6 中加入。
 3. 将 **Web Search** 切换为 **On**。
 4. 在 **Web Search Engine** 下拉框中选择 **linkup**。
 5. 将你的 Linkup API key 粘贴到 **Linkup API Key** 字段。
-6. （可选）按需设置 **Search Depth** 与 **Output Type**（见下文）。
+6. （可选）在 **Parameters** 字段中以 JSON 对象形式设置搜索深度（**Search Depth**）与输出类型（**Output Type**），例如 `{"depth": "standard", "outputType": "sourcedAnswer"}`（见下文）。
 7. 保存设置。
 
 ### 3. 测试集成 {#3-test-the-integration}

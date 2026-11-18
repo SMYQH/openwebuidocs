@@ -34,10 +34,10 @@ title: "迁移到 0.5.0"
 
 ```python
 
-# 带完整 API 流程与解析的新函数：
+# Full API flow with parsing (new function):
 from open_webui.main import chat_completion
 
-# 更轻量、直接的 POST 请求版本（直接继任者）：
+# Lightweight, direct POST request (direct successor):
 from open_webui.utils.chat import generate_chat_completion
 ```
 
@@ -58,7 +58,7 @@ class Pipe:
         __user__: dict,
         __request__: Request, # New parameter
     ) -> str:
-        # 在这里编写你的逻辑
+        # Write your function here
 ```
 
 📌 **为什么要做这些变更？**
@@ -122,11 +122,11 @@ from open_webui.apps.openai import main as openai
 
 ```python
 
-# 分别导入 router
+# Separate router imports
 from open_webui.routers.ollama import generate_chat_completion
 from open_webui.routers.openai import generate_chat_completion
 
-# 或改用统一 endpoint
+# Or use the unified endpoint
 from open_webui.main import chat_completion
 ```
 
@@ -154,10 +154,10 @@ from open_webui.main import chat_completion
 
 ```python
 
-# 需要完整 API 流程与解析时：
+# Use this for the full API flow with parsing:
 from open_webui.main import chat_completion
 
-# 需要更轻量、直接的 POST 请求时：
+# Use this for a stripped-down, direct POST request:
 from open_webui.utils.chat import generate_chat_completion
 ```
 
@@ -201,7 +201,7 @@ class Pipe:
         pass
 
     async def pipe(self, body: dict, __user__: dict) -> str:
-        # 调用 OpenAI endpoint
+        # Calls OpenAI endpoint
         user = User(**__user__)
         body["model"] = "qwen3.6:27b"
         return await ollama.generate_chat_completion(body, user)
@@ -231,7 +231,7 @@ class Pipe:
         __user__: dict,
         __request__: Request,
     ) -> str:
-        # 使用更新后签名的统一调用方式
+        # Uses the unified endpoint with updated signature
         user = User(**__user__)
         body["model"] = "qwen3.6:27b"
         return await generate_chat_completion(__request__, body, user)

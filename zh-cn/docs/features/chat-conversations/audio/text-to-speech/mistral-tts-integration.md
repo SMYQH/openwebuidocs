@@ -56,7 +56,7 @@ services:
       - AUDIO_TTS_MISTRAL_API_BASE_URL=https://api.mistral.ai/v1
       - AUDIO_TTS_MODEL=voxtral-tts-26-03
       - AUDIO_TTS_VOICE=<voice-id>
-    # ... 其他配置
+    # ... other configuration
 ```
 
 ### 全部 Mistral TTS 环境变量 {#all-mistral-tts-environment-variables}
@@ -86,7 +86,7 @@ Open WebUI 会向已配置的 Mistral 端点请求可用语音列表，并在 **
 
 ## 故障排查 {#troubleshooting}
 
-### “Mistral TTS 需要 API 密钥” {#mistral-api-key-is-required-for-mistral-tts}
+### "Mistral API key is required for Mistral TTS" {#mistral-api-key-is-required-for-mistral-tts}
 
 1. 确认 `AUDIO_TTS_MISTRAL_API_KEY` 已设置（或已在 Admin Audio 设置中填写）
 2. 保存设置后重试

@@ -48,23 +48,23 @@ Chatterbox 可能会占用较多内存，其硬件要求也可能高于你熟悉
 
 ```bash
 
-# 克隆仓库
+# Clone the repository
 git clone https://github.com/travisvn/chatterbox-tts-api
 cd chatterbox-tts-api
 
-# 如果还没安装 uv
+# Install uv if you haven't already
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 用 uv 安装依赖（会自动创建 venv）
+# Install dependencies with uv (automatically creates venv)
 uv sync
 
-# 复制并自定义环境变量
+# Copy and customize environment variables
 cp .env.example .env
 
-# 使用 FastAPI 启动 API
+# Start the API with FastAPI
 uv run uvicorn app.main:app --host 0.0.0.0 --port 4123
 
-# 或使用主脚本
+# Or use the main script
 uv run main.py
 ```
 
@@ -74,28 +74,28 @@ uv run main.py
 
 ```bash
 
-# 克隆仓库
+# Clone the repository
 git clone https://github.com/travisvn/chatterbox-tts-api
 cd chatterbox-tts-api
 
-# 配置环境 —— 使用 Python 3.11
+# Setup environment — using Python 3.11
 python -m venv .venv
 source .venv/bin/activate
 
-# 安装依赖
+# Install dependencies
 pip install -r requirements.txt
 
-# 复制并自定义环境变量
+# Copy and customize environment variables
 cp .env.example .env
 
-# 添加你的语音样本（或使用项目自带样本）
+# Add your voice sample (or use the provided one)
 
 # cp your-voice.mp3 voice-sample.mp3
 
-# 使用 FastAPI 启动 API
+# Start the API with FastAPI
 uvicorn app.main:app --host 0.0.0.0 --port 4123
 
-# 或使用主脚本
+# Or use the main script
 python main.py
 ```
 
@@ -105,33 +105,33 @@ python main.py
 
 ```bash
 
-# 克隆并用 Docker Compose 启动
+# Clone and start with Docker Compose
 git clone https://github.com/travisvn/chatterbox-tts-api
 cd chatterbox-tts-api
 
-# 使用针对 Docker 优化的环境变量
-cp .env.example.docker .env  # Docker 专用路径，可直接使用
+# Use Docker-optimized environment variables
+cp .env.example.docker .env  # Docker-specific paths, ready to use
 
-# 或：cp .env.example .env    # 本地开发路径，需要自行修改
+# Or: cp .env.example .env    # Local development paths, needs customization
 
-# 选择部署方式：
+# Choose your deployment method:
 
-# 仅 API（默认）
-docker compose -f docker/docker-compose.yml up -d             # 标准版（基于 pip）
-docker compose -f docker/docker-compose.uv.yml up -d          # uv 优化版（构建更快）
-docker compose -f docker/docker-compose.gpu.yml up -d         # 标准版 + GPU
-docker compose -f docker/docker-compose.uv.gpu.yml up -d      # uv + GPU（GPU 用户推荐）
-docker compose -f docker/docker-compose.cpu.yml up -d         # 仅 CPU
+# API Only (default)
+docker compose -f docker/docker-compose.yml up -d             # Standard (pip-based)
+docker compose -f docker/docker-compose.uv.yml up -d          # uv-optimized (faster builds)
+docker compose -f docker/docker-compose.gpu.yml up -d         # Standard + GPU
+docker compose -f docker/docker-compose.uv.gpu.yml up -d      # uv + GPU (recommended for GPU users)
+docker compose -f docker/docker-compose.cpu.yml up -d         # CPU-only
 
-# API + Frontend（在以上任一命令后加 --profile frontend）
-docker compose -f docker/docker-compose.yml --profile frontend up -d             # 标准版 + Frontend
+# API + Frontend (add --profile frontend to any of the above)
+docker compose -f docker/docker-compose.yml --profile frontend up -d             # Standard + Frontend
 docker compose -f docker/docker-compose.gpu.yml --profile frontend up -d         # GPU + Frontend
 docker compose -f docker/docker-compose.uv.gpu.yml --profile frontend up -d      # uv + GPU + Frontend
 
-# 查看初始化日志（第一次使用 TTS 最慢）
+# Watch the logs as it initializes (the first use of TTS takes the longest)
 docker logs chatterbox-tts-api -f
 
-# 测试 API
+# Test the API
 curl -X POST http://localhost:4123/v1/audio/speech \
   -H "Content-Type: application/json" \
   -d '{"input": "Hello from Chatterbox TTS!"}' \
@@ -149,16 +149,16 @@ curl -X POST http://localhost:4123/v1/audio/speech \
 
 ```bash
 
-# 仅 API（默认行为）
+# API only (default behavior)
 docker compose -f docker/docker-compose.yml up -d
 
-# API + Frontend + Web UI（添加 --profile frontend）
+# API + Frontend + Web UI (with --profile frontend)
 docker compose -f docker/docker-compose.yml --profile frontend up -d
 
-# 或者使用辅助脚本启动完整栈：
+# Or use the convenient helper script for fullstack:
 python start.py fullstack
 
-# 其他部署变体同理：
+# Same pattern works with all deployment variants:
 docker compose -f docker/docker-compose.gpu.yml --profile frontend up -d    # GPU + Frontend
 docker compose -f docker/docker-compose.uv.yml --profile frontend up -d     # uv + Frontend
 docker compose -f docker/docker-compose.cpu.yml --profile frontend up -d    # CPU + Frontend
@@ -170,9 +170,9 @@ docker compose -f docker/docker-compose.cpu.yml --profile frontend up -d    # CP
 
 ```bash
 
-# 先启动 API（按前文说明）
+# Start the API first (follow earlier instructions)
 
-# 然后启动前端：
+# Then run the frontend:
 cd frontend && npm install && npm run dev
 ```
 

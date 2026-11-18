@@ -13,15 +13,15 @@ title: "架构与高可用性"
 
 #### 无状态、容器优先的设计 {#stateless-container-first-design}
 
-Open WebUI 采用**无状态、容器优先架构**，这意味着你不会被限制在单台服务器上。这样的设计理念带来了：
+Open WebUI 采用**无状态、容器优先架构**。在扩展部署中，状态保存在共享服务中，而不依赖某个特定的应用副本：PostgreSQL 保存应用数据，共享向量数据库保存嵌入，共享存储保存文件，Redis 协调各实例。由此可以实现：
 
 * **横向扩展：** 随着需求增长，直接增加实例，而不是不断升级更大、也更昂贵的硬件。
 * **灵活部署：** 可在本地、私有云或混合环境中运行，而无需更改架构。
 * **容器编排兼容性：** 完整支持 Kubernetes、Docker Swarm 及其他编排平台。
 
-默认的单实例部署使用本地 SQLite 和 ChromaDB 存储。在增加副本之前，请先按[扩展指南](/getting-started/advanced-topics/scaling)中的说明配置共享服务和配套的密钥。
-
 对于决策者来说，这意味着你在 Open WebUI 上的前期投入不会演变成技术债。支撑 PoC 的同一套架构，也可以继续扩展到支撑整个组织。
+
+默认的单实例部署使用本地 SQLite 和 ChromaDB 存储。在增加副本之前，请先按[扩展指南](/getting-started/advanced-topics/scaling)中的说明配置共享服务和配套的密钥。
 
 ### 高可用配置 {#high-availability-configuration}
 
@@ -32,7 +32,7 @@ Open WebUI 采用**无状态、容器优先架构**，这意味着你不会被�
 | **负载均衡** | 在负载均衡器后运行多个容器实例，以获得更强韧性和更优性能。 |
 | **外部数据库** | 主数据库使用 PostgreSQL（SQLite 不支持多实例场景）。 |
 | **外部向量数据库** | 使用客户端-服务器型向量数据库（PGVector、Milvus、Qdrant），或 HTTP Server 模式的 ChromaDB。默认的 ChromaDB 本地模式基于 SQLite，不适合多进程访问。 |
-| **Redis** | 用于会话管理、WebSocket 协调以及实例间配置同步。 |
+| **Redis** | 实例间的 WebSocket 协调、令牌吊销和共享缓存（例如模型列表）都依赖它。配置通过公共的 PostgreSQL 数据库共享，而不是通过 Redis。 |
 | **持久化存储** | 提供灵活的存储后端，以满足你的数据驻留与性能需求。 |
 | **可观测性** | 可集成现代日志与指标工具，支持主动监控。 |
 

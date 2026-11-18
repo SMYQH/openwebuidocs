@@ -163,7 +163,7 @@ Open WebUI 的 **ComfyUI Workflow Nodes** 区域允许你把通用控制项映�
 
 在配置 Open WebUI 之前，你必须先用文本编辑器直接检查导出的 workflow JSON 文件。Node ID 是 ComfyUI 在 JSON 结构中标识某个 node 的唯一编号；JSON 对象的顶层 key 通常就是这些 node ID。
 
-![Screenshot of the ComfyUI interface with a node selected, highlighting the node ID in the properties panel.](/images/image-generation-and-editing/comfyui-node-mapping.png)
+![Open WebUI 中 ComfyUI Workflow Nodes 列表的截图，其中每个输入键（如 text、unet_name、width、height、steps 和 seed）都与其 node ID 对应。](/images/image-generation-and-editing/comfyui-node-mapping.png)
 
 **识别 Input Key（参数名）**
 
@@ -376,12 +376,12 @@ ComfyUI/
 
 ## 配置 SwarmUI {#configuring-with-swarmui}
 
-SwarmUI 使用 ComfyUI 作为后端。若要让 Open WebUI 与 SwarmUI 协同工作，你需要在 `ComfyUI Base URL` 末尾追加 `ComfyBackendDirect`。此外，还建议为 SwarmUI 启用局域网访问。完成这些调整后，SwarmUI 在 Open WebUI 中的设置方式，与前文所述的 ComfyUI 图像生成步骤基本一致。
+SwarmUI 使用 ComfyUI 作为后端。若要让 Open WebUI 与 SwarmUI 协同工作，你需要在 `Base URL` 末尾追加 `ComfyBackendDirect`。此外，还建议为 SwarmUI 启用局域网访问。完成这些调整后，SwarmUI 在 Open WebUI 中的设置方式，与前文所述的 ComfyUI 图像生成步骤基本一致。
 
 ![启用局域网访问安装 SwarmUI。](https://github.com/user-attachments/assets/a6567e13-1ced-4743-8d8e-be526207f9f6)
 
 ### SwarmUI API 地址 {#swarmui-api-url}
 
-你在 `ComfyUI 基础 URL` 中填写的地址通常如下：
+你在 **Base URL** 中填写的地址通常如下：
 
 `http://<your_swarmui_address>:7801/ComfyBackendDirect`

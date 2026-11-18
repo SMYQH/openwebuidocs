@@ -10,8 +10,12 @@ title: "OpenAPI 工具服务器"
 
 借助 OpenAPI，我们无需引入专有或陌生的通信协议，因此你可以更快速、更有把握地构建或接入服务器。这样一来，你无需把时间耗在理解自定义接口上，而能把精力集中在打造真正增强 AI 应用能力的工具上。
 
+:::tip 工具的可靠性取决于模型
+连接外部工具只是让模型可以使用它；模型仍需选对工具、提供有效参数并正确使用结果。支持工具调用的模型也可能无法可靠完成这些步骤，尤其是在连续多次调用时。如果工具已启用，但模型忽略它或调用不正确，请先**尝试原生工具调用能力更可靠的模型**，再判断是否为 Open WebUI 的问题。参见[模型工具使用故障排查](/features/extensibility/plugin/tools/openapi-servers/open-webui#tools-are-enabled-but-the-model-does-not-use-them-correctly)。
+:::
+
 :::tip 一个第一方示例
-[oikb](/ecosystem/knowledge-base-sync) 同步守护进程就是一个开箱即用的 OpenAPI 工具服务器。运行它，然后在 **Settings → Tools** 中添加它的 URL，模型就可以从对话中触发知识库同步并查看其状态。参见[让模型触发同步](/ecosystem/knowledge-base-sync/daemon#let-the-model-trigger-syncs)。
+[oikb](/ecosystem/knowledge-base-sync) 同步守护进程就是一个开箱即用的 OpenAPI 工具服务器。运行它，然后在 **设置 → 集成** 中添加它的 URL，模型就可以从对话中触发知识库同步并查看其状态。参见[让模型触发同步](/ecosystem/knowledge-base-sync/daemon#let-the-model-trigger-syncs)。
 :::
 
 ## ☝️ 为什么选择 OpenAPI？ {#why-openapi}
@@ -42,6 +46,7 @@ Open WebUI 按照 OpenAPI 3.x 的 path-item 模型解析工具服务器的 spec�
 - 仅识别八个标准 HTTP 方法键（`get`、`put`、`post`、`delete`、`options`、`head`、`patch`、`trace`）作为操作。path 下的其他键——包括扩展键（`x-codeSamples`、`x-internal` 等）、`summary`、`description`、`servers` 和 `parameters`——在操作发现阶段会被跳过，因此不会引发解析错误。
 - 支持 **path 层级的 `parameters`**：在 path 层级声明一次的参数会自动应用于该 path 下的所有操作。同名 `(name, in)` 的操作级参数会按 OpenAPI 规范覆盖 path 级参数。
 - 会对 path 参数值（`{id}` 替换）和 query 参数值进行 URL 编码，确保包含空格、`/`、`&`、`?` 等保留字符的值能正确传输。
+- 数组查询参数按每个元素一个值的方式发送，例如 `tags=red&tags=blue`，这也是 OpenAPI 默认的表单格式。
 - 在抓取 spec 时会在 JSON 与 YAML 之间优雅地回退——`.yaml`/`.yml` 链接按 YAML 解析；其他类型先按 JSON 尝试，失败再按 YAML 解析。
 
 把 `parameters` 放在 path 层级、暴露扩展键，或依赖 path-item 元数据字段的 spec 都可以直接使用，无需改动。
@@ -59,7 +64,7 @@ cd openapi-servers
 
 ```bash
 
-# 示例：为特定 server（如 filesystem）安装依赖
+# Example: Installing dependencies for a specific server 'filesystem'
 cd servers/filesystem
 pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --reload
@@ -89,7 +94,3 @@ docker compose up
 
 - 若要参与一般讨论、技术交流或查看公告，请访问我们的 [Community Discussions](https://github.com/open-webui/openapi-servers/discussions)
 - 有想法或反馈？欢迎直接提 issue！
-
-:::tip 一手示例
-[oikb](/ecosystem/knowledge-base-sync) 同步守护进程是一个开箱即用的 OpenAPI 工具服务器。运行它之后，在 **设置 → 工具** 中添加它的 URL，模型就能在聊天中触发知识库同步并查询同步状态。详见[让模型触发同步](/ecosystem/knowledge-base-sync/daemon#let-the-model-trigger-syncs)。
-:::

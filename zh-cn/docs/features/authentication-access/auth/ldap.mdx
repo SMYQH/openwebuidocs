@@ -67,10 +67,11 @@ userPassword: {PLAIN}password123
 **关于密码：** `userPassword` 字段在此测试环境中设置为明文值，方便操作。在生产环境中，应始终使用哈希密码。可以使用 `slappasswd` 或 `openssl passwd` 生成哈希密码，例如：
 
 ```bash
-# 使用 slappasswd（在容器内部）
+
+# Using slappasswd (inside the container)
 docker exec openldap slappasswd -s your_password
 
-# 使用 openssl
+# Using openssl
 openssl passwd -6 your_password
 ```
 
@@ -110,30 +111,31 @@ Open WebUI 仅在首次启动时读取这些环境变量。后续更改必须在
 :::
 
 ```env
-# 启用 LDAP
+
+# Enable LDAP
 ENABLE_LDAP="true"
 
-# --- 服务器设置 ---
+# --- Server Settings ---
 LDAP_SERVER_LABEL="OpenLDAP"
-LDAP_SERVER_HOST="localhost"  # 或您的 LDAP 服务器 IP/主机名
-LDAP_SERVER_PORT="389"        # 明文使用 389，LDAPS 使用 636
-LDAP_USE_TLS="false"          # LDAPS 设置为 "true"（默认为 "true"）
-LDAP_VALIDATE_CERT="false"    # 生产环境使用有效证书时设置为 "true"（默认为 "true"）
+LDAP_SERVER_HOST="localhost"  # Or the IP/hostname of your LDAP server
+LDAP_SERVER_PORT="389"        # Use 389 for plaintext, 636 for LDAPS
+LDAP_USE_TLS="false"          # Set to "true" for LDAPS (the default is "true")
+LDAP_VALIDATE_CERT="false"    # Set to "true" in production with valid certs (the default is "true")
 
-# --- 绑定凭据 ---
+# --- Bind Credentials ---
 LDAP_APP_DN="cn=admin,dc=example,dc=org"
 LDAP_APP_PASSWORD="admin"
 
-# --- 用户 Schema ---
+# --- User Schema ---
 LDAP_SEARCH_BASE="dc=example,dc=org"
 LDAP_ATTRIBUTE_FOR_USERNAME="uid"
 LDAP_ATTRIBUTE_FOR_MAIL="mail"
-# 可选：没有 mail 属性的用户所使用的邮箱域（见下方警告）
+# Optional: email domain for users without a mail attribute (see the warning below)
 # LDAP_DEFAULT_EMAIL_DOMAIN="example.org"
-# LDAP_SEARCH_FILTER 是可选项，用于附加过滤条件。
-# Open WebUI 会自动添加用户名过滤器，因此请勿包含
-# %(user)s 或 %s 等用户占位符语法——这些不受支持。
-# 简单设置可留空，或添加组成员过滤器，例如：
+# LDAP_SEARCH_FILTER is optional and used for additional filtering conditions.
+# The username filter is automatically added by Open WebUI, so do NOT include 
+# user placeholder syntax like %(user)s or %s - these are not supported.
+# Leave empty for simple setups, or add group membership filters, e.g.:
 # LDAP_SEARCH_FILTER="(memberOf=cn=allowed-users,ou=groups,dc=example,dc=org)"
 ```
 

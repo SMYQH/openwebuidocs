@@ -61,6 +61,8 @@ class Tools:
         return string[::-1]
 ```
 
+类的加载方式决定了两条规则：实例上的每个公开可调用对象都会作为工具暴露给模型，因此辅助方法必须以下划线 `_` 开头；另外，`__init__` 必须设置 `self.valves = self.Valves()`——存储在后台的管理员 valves 只会加载到已经带有 `valves` 属性的实例上，所以缺少这一行时，无论管理员保存了什么，工具都只会按类默认值运行。
+
 ### 方法文档字符串 {#method-docstrings}
 
 每个方法的文档字符串就是模型在决定是否调用它之前会阅读的内容。第一个 `:param` 之前的文本会成为工具自身的描述，而每个 `:param name:` 会成为该参数在 JSON schema 中的描述。
@@ -164,13 +166,13 @@ class Tools:
 事件发射器用于向聊天界面补充额外信息。和 Filter 的 outlet 类似，事件发射器可以向聊天中追加内容；不同的是，它们不能移除信息。此外，发射器可以在工具执行的任意阶段启用。
 
 :::danger 为原生模式编写工具
-Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Calling Modes 指南](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。请把工具写成能在 **Native（Agentic）模式** 下正常工作的形式，因为这才是未来唯一支持的模式。下面的事件发射器兼容性矩阵仍保留 Default Mode 的行为，仅供历史参考以及尚未迁移的旧工具维护者使用——新工具不应依赖只在 Default Mode 中生效的事件类型。如果你的工具 UX 本质上依赖某个只在 Default Mode 下可用的事件（`message`、`chat:message:delta`、`chat:message`、`replace` 的中途流式写入），请围绕 Native 兼容事件（`status`、`notification`、`citation`、`chat:message:files`、`confirmation`、`chat:message:follow_ups`）重新设计，而不是要求用户切换到旧模式。
+Legacy Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Calling Modes 指南](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。请把工具写成能在 **Native（Agentic）模式** 下正常工作的形式，因为这才是未来唯一支持的模式。下面的事件发射器兼容性矩阵仍保留 Legacy Mode 的行为，仅供历史参考以及尚未迁移的旧工具维护者使用——新工具不应依赖只在 Legacy Mode 中生效的事件类型。如果你的工具 UX 本质上依赖某个只在 Legacy Mode 下可用的事件（`message`、`chat:message:delta`、`chat:message`、`replace` 的中途流式写入），请围绕 Native 兼容事件（`status`、`notification`、`citation`、`chat:message:files`、`confirmation`、`chat:message:follow_ups`）重新设计，而不是要求用户切换到旧模式。
 :::
 
 事件发射器在两种函数调用模式下的行为不同。函数调用模式由 `function_calling` 参数控制：
 
 - **Native Mode（Agentic Mode）**（`function_calling = "native"`）—— 唯一受支持的模式。它使用模型的结构化工具调用 API。**可用的事件发射器表面有限**——请查看下方矩阵以了解具体支持哪些事件类型。
-- **Default Mode**（`function_calling = "default"`）—— 旧版、基于 prompt injection 的模式。虽然事件发射器能力完整，但该模式本身不受支持，不应在新部署中选择。
+- **Legacy Mode**（`function_calling = "legacy"`）—— 旧版、基于 prompt injection 的模式。虽然事件发射器能力完整，但该模式本身不受支持，不应在新部署中选择。
 
 完整的模式策略、模型要求和配置请参阅 [**Tool Calling Modes 指南**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。简单来说：**请使用 Native Mode**；下方矩阵会告诉你哪些事件类型在该模式下可用。
 
@@ -178,8 +180,8 @@ Default Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Ca
 
 你可以在两个位置配置函数调用模式：
 
-1. **管理员级别**：进入 **Settings > Models > Model Specific Settings > Advanced Parameters > Function Calling**（管理员区域）（设置为 `Default` 或 `Native`）。
-2. **按请求设置**：在 **Chat Controls > Advanced Params** 中设置 `params.function_calling = "native"` 或 `"default"`。
+1. **管理员级别**：进入 **Settings > Models**（管理员区域），点击模型上的铅笔按钮（**编辑**），然后进入 **Advanced Params > Function Calling**（设置为 "Native" 或 "Legacy"）。
+2. **按请求设置**：在 **Model controls > Controls > Advanced Params** 中设置 `params.function_calling = "native"` 或 `"legacy"`。
 
 如果模型似乎无法调用工具，请确认它已被启用（可在 Model 页面或聊天输入框旁边的 `+` 按钮中开启）。
 
@@ -217,7 +219,7 @@ else:
 
 下面是各个事件类型在不同函数调用模式下行为的完整说明：
 
-| 事件类型 | Default Mode 行为 | Native Mode 行为 | 状态 |
+| 事件类型 | Legacy Mode 行为 | Native Mode 行为 | 状态 |
 |------------|---------------------------|--------------------------|--------|
 | `status` | ✅ 完全支持 —— 在工具执行期间更新状态历史 | ✅ **完全相同** —— 跟踪函数执行状态 | **兼容** |
 | `message` | ✅ 完全支持 —— 在流式过程中追加增量内容 | ❌ **已损坏** —— 会被原生 completion 快照覆盖 | **不兼容** |
@@ -250,26 +252,23 @@ else:
 #### 最佳实践与建议 {#best-practices-and-recommendations}
 
 **对于需要实时 UI 更新的工具：**
-
-**对于必须在两种模式下都能工作的工具：**
-
 ``` python
 class Tools:
     def __init__(self):
-        # 记录函数调用模式要求的说明
-        self.description = "此工具需要 Default function calling mode 才能完整运行"
+        # Add a note about function calling mode requirements
+        self.description = "This tool requires Legacy Mode for full functionality"
 
     async def interactive_tool(self, prompt: str, __event_emitter__=None) -> str:
         """
         This tool requires function_calling = "legacy" for proper event emission
         """
         if not __event_emitter__:
-            return "事件发射器不可用——请确认已启用 Default function calling mode"
+            return "Event emitter not available - ensure Legacy Mode is enabled"
 
-        # 在 Default 模式下可以安全使用 message 事件
+        # Safe to use message events in Legacy Mode
         await __event_emitter__({
             "type": "message",
-            "data": {"content": "正在处理第 1 步..."}
+            "data": {"content": "Processing step 1..."}
         })
         # ... rest of tool logic
 ```
@@ -286,7 +285,7 @@ class Tools:
 - 状态更新有效，但内容更新不会持久保留
 
 **解决方案：**
-1. **切换到 Default 模式**：在模型设置中把 `function_calling` 从 `"native"` 改为 `"default"`
+1. **切换到 Legacy 模式**：在模型设置中把 `function_calling` 从 `"native"` 改为 `"legacy"`
 2. **使用兼容的事件类型**：在 Native 模式下坚持使用 `status`、`citation`、`notification` 和其他兼容事件类型
 3. **实现模式检测**：添加逻辑检测函数调用模式，并据此调整事件使用方式
 4. **考虑混合方案**：核心功能使用兼容事件，并在必要时优雅降级
@@ -335,20 +334,20 @@ async def debug_events_tool(self, __event_emitter__=None, __metadata__=None) -> 
 
 #### Status 事件 ✅ 完全兼容 {#status-events-fully-compatible}
 
-**Status 事件在 Default 和 Native 两种函数调用模式下行为完全一致。** 这是在工具执行期间提供实时反馈最可靠的事件类型。
+**Status 事件在 Legacy 和 Native 两种函数调用模式下行为完全一致。** 这是在工具执行期间提供实时反馈最可靠的事件类型。
 
 Status 事件会在消息执行步骤时添加实时状态更新，可以在工具执行的任意阶段发出。状态消息会显示在消息内容正上方，对于会延迟 LLM 响应或处理大量信息的工具来说非常关键。
 
 **Status 事件的基本结构：**
 ``` python
-    await __event_emitter__({
-        "type": "status",
+await __event_emitter__({
+    "type": "status",
     "data": {
         "description": "Message that shows up in the chat",
         "done": False,        # False = still processing, True = completed
         "hidden": False       # False = visible, True = auto-hide when done
     }
-    })
+})
 ```
 
 **Status 事件参数：**
@@ -519,7 +518,7 @@ async def batch_processor_tool(
 ```
 </details>
 
-#### Message 事件 ⚠️ 仅限 Default 模式 {#message-events-default-mode-only}
+#### Message 事件 ⚠️ 仅限 Legacy 模式 {#message-events-default-mode-only}
 
 :::warning
 
@@ -530,20 +529,29 @@ async def batch_processor_tool(
 Message 事件（`message`、`chat:message`、`chat:message:delta`、`replace`）允许你在工具执行的任意阶段追加或修改消息内容。这使得嵌入图片、渲染网页、流式更新内容以及创建丰富交互体验成为可能。
 
 **不过，这些事件类型存在严重兼容性问题：**
-- ✅ **Default Mode**：功能完整——内容会持久保存并正常显示
+- ✅ **Legacy Mode**：功能完整——内容会持久保存并正常显示
 - ❌ **Native Mode**：已损坏——内容会被 completion 快照覆盖并消失
 
 **为什么 Message 事件在 Native 模式下会失效：**
 Native 函数调用会反复发出带完整内容快照的 `chat:completion` 事件，这些快照会完全替换消息内容，导致工具发出的任何消息更新闪烁并消失。
 
-**安全的 Message 事件结构（仅限 Default 模式）：**
+**安全的 Message 事件结构（仅限 Legacy 模式）：**
 ``` python
 await __event_emitter__({
     "type": "message",  # Also: "chat:message", "chat:message:delta", "replace"
     "data": {"content": "This content will be appended/replaced in the chat"},
-            # Update status for current batch
-            })
+    # Note: message types do NOT require a "done" condition
+})
 ```
+
+**Message 事件类型：**
+- `message` / `chat:message:delta`：向现有消息追加内容
+- `chat:message` / `replace`：替换整条消息内容
+- 这两类事件在 Native 模式下都会被覆盖
+
+<details>
+<summary>安全的 Message 流式输出（Legacy 模式）</summary>
+
 ``` python
 async def streaming_content_tool(
         self, query: str, __event_emitter__=None, __metadata__=None
@@ -599,28 +607,10 @@ async def streaming_content_tool(
 
         return "Content streaming completed successfully. All phases processed."
 ```
-
-**Message 事件类型：**
-- `message` / `chat:message:delta`：向现有消息追加内容
-- `chat:message` / `replace`：替换整条消息内容
-- 这两类事件在 Native 模式下都会被覆盖
-
-<details>
-<summary>安全的 Message 流式输出（Default 模式）</summary>
-
 </details>
 
 <details>
-<summary>动态内容替换（Default 模式）</summary>
-
-</details>
-
-<details>
-<summary>模式安全的消息工具</summary>
-
-一个能够适应模式的工具会基于 [`is_legacy_mode()`](#detecting-the-mode-in-your-tool) 分支：在 Legacy 路径上它流式发送逐步的 `message` 事件，在 Native 路径（默认）上它发出 `status` 更新，并把组装好的内容作为工具结果返回。辅助函数和分支骨架见[在工具中检测当前模式](#detecting-the-mode-in-your-tool)。
-
-</details>
+<summary>动态内容替换（Legacy 模式）</summary>
 
 ``` python
 async def live_dashboard_tool(
@@ -733,16 +723,22 @@ This dashboard tool cannot function in Native mode (the default) because:
 
         return "Dashboard monitoring session completed."
 ```
+</details>
+
+<details>
+<summary>模式安全的消息工具</summary>
+
+一个能够适应模式的工具会基于 [`is_legacy_mode()`](#detecting-the-mode-in-your-tool) 分支：在 Legacy 路径上它流式发送逐步的 `message` 事件，在 Native 路径（默认）上它发出 `status` 更新，并把组装好的内容作为工具结果返回。辅助函数和分支骨架见[在工具中检测当前模式](#detecting-the-mode-in-your-tool)。
+
+</details>
+
 #### Citations ✅ 完全兼容 {#citations-fully-compatible}
 
-**Citation 事件在 Default 与 Native 两种函数调用模式下行为完全一致。** 这种事件类型会在聊天界面中提供来源引用，用户可以点击查看原始材料。
+**Citation 事件在 Legacy 与 Native 两种函数调用模式下行为完全一致。** 这种事件类型会在聊天界面中提供来源引用，用户可以点击查看原始材料。
 
 Citation 对于从外部来源、数据库或文档中检索信息的工具至关重要。它们提供透明度，并允许用户验证信息来源。
 
 **Citation 事件结构：**
-
-**重要的 Citation 配置：**
-实现自定义引用时，你 **必须** 在 `Tools` 类中禁用自动引用：
 
 ``` python
 await __event_emitter__({
@@ -763,27 +759,12 @@ await __event_emitter__({
 })
 ```
 
-:::warning
-
-**⚠️ 关键引用警告：**
-如果你设置了 `self.citation = True`（或者没有将其设为 `False`），自动引用会替换你发送的任何自定义引用。使用自定义 citation 事件时，请始终关闭自动引用。
-
+:::info `self.citation` 不再有任何作用
+旧版指南会让你设置 `self.citation = False`，以免自动引用覆盖你自定义的引用。这个标志仍然会从模块上读取，但现在已经没有任何逻辑会使用它。在 Legacy 模式下，每个工具结果都会成为来源，与该标志无关；在 Native 模式下，只有固定的一组内置工具会产生来源，而 Python 工具的结果永远不会。设置它没有危害，不设置也不会带来任何变化。
 :::
 
 <details>
 <summary>基础 Citation 示例</summary>
-
-</details>
-
-<details>
-<summary>高级多来源 Citation 示例</summary>
-
-</details>
-
-<details>
-<summary>数据库 Citation 工具</summary>
-
-</details>
 
 ``` python
 class Tools:
@@ -840,6 +821,11 @@ class Tools:
 
         return f"Research on '{topic}' completed. Found {len(sources)} relevant sources with detailed citations."
 ```
+</details>
+
+<details>
+<summary>高级多来源 Citation 示例</summary>
+
 ``` python
 async def comprehensive_analysis_tool(
         self, query: str, __event_emitter__=None
@@ -976,6 +962,11 @@ Comprehensive analysis of '{query}' has been completed using {citation_count} au
 All sources have been properly cited and are available for review by clicking the citation links above.
 """
 ```
+</details>
+
+<details>
+<summary>数据库 Citation 工具</summary>
+
 ``` python
 async def database_query_tool(
         self, sql_query: str, __event_emitter__=None
@@ -1045,9 +1036,11 @@ Retrieved **{len(query_results)}** records with complete citation metadata. Each
 All data sources have been properly cited for transparency and verification.
 """
 ```
+</details>
+
 #### 其他兼容的事件类型 ✅ {#additional-compatible-event-types}
 
-以下事件类型在 Default 和 Native 两种函数调用模式下行为完全一致：
+以下事件类型在 Legacy 和 Native 两种函数调用模式下行为完全一致：
 
 **Notification 事件**
 ``` python
@@ -1101,6 +1094,8 @@ await __event_emitter__({
 })
 ```
 
+接下来的 `confirmation` 和 `input` 需要等待浏览器回应，因此必须使用 `__event_call__`——通过 `__event_emitter__` 发送的话，回应无处可去。`execute` 两种方式都支持：需要拿到结果时用 `__event_call__`，无需等待返回时用 `__event_emitter__`。
+
 **确认事件**
 ``` python
 confirmed = await __event_call__({
@@ -1127,15 +1122,15 @@ result = await __event_call__({
 
 #### 函数调用模式综合指南 {#comprehensive-function-calling-mode-guide}
 
-:::danger 为 Native 模式编写工具 —— Default 模式不再受支持
-Default Mode **属于旧版且不再支持**。新工具应编写为在 Native Mode 下工作。下面的模式对比细节仅保留给仍在维护旧版 Default-Mode 工具的人，帮助他们了解迁移时需要弥补的差距——这 **不是** 对新项目选择 Default Mode 的建议。
+:::danger 为 Native 模式编写工具 —— Legacy 模式不再受支持
+Legacy Mode **属于旧版且不再支持**。新工具应编写为在 Native Mode 下工作。下面的模式对比细节仅保留给仍在维护旧版 Legacy-Mode 工具的人，帮助他们了解迁移时需要弥补的差距——这 **不是** 对新项目选择 Legacy Mode 的建议。
 
-如果你的工具设计依赖某个只在 Default Mode 中存在的事件类型，请围绕 Native 兼容面重新设计 UX（`status`、`notification`、`citation`、`chat:message:files`、`confirmation`、`chat:message:follow_ups`，再加上从工具方法返回最终内容块）。要求用户为了运行你的工具而切换到旧模式，这种做法今后不可接受。
+如果你的工具设计依赖某个只在 Legacy Mode 中存在的事件类型，请围绕 Native 兼容面重新设计 UX（`status`、`notification`、`citation`、`chat:message:files`、`confirmation`、`chat:message:follow_ups`，再加上从工具方法返回最终内容块）。要求用户为了运行你的工具而切换到旧模式，这种做法今后不可接受。
 :::
 
 **模式对比概览**（仅供迁移参考——Native 是唯一受支持的目标）：
 
-| 方面 | Default Mode（旧版 / 不支持） | Native Mode（受支持） |
+| 方面 | Legacy Mode（旧版 / 不支持） | Native Mode（受支持） |
 |--------|-------------|-------------|
 | **状态** | ❌ 旧版，已不再支持 | ✅ 新工具必须使用 |
 | **延迟** | 更高 —— 完整的 prompt injection 流水线 | 更低 —— 直接工具调用 API |
@@ -1156,9 +1151,9 @@ Default Mode **属于旧版且不再支持**。新工具应编写为在 Native M
 - 避免在流式过程中依赖 `message`、`chat:message:delta`、`chat:message` 或 `replace`——这四种事件在 Native Mode 下会失效。如果你需要渐进式输出，请连续发出一系列 `status` 更新，并从工具返回最终内容。
 
 <details>
-<summary>将 Default Mode 工具迁移到 Native Mode</summary>
+<summary>将 Legacy Mode 工具迁移到 Native Mode</summary>
 
-将 Default-Mode 工具迁移到 Native 时，常见的改写方式如下：
+将 Legacy-Mode 工具迁移到 Native 时，常见的改写方式如下：
 
 - 把中途追加内容的 `message` 事件改成一个单独的最终返回值，返回已组装好的完整内容。
 - 把基于 `replace` 的进度条改成一系列 `status` 事件（例如 `"description": "Step 3 of 5 — fetching..."`）。
@@ -1166,6 +1161,28 @@ Default Mode **属于旧版且不再支持**。新工具应编写为在 Native M
 - 保持 `citation`、`notification`、`confirmation` 和文件附件不变——它们在两种模式下行为一致。
 
 **通用兼容模式：** 基于 [`is_legacy_mode()`](#detecting-the-mode-in-your-tool) 分支。在 Legacy 路径上发送 `message` 事件以产生渐进式输出；在 Native 路径（默认）上发出 `status` 更新并由工具返回结果。辅助函数和分支骨架见[在工具中检测当前模式](#detecting-the-mode-in-your-tool)。
+
+</details>
+
+<details>
+<summary>🔧 事件发射器调试问题</summary>
+
+**常见问题与解决方案：**
+
+**问题：内容出现后又消失**
+- **原因**：在 Native Mode 中使用了 `message` / `chat:message` / `replace` 事件——completion 快照会把它们覆盖掉。
+- **解决方案**：从工具方法返回内容，并使用 `status` 事件来表示进度。**不要**切换回 Legacy Mode——Legacy Mode 是旧版且不再支持。
+
+**问题：工具似乎没有响应**
+- **原因**：模型未启用函数调用
+- **解决方案**：在 Model 设置里或通过 `+` 按钮启用工具
+
+**问题：事件完全没有触发**
+- **原因**：缺少 `__event_emitter__` 参数，或者它是 None
+- **解决方案**：确保该参数包含在工具方法签名中
+
+**诊断工具：**
+
 ``` python
 async def event_diagnostics_tool(
         self, __event_emitter__=None, __metadata__=None, __user__=None
@@ -1258,40 +1275,9 @@ async def event_diagnostics_tool(
 </details>
 
 <details>
-<summary>🔧 事件发射器调试问题</summary>
-
-**常见问题与解决方案：**
-
-**问题：内容出现后又消失**
-- **原因**：在 Native Mode 中使用了 `message` / `chat:message` / `replace` 事件——completion 快照会把它们覆盖掉。
-- **解决方案**：从工具方法返回内容，并使用 `status` 事件来表示进度。**不要**切换回 Default Mode——Default Mode 是旧版且不再支持。
-
-**问题：工具似乎没有响应**
-- **原因**：模型未启用函数调用
-- **解决方案**：在 Model 设置里或通过 `+` 按钮启用工具
-
-**问题：事件完全没有触发**
-- **原因**：缺少 `__event_emitter__` 参数，或者它是 `None`
-- **解决方案**：确保该参数包含在工具方法签名中
-
-**问题：引用被覆盖**
-- **原因**：`self.citation = True`（或者没有设为 `False`）
-- **解决方案**：在 `__init__` 方法中把 `self.citation = False`
-
-**诊断工具：**
-</details>
-
-<details>
 <summary>📚 事件发射器速查表</summary>
 
 **始终兼容（两种模式都可用）：**
-
-**仅限 Default Mode（Native 中会失效）：**
-
-**模式检测模式：**
-
-**必要导入：**
-</details>
 
 ``` python
 
@@ -1316,6 +1302,9 @@ await __event_emitter__({
     "data": {"content": "Task completed!"}
 })
 ```
+
+**仅限 Legacy Mode（Native 中会失效）：**
+
 ``` python
 
 # These will flicker/disappear in Native mode
@@ -1338,16 +1327,24 @@ await __event_emitter__({
     "data": {"content": "Additional content"}
 })
 ```
+
+**模式检测模式：** 参见[在工具中检测当前模式](#detecting-the-mode-in-your-tool)以了解辅助函数和注意事项。
+
 ``` python
 # Native is the default; only an explicit "legacy" opts out.
 is_legacy = is_legacy_mode(__metadata__)
 can_stream_messages = is_legacy   # message / replace work in Legacy only
 ```
+
+**必要导入：**
+
 ``` python
 import asyncio
 from datetime import datetime
 from typing import Optional, Callable, Awaitable
 ```
+</details>
+
 ### 富 UI 元素嵌入 {#rich-ui-element-embedding}
 
 Tools 和 Actions 可以返回 HTML 内容，并在聊天中直接渲染为可交互的 iframe。完整文档、示例、安全注意事项和 CORS 配置请参阅专门的 **[Rich UI Embedding](/features/extensibility/plugin/development/rich-ui)** 指南。

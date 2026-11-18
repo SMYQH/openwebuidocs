@@ -163,14 +163,14 @@ server {
     listen 443 ssl http2;
     server_name your-domain.com;
 
-    # SSL 配置……
+    # SSL configuration...
 
-    # 压缩 - 排除流式内容类型
+    # Compression - EXCLUDE streaming content types
     gzip on;
     gzip_types text/plain text/css application/javascript image/svg+xml;
-    # 不要包含：application/json、text/event-stream
+    # DO NOT include: application/json, text/event-stream
 
-    # API 端点 - 针对流式优化
+    # API endpoints - streaming optimized
     location /api/ {
         proxy_pass http://openwebui;
         proxy_http_version 1.1;
@@ -181,7 +181,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        # 关键：为流式传输关闭所有缓冲
+        # CRITICAL: Disable all buffering for streaming
         gzip off;
         proxy_buffering off;
         proxy_request_buffering off;
@@ -190,13 +190,13 @@ server {
         add_header X-Accel-Buffering "no" always;
         add_header Cache-Control "no-store" always;
 
-        # 为 LLM 补全设置更长的超时时间
+        # Extended timeouts for LLM completions
         proxy_connect_timeout 1800;
         proxy_send_timeout 1800;
         proxy_read_timeout 1800;
     }
 
-    # WebSocket 端点
+    # WebSocket endpoints
     location ~ ^/(ws/|socket\.io/) {
         proxy_pass http://openwebui;
         proxy_http_version 1.1;
@@ -207,13 +207,13 @@ server {
         proxy_buffering off;
         proxy_cache off;
 
-        # 为持久连接设置 24 小时超时
+        # 24-hour timeout for persistent connections
         proxy_connect_timeout 86400;
         proxy_send_timeout 86400;
         proxy_read_timeout 86400;
     }
 
-    # 静态资源 - 可以缓冲和缓存
+    # Static assets - CAN buffer and cache
     location /static/ {
         proxy_pass http://openwebui;
         proxy_buffering on;
@@ -221,7 +221,7 @@ server {
         add_header Cache-Control "public, max-age=604800, immutable";
     }
 
-    # 默认 location
+    # Default location
     location / {
         proxy_pass http://openwebui;
         proxy_http_version 1.1;
@@ -270,7 +270,7 @@ sudo chown -R www-data:www-data /var/cache/nginx
 
 | 内容类型 | 缓存时长 | 说明 |
 |----------|----------|------|
-| 静态资源（CSS、JS、字体） | 7–30 天 | 对版本化资源使用 `immutable` |
+| 静态资源（CSS、JS、字体） | 7-30 天 | 对版本化资源使用 `immutable` |
 | 个人资料/模型图片 | 1 天 | 在新鲜度和性能之间取得平衡 |
 | 静态文件（/static/） | 7 天 | Favicon、默认头像 |
 | HTML 页面 | 5 分钟 | 短缓存并进行重新验证 |
@@ -313,11 +313,11 @@ location ~ ^/api/v1/(users/[^/]+/profile/image|models/model/profile/image)$ {
     proxy_cache_lock on;
     proxy_cache_key "$request_uri$is_args$args";
     
-    # 即使后端没有缓存头，也强制缓存
+    # Force caching even without backend cache headers
     proxy_ignore_headers Cache-Control Expires Set-Cookie;
     proxy_hide_header Set-Cookie;
     
-    # 客户端缓存
+    # Client-side caching
     add_header Cache-Control "public, max-age=86400, stale-while-revalidate=604800" always;
     add_header X-Cache-Status $upstream_cache_status always;
     

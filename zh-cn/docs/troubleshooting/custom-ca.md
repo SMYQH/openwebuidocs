@@ -16,7 +16,7 @@ title: "自定义 CA 证书库"
 **对于预构建 Docker 镜像：**
 
 1. 在 `docker run` 中通过 `--volume=/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro`，把宿主机的证书库挂载到容器内
-2. 设置 `SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt`，强制 Python 使用系统 truststore（参见 https://docs.docker.com/reference/cli/docker/container/run/#env）
+2. 设置 `SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt`，强制 Python 使用系统 truststore，参见 https://docs.docker.com/reference/cli/docker/container/run/#env
 
 来自 [@KizzyCode](https://github.com/open-webui/open-webui/issues/1398#issuecomment-2258463210) 的 `compose.yaml` 示例：
 

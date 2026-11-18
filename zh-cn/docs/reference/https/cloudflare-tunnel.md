@@ -190,7 +190,7 @@ volumes:
   open-webui:
 ```
 
-你可以在 [Cloudflare 控制台](https://one.dash.cloudflare.com/networks/tunnels) 中获取隧道 token：选择你的隧道 → **配置** → 从安装命令中复制 token。
+你可以在 [Cloudflare 控制台](https://dash.cloudflare.com/) 中获取隧道 token：进入 [**Networking → Tunnels**] → 选择你的隧道 → 选择 **Add a replica** → 从安装命令中复制 token。token 以 `eyJ...` 开头。
 
 :::tip
 在这种部署方式中，`open-webui` 服务**不需要**暴露 `ports`。`cloudflared` 会通过 Docker 内部网络连接它。此时请把 tunnel config 中的 service URL 改成 `http://open-webui:8080`。
@@ -202,9 +202,9 @@ volumes:
 
 Cloudflare Zero Trust 可以在不改动 Open WebUI 的情况下，为你的实例加上一层认证保护：
 
-1. 前往 [**Zero Trust → Access → Applications**](https://one.dash.cloudflare.com/access/apps)
-2. 点击 **Add an application** → Self-hosted
-3. 将域名设置为 `chat.your-domain.com`
+1. 前往 [**Zero Trust → Access controls → Applications**](https://dash.cloudflare.com/?to=/:account/one/access-controls/apps)
+2. 点击 **Create new application** → Self-hosted and private
+3. 将公共主机名设置为 `chat.your-domain.com`
 4. 创建一条 **Access Policy**（例如只允许 `@your-company.com` 邮箱访问）
 
 这样用户在进入 Open WebUI 前，会先看到 Cloudflare 登录页。

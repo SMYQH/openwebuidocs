@@ -86,11 +86,12 @@ cd openai-edge-tts
 创建并激活虚拟环境，以隔离依赖：
 
 ```bash
-# macOS/Linux
+
+# For macOS/Linux
 python3 -m venv venv
 source venv/bin/activate
 
-# Windows
+# For Windows
 python -m venv venv
 venv\Scripts\activate
 ```

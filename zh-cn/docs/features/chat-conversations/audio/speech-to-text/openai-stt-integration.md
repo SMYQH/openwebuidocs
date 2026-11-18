@@ -62,7 +62,7 @@ services:
       - AUDIO_STT_OPENAI_API_BASE_URL=https://api.openai.com/v1
       - AUDIO_STT_OPENAI_API_KEY=sk-...
       - AUDIO_STT_MODEL=gpt-transcribe
-    # ... 其他配置
+    # ... other configuration
 ```
 
 ### 全部 STT 环境变量（OpenAI） {#all-stt-environment-variables-openai}

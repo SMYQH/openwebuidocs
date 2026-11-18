@@ -5,35 +5,33 @@ title: "扩缩容与高可用"
 
 # 多副本、高可用与并发故障排查 {#multi-replica-high-availability--concurrency-troubleshooting}
 
-本指南针对在**多副本**环境（如 Kubernetes、Docker Swarm）部署 Open WebUI，或通过 **多个 worker**（`UVICORN_WORKERS > 1`）提升并发时常见的问题进行说明。
+本指南说明 **多副本** 部署（Docker Compose、Docker Swarm、Kubernetes）中的常见问题。请通过增加副本来扩容，每个副本跑一个 worker；不推荐把 `UVICORN_WORKERS` 设为大于 `1`，那样会遇到同样的问题。
 
-如果你是第一次搭建扩缩容部署，请先阅读 [扩展 Open WebUI](/getting-started/advanced-topics/scaling) 获取完整步骤。
+要搭建扩缩容部署，请遵循[扩展 Open WebUI](/getting-started/advanced-topics/scaling)。单实例调优请参阅[优化、性能与 RAM 占用](/troubleshooting/performance)。
 
-<span id="core-requirements-checklist"></span>
 ## 核心要求检查清单 {#core-requirements-checklist}
 
-在排查具体错误前，请先确保你的部署满足多副本场景下的这些**硬性要求**。缺少其中任意一项，都可能导致不稳定、登录循环或数据丢失。
+在排查具体错误之前，请先确认你的部署满足以下要求。缺少其中任何一项都会导致不稳定、登录循环或数据丢失。
 
-1. **共享密钥：** 所有副本上的 [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key) **必须完全一致**。
-2. **外部数据库：** 你**必须**使用外部 PostgreSQL（见 [`DATABASE_URL`](/reference/env-configuration#database_url)）。SQLite **不支持** 多实例部署。
-3. **WebSocket 使用 Redis：** 必须启用 [`ENABLE_WEBSOCKET_SUPPORT=True`](/reference/env-configuration#enable_websocket_support) 与 [`WEBSOCKET_MANAGER=redis`](/reference/env-configuration#websocket_manager)，并配置有效的 [`WEBSOCKET_REDIS_URL`](/reference/env-configuration#websocket_redis_url)。
-4. **共享存储：** 持久卷（最好是 RWX / ReadWriteMany，或确保所有副本都映射到同一份 `data/` 底层存储）对 RAG（上传/向量）和生成图像都非常关键。
-5. **外部向量数据库（必需）：** 默认 ChromaDB 使用本地 SQLite 支持的 `PersistentClient`，**不适合多 worker 或多副本部署**。SQLite 连接不具备 fork-safe 特性，多进程并发写入会导致 worker 立即崩溃。你**必须**通过 [`VECTOR_DB`](/reference/env-configuration#vector_db) 使用专用外部 Vector DB（如 [PGVector](/reference/env-configuration#pgvector_db_url)、[MariaDB Vector](/reference/env-configuration#mariadb_vector_db_url)、Milvus、Qdrant），或将 ChromaDB 作为[独立 HTTP 服务](/reference/env-configuration#chroma_http_host)运行。
-6. **数据库会话共享（可选）：** 对资源充足的 PostgreSQL 部署，可考虑启用 [`DATABASE_ENABLE_SESSION_SHARING=True`](/reference/env-configuration#database_enable_session_sharing) 以提高高并发性能。
-7. **线程池上限：** 将 [`THREAD_POOL_SIZE=2000`](/reference/env-configuration#thread_pool_size)（或更高）。阻塞操作的默认并发上限只有 **40**；在多用户规模下会很快被耗尽，导致应用看起来**卡住**，但 CPU/内存却一切正常。这只是一个上限值，而不是线程/CPU 数量——设置得高并不会带来争用风险。永远不要降低它。
-8. **节流在线状态写入：** 设置 [`DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL=300`](/reference/env-configuration#database_user_active_status_update_interval)（300–500 秒）。未设置（默认）时，每个用户的 `last_active_at` 都会**几乎在每个请求上**被写入——这是大量细小的 `UPDATE` / `COMMIT` 事务，在规模部署时会饱和连接池，并且没有任何功能性收益。
+1.  **共享密钥：** [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key) 在所有副本上完全一致。
+2.  **PostgreSQL：** [`DATABASE_URL`](/reference/env-configuration#database_url) 指向 PostgreSQL。多实例**不支持** SQLite。参见[第 1 步](/getting-started/advanced-topics/scaling#step-1-switch-to-postgresql)。
+3.  **Redis：** 每个副本都设置了 [`REDIS_URL`](/reference/env-configuration#redis_url) 和 [`WEBSOCKET_MANAGER=redis`](/reference/env-configuration#websocket_manager)。参见[第 2 步](/getting-started/advanced-topics/scaling#step-2-add-redis)。
+4.  **外部向量数据库：** [`VECTOR_DB`](/reference/env-configuration#vector_db) 指向客户端-服务端数据库，或者 ChromaDB 作为[独立 HTTP 服务](/reference/env-configuration#chroma_http_host)运行。嵌入式 ChromaDB 在多进程写入时会崩溃。参见[第 4 步](/getting-started/advanced-topics/scaling#step-4-switch-to-an-external-vector-database)。
+5.  **共享文件存储：** 每个副本都通过对象存储或共享文件系统访问同一批上传文件。参见[第 5 步](/getting-started/advanced-topics/scaling#step-5-share-file-storage-across-instances)。
+6.  **单一迁移进程：** 升级时只有一个进程执行数据库迁移。参见[更新与迁移](#updates-and-migrations)。
+
+在这些之外，如需推荐的调优参数，请参阅[扩缩容部署所需的最小环境变量集](/getting-started/advanced-topics/scaling#minimum-environment-variables-for-scaled-deployments)。
 
 ---
 
 ## 常见问题 {#common-issues}
 
-<span id="1-login-loops--401-unauthorized-errors"></span>
 ### 1. 登录循环 / 401 Unauthorized 错误 {#1-login-loops--401-unauthorized-errors}
 
 **症状：**
 - 登录后下一次点击就被登出
-- 浏览器控制台在登录后立刻出现 “Unauthorized” 或 “401” 错误
-- 日志中出现 “Error decrypting tokens”
+- 浏览器控制台在登录后立刻出现 "Unauthorized" 或 "401" 错误
+- 日志中出现 "Error decrypting tokens"
 
 **原因：**
 各副本使用了不同的 `WEBUI_SECRET_KEY`。副本 B 会拒绝由副本 A 签名的 token。如果不设置 `WEBUI_SECRET_KEY`，每个容器都会在首次启动时各自生成一个密钥。
@@ -41,165 +39,145 @@ title: "扩缩容与高可用"
 **解决方法：**
 在所有副本上，把 `WEBUI_SECRET_KEY` 设置成**同一个**强随机字符串。如果你另外设置了 `OAUTH_SESSION_TOKEN_ENCRYPTION_KEY`，它也必须在所有地方保持一致。
 
-``` yaml
-# Kubernetes/Compose 示例
+```yaml
+# Example in Kubernetes/Compose
 env:
   - name: WEBUI_SECRET_KEY
     value: "your-super-secure-static-key-here"
 ```
 
-<span id="2-websocket-403-errors--connection-failures"></span>
 ### 2. WebSocket 403 错误 / 连接失败 {#2-websocket-403-errors--connection-failures}
 
 **症状：**
 - 聊天停止响应或一直卡住
 - 浏览器控制台出现 `WebSocket connection failed: 403 Forbidden` 或 `Connection closed`
-- 日志出现 `engineio.server: https://your-domain.com is not an accepted origin`
+- 日志中出现 `https://your-domain.com is not an accepted origin`
 
 **原因：**
-- **CORS：** 负载均衡器或 ingress 的来源不在允许列表里
-- **缺少 Redis：** WebSocket 默认退回内存模式，导致副本 A 上发生的事件（如 LLM 生成完成）无法广播给连接在副本 B 上的用户
+- **CORS：** 用户访问 Open WebUI 所用的来源不在允许列表中。
+- **缺少 Redis：** 没有设置 `WEBSOCKET_MANAGER=redis` 时，实时更新会停留在产生它的那台副本上，因此连接到其他副本的用户永远看不到响应。
 
 **解决方法：**
-1. **配置 CORS：** 确保 [`CORS_ALLOW_ORIGIN`](/reference/env-configuration#cors_allow_origin) 包含你的公网域名以及 http/https 变体。
+1.  **配置 CORS：** 把所有公网来源加入 [`CORS_ALLOW_ORIGIN`](/reference/env-configuration#cors_allow_origin)，这是一个**以分号分隔**的列表：
 
-   如果日志出现 `engineio.base_server:_log_error_once:354 - https://yourdomain.com is not an accepted origin`，你就必须更新该变量。它接受**以分号分隔**的允许来源列表。
+    ```bash
+    CORS_ALLOW_ORIGIN="https://chat.yourdomain.com;http://chat.yourdomain.com;https://yourhostname;http://localhost:3000"
+    ```
 
-   **示例：**
-``` bash
-   CORS_ALLOW_ORIGIN="https://chat.yourdomain.com;http://chat.yourdomain.com;https://yourhostname;http://localhost:3000"
-```
-   *请把用户可能访问 Open WebUI 的所有合法 IP、域名和主机名都列进去。*
-2. **为 WebSocket 启用 Redis：**
-   确保所有副本都设置了：
-``` bash
+    请把用户可能使用的所有域名、主机名和 IP 都列进去。
+2.  在**所有**副本上**为 WebSocket 启用 Redis**：
+
+    ```bash
     REDIS_URL=redis://your-redis-host:6379/0
-   WEBSOCKET_MANAGER=redis
-```
+    WEBSOCKET_MANAGER=redis
+    ```
 
-<span id="3-model-not-found-or-configuration-mismatch"></span>
 ### 3. “Model Not Found” 或配置不一致 {#3-model-not-found-or-configuration-mismatch}
 
 **症状：**
-- 你在 Admin UI 中启用了某个模型或修改了设置，但其他用户（或你自己刷新后）看不到变化
-- 聊天会间歇性报 “Model not found”
+- 你在 Admin UI 中启用的模型，对部分请求可见、对部分请求不可见
+- 聊天间歇性报 “Model not found”
 
 **原因：**
-- **配置同步失败：** Open WebUI 通过 Redis Pub/Sub 把配置变更（如启用/停用模型）广播给其他实例
-- **缺少 Redis：** 如果未设置 `REDIS_URL`，配置变更只会停留在修改它的那个实例上
+设置保存在共享数据库中，每个副本都从那里读取，因此即使没有 Redis，设置变更也能到达所有副本。但模型列表是按副本各自保存的，除非由 `WEBSOCKET_MANAGER=redis` 共享。没有它时，每个副本只知道自己加载过的模型。
 
 **解决方法：**
-把 `REDIS_URL` 指向共享 Redis 实例，以启用实时配置同步。
+在每个副本上设置 `REDIS_URL` 和 `WEBSOCKET_MANAGER=redis`（参见[第 2 步](/getting-started/advanced-topics/scaling#step-2-add-redis)）。
 
-<span id="4-database-corruption--locked-errors"></span>
+对于 Ollama，当一次对话被发往该副本并不认识的模型时，它会先从 Ollama 服务器重新读取模型列表。在副本持有过期列表期间拉取的模型，会在下一次请求时可用。
+
 ### 4. 数据库损坏 / “Locked” 错误 {#4-database-corruption--locked-errors}
 
 **症状：**
 - 日志中出现 `database is locked` 或严重 SQL 错误
-- 在一个实例上保存的数据，在另一个实例上看不到
-- 短暂预热后，**每一次**请求都出现 `sqlalchemy.exc.TimeoutError: QueuePool limit of size N overflow M reached, connection timed out, timeout 30.00`
-- `/api/config`、`/api/v1/chats/?page=1`、OIDC 回调全部卡 10 秒到数分钟
+- 在一个实例上保存的数据，在另一个实例上却看不到
+- 短暂预热后，几乎每个请求都出现 `sqlalchemy.exc.TimeoutError: QueuePool limit of size N overflow M reached, connection timed out, timeout 30.00`，而不只是在峰值负载时
+- `/api/config`、聊天列表和 OIDC 回调会卡住 10 秒到数分钟
 - 日志里出现 `PRAGMA journal_mode=WAL` 开始执行，但始终没有完成
-- 在 0.8.x → 0.9.x 升级后突然出现问题，即使部署没有别的变化
 
 **原因：**
-你在**多副本**环境中使用了 **SQLite**——或者虽然只有单副本，但 `webui.db` 存在于网络文件系统上。SQLite 是文件型数据库；它的文件锁在 [NFS / CIFS / CephFS / Azure Files / 任意网络 PVC](https://www.sqlite.org/faq.html#q5) 上都**不可靠**。随着 0.9.0 引入异步后端，这个问题不再只是“慢而且偶尔锁住”，而会变成硬失败：慢速网络 `fsync` 会让连接池长期占满，所有请求都排队超时。
+**SQLite** 与多副本搭配使用，或者虽然是单副本但 `webui.db` 位于网络文件系统（NFS、CIFS、CephFS、Azure Files、网络 PVC）上。SQLite 的文件锁在[网络文件系统上并不可靠](https://www.sqlite.org/faq.html#q5)，而缓慢的网络 `fsync` 会长时间占用每个池连接，足以耗尽连接池。机制细节参见[磁盘 I/O 延迟](/troubleshooting/performance#disk-io-latency-sqlite--storage)。
 
-完整机制（`fsync` 延迟 + 异步并发 + 连接池饱和 + WAL-on-mmap-on-NFS）请参阅 [性能 → 磁盘 I/O 延迟](/troubleshooting/performance#disk-io-latency-sqlite--storage)。
+**解决方案（按优先级排列）：**
 
-**解决方法——按正确性从高到低排序：**
-
-1. **迁移到 PostgreSQL（强烈推荐，也是多副本的必需项）：**
-``` bash
+1. **迁移到 PostgreSQL**（多副本的必需项）。参见[第 1 步](/getting-started/advanced-topics/scaling#step-1-switch-to-postgresql)。
+2. **单实例：** 把 `webui.db` 移到本地直连的 SSD/NVMe（宿主机 bind mount、节点本地卷）。上传文件和 RAG 文件仍可放在共享存储上。
+3. 迁移期间的**临时手段**：减少连接数并延长锁等待时间，可以降低锁竞争。
+   ```bash
    DATABASE_POOL_SIZE=1
    DATABASE_SQLITE_PRAGMA_BUSY_TIMEOUT=30000
-```
-   对 Kubernetes / Docker Swarm 来说，这几乎是强制要求。Postgres 负责管理自己的本地存储 I/O，因此网络 `fsync` 病理会彻底消失。完整迁移步骤见 [Scaling → Step 1](/getting-started/advanced-topics/scaling#step-1-switch-to-postgresql)。
-2. **如果你是单实例并且可以移动数据库：** 把 `webui.db` 放到本地直连 SSD/NVMe（宿主机 bind mount、本地卷、临时盘），**不要** 与上传文件和 RAG 文件共用同一块 NFS/Ceph/EFS 网络盘。
-3. **不要只增加 `DATABASE_POOL_SIZE`。** 更大的连接池并不能解决慢 `fsync`，只会让更多慢 `fsync` 并发堆积在同一份慢存储上，把崩溃点往后推几秒而已。
-4. **只作为临时止损手段：**
-   这样会把并发串行化到单个异步连接，以稳定性换吞吐。**不支持长期使用。** 如果后台调度器的轮询是压垮系统的最后一根稻草，还可以考虑 `ENABLE_AUTOMATIONS=false`。
+   ```
 
-<span id="5-uploaded-files-or-rag-knowledge-inaccessible"></span>
+更大的 `DATABASE_POOL_SIZE` 反而会更糟：它会让更多缓慢的 `fsync` 同时压向同一份存储。
+
 ### 5. 上传的文件或 RAG 知识不可访问 {#5-uploaded-files-or-rag-knowledge-inaccessible}
 
 **症状：**
-- 你在某个实例上上传了文件（用于 RAG），但模型稍后却找不到它
-- 生成的图像显示为损坏链接
+- 你在某个实例上上传了文件，但模型稍后却找不到它
+- 对话中的图片会间歇性显示**图像不可用**占位符，具体取决于请求由哪个副本处理
 
 **原因：**
-`/app/backend/data` 没有在所有副本之间共享，或共享内容不一致。如果用户在副本 1 上传文件，而下一次请求落到副本 2，副本 2 的磁盘上就没有这个文件。
+上传的文件没有在副本之间共享。上传到副本 1 的文件在副本 2 上并不存在。
 
 **解决方法：**
-- **Kubernetes：** 使用支持 `ReadWriteMany`（RWX）的 `PersistentVolumeClaim`（例如 NFS、CephFS、AWS EFS）
-- **Docker Swarm/Compose：** 在所有容器上把同一份共享卷（如 NFS 挂载）挂载到 `/app/backend/data`
+按[第 5 步](/getting-started/advanced-topics/scaling#step-5-share-file-storage-across-instances)的说明，在每个副本上使用对象存储或共享文件系统。在 Kubernetes 上，共享卷需要 `ReadWriteMany`（RWX）访问权限。
 
-<span id="6-worker-crashes-during-document-upload-chromadb--multi-worker"></span>
 ### 6. 文档上传期间 worker 崩溃（ChromaDB + 多 worker） {#6-worker-crashes-during-document-upload-chromadb--multi-worker}
 
 **症状：**
 - 日志在同一秒内出现如下序列：
-```
+  ```
   save_docs_to_vector_db:1619 - adding to collection file-id
   INFO:     Waiting for child process [pid]
   INFO:     Child process [pid] died
-```
-- RAG 文档导入过程中 worker 立即退出
-- 崩溃是瞬时的，而不是超时后发生
+  ```
+- RAG 文档导入过程中 worker 立即崩溃（不是超时）
 
 **原因：**
-默认 ChromaDB 配置使用本地 **SQLite** 支持的 `PersistentClient`。当 uvicorn 通过 `UVICORN_WORKERS > 1` fork 多个 worker 时，每个 worker 都会继承同一个 SQLite 数据库连接，并共同指向 `data/vector_db/` 中的同一文件。
-
-当两个 worker 同时向 collection 写入时（例如文档上传期间），SQLite 基于文件级别的锁在 fork 出来的多进程之间会失败，结果要么是数据库锁错误，要么是由于 `fork()` 后继承了损坏的内部状态而触发 segfault，worker 会被立刻杀死。
-
-这是 [SQLite 的已知限制](https://www.sqlite.org/howtocorrupt.html#_carrying_an_open_database_connection_across_a_fork_)：**打开的数据库连接不能跨 `fork()` 传递。**
+默认 ChromaDB 以嵌入方式运行在每个 Open WebUI 进程中，并把数据存放在本地 SQLite 文件里（`data/vector_db/`）。同一时刻只能有一个进程写入它们。存在多个副本或 worker 时，上传期间的并发写入会让进程崩溃。
 
 **解决方法：**
-你**必须**停止在多 worker 环境中使用默认的本地 ChromaDB。可选方案：
 
-| Option | 变更 | 取舍 |
+| Option | Change | Tradeoff |
 |--------|--------|----------|
-| **保持 1 个 worker** | 设 `UVICORN_WORKERS=1`（默认值） | 最简单，但并发能力受限 |
-| **使用 ChromaDB HTTP 模式** | 通过 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) / [`CHROMA_HTTP_PORT`](/reference/env-configuration#chroma_http_port) 指向独立 Chroma 服务 | 每个 worker 通过 HTTP 连接，不再直接使用 SQLite，完全 fork-safe |
-| **切换 Vector DB** | 将 [`VECTOR_DB`](/reference/env-configuration#vector_db) 设为 `pgvector`、`mariadb-vector`、`milvus`、`qdrant` 等 | 客户端/服务端数据库天然支持多进程 |
+| **保持 1 个 worker** | `UVICORN_WORKERS=1`（默认值），通过增加副本来扩容 | 副本超过一个之后，仍需采用下面某种方案 |
+| **使用 ChromaDB HTTP 模式** | 把 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) / [`CHROMA_HTTP_PORT`](/reference/env-configuration#chroma_http_port) 指向独立的 Chroma 服务 | 每个进程都通过 HTTP 连接同一个服务 |
+| **切换向量数据库** | 把 [`VECTOR_DB`](/reference/env-configuration#vector_db) 设为 `pgvector`、`mariadb-vector`、`milvus`、`qdrant` 或其他客户端-服务端数据库 | 天然为大量客户端设计 |
 
-**推荐方案**——将 ChromaDB 独立运行：
+若要继续使用 ChromaDB，请把它作为独立服务运行：
 
-``` bash
-# 单独运行 chroma server
+```bash
+# Run the Chroma server separately
 chroma run --host 0.0.0.0 --port 8000 --path /data/vector_db
 
-# 然后为 Open WebUI 设置这些环境变量
+# Then point Open WebUI at it
 CHROMA_HTTP_HOST=localhost
 CHROMA_HTTP_PORT=8000
 ```
 
-### 7. 云环境 Kubernetes 比本地明显更慢 {#7-slow-performance-in-cloud-vs-local-kubernetes}
+### 7. 云上 Kubernetes 比本地更慢 {#7-slow-performance-in-cloud-vs-local-kubernetes}
 
 **症状：**
-- 本地运行良好，但部署到 AKS、EKS、GKE 后性能明显下降甚至超时
-- 即使资源配额充足，并发下仍然明显变慢
+- 本地运行良好，但部署到 AKS、EKS 或 GKE 后性能下降甚至超时
+- 即使资源充足，并发负载下性能也会急剧下降
 
 **原因：**
-这通常是基础设施延迟（数据库网络延迟或 SQLite 的磁盘 I/O 延迟）造成的。云环境天然比本地 NVMe/SSD 和本地网络更慢。
+通常是到数据库的网络延迟，或 SQLite 的磁盘 I/O 延迟——两者在云环境里都比本地 NVMe 和局域网更高。
 
 **解决方法：**
-请参阅性能指南中的 **[Cloud Infrastructure Latency](/troubleshooting/performance#cloud-infrastructure-latency)**，那里有更完整的诊断与缓解思路。
-
-若需要更多性能建议，请继续阅读完整的 [性能优化指南](/troubleshooting/performance)。
+参见[云基础设施延迟](/troubleshooting/performance#cloud-infrastructure-latency)。
 
 ### 8. 优化数据库性能 {#8-optimizing-database-performance}
 
 **症状：**
-- PostgreSQL 在负载下出现 `QueuePool limit of size N overflow M reached` 错误。
-- PostgreSQL 以 `too many clients already` 拒绝连接。
+- PostgreSQL 在负载下出现 `QueuePool limit of size N overflow M reached` 错误
+- PostgreSQL 以 `too many clients already` 拒绝连接
 
 **原因：**
 单个进程的连接池对其负载而言过小，或者所有进程的连接池加起来超过了 PostgreSQL 的 `max_connections`。每个副本都有自己的连接池。
 
 **解决方法：**
 按进程设置 `DATABASE_POOL_SIZE` 与 `DATABASE_POOL_MAX_OVERFLOW`，并参照[第 1 步](/getting-started/advanced-topics/scaling#step-1-switch-to-postgresql)核对总和是否超过 `max_connections`。如果出现的是阻塞式任务堆积（应用卡死，但 CPU 和内存看起来正常），则提高 [`THREAD_POOL_SIZE`](/troubleshooting/performance#thread-pool-size)。
-
 
 ### 9. Function/Tool 依赖安装导致崩溃 {#9-functiontool-dependency-installation-crashes}
 
@@ -208,37 +186,34 @@ CHROMA_HTTP_PORT=8000
 - 日志中出现 pip 锁冲突或多个 pip 进程竞争
 
 **原因：**
-当 function 或 tool 在 frontmatter 中声明 `requirements` 时，Open WebUI 会在运行时执行 `pip install`。在多 worker 或多副本部署中，每个进程都会独立尝试安装依赖，从而触发 pip 内部锁冲突并导致崩溃。
+当 function 或 tool 在 frontmatter 中声明 `requirements` 时，Open WebUI 会在运行时执行 `pip install`。当 `UVICORN_WORKERS` 大于 `1` 时，每个 worker 会同时向同一个环境安装依赖。
 
 **解决方法：**
-将 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements) 关闭运行时 pip 安装，然后在镜像构建阶段预装所有依赖：
+保持 `UVICORN_WORKERS=1`，设置 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements)，并在镜像构建阶段安装这些包：
 
-``` dockerfile
+```dockerfile
 FROM ghcr.io/open-webui/open-webui:main
 
 RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 ```
 
-运行时安装 `requirements` 只适合单 worker 的开发或 homelab 环境。
-
-更多信息见 [External Packages](/features/extensibility/plugin/tools/development#external-packages)。
+运行时安装只适合开发或 homelab 环境。参见[外部包](/features/extensibility/plugin/tools/development#external-packages)。
 
 ---
 
 ## 部署最佳实践 {#deployment-best-practices}
 
-<span id="updates-and-migrations"></span>
 ### 更新与迁移 {#updates-and-migrations}
 
 :::danger 关键：避免并发迁移
-**升级 Open WebUI 版本时，务必保证只有一个进程负责执行数据库迁移。**
+**升级 Open WebUI 时，只能有一个进程执行数据库迁移。**
 :::
 
 :::danger 关键：绝不能让两个版本共用同一个数据库
 **新旧版本的 Open WebUI 实例绝不能同时为流量提供服务。** 在涉及 schema 变更的版本中，滚动更新、金丝雀发布以及“更新一个副本、等它健康后再扩展其余副本”这类策略都不受支持。
 :::
 
-数据库迁移会在启动时自动执行。如果多个副本在启动时同时运行新版本，它们就会并发执行迁移，从而可能损坏 schema。
+数据库迁移会在启动时自动执行。如果多个副本同时启动新版本，它们就会并发执行迁移，从而可能损坏 schema。
 
 请先停止所有副本，让其中一个实例完成迁移，然后再把整个集群以新版本拉起。这会带来一次短暂的全量中断；跨 schema 变更并不存在通用的零停机路径。
 
@@ -246,31 +221,30 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 
 **安全更新流程：**
 
-在多副本环境中，建议通过以下两种方式之一安全处理迁移：
-
 #### 方案 1：指定一个主迁移 Pod（推荐） {#option-1-designate-a-master-migration-pod-recommended}
-1. 指定一个 pod/副本作为迁移“主节点”
-2. 在主节点上保持 `ENABLE_DB_MIGRATIONS=True`（默认）
-3. 在其他所有节点上设置 `ENABLE_DB_MIGRATIONS=False`
-4. 升级时由主节点负责 schema 更新，其他节点跳过迁移步骤
+1.  选一个 pod 作为迁移“主节点”。
+2.  在该 pod 上保持 `ENABLE_DB_MIGRATIONS=True`（默认）。
+3.  在其他所有 pod 上设置 `ENABLE_DB_MIGRATIONS=False`。
+4.  更新时，由主节点迁移 schema，其他 pod 跳过迁移。
+
+`ENABLE_DB_MIGRATIONS` 只决定**哪一个**实例执行迁移。新镜像要同时下发到每个 pod。如果你的平台无法同时替换所有 pod，请使用方案 2。
 
 #### 方案 2：更新时先缩容 {#option-2-scale-down-during-update}
-1. **缩容：** 将副本数降到 `1`（并确保 `UVICORN_WORKERS=1`）
-2. **更新镜像：** 升级镜像或版本
-3. **等待健康检查通过：** 确保单实例完全启动并完成迁移
-4. **再扩容：** 将副本数恢复到目标值
+1.  **缩容：** 把副本数设为 `1`。
+2.  **更新**镜像或版本。
+3.  **等待**单实例启动并完成迁移。
+4.  **扩容**到你期望的副本数。
 
 ### 会话亲和性（Sticky Sessions） {#session-affinity-sticky-sessions}
+
 在配置好 Redis 并开启 WebSocket（默认开启）的情况下，任意副本都可以处理任意请求，因此并不需要粘性会话。在网络不稳定时，偶尔的抖动或重连仍可能影响流式响应或工具调用抵达浏览器的过程；如果你遇到这种情况，开启粘性会话值得一试。当 `ENABLE_WEBSOCKET_SUPPORT=false` 时，粘性会话是必需的，因为长轮询要求同一个连接的每个请求都落到同一个副本上。
 
 - **Nginx Ingress：** `nginx.ingress.kubernetes.io/affinity: "cookie"`
-- **AWS ALB：** 启用 Target Group Stickiness
-
----
+- **AWS ALB：** 启用 Target Group Stickiness。
 
 ### 使用更快的 JSON 编码器 {#use-the-faster-json-encoder}
 
-``` bash
+```bash
 ENABLE_ORJSON=True
 ```
 
@@ -285,10 +259,10 @@ orjson 无法处理的载荷（非字符串字典键、超出 64 位的整数）
 
 ## 相关文档 {#related-documentation}
 
-- [扩展 Open WebUI](/getting-started/advanced-topics/scaling) —— 从单实例扩展到生产环境的完整步骤
+- [扩展 Open WebUI](/getting-started/advanced-topics/scaling)：从单实例到生产环境的分步指南
 - [环境变量配置](/reference/env-configuration)
 - [优化、性能与 RAM 占用](/troubleshooting/performance)
-- [Redis WebSocket 支持](/tutorials/integrations/redis) —— 详细的 Redis 设置教程
+- [Redis WebSocket 支持](/tutorials/integrations/redis)：详细的 Redis 配置教程
 - [连接错误排查](/troubleshooting/connection-error)
-- [RAG 故障排查](/troubleshooting/rag) —— 文档上传与嵌入问题
+- [RAG 故障排查](/troubleshooting/rag)：文档上传与嵌入问题
 - [Open WebUI 日志](/getting-started/advanced-topics/logging)

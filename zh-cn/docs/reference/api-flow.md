@@ -3,10 +3,9 @@ sidebar_position: 40
 title: "后端控制的 API 流程"
 ---
 
-# 后端控制、兼容前端的 API 流程 {#backend-controlled-ui-compatible-api-flow}
-
 ---
 
+# 后端控制、兼容前端的 API 流程 {#backend-controlled-ui-compatible-api-flow}
 
 :::warning
 
@@ -15,11 +14,7 @@ title: "后端控制的 API 流程"
 :::
 
 本教程展示如何实现对 Open WebUI 对话的服务器端编排，并确保助手回复能在前端 UI 中正常显示。这种方法不需前端任何介入，并允许完全的后端控制聊天流程。
-本教程已验证适用于 Open WebUI 版本 v0.6.15。未来版本可能会展开行为或 API 结构的变化。
-
-:::tip 你关心的是工具调用？
-如果你的目标是让模型使用工具（内置工具、工作区工具、MCP 服务器或终端），并让 Open WebUI 在服务器端执行它们，请参见 [Server-Side Tool Calling (API)](/reference/server-side-tool-calling)。它在此处记述的聊天结构之上添加了开启工具执行所需的字段。
-:::
+本教程已验证适用于 Open WebUI 版本 v0.6.15。未来版本可能会在行为或 API 结构上引入变化。
 
 ## 前置条件 {#prerequisites}
 
@@ -34,6 +29,10 @@ title: "后端控制的 API 流程"
 ## 概述 {#overview}
 
 本教程描述了一个包含 6 个步骤的完整流程，能够实现对 Open WebUI 对话的服务器端编排，同时确保助手回复能在前端 UI 中正常显示。
+
+:::tip 你关心的是工具调用？
+如果你的目标是让模型使用工具（内置工具、工作区工具、MCP 服务器或终端），并让 Open WebUI 在服务器端执行它们，请参见 [Server-Side Tool Calling (API)](/reference/server-side-tool-calling)。它在此处记述的聊天结构之上添加了开启工具执行所需的字段。
+:::
 
 ### 流程步骤 {#process-flow}
 
@@ -54,7 +53,7 @@ title: "后端控制的 API 流程"
 
 示例（bash）：
 
-``` bash
+```bash
 USER_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 ASSISTANT_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 ```
@@ -74,7 +73,7 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 
 ### 关键步骤：在聊天响应中补充助手消息 {#critical-step-enrich-chat-response-with-assistant-message}
 
-在触发补全之前，助手消息必须作为关键前提先存在于聊天数据中。这个步骤至关重要，因为 Open WebUI 前端期望助手消息具有特定的结构。
+助手消息必须作为关键前提**先**存在于聊天数据中，然后才能触发补全。这个步骤至关重要，因为 Open WebUI 前端期望助手消息具有特定的结构。
 
 助手消息必须同时出现在以下两个位置：
 
@@ -83,7 +82,7 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 
 **助手消息的预期结构：**
 
-``` json
+```json
 {
   "id": "<uuid>",
   "role": "assistant",
@@ -104,7 +103,7 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 
 ### 第 1 步：创建包含用户和助手消息的对话 {#step-1-create-chat-with-user-and-assistant-messages}
 
-这一步会在一次请求中同时创建用户消息和一个空的助手占位符。响应会返回一个 `chatId`（位于 `id` 字段），后续请求会使用它。
+这一步会在一次请求中**同时**创建用户消息和一个空的助手占位符。响应会返回一个 `chatId`（位于 `id` 字段），后续请求会使用它。
 
 :::tip
 
@@ -112,7 +111,7 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 
 :::
 
-``` bash
+```bash
 USER_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 ASSISTANT_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 TIMESTAMP=$(date +%s)
@@ -187,7 +186,7 @@ curl -X POST https://<host>/api/v1/chats/new \
 
 使用补全端点生成实际的 AI 响应。请使用第 1 步得到的 `chatId`：
 
-``` bash
+```bash
 curl -X POST https://<host>/api/chat/completions \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
@@ -248,7 +247,7 @@ curl -X POST https://<host>/api/chat/completions \
 
 对于涉及知识库的高级用例，可以在补全请求中包含知识文件：
 
-``` bash
+```bash
 curl -X POST https://<host>/api/chat/completions \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
@@ -312,7 +311,7 @@ curl -X POST https://<host>/api/chat/completions \
 
 对于无法处理流式响应的实现，可以轮询聊天端点，直到响应准备好。请使用带指数退避的重试机制：
 
-``` bash
+```bash
 
 # Poll every few seconds until assistant content is populated
 while true; do
@@ -336,7 +335,7 @@ done
 
 获取已完成的对话：
 
-``` bash
+```bash
 curl -X GET https://<host>/api/v1/chats/<chatId> \
   -H "Authorization: Bearer <token>"
 ```
@@ -347,7 +346,7 @@ curl -X GET https://<host>/api/v1/chats/<chatId> \
 
 获取用于 RAG 集成的知识库信息：
 
-``` bash
+```bash
 curl -X GET https://<host>/api/v1/knowledge/<knowledge-id> \
   -H "Authorization: Bearer <token>"
 ```
@@ -356,7 +355,7 @@ curl -X GET https://<host>/api/v1/knowledge/<knowledge-id> \
 
 获取某个特定模型的详细信息：
 
-``` bash
+```bash
 curl -X GET https://<host>/api/v1/models/model?id=<model-name> \
   -H "Authorization: Bearer <token>"
 ```
@@ -365,7 +364,7 @@ curl -X GET https://<host>/api/v1/models/model?id=<model-name> \
 
 对于多轮对话，你可以向现有聊天中追加新消息。你必须提供完整更新后的消息树，并正确维护 `parentId` 和 `childrenIds` 的关联：
 
-``` bash
+```bash
 NEW_USER_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 NEW_ASSISTANT_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 
@@ -446,7 +445,7 @@ curl -X POST https://<host>/api/chat/completions \
 
 助手回复有时会被包裹在 Markdown 代码块中。可以按以下方式清理：
 
-``` bash
+```bash
 
 # Example raw response from assistant
 raw_response='```json
@@ -475,7 +474,7 @@ echo "$cleaned_response" | jq '.'
 
 #### Chat DTO（完整结构）{#chat-dto-complete-structure}
 
-``` json
+```json
 {
   "id": "chat-uuid-12345",
   "title": "New Chat",
@@ -541,7 +540,7 @@ echo "$cleaned_response" | jq '.'
 #### ChatCompletionsRequest DTO {#chatcompletionsrequest-dto}
 
 
-``` json
+```json
 {
   "chat_id": "chat-uuid-12345",
   "id": "assistant-msg-id",
@@ -592,7 +591,7 @@ echo "$cleaned_response" | jq '.'
 ```
 #### ChatCompletionMessage DTO {#chatcompletionmessage-dto}
 
-``` json
+```json
 {
   "role": "user",
   "content": "Hi, what is the capital of France?"
@@ -601,7 +600,7 @@ echo "$cleaned_response" | jq '.'
 
 #### History DTO {#history-dto}
 
-``` json
+```json
 {
   "currentId": "assistant-msg-id",
   "messages": {
@@ -632,7 +631,7 @@ echo "$cleaned_response" | jq '.'
 
 **用户消息：**
 
-``` json
+```json
 {
   "id": "user-msg-id",
   "role": "user",
@@ -645,7 +644,7 @@ echo "$cleaned_response" | jq '.'
 
 **助手消息：**
 
-``` json
+```json
 {
   "id": "assistant-msg-id",
   "role": "assistant",
@@ -664,7 +663,7 @@ echo "$cleaned_response" | jq '.'
 
 #### 创建对话响应 {#create-chat-response}
 
-``` json
+```json
 {
   "id": "chat-uuid-12345",
   "user_id": "user-uuid",
@@ -728,7 +727,7 @@ echo "$cleaned_response" | jq '.'
 
 #### 最终对话响应（完成后） {#final-chat-response-after-completion}
 
-``` json
+```json
 {
   "id": "chat-uuid-12345",
   "title": "Capital of France Discussion",
@@ -766,7 +765,7 @@ echo "$cleaned_response" | jq '.'
 
 #### OWUIKnowledge DTO（知识集合） {#owuiknowledge-dto-knowledge-collection}
 
-``` json
+```json
 {
   "id": "knowledge-collection-id",
   "type": "collection",
@@ -780,7 +779,7 @@ echo "$cleaned_response" | jq '.'
 
 #### 模型信息响应 {#model-information-response}
 
-``` json
+```json
 {
   "id": "gpt-5.6-sol",
   "name": "GPT-5.6 Sol",
@@ -879,7 +878,7 @@ echo "$cleaned_response" | jq '.'
 ## 重要说明 {#important-notes}
 
 - 该工作流兼容 Open WebUI + 后端编排场景
-- **关键：history 对象中使用 `currentId`（驼峰命名）**，而不是 `current_id`（下划线命名）
+- **关键：history 对象中使用 `currentId`（camelCase）**，而不是 `current_id`（snake_case）
 - **关键：每条消息都要带上 `childrenIds`**。前端依赖它构建消息树
 - 该方案无需修改任何前端代码
 - 如有需要，可通过 `stream: true` 参数实现实时流式响应
@@ -895,7 +894,7 @@ echo "$cleaned_response" | jq '.'
 | 症状 | 原因 | 修复方式 |
 |---|---|---|
 | 对话已创建，但消息未显示在界面中 | 消息缺少 `childrenIds` | 添加 `childrenIds` 数组，把父消息链接到子消息 |
-| 对话显示"How can I help you today?" | 使用了 `current_id` 而非 `currentId` | 在 history 对象中使用驼峰命名的 `currentId` |
+| 对话显示"How can I help you today?" | 使用了 `current_id` 而非 `currentId` | 在 history 对象中使用 camelCase `currentId` |
 | 补全成功，但响应只以通知形式出现 | 触发补全前，助手消息不在对话历史中 | 在第 1 步中加入空的助手消息占位 |
 | 消息已存在于数据库中，但前端显示空对话 | 缺少 `parentId` 或树连接断裂 | 确保每条消息的 `parentId` 正确，且父消息的 `childrenIds` 包含该子消息 |
 | 补全执行后刷新页面，用户消息消失 | `/api/chat/completions` 请求缺少 `user_message`，助手消息保存时没有父消息 | 在补全请求（第 2 步）中发送携带用户消息 `id` 的 `user_message` |

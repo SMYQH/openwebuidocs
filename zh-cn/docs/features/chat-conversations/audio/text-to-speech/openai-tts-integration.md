@@ -105,7 +105,7 @@ services:
       - AUDIO_TTS_OPENAI_API_KEY=sk-...
       - AUDIO_TTS_MODEL=tts-1
       - AUDIO_TTS_VOICE=alloy
-    # ... 其他配置
+    # ... other configuration
 ```
 
 ### 全部 TTS 环境变量 {#all-tts-environment-variables}
@@ -147,7 +147,7 @@ services:
       - AUDIO_TTS_OPENAI_API_KEY=sk-...
       - AUDIO_TTS_MODEL=gpt-realtime-2.1-mini
       - AUDIO_TTS_VOICE=marin
-      # 可选：替换内置的朗读指令
+      # Optional: replaces the built-in read-aloud instructions
       # - REALTIME_TTS_PROMPT_TEMPLATE=...
 ```
 
@@ -202,7 +202,7 @@ services:
       - AUDIO_TTS_MODEL=openai/tts-1
       - AUDIO_TTS_VOICE=alloy
       - AUDIO_TTS_OPENAI_PARAMS={"response_format":"mp3"}
-    # ... 其他配置
+    # ... other configuration
 ```
 
 :::info
@@ -223,7 +223,7 @@ OpenRouter 支持 `mp3` 和 `pcm` 两种输出格式。在 Open WebUI 中请始�
 
 | 选项 | 说明 |
 |--------|-------------|
-| **标点符号**（默认） | 在句子边界处切分：句号（`.`）、感叹号（!）、问号（`?`）和换行。最适合自然的语速节奏。 |
+| **标点符号**（默认） | 在句子边界处切分：句号（`.`）、感叹号（`!`）、问号（`?`）和换行。最适合自然的语速节奏。 |
 | **段落** | 仅在段落分隔处（两个换行）切分。得到的音频块更长。 |
 | **无** | 将整个响应作为单个块发送。在较长响应上可能导致音频开始前出现延迟。 |
 
@@ -257,5 +257,5 @@ OpenAI Audio API 有速率限制。如果你经常触发限制：
 OpenAI 的 TTS 按字符数计费。当前价格请查看 [OpenAI Pricing](https://platform.openai.com/docs/pricing)。注意 `tts-1-hd` 的价格高于 `tts-1`。
 
 :::info
-如果你想要免费替代方案，可考虑 [OpenAI Edge TTS](/features/chat-conversations/audio/text-to-speech/openai-edge-tts-integration)，它利用微软 Edge 浏览器的免费 TTS 能力。
+如果你想要免费替代方案，可考虑 [OpenAI Edge TTS](/features/chat-conversations/audio/text-to-speech/openai-edge-tts-integration)，它利用Microsoft Edge 浏览器的免费 TTS 能力。
 :::

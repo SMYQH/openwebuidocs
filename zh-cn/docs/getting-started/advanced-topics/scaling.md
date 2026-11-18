@@ -61,23 +61,9 @@ DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
 
 ### 为什么一旦扩展（或升级），网络存储上的 SQLite 就会出问题 {#why-sqlite-on-network-storage-fails-the-moment-you-scale-or-upgrade}
 
-从 0.9.0 开始，后端数据层变成了**完全异步**（async SQLAlchemy + `aiosqlite`）。这一改动极大提升了并发能力，但副作用是：所有既有的“SQLite 在 NFS/CephFS/Azure Files 上很慢”问题，会从“还能忍”瞬间升级成“直接致命”。很多运维人员在从 0.8.x 升级后，明明没改部署，却立刻踩中了这个坑。
+在 NFS、CephFS、Azure Files 或网络支撑的 Kubernetes PVC 上，SQLite 在低负载时还能正常工作，一旦并发上来就会失败：连接池超时、`database is locked`，以及简单查询卡住数秒甚至数分钟。每次提交都要等待一次缓慢的网络 `fsync`，而 SQLite 的文件锁定[在网络文件系统上并不可靠](https://www.sqlite.org/faq.html#q5)。把连接池调得更大只会让情况更糟。
 
-原理可以概括为：SQLite 的持久性保障依赖每次提交都执行 `fsync()`。在本地 SSD 上，这大约是 100 微秒；在 NFS / CephFS / Azure Files / 由网络存储支撑的 Kubernetes PVC 上，可能需要 50–500 毫秒，甚至更久。旧的同步后端里，FastAPI 大约 40 线程的 worker 池天然形成了节流，所以慢存储只会让应用“变慢”。而异步后端没有线程池上限——asyncio 事件循环会并发调度成千上万个数据库协程，每个慢速 `fsync` 都会占住连接整整一段时间，SQLAlchemy 的异步连接池（默认 `pool_size=5` + `max_overflow=10` = 15 个连接）很快就会被打满。随后你会看到：
-
-
-把连接池调大并不会真正解决问题，只是把崩溃点向后挪。更多连接意味着更多慢速 `fsync` 同时打到同一套慢存储上；瓶颈仍然在文件系统。
-
-此外，SQLite 的 WAL 模式依赖内存映射的 `-shm` 文件来协调跨进程访问，而 SQLite 官方已经明确指出 [NFS 上的 `mmap` 并不可靠](https://www.sqlite.org/faq.html#q5)。在高并发异步场景下，这还可能导致真正的锁问题（死锁、`PRAGMA journal_mode=WAL` 启动后卡死、简单查询也要等数分钟）。
-
-**只要 SQLite 仍放在网络存储上，就没有哪个配置可以彻底解决问题。** 你只有三个选择：
-
-1. **最佳方案——切到 PostgreSQL（本步骤）。** 数据库服务器在自己的本地存储上管理 I/O。应用虽然通过网络访问它，但这种开销远远低于 NFS 上的 `fsync`，而 Postgres 从诞生起就是为并发写入设计的。这也是多副本、多用户、Kubernetes/Swarm 部署的唯一受支持配置。
-2. **把 `webui.db` 从网络存储移到本地 SSD/NVMe。** 这只适合单节点、低用户量部署。你的 RAG 文件和上传文件依然可以放 NFS——问题针对的是 SQLite，不是共享文件系统本身。
-3. **如果暂时做不到以上两点，可临时缓解：**
-   这会把异步数据库访问串行化为单连接，用牺牲并发来换稳定。**不适合作为长期方案**——请尽快完成真正迁移。
-
-简而言之：同步后端通过线程池限制了并发，因此慢存储只会让系统*变慢*；异步后端允许大规模并发，于是慢速 `fsync` 会堆积、连接长时间不归还、连接池迅速打满，整个系统卡死。以前能勉强承受，是因为应用根本不会同时发起 20 个 `fsync`。
+只要 SQLite 仍留在网络存储上，就没有哪个配置能解决这个问题。请切换到 PostgreSQL（本步骤），或者在单节点部署中把 `webui.db` 移到本地 SSD/NVMe。上传文件与 RAG 文件仍可留在共享文件系统上。机制层面的说明见[磁盘 I/O 延迟](/troubleshooting/performance#disk-io-latency-sqlite--storage)；症状与临时缓解办法见[数据库损坏 / “锁定”错误](/troubleshooting/multi-replica#4-database-corruption--locked-errors)。
 
 ---
 
@@ -104,7 +90,7 @@ Open WebUI 使用的是普通 Redis 命令，因此像 [**Valkey**](/tutorials/i
 
 **需要了解的关键点：**
 
-- 单实例部署不需要 Redis；只有多副本才需要。
+- 单实例部署在没有 Redis 时也能工作，但此时**登出不会吊销会话令牌**：它会一直有效直到过期（默认 4 周）。修改密码和**登出所有设备**在没有 Redis 时也照常可用。对于生产环境或敏感数据，请添加 Redis 或缩短 `JWT_EXPIRES_IN`。参见[令牌吊销](/getting-started/advanced-topics/hardening#token-revocation)。
 - [Tether](/ecosystem/tether) 连接在 [`UVICORN_WORKERS`](/reference/env-configuration#uvicorn_workers) 大于 1 时需要 Redis。参见它的[要求](/ecosystem/tether#requirements)。
 - **Redis Sentinel：** 设置 [`REDIS_SENTINEL_HOSTS`](/reference/env-configuration#redis_sentinel_hosts) 和 [`WEBSOCKET_SENTINEL_HOSTS`](/reference/env-configuration#websocket_sentinel_hosts)（websocket 管理器只读取后者）。`REDIS_URL` 的主机部分应为 master 的服务名。设置 `REDIS_SOCKET_CONNECT_TIMEOUT=5`，避免故障转移时长时间挂起。
 - **Redis Cluster**（例如以集群模式运行的 AWS ElastiCache）：设置 [`REDIS_CLUSTER=true`](/reference/env-configuration#redis_cluster)。websocket 管理器会遵循该设置。
@@ -114,6 +100,8 @@ Open WebUI 使用的是普通 Redis 命令，因此像 [**Valkey**](/tutorials/i
 - 对于绝大多数部署（即使有数千用户）），一个 **单个 Redis 实例** 就够用。在考虑 Redis Cluster 之前，请先检查是否存在可修复的配置问题（参见[常见错误模式](/troubleshooting/performance#common-anti-patterns)）。
 
 如需完整的 Redis 搭置（Docker Compose、Sentinel、Cluster、验证），请参阅 [Redis WebSocket 支持](/tutorials/integrations/redis) 教程。若需处理反向代理后的 WebSocket 和 CORS 问题，请参见[连接错误](/troubleshooting/connection-error#https-tls-cors--websocket-issues)。
+
+---
 
 ## 第 3 步——运行多个实例 {#step-3-run-multiple-instances}
 **何时需要：** 你需要服务更多用户，或希望获得高可用性。
@@ -217,26 +205,10 @@ AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=True
 
 它是可选开启的，因为 c-ares 读取的名称来源比操作系统少。之后的测试项参见 [DNS 解析器](/troubleshooting/performance#dns-resolver)。
 
+---
+
 ## 第 4 步——切换到外部向量数据库 {#step-4-switch-to-an-external-vector-database}
-**何时需要：** 你在生产环境中经常处理文档（RAG、知识库）。
-
-默认的内容提取器（pypdf）和默认的本地嵌入模型（SentenceTransformers）都运行在每个 Open WebUI 进程内部，因此它们的内存开销会在每个副本上重复出现，而提取器也是内存增长的一个常见来源。请把两者都迁移到外部服务。
-
-**需要做什么：**
-
-1. **把内容提取引擎**切换到外部服务：
-
-
-若要把不同文件类型路由到不同后端，请运行你自己的服务并设置 `CONTENT_EXTRACTION_ENGINE=external`。参见[外部文档提取](/features/chat-conversations/rag/document-extraction/external)。
-
-2. **把嵌入引擎**切换到外部提供方：
-
-
-**需要了解的关键点：**
-
-- 详情和可选项参见[内容提取引擎](/troubleshooting/performance#content-extraction-engine)和[嵌入引擎](/troubleshooting/performance#embedding-engine)。
-- slim 镜像不包含本地嵌入或重排模型，因此必须使用外部嵌入引擎。
-- 外部的 Tika、Docling 或嵌入端点都是新增的外发目的地。请仅通过内部网络访问它们，并查阅加固指南中的[网络与外发请求](/getting-started/advanced-topics/hardening#network-and-outbound-requests)（`AIOHTTP_CLIENT_ALLOW_REDIRECTS=false`、`WEB_FETCH_FILTER_LIST`）。
+**何时需要：** 你运行不止一个副本。**这是必需的。**
 
 :::danger 多进程设置下默认的 ChromaDB 会导致崩溃
 
@@ -303,7 +275,7 @@ slim 镜像只支持 PGVector，也就是它默认的 `VECTOR_DB`。
 | **共享文件系统**（NFS、AWS EFS、CephFS，或单主机上的共享卷） | 你已经在运维共享存储。在所有实例上以相同路径挂载同一目录；多节点 Kubernetes 需要 ReadWriteMany（RWX）存储。 |
 | **外部对象存储**（S3、GCS、Azure Blob） | 副本运行在不同主机上，或者文件需要在没有共享卷的情况下在容器替换后依然保留。请在每个副本上配置 `STORAGE_PROVIDER` 和同一个存储桶或容器。 |
 
-:::info `STORAGE_PROVIDER` 究竟控制什么？
+:::info STORAGE_PROVIDER 究竟控制什么？
 `STORAGE_PROVIDER` 覆盖的是通过 Open WebUI 文件上传 API 保存的文件：文档、附件和生成的图片。主数据库（`DATABASE_URL`）、向量数据库（`VECTOR_DB`）以及 `DATA_DIR` 的其余部分仍留在原处。直接从 `/cache/` 提供的文件（例如某些工具输出）使用文件系统，如果需要由其他副本提供，同样需要共享访问。
 :::
 
@@ -348,7 +320,7 @@ STORAGE_PROVIDER=s3
 S3_BUCKET_NAME=my-openwebui-bucket
 S3_REGION_NAME=us-east-1
 
-# 对于兼容 S3 的服务，还需要设置其端点：
+# For an S3-compatible service, also set its endpoint:
 # S3_ENDPOINT_URL=https://s3.example.com
 # S3_ADDRESSING_STYLE=path
 ```
@@ -368,6 +340,8 @@ S3_REGION_NAME=us-east-1
 更改 `STORAGE_PROVIDER` **不会**迁移已有文件，也不会改写它们存储时的路径。切换前请规划好已有对象及其文件记录的迁移方案；把文件复制进存储桶是不够的。请先备份数据库和文件。
 
 在把生产流量发往多个副本之前，先通过一个副本上传文件，再通过另一个副本下载它。知识库文档和生成的图片也要一并检查，然后在替换上传副本后重复一次。
+
+---
 
 ## 第 6 步——修复内容提取与 Embeddings 默认配置 {#step-6-fix-content-extraction--embeddings}
 **何时需要：** 你在生产环境中经常处理文档（RAG、知识库）。
@@ -389,7 +363,7 @@ TIKA_SERVER_URL=http://tika:9998
 
 ```
 RAG_EMBEDDING_ENGINE=openai
-# 或自托管：
+# or for self-hosted:
 RAG_EMBEDDING_ENGINE=ollama
 ```
 
@@ -426,14 +400,14 @@ flowchart TD
     %% Main Flow
     LB["Load Balancer<br/>(Nginx, HAProxy, Cloud LB)"]
 
-    subgraph Pods ["无状态容器"]
+    subgraph Pods ["Stateless Containers"]
         direction LR
         P1["WebUI<br/>Pod 1"]
         P2["WebUI<br/>Pod 2"]
         PN["WebUI<br/>Pod N"]
     end
 
-    subgraph Shared ["共享基础设施"]
+    subgraph Shared ["Shared Infrastructure"]
         direction LR
         DB[("PostgreSQL<br/>(+ PGVector for RAG)")]
         Redis{{"Redis"}}
@@ -441,9 +415,9 @@ flowchart TD
     end
 
     %% Annotations
-    DBNote["共享主数据库<br/>+ 向量数据库"]
-    RedisNote["共享状态与 WebSocket"]
-    StoreNote["共享文件存储"]
+    DBNote["Shared database<br/>+ Vector DB"]
+    RedisNote["Shared state & websockets"]
+    StoreNote["Shared file storage"]
 
     %% Connections
     LB --> P1
@@ -463,15 +437,15 @@ flowchart TD
 
 ### 扩展部署的最小环境变量集合 {#minimum-environment-variables-for-scaled-deployments}
 ``` bash
-# 每个副本上使用相同的值
+# Same value on every replica
 WEBUI_SECRET_KEY=your-shared-secret
 
-# 数据库
+# Database
 DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
 DATABASE_POOL_SIZE=15
 DATABASE_POOL_MAX_OVERFLOW=20
 
-# 向量数据库（多个副本时绝不要用内嵌的 ChromaDB）
+# Vector database (never the embedded ChromaDB with several replicas)
 VECTOR_DB=pgvector
 PGVECTOR_DB_URL=postgresql://user:password@db-host:5432/openwebui
 
@@ -479,40 +453,40 @@ PGVECTOR_DB_URL=postgresql://user:password@db-host:5432/openwebui
 REDIS_URL=redis://redis-host:6379/0
 WEBSOCKET_MANAGER=redis
 
-# 文件存储：跨副本必需，在所有副本上配置其中一种方案。
-# 方案 A：STORAGE_PROVIDER=local 配合相同的共享文件系统和挂载路径。
-#           各主机上独立的 Docker 卷并不共享文件。
-# 方案 B：外部对象存储（所有副本使用相同的存储桶和键前缀）
+# File storage: required across replicas, configure ONE option on all of them.
+# Option A: STORAGE_PROVIDER=local with the same shared filesystem and mount path.
+#           Separate per-host Docker volumes do not share files.
+# Option B: external object storage (same bucket and key prefix on all replicas)
 # STORAGE_PROVIDER=s3
 # S3_BUCKET_NAME=my-openwebui-bucket
 # S3_REGION_NAME=us-east-1
-# 对象存储仍然需要可写的本地磁盘；参见第 5 步。
+# Object storage still needs writable local disk; see Step 5.
 
-# 把内容提取和嵌入放到应用进程之外
+# Content extraction and embeddings outside the app process
 CONTENT_EXTRACTION_ENGINE=tika
 TIKA_SERVER_URL=http://tika:9998
 RAG_EMBEDDING_ENGINE=openai
-# 或：RAG_EMBEDDING_ENGINE=ollama
+# or: RAG_EMBEDDING_ENGINE=ollama
 
-# 迁移：除一个实例外其余都设为 false；参见"更新与迁移"
+# Migrations: false on all but one instance; see Updates and Migrations
 ENABLE_DB_MIGRATIONS=false
 
-# 为阻塞型工作（数据库调用、文件 I/O）留出余量；默认上限为 40
+# Room for blocking work (DB calls, file I/O); the default limit is 40
 THREAD_POOL_SIZE=2000
 
-# 仅当你的负载均衡器、ingress 或 CDN 会压缩响应时才需要
+# Only if your load balancer, ingress or CDN compresses responses
 # ENABLE_COMPRESSION_MIDDLEWARE=false
 
-# 逐 token 的 WebSocket 压缩很费 CPU，收益很小
+# Per-token WebSocket compression costs CPU for little gain
 # UVICORN_WS_PER_MESSAGE_DEFLATE=false
 
-# 减少空闲心跳；掉线的用户在活跃计数中停留的时间更长
+# Fewer idle heartbeats; a dropped user lingers longer in the active count
 # WEBSOCKET_HEARTBEAT_INTERVAL=60
 
-# 就地增长流式响应；在高并发下有助于长回答
+# Grow streamed responses in place; helps long answers under concurrency
 ENABLE_CHAT_RESPONSE_STREAM_INPLACE_APPEND=True
 
-# 更快的名称查找；开启后请确认名称仍能正确解析
+# Faster name lookups; verify your names still resolve after enabling
 AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=True
 ```
 
@@ -534,20 +508,23 @@ Open WebUI 把阻塞型工作（数据库调用、文件 I/O、同步处理函�
 
 ## 速查：什么场景需要哪些组件？ {#quick-reference-when-do-i-need-what}
 
+<div className="responsive-table">
+
 | 场景 | PostgreSQL | Redis | 外部向量数据库 | 外部内容提取 | 外部 Embeddings | 共享存储 |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | 单用户 / 评估 | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| 小团队（< 50 用户，单实例） | 推荐 | 推荐† | ✗ | 推荐 | ✗ | ✗ |
-| 多 Uvicorn worker | **必须** | **必须** | **必须** | **强烈推荐** | **强烈推荐** | ✗（同一文件系统） |
-| 多实例 / 高可用 | **必须** | **必须** | **必须** | **强烈推荐** | **强烈推荐** | **可选**（NFS 或 S3） |
-| 大规模（1000+ 用户） | **必须** | **必须** | **必须** | **强烈推荐** | **强烈推荐** | **可选**（NFS 或 S3） |
+| 小团队（< 50 用户，单实例） | 可选 | 推荐† | ✗ | 推荐 | ✗ | ✗ |
+| 多实例 / 高可用 | **必须** | **必须** | **必须** | **强烈推荐** | **强烈推荐** | **必须**（共享文件系统或对象存储） |
+| 大规模（1000+ 用户） | **必须** | **必须** | **必须** | **强烈推荐** | **强烈推荐** | **跨副本必须** |
 
-† 没有 Redis 时，登出和密码变更**不会**撤销 token——它们会一直有效直到 `JWT_EXPIRES_IN` 到期（默认 4 周）。如果是处理敏感数据的生产环境，建议启用 Redis 以支持正确的 token 撤销。详见 [Token 撤销](/getting-started/advanced-topics/hardening#token-revocation)。
+</div>
+
+† 没有 Redis 时，登出**不会**撤销会话令牌：它会一直有效直到 `JWT_EXPIRES_IN` 到期（默认 4 周）。参见[令牌吊销](/getting-started/advanced-topics/hardening#token-revocation)。
 
 :::note 关于“外部向量数据库”
-默认 ChromaDB 使用本地 SQLite 后端，在多进程访问下会崩溃。这里的“外部向量数据库”指的是客户端-服务端数据库（PGVector、Milvus、Qdrant、Pinecone），或作为独立 HTTP 服务运行的 ChromaDB。详情见 [第 4 步](#step-4-switch-to-an-external-vector-database)。
+客户端-服务端数据库（PGVector、Milvus、Qdrant、Pinecone 等），或作为独立 HTTP 服务运行的 ChromaDB。参见[第 4 步](#step-4-switch-to-an-external-vector-database)。
 :::
 
 :::note 关于“共享存储”
-多实例场景下，所有副本都必须能访问相同的上传文件。**共享文件系统挂载**（本地磁盘、NFS、EFS、CephFS）已经足够——云对象存储（S3/GCS/Azure）是更易扩展的替代方案，但不是硬性要求。文件名基于 UUID，不会产生写冲突。详情见 [第 5 步](#step-5-share-file-storage-across-instances)。
+所有副本都必须通过**外部对象存储**（S3、GCS、Azure）或**共享文件系统**（NFS、EFS、CephFS，或同一主机上共享的卷）访问同一批上传文件。参见[第 5 步](#step-5-share-file-storage-across-instances)。
 :::

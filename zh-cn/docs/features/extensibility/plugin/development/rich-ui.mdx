@@ -76,7 +76,7 @@ def render_feedback_form(self, prompt: str) -> tuple:
 ```
 
 上下文可以是：
-- **字符串** — 原样发送给 LLM（如 `"Generated a bar chart with 5 categories"`）
+- **字符串** — 原样发送给 LLM（如 `"Rendered a 5-item checklist"`）
 - **dict** — 序列化为 JSON 提供结构化上下文
 - **list** — 序列化为 JSON 提供多个项目
 
@@ -205,11 +205,7 @@ if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], HTML
 
 ## 沙箱与安全性 {#sandbox-and-security}
 
-嵌入的 iframe 运行在 [sandbox](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe#sandbox) 中。以下沙箱标志默认始终启用：
-
-- `allow-scripts` —— 允许执行 JavaScript
-- `allow-popups` —— 允许弹出窗口（例如 `window.open`）
-- `allow-downloads` —— 允许文件下载
+嵌入的 iframe 运行在 [sandbox](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe#sandbox) 中。`allow-scripts` 和 `allow-downloads` 始终启用。对于工具调用结果、分组详情块内的嵌入以及附加到助手消息的嵌入，`allow-popups` 会启用；但对于从 Embeds 面板中的引用打开的嵌入则不会启用。
 
 用户可以在 **设置 → 界面** 中切换另外两个标志：
 
@@ -217,6 +213,8 @@ if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], HTML
 |---|---|---|
 | 允许 Iframe 同源访问 | ❌ 关闭 | 允许 iframe 访问父页面上下文 |
 | 允许 Iframe 表单提交 | ❌ 关闭 | 允许在嵌入内容中提交表单 |
+
+关于这两个开关还有两点需要注意。附加到助手消息的嵌入无论该设置如何都始终允许表单提交；而从引用打开的嵌入会完全忽略这两个开关，因此它们的沙箱只有 `allow-scripts allow-downloads`。
 
 ### allowSameOrigin {#allowsameorigin}
 
@@ -390,7 +388,7 @@ Rich UI 嵌入可以通过三种消息类型与聊天输入框交互：
 这意味着你的 Rich UI 嵌入可以包含交互式按钮（例如“解释这张图表”“用不同参数重新生成”），并把提示词提交到聊天中，**而不要求用户开启同源访问**。用户只会看到一个确认对话框，点击“确认”即可继续。
 :::
 
-## 富 UI 嵌入与 `execute` 事件 {#rich-ui-embeds-vs-execute-event}
+## 富 UI 嵌入与 Execute 事件 {#rich-ui-embeds-vs-execute-event}
 
 Rich UI 嵌入与 [`execute` 事件](/features/extensibility/plugin/development/events#execute-works-with-both-__event_call__-and-__event_emitter__) 是创建交互体验的两种互补方式。请根据需求选择：
 
@@ -561,8 +559,8 @@ async def create_dashboard():
 ## CORS 与直连工具 {#cors-and-direct-tools}
 
 直连外部工具是直接在浏览器中运行的工具。此时，工具由用户浏览器中的 JavaScript 调用。
-由于我们依赖 `Content-Disposition` 标头，在远程工具服务器上启用 CORS 时，Open WebUI 可能因为 `Access-Control-Expose-Headers` 的限制而读不到该标头，从而无法从 `fetch` 结果中获取某些头信息。
-为避免这种情况，你必须将 `Access-Control-Expose-Headers` 设为 `Content-Disposition`。下面是一个使用 Node.js 的工具示例：
+由于我们依赖 Content-Disposition 标头，在远程工具服务器上使用 CORS 时，Open WebUI 会因为 Access-Control-Expose-Headers 的限制而读不到该标头，从而无法从 fetch 结果中读取某些标头。
+为避免这种情况，你必须把 Access-Control-Expose-Headers 设为 Content-Disposition。下面是一个使用 Node.js 的工具示例：
 
 
 ```javascript

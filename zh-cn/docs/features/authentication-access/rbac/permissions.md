@@ -56,14 +56,13 @@ Open WebUI 中的权限是**累加**的。
 | **工具访问** | **（父级）** 访问**工具**工作区以管理函数/工具。当 [`ENABLE_PLUGINS`](/reference/env-configuration#enable_plugins) 或 [`ENABLE_TOOLS`](/reference/env-configuration#enable_tools) 为 `false` 时，该权限及其"导入"和"导出"子开关会被隐藏，因为此时工具工作区并不存在。 |
 | **工具导入** | *（需要工具访问）* 导入工具的能力。它如何影响代码改动请参见[版本历史](/features/extensibility/plugin/tools#version-history)。 |
 | **工具导出** | *（需要工具访问）* 导出工具的能力。 |
-
-:::danger ⚠️ 工具访问 = 等同 Root 级别的访问权限
-**将工具访问权限视为等同 root 的访问权限。** 授予用户创建或导入工具的访问权限等同于给予其服务器的 shell 访问权限，因为工具和函数会执行任意 Python 代码。只将此权限授予您信任能直接访问服务器的用户。如果您为不受信任的用户启用此权限，则是在接受在主机上任意执行代码的风险。有关完整详情，请参阅[插件安全警告](/features/extensibility/plugin/)。
-:::
-
 | **技能访问** | **（父级）** 访问**技能**工作区以创建和管理可复用指令集。使用 [`/skills:create`](/features/workspace/skills#from-a-chat-with-skillscreate) 同样需要该权限。 |
 | **导入技能** | *（需要技能访问）* 将技能导入技能工作区（参见[导入技能](/features/workspace/skills#importing-skills)和[社区技能](/features/workspace/skills#community-skills)）。 |
 | **导出技能** | *（需要技能访问）* 从技能工作区导出技能（参见[技能管理](/features/workspace/skills#skill-management)和[社区技能](/features/workspace/skills#community-skills)）。 |
+
+:::danger 工具访问 = 等同 Root 级别的访问权限
+**将工具访问权限视为等同 root 的访问权限。** 授予用户创建或导入工具的访问权限等同于给予其服务器的 shell 访问权限，因为工具和函数会执行任意 Python 代码。只将此权限授予您信任能直接访问服务器的用户。如果您为不受信任的用户启用此权限，则是在接受在主机上任意执行代码的风险。有关完整详情，请参阅[插件安全警告](/features/extensibility/plugin/)。
+:::
 
 ### 2. 共享权限 {#2-sharing-permissions}
 控制用户可以与社区共享或公开的内容。
@@ -218,7 +217,7 @@ Open WebUI 中的权限是**累加**的。
 
 **为应对未来的权限变更，请为管理员创建专用用户组：**
 
-1.  通过**管理面板 > 用户 > 用户组**创建"管理员"用户组**
+1.  **创建"管理员"用户组**，通过**管理面板 > 用户 > 用户组**
 2.  将所有管理员用户**添加到此用户组**
 3.  根据需要向该用户组**授予用户可见功能权限**（例如，为非管理员组成员授予 API Keys 权限）
 

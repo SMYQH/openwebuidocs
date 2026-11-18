@@ -42,18 +42,18 @@ Open WebUI 从第一天起就支持多用户。无论你是在运行个人实例
 
 ```mermaid
 flowchart LR
-    IdP["身份提供商<br/>(Google、Okta、LDAP...)"] -->|SSO / OIDC / LDAP| Auth["认证"]
-    IdP -->|SCIM 2.0| Provision["用户 & 用户组<br/>预配"]
-    Auth --> RBAC["RBAC 引擎"]
+    IdP["Identity Provider<br/>(Google, Okta, LDAP...)"] -->|SSO / OIDC / LDAP| Auth["Authentication"]
+    IdP -->|SCIM 2.0| Provision["User & Group<br/>Provisioning"]
+    Auth --> RBAC["RBAC Engine"]
     Provision --> RBAC
     RBAC -->|Roles + Groups| Permissions["Per-User<br/>Permissions"]
-    Permissions --> Resources["模型 · 知识库<br/>工具 · 频道"]
+    Permissions --> Resources["Models · Knowledge<br/>Tools · Channels"]
     APIKeys["API Keys"] -->|Bearer Token| RBAC
 ```
 
-1. **用户通过** SSO、OIDC、LDAP 或本地凭据**进行认证**。
+1. **用户通过 SSO、OIDC、LDAP 或本地凭据进行认证**。
 2. **SCIM 从身份提供商自动预配**用户和用户组。
-3. **RBAC 根据**角色（管理员、用户）和用户组成员资格**确定访问权限**。
+3. **RBAC 根据角色（管理员、用户）和用户组成员资格确定访问权限**。
 4. **权限是累加的**：每个用户组成员资格都会增加能力，而不会减少。
 5. **API Keys** 继承创建用户的完整权限，用于程序化访问。
 

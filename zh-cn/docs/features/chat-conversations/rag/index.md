@@ -35,8 +35,6 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 需要清理多个已上传的文档或审计您的存储？您现在可以使用位于 **设置 > 数据控制 > 管理文件 (Settings > Data Controls > Manage Files)** 的集中式**[文件管理器](/features/chat-conversations/data-controls/files)**。在那里删除文件将自动清理其相应的 RAG 嵌入数据。
 :::
 
-您还可以通过以 `#` 开头并紧跟一个 URL 来开始提示，将带有访问权限的文档加载到工作区。这有助于将网页内容直接融入到您的对话中。
-
 ## 外部知识源（外部向量数据库） {#external-knowledge-sources-external-vector-databases}
 
 :::warning 实验性
@@ -86,12 +84,12 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 ## 用于 RAG 的网络搜索 {#web-search-for-rag}
 
 :::warning
-**致 Ollama 用户的上下文长度警告：** 即使经过内容提取，网页通常包含 4,000-8,000 多个 token，包括主要内容、导航元素、页眉、页脚和元数据。如果只有 2048 个可用 token，您获得的内容不到页面内容的一半，通常会丢失最相关的信息。甚至 4096 个 token 对于全面的网页内容分析也常常是不够的。
+**致 Ollama 用户的上下文长度警告：** 即使经过内容提取，网页通常包含 4,000-8,000 多个 token，包括主要内容、导航元素、页眉、页脚和元数据。如果只有 4096 个可用 token，您获得的内容不到页面内容的一半，通常会丢失最相关的信息。甚至 4096 个 token 对于全面的网页内容分析也常常是不够的。
 
 **修复方法：** 导航至 **Settings > Models**（管理员区域）中（您的 Ollama 模型的）铅笔图标（**Edit**），打开 **Advanced Params** 并**将上下文长度增加到 8192+（或最好超过 16000）个 token**。此设置特别适用于 Ollama 模型。对于 OpenAI 和其他集成模型，请确保您使用的是具有足够内置上下文长度的模型（例如，拥有 1M token 上下文窗口的 GPT-5.6）。
 :::
 
-对于网页内容的集成，在聊天中以 `#` 开头开始查询，并紧跟目标 URL。点击聊天框上方出现的方框中的格式化 URL。选择后，`Send a message` 上方会出现一个文档图标，表示检索成功。如果可以，Open WebUI 将从该 URL 获取并解析信息。
+对于网页内容的集成，在聊天中以 `#` 开头开始查询，并紧跟目标 URL。点击聊天框上方出现的方框中的格式化 URL。选择后，`Send a message` 上方会出现一个文档图标，表示检索成功。如果可以，Open WebUI 将从该 URL 获取并解析信息。指向文件的链接（例如 PDF）会通过文档提取来读取。如果无法读取该 URL，该尝试会失败并给出提示，指出无法读取的链接，参见[附加链接或 YouTube 视频失败](/troubleshooting/rag#14-attaching-a-link-or-a-youtube-video-fails)。
 
 :::tip
 
@@ -207,7 +205,7 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 ## RAG 嵌入支持 {#rag-embedding-support}
 
-直接在 `Settings` > `Documents`（管理员区域）菜单中更改 RAG 嵌入模型。该功能支持 Ollama 和 OpenAI 模型，让您能够根据需求增强文档处理。
+在 **Settings** > **Documents**（管理员区域）中更改 RAG 嵌入模型。嵌入引擎可以是内置的 SentenceTransformers 默认值、Ollama、OpenAI 或 Azure OpenAI。
 
 ## 初始设置后更改 RAG 设置 {#changing-rag-settings-after-initial-setup}
 
@@ -234,10 +232,16 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 重建索引过程对每个知识库执行如下步骤：
 
 1. **删除**该知识库现有的向量集合。
-2. 使用当前的语块大小、重叠和文本分割设置，**重新切分**所有文件。
-3. 使用当前配置的嵌入模型，**重新生成嵌入**所有块。
+2. 使用当前的内容提取引擎及其设置，从原始上传文件**重新提取**每个文件。
+3. 使用当前的语块大小、重叠和文本分割设置，**重新切分**所有文件。
+4. 使用当前配置的嵌入模型，**重新生成嵌入**所有块。
+5. 同时**重建**知识库中每个文件的逐文件集合，这样单独把某个文件附加到聊天中时，检索到的内容与在它所属的知识库中搜索时相同。
 
-这意味着，一次重建索引能同时应用分块设置变更和嵌入模型变更。
+这意味着，一次重建索引能同时应用内容提取、分块设置和嵌入模型变更。
+
+:::note 重建索引会重新解析文件
+每个文件都会再次经过内容提取引擎，因此在嵌入之外还要预留内容提取的时间。在知识库文件查看器中编辑过的文本会被新的提取结果替换。音频、图片和视频文件会保留其已存储的文本，原始文件缺失或提取失败的文件同样如此。
+:::
 
 :::warning 重新索引不涵盖聊天文件
 重新索引操作仅处理属于**知识库**的文件。直接上传到对话中（而未加入任何知识库）的文件拥有单独的逐文件向量集合，这些集合不受重新索引操作的影响。
@@ -336,7 +340,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 我们的 RAG 嵌入功能带有可切换的混合搜索子功能，通过 `BM25` 增强了 RAG，并借由 `CrossEncoder` 实现重排打分，其相关度阈值可以自由配置。这为您的特定用例提供了更精准、更个性化的 RAG 体验。
 
 :::tip 类文件系统的知识库访问（`kb_exec`）
-若想获得更强大的代理式体验，可设置 `ENABLE_KB_EXEC=True`。这会让模型获得一个 shell 风格的知识库操作界面（`ls`、`tree`、`grep`、`cat`、`head`/`tail`、按行读取，并支持管道）。相比起一组分散的搜索工具，能力较强的模型通常能更可靠地将其串联起来，因此往往能更准确地定位到目标片段。它要求**原生函数调用**（一个原生模式的内置工具），默认关闭；在 Default 模式下没有任何效果。我们建议为能力足够的模型开启它。详见[类文件系统的知识库访问](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
+若想获得更强大的代理式体验，可设置 `ENABLE_KB_EXEC=True`。这会让模型获得一个 shell 风格的知识库操作界面（`ls`、`tree`、`grep`、`cat`、`head`/`tail`、按行读取，并支持管道）。相比起一组分散的搜索工具，能力较强的模型通常能更可靠地将其串联起来，因此往往能更准确地定位到目标片段。它要求**原生函数调用**（它是原生模式的[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)），默认关闭；对于设置为 Legacy 的模型它没有任何效果。我们建议为能力足够的模型开启它。详见[类文件系统的知识库访问](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
 :::
 
 ## YouTube RAG 流程 {#youtube-rag-pipeline}
@@ -360,14 +364,14 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 
 ## Google Drive 集成 {#google-drive-integration}
 
-当与一个开启了 Google Picker API 以及 Google Drive API 的 Google Cloud 项目共同配置时，此项特性可以让用户直接从聊天界面接入他们的 Drive 文件并上传文档、幻灯片、表格等作为您的对话上下文。这能够在 `Settings` > `Documents`（管理员区域）菜单下启用。使用它必须要设定 [`GOOGLE_DRIVE_API_KEY` 和 `GOOGLE_DRIVE_CLIENT_ID`](/reference/env-configuration) 的环境变量。
+当与一个开启了 Google Picker API 以及 Google Drive API 的 Google Cloud 项目共同配置时，此项特性可以让用户直接从聊天界面接入他们的 Drive 文件并上传文档、幻灯片、表格等作为您的对话上下文。这能够在 `Settings` > `Documents`（管理员区域）菜单下启用。使用它必须要设定 [`GOOGLE_DRIVE_API_KEY and GOOGLE_DRIVE_CLIENT_ID`](/reference/env-configuration) 环境变量。
 
 ### 详细说明 {#detailed-instructions}
 
 1. 创建一个 OAuth 2.0 客户端并将授权的 JavaScript 来源与授权的重定向 URI 配置为访问你 Open WebUI 实例使用的 URL (包括可能的端口)。
-2. 记录下与该 OAuth 客户端绑定的客户端 ID (Client ID)。
+2. 记录下与该 OAuth 客户端绑定的客户端 ID (Client ID)。请完全按照 Google 显示的形式使用它，即 `<project number>-....apps.googleusercontent.com`。选择器会从 Client ID 开头的几位数字读取 Cloud 项目编号。
 3. 确保你的项目启用了 Google Drive API 和 Google Picker API 两项服务。
-4. 同时将你的应用 (项目) 设定在测试状态 (Testing) 并将你的 Google Drive 邮箱增添至用户列表中。
+4. 在 OAuth 同意屏幕上，将应用设置为“正式发布 (In production)”；或者保持“测试中 (Testing)”，并把你的用户添加到测试用户列表中。
 5. 添加 `https://www.googleapis.com/auth/drive.file` 作用域。Open WebUI 只请求这一个作用域，它授予访问每位用户所选文件的权限。Google 将其归类为非敏感作用域，因此自托管安装无需受限作用域验证或安全评估，用户也不会看到"Google 尚未验证此应用"的警告。
 6. 前往 Google Picker API 的控制台，然后点击创建凭据 (create credentials) 按钮。
 7. 创建一个 API 密钥，并在应用限制 (Application restrictions) 中勾选网站 (Websites)。随后添入你的 Open-WebUI 实例 URL，内容等同于步骤 1 中的授权 JavaScript 来源和重定向 URI 的地址。

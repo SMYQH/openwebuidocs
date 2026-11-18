@@ -41,7 +41,7 @@ title: "音频"
 用户级选项包括：
 - **STT 引擎覆盖** —— 选择 “Web API” 使用浏览器语音识别
 - **STT 语言** —— 设置偏好的转录语言
-- **TTS 引擎** —— 选择 `Kokoro.js (Browser)` 以使用浏览器本地 TTS
+- **TTS 引擎** —— 选择 **Kokoro.js (Browser)** 以使用浏览器本地 TTS
 - **TTS 音色** —— 选择可用音色
 - **自动播放** —— 自动播放 AI 回答
 - **播放速度** —— 调整播放速度
@@ -80,7 +80,7 @@ environment:
 如果你更喜欢 Mistral 的音频栈：
 
 **在 设置 → 音频（管理员区域） 中：**
-- **STT 引擎:** `MistralAI` | **模型:** `voxtral-mini-latest`（或留空）
+- **STT 引擎:** `MistralAI` | **模型:** 对 `voxtral-mini-latest` 留空，或填写其他 Voxtral 模型名（任何 id 都会原样透传）
 - **TTS 引擎:** `MistralAI` | **模型:** `voxtral-mini-tts-2603` | **音色:** 从列表中选择
 - 在两个部分填入你的 Mistral API 密钥
 
@@ -135,7 +135,6 @@ services:
 当管理员把 `AUDIO_TTS_ENGINE` 留空（默认值）时，后端不会提供 TTS 服务，所有 TTS 都由客户端处理。类似地，如果用户在自己的设置中把 STT 设为 “Web API”，则不会使用后端本地 Whisper。
 :::
 
-<span id="microphone-access-issues"></span>
 ## 麦克风访问问题 {#microphone-access-issues}
 
 ### 理解安全上下文 {#understanding-secure-contexts}
@@ -182,7 +181,6 @@ Chrome、Brave、Microsoft Edge、Opera、Vivaldi 以及 Firefox 等浏览器，
 
 ## Text-to-Speech（TTS）问题 {#text-to-speech-tts-issues}
 
-<span id="tts-loading-forever--not-working"></span>
 ### TTS 一直加载 / 无法工作 {#tts-loading-forever--not-working}
 
 如果点击聊天回复旁的播放按钮后一直转圈，请按以下方式排查：
@@ -234,7 +232,7 @@ services:
       - AUDIO_TTS_OPENAI_API_BASE_URL=http://openai-edge-tts:5050/v1
     depends_on:
       - openai-edge-tts
-    # ... 其他配置
+    # ... other configuration
 
   openai-edge-tts:
     image: travisvn/openai-edge-tts:latest
@@ -268,7 +266,6 @@ services:
 
 ## Speech-to-Text（STT）问题 {#speech-to-text-stt-issues}
 
-<span id="whisper-stt-not-working--compute-type-error"></span>
 ### Whisper STT 不工作 / Compute Type 错误 {#whisper-stt-not-working--compute-type-error}
 
 **症状：**
@@ -280,7 +277,7 @@ services:
 **解决方法：**
 
 #### 1. 升级到最新版本（推荐） {#1-upgrade-to-the-latest-version-recommended}
-最可靠的修复方式是更新到最新版本的 Open WebUI。新版本会正确尊重 `WHISPER_COMPUTE_TYPE`，并为 CUDA 环境提供更合理的默认值。
+最可靠的修复方式是更新到最新版本的 Open WebUI。`WHISPER_COMPUTE_TYPE` 在所有镜像上默认都是 `int8`，`:cuda` 镜像也不例外。不存在 CUDA 专属的默认值，所以在 GPU 上需要自行设置 `WHISPER_COMPUTE_TYPE=float16`（或 `int8_float16`）。
 
 #### 2. 手动设置计算类型 {#2-manually-set-compute-type}
 如果你正在使用受影响版本，或在 GPU 上仍然遇到问题，请显式将计算类型设为 `float16`：
@@ -294,10 +291,10 @@ environment:
 如果你的 GPU 非常老，或兼容性问题始终存在，请改用标准（CPU）镜像。对于 Whisper 这类较小模型，CPU 模式在很多场景下性能也足够，同时兼容性更好：
 
 ```bash
-# 不要使用：
+# Instead of:
 # ghcr.io/open-webui/open-webui:cuda
 
-# 改用：
+# Use:
 ghcr.io/open-webui/open-webui:main
 ```
 
@@ -325,7 +322,7 @@ environment:
 
 :::info 默认行为
 - **CPU 模式：** 默认使用 `int8` 以获得最佳性能
-- **CUDA 模式：** `:cuda` 镜像可能默认使用 `int8`，这会在旧 GPU 上报错。请为 GPU 显式设置 `float16`。
+- **CUDA 模式：** `:cuda` 镜像和其他所有镜像一样默认使用 `int8`，这会在旧 GPU 上报错。请为 GPU 显式设置 `float16`。
 :::
 
 ### STT 识别准确率差 {#stt-not-recognizing-speech-correctly}
@@ -344,8 +341,8 @@ environment:
    ```
 3. **检查浏览器麦克风权限**（见上文）
 4. **改用 Web API 引擎：**
-  - 进入用户设置（不是管理面板）
-  - 在 STT 设置中把语音转文本引擎改为 “Web API”
+   - 进入用户设置（不是管理面板）
+   - 在 STT 设置中把语音转文本引擎改为 “Web API”
    - 这样会使用浏览器内置语音识别
 
 ### STT/TTS 报 SSL 证书错误 {#stttts-failing-with-ssl-certificate-errors}
@@ -353,7 +350,7 @@ environment:
 如果你的 STT 或 TTS 引擎部署在自签名证书或内部 CA 之后，且请求因 TLS 校验失败而报错（例如 `SSLCertVerificationError`、`certificate verify failed`）：
 
 - 将 [`AIOHTTP_CLIENT_SESSION_SSL=False`](/reference/env-configuration#aiohttp_client_session_ssl) 设为 False，以关闭这些出站调用的证书校验。
-- 从 v0.9.6 起，音频接口开始遵循该设置（之前 STT/TTS 始终校验证书，配置对音频引擎无效）。如果仍然看起来被忽略，请确认你的版本是 v0.9.6 或更高。
+- 文本转语音和语音转文本都会遵循该设置。
 - 建议优先把内部 CA 安装进容器的信任库；关闭校验会让该连接失去针对中间人攻击的保护。
 
 ---
@@ -389,10 +386,10 @@ environment:
 ### 查看容器日志 {#check-container-logs}
 
 ```bash
-# 查看 Open WebUI 日志
+# View Open WebUI logs
 docker logs open-webui -f
 
-# 查看外部 TTS 服务日志（如适用）
+# View logs for external TTS service (if applicable)
 docker logs openai-edge-tts -f
 ```
 
@@ -406,8 +403,8 @@ docker logs openai-edge-tts -f
 
 对于外部 TTS 服务，可直接测试：
 
-``` bash
-# 测试 OpenAI Edge TTS
+```bash
+# Test OpenAI Edge TTS
 curl -X POST http://localhost:5050/v1/audio/speech \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_api_key_here" \
@@ -420,10 +417,10 @@ curl -X POST http://localhost:5050/v1/audio/speech \
 确认 Open WebUI 容器能够访问外部服务：
 
 ```bash
-# 进入容器
+# Enter the container
 docker exec -it open-webui bash
 
-# 测试连通性（如果容器内有 curl）
+# Test connectivity (if curl is available)
 curl http://your-tts-service:port/health
 ```
 
@@ -456,7 +453,7 @@ curl http://your-tts-service:port/health
 | `AUDIO_STT_OPENAI_API_BASE_URL` | 兼容 OpenAI 的 STT Base URL |
 | `AUDIO_STT_OPENAI_API_KEY` | 兼容 OpenAI 的 STT API 密钥 |
 | `DEEPGRAM_API_KEY` | Deepgram API 密钥 |
-| `AIOHTTP_CLIENT_SESSION_SSL` | 出站 STT/TTS API 调用的 TLS 校验（默认：`True`；自签名证书场景下设为 `False`——自 v0.9.6 起音频引擎开始遵循该设置） |
+| `AIOHTTP_CLIENT_SESSION_SSL` | 出站 STT/TTS API 调用的 TLS 校验（默认：`True`；自签名证书场景下设为 `False`） |
 
 完整的音频环境变量列表请参阅 [环境变量配置](/reference/env-configuration#audio)。
 

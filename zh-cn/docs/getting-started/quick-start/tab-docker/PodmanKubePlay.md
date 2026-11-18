@@ -8,7 +8,7 @@ Podman 支持类似 Kubernetes 的语法来部署 Pod、卷等资源，而无需
 
 下面是一个用于部署的 Podman Kube Play 示例文件：
 
-``` yaml
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -54,7 +54,7 @@ podman kube play ./play.yaml
 
 ## 使用 GPU 支持 {#using-gpu-support}
 
-若需 Nvidia GPU 支持，请将容器镜像替换为 `ghcr.io/open-webui/open-webui:cuda`，并在 Pod 资源限制中声明所需设备（GPU）：
+使用 `:cuda` 镜像，Open WebUI 自带的本地模型（嵌入模型、重排序模型和 Whisper 语音转文字）会转移到 GPU 上运行；Ollama 的模型不受影响。若需 Nvidia GPU 支持，请将容器镜像替换为 `ghcr.io/open-webui/open-webui:cuda`，并在 Pod 资源限制中声明所需设备（GPU）：
 
 ```yaml
       [...]

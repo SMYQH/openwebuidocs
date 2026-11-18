@@ -252,7 +252,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   | 设置项 | 值 |
   |---|---|
   | **URL** | `https://ai-gateway.vercel.sh/v1` |
-  | **API Key** | 从 [Vercel 控制台](https://vercel.com/docs/ai-gateway/authentication/api-keys) 获取的 AI Gateway API 密钥 |
+  | **API Key** | 从 [Vercel 控制台](https://vercel.com/docs/ai-gateway/authentication) 获取的 AI Gateway API 密钥 |
   | **Model IDs** | 自动检测；可选择筛选到特定的网关模型 ID，例如 `anthropic/claude-opus-5` |
 
   :::tip
@@ -328,7 +328,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   ```bash
   git clone https://github.com/aws-samples/bedrock-access-gateway
   cd bedrock-access-gateway
-  # 使用 ECS Dockerfile
+  # Use the ECS Dockerfile
   mv Dockerfile_ecs Dockerfile
   docker build . -f Dockerfile -t bedrock-gateway
   docker run -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
@@ -416,7 +416,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   ```bash
   OPENAI_API_BASE_URL=YOUR_STDAPI_URL/v1
   OPENAI_API_KEY=YOUR_STDAPI_KEY
-  # 为 `TASK_MODEL_EXTERNAL` 选择一个快速且低成本的聊天模型
+  # Use a fast, low-cost chat model for `TASK_MODEL_EXTERNAL`.
   TASK_MODEL_EXTERNAL=amazon.nova-micro-v1:0
   ```
 
@@ -519,15 +519,15 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   **Azure OpenAI** 通过 Microsoft Azure 提供企业级 OpenAI 托管能力。
 
-  要添加 Azure OpenAI 连接，你需要先在连接弹窗中**切换 provider type**：
+  要添加 Azure OpenAI 连接，请在连接对话框中设置 **Provider**：
 
-  1. 在连接表单中找到 **Provider Type** 按钮（默认显示为 **OpenAI**）。
-  2. **点击它**，将其切换成 **Azure OpenAI**。
+  1. 在连接表单中点击 **高级（Advanced）** 展开它。
+  2. 把 **Provider** 下拉框设为 **Azure OpenAI**。
   3. 然后填写如下设置。
 
   | 设置项 | 值 |
   |---|---|
-  | **Provider Type** | 点击切换为 **Azure OpenAI** |
+  | **Provider** | **Azure OpenAI**（参见[服务商设置](#the-provider-setting)） |
   | **URL** | 你的 Azure endpoint（例如 `https://my-resource.openai.azure.com`） |
   | **API Version** | 例如 `2024-02-15-preview` |
   | **API Key** | 你的 Azure API Key |
@@ -562,6 +562,9 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   | **URL** | `http://localhost:4000/v1`（LiteLLM 默认代理端口） |
   | **API Key** | 你的 LiteLLM 代理 key（若已配置） |
   | **Model IDs** | 从 LiteLLM 配置中自动发现 |
+  | **Provider** | `LiteLLM`（可选，详见下文） |
+
+  只有当有东西调用 Open WebUI 自带的 [Anthropic Messages 端点](/reference/api-endpoints#anthropic-messages-api) 时——例如指向 Open WebUI 的 Anthropic SDK 或编程 Agent——把 **高级（Advanced）** 下的 **Provider** 设为 `LiteLLM` 才有意义。设置之后，这类请求会被原样交给 LiteLLM，而不是被转换成 Chat Completions 再转回来，因此 Anthropic 独有的字段得以保留。代价是请求会直接发往 LiteLLM，跳过 Open WebUI 的聊天流程，因此过滤器、工具和知识库都不会作用于它。无论如何，在 Open WebUI 界面里正常聊天都不受影响。
 
   **快速开始：**
 
@@ -622,7 +625,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   ![Lemonade Server](/images/getting-started/lemonade-server.png)
 
-  详情请查看[官方文档](https://lemonade-server.ai/docs/server/apps/open-webui/)。
+  详情请查看[官方文档](https://lemonade-server.ai/docs/integrations/open-webui/)。
 
   然后在 Open WebUI 中用上面的 URL 和 API key 添加连接：
 
@@ -683,7 +686,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 如果你的服务启动较慢，或你通过高延迟网络连接，可以调整模型列表获取超时：
 
 ``` bash
-# 针对较慢连接调整超时（默认 10 秒）
+# Raise the timeout for slower connections. The default is 10 seconds, and an empty value disables it
 AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 ```
 

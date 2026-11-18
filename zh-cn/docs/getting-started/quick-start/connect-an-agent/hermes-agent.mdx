@@ -13,7 +13,7 @@ title: "Hermes Agent"
 
 [Hermes Agent](https://github.com/NousResearch/hermes-agent) 是 **Nous Research** 开发的自主 AI Agent，内置终端访问、文件操作、网页搜索、记忆和可扩展技能。它会暴露一个**兼容 OpenAI 的 API 服务**，因此接入 Open WebUI 只需几分钟。
 
-当你通过 Open WebUI 发送消息时，Hermes Agent 会接收消息，决定是否调用工具，执行相关操作，并将最终回复流式返回。你还会实时看到内联进度提示（例如 `💻 ls -la`、`🔍 searching...`）。
+当你通过 Open WebUI 发送消息时，Hermes Agent 会接收消息，决定是否调用工具，执行相关操作，并将最终回复流式返回。你还会实时看到内联进度提示（例如 `ls -la`、`searching...`）。
 
 :::info 你需要准备
 - 本机已安装 **Hermes Agent**（见其[快速开始指南](https://hermes-agent.nousresearch.com/docs/getting-started/quickstart)）
@@ -87,6 +87,7 @@ Open WebUI 需要依赖该 gateway 与你的 Agent 通信。对于长期部署�
 5. 点击 ✅ 勾选按钮进行验证，然后点击 **保存**。
 
 :::tip 如果 Open WebUI 运行在 Docker 中？
+把 `localhost` 替换为 `host.docker.internal`：
 
 ```
 http://host.docker.internal:8642/v1
@@ -133,6 +134,9 @@ docker compose up -d
 :::note
 环境变量只会在 Open WebUI **首次启动**时生效。之后，连接设置会存储在其内部数据库中。若之后要修改，请使用管理界面，或删除 Docker 卷后重新开始。
 :::
+
+---
+
 ## 故障排查 {#troubleshooting}
 
 ### 下拉框中没有模型 {#no-models-appear-in-the-dropdown}
@@ -158,13 +162,13 @@ Hermes Agent 可能在回复前执行了多个工具调用。对于复杂查询�
 在不带 Docker Desktop 的 Linux 上，`host.docker.internal` 默认不会解析：
 
 ```bash
-# 方案 1：添加 host 映射
+# Option 1: Add host mapping
 docker run --add-host=host.docker.internal:host-gateway ...
 
-# 方案 2：使用 host 网络
+# Option 2: Use host networking
 docker run --network=host -e OPENAI_API_BASE_URL=http://localhost:8642/v1 ...
 
-# 方案 3：使用 Docker bridge IP
+# Option 3: Use Docker bridge IP
 docker run -e OPENAI_API_BASE_URL=http://172.17.0.1:8642/v1 ...
 ```
 

@@ -1,3 +1,8 @@
+---
+sidebar_position: 100
+title: "图像生成"
+---
+
 ## 图像生成故障排查 {#image-generation-troubleshooting}
 
 ### 常见问题 {#general-issues}

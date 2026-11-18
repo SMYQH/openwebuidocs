@@ -62,15 +62,16 @@ Code Interpreter 是一种模型能力，可让 LLM 在对话过程中自主编�
 
 ### 原生函数调用（Native Mode） {#native-function-calling-native-mode}
 
-当你在支持的模型上启用 **原生函数调用模式**（例如 GPT-5、Claude 4.5、MiniMax M2.5）时，代码解释器会以一个名为 `execute_code` 的内置工具形式提供。这会带来更自然的集成体验：
+当你在当前的模型上启用 **原生函数调用模式**（最低需要 GPT-5.6 Luna、Gemini 3.5 Flash-Lite、MiniMax M3，或本地运行的 Muse Glimmer 30B）时，代码解释器会以一个名为 `execute_code` 的内置工具形式提供。这会带来更自然的集成体验：
 
 - **无需 XML 标签**：模型可以直接调用 `execute_code(code)`
 - **图像处理方式相同**：输出中的 base64 图像 URL 会被替换为文件 URL；模型随后通过 markdown 嵌入
+- **此处不执行标签**：该标签格式只在 Legacy 模式下被教给模型，也只在 Legacy 模式下生效。Native 模式下，如果模型自行写出代码解释器标签块，它会被当作文本显示而不是执行，因为它想执行的代码本应通过工具调用传入。
 
 **使用要求：**
 1. 必须在全局启用 `ENABLE_CODE_INTERPRETER`
 2. 模型必须启用 `code_interpreter` capability
-3. 模型必须使用 **Native** 原生函数调用模式（在模型高级参数中设置）
+3. 模型必须使用 **Native** 原生函数调用模式（默认即为 Native；只有在模型高级参数中被切换为 **Legacy** 时才需要留意）
 
 有关 builtin tools 和 native mode 的详细说明，请参阅 [工具开发指南](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
 
@@ -183,7 +184,7 @@ AI **不能安装**上述列表之外的库。任何导入不受支持包的代�
 - **跨执行持久化** —— 一次代码执行写入的文件，在后续执行中仍可访问
 - **跨刷新持久化** *（需手动开启）* —— 只有在设置 [`ENABLE_PYODIDE_FILE_PERSISTENCE=true`](/reference/env-configuration#enable_pyodide_file_persistence) 后，文件才会在页面刷新后保留（默认关闭）。关闭该开关时，Pyodide 运行在不透明源（opaque origin）的沙箱中，基于 IndexedDB 的文件系统不会跨刷新保留
 - **自动挂载上传文件** —— 附件会在执行前从服务器拉取，并放入 `/mnt/uploads/`，因此模型能直接读取
-- **文件浏览器面板** —— 启用 Code Interpreter 后，聊天控制侧边栏中会显示文件浏览器。你可浏览、预览、上传、下载和删除文件，无需终端
+- **文件浏览器面板** —— 启用 Code Interpreter 后，聊天的[标签页](/features/chat-conversations/chat-features/#tabs-side-panel)中会显示一个 **Files** 标签页。你可浏览、预览、上传、下载和删除文件，无需终端
 
 ### 在代码中操作文件 {#working-with-files-in-code}
 
@@ -276,7 +277,7 @@ plt.close()
 
 - **明确说明运行环境**：告诉 LLM 它运行在 “Pyodide 环境” 或 “代码解释器” 中，有助于生成更准确的代码
 - **明确输出形式**：如果想显示图像，请明确要求 “base64 数据 URL 输出”
-- **使用 print 语句**：结果必须打印出来，才能显示在输出中
+- **使用 print 语句**：打印出的内容会显示在 **STDOUT/STDERR** 下。当一个代码块的最后一行是表达式时（例如 `square(7)`），其值也会显示在 **RESULT** 下
 - **先检查库支持**：确认你需要的库在 Pyodide 中是否可用
 
 ## 延伸阅读 {#further-reading}

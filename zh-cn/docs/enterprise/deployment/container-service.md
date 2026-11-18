@@ -65,7 +65,7 @@ ghcr.io/open-webui/open-webui:v0.x.x
 | **存储** | 使用对象存储（S3、GCS、Azure Blob）或共享文件系统（例如 EFS）。容器本地存储是临时性的，且不会在任务间共享。 |
 | **Tika Sidecar** | 可将 Tika 作为同一任务定义中的 sidecar 容器运行，或作为独立服务运行。采用 sidecar 模式可让提取流量保持本地。 |
 | **密钥管理** | 对于 `DATABASE_URL`、`REDIS_URL` 和 `WEBUI_SECRET_KEY`，请使用平台提供的密钥管理器（AWS Secrets Manager、Azure Key Vault、GCP Secret Manager）。 |
-| **更新** | 先以单任务方式执行滚动部署——该任务负责运行迁移（`ENABLE_DB_MIGRATIONS=true`）。确认健康后，再将其余任务扩展起来，并设置 `ENABLE_DB_MIGRATIONS=false`。有关多副本部署的细节请参见[多副本指南](/troubleshooting/multi-replica)。 |
+| **更新** | 将服务缩减到单个任务，在其上部署新镜像（`ENABLE_DB_MIGRATIONS=true`），等待其变为健康状态，然后将其余任务重新扩容（`ENABLE_DB_MIGRATIONS=false`）。在更改数据库架构的版本之间不支持滚动更新，因此新旧任务绝不能同时承载流量。参见[更新与迁移](/troubleshooting/multi-replica#updates-and-migrations)。 |
 
 ## 需要避免的反模式 {#anti-patterns-to-avoid}
 

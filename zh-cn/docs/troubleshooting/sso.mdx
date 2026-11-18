@@ -30,35 +30,42 @@ OAuth 和 Single Sign-On（SSO）为 Open WebUI 提供安全认证。当登录�
 #### ❌ 人们经常误用的不存在变量： {#non-existent-variables-people-often-use}
 - `OIDC_CONFIG` → 应使用 `OPENID_PROVIDER_URL`
 - `WEBUI_OIDC_CLIENT_ID` → 应使用 `OAUTH_CLIENT_ID`
-- `WEBUI_ENABLE_SSO` → 应使用 `ENABLE_OAUTH_SIGNUP`
+- `WEBUI_ENABLE_SSO` → OAuth 由 `ENABLE_OAUTH` 默认启用。只有需要通过 SSO 创建新账户时，才需要 `ENABLE_OAUTH_SIGNUP`
 - `WEBUI_AUTH_TYPE` → 这个变量不存在——请改用提供商对应的变量
 - `OPENID_CLIENT_ID` → 应使用 `OAUTH_CLIENT_ID`
 - `OPENID_CLIENT_SECRET` → 应使用 `OAUTH_CLIENT_SECRET`
 
 #### ✅ 正确的 OIDC 变量： {#correct-oidc-variables}
 ```bash
-# OIDC 必需
+
+# Required for OIDC
 OAUTH_CLIENT_ID=your_client_id
 OAUTH_CLIENT_SECRET=your_client_secret
 OPENID_PROVIDER_URL=https://your-provider/.well-known/openid-configuration
+
+# Needed only for SSO to create accounts that do not exist yet
 ENABLE_OAUTH_SIGNUP=true
 
-# 可选但推荐
+# Optional but recommended
 OAUTH_PROVIDER_NAME=Your Provider Name
 OAUTH_SCOPES=openid email profile
 OPENID_REDIRECT_URI=https://your-domain/oauth/oidc/callback
 
-# 可选：以 JSON 对象传入提供商特定的 authorize 参数
+# Optional: pass provider-specific authorize params (JSON object)
+# e.g. force consent screen, prefill user/email hint
 OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com"}
 ```
 
 #### ✅ Google 特有的可选 authorize 参数： {#google-specific-optional-authorize-params}
 ```bash
+# Optional: extra Google /authorize params as JSON
 GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com","hd":"example.com"}
 ```
 
 #### ✅ 正确的 Microsoft 变量： {#correct-microsoft-variables}
 ```bash
+
+# Use these for Microsoft Entra ID
 MICROSOFT_CLIENT_ID=your_client_id
 MICROSOFT_CLIENT_SECRET=your_client_secret
 MICROSOFT_CLIENT_TENANT_ID=your_tenant_id
@@ -87,11 +94,11 @@ ENABLE_OAUTH_SIGNUP=true
 **Kubernetes/YAML 用户注意：** 小心**环境变量名尾部的空格**。在 YAML 中，如果你把键写成 `'OAUTH_CLIENT_ID '`（引号内尾部带空格），最终设置出来的变量名就真的是 `OAUTH_CLIENT_ID `，Open WebUI **不会识别**。请确保环境变量名末尾没有任何空白字符：
 
 ```yaml
-# ❌ 错误：引号内尾部多了空格
+# Wrong — trailing space inside quotes:
 - name: 'OAUTH_CLIENT_ID '
   value: your_client_id
 
-# ✅ 正确：没有尾部空格
+# Correct — no trailing space:
 - name: OAUTH_CLIENT_ID
   value: your_client_id
 ```
@@ -120,7 +127,7 @@ OPENID_PROVIDER_URL=https://your-authentik-domain/application/o/your-app-name/.w
 ```
 
 #### 按提供商分类的其他必需变量： {#other-required-variables-by-provider}
-- **所有 OAuth 提供商：** `WEBUI_URL`、`ENABLE_OAUTH_SIGNUP=true`
+- **所有 OAuth 提供商：** `ENABLE_OAUTH`（默认开启）；需要通过 SSO 创建账户时，还需 `ENABLE_OAUTH_SIGNUP=true`。只有代理改变请求 URL 时，`WEBUI_URL` 才起作用
 - **Microsoft：** `MICROSOFT_CLIENT_ID`、`MICROSOFT_CLIENT_SECRET`、`MICROSOFT_CLIENT_TENANT_ID`
 - **Google：** `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`
 - **OIDC：** `OAUTH_CLIENT_ID`、`OAUTH_CLIENT_SECRET`、`OPENID_PROVIDER_URL`
@@ -149,7 +156,6 @@ OPENID_PROVIDER_URL=https://your-authentik-domain/application/o/your-app-name/.w
 3. **彻底重来：** 删除数据库 volume，用正确配置重新启动
 
 在它为 `false` 期间，Admin Panel 的 OAuth 区域是只读的，所以一次编辑不会看起来像是生效了，又在下次重启时消失。参见 [`ENABLE_OAUTH_PERSISTENT_CONFIG`](../reference/env-configuration.mdx#enable_oauth_persistent_config)。
-3. **彻底重来：** 删除数据库 volume，用正确配置重新启动
 
 📌 **Docker Compose 示例：**
 ```yaml
@@ -202,7 +208,8 @@ Wrong: https://ai.company.com/callback
 
 **NGINX 示例：**
 ```nginx
-# 为登录 / OAuth / websocket endpoint 关闭缓存
+
+# Disable caching for login / OAuth / websockets endpoints
 location ~* ^/(api|oauth|callback|login|ws|websocket) {
     proxy_no_cache 1;
     proxy_cache_bypass 1;
@@ -238,18 +245,23 @@ location ~* ^/(api|oauth|callback|login|ws|websocket) {
 
 #### 对于 NGINX Proxy Manager： {#for-nginx-proxy-manager}
 ```nginx
-# 删除或调整有问题的 cookie 设置
 
-# ❌ 问题配置：
+# Remove or adjust problematic cookie settings
+
+# Problematic:
+
 # proxy_cookie_path / "/; Secure; HttpOnly; SameSite=None";
 
-# ✅ 更合理的配置：
+# Better:
 proxy_cookie_flags ~ secure samesite=lax;
-# 或者彻底移除 cookie 篡改逻辑
+
+# or remove cookie manipulation entirely
 ```
 
 #### 环境变量中的 cookie 设置： {#environment-variable-cookie-settings}
 ```bash
+
+# Recommended cookie settings for OAuth
 WEBUI_SESSION_COOKIE_SAME_SITE=lax
 WEBUI_AUTH_COOKIE_SAME_SITE=lax
 WEBUI_SESSION_COOKIE_SECURE=true  # Set to false if using HTTP
@@ -277,7 +289,6 @@ OAUTH_TIMEOUT=60
 
 ---
 
-<span id="9-session-state-mismatch-csrf-errors"></span>
 ### 9. Session State 不匹配（CSRF 错误） {#9-session-state-mismatch-csrf-errors}
 
 OAuth 重定向过程中，如果 session cookie 没有被正确保留，就会出现这类错误。
@@ -298,6 +309,8 @@ WEBUI_URL=https://your-exact-domain.com  # Must match exactly - check if you hav
 
 2. **检查 Session 配置：**
 ```bash
+
+# Ensure session handling is properly configured
 WEBUI_SECRET_KEY=your_very_secure_random_key_here
 OAUTH_SESSION_TOKEN_ENCRYPTION_KEY=another_secure_key_here
 ```
@@ -310,10 +323,16 @@ OAUTH_SESSION_TOKEN_ENCRYPTION_KEY=another_secure_key_here
 
 #### 集群部署所需配置： {#required-configuration-for-clusters}
 ```bash
+
+# Redis for session synchronization (required for multi-instance)
 REDIS_URL=redis://your-redis:6379/0
 WEBSOCKET_REDIS_URL=redis://your-redis:6379/0
+
+# Shared secrets across all instances
 WEBUI_SECRET_KEY=same_on_all_instances
 OAUTH_SESSION_TOKEN_ENCRYPTION_KEY=same_on_all_instances
+
+# WebSocket support for clusters
 ENABLE_WEBSOCKET_SUPPORT=true
 WEBSOCKET_MANAGER=redis
 ```
@@ -328,6 +347,8 @@ WEBSOCKET_MANAGER=redis
 
 ✅ **正确的 Microsoft 配置：**
 ```bash
+
+# Use Microsoft-specific variables, not generic OIDC
 MICROSOFT_CLIENT_ID=your_azure_app_id
 MICROSOFT_CLIENT_SECRET=your_azure_app_secret
 MICROSOFT_CLIENT_TENANT_ID=your_tenant_id
@@ -401,13 +422,19 @@ oauth
 开启 debug 日志，并按流程逐步跟踪：
 
 ```bash
+
+# Enable detailed logging
 GLOBAL_LOG_LEVEL=DEBUG
 
-# 重点观察：
-# 1. GET /oauth/{provider}/login - 应返回 302 redirect
-# 2. 用户在 provider 端完成认证
-# 3. GET /oauth/{provider}/callback?code=... - 应返回 200 或继续 redirect
-# 4. 用户最终进入已登录状态
+# Check logs for these key steps:
+
+# 1. GET /oauth/{provider}/login - Should return 302 redirect
+
+# 2. User authenticates with provider
+
+# 3. GET /oauth/{provider}/callback?code=... - Should return 200 or redirect
+
+# 4. User should be logged in
 ```
 
 ### 数据库调试 {#database-debugging}
@@ -415,10 +442,11 @@ GLOBAL_LOG_LEVEL=DEBUG
 检查用户账号是否真的被创建：
 
 ```bash
-# 进入容器
+
+# Access your container
 docker exec -it your-openwebui-container sh
 
-# 检查用户数据（按你的数据目录路径调整）
+# Check if users are created (adjust path to your data directory)
 ls -la /app/backend/data/
 ```
 
@@ -441,7 +469,9 @@ ls -la /app/backend/data/
 ### 需要重点关注的日志信息： {#key-log-messages-to-watch-for}
 - `OAuth callback error: mismatching_state` → Session/cookie 问题
 - `httpcore.ReadTimeout` → 网络超时问题
-- `The email or password provided is incorrect` → 往往说明 OAuth 已完成，但 session 没有建立成功
+- `Sign-in with your identity provider failed. Please contact your administrator for assistance.` → 登录在回调阶段失败，例如提供商拒绝访问、账户没有邮箱，或邮箱域不被允许。这些情况显示相同的文本，因此应查看后端日志确定真正原因。角色不匹配或禁止注册时会显示禁止访问的文本，邮箱重复时会显示已经注册的错误，其他异常则显示 `Error during OAuth process`
+- `Unsupported {'app_id'} in header` → 提供商在 ID 令牌中添加了厂商特有的参数，而当前版本仍会拒绝它。参见[在 ID 令牌中添加自有参数的服务商](#providers-that-add-their-own-parameters-to-the-id-token)
+- `1 validation error for UserModel`，发生在 `oauth` 字段 → 旧的升级步骤把身份提供商 subject 存成了文本。参见[长时间未升级后已有账户无法登录](#12-existing-accounts-cannot-sign-in-after-a-long-delayed-upgrade)
 - 回调 URL 返回 `404` → Redirect URI 配置错误
 
 ---
@@ -453,13 +483,14 @@ ls -la /app/backend/data/
 | 🔗 WebUI URL 缺失或错误 | 在 admin panel 中设置正确的 WebUI URL |
 | 📝 环境变量拼写错误或缺失 | 对照官方文档逐项检查；不要使用 `OIDC_CONFIG` 这类不存在的变量 |
 | 🚨 缺少 OPENID_PROVIDER_URL | OIDC 必需项，指向提供商的 `.well-known/openid-configuration` |
-| 🔄 持久化配置冲突 | 设 `ENABLE_OAUTH_PERSISTENT_CONFIG=false`，或统一改用 admin panel 配置 |
+| 🔄 持久化配置冲突 | 设 `ENABLE_OAUTH_PERSISTENT_CONFIG=false` 以使用环境变量，或设为 `true` 以使用管理面板；为 `false` 时面板只读 |
 | 🏢 提供商侧配置错误 | 核对应用注册、URI、client ID 与 secret |
 | 🧊 代理缓存干扰 | 把所有 OAuth endpoint 排除在服务端缓存之外 |
 | 🍪 Cookie 配置问题 | 检查反向代理 cookie 设置与相关 env vars |
 | ⏱️ 超时问题 | 提高 `AIOHTTP_CLIENT_TIMEOUT` 等超时设置 |
 | 🔐 CSRF / session 问题 | 检查 `WEBUI_SECRET_KEY` 与会话配置 |
 | 🔀 多实例问题 | 配置 Redis 与共享密钥 |
+| 长时间未升级后，SSO 账户在升级后立即无法登录 | 更新 Open WebUI；启动时的修复迁移会修复存储的身份数据 |
 | 仍未解决？ | 开启 debug 日志、绕过代理测试、复查 provider 配置 |
 
 ---
@@ -468,8 +499,8 @@ ls -la /app/backend/data/
 
 ---
 
-:::warning Token 撤销依赖 Redis
-如果没有 Redis，**退出登录并不会撤销 JWT token**——它们会一直有效直到过期（默认：4 周）。对 SSO/OAuth 部署来说，这一点尤其重要，因为你可能需要在用户离职等场景下快速撤销访问权限。没有 Redis 时，密码修改和管理员停用账号也无法让已签发 token 立即失效。
+:::warning 退出单个会话需要 Redis
+如果没有 Redis，**退出登录并不会撤销 JWT token**——它们会一直有效直到过期（默认：4 周）。对 SSO/OAuth 部署来说，这一点尤其重要，因为你可能需要在用户离职等场景下快速撤销访问权限，而 OIDC 后通道注销也需要 Redis 才能撤销令牌。没有 Redis 时，管理员仍可在用户编辑对话框中使用 **退出所有设备** 来结束该账户的全部会话。
 
 对于生产环境中的 SSO 部署，请配置 Redis，或缩短 `JWT_EXPIRES_IN` 来降低暴露窗口。更多信息请参阅 [Token 撤销](/getting-started/advanced-topics/hardening#token-revocation) 和 [Redis 教程](/tutorials/integrations/redis)。
 :::

@@ -24,7 +24,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # 改成你自己的任意密钥，作为 OpenAI 兼容 API key 使用
+      # Change this to any secret key to use as your OpenAI compatible API key
       - KW_SECRET_API_KEY=your-api-key
     volumes:
       - ./kokoro-cache:/kokoro/cache

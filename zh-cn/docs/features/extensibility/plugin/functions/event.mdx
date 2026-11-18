@@ -61,9 +61,9 @@ class Event:
         __app__=None,
         __request__=None,
     ):
-        print(f"事件 ID:   {__event_id__}")
-        print(f"事件名称: {__event_name__}")
-        print(f"负载:    {event}")
+        print(f"event id:   {__event_id__}")
+        print(f"event name: {__event_name__}")
+        print(f"payload:    {event}")
 ```
 
 你的 `event()` 处理程序会被**每个**系统事件调用。你通过检查 `__event_name__` 来决定对什么做出响应。
@@ -121,10 +121,10 @@ Open WebUI 发出 **170+ 事件**，涵盖每个子系统。每个名称以 `<ar
 ```python
 async def event(self, event: dict, __event_name__: str = None, __app__=None, **kwargs):
     if __event_name__ == "system.startup.completed":
-        # 应用保存的配置、预热缓存、注册路由等
+        # Apply a saved configuration, warm a cache, register routes, etc.
         ...
     elif __event_name__ == "system.shutdown.started":
-        # 刷新缓冲区、关闭连接等
+        # Flush buffers, close connections, etc.
         ...
 ```
 
@@ -190,8 +190,8 @@ _redis = get_redis_connection(REDIS_URL, decode_responses=True) if REDIS_URL els
 
 
 def run_once(key: str, ttl: int = 300) -> bool:
-    # Redis SET NX EX：原子"如果不存在则设置"并带过期时间。在 ttl 窗口内，
-    # 所有副本中恰好有一个调用者得到 True。
+    # Redis SET NX EX: atomic "set if not exists" with expiry. Exactly one
+    # caller across all replicas gets True within the ttl window.
     if _redis is None:
         return True  # single process: nothing to coordinate with
     return bool(_redis.set(f"{REDIS_KEY_PREFIX}:event:{key}", "1", nx=True, ex=ttl))

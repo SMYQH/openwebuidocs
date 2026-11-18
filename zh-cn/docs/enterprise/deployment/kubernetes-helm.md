@@ -14,8 +14,8 @@ title: "使用 Helm 的 Kubernetes"
 ## 何时选择这种模式 {#when-to-choose-this-pattern}
 
 - 你的组织已经在运行 Kubernetes，并具备平台工程能力
-- 你需要声明式 IaC 与 GitOps 工作流
-- 你需要更高级的扩缩容（HPA）、滚动更新和 Pod Disruption Budget
+- 你需要声明式基础设施即代码与 GitOps 工作流
+- 你需要自动扩缩容（HPA）、声明式更新和 Pod Disruption Budget
 - 你正在为数百到数千用户的关键任务环境部署
 
 ## 架构 {#architecture}
@@ -54,17 +54,17 @@ flowchart LR
 ## Helm Chart 配置 {#helm-chart-setup}
 
 ```bash
-# 添加仓库
+# Add the repository
 helm repo add open-webui https://open-webui.github.io/helm-charts
 helm repo update
 
-# 使用自定义 values 安装
+# Install with custom values
 helm install openwebui open-webui/open-webui -f values.yaml
 ```
 
 你的 `values.yaml` 应覆盖默认值，并指向共享基础设施。Chart 已为许多常见设置提供专用配置项——在可用时，应优先使用这些配置项，而不是直接传裸环境变量：
 
-``` yaml
+```yaml
 # Example values.yaml overrides (refer to chart documentation for full schema)
 replicaCount: 3
 
@@ -140,14 +140,7 @@ extraEnvVars:
 ## 更新流程 {#update-procedure}
 
 :::danger 关键更新流程
-在多副本场景下，每次更新时你**必须**遵循以下流程：
-
-1. 先将部署缩容到 **1 个副本**
-2. 应用新镜像版本（单副本上设置 `ENABLE_DB_MIGRATIONS=true`）
-3. 等待 Pod **完全就绪**（数据库迁移完成）
-4. 再扩容回目标副本数（并设置 `ENABLE_DB_MIGRATIONS=false`）
-
-跳过该流程会带来并发迁移导致数据库损坏的风险。
+绝不能让多个副本同时执行迁移，也绝不能让新旧版本同时访问同一个数据库。停止所有副本，用新版本启动一个副本并设置 `ENABLE_DB_MIGRATIONS=true`，等待其就绪，然后在关闭迁移的情况下重新扩容。Helm 回滚不会撤销迁移。完整的操作步骤和命令见[更新与恢复](/deployment/kubernetes#updates-and-recovery)。
 :::
 
 ## 关键注意事项 {#key-considerations}
@@ -157,10 +150,10 @@ extraEnvVars:
 | **存储** | 上传文件应使用 **ReadWriteMany (RWX)** 共享文件系统（EFS、CephFS、NFS）或对象存储（S3、GCS、Azure Blob）。`ReadWriteOnce` 卷无法支持多 Pod。 |
 | **密钥** | 凭证应存储在 Kubernetes Secrets 中，并通过 `secretKeyRef` 引用。对于 GitOps 工作流，可集成 External Secrets、Sealed Secrets 等外部密钥方案。 |
 | **数据库** | 生产环境建议使用托管 PostgreSQL 服务（RDS、Cloud SQL、Azure DB）。集群内 PostgreSQL Operator（CloudNativePG、Zalando）虽可行，但会增加运维负担。 |
-| **Redis** | 对于大多数部署，单个 Redis 实例配合 `timeout 1800` 和 `maxclients 10000` 已足够。只有当 Redis 本身也必须高可用时，才需要 Sentinel 或 Cluster。 |
+| **Redis** | 对于大多数部署，单个 Redis 实例配合 `timeout 1800` 和 `maxclients 10000` 已足够。只有当 Redis 本身也必须高可用时，才需要 Redis Sentinel 或 Cluster。 |
 | **网络** | 尽量让所有服务处于同一可用区。数据库延迟目标应低于 2 ms。并审查网络策略，确保 Pod 能访问 PostgreSQL、Redis 和存储后端。 |
 
-完整 Helm 配置指南请参阅 [快速入门指南](/getting-started/quick-start)。多副本问题排查见 [多副本故障排查](/troubleshooting/multi-replica)。
+完整 Helm 配置指南请参阅 [Kubernetes 部署](/deployment/kubernetes)。多副本问题排查见 [多副本故障排查](/troubleshooting/multi-replica)。
 
 ---
 

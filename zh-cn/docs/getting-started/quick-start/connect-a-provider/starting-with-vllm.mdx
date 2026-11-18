@@ -48,7 +48,7 @@ http://localhost:8000/v1
 如果你的 vLLM 服务器响应较慢（尤其在模型加载时），可以调整超时：
 
 ```bash
-# 针对较慢的模型初始化提高超时（默认 10 秒）
+# Increase timeout for slower model initialization (default is 10 seconds)
 AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 ```
 

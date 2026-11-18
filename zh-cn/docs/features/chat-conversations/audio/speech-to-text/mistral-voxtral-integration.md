@@ -52,7 +52,7 @@ services:
       - AUDIO_STT_ENGINE=mistral
       - AUDIO_STT_MISTRAL_API_KEY=your-mistral-api-key
       - AUDIO_STT_MODEL=voxtral-mini-2602
-    # ... 其他配置
+    # ... other configuration
 ```
 
 ### 全部 Mistral STT 环境变量 {#all-mistral-stt-environment-variables}
@@ -124,7 +124,7 @@ Voxtral 接受常见音频格式。系统默认允许 `audio/*` 和 `video/webm`
 | --------- | ----------------- | ---------------- | --------------- |
 | **成本** | 按分钟计费 | 按分钟计费 | 免费 |
 | **隐私** | 音频发送到 Mistral | 音频发送到 OpenAI | 音频保留本地 |
-| **模型选项** | voxtral-mini-2602 | gpt-transcribe、whisper-1 | tiny → large |
+| **模型选项** | `voxtral-mini-2602` | `gpt-transcribe`、`whisper-1` | tiny → large |
 | **需要 GPU** | 否 | 否 | 推荐 |
 
 ## 成本说明 {#cost-considerations}

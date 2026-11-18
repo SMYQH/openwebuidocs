@@ -65,7 +65,7 @@ PLUGIN_ID = re.sub(r"^(?:function|tool)_|_[0-9a-f]{32}$", "", __name__)
 - [保留参数](./reserved-args.mdx) 文档中列出的保留双下划线参数：`__user__`、`__metadata__`、`__model__`、`__request__`、`__event_emitter__`、`__event_call__`、`__features__`、`__body__`、`__id__`、`__oauth_token__`，以及仅 stream 可用和按钩子附加的参数。
 - [事件](./events.mdx) 中文档化的所有事件：可以向前端发送任意事件，也可以通过 `event_call` 向用户征求响应。
 - 通过 `requirements:` 前言（frontmatter）声明的任何 pip 包，会在加载时安装（受 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS`](/reference/env-configuration#enable_pip_install_frontmatter_requirements) 开关控制）。
-- Python 标准库，以及容器中 pip 安装的所有内容。
+- Python 标准库，以及容器中 pip 安装的所有内容。只有你在 `requirements:` 中声明的包才值得依赖。Open WebUI 碰巧安装的包在各个版本之间时有时无，因此一个没有声明就 import 某个包的插件，可能在更新后无法加载。
 
 这里没有沙箱、没有白名单、没有能力（capability）系统。执行模型就是 **"这就是 Python，你在服务器进程里"**。
 
@@ -80,9 +80,9 @@ PLUGIN_ID = re.sub(r"^(?:function|tool)_|_[0-9a-f]{32}$", "", __name__)
 ```python
 class Filter:
     async def inlet(self, body: dict, __model__: dict = None) -> dict:
-        # 把按请求的 model 切换到那条会在原生工具调用循环中
-        # 将 reasoning_content 作为 assistant 消息顶层字段
-        # 发出的代码路径上。
+        # Flip the per-request model to the code path that emits
+        # reasoning_content as a top-level field on assistant messages
+        # during the native tool-call loop.
         if __model__ and __model__.get("provider") not in ("ollama", "llama.cpp"):
             __model__["provider"] = "llama.cpp"
         return body
@@ -100,7 +100,7 @@ import open_webui.utils.middleware as _mw
 _original = _mw.process_chat_payload
 
 async def _patched(request, form_data, user, metadata, model):
-    # …… 你的包装逻辑，然后委托给原函数 ……
+    # ...your wrapping logic, then delegate...
     return await _original(request, form_data, user, metadata, model)
 
 _mw.process_chat_payload = _patched
@@ -162,7 +162,7 @@ import asyncio
 
 async def _loop(app):
     while True:
-        # …… 周期性工作 ……
+        # ...periodic work...
         await asyncio.sleep(60)
 
 def _start_once(app):
@@ -179,7 +179,7 @@ def _start_once(app):
 ```python
 async def inlet(self, body, __request__):
     cache = __request__.app.state.__dict__.setdefault("my_cache", {})
-    # …… 读写缓存 ……
+    # ...read/write cache...
     return body
 ```
 
@@ -210,7 +210,7 @@ Pipe 是最强大的入口点，原因恰恰在于中间件会让出控制权。
 
 ### 10. 将 Action 用作任意一次性操作 {#10-actions-as-arbitrary-one-shot-operations}
 
-`Action` 会在 assistant 消息上渲染一个按钮。handler 在服务器端运行，拥有与 Filters 和 Tools 相同的双下划线参数表，运行上下文是消息所属的聊天。可用于"批准这条"、"用……重新跑一遍"、"发送到外部系统"，或任何应当允许用户从特定消息触发的一次性操作。
+`Action` 会在 assistant 消息上渲染一个按钮。handler 在服务器端运行，运行上下文是消息所属的聊天，而它的双下划线参数表比 Filters 和 Tools 更窄：`__model__`、`__id__`、`__event_emitter__`、`__event_call__`、`__request__` 和 `__user__`，别无其他。可用于"批准这条"、"用……重新跑一遍"、"发送到外部系统"，或任何应当允许用户从特定消息触发的一次性操作。
 
 ---
 
@@ -229,7 +229,7 @@ Open WebUI 自己使用的共享状态原语是 **Redis**。在配置正确的�
 from open_webui.utils.redis import get_redis_connection
 from open_webui.env import REDIS_URL, REDIS_KEY_PREFIX
 
-# decode_responses=True 让取值返回 str 而不是 bytes。
+# decode_responses=True so values come back as str, not bytes.
 _redis = get_redis_connection(REDIS_URL, decode_responses=True) if REDIS_URL else None
 
 
@@ -240,8 +240,8 @@ def run_once(key: str, ttl: int = 300) -> bool:
     with expiry, so exactly one worker gets the key and the rest get nothing.
     """
     if _redis is None:
-        # 没有 Redis 意味着是单进程部署：没有其它副本需要协调，
-        # 所以这个调用者就是唯一的那个。
+        # No Redis means a single-process deployment: there is no other
+        # replica to coordinate with, so this caller is the only one.
         return True
     return bool(_redis.set(f"{REDIS_KEY_PREFIX}:plugin:{key}", "1", nx=True, ex=ttl))
 ```
@@ -265,6 +265,7 @@ if run_once(f"signup-log:{event['actor']['id']}"):
 - **Stream 钩子使用的是陈旧的缓存。** 对 `stream` 方法的编辑只有在另一个钩子（或一次进程重启）刷新了模块后才会生效。如果你修改了 stream filter 但变更似乎没生效，请触发一次 `inlet` / `outlet` 重新加载或重启进程。
 - **跨插件干扰不会被检测。** 两个插件 patch 同一个函数、注册同一条路由，或写入同一个 `app.state` key，会发生冲突。加载顺序不是确定性的。请优先采用加法式（additive）的模式（你自己的命名空间、会委托的包装器），而不是破坏性的模式。
 - **禁用不会卸载。** 模块会一直留在 `sys.modules` 中，所有模块级别的副作用也都会一直保留。要完全回滚请重启进程。
+- **没有并发控制，也没有 exactly-once 语义。** Open WebUI 不会串行化你的处理器，也不会在多个副本之间对工作去重。异步钩子在同一进程内会交错执行；在多副本部署中，同一个处理器可能在每个 worker 上同时运行——本应全局只触发一次的副作用，除非你自己做协调，否则会*每个副本触发一次*。参见[并发与多实例](#concurrency-and-multiple-instances)。
 - **`requirements:` 会在每个副本加载时运行 `pip install`。** 在多副本部署中，请将 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements) 关闭，并在镜像中预装依赖；运行时的安装会在多个 worker 之间产生竞态并导致崩溃。参见 [Scaling → Function/Tool Dependency Installation Crashes](/troubleshooting/multi-replica#9-functiontool-dependency-installation-crashes)。
 - **内部 API 并不是稳定的公共接口。** `open_webui.utils.*`、内部 model 类、middleware 辅助函数，以及文档化的双下划线参数和事件类型之外的所有内容，在不同版本之间都可能被重命名、移位或更改签名。如果你的 monkey-patch 在升级后挂了，修复责任在你。
 

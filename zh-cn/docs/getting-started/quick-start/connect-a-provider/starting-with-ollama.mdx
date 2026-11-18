@@ -51,7 +51,7 @@ Open WebUI 的设计是**面向协议（Protocol-Oriented）**的。当我们提
 使用多个 Ollama 实例时（尤其跨网络时），如果某个端点不可达，就可能带来连接延迟。你可以通过以下方式调整超时：
 
 ```bash
-# 降低超时（默认 10 秒）以加快故障切换
+# Lower the timeout (default is 10 seconds) for faster failover
 AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=3
 ```
 

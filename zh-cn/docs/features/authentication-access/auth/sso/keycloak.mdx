@@ -21,7 +21,7 @@ Keycloak 默认也使用 `8080` 端口，导致冲突。请将 Keycloak 端口�
 ```bash
 bin/kc.sh start-dev --http-port=9090
 ```
-{/* TODO: 插入 Keycloak 端口更改控制台输出图片 */}
+{/* TODO: Insert image of Keycloak port change console output */}
 
 ## 2. 创建 Keycloak Realm {#2-create-a-keycloak-realm}
 
@@ -61,7 +61,7 @@ bin/kc.sh start-dev --http-port=9090
 5. 在 **Client authentication** 部分，点击 **Reveal secret** 并复制密钥。
 6. 将此密钥粘贴到 `.env` 文件中的 `OAUTH_CLIENT_SECRET` 变量。
 
-{/* TODO: 插入高级选项卡客户端认证器设置图片 */}
+{/* TODO: Insert image of Advanced tab Client Authenticator settings */}
 
 ## 5. 创建测试用户 {#5-create-a-test-user}
 
@@ -76,20 +76,21 @@ bin/kc.sh start-dev --http-port=9090
 在 `.env` 文件中添加或修改以下变量。
 
 ```env
-# 启用 OAuth2/OIDC 登录
+
+# Enable OAuth2/OIDC Login
 ENABLE_OAUTH_SIGNUP=true
 
-# Keycloak 客户端信息
+# Keycloak Client Information
 OAUTH_CLIENT_ID=open-webui
 OAUTH_CLIENT_SECRET=<YOUR_COPIED_SECRET>
 
 # OIDC Discovery Document URL
 OPENID_PROVIDER_URL=http://localhost:9090/realms/openwebui/.well-known/openid-configuration
 
-# （可选）SSO 按钮标签
+# (Optional) SSO Button Label
 OAUTH_PROVIDER_NAME=Keycloak
 
-# （可选）OAuth 回调 URL
+# (Optional) OAuth Callback URL
 OPENID_REDIRECT_URI=http://localhost:8080/oauth/oidc/callback
 ```
 **修改 `.env` 文件后，重启 Open WebUI 服务器。**
@@ -113,7 +114,7 @@ OPENID_REDIRECT_URI=http://localhost:8080/oauth/oidc/callback
 2. 点击该按钮，应该会重定向到 Keycloak 登录页面。
 3. 使用 `testuser` / `Test1234!` 登录，应该成功重定向回 Open WebUI。
 
-{/* TODO: 插入实际登录界面图片 */}
+{/* TODO: Insert image of the actual login screen */}
 
 ## 9. 配置 Keycloak 用户组映射 {#9-configure-keycloak-group-mapping}
 
@@ -147,12 +148,13 @@ OPENID_REDIRECT_URI=http://localhost:8080/oauth/oidc/callback
 在 `.env` 文件中添加或修改以下变量：
 
 ```env
-# 启用用户组同步
+
+# Enable group synchronization
 ENABLE_OAUTH_GROUP_MANAGEMENT=true
 
-# （可选）启用即时用户组创建
+# (Optional) Enable Just-In-Time group creation
 ENABLE_OAUTH_GROUP_CREATION=true
 
-# token 中用户组的 claim 键
+# The claim key for groups in the token
 OAUTH_GROUP_CLAIM=groups
 ```

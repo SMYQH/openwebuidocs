@@ -232,7 +232,7 @@ networks:
 
 **语音文件存在哪里？配置文件呢？**
 
-定义可用语音及其属性的配置文件存放在 config volume 中。默认语音配置定义在 `voice_to_speaker.default.yaml`。
+定义可用语音及其属性的配置文件存放在 config volume 中。默认语音配置定义在 voice_to_speaker.default.yaml。
 
 ## 其他资源 {#additional-resources}
 

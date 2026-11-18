@@ -62,7 +62,7 @@ title: "使用 Docker 部署 Kokoro-FastAPI"
 docker run --gpus all -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu
 ```
 
-或者创建 `docker-compose.yml` 后用 docker compose 启动。例如：
+或者创建 `docker-compose.yml` 文件并运行 `docker compose up`。例如：
 
 ```yaml
 name: kokoro
@@ -177,14 +177,14 @@ docker compose up --build
 如果 `host.docker.internal` 不可用，可创建一个共享的 Docker 网络：
 
 ```bash
-# 创建 Docker 网络
+# Create a Docker network
 docker network create local-llm
 
-# 将两个容器接入该网络
+# Connect both containers to the network
 docker network connect local-llm open-webui
 docker network connect local-llm kokoro-fastapi
 
-# 重启两个容器
+# Restart both containers
 docker restart open-webui kokoro-fastapi
 ```
 

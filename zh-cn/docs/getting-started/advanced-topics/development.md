@@ -98,11 +98,11 @@ cd backend
 创建并激活虚拟环境（Conda 或 venv）：
 
 ```bash
-# 方案 A：Conda
+# Option A: Conda
 conda create --name open-webui python=3.12
 conda activate open-webui
 
-# 方案 B：venv
+# Option B: venv
 python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 ```
