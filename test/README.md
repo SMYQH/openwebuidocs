@@ -5,7 +5,7 @@ Python 3.10 or later. Run commands from the repository root:
 ```sh
 python -m pip install -r test/requirements.txt
 python -m unittest discover -s test -p "test_*.py"
-python test/translation_check.py --strict --report test/.reports/audit.json
+python test/translation_check.py --strict --summary-only --report test/.reports/audit.json
 ```
 
 All verification and translation-update Python code lives under `test/`. Reports
@@ -95,7 +95,7 @@ Do not blanket-exempt a directory or hide a stale upstream parse error.
 ## Semantic quality review without configuration
 
 Static checks cannot prove accuracy, fluency, correct negation, or that a Chinese
-body belongs under the right heading. Export full pairs for the current AI agent:
+body belongs under the right heading. Export full pairs of installed documents:
 
 ```sh
 python test/translation_check.py --files alternatives --review-bundle test/.reports/review.json
@@ -117,9 +117,25 @@ matching source/target hashes. Incomplete, stale, or failed reviews cannot pass.
 This validates review coverage and provenance, not the reviewer's truthfulness.
 Without submitted results, reports always say semantic review is required.
 
-## Autonomous AI translation (default, no key)
+On later runs, add `--reuse-review test/.reports/review-results.json` to the
+`--review-bundle` command. Only completed, finding-free reviews with the same
+source, target, and verifier configuration hashes carry forward. The export
+still audits all selected files; only files needing review include full text.
+Keep carried-forward entries in `result_format`. Review changed pairs in full,
+not just the changed lines.
+
+## Translation workflow
+
+1. Select explicit paths relative to `en-us/docs/`. Use `--plan` for a local
+   estimate before sending text to a provider.
+2. Generate a task with one provider. Validate and export a candidate report.
+3. Review the complete source and candidate, and diff against the current
+   target. Resolve meaning changes, missing content, and local-only changes.
+4. Apply with the completed review, then run a strict audit and the site build.
 
 Only prepare/apply translations when the user requests translation work.
+
+### Autonomous AI (default, no key)
 
 ```sh
 python test/translation_update.py --files path/to/page.mdx --bundle test/.reports/task.json
@@ -133,25 +149,7 @@ Protected terms, code, URLs, numbers, and Markdown symbols become ordered `⟦Pn
 placeholders. Keep each placeholder exactly once, in order. No model endpoint,
 model key, or additional provider configuration is needed.
 
-```sh
-python test/translation_update.py --apply test/.reports/task.json
-python test/translation_update.py --apply test/.reports/task.json --write
-```
-
-The first command validates only. The second writes only after validating the
-entire batch. Changes to source, target, configuration, segment identity, or
-protected content reject the task. Writes preserve target newline style/BOM,
-use atomic replacement per file, and roll back earlier writes on a later I/O
-failure. This is not a crash-proof multi-file filesystem transaction.
-
-Updates reconstruct selected documents from upstream prose segments. They do
-not merge arbitrary Chinese-only blocks or preserve unrelated local edits.
-Use small explicit selections and review the resulting diff. Malformed upstream
-syntax stops automated translation; fix/review syntax before generating a task.
-Upstream-derived explicit heading IDs are added automatically, including dedup
-suffixes and escaping for indented MDX headings.
-
-## DeepL translation (optional key only)
+### DeepL (optional key only)
 
 Copy `.env.example` to `.env` and set:
 
@@ -159,23 +157,67 @@ Copy `.env.example` to `.env` and set:
 DEEPL_AUTH_KEY=your-key
 ```
 
-No other setting is required. An environment variable of the same name takes
-precedence. The key suffix selects Free or Pro automatically. `.env` is ignored
-by Git and never executed as shell code. Autonomous verification/translation
-does not load the key.
+Replace the placeholder with a real key. An environment variable of the same
+name takes precedence. The key suffix selects Free or Pro automatically.
+`.env` is ignored by Git and never executed as shell code. Autonomous
+verification/translation does not load the key.
 
 ```sh
-python test/translation_update.py --mode deepl --files path/to/page.mdx --bundle test/.reports/deepl.json
-python test/translation_update.py --apply test/.reports/deepl.json --write
+python test/translation_update.py --mode deepl --plan --files path/to/page.mdx
+python test/translation_update.py --mode deepl --files path/to/page.mdx --bundle test/.reports/task.json --report test/.reports/candidate.json
 ```
 
-DeepL mode sends prose only. XML `keep` tags protect placeholders. Requests batch
-at most 50 texts and stay below 120,000 encoded bytes, with a 45-second timeout
-and at most three attempts for transient HTTP failures. Redirects are rejected;
-errors never print keys or API response bodies. Returned XML, placeholder order,
-and result counts must validate. No live API requests run in behavior tests.
+The plan reports distinct unrequested texts and their prose character count,
+not billed characters. DeepL receives masked prose, not code or whole documents.
+Exact duplicate segments on the same page share a request. For a new revision,
+add `--reuse test/.reports/earlier-task.json` to both commands. Only exact
+same-page, same-kind segments with a single validated translation and matching
+verifier configuration are reused. This is local reuse, not a paid DeepL
+translation memory. Reuse does not replace full candidate review.
 
-Both modes share the same apply checks. Follow updates with a strict audit,
-semantic review, diff review, and `npm --prefix zh-cn run build`. Python's
-CommonMark parser and conservative MDX scanner do not replace Docusaurus's MDX
-compiler or its broken-link/anchor checks. Do not weaken build validation.
+```sh
+python test/translation_update.py --mode deepl --resume --plan --bundle test/.reports/task.json
+python test/translation_update.py --mode deepl --resume --bundle test/.reports/task.json --report test/.reports/candidate.json
+```
+
+Responses are saved atomically before decoding. Resume uses cached responses
+before making requests and stops if the input snapshots no longer match. If
+DeepL returned invalid output, `--resume --retry-rejected` retries only the
+rejected segments: legacy XML upgrades to v2; rejected v2 replies retry prose
+fragments with placeholders anchored locally. Review those fragments carefully
+for fluency and meaning. A saved rejected fragment retry is not sent again.
+Inspect unresolved segments instead of looping or switching providers.
+
+DeepL groups adjacent placeholders in XML v2. It may move a term past an intact
+inline code span, but may not reorder code spans or cross other protected
+markers. Missing or duplicated tokens, invalid XML, and broken rendered Markdown
+reject the output. Requests use at most 50 texts, at most 120,000 encoded bytes,
+and a 45-second timeout. Redirects are rejected; transient HTTP retries are
+bounded. No live API requests run in behavior tests.
+
+### Shared review and apply
+
+```sh
+python test/translation_update.py --apply test/.reports/task.json --report test/.reports/candidate.json
+```
+
+The report includes full source, current target, candidate, and file/line
+findings. Review every pair in full, including frontmatter, headings, lists,
+tables, and accessible text. Copy `result_format` into a separate completed
+review file as described above. It binds source, candidate bytes, and verifier
+configuration. Review warnings; fix false positives in tooling when confirmed.
+Do not mark unresolved omissions, meaning changes, or lost local content passed.
+
+```sh
+python test/translation_update.py --apply test/.reports/task.json --review-results test/.reports/candidate-review.json --write
+python test/translation_check.py --strict --files path/to/page.mdx --review-results test/.reports/candidate-review.json --report test/.reports/reviewed-audit.json
+npm --prefix zh-cn run build
+```
+
+The tool revalidates the entire batch and completed review before writing.
+It preserves target newline style/BOM, replaces files atomically, and attempts
+to roll back earlier files if a later write fails. Updates reconstruct selected
+documents, not a merge with Chinese-only text. If local edits must remain, stage
+a reviewed manual merge separately and audit that result. Malformed upstream
+syntax stops automated translation. Docusaurus remains the final link, anchor,
+route, and MDX build gate.

@@ -6,6 +6,7 @@ content asserted verbatim. No dictionary or bilingual reference answers exist.
 
 from __future__ import annotations
 
+from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
 import io
 import json
@@ -13,13 +14,16 @@ from pathlib import Path
 import re
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import urllib.error
+import xml.etree.ElementTree as ET
 
+from translation_tools.artifacts import save_bundle
 from translation_tools.document import Document, PLACEHOLDER, digest, mask, prose, unmask
-from translation_tools.update import DeepL, apply_bundle, load_deepl_key, prepare
-from translation_tools.verify import compare, load_config, review_bundle, validate_review, verify
+from translation_tools.update import DeepL, apply_bundle, load_deepl_key, prepare, reuse_completed, translation_plan, validate_task
+from translation_tools.verify import REVIEW_DIMENSIONS, compare, load_config, review_bundle, validate_review, verify
 from translation_check import main as check_main
+from translation_update import main as update_main
 
 
 def generated_cjk(length: int) -> str:
@@ -208,6 +212,16 @@ class ExtractionTests(Fixture):
         self.assertIn("literal-identifier", self.codes(source, target.replace("/photos", "/changed")))
         spans = mask("Read /photos/.", self.terms)[1]
         self.assertIn("/photos/.", [span.value for span in spans])
+
+    def test_prose_slashes_do_not_hide_terms_or_adjacent_paths(self):
+        cjk = generated_cjk(3)
+        source = "Source API and /archive/config with API_KEY and --source.\n"
+        target = f"{cjk}/API/{cjk} /archive/config{cjk}API_KEY{cjk}--source{cjk}.\n"
+        spans = mask(target, self.terms)[1]
+        self.assertEqual([s.value for s in spans if s.kind == "identifier"], ["/archive/config", "API_KEY", "--source"])
+        self.assertIn(("term", "API"), [(s.kind, s.value) for s in spans])
+        self.assertFalse({"literal-identifier", "literal-term"} & self.codes(source, target))
+        self.assertIn("literal-identifier", self.codes(source, target.replace("/archive/config", "")))
 
     def test_html_code_is_never_prose(self):
         source = '<code>source_command --literal</code>\n\n<pre>Literal source code\n</pre>\n\nVisible source prose.\n'
@@ -779,6 +793,15 @@ class DeepLTests(Fixture):
         with patch.dict("os.environ", {}, clear=True), self.assertRaises(ValueError):
             load_deepl_key(self.root / "absent")
 
+    def test_example_key_is_rejected_before_request(self):
+        path = self.put(self.root, ".env", "DEEPL_AUTH_KEY=your-key\n")
+        opener = Mock()
+        with (patch.dict("os.environ", {}, clear=True),
+              patch("translation_tools.update.load_deepl_key", side_effect=lambda: load_deepl_key(path)),
+              self.assertRaisesRegex(ValueError, "Set DEEPL_AUTH_KEY")):
+            DeepL(opener=opener).request(["<text>Source</text>"])
+        opener.open.assert_not_called()
+
     def test_xml_escape_and_protected_placeholder_roundtrip(self):
         source = "Source & prose < text ⟦P0⟧ and ⟦P1⟧."
         self.assertEqual(DeepL.xml_decode(DeepL.xml_encode(source), source), source)
@@ -797,11 +820,13 @@ class DeepLTests(Fixture):
             payload = json.loads(request.data)
             self.assertEqual(payload["target_lang"], "ZH-HANS")
             self.assertEqual(payload["ignore_tags"], ["keep"])
+            self.assertEqual(payload["tag_handling_version"], "v2")
             self.assertLessEqual(len(payload["text"]), 50)
             self.assertLess(len(request.data), 128 * 1024)
             return Response({"translations": [{"text": t} for t in payload["text"]]})
         opener.open.side_effect = respond
-        bundle = {"files": [{"segments": [{"source": "source ⟦P0⟧", "translation": None} for _ in range(121)]}]}
+        bundle = {"files": [{"path": "a.md", "segments": [{"id": i, "source": "source ⟦P0⟧", "translation": None}
+                                                          for i in range(121)]}]}
         DeepL("synthetic:fx", opener=opener).fill(bundle)
         self.assertEqual(opener.open.call_count, 3)
         self.assertTrue(all(s["translation"] is not None for s in bundle["files"][0]["segments"]))
@@ -831,6 +856,292 @@ class DeepLTests(Fixture):
             opener.open.return_value = Response(payload)
             with self.assertRaises(ValueError):
                 DeepL("synthetic", opener=opener).request(["<text>source</text>"])
+
+    def test_wrapper_merge_keeps_prose_and_tokens_but_rejects_missing_and_duplicate_tokens(self):
+        original = "Source ⟦P0⟧⟦P1⟧ and ⟦P2⟧."
+        response = f'<text>{generated_cjk(3)}<keep id="0">⟦P0⟧⟦P1⟧{generated_cjk(2)}⟦P2⟧</keep>.</text>'
+        self.assertEqual(PLACEHOLDER.findall(DeepL.xml_decode(response, original)), PLACEHOLDER.findall(original))
+        for bad in (response.replace("⟦P2⟧", ""), response.replace("⟦P2⟧", "⟦P2⟧⟦P2⟧"),
+                    "<text>⟦P0⟧⟦P1⟧⟦P2⟧.</text>", "<text><other /></text>"):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                DeepL.xml_decode(bad, original)
+
+    def test_term_motion_never_moves_markup_or_reorders_inline_code(self):
+        raw = "- **Source text** with Open WebUI and `source_key` plus `other_key`."
+        source, spans = mask(raw, self.terms)
+        by_value = {span.value: token for span, token in zip(spans, PLACEHOLDER.findall(source))}
+        translated = generated_text(source)
+
+        def swap(left, right):
+            return translated.replace(by_value[left], "\0").replace(by_value[right], by_value[left]).replace("\0", by_value[right])
+
+        reordered = swap("Open WebUI", "`source_key`")
+        with self.assertRaises(ValueError):
+            unmask(reordered, spans)
+        self.assertIn("Open WebUI", unmask(reordered, spans, move_terms=True))
+        for invalid in (swap("`source_key`", "`other_key`"), swap("Open WebUI", "- ")):
+            with self.assertRaises(ValueError):
+                unmask(invalid, spans, move_terms=True)
+
+    def test_linkage_and_emphasis_survive_provider_spacing_and_adjacent_cjk(self):
+        raw = "1. **Source label:** Use --source with port 8188 at [source](https://example.test)."
+        doc = Document(raw, ".md", self.terms)
+        source, _ = mask(raw, self.terms)
+        value = generated_text(source).replace("⟦P0⟧", "⟦P0⟧ ").replace("⟦P1⟧", "⟦P1⟧ ")
+        value = value.replace("⟦P3⟧", "⟦P3⟧ ").replace("⟦P4⟧", "⟦P4⟧ ").replace("⟦P6⟧⟦P7⟧", "⟦P6⟧ ⟦P7⟧")
+        checked = DeepL.checked_text(value, source, doc)
+        rendered = doc.render_segment(doc.segments[0], checked, move_terms=True)
+        self.assertTrue(rendered.startswith("1. **"))
+        self.assertIn("](https://example.test)", rendered)
+        self.assertIn("--source", rendered)
+        self.assertIn("8188", rendered)
+
+
+class WorkflowTests(Fixture):
+    def invoke(self, main, args, status=0):
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            result = main(["--source", str(self.source), "--target", str(self.target), *map(str, args)])
+        self.assertEqual(result, status, stdout.getvalue() + stderr.getvalue())
+        return stdout.getvalue(), stderr.getvalue()
+
+    def mark_reviewed(self, result):
+        # Simulate review status, not expected Chinese phrasing.
+        for entry in result["files"]:
+            entry.update(reviewed_all_sections=True, **dict.fromkeys(REVIEW_DIMENSIONS, "pass"))
+        return result
+
+    def mock_deepl(self):
+        opener = Mock()
+        def respond(request, timeout):
+            payload = json.loads(request.data)
+            if payload.get("tag_handling") != "xml":
+                values = [generated_text(t) for t in payload["text"]]
+            else:
+                values = []
+                for text in payload["text"]:
+                    root = ET.fromstring(text)
+                    root.text = generated_text(root.text or "")
+                    for keep in root:
+                        keep.tail = generated_text(keep.tail or "")
+                    values.append(ET.tostring(root, encoding="unicode"))
+            return Response({"translations": [{"text": value} for value in values]})
+        opener.open.side_effect = respond
+        return opener
+
+    def test_plan_translate_review_apply_and_reuse_after_source_edit(self):
+        paragraph = "Use Open WebUI with `literal_code` in the current setup."
+        source = "# Source heading\n\n" + (paragraph + "\n\n") * 2
+        path = self.put(self.source, "a.md", source)
+        bundle, report = self.root / "task.json", self.root / "report.json"
+        mode = ["--mode", "deepl", "--files", "a.md"]
+        with patch("translation_tools.update.load_deepl_key", side_effect=AssertionError("No key in plan")):
+            counts = json.loads(self.invoke(update_main, mode + ["--plan", "--bundle", bundle])[0])
+        self.assertFalse(bundle.exists())
+        self.assertEqual((counts["pending_segments"], counts["unrequested_texts"], counts["deduplicated_segments"]), (3, 2, 1))
+        opener = self.mock_deepl()
+        with patch("translation_tools.update.load_deepl_key", return_value="synthetic:fx"), patch("urllib.request.build_opener", return_value=opener):
+            self.invoke(update_main, mode + ["--bundle", bundle, "--report", report])
+        self.assertEqual(len(json.loads(opener.open.call_args.args[0].data)["text"]), 2)
+        candidate = json.loads(report.read_bytes())
+        self.assertEqual(candidate["validation"], "passed")
+        self.assertEqual(candidate["semantic_review"], "required")
+        self.assertFalse((self.target / "a.md").exists())
+        reviews = self.root / "reviews.json"
+        save_bundle(reviews, self.mark_reviewed(candidate["result_format"]))
+        self.invoke(update_main, ["--apply", bundle, "--review-results", reviews, "--write"])
+        old_target = (self.target / "a.md").read_bytes()
+        self.assertEqual(digest(old_target), candidate["files"][0]["candidate_sha256"])
+        self.invoke(check_main, ["--strict", "--files", "a.md", "--review-results", reviews])
+        path.write_bytes(source.replace("literal_code", "different_code", 1).encode("utf-8"))
+        with patch("translation_tools.update.load_deepl_key", side_effect=AssertionError("No key in plan")):
+            counts = json.loads(self.invoke(update_main, mode + ["--plan", "--reuse", bundle])[0])
+        self.assertEqual((counts["reused_segments"], counts["unrequested_texts"]), (2, 1))
+        opener.reset_mock()
+        with patch("translation_tools.update.load_deepl_key", return_value="synthetic:fx"), patch("urllib.request.build_opener", return_value=opener):
+            self.invoke(update_main, mode + ["--reuse", bundle, "--bundle", self.root / "next.json"])
+        self.assertEqual(len(json.loads(opener.open.call_args.args[0].data)["text"]), 1)
+        self.assertEqual((self.target / "a.md").read_bytes(), old_target)
+
+    def test_reuse_does_not_pick_between_conflicting_saved_translations(self):
+        self.put(self.source, "a.md", "Source body paragraph.\n\nSource body paragraph.\n")
+        previous = self.fill(prepare(self.source, self.target, self.config, []))
+        previous["provider"] = "deepl"
+        previous["files"][0]["segments"][1]["translation"] = generated_cjk(20)
+        fresh = prepare(self.source, self.target, self.config, [])
+        docs = validate_task(fresh, self.source, self.target, self.config)
+        reuse_completed(fresh, previous, docs, self.config)
+        self.assertEqual(translation_plan(fresh, docs)["reused_segments"], 0)
+
+    def test_interrupted_batch_replays_paid_response_without_key_or_request(self):
+        self.put(self.source, "a.md", "Source body paragraph.\n")
+        task = prepare(self.source, self.target, self.config, [])
+        task["provider"] = "deepl"
+        docs = validate_task(task, self.source, self.target, self.config)
+        bundle = self.root / "task.json"
+
+        def interrupted(value):
+            save_bundle(bundle, value)
+            if "deepl_response" in value["files"][0]["segments"][0]:
+                raise InterruptedError("Interrupted after response save")
+
+        with self.assertRaises(InterruptedError):
+            DeepL("synthetic", opener=self.mock_deepl()).fill(task, checkpoint=interrupted, documents=docs)
+        pending = json.loads(bundle.read_bytes())["files"][0]["segments"][0]
+        self.assertIsNone(pending["translation"])
+        self.assertIn("deepl_response", pending)
+        with patch("translation_tools.update.load_deepl_key", side_effect=AssertionError("No new requests")):
+            self.invoke(update_main, ["--mode", "deepl", "--resume", "--bundle", bundle])
+        self.assertIsNotNone(json.loads(bundle.read_bytes())["files"][0]["segments"][0]["translation"])
+        self.assertFalse((self.target / "a.md").exists())
+
+    def test_stale_or_tampered_resume_is_rejected_before_network(self):
+        path = self.put(self.source, "a.md", "Source body paragraph.\n")
+        task = prepare(self.source, self.target, self.config, [])
+        task["provider"] = "deepl"
+        bundle = self.root / "task.json"
+        args = ["--mode", "deepl", "--resume", "--bundle", bundle]
+        broken = deepcopy(task)
+        broken["files"][0]["segments"][0]["source"] += " Changed."
+        save_bundle(bundle, broken)
+        with patch("translation_tools.update.load_deepl_key", side_effect=AssertionError("Stale task must not call DeepL")):
+            self.assertIn("segment 0 identity changed", self.invoke(update_main, args, 2)[1])
+            save_bundle(bundle, task)
+            path.write_bytes(b"Source body changed.\n")
+            self.assertIn("source or target changed", self.invoke(update_main, args, 2)[1])
+
+    def test_rejected_retry_never_sends_untouched_or_already_retried_segments(self):
+        self.put(self.source, "a.md", "Source with `literal_code` here.\n\nUntouched source prose.\n")
+        task = prepare(self.source, self.target, self.config, [])
+        task["provider"] = "deepl"
+        a, b = task["files"][0]["segments"]
+        a.update(deepl_response="<text></text>", deepl_tag_version="v2")
+        bundle = self.root / "task.json"
+        save_bundle(bundle, task)
+        args = ["--mode", "deepl", "--resume", "--bundle", bundle]
+        with patch("translation_tools.update.load_deepl_key", side_effect=AssertionError("Explicit retry required")):
+            self.assertIn("a.md: segment 0", self.invoke(update_main, args, 2)[1])
+        opener = Mock()
+        opener.open.return_value = Response({"translations": [{"text": ""}, {"text": ""}]})
+        with patch("translation_tools.update.load_deepl_key", return_value="synthetic"), patch("urllib.request.build_opener", return_value=opener):
+            self.invoke(update_main, args + ["--retry-rejected"], 2)
+        payload = json.loads(opener.open.call_args.args[0].data)
+        self.assertNotIn("tag_handling", payload)
+        self.assertEqual(payload["text"], ["Source with", "here."])
+        self.assertNotIn(b["source"], str(payload))
+        a, b = json.loads(bundle.read_bytes())["files"][0]["segments"]
+        self.assertIn("deepl_retry", a)
+        self.assertNotIn("deepl_response", b)
+        with patch("translation_tools.update.load_deepl_key", side_effect=AssertionError("Retry already paid")):
+            self.invoke(update_main, args + ["--retry-rejected"], 2)
+
+    def test_artifact_collisions_preserve_bundle_docs_and_inputs(self):
+        source = self.put(self.source, "a.md", "Source body paragraph.\n")
+        bundle = self.root / "task.json"
+        save_bundle(bundle, self.fill(prepare(self.source, self.target, self.config, [])))
+        before = bundle.read_bytes()
+        for command, args in [
+            (update_main, ["--apply", bundle, "--report", bundle]),
+            (update_main, ["--mode", "deepl", "--files", "a.md", "--bundle", self.root / "new.json", "--report", self.root / "new.json"]),
+            (update_main, ["--apply", bundle, "--report", source]),
+            (check_main, ["--report", self.target / "report.json"]),
+            (check_main, ["--report", bundle, "--review-results", bundle]),
+            (check_main, ["--report", bundle, "--review-bundle", bundle]),
+        ]:
+            with self.subTest(command=command, args=args):
+                self.invoke(command, args, 2)
+        self.assertEqual(before, bundle.read_bytes())
+        self.assertEqual(source.read_bytes(), b"Source body paragraph.\n")
+        self.assertFalse(any(self.target.iterdir()))
+
+    def test_blocked_candidate_report_and_report_failure_leave_target_unchanged(self):
+        self.put(self.source, "a.md", "Source prose [linked](https://discord.gg/synthetic).\n")
+        bundle, report = self.root / "task.json", self.root / "report.json"
+        save_bundle(bundle, self.fill(prepare(self.source, self.target, self.config, [])))
+        args = ["--apply", bundle, "--report", report]
+        self.assertIn("a.md: non-compliant-link", self.invoke(update_main, args, 2)[1])
+        summary = json.loads(report.read_bytes())
+        self.assertEqual(summary["validation"], "blocked")
+        self.assertIn("non-compliant-link", {i["code"] for i in summary["files"][0]["issues"]})
+        with patch("translation_update.save_bundle", side_effect=OSError("Synthetic report write failure")):
+            errors = self.invoke(update_main, args, 2)[1]
+        self.assertIn("non-compliant-link", errors)
+        self.assertIn("Synthetic report write failure", errors)
+        self.assertFalse(any(self.target.iterdir()))
+
+    def test_apply_requires_review_of_exact_candidate_and_preserves_existing_target(self):
+        self.put(self.source, "a.md", "# Source heading\r\n\r\nSource body prose.\r\n")
+        target = self.put(self.target, "a.md", "\ufeffPrevious target.\r\n")
+        before = target.read_bytes()
+        bundle, review, report = (self.root / name for name in ("task.json", "review.json", "report.json"))
+        task = self.fill(prepare(self.source, self.target, self.config, []))
+        save_bundle(bundle, task)
+        self.invoke(update_main, ["--apply", bundle, "--report", report])
+        results = json.loads(report.read_bytes())["result_format"]
+        args = ["--apply", bundle, "--review-results", review, "--write"]
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            update_main(["--apply", str(bundle), "--write"])
+        save_bundle(review, results)
+        self.assertIn("Semantic review incomplete", self.invoke(update_main, args, 2)[1])
+        review.write_bytes(b"null\n")
+        self.invoke(update_main, args, 2)
+        save_bundle(review, self.mark_reviewed(results))
+        changed = deepcopy(task)
+        changed["files"][0]["segments"][-1]["translation"] += generated_cjk(2)
+        save_bundle(bundle, changed)
+        self.assertIn("stale semantic review", self.invoke(update_main, args, 2)[1])
+        self.assertEqual(target.read_bytes(), before)
+        save_bundle(bundle, task)
+        self.invoke(update_main, args)
+        self.assertTrue(target.read_bytes().startswith(b"\xef\xbb\xbf"))
+        self.assertIn(b"\r\n", target.read_bytes())
+        self.invoke(check_main, ["--strict", "--review-results", review])
+
+    def test_review_reuse_exports_full_changed_pairs_and_requires_complete_results(self):
+        text = "# Source heading\n\nSource body paragraph.\n"
+        for path in ["a.md", "b.md", "c.md"]:
+            self.put(self.source, path, text)
+            self.put(self.target, path, self.translate(text))
+        previous = review_bundle(self.source, self.target, self.config, [])
+        results = previous["result_format"]
+        for entry in results["files"][:2]:
+            entry.update(reviewed_all_sections=True, completeness="pass", accuracy="pass", fluency="pass", terminology="pass")
+        prior, review = self.root / "results.json", self.root / "review.json"
+        save_bundle(prior, results)
+        self.put(self.target, "b.md", self.translate(text) + "\n")
+        self.invoke(check_main, ["--summary-only", "--review-bundle", review, "--reuse-review", prior])
+        bundle = json.loads(review.read_bytes())
+        self.assertEqual(bundle["reused_files"], ["a.md"])
+        self.assertEqual([(e["path"], e["source"]) for e in bundle["files"]], [("b.md", text), ("c.md", text)])
+        self.assertEqual(bundle["files"][0]["target"], self.translate(text) + "\n")
+        quality = validate_review(bundle["result_format"], self.source, self.target, [], config=self.config)
+        self.assertEqual((quality["reviewed_files"], quality["pending_files"]), (1, ["b.md", "c.md"]))
+        config = deepcopy(self.config)
+        config["terms"].append("ExtraTerm")
+        self.assertEqual(review_bundle(self.source, self.target, config, [], previous=results)["reused_files"], [])
+
+    def test_cli_audit_and_review_use_the_same_snapshot(self):
+        text = "Source body paragraph.\n"
+        self.put(self.source, "a.md", text)
+        target = self.put(self.target, "a.md", self.translate(text))
+        results = self.mark_reviewed(review_bundle(self.source, self.target, self.config, [])["result_format"])
+        review = self.root / "results.json"
+        save_bundle(review, results)
+
+        audited = target.read_bytes() + b"\n"
+        target.write_bytes(audited)
+        original_read = Path.read_bytes
+
+        def read_then_restore(path):
+            data = original_read(path)
+            if path == target:
+                target.write_bytes(self.translate(text).encode("utf-8"))
+            return data
+
+        with patch.object(type(target), "read_bytes", read_then_restore):
+            out, err = self.invoke(check_main, ["--summary-only", "--review-results", review], 2)
+        self.assertNotIn("Semantic review: passed", out)
+        self.assertIn("stale semantic review", err)
 
 
 if __name__ == "__main__":

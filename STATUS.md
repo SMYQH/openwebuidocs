@@ -19,9 +19,15 @@
 | Content completeness | **Not certified**. File/heading coverage cannot establish semantic completeness; full source/target review is required. |
 | Verbatim code blocks | Current audit reports hard code-preservation differences in **28 pages**, including comments and strings. Broken upstream fence boundaries require direct review rather than copying malformed structure. |
 | Upstream inline code spans preserved | Current source-derived audit reports preservation findings; the previous **100%** claim is not a current certification. |
-| Explicit heading IDs matching upstream | No heading-structure findings in the current Python scan; upstream syntax defects still require review. |
+| Explicit heading IDs matching upstream | No hard heading-structure failures. One warning records a restored HAProxy heading hidden by upstream fence markup. |
 | Untranslated English prose | Current audit reports heuristic language warnings after literal/terminology exclusions; semantic review is pending. |
-| Production build | 2026-11-18: **passes** with zero broken links, anchors, Markdown links, or duplicate routes after the current translation repair pass. Local sitemap synchronization is skipped without `DOMAIN`, as designed. |
+| Production build | 2026-11-18: **passes** with zero broken links, anchors, Markdown links, or duplicate routes. Local sitemap synchronization is skipped without `DOMAIN`, as designed. |
+
+### 2026-11-18 Translation workflow acceptance
+
+- Standardized both providers on offline planning, protected prose extraction, full candidate review, and a strict audit and site build after apply. DeepL resumes saved responses and reuses validated, exact same-page segments. Autonomous mode requires no key. Reviews are bound to the audited file bytes; only passed reviews with matching source, target, and configuration hashes can be reused.
+- The offline DeepL plan for `alternatives/` and `reference/env-configuration.mdx` found **2,052 duplicate segments** across 14 files. No API request was needed for the estimate. No live provider calls or documentation changes were made during acceptance.
+- **114 offline behavior tests passed** on Python 3.14. The Skill validator and production build passed. Full strict audit: **441/441 counterparts, 80 errors, 1,202 warnings, 0 exceptions**. Matching counterparts include 398 pages and 43 category files. The strict audit still fails; no full semantic pass is claimed. The audit is in ignored `test/.reports/acceptance-audit-final.json`.
 
 ### 2026-11-18 Translation repairs and focused verifier improvements
 

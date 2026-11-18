@@ -1,8 +1,6 @@
 ---
 name: upstream-sync
-description: "Sync and translate upstream English docs (en-us) to simplified Chinese (zh-cn). Use when: upstream sync, sync upstream, en-us update, submodule update, translation sync, pull open-webui/docs, update STATUS.md coverage, detect new en-us commits."
-argument-hint: "[detect only | verify only | full sync | specific files] [autonomous | deepl]"
-user-invocable: true
+description: "Sync upstream English docs (en-us) to Simplified Chinese (zh-cn), verify translations, or maintain translation tooling. Use for en-us submodule updates, translation sync, coverage audits, and offline acceptance tests."
 ---
 
 # Upstream Sync Workflow (en-us → zh-cn)
@@ -14,6 +12,7 @@ Sync updates from the official English documentation submodule `en-us/` (`open-w
 - User requests "sync upstream", "pull en-us updates", or "translate latest docs"
 - Check whether the `en-us` submodule is behind `origin/main`
 - After upstream adds or modifies docs, the Chinese version and `STATUS.md` need updating
+- For verification or tooling only, go directly to [verification](#41-verify-completeness-and-quality-before-committing). Do not fetch, pull, translate, or send provider requests unless separately requested.
 
 ## Prerequisites
 
@@ -88,21 +87,24 @@ Choose the translation mode from the user's request. Default to **autonomous**; 
 
 When the user assigns translation to sub-agents, delegate translation edits directly. The parent handles tooling, integration, and validation; it must not translate on their behalf. Respect the user's concurrency limit; run one translation agent at a time when requested. A provider/capacity failure must be reported, never hidden by certifying unfinished review.
 
-Prepare small, explicit file batches. Paths are relative to `en-us/docs/`:
+Prepare small, explicit file batches. Paths are relative to `en-us/docs/`.
+Keep task and review artifacts in ignored `test/.reports/`.
 
 ```powershell
 # Autonomous: fill only translation fields in this task JSON, preserving placeholders.
 python test/translation_update.py --files path/to/page.mdx --bundle test/.reports/task.json
 
-# DeepL: make API requests only when this mode is requested.
-python test/translation_update.py --mode deepl --files path/to/page.mdx --bundle test/.reports/task.json
+# DeepL: estimate locally, then send only authorized text.
+python test/translation_update.py --mode deepl --plan --files path/to/page.mdx
+python test/translation_update.py --mode deepl --files path/to/page.mdx --bundle test/.reports/task.json --report test/.reports/candidate.json
 
-# Both providers use the same validation and guarded apply path.
-python test/translation_update.py --apply test/.reports/task.json
-python test/translation_update.py --apply test/.reports/task.json --write
+# Either provider: export full source/current target/candidate for review without writing docs.
+python test/translation_update.py --apply test/.reports/task.json --report test/.reports/candidate.json
 ```
 
-Task bundles bind source/target bytes, configuration, and segment identities. Keep ordered `⟦Pn⟧` placeholders verbatim. They protect terminology, code, identifiers, link destinations, numbers, and Markdown symbols. Automated updates reconstruct selected source documents; review local-only content before applying. Malformed upstream syntax stops generation: report/repair the specific defect rather than bypassing preservation checks.
+Use `--resume --bundle` for an interrupted DeepL task. Review rejected replies before a bounded `--resume --retry-rejected`; do not loop on a failed retry. Use `--reuse` with an earlier compatible checkpoint for a new revision. Only exact same-page segments are reusable. See [`test/README.md`](../../../test/README.md#deepl-optional-key-only) for commands and limits.
+
+Task bundles bind source/target bytes, configuration, and segment identities. Autonomous translations must preserve ordered `⟦Pn⟧` placeholders. Both providers protect terminology, code, identifiers, link destinations, numbers, and Markdown symbols. Automated updates reconstruct documents; compare the complete candidate to upstream and the existing target before applying. Do not overwrite Chinese-only content or local policy edits. Malformed upstream syntax stops generation; report or repair the defect rather than bypassing protection.
 
 1. Compare `en-us/docs/` with `zh-cn/docs/` file by file; process all P0 items
 2. Adhere to the "Translation Principles" above
@@ -118,11 +120,11 @@ For large-scale changes:
 
 #### 4.1 Verify completeness and quality before committing
 
-All translation verification scripts live under root `test/`. Run behavior tests after changing them, then audit the requested scope:
+All translation verification scripts live under root `test/`. Run offline behavior tests after changing them. Audit the requested scope; for existing target files, export review pairs with `--review-bundle`:
 
 ```powershell
 python -m unittest discover -s test -p "test_*.py"
-python test/translation_check.py --strict --report test/.reports/audit.json
+python test/translation_check.py --strict --summary-only --report test/.reports/audit.json
 python test/translation_check.py --files path/to/page.mdx --review-bundle test/.reports/review.json
 ```
 
@@ -130,9 +132,12 @@ Fully quoted headings inside upstream troubleshooting/error sections are source-
 
 The deterministic audit checks file/category coverage, code/literal preservation, heading structure/anchors, Markdown structure, metadata, terminology, untranslated prose, and omission signals. It compares matched sections even when heading counts differ. A dropped literal fails; an added or re-counted literal, a translated interface label and a repaired upstream fence are review signals. File coverage and matching headings **do not establish semantic completeness**. Do not invent a quality score or claim a semantic pass from static checks. Treat findings as leads, not proof: read the pair before changing a translation, and improve the checker when a finding turns out to be a tool defect.
 
-Read every English/Chinese pair in the review bundle in full. Assess omissions/additions, facts, negation, numbers, fluency, terminology, and heading/body alignment. Exclude protected terms, code, and markup from language judgments. Complete the bundle's `result_format` in a separate result file, including source evidence for every finding. Then validate review coverage and hashes:
+Read every English/Chinese pair in the candidate report or review bundle in full. Assess omissions/additions, facts, negation, numbers, fluency, terminology, and heading/body alignment. Exclude protected terms, code, and markup from language judgments. Complete `result_format` in a separate result file, including source evidence for every finding. For later installed-document audits, `--reuse-review` can carry forward only completed reviews with matching file and configuration hashes.
+
+The update CLI requires a passed review of the exact candidate before writing. Use the same result file to verify the installed bytes, then build:
 
 ```powershell
+python test/translation_update.py --apply test/.reports/task.json --review-results test/.reports/review-results.json --write
 python test/translation_check.py --strict --files path/to/page.mdx --review-results test/.reports/review-results.json --report test/.reports/reviewed-audit.json
 npm --prefix zh-cn run build
 ```

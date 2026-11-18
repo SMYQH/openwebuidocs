@@ -5,12 +5,13 @@
     "Kubernetes", "Python", "JavaScript", "TypeScript", "PostgreSQL", "SQLite",
     "Redis", "Valkey", "HAProxy", "NGINX", "Nginx", "AnythingLLM", "LibreChat", "Kagi",
     "LangChain", "LlamaIndex", "Open Terminal", "Tether", "MCP", "API", "RAG",
-    "RBAC", "SSO", "OIDC", "LDAP", "SCIM", "OAuth", "JWT", "HTTP", "HTTPS",
+    "RBAC", "SSO", "OIDC", "LDAP", "SCIM", "OAuth", "JWT", "HTTP", "HTTPS", "URL",
     "WebSocket", "JSON", "YAML", "MDX", "HTML", "CSS", "SQL", "GPU", "CPU",
     "Okta", "Google", "Microsoft", "Tailscale", "Tailscale Serve", "oauth2-proxy",
     "Authentik", "Authelia", "Keycloak", "OpenTelemetry", "Docker Compose",
     "Kubernetes Secret", "Syntegon Technology GmbH", "Noerr Partnerschaftsgesellschaft mbB",
-    "Noerr", "TRG, Inc."
+    "Noerr", "TRG, Inc.", "ComfyUI", "Stable Diffusion", "Flux", "Qwen", "SwarmUI",
+    "FLUX.1", "FLUX.1 Dev", "FLUX.1 Schnell", "KSampler", "CLIPTextEncode", "TextEncodeQwen", "VAE"
   ],
   "untranslated_min_words": 6,
   "length_ratio_warning": 0.15,

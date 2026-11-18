@@ -34,9 +34,11 @@ PLACEHOLDER = re.compile(r"⟦P\d+⟧")
 CJK = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\U00020000-\U0002fa1f]")
 WORDS = re.compile(r"[A-Za-z]+(?:['’-][A-Za-z]+)*")
 IDENTIFIER = re.compile(
-    r"(?<![\w])(?:[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+|"
+    r"(?a:(?<!\w)(?:[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+|"
     r"[a-zA-Z]\w*_[a-zA-Z0-9_]+|[a-z]+(?:[A-Z][a-zA-Z0-9]*)+|"
-    r"(?:/|\./|\.\./)[\w./{}:<>-]+|--[a-z][\w-]*)(?![\w])"
+    r"--[a-z][\w-]*)(?!\w))"
+    # A prose slash between words is not a bare filesystem path.
+    r"|(?<![\w/])(?a:(?:/|\./|\.\./)[\w./{}:<>-]+)"
 )
 URL = re.compile(r"(?:https?://|mailto:)[^\s<>\]\)\"']+")
 EXPLICIT_ID = re.compile(r"\\?\{#([^}]+)\}\s*$")
@@ -179,7 +181,7 @@ def inline_protected(text: str, terms: list[str]) -> list[Protected]:
         (r"\[[ xX]\](?=\s)|(?m:(?<=\s)#{1,6}\s*$)", "marker"),
         (IDENTIFIER.pattern, "identifier"),
         (term_pattern(terms).pattern, "term"),
-        (r"(?<![\w])\d+(?:[.,:/-]\d+)*(?:%|[a-zA-Z]+)?(?![\w])", "number"),
+        (r"(?a:(?<!\w)\d+(?:[.,:/-]\d+)*(?:%|[a-zA-Z]+)?(?!\w))", "number"),
         (r"(?m)^(?:[ \t]*>[ \t]*)+|!?(?=\[)\[|\*+|_+|~{2,}|[\]|]", "symbol"),
     ]:
         for m in re.finditer(pattern, text):
@@ -199,10 +201,24 @@ def mask(text: str, terms: list[str]) -> tuple[str, list[Protected]]:
     return text, spans
 
 
-def unmask(text: str, spans: list[Protected]) -> str:
+def unmask(text: str, spans: list[Protected], *, move_terms: bool = False) -> str:
     expected = [f"⟦P{i}⟧" for i in range(len(spans))]
     actual = PLACEHOLDER.findall(text)
-    if actual != expected or "⟦" in PLACEHOLDER.sub("", text) or "⟧" in PLACEHOLDER.sub("", text):
+    valid_order = actual == expected
+    if move_terms and not valid_order and sorted(actual) == sorted(expected):
+        # DeepL can move terms within a run of terms and inline code. All other
+        # placeholders stay in their slots, and code spans stay in source order.
+        kinds = {key: span.kind for key, span in zip(expected, spans)}
+        fixed = [i for i, span in enumerate(spans) if span.kind not in {"term", "inline_code"}]
+        edges = [-1, *fixed, len(spans)]
+        valid_order = (
+            all(actual[i] == expected[i] for i in fixed)
+            and all(sorted(actual[a + 1:b]) == sorted(expected[a + 1:b]) for a, b in zip(edges, edges[1:]))
+            and [key for key in actual if kinds[key] == "inline_code"]
+            == [key for key in expected if kinds[key] == "inline_code"]
+        )
+    remaining = PLACEHOLDER.sub("", text)
+    if not valid_order or "⟦" in remaining or "⟧" in remaining:
         raise ValueError("Translation changed, duplicated, reordered, or removed protected placeholders")
     return PLACEHOLDER.sub(lambda m: spans[int(m[0][2:-1])].value, text)
 
@@ -468,23 +484,32 @@ class Document:
         for line in admonition_stack:
             self.errors.append((line, "Unclosed admonition"))
 
-    def render(self, translations: list[str]) -> str:
+    def render_segment(self, segment: Segment, value: str, *, move_terms: bool = False) -> str:
+        if not isinstance(value, str) or not value.strip() or segment.kind == "prose" and ("\n" in value or "\r" in value):
+            raise ValueError("Translation must be nonempty and preserve prose line boundaries")
+        _, spans = mask(segment.text, self.terms)
+        restored = unmask(value, spans, move_terms=move_terms)
+        if segment.kind in {"yaml", "keyword", "json", "fence-title"}:
+            return json.dumps(restored, ensure_ascii=False)
+        if segment.kind == "attribute":
+            return '"' + html.escape(restored, quote=True) + '"'
+        # Preserve every source marker, including symbols absent from placeholders.
+        if markup_signature(segment.text, self.terms) != markup_signature(restored, self.terms):
+            raise ValueError("Translation changed Markdown syntax")
+        if move_terms and inline_structure(segment.text) != inline_structure(restored):
+            raise ValueError("Translation changed rendered inline Markdown")
+        return restored
+
+    def render(self, translations: list[str], *, move_terms: bool = False) -> str:
         if len(translations) != len(self.segments):
             raise ValueError("Translation segment count differs")
         result = self.text
-        for segment, value in reversed(list(zip(self.segments, translations))):
-            if not isinstance(value, str) or not value.strip() or "\n" in value and segment.kind == "prose":
-                raise ValueError("Translation must be nonempty and preserve prose line boundaries")
-            masked, spans = mask(segment.text, self.terms)
-            restored = unmask(value, spans)
-            if segment.kind in {"yaml", "keyword", "json", "fence-title"}:
-                restored = json.dumps(restored, ensure_ascii=False)
-            elif segment.kind == "attribute":
-                restored = '"' + html.escape(restored, quote=True) + '"'
-            else:
-                # Preserve every source marker, including symbols absent from placeholders.
-                if markup_signature(segment.text, self.terms) != markup_signature(restored, self.terms):
-                    raise ValueError("Translation changed Markdown syntax")
+        for index in range(len(self.segments) - 1, -1, -1):
+            segment = self.segments[index]
+            try:
+                restored = self.render_segment(segment, translations[index], move_terms=move_terms)
+            except ValueError as error:
+                raise ValueError(f"segment {index}: {error}") from None
             result = result[:segment.start] + restored + result[segment.end:]
         if self.suffix != ".json":
             # Chinese heading text needs the upstream fragment, never a new slug.
@@ -507,6 +532,10 @@ class Document:
 
 def markup_signature(text: str, terms: list[str]) -> list[str]:
     return [p.value for p in inline_protected(text, terms) if p.kind != "term"]
+
+
+def inline_structure(text: str) -> list[str]:
+    return [token.type for token in PARSER.parseInline(text)[0].children or [] if token.type != "text"]
 
 
 JSON_LD = re.compile(r"<script\b[^>]*type=[\"\']application/ld\+json[\"\'][^>]*>\s*\{JSON\.stringify\((?P<payload>.*?)\)\}\s*</script>", re.S)

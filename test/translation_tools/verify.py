@@ -17,6 +17,7 @@ from .document import (ATTRIBUTE, CJK, FENCE_TITLE, KEYWORD_FIELDS, LAYOUT_FIELD
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = ROOT / "test/translation_config.json"
 SUFFIXES = {".md", ".mdx"}
+REVIEW_DIMENSIONS = ("completeness", "accuracy", "fluency", "terminology")
 
 
 def load_config(path: Path = DEFAULT_CONFIG) -> dict:
@@ -451,7 +452,8 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
     return issues
 
 
-def verify(source_root: Path, target_root: Path, config: dict, patterns: list[str] | None = None) -> dict:
+def verify(source_root: Path, target_root: Path, config: dict, patterns: list[str] | None = None,
+           *, review_entries: list[dict] | None = None, review_results: dict | None = None) -> dict:
     if not source_root.is_dir() or not target_root.is_dir():
         raise ValueError("Source and target documentation directories must exist")
     src, dst = files(source_root), files(target_root)
@@ -459,86 +461,146 @@ def verify(source_root: Path, target_root: Path, config: dict, patterns: list[st
     if not paths:
         raise ValueError("No documentation files matched; refusing an empty verification")
     issues: list[Issue] = []
+    audited_pairs = {}
+    exceptions = {entry["fingerprint"]: entry["reason"] for entry in config["exceptions"]}
     matched = 0
     for path in paths:
-        a = src[path].read_text(encoding="utf-8-sig") if path in src else ""
-        b = dst[path].read_text(encoding="utf-8-sig") if path in dst else ""
-        source_hash = digest(src[path].read_bytes()) if path in src else None
-        target_hash = digest(dst[path].read_bytes()) if path in dst else None
+        a = src[path].read_bytes() if path in src else None
+        b = dst[path].read_bytes() if path in dst else None
+        source_hash = digest(a) if a is not None else None
+        target_hash = digest(b) if b is not None else None
+        if review_results is not None and a is not None:
+            audited_pairs[path] = source_hash, target_hash
+        source_text = audit_text(a) if a is not None else None
+        target_text = audit_text(b) if b is not None else None
         if path not in dst:
             current = [Issue(path, 1, "error", "missing-file", "Missing target file")]
         elif path not in src:
             current = [Issue(path, 1, "warning", "extra-file", "Target file has no upstream counterpart")]
         else:
             matched += 1
-            current = compare(path, Document(a, src[path].suffix, config["terms"]), Document(b, dst[path].suffix, config["terms"]), config)
+            current = compare(path, Document(source_text, src[path].suffix, config["terms"]),
+                              Document(target_text, dst[path].suffix, config["terms"]), config)
         for issue in current:
             issue.fingerprint = digest(json.dumps([path, source_hash, target_hash,
                                                   issue.line, issue.code, issue.message], ensure_ascii=False))
-            exception = next((e for e in config["exceptions"] if e["fingerprint"] == issue.fingerprint), None)
-            if exception:
-                issue.suppressed, issue.reason = True, exception["reason"]
+            if issue.fingerprint in exceptions:
+                issue.suppressed, issue.reason = True, exceptions[issue.fingerprint]
         issues.extend(current)
+        if review_entries is not None and a is not None:
+            review_entries.append({"path": path, "source_sha256": source_hash, "target_sha256": target_hash,
+                                   "source": source_text, "target": target_text, "issues": [asdict(i) for i in current]})
     counts = Counter(i.severity for i in issues if not i.suppressed)
     source_count = sum(p in src for p in paths)
+    quality = {"semantic_review": "required", "note": "File coverage and deterministic checks do not prove semantic completeness or translation accuracy."}
+    if review_results is not None:
+        quality = validate_review_snapshot(review_results, audited_pairs, config=config)
     return {
         "schema_version": 1,
         "summary": {"source_files": source_count, "target_files": sum(p in dst for p in paths), "matched_files": matched,
                     "file_coverage_percent": round(100 * matched / source_count, 2) if source_count else 0,
                     "errors": counts["error"], "warnings": counts["warning"], "suppressed": sum(i.suppressed for i in issues)},
-        "quality": {"semantic_review": "required", "note": "File coverage and deterministic checks do not prove semantic completeness or translation accuracy."},
+        "quality": quality,
         "issues": [asdict(i) for i in issues],
     }
 
 
-def review_bundle(source_root: Path, target_root: Path, config: dict, patterns: list[str]) -> dict:
-    report = verify(source_root, target_root, config, patterns)
-    entries = []
-    src, dst = files(source_root), files(target_root)
-    for path in sorted(src):
-        if not selected(path, patterns):
-            continue
-        a, b = src[path].read_text(encoding="utf-8-sig"), dst[path].read_text(encoding="utf-8-sig") if path in dst else None
-        entries.append({"path": path, "source_sha256": digest(src[path].read_bytes()), "target_sha256": digest(dst[path].read_bytes()) if path in dst else None,
-                        "source": a, "target": b, "issues": [i for i in report["issues"] if i["path"] == path]})
+def audit_text(raw: bytes) -> str:
+    # Line ending style does not constitute a code difference in an audit.
+    return raw.decode("utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
+
+
+def review_template(files, config: dict) -> dict:
+    return {"schema_version": 1, "purpose": "semantic-review-results",
+            "config_sha256": digest(json.dumps(config, sort_keys=True)),
+            "files": [{"path": path, "source_sha256": hashes[0], "target_sha256": hashes[1],
+                       "reviewed_all_sections": False, **dict.fromkeys(REVIEW_DIMENSIONS, "needs-review"),
+                       "findings": []} for path, hashes in files.items()]}
+
+
+def review_bundle(source_root: Path, target_root: Path, config: dict, patterns: list[str],
+                  *, previous=None, review_results=None) -> dict:
+    earlier = {}
+    if previous is not None:
+        config_hash = digest(json.dumps(config, sort_keys=True))
+        review_entries = result_entries(previous)
+        if previous.get("config_sha256") == config_hash:
+            earlier = review_entries
+    entries: list[dict] = []
+    report = verify(source_root, target_root, config, patterns, review_entries=entries, review_results=review_results)
+    identities = {e["path"]: (e["source_sha256"], e["target_sha256"]) for e in entries}
+    template = review_template(identities, config)
+    pending, reused = [], []
+    for index, entry in enumerate(entries):
+        prior = earlier.get(entry["path"])
+        if (prior and entry["target_sha256"] is not None
+                and (prior["source_sha256"], prior["target_sha256"]) == identities[entry["path"]]
+                and review_passed(prior)):
+            template["files"][index] = prior
+            reused.append(entry["path"])
+        else:
+            pending.append(entry)
     return {"schema_version": 1, "purpose": "semantic-review",
-            "instructions": "Read every source and target section, including frontmatter and category labels. Check omissions, additions, wrong facts, negation, numbers, section/body alignment, fluency, and terminology. Do not flag protected product names, code, or Markdown symbols as untranslated. Report path, target line, source evidence, severity, and correction. Mark each file reviewed only after full comparison. Do not change translations during review.",
-            "protected_terms": config["terms"], "files": entries, "deterministic_report": report,
-            "result_format": {"schema_version": 1, "purpose": "semantic-review-results", "files": [
-                {"path": e["path"], "source_sha256": e["source_sha256"], "target_sha256": e["target_sha256"],
-                 "reviewed_all_sections": False, "completeness": "needs-review", "accuracy": "needs-review",
-                 "fluency": "needs-review", "terminology": "needs-review", "findings": []} for e in entries]}}
+            "instructions": "Read every source and target section in files, including frontmatter and category labels. Check omissions, additions, wrong facts, negation, numbers, section/body alignment, fluency, and terminology. Do not flag protected product names, code, or Markdown symbols as untranslated. Report target line, source evidence, severity, and correction. Mark each file reviewed only after full comparison. Preserve reused results in result_format. Do not change translations during review.",
+            "protected_terms": config["terms"], "files": pending, "reused_files": reused, "deterministic_report": report,
+            "result_format": template}
 
 
-def validate_review(results: dict, source_root: Path, target_root: Path, patterns: list[str]) -> dict:
-    """Validate review coverage/provenance, not the reviewer's truthfulness."""
-    if results.get("schema_version") != 1 or results.get("purpose") != "semantic-review-results":
+def result_entries(results: dict) -> dict[str, dict]:
+    if (not isinstance(results, dict) or results.get("schema_version") != 1
+            or results.get("purpose") != "semantic-review-results" or not isinstance(results.get("files"), list)):
         raise ValueError("Not a supported semantic review result")
-    src, dst = files(source_root), files(target_root)
-    expected = {p for p in src if selected(p, patterns)}
-    if not expected or not isinstance(results.get("files"), list):
-        raise ValueError("Review has no selected files")
-    seen, findings, pending = set(), [], []
+    entries = {}
     for entry in results["files"]:
         path = entry["path"]
-        if path in seen or path not in expected or path not in dst:
-            raise ValueError("Review file set is duplicate, unexpected, or missing target")
-        seen.add(path)
-        if entry["source_sha256"] != digest(src[path].read_bytes()) or entry["target_sha256"] != digest(dst[path].read_bytes()):
-            raise ValueError(f"{path}: stale semantic review; source or target changed")
+        if not isinstance(path, str) or path in entries:
+            raise ValueError("Review paths must be unique strings")
         if type(entry.get("reviewed_all_sections")) is not bool:
             raise ValueError("reviewed_all_sections must be a boolean")
-        statuses = [entry.get(key) for key in ["completeness", "accuracy", "fluency", "terminology"]]
-        if any(status not in {"pass", "fail", "needs-review"} for status in statuses):
+        for field in ("source_sha256", "target_sha256"):
+            value = entry[field]
+            if field == "target_sha256" and value is None:
+                continue
+            if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
+                raise ValueError(f"{path}: invalid {field}")
+        if any(entry.get(k) not in ("pass", "fail", "needs-review") for k in REVIEW_DIMENSIONS):
             raise ValueError("Review statuses must be pass, fail, or needs-review")
         if not isinstance(entry.get("findings"), list):
             raise ValueError("Review findings must be an array")
         for finding in entry["findings"]:
-            if not isinstance(finding.get("line"), int) or finding["line"] < 1 or not all(isinstance(finding.get(k), str) and finding[k].strip() for k in ["source_evidence", "message"]):
+            if (not isinstance(finding, dict) or type(finding.get("line")) is not int or finding["line"] < 1
+                    or not all(isinstance(finding.get(k), str) and finding[k].strip() for k in ("source_evidence", "message"))):
                 raise ValueError("Review findings need a target line, source_evidence, and message")
-            findings.append({"path": path, **finding})
-        if not entry["reviewed_all_sections"] or any(s != "pass" for s in statuses) or entry["findings"]:
+        entries[path] = entry
+    return entries
+
+
+def review_passed(entry: dict) -> bool:
+    return entry["reviewed_all_sections"] and all(entry[k] == "pass" for k in REVIEW_DIMENSIONS) and not entry["findings"]
+
+
+def validate_review(results: dict, source_root: Path, target_root: Path, patterns: list[str], *, config=None) -> dict:
+    """Validate review coverage/provenance, not the reviewer's truthfulness."""
+    src, dst = files(source_root), files(target_root)
+    expected = {p: (digest(src[p].read_bytes()), digest(dst[p].read_bytes()) if p in dst else None)
+                for p in src if selected(p, patterns)}
+    return validate_review_snapshot(results, expected, config=config)
+
+
+def validate_review_snapshot(results: dict, expected: dict, *, config=None, require_config=False) -> dict:
+    entries = result_entries(results)
+    if config is not None and (require_config or "config_sha256" in results):
+        if results.get("config_sha256") != digest(json.dumps(config, sort_keys=True)):
+            raise ValueError("Stale semantic review; configuration changed or unbound")
+    if not expected or entries.keys() != expected.keys() or any(target is None for _, target in expected.values()):
+        raise ValueError("Review must cover every selected source file with an existing target")
+    findings, pending = [], []
+    for path, entry in entries.items():
+        if (entry["source_sha256"], entry["target_sha256"]) != expected[path]:
+            raise ValueError(f"{path}: stale semantic review; source or target changed")
+        findings.extend(dict(finding, path=path) for finding in entry["findings"])
+        if not review_passed(entry):
             pending.append(path)
-    if seen != expected:
-        raise ValueError("Semantic review omitted selected source files")
-    return {"semantic_review": "passed" if not pending else "needs-review", "reviewed_files": len(seen), "pending_files": pending, "findings": findings}
+    return {"semantic_review": "passed" if not pending else "needs-review",
+            "reviewed_files": sum(e["reviewed_all_sections"] for e in entries.values()),
+            "pending_files": pending, "findings": findings}
