@@ -16,12 +16,28 @@
 | en-us `_category_.json` | 43 |
 | zh-cn `_category_.json` | 43 |
 | File coverage | **100%** (all 398 en-us documents have corresponding zh-cn translations) |
-| Content completeness | **Not certified**. File/heading coverage cannot establish semantic completeness; full source/target review is required. |
-| Verbatim code blocks | Current audit reports hard code-preservation differences in **28 pages**, including comments and strings. Broken upstream fence boundaries require direct review rather than copying malformed structure. |
-| Upstream inline code spans preserved | Current source-derived audit reports preservation findings; the previous **100%** claim is not a current certification. |
+| Content completeness | **Not certified**. All 43 categories passed review against the current configuration. Older document reviews remain historical evidence; their configuration hashes no longer match. |
+| Verbatim code blocks | No hard code-preservation errors. The HAProxy and Nginx Proxy Manager warnings reflect reviewed upstream fence repairs. |
+| Upstream inline code spans preserved | No unwaived hard preservation errors. Review signals and exact exceptions remain; this is not a universal preservation certification. |
 | Explicit heading IDs matching upstream | No hard heading-structure failures. One warning records a restored HAProxy heading hidden by upstream fence markup. |
 | Untranslated English prose | Current audit reports heuristic language warnings after literal/terminology exclusions; semantic review is pending. |
 | Production build | 2026-11-18: **passes** with zero broken links, anchors, Markdown links, or duplicate routes. Local sitemap synchronization is skipped without `DOMAIN`, as designed. |
+
+### 2026-11-18 Verifier and translation repairs
+
+- Checked all 441 counterparts: **0 unwaived errors, 1,079 warnings, 5 exact exceptions**. Strict mode exits 1. All **120 behavior tests**, the Skill validator, and the production build passed. Local evidence: `test/.reports/optimized-audit.json`, `optimized-category-review.json` and `optimized-build.log` under the same reports directory.
+- The checker now compares numeric defaults within the individual setting. It found two stale defaults: `MCP_INITIALIZE_TIMEOUT` is `10` seconds and `CHUNK_SIZE` is `1024`. The latter entry also lacked the instruction to reindex existing documents. Section checks now group prose in a single pass. A local environment-reference audit took 6.8 seconds versus 13.4 seconds before the change.
+- Corrected `PLAYWRIGHT_TIMEOUT` to `10000` milliseconds. The Firecrawl loader accepts positive integer seconds, then clamps the scrape payload to 1000–300000 milliseconds. Verified against `config.py`, `retrieval/web/utils.py`, and `retrieval/web/firecrawl.py` in `open-webui/open-webui@29b4af6b`.
+- Restored Firefox link confirmation and prompt-prefill behavior; confirmed the rendered heading and anchor without a verifier exception. Corrected stale banner descriptions, ecosystem instructions, Langfuse tutorial estimates, and task-management links. A clean build does not certify semantic accuracy.
+- Rechecked the 43 category pairs under the new configuration. The earlier page reviews below do not count as current passes. Installed-document audits and candidate writes both reject review results missing the configuration hash.
+
+### 2026-11-18 Full translation review checkpoint (prior configuration)
+
+- The English submodule remains pinned at `3072f18`. The working tree updates 91 Chinese pages, including restored code and literals, corrected MCP and Open Terminal guidance, comparison metadata and FAQ translations, and Llama.cpp and vLLM connection instructions. DeepL supplied targeted corrections; translation agents ran one at a time.
+- The Firefox heading now renders the literal `browser.ml.chat.prompts.{#}` and keeps the `browsermlchatprompts` anchor. The Chinese HAProxy and Nginx Proxy Manager guides repair malformed upstream fences without changing the commands. Five whitespace-only Nginx code lines intentionally retain upstream bytes.
+- **117 behavior tests passed**. The production build passed. The full strict audit covered **441/441 counterparts: 0 unwaived errors, 1,094 warnings, 6 exact exceptions**. Strict mode still exits 1 because warnings remain. Reports: `test/.reports/review-checkpoint-audit.json` and `test/.reports/review-checkpoint-build.log`.
+- **74/441 pairs passed full semantic review**: 43 categories and 31 documents, including all 13 comparison pages. The ignored `test/.reports/review-progress.json` binds those results to source, target, and configuration hashes. `test/.reports/review-checkpoint-pending.json` contains the remaining 367 pairs. Do not treat the deterministic audit as a semantic pass.
+- Issues at this checkpoint included missing Firefox confirmation and prefill details and contradictory upstream `FIRECRAWL_TIMEOUT` units. The later verifier and translation repairs above resolved these issues.
 
 ### 2026-11-18 Translation workflow acceptance
 
