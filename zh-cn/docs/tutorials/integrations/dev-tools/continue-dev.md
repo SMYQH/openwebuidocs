@@ -6,7 +6,7 @@ title: "Continue.dev"
 # 将 Continue.dev VS Code 扩展与 Open WebUI 集成 {#integrating-continuedev-vs-code-extension-with-open-webui}
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/tutorials/contributing-tutorial)。
+本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/contributing)。
 :::
 
 ## 下载扩展 {#download-extension}
@@ -77,7 +77,7 @@ version: 1.0.0
 schema: v1
 ```
 
-context 部分为模型提供额外信息。更多信息请参见[官方配置指南](https://docs.continue.dev/reference#context)和[上下文提供商指南](https://docs.continue.dev/customize/custom-providers)。
+“上下文”部分为模型提供了额外信息。 更多信息请参阅 [官方配置指南](https://docs.continue.dev/reference#context) 以及 [上下文提供程序指南](https://docs.continue.dev/customize/model-providers/overview)。
 
 ```yaml
 context:
@@ -138,7 +138,7 @@ model: qwen3.6:27b
 
 ### 旧版 completions 端点 {#legacy-completions-endpoint}
 
-Open WebUI 不需要此设置，更多信息请参见[原始指南](https://platform.openai.com/docs/guides/completions/completions-api-legacy)。
+Open WebUI 不需要此设置，更多信息请参见[原始指南](https://platform.openai.com/docs/guides/completions)。
 
 ```yaml
 env:

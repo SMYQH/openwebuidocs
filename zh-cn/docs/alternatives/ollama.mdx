@@ -33,7 +33,7 @@ import Head from '@docusaurus/Head';
 
 ## Ollama 擅长的领域 {#what-ollama-does-well}
 
-- **死简单**，几秒钟内安装并运行模型
+- **安装极其简单**，几秒钟内即可运行一个模型
 - **带有内置聊天的桌面应用**，提供完整的独立体验
 - **巨大的模型库**，数百个模型可从 Ollama 注册表下载
 - **Modelfiles**，用于通过系统提示、参数和适配器自定义模型
@@ -64,7 +64,7 @@ import Head from '@docusaurus/Head';
 Ollama 和 Open WebUI 是本地 AI 生态系统中最流行的配对。Ollama 管理和提供您的模型；Open WebUI 在此基础上添加网络平台，具有知识管理、团队功能和可扩展性。
 
 ```bash
-# 最常见的 Open WebUI 设置
+# The most common Open WebUI setup
 ollama pull muse-glimmer:30b-q4_K_M
 docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway \
   -v open-webui:/app/backend/data --name open-webui \

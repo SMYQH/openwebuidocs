@@ -478,7 +478,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 #### `FOLDER_MAX_FILE_COUNT` {#folder\_max\_file\_count}
 
 - 类型：`int`
-- 默认值：空字符串（无限制）
+- 默认值：`("")` 空字符串（无限制）
 - 描述：设置每个文件夹允许处理的最大文件数。
 - 持久化：这是一个 `ConfigVar` 变量。可在 **Settings > General > Folder Max File Count**（管理员区域） 中配置。
 
@@ -522,15 +522,15 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 #### `AUTOMATION_MAX_COUNT` {#automation\_max\_count}
 
 - 类型：`int`
-- 默认值：空字符串（无限制）
-- 描述：限制非管理员用户可创建的自动化数量。
+- 默认值：`("")` 空字符串（无限制）
+- 描述：设置非管理员用户可创建的自动化任务的最大数量。当设置为正整数时，达到此限制的用户在尝试创建更多自动化任务时将收到 `403 Forbidden` 错误。管理员不受此限制。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `AUTOMATION_MIN_INTERVAL` {#automation\_min\_interval}
 
 - 类型：`int` (seconds)
-- 默认值：空字符串（无最小值）
+- 默认值：`("")` 空字符串（无最小值）
 - 描述：设置非管理员用户自动化重复执行之间允许的最小间隔（秒）。设置后，任何重复频率高于该值的自动化计划都会被拒绝，并返回 `400 Bad Request` 错误。一次性自动化（`COUNT=1`）不受此限制。管理员不受该限制。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -539,7 +539,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 - 类型： `str` (duration)
 - 默认值： `1h`
 - 说明： 自动化在无头运行时用于回调 Open WebUI 的短期认证令牌的生命周期（这样定时运行可以访问经过会话认证的工具和终端）。接受持续时间字符串，如 `30m`、`1h`、`24h`。
-- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
+- 持久化：这是一个 `ConfigVar` 变量。
 
 :::tip AUTOMATION_MIN_INTERVAL 常用取值
 
@@ -1009,7 +1009,7 @@ open-webui serve --port 9999
 
 - 类型：`str`
 - 默认值：`dev-build`
-- 描述：用于标识发布构建对应的 Git SHA。
+- 描述：标识发布构建的 Git SHA。Docker 容器镜像会将其设置为构建所基于的提交（即 `BUILD_HASH` 构建参数）。
 
 
 #### `WEBUI_BANNERS` {#webui\_banners}
@@ -1295,7 +1295,7 @@ c-ares 会读取 `/etc/resolv.conf` 和 hosts 文件，但不读取其它名称�
 #### `MCP_INITIALIZE_TIMEOUT` {#mcp\_initialize\_timeout}
 
 - 类型：`int`
-- 默认值：`30`
+- 默认值：`10`
 - 描述：除工具调用之外的 MCP 请求的超时时间（秒）：连接、列出工具和读取资源。如果服务器冷启动较慢或暴露了大量工具，可以调高该值；几十个工具可能需要 30 到 60 秒。工具调用使用 [`AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER`](#aiohttp_client_timeout_tool_server)。
 
 
@@ -1367,7 +1367,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`str`
 - 默认值：未设置（纯文本日志）
-- 描述：控制日志输出格式。设为 `json` 时，所有 stdout 日志都会变成单行 JSON 对象。
+- 描述：控制日志输出格式。设置为 `json` 可将所有标准输出日志切换为单行 JSON 对象，适用于 Loki、Fluentd、CloudWatch 和 Datadog 等日志聚合工具。 当设置为 `json` 时，ASCII 启动横幅也会被抑制，以确保日志流可解析。任何其他值（或未设置）将使用默认的纯文本格式。 有关日志字段和示例的详细信息，请参阅 [JSON 日志记录文档](/getting-started/advanced-topics/logging#structured-json-logging) 。
 
 
 #### `LOGURU_DIAGNOSE` {#loguru\_diagnose}
@@ -3129,8 +3129,8 @@ CORS_ALLOW_ORIGIN: "https://yourdomain.com;http://yourdomain.com;https://yourhos
 
 - 类型：`str`
 - 选项：
-- `chroma`, `elasticsearch`, `mariadb-vector`, `milvus`, `opensearch`, `pgvector`, `qdrant`, `pinecone`, `s3vector`, `oracle23ai`, `weaviate`
-- 默认值：`chroma`
+- `chroma`, `elasticsearch`, `mariadb-vector`, `milvus`, `opengauss`, `opensearch`, `pgvector`, `qdrant`, `pinecone`, `s3vector`, `oracle23ai`, `weaviate`, `valkey`
+- 默认值：`chroma`，或在设置了 `USE_SLIM_DOCKER` 的精简镜像上使用 `pgvector`
 - 描述：指定要使用的向量数据库系统。此设置决定用于管理 embeddings 的向量存储系统。
 
 :::danger ChromaDB（默认）不适用于多 Worker 或多副本部署
@@ -4412,6 +4412,8 @@ Docling 集成已重构为使用服务端参数传递。如果你正在使用 Do
   - `picture_description_api` (str)：用于图像描述的 API 端点配置对象。
   - `vlm_pipeline_model_api` (str)：视觉语言模型 API 配置。（例如 `openai://gpt-5.6-sol`）。
 
+
+  **注意：** 这些值将作为表单字段原样（不经重新编码）转发至 Docling 服务器。 因此，值为嵌套对象的参数（如 `picture_description_local` 和 `picture_description_api`）必须以 JSON 字符串的形式书写，例如 `"picture_description_api": "{\"url\": \"...\", \"params\": {\"model\": \"llava:7b\"}}"`。普通值、布尔值和列表则可直接输入。
 - Example:
 ``` json
 {
@@ -4591,7 +4593,7 @@ Open WebUI 会向 `/marker` 端点发起请求，而 Datalab 的 API 参考文�
 
 - 类型： `int`
 - 默认值： unset (no limit)
-- 说明： 限制 **MinerU** 加载器从处理后的文档返回的 Markdown 大小（字节）。超出上限的输出将被截断，防止单个超大文档淹没上下文或内存。不设置则无限制。
+- 说明：限制 Open WebUI 从 MinerU 结果 ZIP 文件中读取的 Markdown 文件大小（以字节为单位），该 ZIP 文件由 MinerU 云服务和自托管的 MinerU 4.1 服务器返回。超过此限制的文件将被拒绝，文档会因 `Markdown file in results ZIP is too large` 而失败，此机制可防止单个超大文档耗尽内存。来自自托管的 MinerU 3.x 或 4.0 服务器的结果将被完整读取。若不设置此参数，则表示无限制。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
@@ -4816,8 +4818,8 @@ Provide a clear and direct response to the user's query, including inline citati
 #### `CHUNK_SIZE` {#chunk\_size}
 
 - 类型：`int`
-- 默认值：`1000`
-- 描述：设置文档分块大小（用于嵌入）。
+- 默认值：`1024`
+- 描述：设置文档分块大小（用于嵌入）。更改后请重新索引已有文档。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -6210,16 +6212,16 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 #### `FIRECRAWL_TIMEOUT` {#firecrawl\_timeout}
 
-- 类型：`int`
-- 默认值：`None`
-- 描述：指定 Firecrawl 请求的超时时间（毫秒）。未设置时使用 Firecrawl 默认超时。
+- 类型：`str`
+- 默认值：空字符串（`''`）
+- 描述：设置 Firecrawl 加载器请求的超时时间，单位为秒，必须为正整数。运行时该值会转换为毫秒写入 scrape 负载，并限制在 1–300 秒之间；未设置、为空或不是正整数时，不会覆盖 Firecrawl 请求的默认超时。仅对加载器（web loader）生效。
 - 持久化：这是一个 `ConfigVar` 变量。可在**设置 > Web 搜索 > Firecrawl 超时**（管理员区域）中配置。
 
 
 #### `PLAYWRIGHT_TIMEOUT` {#playwright\_timeout}
 
 - 类型：`int`
-- 默认值：Empty string (' '), since `None` is set as default.
+- 默认值：`10000`（毫秒）
 - 描述：指定 Playwright 请求的超时时间。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -7440,7 +7442,7 @@ curl -X POST "http://localhost:8080/api/v1/oauth/oidc/token/exchange" \
 #### `WEBUI_AUTH_TRUSTED_ROLE_HEADER` {#webui\_auth\_trusted\_role\_header}
 
 - 类型：`str`
-- 描述：定义使用受信任头认证时决定用户角色（`admin`、`user` 或 `pending`）的受信任请求头。设置后，用户角色在每次登录时更新以匹配头值。无效值将被忽略并发出警告。参见 [SSO 文档](/features/authentication-access/auth/sso)。
+- 描述：定义了在使用可信头身份验证时，用于确定用户角色（`admin`、`user` 或 `pending`）的可信请求头。 设置后，每次登录时都会将用户的角色更新为与该头值相匹配。无效值将被忽略并显示警告。 此头引发的角色变更将终止该账户的活跃 WebSocket 连接，这些连接会自动重新连接并重新认证，因此之前的角色不会在打开的标签页中残留。 请参阅 [SSO 文档](/features/authentication-access/auth/sso) 以及 [《角色变更何时生效》](/features/authentication-access/rbac/roles#when-a-role-change-takes-effect)。
 
 
 ### Google {#google}
@@ -8093,7 +8095,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：充当主开关，用于启用或禁用聊天界面中的"Controls"按钮和面板。**如果设为 False，用户将看不到 Controls 按钮，以下细粒度权限将不生效**。
+- 描述：充当主开关，用于启用或禁用聊天界面中的"Controls"按钮和面板。该部分包含聊天文件、阀门、系统提示和高级参数。 **当设置为 False 时，用户将无法看到“控件”部分，且下方的细粒度权限设置将不生效**。**设置 > 常规** 中的 **系统提示** 和 **高级参数** 部分也将被隐藏。任何有权访问该模型的用户仍可使用其 [模型控制](/features/workspace/models#using-model-controls-in-chat)。设置 **允许聊天控制** 以按组进行配置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8117,7 +8119,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：当 `USER_PERMISSIONS_CHAT_CONTROLS` 启用时，此设置专门控制聊天控制面板中"Advanced Parameters"部分的可见性。
+- 描述：当 `USER_PERMISSIONS_CHAT_CONTROLS` 启用时，此设置生效。它控制用户是否能在聊天控制菜单及其通用设置中看到高级参数。 此设置不会影响 [模型控制项](/features/workspace/models#using-model-controls-in-chat)：任何有权访问该模型的用户仍可从中进行选择。无论此设置如何，保存到用户账户中的参数都会被保留。此设置仅隐藏相关面板。 用户仍可通过 API 设置参数，包括在聊天请求中或保存设置时。这使管理员能够在提供模型控制功能的同时隐藏面板。请将 **允许聊天参数** 设置为按组配置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8220,7 +8222,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用用户在聊天中使用语音通话（Voice Call）的权限。**音频**设置标签页会向至少持有 [`USER_PERMISSIONS_CHAT_STT`](#user_permissions_chat_stt)、[`USER_PERMISSIONS_CHAT_TTS`](#user_permissions_chat_tts) 和 [`USER_PERMISSIONS_CHAT_CALL`](#user_permissions_chat_call) 中至少一项的非管理员显示。
+- 描述：启用或禁用在标准模式或实时模式下发起 [语音模式](/features/chat-conversations/chat-features/voice-mode#permissions) 通话的权限。非管理员用户持有以下任一权限时，将看到 **音频** 设置： [`USER_PERMISSIONS_CHAT_STT`](#user_permissions_chat_stt)、 [`USER_PERMISSIONS_CHAT_TTS`](#user_permissions_chat_tts)，或 [`USER_PERMISSIONS_CHAT_CALL`](#user_permissions_chat_call)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8428,7 +8430,7 @@ environment:
 
 - 类型： `bool`
 - 默认值： `False`
-- 说明： 启用或禁用用户**导入**技能到技能工作区的权限。
+- 说明： 启用或禁用用户**导入**技能到技能工作区的权限。请参阅 [所需权限](/features/workspace/skills#required-permissions)。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -8436,7 +8438,7 @@ environment:
 
 - 类型： `bool`
 - 默认值： `False`
-- 说明： 启用或禁用用户从技能工作区**导出**技能的权限。
+- 说明：启用或禁用用户从“技能”工作区 **导出** 技能的权限。请参阅 [所需权限](/features/workspace/skills#required-permissions)。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -9405,7 +9407,7 @@ Redis 集群模式与 OpenTelemetry 埋点完全兼容。启用 `ENABLE_OTEL` �
 
 - 类型：`str`
 - 默认值：`open-webui`
-- 描述：自定义用于存储配置值的 Redis 键前缀。这允许多个 Open WebUI 实例共享同一 Redis 实例而不会发生键冲突。在 Redis 集群模式下运行时，前缀格式为 `{prefix}:`（例如 `{open-webui}:config:*`），以便在同一哈希槽内对配置键执行多键操作。
+- 描述：设置 Open WebUI 写入的 Redis 键的前缀，例如 `open-webui:tasks:...`。
 
 
 #### `REDIS_RESPONSE_STREAM_TTL` {#redis\_response\_stream\_ttl}
@@ -9594,7 +9596,7 @@ WEBSOCKET_REDIS_OPTIONS='{"socket_connect_timeout": 5}'
 #### `WEBSOCKET_REDIS_OPTIONS` {#websocket\_redis\_options}
 
 - 类型：`str`
-- 默认值：`{}` (empty, which allows `REDIS_SOCKET_CONNECT_TIMEOUT` to apply if set)
+- 默认值：空。此时 WebSocket 客户端将不使用读取超时（`socket_timeout` 设为 `None`），并应用 `REDIS_SOCKET_CONNECT_TIMEOUT`（若已设置）。若 JSON 值中未包含 `socket_timeout`，则该参数也设为 `None`。
 - 描述：包含 WebSocket Redis 客户端（AsyncRedisManager）额外 Redis 连接选项的字典的字符串表示。允许指定高级连接参数，如 SSL 设置、超时或其他标准 `WEBSOCKET_REDIS_URL` 未覆盖的 Redis 客户端配置。字符串应为有效的 JSON 格式。例如：`{"retry_on_timeout": true, "socket_connect_timeout": 5, "socket_timeout": 5, "max_connections": 8}`。[此处](https://redis.readthedocs.io/en/stable/connections.html)列出的所有 JSON 可编码选项均可使用。
 
 :::warning
@@ -9702,31 +9704,6 @@ WEBSOCKET_REDIS_OPTIONS='{"socket_connect_timeout": 5}'
 
 每个 worker 都是一个完整的 Open WebUI 进程，它持有自己的本地模型副本、打开自己的数据库连接池，并与其他 worker 同时运行启动迁移。所有 worker 共享同一个容器的内存上限，并会一起重启。worker 多于一个时，嵌入式的 ChromaDB 会崩溃，因此必须使用 Redis、PostgreSQL 和客户端-服务器型向量数据库。升级时，请先以 `UVICORN_WORKERS=1` 启动新版本，等待迁移完成后再调高该值。
 
-:::
-
-:::info
-
-在 Kubernetes 等编排环境中或使用 Helm chart 部署时，建议将 UVICORN_WORKERS 保持为 1。容器编排平台本身已通过 Pod 副本提供横向扩展机制，而在容器内使用多个 worker 可能导致资源分配问题，并使横向扩展策略复杂化。
-如果你确实使用 UVICORN_WORKERS，还需要确保为可扩展的多 worker 部署正确设置了相关环境变量。
-
-:::
-
-:::danger ChromaDB 不兼容多 worker
-
-默认的向量数据库（ChromaDB）使用基于本地 SQLite 的 `PersistentClient`。SQLite 连接**不是 fork 安全的**——当 uvicorn fork 出多个 worker 时，每个进程都会继承同一个 SQLite 连接，并发写入会立即导致 worker 崩溃（`Child process died`）。
-如果你设置 `UVICORN_WORKERS > 1`，则**必须**通过 [`VECTOR_DB`](/reference/env-configuration#vector_db) 切换到客户端-服务器型向量数据库（PGVector、Milvus、Qdrant），或者将 ChromaDB 作为独立服务器运行并设置 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host)。
-
-:::
-
-:::warning 多 worker / 多 Pod 部署中的数据库迁移
-当 `UVICORN_WORKERS > 1` 或运行多个副本时，启动应用可能触发多个进程并发执行数据库迁移，从而可能导致数据库结构损坏或状态不一致。
-
-**Recommendation:**
-要在多进程/多 Pod 环境中安全地处理迁移，你可以：
-1.  **指定主节点（推荐）：** 在除一个实例/worker 之外的所有实例上设置 `ENABLE_DB_MIGRATIONS=False`。设置了 `ENABLE_DB_MIGRATIONS=True`（默认）的实例将负责迁移，其他实例则等待或跳过。
-2.  **临时缩容：** 临时缩减到单个实例/worker，让迁移完成后再扩容。
-**对于 Kubernetes、Helm 及编排环境：**
-建议使用 `ENABLE_DB_MIGRATIONS` 变量指定一个专用于迁移的 Pod，或使用 init container/job 在主应用 Pod 扩容之前完成迁移。这可确保结构更新只应用一次。
 :::
 
 #### `UVICORN_WS_PER_MESSAGE_DEFLATE` {#uvicorn\_ws\_per\_message\_deflate}

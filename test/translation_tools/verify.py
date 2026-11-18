@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = ROOT / "test/translation_config.json"
 SUFFIXES = {".md", ".mdx"}
 REVIEW_DIMENSIONS = ("completeness", "accuracy", "fluency", "terminology")
+CORRUPT_CHARACTER = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\ufffd]")
 
 
 def load_config(path: Path = DEFAULT_CONFIG) -> dict:
@@ -87,7 +88,13 @@ def count_literals(doc: Document, kind: str) -> Counter:
         doc._literal_counts = {}
         # Reuse body tokens, including lines that contain literals but no prose.
         for span in getattr(doc, "literal_spans", []):
-            doc._literal_counts.setdefault(span.kind, Counter())[span.value] += 1
+            value = span.value
+            # The table parser consumes the pipe escape before parsing code spans.
+            if span.kind == "inline_code" and r"\|" in value and doc.line(span.start) in doc.table_rows:
+                value = value.replace(r"\|", "|")
+            if span.kind == "hash_placeholder":
+                value = value.removeprefix("\\")
+            doc._literal_counts.setdefault(span.kind, Counter())[value] += 1
         # Metadata and localizable attributes sit outside the body token stream.
         for segment in doc.segments:
             if segment.kind == "prose":
@@ -263,6 +270,30 @@ def canonical_destinations(counter: Counter, path: str) -> Counter:
     return result
 
 
+def setting_fields(doc: Document):
+    """Return the opening field rows of sections headed by a literal setting name."""
+    lines = doc.text.splitlines()
+    fields = {}
+    for index, (_, line, title, _) in enumerate(doc.headings):
+        key = re.fullmatch(r"`([A-Z][A-Z0-9_]+)`(?:\s+\\?\{#[^}]+\})?", title)
+        if not key:
+            continue
+        end = doc.headings[index + 1][1] - 1 if index + 1 < len(doc.headings) else len(lines)
+        rows = []
+        for offset in range(line, end):
+            text = lines[offset].strip()
+            if not text:
+                continue
+            field = re.fullmatch(r"[-*] ([^:`：]+?)\s*[:：]\s*(.*)", text)
+            if not field:
+                break
+            rows.append((offset + 1, field[1], field[2]))
+            if len(rows) == 2:
+                break
+        fields[key[1]] = (line, rows)
+    return fields
+
+
 def compare(path: str, source: Document, target: Document, config: dict) -> list[Issue]:
     issues: list[Issue] = []
 
@@ -319,6 +350,28 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
         add("duplicate-anchor", "Target has duplicate explicit heading anchors")
     if source.structure != target.structure:
         add("markdown-structure", "Lists, table cells, blockquotes, or thematic breaks differ", severity="warning")
+    source_fields = setting_fields(source)
+    if source_fields:
+        target_fields = setting_fields(target)
+        for key, (_, rows) in source_fields.items():
+            if key not in target_fields or [r[1] for r in rows] != ["Type", "Default"]:
+                continue
+            number = re.match(r"`([-+]?\d+(?:\.\d+)?)`(?:\s|$)", rows[1][2])
+            if not number:
+                continue
+            line, local = target_fields[key]
+            # Labels are translated. Use the source field order as a review signal,
+            # not a failure: a translation can legitimately reorder or convert units.
+            value = local[1][2] if len(local) == 2 else ""
+            first_number = re.search(r"(?<![\w.+-])[-+]?\d+(?:\.\d+)?(?![\w.])", value, re.ASCII)
+            if not first_number or first_number[0] != number[1]:
+                add("setting-default", f"Check {key}: expected numeric default {number[1]} in its own field",
+                    local[1][0] if len(local) == 2 else line, "warning")
+    for span in target.literal_spans:
+        if span.kind == "inline_code" and re.search(r"(?<!\\)\|", span.value):
+            line = target.line(span.start)
+            if line in target.table_rows:
+                add("table-code-pipe", "An unescaped pipe splits inline code across table cells", line)
     if source.admonitions != target.admonitions:
         if len(source.admonitions) != len(target.admonitions):
             add("admonition-structure", f"Admonition count differs (source {len(source.admonitions)}, "
@@ -331,7 +384,7 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
         a, b = count_literals(source, kind), count_literals(target, kind)
         if a != b:
             add("markdown-" + kind, difference(a, b), severity="warning")
-    for kind in ["inline_code", "identifier", "term", "destination", "reference", "jsx", "expression", "math", "comment"]:
+    for kind in ["inline_code", "identifier", "term", "destination", "reference", "jsx", "expression", "hash_placeholder", "math", "comment"]:
         a, b = count_literals(source, kind), count_literals(target, kind)
         if kind in {"identifier", "term"}:
             b = b.copy()
@@ -395,8 +448,8 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
     if a != b:
         add("numbers", difference(a, b), severity="warning")
     for doc, code in [(source, "source-corruption"), (target, "target-corruption")]:
-        if "\ufffd" in doc.text:
-            add(code, "Unicode replacement character U+FFFD found", doc.line(doc.text.index("\ufffd")))
+        if match := CORRUPT_CHARACTER.search(doc.text):
+            add(code, f"Unexpected character U+{ord(match[0]):04X} found", doc.line(match.start()))
     language_terms = config["terms"] + list(source.error_messages.values())
     target_headings = {anchor: (line, title) for _, line, title, anchor in target.headings}
     for anchor, message in source.error_messages.items():
@@ -405,8 +458,8 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
             add("literal-error-message", "Quoted diagnostic heading changed: " + repr(message), line)
     source_prose = [prose(s.text, language_terms) for s in source.segments]
     normalized_source = {re.sub(r"\s+", " ", p).strip().lower() for p in source_prose}
-    for segment in target.segments:
-        value = prose(segment.text, language_terms)
+    target_prose = [prose(s.text, language_terms) for s in target.segments]
+    for segment, value in zip(target.segments, target_prose):
         words = WORDS.findall(value)
         normalized = re.sub(r"\s+", " ", value).strip().lower()
         if segment.kind == "keyword":
@@ -424,16 +477,18 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
             add("untranslated-heading", "Heading remains English after terminology/code exclusions", line, "warning")
     # Compare every matched section even when heading counts differ. Alignment
     # follows anchors, not heading position, so one omission cannot shift all checks.
-    def sections(doc):
-        result = {}
-        heading_offsets = [(line, anchor) for _, line, _, anchor in doc.headings]
-        for i, (line, anchor) in enumerate([(0, "<preamble>")] + heading_offsets):
-            end = heading_offsets[i][0] if i < len(heading_offsets) else doc.text.count("\n") + 2
-            content = " ".join(prose(s.text, language_terms) for s in doc.segments
-                               if s.kind != "keyword" and line < doc.line(s.start) < end)
-            result[anchor] = (line, content)
-        return result
-    src_sections, dst_sections = sections(source), sections(target)
+    def sections(doc, values):
+        offsets = [(0, "<preamble>"), *((line, anchor) for _, line, _, anchor in doc.headings)]
+        groups = [[] for _ in offsets]
+        index = 0
+        for segment, value in zip(doc.segments, values):
+            line = doc.line(segment.start)
+            while index + 1 < len(offsets) and offsets[index + 1][0] <= line:
+                index += 1
+            if segment.kind != "keyword" and line > offsets[index][0]:
+                groups[index].append(value)
+        return {anchor: (line, " ".join(group)) for (line, anchor), group in zip(offsets, groups)}
+    src_sections, dst_sections = sections(source, source_prose), sections(target, target_prose)
     for anchor, (line, src) in src_sections.items():
         if anchor not in dst_sections:
             continue
@@ -587,9 +642,9 @@ def validate_review(results: dict, source_root: Path, target_root: Path, pattern
     return validate_review_snapshot(results, expected, config=config)
 
 
-def validate_review_snapshot(results: dict, expected: dict, *, config=None, require_config=False) -> dict:
+def validate_review_snapshot(results: dict, expected: dict, *, config=None) -> dict:
     entries = result_entries(results)
-    if config is not None and (require_config or "config_sha256" in results):
+    if config is not None:
         if results.get("config_sha256") != digest(json.dumps(config, sort_keys=True)):
             raise ValueError("Stale semantic review; configuration changed or unbound")
     if not expected or entries.keys() != expected.keys() or any(target is None for _, target in expected.values()):

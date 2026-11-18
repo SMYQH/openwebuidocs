@@ -9,7 +9,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 # 提示词 {#prompts}
 
 <ThemedImage
-  alt="工作区地图，提示词模块高亮：模型、知识、提示词、技能和工具围绕 Open WebUI 核心"
+  alt="工作区提示：位于一排相同副本上方的模板块"
   sources={{
     light: useBaseUrl('/images/banners/workspace-prompts-light.svg'),
     dark: useBaseUrl('/images/banners/workspace-prompts-dark.svg'),
@@ -128,7 +128,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 所有自定义变量**默认为可选**。添加 `:required` 使字段为必填：
 ```
 {{title | text:required}}
-{{notes | textarea:placeholder="附加上下文（可选）"}}
+{{notes | textarea:placeholder="Additional context (optional)"}}
 ```
 
 ### 可用输入类型 {#available-input-types}
@@ -213,7 +213,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 - **Set as Production** 可将该版本恢复为当前生效的版本。
 - 某个版本的 **⋯** 菜单中的 **Delete** 会在您于 **Delete Version** 对话框中确认后删除它。Live 版本无法删除。建立在已删除版本之上的版本会重新关联到其父版本，因此历史记录始终保持连贯。
 
-![Compare to current in the prompt editor, with an older version on the left and the production version on the right in the Split layout](/images/workspace/prompt-version-compare.webp)
+![在提示词编辑器中进行对比，采用“分屏”布局，左侧显示旧版本，右侧显示正式发布版本](/images/workspace/prompt-version-compare.webp)
 
 切换到其他版本或在存在未保存更改时离开编辑器，都会先询问是否放弃这些更改。任何可以查看提示词的人都能打开并比较其版本；编辑、将某个版本设为生效以及删除则需要写权限。
 
@@ -237,7 +237,7 @@ Generate a bug report with the following details:
 **Summary:** {{summary | text:placeholder="A brief summary of the issue":required}}
 **Priority:** {{priority | select:options=["Critical","High","Medium","Low"]:default="Medium":required}}
 **Steps to Reproduce:**
-{{steps | textarea:placeholder="1. 进入...\n2. 点击...\n3. 出现错误...":required}}
+{{steps | textarea:placeholder="1. Go to...\n2. Click on...\n3. See error...":required}}
 
 **Additional Context:** {{additional_context | textarea:placeholder="Browser version, OS, screenshots, etc."}}
 **Workaround:** {{workaround | textarea:placeholder="Any temporary solutions found"}}
@@ -250,23 +250,23 @@ Please format this into a clear and complete bug report document.
 日期和时间选择器、必填参与者和议程、可选决定和行动项：
 
 ``` txt
-# 会议记录
+# Meeting Minutes
 
 **Date:** {{meeting_date | date:required}}
 **Time:** {{meeting_time | time:required}}
 **Title:** {{title | text:placeholder="e.g., Weekly Team Sync":required}}
 **Attendees:** {{attendees | text:placeholder="Comma-separated list of names":required}}
 
-## 议程/主要讨论点
-{{agenda_items | textarea:placeholder="粘贴议程或列出讨论的主要主题。":required}}
+## Agenda / Key Discussion Points
+{{agenda_items | textarea:placeholder="Paste the agenda or list the key topics discussed.":required}}
 
-## 做出的决定
-{{decisions | textarea:placeholder="关键决定和结果"}}
+## Decisions Made
+{{decisions | textarea:placeholder="Key decisions and outcomes"}}
 
-## 行动项
-{{action_items | textarea:placeholder="每项行动的负责人和截止日期。"}}
+## Action Items
+{{action_items | textarea:placeholder="Action item, assignee, and deadline for each."}}
 
-## 下次会议
+## Next Meeting
 **Date:** {{next_meeting | date}}
 **Topics:** {{next_topics | text:placeholder="Items to discuss next time"}}
 

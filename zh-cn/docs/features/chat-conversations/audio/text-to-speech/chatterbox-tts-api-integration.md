@@ -15,7 +15,7 @@ title: "Chatterbox TTS —— 声音克隆"
 
 [Chatterbox TTS API](https://github.com/travisvn/chatterbox-tts-api) 是一个 API 封装层，支持声音克隆与文本转语音，可直接替代 OpenAI Speech API 端点。
 
-[![Link to Resemble AI voice samples](https://img.shields.io/badge/listen-demo_samples-blue)](https://resemble-ai.github.io/chatterbox_demopage/)
+[![Resemble AI 语音样本链接](https://img.shields.io/badge/listen-demo_samples-blue)](https://resemble-ai.github.io/chatterbox_demopage/)
 
 ## 主要特性 {#key-features}
 

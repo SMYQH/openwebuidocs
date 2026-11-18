@@ -243,7 +243,7 @@ def apply_bundle(bundle: dict, source_root: Path, target_root: Path, config: dic
     if report is not None:
         report["result_format"] = review_template(identities, config)
     if review_results is not None:
-        quality = validate_review_snapshot(review_results, identities, config=config, require_config=True)
+        quality = validate_review_snapshot(review_results, identities, config=config)
         if report is not None:
             report.update(quality=quality, semantic_review=quality["semantic_review"])
         if quality["semantic_review"] != "passed":

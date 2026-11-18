@@ -97,7 +97,7 @@ services:
 | `hapticFeedback` | Haptic Feedback (Android) | `false` |
 | `copyFormatted` | Copy Formatted Text | `false` |
 | `showUpdateToast` | Toast Notifications for New Updates | `true` |
-| `showChangelog` | Show "What's New" Modal on Login | `true` |
+| `showChangelog` | 登录时显示“最新动态”模态窗口 | `true` |
 
 `textScale` 对应 **UI Scale** 滑块，`highContrastMode` 对应 **Accessibility Mode**。开启无障碍模式后，手机允许最多 5 倍的捏合缩放；关闭时缩放会被锁定，因此手机不会自行放大到小号输入框里。
 
@@ -112,7 +112,7 @@ services:
 | `landingPageMode` | Landing Page Mode | `""`（显示为 **Default**），或 `"chat"` |
 | `backgroundImageUrl` | Chat Background Image | `null` |
 | `chatBubble` | Chat Bubble UI | `true` |
-| `showUsername` | Display the Username Instead of You in the Chat | `false` |
+| `showUsername` | 在聊天中显示用户名而非“您” | `false` |
 | `widescreenMode` | Widescreen Mode | `false` |
 | `temporaryChatByDefault` | Temporary Chat by Default | `false` |
 | `chatFadeStreamingText` | Fade Effect for Streaming Text | `true` |

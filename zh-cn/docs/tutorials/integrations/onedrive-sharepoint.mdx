@@ -85,18 +85,18 @@ Open WebUI 使用 `.default` 范围以实现无缝企业体验，这意味着它
 在 Open WebUI 部署中设置以下环境变量以启用工作/学校账户集成：
 
 ```bash
-# 全局启用 OneDrive 集成功能
+# Enable the OneDrive integration feature globally
 ENABLE_ONEDRIVE_INTEGRATION=true
 
-# --- 企业账户及 SharePoint 配置 ---
+# --- Business & SharePoint Configuration ---
 
-# 来自企业应用注册的 Application (client) ID
+# The Application (client) ID from your Business App Registration
 ONEDRIVE_CLIENT_ID_BUSINESS="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-# 来自企业应用注册的 Directory (tenant) ID
+# The Directory (tenant) ID from your Business App Registration
 ONEDRIVE_SHAREPOINT_TENANT_ID="yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
 
-# SharePoint 实例的根 URL
+# The root URL of your SharePoint instance
 ONEDRIVE_SHAREPOINT_URL="https://your-tenant-name.sharepoint.com"
 ```
 
@@ -131,9 +131,9 @@ ONEDRIVE_SHAREPOINT_URL="https://your-tenant-name.sharepoint.com"
 
 ```bash
 
-# --- 个人账户配置（可选）---
+# --- Personal Account Configuration (Optional) ---
 
-# 来自*第二个*个人应用注册的 Application (client) ID
+# The Application (client) ID from your *second*, Personal App Registration
 ONEDRIVE_CLIENT_ID_PERSONAL="zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz"
 ```
 

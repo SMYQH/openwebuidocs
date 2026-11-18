@@ -228,7 +228,7 @@ curl -s -X POST $OWUI_URL/api/chat/completions \
 
 发生的过程：Open WebUI 询问任务模型要调用哪些工具，使用你的权限在服务端执行它们，把结果作为上下文注入提示词，然后运行真正的补全。不会持久化任何内容，不需要聊天，响应就是你的 HTTP 客户端所期望的常规对象，另外还带有一个顶层 `sources` 数组，其中保存每个工具的结果。
 
-把 `"stream"` 设为 `true` 可以得到同样内容的 SSE 版本。工具轮发生在第一个 token 之前，因此流会在工具执行完之后才开始。`sources` 负载会作为第一个 `data:` 帧到达，先于模型的增量输出。
+设置 `"stream": true` 可以得到同样内容的 SSE 版本。工具轮发生在第一个 token 之前，因此流会在工具执行完之后才开始。`sources` 负载会作为第一个 `data:` 帧到达，先于模型的增量输出。
 
 为换取简洁性，需要接受以下限制：
 
@@ -446,7 +446,7 @@ if __name__ == "__main__":
 | `503`，聊天中终端不可用 | 该终端的 `contexts.chat` 为 `false`，说明管理员已把它从聊天中移除 | 换一个 `contexts.chat` 不为 `false` 的终端 |
 | `503`，终端需要已保存的聊天上下文 | 该终端按 `contexts.chat.context_id = "chat_id"` 限定范围，而请求没有已保存的 `chat_id` | 使用路径 A 并配合已保存的聊天，或换一个共享终端 |
 | MCP 工具连接失败 | 该 OAuth 受保护的 MCP 服务器尚未被 API 密钥所属用户授权 | 以该用户身份在浏览器中完成一次 OAuth 流程 |
-| 聊天已创建但在界面中始终为空 | 消息树损坏 | `currentId` 使用驼峰命名，每条消息都需要 `parentId` 和 `childrenIds`。参见[后端可控的 API 流程](/reference/api-flow) |
+| 聊天已创建但在界面中始终为空 | 消息树损坏 | `currentId` 使用驼峰命名（camelCase），每条消息都需要 `parentId` 和 `childrenIds`。参见[后端可控的 API 流程](/reference/api-flow) |
 
 ---
 

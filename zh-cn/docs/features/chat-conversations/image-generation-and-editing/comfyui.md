@@ -13,7 +13,7 @@ ComfyUI 是一个强大且模块化的 Stable Diffusion 节点式图形界面，
 
 启动后，ComfyUI 界面通常可通过 `http://<your_comfyui_ip>:8188` 访问。
 
-![Screenshot of the ComfyUI server startup command with the --listen flag highlighted.](/images/image-generation-and-editing/comfyui-listen-flag.png)
+![ComfyUI 服务器启动命令的截图，其中突出显示了 --listen 参数。](/images/image-generation-and-editing/comfyui-listen-flag.png)
 
 ## 将 ComfyUI 连接到 Open WebUI {#connecting-comfyui-to-open-webui}
 
@@ -46,7 +46,7 @@ docker run -d -p 3000:8080 \
 
 若要自定义用于生成提示词的模板，请前往 **Settings > Interface > Tasks**（管理员区域）。
 
-![Screenshot showing the Image Prompt Generation toggle location in Images settings](/images/image-generation-and-editing/image-prompt-generation-toggle.png)
+![显示“图像设置”中“图像提示生成”开关位置的截图](/images/image-generation-and-editing/image-prompt-generation-toggle.png)
 
 ## 创建图像（Image Generation） {#create-image-image-generation}
 
@@ -62,19 +62,19 @@ docker run -d -p 3000:8080 \
     - 点击 URL 字段旁的 **refresh icon**（🔄）验证连接；成功后应出现提示
     - 如果你的 ComfyUI 实例需要 API key，请在 **ComfyUI API Key** 字段中填写
 
-    ![Screenshot of the Open WebUI Images settings page with ComfyUI selected for image generation.](/images/image-generation-and-editing/comfyui-generation-settings.png)
+    ![Open WebUI“图片”设置页面的截图，其中已选择 ComfyUI 用于生成图片。](/images/image-generation-and-editing/comfyui-generation-settings.png)
 
 3. **上传你的 ComfyUI Workflow：**
     - 首先，你需要从 ComfyUI 导出正确格式的 workflow。在 ComfyUI 界面左上角点击 ComfyUI logo，再点击 **Settings**，搜索并启用 **"Dev Mode"** 选项，其说明通常为 **"Enable dev mode options (API save, etc.)"**
 
-    ![Screenshot of the ComfyUI settings with the "Dev Mode" toggle highlighted.](/images/image-generation-and-editing/comfyui-dev-mode.png)
+    ![ComfyUI 设置界面的截图，其中“开发者模式”开关已被高亮显示。](/images/image-generation-and-editing/comfyui-dev-mode.png)
 
     - 仍在 ComfyUI 中时，加载你想使用的**图像生成** workflow，然后点击 ComfyUI logo，在 **File** 子菜单中选择 **"Export (API)"**。系统会提示你为文件命名，请使用一个方便识别的名称并下载
 
-    ![Screenshot of the "Save (API Format)" button in the ComfyUI interface.](/images/image-generation-and-editing/comfyui-save-api-format.png)
+    ![ComfyUI“文件”菜单中“导出（API）”选项的屏幕截图。](/images/image-generation-and-editing/comfyui-save-api-format.png)
     - 返回 Open WebUI，在 **ComfyUI Workflow** 区域点击 **Upload**，然后选择刚刚下载的 JSON workflow 文件
 
-    ![Screenshot of the ComfyUI Workflow section in Open WebUI, showing the upload button.](/images/image-generation-and-editing/comfyui-workflow-upload.png)
+    ![Open WebUI 中 ComfyUI“工作流”部分的截图，显示了上传按钮。](/images/image-generation-and-editing/comfyui-workflow-upload.png)
 
 4. **映射 Workflow Nodes：**
     导入 workflow 后，你必须将 workflow 中的 node ID 映射到 Open WebUI 对应字段。每个参数都有两个输入框：
@@ -99,7 +99,7 @@ docker run -d -p 3000:8080 \
 
     Open WebUI 会从 workflow 的 **Save Image**、**Save Image (Advanced)**、**Save Animated WEBP**、**Save Animated PNG** 和 **Preview Image** 节点返回图片。动画图片在聊天中会保持为动画。
 
-    ![Screenshot of the ComfyUI Workflow Nodes section in Open WebUI, showing the mapping fields.](/images/image-generation-and-editing/comfyui-node-mapping.png)
+    ![Open WebUI 中 ComfyUI“工作流节点”部分的截图，显示了映射字段。](/images/image-generation-and-editing/comfyui-node-mapping.png)
 
     :::info
     你可能需要在 Open WebUI 的 `ComfyUI Workflow Nodes` 区域中调整某个 `Key`，以匹配你的 workflow node。比如，默认的 `seed` key 可能要根据 workflow 结构改成 `noise_seed`。
@@ -112,7 +112,7 @@ docker run -d -p 3000:8080 \
 5. **保存配置：**
     - 点击页面底部的 **Save** 按钮完成配置。之后你就可以在 Open WebUI 中使用 ComfyUI 进行图像生成了。
 
-![Screenshot of an image being generated in the chat using ComfyUI.](/images/image-generation-and-editing/comfyui-create-image-in-chat.png)
+![使用 ComfyUI 在聊天中生成图片的截图。](/images/image-generation-and-editing/comfyui-create-image-in-chat.png)
 
 :::info
 消息上没有“生成图像”按钮。生成是从聊天本身发起的：在消息输入框的 **+** 菜单中开启 **图像**，然后再请求生成图片。具体需要满足的条件，以及一个社区插件可以添加该按钮，请参见[使用方法](/features/chat-conversations/image-generation-and-editing/usage)。
@@ -206,7 +206,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 },
 ```
 
-![Screenshot of the ComfyUI interface with the KSampler node selected, highlighting the node ID and the 'seed' and 'steps' input fields.](/images/image-generation-and-editing/comfyui-unet-name-node.png)
+![Open WebUI 管理设置中“Images”页面的截图，该页面使用 ComfyUI 作为引擎，显示了基础 URL、API 密钥、工作流上传以及工作流节点的映射。](/images/image-generation-and-editing/comfyui-unet-name-node.png)
 
 #### 按任务类型区分的默认 Key 值 {#default-key-values-by-task-type}
 

@@ -4,7 +4,7 @@ title: "Intel GPU (IPEX-LLM)"
 ---
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/contributing)。
 :::
 
 :::note
@@ -17,7 +17,7 @@ title: "Intel GPU (IPEX-LLM)"
 
 :::info
 
-[**IPEX-LLM**](https://github.com/intel-analytics/ipex-llm) 是一个用于在 Intel CPU 和 GPU（例如，配有集成显卡的本地 PC、Arc A 系列、Flex 和 Max 等独立显卡）上以极低延迟运行 LLM 的 PyTorch 库。
+[**IPEX-LLM**](https://github.com/intel-analytics/ipex-llm) 是一个用于在 Intel CPU 和 GPU（例如，配有集成显卡（iGPU）的本地 PC、Arc A 系列、Flex 和 Max 等独立显卡）上以极低延迟运行 LLM 的 PyTorch 库。
 
 :::
 
@@ -35,7 +35,7 @@ title: "Intel GPU (IPEX-LLM)"
 
 ## 配置 Open WebUI {#configure-open-webui}
 
-通过菜单中的 **Settings -> Connections** 访问 Ollama 设置。默认情况下，**Ollama Base URL** 预设为 `https://localhost:11434`，如下图所示。要验证 Ollama 服务连接状态，点击文本框旁边的**刷新按钮**。如果 WebUI 无法与 Ollama 服务器建立连接，您将看到错误消息 `WebUI could not connect to Ollama`。
+通过菜单中的 **Settings -> Connections** 访问 Ollama 设置。默认情况下，**Ollama Base URL** 预设为 `http://localhost:11434`，如下图所示。要验证 Ollama 服务连接状态，点击文本框旁边的**刷新按钮**。如果 WebUI 无法与 Ollama 服务器建立连接，您将看到错误消息 `WebUI could not connect to Ollama`。
 
 ![Open WebUI Ollama 设置失败](https://llm-assets.readthedocs.io/en/latest/_images/open_webui_settings_0.png)
 

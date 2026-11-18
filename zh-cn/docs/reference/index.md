@@ -7,7 +7,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # 参考文档 {#reference}
 <ThemedImage
-  alt="Open WebUI 参考文档：环境变量、API 端点、HTTPS、监控与网络拓扑图"
+  alt="参考：四个叠放的抽屉，其中一个被拉了出来"
   sources={{
     light: useBaseUrl('/images/banners/reference-light.svg'),
     dark: useBaseUrl('/images/banners/reference-dark.svg'),

@@ -3,11 +3,6 @@ sidebar_position: 310
 title: "导出与导入数据库"
 ---
 
-:::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
-:::
-
-
 如果您需要将 **Open WebUI** 的数据（例如聊天历史记录、配置等）从一台服务器迁移到另一台，或者备份以供将来使用，可以通过导出和导入数据库来实现。本指南假设您使用 Open WebUI 内置的 SQLite 数据库（而非 PostgreSQL）。复制 `webui.db` 只会迁移存储在数据库中的全部内容（账号、聊天、设置、文件和知识库记录），但不包括文件本身：位于 `/app/backend/data/uploads` 下的上传文件和位于 `/app/backend/data/vector_db` 下的向量库会留在原处，因此引用了这些文件的聊天会指向不存在的对象。要完成完整迁移，请复制整个 `/app/backend/data` 目录（参见[备份指南](/tutorials/maintenance/backups)）并保持相同的 `WEBUI_SECRET_KEY`；Docker 镜像会把自动生成的密钥写入 `/app/backend/.webui_secret_key`，位于该目录之外。如果使用 PGVector 等外部向量数据库，向量则存放在那里，而不是存放在 `vector_db` 中。
 
 按照以下步骤导出和导入 `webui.db` 文件，该文件包含您的数据库。

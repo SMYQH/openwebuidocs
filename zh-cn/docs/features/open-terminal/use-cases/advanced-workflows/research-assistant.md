@@ -18,9 +18,9 @@ title: "研究助手"
 4. 创建带有小标题、来源引用和对比表格的结构化 Markdown 简报
 5. 保存为 Markdown 和 PDF 两种格式
 
-{/* TODO: Screenshot — Chat showing the AI gathering information from 6+ sources and producing a structured briefing document. The file browser shows research_briefing.md being previewed with headers, bullet points, and a comparison table. */}
+{/* TODO: Screenshot: Chat showing the AI gathering information from 6+ sources and producing a structured briefing document. The file browser shows research_briefing.md being previewed with headers, bullet points, and a comparison table. */}
 
-{/* TODO: Screenshot — The briefing document showing an executive summary, a comparison table of key companies and their technology approaches, and a source list with URLs. */}
+{/* TODO: Screenshot: The briefing document showing an executive summary, a comparison table of key companies and their technology approaches, and a source list with URLs. */}
 
 ## 技能内容 {#skill-content}
 

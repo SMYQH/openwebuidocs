@@ -30,9 +30,9 @@ Let's Encrypt 提供免费的 SSL 证书，被大多数浏览器信任，非常�
 
    在项目根目录执行以下命令，为 Nginx 配置和 Let's Encrypt 证书创建目录：
 
-   ```bash
-   mkdir -p nginx/conf.d ssl/certbot/conf ssl/certbot/www
-   ```
+    ```bash
+    mkdir -p nginx/conf.d ssl/certbot/conf ssl/certbot/www
+    ```
 
 3. **创建临时的 Nginx 配置**
 
@@ -40,64 +40,64 @@ Let's Encrypt 提供免费的 SSL 证书，被大多数浏览器信任，非常�
 
    **记得把 `<YOUR_DOMAIN_NAME>` 替换成你的真实域名。**
 
-   ```nginx
-   # nginx/conf.d/open-webui.conf
+    ```nginx
+    # nginx/conf.d/open-webui.conf
 
-   server {
-       listen 80;
-       listen [::]:80;
-       server_name <YOUR_DOMAIN_NAME>;
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name <YOUR_DOMAIN_NAME>;
 
-       # Let's Encrypt 验证挑战路由
-       location /.well-known/acme-challenge/ {
-           root /var/www/certbot;
-       }
+        # Route for Let's Encrypt validation challenges
+        location /.well-known/acme-challenge/ {
+            root /var/www/certbot;
+        }
 
-       # 其余请求暂时返回 404
-       location / {
-           return 404;
-       }
-   }
-   ```
+        # All other requests will be ignored for now
+        location / {
+            return 404;
+        }
+    }
+    ```
 
 4. **更新你的 `docker-compose.yml`**
 
    将 `nginx` 服务添加到 `docker-compose.yml` 中，并确保 `open-webui` 服务使用共享的 Docker 网络。
 
-   ```yaml
-   services:
-     nginx:
-       image: nginx:alpine
-       restart: always
-       ports:
-         # 将 HTTP 和 HTTPS 端口暴露到宿主机
-         - "80:80"
-         - "443:443"
-       volumes:
-         # 挂载 Nginx 配置和 SSL 证书数据
-         - ./nginx/conf.d:/etc/nginx/conf.d
-         - ./ssl/certbot/conf:/etc/letsencrypt
-         - ./ssl/certbot/www:/var/www/certbot
-       depends_on:
-         - open-webui
-       networks:
-         - open-webui-network
+    ```yaml
+    services:
+      nginx:
+        image: nginx:alpine
+        restart: always
+        ports:
+          # Expose HTTP and HTTPS ports to the host machine
+          - "80:80"
+          - "443:443"
+        volumes:
+          # Mount Nginx configs and SSL certificate data
+          - ./nginx/conf.d:/etc/nginx/conf.d
+          - ./ssl/certbot/conf:/etc/letsencrypt
+          - ./ssl/certbot/www:/var/www/certbot
+        depends_on:
+          - open-webui
+        networks:
+          - open-webui-network
 
-     open-webui:
-       # 你的现有 open-webui 配置……
-       # ...
-       # 确保它在同一个网络中
-       networks:
-         - open-webui-network
-       # 只在 Docker 网络内部暴露端口。
-       # 你不需要把它发布到宿主机（即这里不需要 `ports` 配置）。
-       expose:
-         - 8080
+      open-webui:
+        # Your existing open-webui configuration...
+        # ...
+        # Ensure it's on the same network
+        networks:
+          - open-webui-network
+        # Expose the port internally to the Docker network.
+        # You do NOT need to publish it to the host (e.g., no `ports` section is needed here).
+        expose:
+          - 8080
 
-   networks:
-       open-webui-network:
-           driver: bridge
-   ```
+    networks:
+        open-webui-network:
+            driver: bridge
+    ```
 
 -----
 
@@ -111,55 +111,55 @@ Let's Encrypt 提供免费的 SSL 证书，被大多数浏览器信任，非常�
 
    **记得把 `<YOUR_DOMAIN_NAME>` 和 `<YOUR_EMAIL_ADDRESS>` 替换成你的真实信息。**
 
-   ```bash
-   #!/bin/bash
-   # enable_letsencrypt.sh
+    ```bash
+    #!/bin/bash
+    # enable_letsencrypt.sh
 
-   DOMAIN="<YOUR_DOMAIN_NAME>"
-   EMAIL="<YOUR_EMAIL_ADDRESS>"
+    DOMAIN="<YOUR_DOMAIN_NAME>"
+    EMAIL="<YOUR_EMAIL_ADDRESS>"
 
-   echo "### 正在为 $DOMAIN 获取 SSL 证书 ###"
+    echo "### Obtaining SSL certificate for $DOMAIN ###"
 
-   # 启动 Nginx 以提供挑战文件
-   docker compose up -d nginx
+    # Start Nginx to serve the challenge
+    docker compose up -d nginx
 
-   # 在容器中运行 Certbot 获取证书
-   docker run --rm \
-     -v "./ssl/certbot/conf:/etc/letsencrypt" \
-     -v "./ssl/certbot/www:/var/www/certbot" \
-     certbot/certbot certonly \
-     --webroot \
-     --webroot-path=/var/www/certbot \
-     --email "$EMAIL" \
-     --agree-tos \
-     --no-eff-email \
-     --force-renewal \
-     -d "$DOMAIN"
+    # Run Certbot in a container to get the certificate
+    docker run --rm \
+      -v "./ssl/certbot/conf:/etc/letsencrypt" \
+      -v "./ssl/certbot/www:/var/www/certbot" \
+      certbot/certbot certonly \
+      --webroot \
+      --webroot-path=/var/www/certbot \
+      --email "$EMAIL" \
+      --agree-tos \
+      --no-eff-email \
+      --force-renewal \
+      -d "$DOMAIN"
 
-   if [[ $? != 0 ]]; then
-       echo "错误：无法获取 SSL 证书。"
-       docker compose stop nginx
-       exit 1
-   fi
+    if [[ $? != 0 ]]; then
+        echo "Error: Failed to obtain SSL certificate."
+        docker compose stop nginx
+        exit 1
+    fi
 
-   # 在应用最终配置前先停止 Nginx
-   docker compose stop nginx
-   echo "### 证书获取成功！ ###"
-   ```
+    # Stop Nginx before we apply the final config
+    docker compose stop nginx
+    echo "### Certificate obtained successfully! ###"
+    ```
 
 2. **让脚本可执行**
 
-   ```bash
-   chmod +x enable_letsencrypt.sh
-   ```
+    ```bash
+    chmod +x enable_letsencrypt.sh
+    ```
 
 3. **运行脚本**
 
    执行脚本。它会自动启动 Nginx、申请证书，然后停止 Nginx。
 
-   ```bash
-   ./enable_letsencrypt.sh
-   ```
+    ```bash
+    ./enable_letsencrypt.sh
+    ```
 
 -----
 
@@ -183,116 +183,116 @@ Let's Encrypt 提供免费的 SSL 证书，被大多数浏览器信任，非常�
 
    **把 `<YOUR_DOMAIN_NAME>` 的 4 处都替换成你的域名。**
 
-   ```nginx
-   # nginx/conf.d/open-webui.conf
+    ```nginx
+    # nginx/conf.d/open-webui.conf
 
-   # 将所有 HTTP 流量重定向到 HTTPS
-   server {
-       listen 80;
-       listen [::]:80;
-       server_name <YOUR_DOMAIN_NAME>;
+    # Redirect all HTTP traffic to HTTPS
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name <YOUR_DOMAIN_NAME>;
 
-       location /.well-known/acme-challenge/ {
-           root /var/www/certbot;
-       }
+        location /.well-known/acme-challenge/ {
+            root /var/www/certbot;
+        }
 
-       location / {
-           return 301 https://$host$request_uri;
-       }
-   }
+        location / {
+            return 301 https://$host$request_uri;
+        }
+    }
 
-   server {
-       listen 443 ssl;
-       listen [::]:443 ssl;
-       http2 on;
-       server_name <YOUR_DOMAIN_NAME>;
+    server {
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2 on;
+        server_name <YOUR_DOMAIN_NAME>;
 
-       ssl_certificate /etc/letsencrypt/live/<YOUR_DOMAIN_NAME>/fullchain.pem;
-       ssl_certificate_key /etc/letsencrypt/live/<YOUR_DOMAIN_NAME>/privkey.pem;
+        ssl_certificate /etc/letsencrypt/live/<YOUR_DOMAIN_NAME>/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/<YOUR_DOMAIN_NAME>/privkey.pem;
 
-       ssl_protocols TLSv1.2 TLSv1.3;
-       ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256';
-       ssl_prefer_server_ciphers off;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256';
+        ssl_prefer_server_ciphers off;
 
-       location ~* ^/(auth|api|oauth|admin|signin|signup|signout|login|logout|sso)/ {
-           proxy_pass http://open-webui:8080;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection "upgrade";
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-           proxy_read_timeout 10m;
-           proxy_buffering off;
-           proxy_cache off;
-           client_max_body_size 20M;
+        location ~* ^/(auth|api|oauth|admin|signin|signup|signout|login|logout|sso)/ {
+            proxy_pass http://open-webui:8080;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 10m;
+            proxy_buffering off;
+            proxy_cache off;
+            client_max_body_size 20M;
 
-           proxy_no_cache 1;
-           proxy_cache_bypass 1;
-           add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
-           add_header Pragma "no-cache" always;
-           expires -1;
-       }
+            proxy_no_cache 1;
+            proxy_cache_bypass 1;
+            add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+            add_header Pragma "no-cache" always;
+            expires -1;
+        }
 
-       # 个人资料和模型图片 - 缓存以提升性能
-       location ~ ^/api/v1/(users/[^/]+/profile/image|models/model/profile/image)$ {
-           proxy_pass http://open-webui:8080;
-           proxy_http_version 1.1;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
+        # Profile and model images - cached for performance
+        location ~ ^/api/v1/(users/[^/]+/profile/image|models/model/profile/image)$ {
+            proxy_pass http://open-webui:8080;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
 
-           # 图片缓存 1 天
-           expires 1d;
-           add_header Cache-Control "public, max-age=86400";
-       }
+            # Cache images for 1 day
+            expires 1d;
+            add_header Cache-Control "public, max-age=86400";
+        }
 
-       location ~* \.(css|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {
-           proxy_pass http://open-webui:8080;
-           proxy_http_version 1.1;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
+        location ~* \.(css|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            proxy_pass http://open-webui:8080;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
 
-           # 静态资源缓存 7 天
-           expires 7d;
-           add_header Cache-Control "public, immutable";
-       }
+            # Cache static assets for 7 days
+            expires 7d;
+            add_header Cache-Control "public, immutable";
+        }
 
-       location / {
-           proxy_pass http://open-webui:8080;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection "upgrade";
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
+        location / {
+            proxy_pass http://open-webui:8080;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            # Extended timeout for long LLM completions (30 minutes)
+            proxy_read_timeout 1800;
+            proxy_send_timeout 1800;
+            proxy_connect_timeout 1800;
+            
+            proxy_buffering off;
+            proxy_cache off;
+            client_max_body_size 20M;
 
-           # 长时间 LLM 补全的扩展超时（30 分钟）
-           proxy_read_timeout 1800;
-           proxy_send_timeout 1800;
-           proxy_connect_timeout 1800;
-
-           proxy_buffering off;
-           proxy_cache off;
-           client_max_body_size 20M;
-
-           add_header Cache-Control "public, max-age=300, must-revalidate";
-       }
-   }
-   ```
+            add_header Cache-Control "public, max-age=300, must-revalidate";
+        }
+    }
+    ```
 
 2. **启动所有服务**
 
    使用最终的安全配置启动 Nginx 和 Open WebUI：
 
-   ```bash
-   docker compose up -d
-   ```
+    ```bash
+    docker compose up -d
+    ```
 
 -----
 

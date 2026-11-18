@@ -10,7 +10,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 # 社区插件 {#community-plugins}
 
 <ThemedImage
-  alt="Open WebUI 插件社区：Pipe、Tool、Action、Event、Filter 和 MCP 插件类型围绕 Open WebUI 标志，周围是社区构建的插件星座"
+  alt="社区：四条辐条连向四个方块的枢纽，其中一个方块被标记"
   sources={{
     light: useBaseUrl('/images/banners/community-light.svg'),
     dark: useBaseUrl('/images/banners/community-dark.svg'),
@@ -79,12 +79,11 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | **[导出为 Word（增强版）](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/actions/export_to_docx)** | 将对话导出为格式化的 `.docx` Word 文档：语法高亮代码（500+ 语言）、从 LaTeX 转换的原生 Word 公式、渲染为图片的 Mermaid 图表、智能表格和自动生成的参考文献部分。去除 `<think>` / `<analysis>` 推理块；可配置字体和中英文界面。安装 pip 依赖（`python-docx`、`Pygments`、`latex2mathml`、`mathml2omml`），因此请按照下面的检查清单进行审查。 |
 | **[导出为 Excel](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/actions/export_to_excel)** | 从对话中提取 Markdown 表格并导出为格式化的 `.xlsx` 电子表格，自动检测表头、支持多表格、斑马条纹、智能类型转换和可配置的文件名（聊天标题、AI 生成或标题）。可导出最后一条消息或整个聊天。 |
 | **[下载代码块](https://openwebui.com/posts/download_code_blocks_06f51b22)** | 从回复中提取每个围栏代码块，并将每个块下载为正确命名的文件（170+ 语言到扩展名的映射）。多块导航弹窗，带语法高亮预览、行号和可编辑的文件名，以及可选的一键批量模式。 |
-| **[Fork Chat](https://openwebui.com/posts/fork_chat_8f77883b)** | 在你点击的确切消息处将对话分支到一个全新的聊天，重建到该点的完整历史（树感知），清理卡住的状态伪影，然后重定向到分支。原始聊天保持不变。就像对话的 `git branch`。 |
 | **[转发到 Webhook](https://openwebui.com/posts/forward_to_webhook_493add62)** | 将回复转发到 Discord、Slack、Microsoft Teams 或任何通用 webhook，从 URL 自动检测平台并相应格式化（Discord 嵌入带自定义颜色、Slack mrkdwn 等）。支持多 URL 路由和并行投递、可选推理块去除和每个用户的 webhook 覆盖。 |
 | **[重新生成后续建议](https://openwebui.com/posts/regenerate_followups_9b5ac6d6)** | 仅重新生成助手消息下的后续建议标签，保持回复本身不变。调用 Open WebUI 的原生后续任务并通过 websocket 事件原地替换标签。需要在管理设置中启用后续生成功能。 |
-| **[生成图片](https://openwebui.com/posts/generate_image_3fadc3ca)** | 重新实现 v0.6.44 中删除的消息工具栏"生成图片"按钮，使用消息文本作为提示词。支持批量生成、增量显示、重新生成模式和可选的 LLM 提示增强，通过 Open WebUI 的内部图片引擎路由（ComfyUI、Automatic1111、DALL-E）。 |
+| **[生成图片](https://openwebui.com/posts/generate_image_3fadc3ca)** | 重新实现 v0.7.0 中删除的消息工具栏"生成图片"按钮，使用消息文本作为提示词。支持批量生成、增量显示、重新生成模式和可选的 LLM 提示增强，通过 Open WebUI 的内部图片引擎路由（ComfyUI、Automatic1111、OpenAI Images）。 |
 | **[固定消息](https://openwebui.com/posts/pin_message_action_143594d1)** | 一键切换固定（收藏）消息，在聊天概览节点图中以心形图标显示。写入与内置概览相同的 `favorite` 标志，并通过 websocket 事件同步前端。 |
-| **[将网页来源添加到知识库](https://openwebui.com/posts/add_sources_to_knowledge_action_65d97417)** | 一键将回复中引用的网络搜索来源 URL 直接保存到[知识库](/features/workspace/knowledge)：选择哪些 URL 和哪个知识库，然后获取、存储和索引每个 URL，支持重复检测和批量处理。 |
+| **[将网页来源添加到知识库](https://openwebui.com/posts/add_sources_to_knowledge_action_65d97417)** | 一键将回复中引用的网络搜索来源 URL 直接保存到[知识库](/features/workspace/knowledge)：选择哪些 URL 和哪个知识库，然后获取、存储并逐一建立索引，支持重复检测和批量处理。 |
 
 ### Filters（过滤器） {#filters}
 

@@ -146,6 +146,13 @@ class ExtractionTests(Fixture):
         self.assertNotIn("Source prose after the example.", target)
         self.assertNotIn("opaque-code-changed", self.codes(source, target))
 
+    def test_blank_lines_before_import_are_not_mdx_code(self):
+        statement = "import Thing from 'module';\n"
+        source = "\n \n" + statement
+        self.assertEqual(Document(source, ".mdx", self.terms).opaque_code, [statement])
+        self.assertNotIn("opaque-code-changed", self.codes(source, statement))
+        self.assertIn("opaque-code-changed", self.codes(source, statement.replace("module", "other")))
+
     def test_quoted_diagnostics_remain_literal_for_both_providers(self):
         message = "Source subsystem reports an unavailable dependency"
         source = '## Troubleshooting\n\n### "' + message + '"\n\nSource recovery instructions.\n'
@@ -294,6 +301,30 @@ class ExtractionTests(Fixture):
 
 
 class VerificationTests(Fixture):
+    def test_setting_default_cannot_be_satisfied_by_another_setting_or_body(self):
+        def section(key, value, label):
+            return f"#### `{key}`\n\n- Type: `int`\n- {label}: {value}\n- Description: `10000`.\n\n"
+
+        a = section("SETTING_A", "`10000` (milliseconds)", "Default")
+        b = section("SETTING_B", "`10000`", "Default")
+        label = generated_cjk(3)
+        self.assertNotIn("setting-default", self.codes(a + b, section("SETTING_A", "`10000`", label) + b))
+        for wrong in ["None", "`100000`", "`-10000`", "`10000.5`", "`30` (formerly `10000`)"]:
+            with self.subTest(wrong=wrong):
+                self.assertIn("setting-default", self.codes(a + b, section("SETTING_A", wrong, label) + b))
+        self.assertIn("setting-default", self.codes(a + b, "#### `SETTING_A`\n\n" + b))
+
+    def test_escaped_hash_placeholder_is_literal_not_mdx_code(self):
+        source = "## Settings.{#} {#stable-heading}\n\nText {node.value}.\n"
+        escaped = source.replace(".{#}", r".\{#}")
+        self.assertNotIn("literal-expression", self.codes(source, escaped))
+        self.assertNotIn("literal-hash-placeholder", self.codes(source, escaped))
+        self.assertIn("literal-hash-placeholder", self.codes(source, escaped.replace(r"\{#}", "")))
+        self.assertIn("literal-expression", self.codes(source, escaped.replace("{node.value}", "{other.value}")))
+        masked, spans = mask(escaped, self.terms)
+        self.assertIn(r"\{#}", [span.value for span in spans])
+        self.assertEqual(unmask(masked, spans), escaped)
+
     def test_missing_and_extra_files_and_category_coverage(self):
         self.put(self.source, "missing.md", "Source prose.")
         self.put(self.target, "extra.md", "Extra source prose.")
@@ -351,6 +382,23 @@ class VerificationTests(Fixture):
         self.assertIn("code-changed", self.codes(source, source.replace("literal comment", "different comment")))
         # Commands and identifiers are literal: a failure.
         self.assertIn("code-changed", self.codes(source, source.replace("run()", "other()")))
+
+    def test_table_pipe_escape_preserves_rendered_code_only_in_table_rows(self):
+        source = "| Column | Detail |\n| --- | --- |\n| Token | `left|right` |\n"
+        escaped = source.replace("left|right", r"left\|right")
+        self.assertNotIn("literal-inline-code", self.codes(source, escaped))
+        self.assertNotIn("table-code-pipe", self.codes(source, escaped))
+        self.assertIn("table-code-pipe", self.codes(escaped, source))
+        self.assertIn("literal-inline-code", self.codes(source, escaped.replace("right", "changed")))
+        self.assertIn("literal-inline-code", self.codes("`left|right`\n", "`left\\|right`\n"))
+
+    def test_control_character_reports_its_line_and_codepoint(self):
+        source = "Line one.\n\tLine two.\n"
+        findings = self.issues(source, source.replace("Line two", "\x08Line two"))
+        corrupt = [issue for issue in findings if issue.code == "target-corruption"]
+        self.assertEqual([(issue.line, issue.severity) for issue in corrupt], [(2, "error")])
+        self.assertIn("U+0008", corrupt[0].message)
+        self.assertNotIn("target-corruption", self.codes(source, source))
 
     def test_code_string_values_are_hard_preservation_failures(self):
         source = '```sh\nexport API_URL="https://example.test/v1"\n```\n'
@@ -634,6 +682,12 @@ class VerificationTests(Fixture):
         self.assertEqual(validate_review(results, self.source, self.target, [])["semantic_review"], "needs-review")
         entry["reviewed_all_sections"] = True
         self.assertEqual(validate_review(results, self.source, self.target, [])["semantic_review"], "passed")
+
+    def test_installed_audit_rejects_review_without_config_digest(self):
+        results = self.review_result()
+        del results["config_sha256"]
+        with self.assertRaisesRegex(ValueError, "unbound"):
+            verify(self.source, self.target, self.config, review_results=results)
 
     def test_semantic_review_rejects_stale_missing_duplicate_and_bad_status(self):
         initial = self.review_result()

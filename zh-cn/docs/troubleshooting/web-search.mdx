@@ -64,17 +64,17 @@ search:
 
 ✅ **解决方法：**
 
-- **增大上下文长度**：网页通常包含 4,000-8,000+ token。如果你的模型限制是 2048 token，那你实际上会丢掉大部分内容。请在 **设置 > 模型 > 编辑**（管理员区域）的模型 **> 高级参数** 中将其提高到 16384+（低于这个值时，网页内容效果通常都比较差）。
+- **增加上下文长度**：网页通常包含 4,000 到 8,000 个 token或更多。 在显存小于 24 GiB 的 GPU 上，Ollama 的默认上下文长度为 4096 个 token。对于大多数网页内容而言，这太短了。请将上下文长度设置为 16384 个 token或更多。 要查找该设置，请在管理后台的 **设置 > 模型** 下编辑模型，并打开 **“高级参数”**。
 
 - **检查结果数量**：通过调整 `WEB_SEARCH_RESULT_COUNT` 控制抓取的结果数。
 
   在 Native/Agentic 工具调用模式下，如果模型在 `search_web` 中省略了 `count`，Open WebUI 会默认使用 `WEB_SEARCH_RESULT_COUNT`。如果模型提供了 `count`，也会被限制在管理员配置的同一最大值以内。
 
-- **压缩响应会被拒绝**：Open WebUI 会请求未压缩的页面和文件，并以 `The server answered with a compressed response, which is not accepted.` 拒绝压缩响应。如果主机总是以压缩方式发送文件（例如上传时带有 `Content-Encoding` 说明头的 S3 或 MinIO 对象），就无法读取。请在不带该说明头的情况下重新上传文件。
-
 - **尝试不同 loader**：把 `WEB_LOADER_ENGINE` 改为 `playwright` 以处理 JavaScript 较重的网站，或使用 `firecrawl`/`tavily` 获得更好的提取效果。
 
-- **设置真实的 User-Agent**：如果来自 Wikipedia、受 Cloudflare 保护的大型站点等来源的结果为空（或在日志中出现 403），说明默认的 Python `requests` / `aiohttp` UA 被反爬机制拦截了。请将 [`USER_AGENT`](/reference/env-configuration#user_agent) 设置为真实的浏览器 UA（例如 `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36`）。该设置同时影响 Web 搜索的结果抓取与 `fetch_url` 工具。
+- **设置真实的 User-Agent**：如果来自维基百科、Cloudflare 受保护的网站或其他大型发布商的查询结果为空（或日志中显示为403），则默认 Python `requests`/`aiohttp` 用户代理正被机器人检测机制过滤。 请将 [`USER_AGENT`](/reference/env-configuration#user_agent) 设置为真实的、类似浏览器的字符串（例如 `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36`）。 这会影响网页搜索结果的获取、`fetch_url` 工具以及带有 `#`的网页，包括检查链接是否指向 PDF等文件。
+
+- **压缩响应会被拒绝**：Open WebUI 会请求未压缩的页面和文件，并以 `The server answered with a compressed response, which is not accepted.` 拒绝压缩响应。如果主机总是以压缩方式发送文件（例如上传时带有 `Content-Encoding` 说明头的 S3 或 MinIO 对象），就无法读取。请在不带该说明头的情况下重新上传文件。
 
 关于上下文窗口问题的更多细节，请参阅 [RAG 故障排查指南](./rag)。
 

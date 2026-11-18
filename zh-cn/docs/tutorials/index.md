@@ -41,7 +41,7 @@ title: "教程"
 | [DeepSeek R1 Dynamic](/tutorials/integrations/llm-providers/deepseekr1-dynamic) | 通过 llama.cpp 运行完整 671B DeepSeek-R1 | 👤 开发者 · ⏱️ 45 分钟 |
 | [Intel GPU（IPEX-LLM）](/tutorials/integrations/llm-providers/ipex_llm) | 在 Intel GPU 上加速 Ollama | 👤 开发者 · ⏱️ 20 分钟 |
 | [Helicone](/tutorials/integrations/monitoring/helicone) | 监控 LLM API 调用、成本与延迟 | 👤 管理员 · ⏱️ 15 分钟 |
-| [Langfuse](/tutorials/integrations/monitoring/langfuse) | 追踪 LLM 使用并评估提示词质量 | 👤 管理员 · ⏱️ 20 分钟 · ⚠️ 可能过时 |
+| [Langfuse](/tutorials/integrations/monitoring/langfuse) | 追踪 LLM 使用并评估提示词质量 | 👤 管理员 · ⏱️ 10 分钟 |
 | [Continue.dev](/tutorials/integrations/dev-tools/continue-dev) | 将 Open WebUI 作为 VS Code 后端使用 | 👤 开发者 · ⏱️ 15 分钟 |
 | [Jupyter Notebooks](/tutorials/integrations/dev-tools/jupyter) | 结合 Jupyter 使用代码解释器 | 👤 开发者 · ⏱️ 20 分钟 |
 | [iTerm2](/tutorials/integrations/dev-tools/iterm2) | 在 macOS 终端中调用模型 | 👤 开发者 · ⏱️ 10 分钟 |

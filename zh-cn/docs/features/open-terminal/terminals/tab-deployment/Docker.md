@@ -4,7 +4,7 @@
 
 - 已安装并运行 [Docker Engine](https://docs.docker.com/engine/install/)
 - Open WebUI 正在运行（或准备好一同部署）
-- [Open WebUI 企业版许可证](https://openwebui.com/enterprise)（生产环境使用必须）
+- [Open WebUI 企业版许可证](/enterprise)（生产环境使用必须）
 
 ## 使用 Docker Compose 快速开始 {#quick-start-with-docker-compose}
 

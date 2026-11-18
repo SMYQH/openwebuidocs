@@ -58,7 +58,7 @@ docker compose up -d
 
 - 使用默认凭据登录（`admin@example.com` / `changeme`）。按提示修改它们。
 - 进入 **SSL 证书 → 添加 SSL 证书 → Let's Encrypt**。
-- 填写你从 DuckDNS 获得的邮箱和域名。一个域名带星号，另一个不带。例如：``*.hello.duckdns.org`` 和 ``hello.duckdns.org``。
+- 请输入您的电子邮件地址以及从 DuckDNS 获得的域名。一个域名带星号，另一个不带。例如：``*.hello.duckdns.org`` 和 ``hello.duckdns.org``。
 - 选择 **使用 DNS 验证**，选择 DuckDNS，然后粘贴你的 API token。例如：
 ```bash
 dns_duckdns_token=f4e2a1b9-c78d-e593-b0d7-67f2e1c9a5b8
@@ -133,7 +133,7 @@ CORS_ALLOW_ORIGIN="https://openwebui.hello.duckdns.org"
 
 6. **把你的 URL 添加到 open-webui（否则会出现 HTTPS 错误）：**
 
-- Go to your open-webui → Settings → General（管理员区域）
+- 在 Open WebUI 中，转到 Settings → General（管理员区域）。
 - 在 **Webhook URL** 输入框中，填入你通过 Nginx 反向代理连接 open-webui 所使用的 URL。例如：``hello.duckdns.org``（这个不关键）或 ``openwebui.hello.duckdns.org``（这个必须填）。
 
 #### 访问 WebUI {#access-the-webui}

@@ -22,5 +22,26 @@
     "http://chatterboxtts.com/discord*", "https://tts.travisvn.com/discord*",
     "https://img.shields.io/badge/Discord-*"
   ],
-  "exceptions": []
+  "exceptions": [
+    {
+      "fingerprint": "8edcf6a76782e8249cbe187421465a6d8c834f0bdcf86f19124ab6897a6e1a7e",
+      "reason": "SearchApi: the upstream step puts the sentence period inside the google_patents engine name. The overview and the target use the valid identifier without that period."
+    },
+    {
+      "fingerprint": "aada2929e4db6bb6674cdc0a9fab91e179c5a9e0fed1affb51e2eb669c95f19a",
+      "reason": "SerpApi: the upstream step puts the sentence period inside the google_patents engine name. The overview and the target use the valid identifier without that period."
+    },
+    {
+      "fingerprint": "e3ce72e764bb2e15cbbfb96df78b69cc1ea53db86c86566d9077210f25145abb",
+      "reason": "The Chinese homepage retains its translation-status notice and link to the English source. The three upstream callouts are also present."
+    },
+    {
+      "fingerprint": "e8344c061e027a511d49f0355b6b1ebd2660863375e6396f4bccf30002f0835d",
+      "reason": "Environment reference: the seven empty-string defaults preserve the literal value and localize its English gloss outside the code span. The remaining differences are translated Documents navigation and reset button labels."
+    },
+    {
+      "fingerprint": "76df0de3759dc79249e70e383c84c199a397786e41cf8b296fdddd58d460693f",
+      "reason": "Environment reference: gPRC is corrected to gRPC and postgreSQL to PostgreSQL in prose. No configuration keys or commands are renamed."
+    }
+  ]
 }

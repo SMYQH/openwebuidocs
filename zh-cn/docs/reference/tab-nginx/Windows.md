@@ -121,13 +121,13 @@ http {
             expires -1;
         }
 
-        # 个人资料和模型图片 - 缓存以提升性能
+        # Profile and model images - cached for performance
         location ~ ^/api/v1/(users/[^/]+/profile/image|models/model/profile/image)$ {
             proxy_pass http://localhost:8080;
             proxy_http_version 1.1;
             proxy_set_header Host $host;
 
-            # 图片缓存 1 天
+            # Cache images for 1 day
             expires 1d;
             add_header Cache-Control "public, max-age=86400";
         }
@@ -136,7 +136,7 @@ http {
             proxy_pass http://localhost:8080;
             proxy_http_version 1.1;
             proxy_set_header Host $host;
-
+            
             expires 7d;
             add_header Cache-Control "public, immutable";
         }
@@ -156,8 +156,8 @@ http {
             proxy_buffering off;
             proxy_cache off;
             client_max_body_size 20M;
-
-            # 长时间 LLM 补全的扩展超时（30 分钟）
+            
+            # Extended timeout for long LLM completions (30 minutes)
             proxy_read_timeout 1800;
             proxy_send_timeout 1800;
             proxy_connect_timeout 1800;

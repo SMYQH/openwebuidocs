@@ -3,7 +3,7 @@
 - 一个正在运行的 Kubernetes 集群 (v1.24+)
 - 已安装 [Helm](https://helm.sh/docs/intro/install/) v3
 - 已配置 `kubectl` 以访问你的集群
-- [Open WebUI 企业版许可证](https://openwebui.com/enterprise)（生产环境使用必须）
+- [Open WebUI 企业版许可证](/enterprise)（生产环境使用必须）
 
 ## 使用 Helm 部署 {#deploy-with-helm}
 
@@ -47,10 +47,10 @@ helm upgrade --install open-webui open-webui/open-webui \
 ### 验证 {#verify}
 
 ```bash
-# 检查所有 pod 是否正在运行
+# Check that all pods are running
 kubectl get pods -n open-webui -l app.kubernetes.io/part-of=open-terminal
 
-# 检查 CRD 是否已安装
+# Check that the CRD is installed
 kubectl get crd terminals.openwebui.com
 ```
 
@@ -78,13 +78,13 @@ kubectl get crd terminals.openwebui.com
 当终端空闲时间超过 `idleTimeoutMinutes` 时，Operator 会删除 Pod，但保留 PVC 和 Secret。在下一次请求时，将创建一个连接了相同 PVC 的新 Pod，因此在空闲周期内**用户数据能够持久化**。
 
 ```bash
-# 列出所有终端
+# List all terminals
 kubectl get terminals -n open-webui
 
-# 检查特定的终端
+# Inspect a specific terminal
 kubectl describe terminal <name> -n open-webui
 
-# 删除终端（子资源会自动被垃圾回收）
+# Delete a terminal (child resources are garbage-collected automatically)
 kubectl delete terminal <name> -n open-webui
 ```
 
@@ -93,10 +93,10 @@ kubectl delete terminal <name> -n open-webui
 ## 监控 {#monitoring}
 
 ```bash
-# Operator 日志
+# Operator logs
 kubectl logs -n open-webui deployment/<release>-terminals-operator --tail=50
 
-# 编排器日志
+# Orchestrator logs
 kubectl logs -n open-webui deployment/<release>-terminals-orchestrator --tail=50
 ```
 

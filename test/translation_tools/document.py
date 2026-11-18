@@ -160,6 +160,11 @@ def inline_protected(text: str, terms: list[str]) -> list[Protected]:
                         i = j
                         break
                     j += 1
+        elif text.startswith(("{#}", r"\{#}"), i) and (i == 0 or text[i - 1] != "\\"):
+            # Docusaurus can render this empty anchor marker as literal text.
+            end = i + (4 if text[i] == "\\" else 3)
+            add(i, end, "hash_placeholder")
+            i = end - 1
         elif text[i] == "{" and (i == 0 or text[i - 1] != "\\"):
             end = balanced_end(text, i, "{", "}")
             if end:
@@ -242,6 +247,8 @@ class Document:
         self.headings: list[tuple[int, int, str, str]] = []
         self.error_messages: dict[str, str] = {}
         self.structure: list[tuple[str, int]] = []
+        self.table_rows: set[int] = set()
+        self.literal_spans: list[Protected] = []
         self.admonitions: list[str] = []
         self.body_start = 0
         self._parse()
@@ -368,6 +375,8 @@ class Document:
                     continue
                 protect(start, end)
                 self.code.append((self.line(start), token.content))
+            if token.type == "tr_open" and token.map:
+                self.table_rows.add(self.line(offsets[token.map[0]]))
             if token.type in {"bullet_list_open", "ordered_list_open", "list_item_open", "tr_open", "th_open", "td_open", "blockquote_open", "hr"}:
                 self.structure.append((token.type, token.level))
         opaque_body = list(parse_body)
@@ -375,7 +384,7 @@ class Document:
             if span.kind in {"inline_code", "comment"}:
                 opaque_body[span.start:span.end] = ["\n" if c == "\n" else " " for c in span.value]
         opaque_body = "".join(opaque_body)
-        for pattern in [r"(?ms)^\s*(?:import|export)\s+.*?(?:;[ \t]*(?:\n|$)|\n\s*\n|\Z)", r"(?is)<(script|style|pre|code)\b[^>]*>.*?</\1\s*>"]:
+        for pattern in [r"(?ms)^[ \t]*(?:import|export)\s+.*?(?:;[ \t]*(?:\n|$)|\n\s*\n|\Z)", r"(?is)<(script|style|pre|code)\b[^>]*>.*?</\1\s*>"]:
             for m in re.finditer(pattern, opaque_body):
                 first = self.body_start + m.start() + len(m[0]) - len(m[0].lstrip())
                 if first < len(blocked) and blocked[first]:
@@ -412,10 +421,9 @@ class Document:
         for token in tokens:
             if token.type == "heading_open" and token.map:
                 begin, finish = token.map
-                raw_lines = body.splitlines()
-                if finish - begin == 2 and re.fullmatch(r"\s*(?:=+|-+)\s*", raw_lines[finish - 1]):
+                if finish - begin == 2 and re.fullmatch(r"\s*(?:=+|-+)\s*", body_lines[finish - 1]):
                     setext[begin] = int(token.tag[1])
-        for index, line in enumerate(body.splitlines(keepends=True)):
+        for index, line in enumerate(body_lines):
             start = offsets[index]
             first = start + len(line) - len(line.lstrip())
             if first < start + len(line) and blocked[first]:

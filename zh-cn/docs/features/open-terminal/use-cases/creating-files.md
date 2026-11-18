@@ -1,6 +1,6 @@
 ---
 sidebar_position: 5
-title: "Create Documents & Files"
+title: "创建文档和文件"
 ---
 
 # 创建文档和文件 {#create-documents-and-files}
@@ -29,7 +29,7 @@ title: "Create Documents & Files"
 
 AI 读取数据，构建出带有标题、摘要段落和一张真正表格的 `.docx`，并在聊天中显示出来。
 
-![The AI generating a Word document and displaying it in the chat](/images/open-terminal-create-docx.png)
+![AI 生成一份 Word 文档并在聊天窗口中显示](/images/open-terminal-create-docx.png)
 
 ---
 
@@ -37,7 +37,7 @@ AI 读取数据，构建出带有标题、摘要段落和一张真正表格的 `
 
 > **你：** 用同样的读数做一页 PDF，带一个标题和各站点的合计。
 
-![The AI generating a PDF and displaying it in the chat](/images/open-terminal-create-pdf.png)
+![AI 生成 PDF 文件并在聊天中显示](/images/open-terminal-create-pdf.png)
 
 长文档会从你指定的那一页打开。参见[聊天消息中显示的文件](../file-browser.md#files-shown-in-the-chat-message)。
 
@@ -49,7 +49,7 @@ AI 读取数据，构建出带有标题、摘要段落和一张真正表格的 `
 
 这份幻灯片带着幻灯片导航栏和翻页控件，因此你无需离开对话即可逐页浏览。
 
-![The AI generating a PowerPoint deck and displaying it in the chat](/images/open-terminal-create-pptx.png)
+![AI 生成 PowerPoint 演示文稿并在聊天中显示](/images/open-terminal-create-pptx.png)
 
 ---
 
@@ -59,7 +59,7 @@ AI 读取数据，构建出带有标题、摘要段落和一张真正表格的 `
 
 矢量输出是以文本形式写下的，因此 AI 之后可以像编辑其他任何文件那样编辑它。要求换个颜色或加一个标签，它会重写这些图形，而不是重新生成一张图片。
 
-![The AI generating an SVG chart and displaying it in the chat](/images/open-terminal-create-svg.png)
+![AI 生成 SVG 图表并在聊天中显示](/images/open-terminal-create-svg.png)
 
 ---
 
@@ -69,7 +69,7 @@ AI 读取数据，构建出带有标题、摘要段落和一张真正表格的 `
 
 代码以文件形式回到你的工作区，而不是需要你从聊天里复制出来的代码块，因此拿来就能跑、拿来就能改。
 
-![The AI writing a Python script into the workspace](/images/open-terminal-create-python.png)
+![AI 正在将一个 Python 脚本写入工作区](/images/open-terminal-create-python.png)
 
 ---
 
@@ -79,7 +79,7 @@ AI 读取数据，构建出带有标题、摘要段落和一张真正表格的 `
 
 Markdown 会在预览中渲染，因此你可以在粘贴到任何地方之前先读一遍成稿。
 
-![The AI writing the findings up as markdown](/images/open-terminal-create-markdown.png)
+![负责将调查结果整理成 Markdown 格式的 AI](/images/open-terminal-create-markdown.png)
 
 ---
 
@@ -87,7 +87,7 @@ Markdown 会在预览中渲染，因此你可以在粘贴到任何地方之前�
 
 聊天中显示的每个文件，其卡片右上角都有一个**下载按钮**，紧挨着在文件浏览器中打开它的控件。
 
-![The download button on a file shown in the chat](/images/open-terminal-inline-download-button.png)
+![聊天界面中显示的文件上的下载按钮](/images/open-terminal-inline-download-button.png)
 
 该文件同时也放在你的工作区里，因此[文件浏览器](../file-browser.md)中也能看到它，与 AI 生成的其他一切并列。在聊天中索取它，只是省得你去找。
 

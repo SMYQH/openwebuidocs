@@ -26,7 +26,7 @@ title: "集成"
 | 教程 | 你将完成什么 | 详情 |
 |----------|-------------------|---------|
 | [Helicone](./monitoring/helicone) | 记录并监控 LLM API 调用、成本与延迟 | 👤 管理员 · ⏱️ 15 分钟 |
-| [Langfuse](./monitoring/langfuse) | 追踪 LLM 使用情况并评估提示词质量 | 👤 管理员 · ⏱️ 20 分钟 · ⚠️ 可能过时 |
+| [Langfuse](./monitoring/langfuse) | 追踪 LLM 使用情况并评估提示词质量 | 👤 管理员 · ⏱️ 10 分钟 |
 
 ---
 
@@ -38,7 +38,7 @@ title: "集成"
 | [Jupyter Notebooks](./dev-tools/jupyter) | 通过 Open WebUI 代码解释器运行代码并创建 Notebook | 👤 开发者 · ⏱️ 20 分钟 |
 | [iTerm2](./dev-tools/iterm2) | 在 macOS 终端中调用 Open WebUI 模型 | 👤 开发者 · ⏱️ 10 分钟 |
 | [Firefox Sidebar](./dev-tools/firefox-sidebar) | 将 Open WebUI 固定到 Firefox 内置 AI 侧栏 | 👤 用户 · ⏱️ 5 分钟 |
-| [Browser Search Engine](./dev-tools/browser-search-engine) | 将 Open WebUI 添加为自定义浏览器搜索引擎 | 👤 用户 · ⏱️ 5 分钟 |
+| [浏览器搜索引擎](./dev-tools/browser-search-engine) | 将 Open WebUI 添加为自定义浏览器搜索引擎 | 👤 用户 · ⏱️ 5 分钟 |
 
 ---
 

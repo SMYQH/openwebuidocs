@@ -10,7 +10,7 @@ title: "MCP 支持"
 :::
 
 :::danger 与持久化相关的重要说明
-如果你通过 API Key 或 Auth Token 将 Open WebUI 连接到这个代理，你**必须**在 Open WebUI Docker 配置中设置 `WEBUI_SECRET_KEY`。如果该 key 发生变化（例如容器重启后变化），Open WebUI 将无法解密为该工具保存的凭证。
+在您的 Open WebUI Docker 配置中设置 `WEBUI_SECRET_KEY`，并保持其稳定。 若将此代理与 OAuth 连接，其存储的客户端信息和会话令牌会使用从 `WEBUI_SECRET_KEY` 派生的密钥进行加密，因此当容器重启导致密钥发生变化时，这些数据将无法解密，连接必须重新授权。 静态的 API 密钥则按原样存储，不受影响。
 :::
 
 ### 📌 什么是 MCP 代理服务器？ {#what-is-the-mcp-proxy-server}

@@ -101,11 +101,11 @@ http://127.0.0.1:10000
 1. 在浏览器中打开 Open WebUI
 2. 进入 **Settings → Connections → OpenAI**（管理员区域）。
 3. 点击 ➕ **Add Connection**。
-4. 填写以下内容（如果有标签页，请在 **Standard / Compatible** 下填写）：
+4. 填写以下内容：
    - **URL**：`http://127.0.0.1:10000/v1`
      （如果 WebUI 运行在 Docker 中，请使用 `http://host.docker.internal:10000/v1`。**注意末尾一定要有 `/v1`！**）
-    - **Auth**：无需密钥的服务器选 **None**。选择 **Bearer** 且密钥留空时，Open WebUI 会发送一个空的 bearer token，而一些服务器会拒绝这种请求
-    - **Provider**：展开 **Advanced**，从 **Provider** 下拉中选择 `llama.cpp`。这会解锁模型选择器中的“已加载”指示符和管理员的 **Eject** 按钮，以及[在 Open WebUI 中管理本地模型](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#managing-local-models-from-open-webui)中描述的管理员模型管理面板。详见下方[卸载已加载的模型](#unloading-loaded-models)。如果不需要这些功能，请保持为 `Default`。
+   - **Auth**：无需密钥的服务器选 **None**。选择 **Bearer** 且密钥留空时，Open WebUI 会发送一个空的 bearer token，而一些服务器会拒绝这种请求
+   - **Provider**：展开 **Advanced**，从 **Provider** 下拉中选择 `llama.cpp`。这会解锁模型选择器中的“已加载”指示符和管理员的 **Eject** 按钮，以及[在 Open WebUI 中管理本地模型](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#managing-local-models-from-open-webui)中描述的管理员模型管理面板。详见下方[卸载已加载的模型](#unloading-loaded-models)。如果不需要这些功能，请保持为 `Default`。
 
 💡 保存后，Open WebUI 就会开始把你的本地 Llama.cpp 服务器作为后端使用！
 

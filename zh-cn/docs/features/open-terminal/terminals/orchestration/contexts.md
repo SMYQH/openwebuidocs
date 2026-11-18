@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: "Terminal Contexts"
+title: "终端上下文"
 ---
 
 # 终端上下文 {#terminal-contexts}
@@ -55,7 +55,7 @@ title: "Terminal Contexts"
 
 ## 容量 {#capacity}
 
-**Per chat** 会成倍增加单个用户可同时运行的工作区数量——每个他正在使用的聊天一个，每个都要计入策略的资源限制。在把一个繁忙的连接切换为 **Per chat** 之前，请先在策略上设置 `idle_timeout_minutes`，以便被遗弃聊天的工作区能够被清理。参见[策略](/features/open-terminal/terminals/orchestration/policies)。
+**Per chat** 会成倍增加单个用户可同时运行的工作区数量——每个该用户正在使用的聊天对应一个，每个都要计入策略的资源限制。在把一个繁忙的连接切换为 **Per chat** 之前，请先在策略上设置 `idle_timeout_minutes`，以便被遗弃聊天的工作区能够被清理。参见[策略](/features/open-terminal/terminals/orchestration/policies)。
 
 ## 预先配置 {#pre-configuring-it}
 

@@ -11,14 +11,16 @@ import Kubernetes from './tab-deployment/Kubernetes.md';
 
 # Terminals（编排器） {#terminals-orchestrator}
 
-**Terminals** 是 [Open Terminal](/features/open-terminal) 的企业级编排层，为每位用户提供完全隔离的终端容器。不再共享单一容器，每个人都有自己专属的容器，包括独立的文件、进程、资源限制和网络隔离。
+**Terminals** 是 [Open Terminal](/features/open-terminal) 的企业级编排层。它为每位 Open WebUI 用户配置一个专用的计算底层环境：独立的文件、进程、软件包环境、资源限制、网络边界以及可选的持久化存储。
+
+[在 GitHub 上查看 →](https://github.com/open-webui/terminals)
+
+Open Terminal 将一个 Open WebUI 聊天窗口转变为一个完整的代理框架，并提供可供操作的真实工作区。Terminals 则将其转化为受管的工作区集群基础设施，从而确保每位用户或每项策略都能获得合适的工作区，而无需共享状态或手动配置容器。
+
+Open WebUI 是配置、管理和监控该框架的地方。Terminals 是该框架内部的工作区生命周期层：它负责为代理提供、隔离、复用、刷新和重置代理用于执行实际工作的计算底层资源。
 
 :::tip 快速导航
 - **需要操作用户终端环境？** → [编排指南](/features/open-terminal/terminals/orchestration)
-:::
-
-:::info Admin UI（0.0.4 新增）
-编排器在 `/` 提供内置的最小化管理 UI，用于查看终端状态、活动会话和策略。默认启用，可通过 `TERMINALS_ENABLE_UI` 切换；设为 `false` 可仅用于 API 部署。
 :::
 
 ```mermaid
@@ -26,9 +28,9 @@ flowchart LR
     OW["Open WebUI"]
     OR["Orchestrator"]
     OW -->|X-User-Id| OR
-    OR --> TA["Open Terminal<br/>用户 A"]
-    OR --> TB["Open Terminal<br/>用户 B"]
-    OR --> TC["Open Terminal<br/>用户 C"]
+    OR --> TA["Agent workspace<br/>User A"]
+    OR --> TB["Agent workspace<br/>User B"]
+    OR --> TC["Agent workspace<br/>User C"]
 
     style OW fill:#4a90d9,color:#fff
     style OR fill:#e67e22,color:#fff
@@ -146,4 +148,4 @@ JWT 模式需要两边达成一致。编排器会针对发起请求的用户身�
 
 ## 许可证 {#license}
 
-Terminals 在生产环境中使用需要 [Open WebUI 企业许可证](https://openwebui.com/enterprise)。详情请参阅 [Terminals 仓库](https://github.com/open-webui/terminals)。
+Terminals 在生产环境中使用需要 [Open WebUI 企业许可证](/enterprise)。详情请参阅 [Terminals 仓库](https://github.com/open-webui/terminals)。

@@ -105,7 +105,7 @@ docker exec -it open-webui /bin/sh
 | 45 | function_history | Function 源代码和元数据的历史版本 |
 | 46 | skill_history | Skill 的历史版本，包含其配套文件 |
 | 47 | app | 已安装的 [App](/features/channels/apps) 及其加密凭据 |
-| 48 | auth_session | 为 [Tether 客户端协议](/reference/tether-client-protocol) 等原生应用提供的可续期登录会话 |
+| 48 | auth_session | 为 [Tether](/ecosystem/tether) 等原生应用提供的可续期登录会话 |
 | 49 | comment | 存储工作区条目、笔记和聊天上的评论与回复 |
 | 50 | comment_reaction | 记录对评论的表情回应 |
 | 51 | notification | 存储每位用户的收件箱通知 |
@@ -649,7 +649,7 @@ docker exec -it open-webui /bin/sh
     "name": string,          # Optional display name
     "content_type": string,  # MIME type
     "size": integer,         # File size in bytes
-    # 通过 ConfigDict(extra="allow") 支持其他元数据
+    # Additional metadata supported via ConfigDict(extra="allow")
 }
 ```
 
@@ -1143,8 +1143,8 @@ docker exec -it open-webui /bin/sh
     "<provider>": {
         "external_id": string,  # externalId from the identity provider
     },
-    # 可以同时存储多个提供方
-    # 示例：
+    # Multiple providers can be stored simultaneously
+    # Example:
     # "microsoft": { "external_id": "abc-123" },
     # "okta": { "external_id": "def-456" }
 }
@@ -1691,7 +1691,7 @@ SELECT sqlcipher_export('plaintext');
 DETACH DATABASE plaintext;
 ```
 
-用 `webui-plain.db` 替换 `webui.db`，然后将 `DATABASE_TYPE` 设为 `sqlite`（或不设置它），并移除 `DATABASE_PASSWORD`。
+用 `webui-plain.db` 替换 `webui.db`，然后设置 `DATABASE_TYPE=sqlite`（或不设置 `DATABASE_TYPE`），并移除 `DATABASE_PASSWORD`。
 
 ### 相关的数据库环境变量 {#related-database-environment-variables}
 | 变量 | 默认值 | 说明 |

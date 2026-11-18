@@ -23,7 +23,7 @@ title: "Firecrawl"
 
 ## 概述 {#overview}
 
-[Firecrawl](https://firecrawl.dev) 是一个为 AI 应用构建的搜索和抓取 API。作为 Open WebUI 的网络搜索引擎，它运行你的查询，返回排序结果，并以干净、模型可用的形式拉回页面内容。你可以使用托管服务 `api.firecrawl.dev`，或者由于 Firecrawl 是开源的，将 Open WebUI 指向自托管的 Firecrawl 实例，这样每个查询都保持在内部。
+[Firecrawl](https://firecrawl.dev) 是一款专为 AI 应用打造的搜索与抓取 API。作为 Open WebUI 网络搜索引擎，它会执行你的查询，并返回带有标题和描述的排序结果。随后，页面内容由配置的**网页加载引擎**获取。如果希望 Firecrawl 抓取页面，请同时将 Firecrawl 设置为网页加载器。你可以使用 `api.firecrawl.dev` 上的托管服务，也可以将 Open WebUI 指向自托管的 Firecrawl 实例。Firecrawl 是开源软件，自托管可让所有查询留在本地。
 
 ## 前提条件 {#prerequisites}
 
@@ -55,7 +55,7 @@ title: "Firecrawl"
 | `ENABLE_WEB_SEARCH` | `false` | 设置为 `true` 以开启网络搜索。 |
 | `FIRECRAWL_API_KEY` | （空） | 你的 Firecrawl API 密钥。 |
 | `FIRECRAWL_API_BASE_URL` | `https://api.firecrawl.dev` | API 端点。指向自托管实例以保持查询在内部进行。 |
-| `FIRECRAWL_TIMEOUT` | （Firecrawl 默认值） | 请求超时时间（毫秒）。 |
+| `FIRECRAWL_TIMEOUT` | （Firecrawl 默认值） | 抓取超时时间以秒为单位，仅当 Firecrawl 作为网页加载器时使用。Open WebUI 会将其转换为毫秒，并将其限制在 1 到 300 秒之间。 |
 
 有关网络搜索变量的完整列表，请参阅[环境配置参考](/reference/env-configuration#web-search)。
 
@@ -63,7 +63,7 @@ title: "Firecrawl"
 
 - **无效的 API 密钥**：确认密钥复制时没有多余空格，并且与端点匹配（托管密钥用于 `api.firecrawl.dev`，实例密钥用于自托管）。
 - **无结果**：确保网络搜索开关（`+`）已开启，并且实例可以访问 Firecrawl 端点。
-- **超时**：对于慢页面或大量抓取查询，提高 `FIRECRAWL_TIMEOUT`。
+- **超时**：`FIRECRAWL_TIMEOUT` 仅适用于网页加载器。搜索调用为每个请求的结果分配 3 秒的固定时间，因此如果搜索超时，请降低**搜索结果数量**。
 - **自托管连接错误**：验证从 Open WebUI 容器或主机能否访问 `FIRECRAWL_API_BASE_URL`。
 
 ## 更多资源 {#additional-resources}

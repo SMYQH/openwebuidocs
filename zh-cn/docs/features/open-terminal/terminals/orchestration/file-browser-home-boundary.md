@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 8
 title: "文件浏览器根目录"
 ---
 
@@ -44,7 +44,7 @@ Open Terminal 为当前用户解析路径并将其报告为 `root.path`。根标
 }
 ```
 
-在策略 `env` 中设置此值以完全退出：
+若要完全禁用文件浏览器的根目录设置，请在策略的 `env` 中设置此值：
 
 ```json
 {

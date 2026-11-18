@@ -218,7 +218,7 @@ Functions 支持基于 [Pydantic](https://docs.pydantic.dev/) 的双层配置系
 
 **Valves** 适合存放 API key、模型端点和全局行为设置。**UserValves** 则允许用户自行定制行为（例如偏好语言、输出格式或个人 API key）。
 
-两者都定义为你 `Pipe`、`Filter` 或 `Action` 类中的嵌套 Pydantic `BaseModel`。`Event` 类也可以携带 `Valves`，但绝不能携带 `UserValves`，因为事件处理器在没有用户的情况下运行。管理员配置的值会存储到数据库中，并在运行时自动加载。
+两者都定义为你 `Pipe`、`Filter` 或 `Action` 类中的嵌套 Pydantic `BaseModel`。`Event` 类也可以携带 `Valves`，但绝不能携带 `UserValves`，因为事件处理器在没有用户的情况下运行。管理员配置的值会存储到数据库中，并在运行时自动加载。当 Valves 中包含机密信息时，管理员可以 [对存储的值进行加密](/features/extensibility/plugin/development/valves#encrypting-valve-values-at-rest)。
 
 → **[Valves Development Guide](/features/extensibility/plugin/development/valves)**
 

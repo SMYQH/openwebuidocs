@@ -13,7 +13,7 @@ title: "Azure AI Speech TTS"
 
 ## 环境要求 {#requirements}
 
-- 一个 Azure Speech 资源（微软文档中也称其为 Speech 的 Foundry 资源）。各区域对文本转语音的支持情况参见微软的 [Speech 服务区域表](https://learn.microsoft.com/azure/ai-services/speech-service/regions?tabs=tts)。
+- 一个 Azure Speech 资源（Microsoft文档中也称其为 Speech 的 Foundry 资源）。各区域对文本转语音的支持情况参见Microsoft的 [Speech 服务区域表](https://learn.microsoft.com/azure/ai-services/speech-service/regions?tabs=tts)。
 - 该资源的密钥，可在 Azure 门户的 **Resource Management** > **Keys and Endpoint** 中获取。两个密钥任选其一即可。
 - 已安装并运行 Open WebUI
 
@@ -42,7 +42,7 @@ title: "Azure AI Speech TTS"
 
 8. 点击 **Save**
 
-该密钥只能在创建资源时所在的区域中使用。微软指出密钥是按区域划分的，因此用其他区域使用该密钥会导致认证失败。
+该密钥只能在创建资源时所在的区域中使用。Microsoft指出密钥是按区域划分的，因此用其他区域使用该密钥会导致认证失败。
 
 :::caution 请务必设置区域
 如果 **Azure Region** 和 **Endpoint URL** 都留空，语音请求仍会发往 `eastus`，但语音列表完全不会加载。请设置你的资源所在的区域。
@@ -60,15 +60,15 @@ Open WebUI 发送给 Azure 的是完整名称，并从名称的前两段中取�
 2. 否则，是用户在个人 **Audio** 设置中通过 **Set Voice** 选择的语音，前提是管理员的 **TTS Voice** 仍与他们选择时相同。如果管理员修改了它，用户会听到新的默认值，直到他们重新选择。
 3. 否则，就是管理员的 **TTS Voice**
 
-完整的语音与语言列表请参见微软的[语言与语音支持](https://learn.microsoft.com/azure/ai-services/speech-service/language-support?tabs=tts)。
+完整的语音与语言列表请参见Microsoft的[语言与语音支持](https://learn.microsoft.com/azure/ai-services/speech-service/language-support?tabs=tts)。
 
 ## Endpoint URL {#endpoint-url}
 
 默认情况下，Open WebUI 会根据 **Azure Region** 把请求发往 `https://<region>.tts.speech.microsoft.com`。**Endpoint URL** 用于替换该地址。Open WebUI 会在其后追加 `/cognitiveservices/v1` 来请求语音、追加 `/cognitiveservices/voices/list` 来加载语音列表，因此只需填写协议和主机，不要带路径。
 
-这并不是你在 **Keys and Endpoint** 中看到的资源端点（[STT 指南](/features/chat-conversations/audio/speech-to-text/azure-stt-integration#endpoint-url)可以使用那个地址）。微软文档中语音列表位于该地址的 `/tts/cognitiveservices/voices/list`，而 Open WebUI 请求的是 `/cognitiveservices/voices/list`，因此语音列表不会加载。
+这并不是你在 **Keys and Endpoint** 中看到的资源端点（[STT 指南](/features/chat-conversations/audio/speech-to-text/azure-stt-integration#endpoint-url)可以使用那个地址）。Microsoft文档中语音列表位于该地址的 `/tts/cognitiveservices/voices/list`，而 Open WebUI 请求的是 `/cognitiveservices/voices/list`，因此语音列表不会加载。
 
-对于主权云，微软文档给出了下列地址，其中 `<region>` 替换为你的区域标识符：
+对于主权云，Microsoft文档给出了下列地址，其中 `<region>` 替换为你的区域标识符：
 
 | 云 | Endpoint URL |
 |-------|--------------|
@@ -79,7 +79,7 @@ Open WebUI 发送给 Azure 的是完整名称，并从名称的前两段中取�
 
 ## Output Format {#output-format}
 
-**Output format** 会作为要返回的音频格式发送给 Azure。请保持使用 MP3 格式之一，例如默认的 `audio-24khz-160kbitrate-mono-mp3`。Open WebUI 会把收到的音频保存为 `.mp3` 文件，并且除 slim 镜像外，无论 Azure 返回何种格式都以 MP3 提供。slim 镜像会拒绝其浏览器可播放格式列表之外的音频类型，例如 MP3、WAV 和 Ogg 之外的类型。微软的[音频输出列表](https://learn.microsoft.com/azure/ai-services/speech-service/rest-text-to-speech#audio-outputs)列出了所有可用值。
+**Output format** 会作为要返回的音频格式发送给 Azure。请保持使用 MP3 格式之一，例如默认的 `audio-24khz-160kbitrate-mono-mp3`。Open WebUI 会把收到的音频保存为 `.mp3` 文件，并且除 slim 镜像外，无论 Azure 返回何种格式都以 MP3 提供。slim 镜像会拒绝其浏览器可播放格式列表之外的音频类型，例如 MP3、WAV 和 Ogg 之外的类型。Microsoft的[音频输出列表](https://learn.microsoft.com/azure/ai-services/speech-service/rest-text-to-speech#audio-outputs)列出了所有可用值。
 
 ## 通过环境变量配置 {#environment-variables-setup}
 
@@ -135,7 +135,7 @@ Azure 拒绝了该密钥。请确认密钥是从 **Keys and Endpoint** 中正确
 ### 语音请求返回其他错误 {#speech-fails-with-another-error}
 
 1. 确认 **TTS Voice** 已设置为列表中的完整 Azure 语音名称
-2. 确认 **Output format** 是微软[音频输出列表](https://learn.microsoft.com/azure/ai-services/speech-service/rest-text-to-speech#audio-outputs)中的某个 MP3 取值
+2. 确认 **Output format** 是Microsoft[音频输出列表](https://learn.microsoft.com/azure/ai-services/speech-service/rest-text-to-speech#audio-outputs)中的某个 MP3 取值
 3. 在 Open WebUI 日志中查看完整错误信息
 
 有关更全面的音频调试，请参阅[音频故障排查指南](/troubleshooting/audio)。

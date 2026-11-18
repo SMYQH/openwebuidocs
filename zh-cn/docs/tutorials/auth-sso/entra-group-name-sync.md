@@ -141,27 +141,27 @@ title: "Entra ID 群组名称同步"
 为您的 Open WebUI 部署配置以下环境变量。有关每个变量的更多详情，请参阅[环境变量文档](/reference/env-configuration)。
 
 ```bash
-# 必填：您的 WebUI 公共地址
+# Required: Your public WebUI address
 WEBUI_URL=https://your-open-webui-domain
 
-# Microsoft OAuth 配置（必填）
+# Microsoft OAuth Configuration (required)
 MICROSOFT_CLIENT_ID=your_client_id
 MICROSOFT_CLIENT_SECRET=your_client_secret
 MICROSOFT_CLIENT_TENANT_ID=your_tenant_id
 MICROSOFT_REDIRECT_URI=https://your-open-webui-domain/oauth/microsoft/callback
 
-# 正确退出所需
+# Required for logout to work properly
 OPENID_PROVIDER_URL=https://login.microsoftonline.com/your_tenant_id/v2.0/.well-known/openid-configuration
 
-# 启用 OAuth 注册
+# Enable OAuth signup
 ENABLE_OAUTH_SIGNUP=true
 
-# OAuth 群组管理
+# OAuth Group Management
 OAUTH_GROUP_CLAIM=groups
 ENABLE_OAUTH_GROUP_MANAGEMENT=true
 ENABLE_OAUTH_GROUP_CREATION=true
 
-# 推荐：设置一致的密钥
+# Recommended: Set a consistent secret key
 WEBUI_SECRET_KEY=your_secure_secret_key
 ```
 

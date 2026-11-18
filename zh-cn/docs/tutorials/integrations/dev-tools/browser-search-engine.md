@@ -57,7 +57,7 @@ WEBUI_URL=https://<your-open-webui-url>
 4. 按如下填写：
   - **Search engine**：Open WebUI Search
   - **Keyword**：webui（或你喜欢的任意关键词）
-  - **URL with %s in place of query**：
+  - **URL 中用 %s 代替查询参数**：
 
       ```txt
       https://<your-open-webui-url>/?q=%s

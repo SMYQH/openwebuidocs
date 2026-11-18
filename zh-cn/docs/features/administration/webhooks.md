@@ -170,7 +170,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 
 ```json
 {
-  "content": "您的消息内容"
+  "content": "Your message content here"
 }
 ```
 
@@ -179,7 +179,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 ```bash
 curl -X POST "https://your-instance.com/api/v1/channels/webhooks/{webhook_id}/{token}" \
   -H "Content-Type: application/json" \
-  -d '{"content": "生产环境部署成功完成！🚀"}'
+  -d '{"content": "Deployment to production completed successfully!"}'
 ```
 
 #### 示例：使用 Python {#example-using-python}
@@ -189,7 +189,7 @@ import requests
 
 webhook_url = "https://your-instance.com/api/v1/channels/webhooks/{webhook_id}/{token}"
 message = {
-    "content": "构建 #1234 失败：单元测试未通过。"
+    "content": "Build #1234 failed: Unit tests did not pass."
 }
 
 response = requests.post(webhook_url, json=message)

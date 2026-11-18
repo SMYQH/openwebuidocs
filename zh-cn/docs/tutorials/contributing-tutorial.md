@@ -28,8 +28,7 @@ title: "参与文档贡献"
 3. **启用 GitHub Pages**
 
    - 在你 Fork 的仓库进入 **Settings** > **Pages**。
-   - 在 **Branch** 中选择部署分支（如 `main`）和目录（如 `/docs`）。
-   - 点击 **Save** 启用 GitHub Pages。
+   - 在 **Build and deployment > Source** 下，选择 **GitHub Actions**。该工作流同时处理构建和发布。 您无需选择分支或文件夹。
 
 4. **配置 GitHub 环境变量**
 
@@ -37,6 +36,8 @@ title: "参与文档贡献"
    - 添加以下环境变量：
      - `BASE_URL` 设置为 `/docs`（或你为 Fork 站点选择的 base URL）。
      - `SITE_URL` 设置为 `https://<your-github-username>.github.io/`。
+
+   只有在您按下文说明编辑工作流和配置后，这些变量才会生效。 在上游仓库中，`gh-pages.yml` 中的构建步骤没有设置 `env`，且 `docusaurus.config.ts` 将 `url` 和 `baseUrl` 设置为硬编码值。
 
 ### 📝 更新 GitHub Pages 工作流与配置文件 {#updating-the-github-pages-workflow-and-config-file}
 
@@ -73,7 +74,7 @@ b. **修改 `docusaurus.config.ts` 以使用环境变量**
 
 5. **运行 `gh-pages` GitHub 工作流**
 
-   - 在 **Actions** 标签页找到 `gh-pages` 工作流。
+   - 打开 **Actions** ，然后选择 **Deploy site to Pages** 工作流（`gh-pages.yml`）。
    - 视你的配置而定，可手动触发，也可能自动运行。
 
 6. **访问你的 Fork 站点**

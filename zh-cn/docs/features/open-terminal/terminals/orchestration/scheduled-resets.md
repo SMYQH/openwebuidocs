@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: "定时重置"
 ---
 
@@ -40,7 +40,7 @@ curl -X PUT http://terminals-orchestrator:3000/api/v1/policies/training-lab/life
 
 ## 重置何时发生 {#when-reset-happens}
 
-重置是空闲安全的。
+对持久化文件的定时重置不会停止正在运行的终端。
 
 当重置到期时，编排器等待用户的终端不在运行或已被空闲超时回收。然后它删除持久化终端文件存储的内容。
 

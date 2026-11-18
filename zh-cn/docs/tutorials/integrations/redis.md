@@ -51,11 +51,11 @@ Open WebUI 使用 Redis 进行：
 将以下设置添加到您的 Redis 配置中：
 
 ``` conf
-# 允许足够的并发连接
+# Allow sufficient concurrent connections
 maxclients 10000
 
-# 30 分钟后关闭空闲连接（1800 秒）
-# 这不会影响会话有效性，只影响到 Redis 的 TCP 连接
+# Close idle connections after 30 minutes (1800 seconds)
+# Affects only idle TCP connections to Redis, not sessions
 timeout 1800
 ```
 
@@ -66,7 +66,7 @@ services:
   redis:
     image: redis:7-alpine
     command: "redis-server --save 30 1 --appendonly yes --maxclients 10000 --timeout 1800 --maxmemory-policy noeviction"
-    # ... 其余配置
+    # ... rest of config
 ```
 
 **为何 `timeout 1800` 是安全的：**
@@ -202,7 +202,7 @@ redis-cli CONFIG GET client-output-buffer-limit
 如果慢日志中出现较大的 `PUBLISH socketio ...` 负载，并且 `client_output_buffer_limit_disconnections` 计数持续增加，则应提高 Redis 的 Pub/Sub 输出缓冲区限制。例如：
 
 ``` conf
-# 保持普通客户端不变；允许更大的 WebSocket Pub/Sub 突发流量。
+# Keep normal clients unchanged; allow larger websocket Pub/Sub bursts.
 client-output-buffer-limit normal 0 0 0 replica 268435456 67108864 60 pubsub 1073741824 268435456 180
 ```
 
@@ -523,20 +523,20 @@ REDIS_KEY_PREFIX="openwebui-dev"
 
 1. 查找是什么在消耗内存，以及它是否在不断增长：
 
-``` bash
+   ``` bash
    docker exec -it redis redis-cli info memory
    docker exec -it redis redis-cli --bigkeys
    docker exec -it redis redis-cli info keyspace   # key counts per DB
-```
+   ```
 
 2. 确认 `timeout` 已设置（空闲连接累积也会表现为内存增长），参见[关键：Redis 服务器配置](#critical-redis-server-configuration)部分。
 
 3. 如果必须限制内存，请同时设置 `maxmemory` 上限并搭配 **`noeviction`**，这样 Redis 会大声报错而不是丢弃认证/会话状态，然后对 `used_memory` 设置告警：
 
-``` conf
+   ``` conf
    maxmemory 512mb
    maxmemory-policy noeviction
-```
+   ```
 
 4. 不要对正在运行的实例执行 `FLUSHDB`/`FLUSHALL`：这会清除活动会话、撤销列表和锁。如果需要清理累积的状态，请在维护窗口重启 Redis 容器。
 
@@ -556,36 +556,36 @@ REDIS_KEY_PREFIX="openwebui-dev"
 **解决方案：**
 
 1. 检查当前连接数：
-``` bash
-redis-cli INFO clients | grep connected_clients
-```
+   ``` bash
+   redis-cli INFO clients | grep connected_clients
+   ```
 
 2. 检查当前设置：
-``` bash
+   ``` bash
    redis-cli CONFIG GET maxclients
    redis-cli CONFIG GET timeout
-```
+   ```
 
 3. 修复配置：
-``` bash
+   ``` bash
    redis-cli CONFIG SET maxclients 10000
    redis-cli CONFIG SET timeout 1800
-```
+   ```
 
 4. 通过添加到 `redis.conf` 或 Docker 命令使其永久生效：
-``` conf
-maxclients 10000
-timeout 1800
-```
+   ``` conf
+   maxclients 10000
+   timeout 1800
+   ```
 
 5. 重启 Redis 以清除积累的连接：
-``` bash
+   ``` bash
    # For systemd
    sudo systemctl restart redis
    
    # For Docker
    docker restart redis
-```
+   ```
 
 **预防：** 始终将 `timeout` 配置为合理的值（例如 1800 秒）。超时仅影响空闲 TCP 连接，不影响用户会话——这是安全且推荐的做法。与客户端侧的 `REDIS_HEALTH_CHECK_INTERVAL` 配合使用（见下文）。
 
@@ -605,7 +605,7 @@ timeout 1800
 将 `REDIS_HEALTH_CHECK_INTERVAL` 环境变量设置为**小于** Redis 服务器 `timeout` 的值：
 
 ``` bash
-# Redis 服务器超时为 1800 秒（30 分钟），所以每 60 秒检查一次
+# Redis server timeout is 1800s (30 min), so check every 60s
 REDIS_HEALTH_CHECK_INTERVAL=60
 ```
 

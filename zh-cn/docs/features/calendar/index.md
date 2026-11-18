@@ -41,10 +41,6 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 活跃的[自动化](/features/chat-conversations/chat-features/automations)会作为虚拟事件显示在专用的**定时任务**日历中。即将到来的运行会显示下一次执行的时间，已完成的运行会直接链接到它生成的对话，让你能在同一时间轴上同时看到自己的事件与自动化工作流。
 
-
-
-带有 RRULE 日程的活跃自动化会作为虚拟事件显示在**定时任务**日历中。过去的自动化运行显示为已完成事件，并附有链接到生成的对话。
-
 ### 共享日历 {#shared-calendars}
 
 通过访问授权把日历共享给特定用户或用户组。团队成员会看到共享事件以及自己的事件，并内置 RSVP 跟踪（待定、已接受、已拒绝、暂定）。
@@ -77,6 +73,8 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 - **管理员**：始终有权访问日历
 - **用户**：需要 **功能 > 日历** 权限
+
+若未获得所需权限而打开 `/calendar`，系统将把用户重定向至主页。
 
 有关权限类别，请参阅 [RBAC 权限](/features/authentication-access/rbac/permissions#4-features-permissions)。
 
@@ -115,12 +113,17 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
    - **日历** — 将事件添加到哪个日历
    - **时间** — 日期和时间，或切换**全天**
    - **地点**（可选）
+   - **重复**：事件重复的频率，参见 [重复事件](#recurring-events)
    - **描述**（可选）
 3. 点击 **创建**
+
+**新建事件** 会打开一个表单。事件的默认日期为今天；开始时间是当前本地时间，结束时间是开始时间后一小时。这两个时间均采用设备时钟，因此即使在深夜或凌晨，日期仍显示为今天。若通过点击网格打开表单，则会预填该时间段：在周视图和日视图中，预填您点击时的具体小时；在月视图中，预填 09:00。
 
 ### 编辑或删除事件 {#edit-or-delete-an-event}
 
 点击日历上的任意事件打开事件编辑器。在那里您可以更新详情或删除事件。自动化生成的虚拟事件无法直接编辑——点击它们会导航到自动化或运行的对话。
+
+单击重复事件中的某一次，即可打开整个系列，日期从该事件的首次出现开始计算。 **保存** 会更改该系列中的每次事件，而 **删除** 则会删除整个系列。
 
 ---
 
@@ -229,7 +232,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 只有日历**所有者**（或管理员）才能管理访问授权和删除日历本身。
 
 :::info 公开共享受权限控制
-通配符访问授权（即允许任何具有日历功能的用户读取或写入日历）受 **Calendars Public Sharing** 权限控制。当非管理员所有者未启用该权限时，公开主体会在创建/更新日历时被静默地从访问授权列表中剥离——逐用户和逐用户组的授权不受影响。管理员始终保留公开共享的能力。可在**管理面板 → 用户 → 用户组 → 权限**中按用户组配置，也可通过 [`USER_PERMISSIONS_CALENDAR_ALLOW_PUBLIC_SHARING`](/reference/env-configuration#user_permissions_calendar_allow_public_sharing) 设置。
+非管理员用户只能在 [共享权限](/features/authentication-access/rbac/permissions#2-sharing-permissions) 允许的范围内进行共享。 **日历公开共享** 向所有拥有日历权限的用户开放日历。日历绝不能与未登录的用户共享。
 :::
 
 ---

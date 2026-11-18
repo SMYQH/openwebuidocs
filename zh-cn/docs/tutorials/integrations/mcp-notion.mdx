@@ -8,7 +8,7 @@ keywords: [notion, mcp, model context protocol, integration, productivity, tools
 
 :::warning 社区贡献
 
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/tutorials/contributing-tutorial/)。
 
 :::
 
@@ -95,11 +95,11 @@ OAuth 会话已过期。在任意聊天中重新切换 Notion 工具（**+** →
 
 ![聊天中 MCP 服务器连接失败错误。](/images/mcp-notion/notion-setup-step12.png)
 
-### `OAuth callback failed: mismatching_state` {#oauth-callback-failed-oauth-callback-state-is-invalid-or-expired}
+### `OAuth callback failed: OAuth callback state is invalid or expired` {#oauth-callback-failed-oauth-callback-state-is-invalid-or-expired}
 
-您正在通过 `localhost` 访问 Open WebUI，但 `WEBUI_URL` 设置为公共域名。请使用 `WEBUI_URL` 中的**确切 URL** 访问实例并重新授权。
+您正在通过 `localhost` 访问 Open WebUI，但 `WEBUI_URL` 设置为公共域名。Notion 的重定向会跳转到一个地址，而该地址不具备您最初访问的地址所拥有的授权状态。请使用 `WEBUI_URL` 中的**确切 URL** 访问实例并重新授权。
 
-![OAuth 回调 mismatching_state 错误。](/images/mcp-notion/notion-setup-step13.png)
+![OAuth 回调状态错误。](/images/mcp-notion/notion-setup-step13.png)
 
 ### `Object not found` {#object-not-found}
 

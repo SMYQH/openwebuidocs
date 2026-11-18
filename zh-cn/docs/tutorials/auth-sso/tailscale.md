@@ -93,7 +93,7 @@ Tailscale 可以为你的 tailnet 主机名自动配置受信任的 Let's Encryp
 简要版本如下：
 
 ```bash
-# 将 HTTPS 流量直接代理到 Open WebUI
+# Proxy HTTPS traffic directly to Open WebUI
 sudo tailscale serve https / http://localhost:8080
 ```
 

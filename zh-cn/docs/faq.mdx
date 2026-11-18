@@ -169,8 +169,6 @@ docker run -d -p 3000:8080 -e HF_ENDPOINT=https://hf-mirror.com/ --add-host=host
 
 **答：** 如果你使用的是 **Ollama**，请注意 Ollama 会根据 GPU 的显存来选择模型的默认上下文长度，在显存不足 24 GiB 的 GPU 上是 **4096 token**（参见 [Ollama 的上下文长度文档](https://docs.ollama.com/context-length)）。这意味着检索到的数据可能完全用不上，因为它超出了可用的上下文窗口。
 
-**答：** 如果你使用的是 **Ollama**，请注意它默认把上下文长度设为 **2048 tokens**。这意味着检索到的数据很可能根本塞不进可用的上下文窗口，因此不会被真正利用。
-
 要提升 Open WebUI 中 Retrieval-Augmented Generation（**RAG**）的效果，你应该把上下文长度提高到更大的值（**8192+ tokens**），确保检索到的文档能有效参与模型回答。
 
 做法是调整 **Ollama 模型参数**，为模型提供更大的上下文窗口。你可以直接在聊天中查看和修改，也可以在模型编辑页里调整，这通常会显著改善 RAG 体验。
@@ -204,7 +202,7 @@ def wait_for_processing(token, file_id):
 
 ### 问：我问模型“你是什么模型”，它答错了。是不是 Open WebUI 路由到了错误的模型？ {#q-i-asked-the-model-what-it-is-and-it-gave-the-wrong-answer-is-open-webui-routing-to-the-wrong-model}
 
-**答：** 不是——**LLM 并不能可靠地知道自己的真实身份。** 当你问模型“你是什么模型？”或“你是 GPT-4 吗？”时，它给出的并不是系统诊断结果，而只是基于训练数据模式生成的一段文本。
+**答：** 不是——**LLM 并不能可靠地知道自己的真实身份。** 当你问模型“你是什么模型？”或“你是 GPT-5.6 吗？”时，它给出的并不是系统诊断结果，而只是基于训练数据模式生成的一段文本。
 
 模型经常会：
 - 声称自己是另一个模型（例如某个 Llama 模型自称 ChatGPT）
@@ -223,7 +221,7 @@ def wait_for_processing(token, file_id):
 
 **答：** 因为提供商会**注入系统提示词**，明确告诉模型它是谁。例如使用 ChatGPT 时，OpenAI 的界面会在你的对话开始前插入类似 “You are ChatGPT, a large language model trained by OpenAI...” 的隐藏系统消息。
 
-模型并不是“自我意识”地知道自己是谁——它只是被要求声称某个特定身份。你在 Open WebUI 中也可以这样做，例如在模型配置里添加系统提示词（如 “You are Llama 3.3 70B...”），之后模型就会很自信地重复你设定的身份。
+模型并不是“自我意识”地知道自己是谁——它只是被要求声称某个特定身份。你在 Open WebUI 中也可以这样做，例如在模型配置里添加系统提示词（如 “You are Qwen 3.6 27B...”），之后模型就会很自信地重复你设定的身份。
 
 这也是为什么同一个模型通过不同界面访问时，可能会对“自己是谁”给出不同答案——关键完全在于是否向它提供了相应的系统提示词。
 

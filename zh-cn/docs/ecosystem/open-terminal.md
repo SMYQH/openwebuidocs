@@ -22,7 +22,7 @@ sidebar_position: 2
 
 同一个循环也适用于演示文稿、一批修过的图片，或者对上千行数据的分析。脚本和交付物都是真实文件：可以检查、下载并在此基础上继续。持久化的工作区让下一个任务从你已经做完的部分开始。
 
-![Open WebUI 界面中的 Open Terminal 工作区及其文件浏览器](/images/open-terminal-file-browser.png)
+![在 Open WebUI 界面中，Open Terminal 工作区及其文件浏览器会与聊天窗口并排显示。](/images/open-terminal-file-browser.png)
 
 ## 用你想用的 AI 一起工作 {#use-the-ai-you-want-to-work-with}
 

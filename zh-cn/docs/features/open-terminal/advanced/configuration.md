@@ -35,9 +35,9 @@ Open Terminal 开箱即用，提供合理的默认值。本页面涵盖所有可
 | **System Prompt** | 自动生成 | `OPEN_TERMINAL_SYSTEM_PROMPT` | 用自定义模板替换生成的提示词 |
 | **Environment Info** | — | `OPEN_TERMINAL_INFO` | 追加操作员提供的环境上下文到生成的提示词 |
 | **File Browser Root** | `home` | `OPEN_TERMINAL_FILE_BROWSER_ROOT` | 使用 `home`、显式路径如 `/workspace`，或 `filesystem` 选择退出 |
-| **Multi-User** | `false` | `OPEN_TERMINAL_MULTI_USER` | 启用[每用户隔离](./multi-user) |
-| **CORS Origins** | `*` | `OPEN_TERMINAL_CORS_ALLOWED_ORIGINS` | 允许的跨域来源。默认 `*` 允许所有来源（宽松）；未设置时会打印启动警告（自 ~0.11.30） |
-| **Allowed Domains** | — | `OPEN_TERMINAL_ALLOWED_DOMAINS` | [出站防火墙](./security#egress-filtering)：仅允许连接到这些域名 |
+| **Multi-User** | `false` | `OPEN_TERMINAL_MULTI_USER` | 启用[每用户隔离](./multi-user.md) |
+| **CORS Origins** | `*` | `OPEN_TERMINAL_CORS_ALLOWED_ORIGINS` | 允许的跨域来源。默认 `*` 允许所有来源（宽松）；未设置时会打印启动警告（自 `~0.11.30`） |
+| **Allowed Domains** | — | `OPEN_TERMINAL_ALLOWED_DOMAINS` | [出站防火墙](./security.md#egress-filtering)：仅允许连接到这些域名 |
 | **Session CWD TTL** | `604800`（7 天） | `OPEN_TERMINAL_SESSION_CWD_TTL` | 会话保存的工作目录记忆时长 |
 | **Max Log Size** | `50000000`（50 MB） | `OPEN_TERMINAL_MAX_LOG_SIZE` | 日志轮转前的最大会话日志大小 |
 | **Log Retention** | `604800`（7 天） | `OPEN_TERMINAL_LOG_RETENTION` | 会话日志保留时长 |
@@ -84,7 +84,7 @@ execute_timeout = 5
 execute_description = "This terminal has ffmpeg and ImageMagick installed."
 ```
 
-<!-- TODO：截图——文本编辑器中展示格式整齐的 config.toml 文件。 -->
+{/* TODO: Screenshot: A text editor showing a well-formatted config.toml file. */}
 
 :::tip 为什么使用配置文件？
 它可以让你的 API Key 不出现在命令行和 shell 历史记录中。在机器上运行 `ps` 或 `htop` 的任何人都不会看到它。
@@ -133,7 +133,7 @@ secrets:
     file: ./terminal_api_key.txt
 ```
 
-<!-- TODO：截图——在编辑器中高亮 Docker Compose 文件中的 secrets 部分。 -->
+{/* TODO: Screenshot: Docker Compose file in an editor with the secrets section highlighted. */}
 
 ---
 
@@ -151,7 +151,7 @@ Open Terminal 提供三种大小的镜像：
 
 **如果不确定，使用 `latest`。** 它预装了所有工具，AI 无需等待安装即可使用任何工具。
 
-<!-- TODO：截图——三种镜像变体相对大小和能力的可视化对比。 -->
+{/* TODO: Screenshot: A visual comparison of the three image variants showing relative sizes and capabilities. */}
 
 ## 相关链接 {#related}
 

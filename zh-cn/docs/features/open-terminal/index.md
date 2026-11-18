@@ -8,7 +8,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Open Terminal {#open-terminal}
 <ThemedImage
-  alt="Terminal: a screen block with a cursor"
+  alt="终端：一个带有光标的屏幕块"
   sources={{
     light: useBaseUrl('/images/banners/terminal-light.svg'),
     dark: useBaseUrl('/images/banners/terminal-dark.svg'),
@@ -26,7 +26,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 Open Terminal 是类计算机的工作区，让 Open WebUI 的智能体循环能够作用于文件、代码、软件包、服务器、文档和生成的成果物。你可以把它运行在 Docker 中以获得隔离，也可以在裸机上运行，让智能体直接作用于宿主机。
 
-![Open WebUI with Open Terminal selected and the Files tab open beside a new chat](/images/open-terminal-file-browser.png)
+![在 Open WebUI 中开启一个新的聊天窗口，此时已选中“Open Terminal”，且“文件”选项卡在聊天窗口旁处于打开状态。](/images/open-terminal-file-browser.png)
 
 ## 正确的心智模型 {#the-right-mental-model}
 现代智能体工作流不是"一次提问、一次作答"，而是有状态的循环：

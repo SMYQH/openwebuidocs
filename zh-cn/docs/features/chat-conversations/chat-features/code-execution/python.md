@@ -215,7 +215,7 @@ print('Saved result.csv to /mnt/uploads/')
 ## 示例：创建一个图表 {#example-creating-a-chart}
 
 **提示词：**
-> "Create a bar chart with matplotlib showing: Acuity 4.1, Signify 7.2, Hubbell 5.6, Legrand 8.9. Output the chart as a base64 data URL so it displays inline."
+> "使用 matplotlib 创建一个柱状图，显示以下数据：Acuity 4.1、Signify 7.2、Hubbell 5.6、Legrand 8.9。将图表输出为 base64 数据 URL，以便内联显示。"
 
 **期望代码输出：**
 ```python

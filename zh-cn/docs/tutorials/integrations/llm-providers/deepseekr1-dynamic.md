@@ -38,16 +38,16 @@ Ollama 上唯一真正的 **DeepSeek-R1** 模型是此处提供的 **671B 版本
 
 ```python
 
-# 运行前请先安装 Hugging Face 依赖：
+# Install Hugging Face dependencies before running this:
 
 # pip install huggingface_hub hf_transfer
 
 from huggingface_hub import snapshot_download
 
 snapshot_download(
-    repo_id = "unsloth/DeepSeek-R1-GGUF",  # 指定 Hugging Face 仓库
-    local_dir = "DeepSeek-R1-GGUF",         # 模型将下载到此目录
-    allow_patterns = ["*UD-IQ1_S*"],        # 仅下载 1.58 位版本
+    repo_id = "unsloth/DeepSeek-R1-GGUF",  # Specify the Hugging Face repo
+    local_dir = "DeepSeek-R1-GGUF",         # Model will download into this directory
+    allow_patterns = ["*UD-IQ1_S*"],        # Only download the 1.58-bit version
 )
 ```
 

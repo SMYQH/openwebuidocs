@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 10
 title: "API 和故障排除"
 ---
 
@@ -32,7 +32,7 @@ Authorization: Bearer {TERMINALS_API_KEY}
   "storage_mode": "per-user",
   "env": {
     "OPEN_TERMINAL_ALLOWED_DOMAINS": "*.pypi.org,github.com",
-    "OPEN_TERMINAL_SYSTEM_PROMPT": "你在 {{os}} 上工作，位于 {{home}}。"
+    "OPEN_TERMINAL_SYSTEM_PROMPT": "You are working on {{os}} at {{home}}."
   },
   "idle_timeout_minutes": 60
 }
@@ -72,7 +72,7 @@ Authorization: Bearer {TERMINALS_API_KEY}
 
 刷新请求体：
 
-``` json
+```json
 {
   "user_id": "optional-user-id",
   "policy_id": "optional-policy-id",
@@ -86,7 +86,7 @@ Authorization: Bearer {TERMINALS_API_KEY}
 
 停止请求体：
 
-``` json
+```json
 {
   "user_id": "...",
   "policy_id": "default",
@@ -114,6 +114,6 @@ Authorization: Bearer {TERMINALS_API_KEY}
 
 ### 为什么用户无法再在文件浏览器中浏览到 `/etc`？ {#why-cant-users-browse-to-etc-in-the-file-browser}
 
-对于编排的终端，文件浏览器有意从 Open Terminal 报告的根目录内部开始，并隐藏该根目录以上的父目录。默认情况下，该根目录是 `Home`。这可以防止令人困惑的支持案例。它不是安全边界。
+对于编排的终端，文件浏览器有意从 Open Terminal 报告的根目录内部开始，并隐藏该根目录以上的父目录。默认情况下，该根目录是 `Home`。这样可以避免产生令人困惑的支持工单。它不是安全边界。
 
-要使用不同的可视根目录，将 `OPEN_TERMINAL_FILE_BROWSER_ROOT` 设置为显式路径，例如 `/workspace`。要退出，在策略 `env` 中设置 `OPEN_TERMINAL_FILE_BROWSER_ROOT=filesystem` 并刷新受影响的终端。
+要使用不同的可视根目录，将 `OPEN_TERMINAL_FILE_BROWSER_ROOT` 设置为显式路径，例如 `/workspace`。若要取消这一限制，在策略 `env` 中设置 `OPEN_TERMINAL_FILE_BROWSER_ROOT=filesystem` 并刷新受影响的终端。

@@ -79,7 +79,7 @@ Open WebUI 通过向数据库写入每个用户的 `last_active_at` 时间戳来
 - **建议**：`120`，这会让在线状态写入再减少一半。请保持低于 `180`：在线状态的判定依据是用户时间戳是否落在最近 180 秒内，因此间隔过长会让活跃用户数出现波动。设为 `0` 表示不进行节流。详见 [`DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL`](/reference/env-configuration#database_user_active_status_update_interval)。
 
 ### 数据库会话共享 {#database-session-sharing}
-从 v0.7.1 开始，Open WebUI 提供数据库会话共享功能，在高并发下可减少频繁新建 session 的开销。
+会话共享允许数据库调用复用请求已持有的会话，而非打开一个新的会话。
 
 - **Env Var**：`DATABASE_ENABLE_SESSION_SHARING`
 - **Default**：`False`
@@ -248,7 +248,7 @@ Open WebUI 会为每个请求体、API 响应、保存的对话、服务商请�
 被该级别过滤掉的消息根本不会被构造，因此调高级别既节省 CPU 也减少日志量，在繁忙的服务器上以及从大型知识库检索的对话中尤为明显。`WARNING` 还会丢掉记录启动、关键事件和请求处理的 `INFO` 日志行，因此如果你的日志聚合依赖这些行，请保留 `INFO`。
 
 - **环境变量**：`GLOBAL_LOG_LEVEL=WARNING`
-  *   *建议*：在依赖 `INFO` 日志行的繁忙实例上试用。绝不要在生产环境保留 `DEBUG`，它是最耗性能的级别。需要重启。
+  *   *建议*：在繁忙且不依赖 `INFO` 日志行的实例上试用。切勿在生产环境保持 `DEBUG` 级别开启，这是运行成本最高的日志级别。更改后需要重启。
 
 完整说明参见[日志级别的代价](../getting-started/advanced-topics/logging.md#what-the-log-level-costs)。
 

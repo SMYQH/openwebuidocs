@@ -17,7 +17,7 @@ title: "Jupyter Notebook"
 本教程将带您了解连接两个服务的基本设置步骤。
 
 - [查看 v0.5.11 发布说明](https://github.com/open-webui/open-webui/releases/tag/v0.5.11)
-- [查看 v0.5.15 发布说明](https://github.com/open-webui/open-webui/releases/tag/v0.5.14)
+- [查看 v0.5.15 发布说明](https://github.com/open-webui/open-webui/releases/tag/v0.5.15)
 
 ## 什么是 Jupyter Notebooks {#what-are-jupyter-notebooks}
 

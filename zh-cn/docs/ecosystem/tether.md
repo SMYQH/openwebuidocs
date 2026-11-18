@@ -16,7 +16,7 @@ Tether 是把你的电脑连接到你的 Open WebUI 的桌面应用。它把你�
 
 ## 触手可及的工作区 {#your-workspace-within-reach}
 
-你的项目早就有了依赖，文档各在各位的工具都装好了。Tether 让你的 AI 通过 **Open Terminal** 在这个环境中工作。跟随命令、检查文件，并在 Open WebUI 中提出修改。你也可以在终端环境里安装并登录[受支持的智能体，例如 Claude Code 和 Codex](/getting-started/quick-start/connect-an-agent)后使用它们。
+该项目已安装好所需依赖项，文档已存放在相应文件夹中，相关工具也已配置完毕。Tether 让你的 AI 通过 **Open Terminal** 在这个环境中工作。在 Open WebUI 中观察命令的执行过程，检查文件，并提出修改请求。你也可以在终端环境里安装并登录[受支持的智能体，例如 Claude Code 和 Codex](/getting-started/quick-start/connect-an-agent)后使用它们。
 
 在另一台设备上打开同一个 Open WebUI 实例，用相同账户登录，然后在终端菜单的 **Your devices** 下选择你的电脑。工作会运行在已连接的电脑上。对团队来说，每个人的设备各自连接到共享实例上的自己的账户。
 

@@ -83,7 +83,7 @@ services:
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     environment:
-      - 'WEBUI_BANNERS=[{"id":"maintenance-2026-03","type":"warning","title":"维护通知","content":"本周计划进行维护窗口，请预期短暂中断。<a href=\"https://intranet.example.com/status\" target=\"_blank\">查看状态页面</a>。","dismissible":true,"timestamp":1772500000}]'
+      - 'WEBUI_BANNERS=[{"id":"maintenance-2026-03","type":"warning","title":"Maintenance","content":"A maintenance window is planned this week. Expect brief interruptions. <a href=\"https://intranet.example.com/status\" target=\"_blank\">See status page</a>.","dismissible":true,"timestamp":1772500000}]'
 ```
 
 > 注意：由于 `WEBUI_BANNERS` 是嵌入 YAML 内的 JSON 字符串，必须确保其始终是有效 JSON（参见下方"常见陷阱"）。

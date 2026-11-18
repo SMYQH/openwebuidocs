@@ -130,6 +130,8 @@ python test/translation_check.py --files path/to/page.mdx --review-bundle test/.
 
 Fully quoted headings inside upstream troubleshooting/error sections are source-derived literal diagnostics. Preserve those messages, including when translating with either provider; other quoted headings remain prose.
 
+For `setting-default` findings, compare the same setting's default and unit in both languages. If upstream pages disagree, check the application revision corresponding to the docs before changing the translation. Record that revision in `STATUS.md`.
+
 The deterministic audit checks file/category coverage, code/literal preservation, heading structure/anchors, Markdown structure, metadata, terminology, untranslated prose, and omission signals. It compares matched sections even when heading counts differ. A dropped literal fails; an added or re-counted literal, a translated interface label and a repaired upstream fence are review signals. File coverage and matching headings **do not establish semantic completeness**. Do not invent a quality score or claim a semantic pass from static checks. Treat findings as leads, not proof: read the pair before changing a translation, and improve the checker when a finding turns out to be a tool defect.
 
 Read every English/Chinese pair in the candidate report or review bundle in full. Assess omissions/additions, facts, negation, numbers, fluency, terminology, and heading/body alignment. Exclude protected terms, code, and markup from language judgments. Complete `result_format` in a separate result file, including source evidence for every finding. For later installed-document audits, `--reuse-review` can carry forward only completed reviews with matching file and configuration hashes.

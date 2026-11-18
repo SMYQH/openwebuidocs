@@ -25,13 +25,13 @@ docker run -d --name open-terminal -p 8000:8000 \
 
 ```mermaid
 flowchart LR
-    Host["你的机器<br/>宿主文件系统"]
-    subgraph Container["Open Terminal 容器"]
-        Work["/home/user<br/>唯一共享的路径"]
-        Proc["命令与进程<br/>上限为 2 CPU · 2 GB"]
+    Host["Your machine<br/>host filesystem"]
+    subgraph Container["Open Terminal container"]
+        Work["/home/user<br/>the only shared path"]
+        Proc["Commands and processes<br/>capped at 2 CPU · 2 GB"]
     end
-    Host -->|"卷挂载"| Work
-    Host -.->|"无法访问"| Proc
+    Host -->|"volume mount"| Work
+    Host -.->|"no access"| Proc
     Work --- Proc
 ```
 
@@ -148,16 +148,16 @@ networks:
 
 ```mermaid
 flowchart LR
-    Internet(["互联网"])
-    subgraph Public["公共网络"]
+    Internet(["Internet"])
+    subgraph Public["Public network"]
         WebUI["Open WebUI"]
     end
-    subgraph Internal["内部网络 · internal: true"]
+    subgraph Internal["Internal network · internal: true"]
         Terminal["Open Terminal<br/>:8000"]
     end
-    Internet -->|"用户访问界面"| WebUI
+    Internet -->|"users reach the UI"| WebUI
     WebUI -->|"http://open-terminal:8000"| Terminal
-    Terminal -.->|"没有出站路径"| Internet
+    Terminal -.->|"no route out"| Internet
 ```
 
 Open WebUI 同时位于两个网络之上，因此既能为用户提供服务，又能访问终端。终端只位于内部网络，这正是互联网上的任何东西都无法访问它、它也无法向外发起调用的原因。
@@ -219,14 +219,14 @@ Docker 容器可以选择性地访问宿主机的 Docker（让 AI 构建镜像�
 
 ```mermaid
 flowchart LR
-    Terminal["Open Terminal 容器"]
+    Terminal["Open Terminal container"]
     Socket["/var/run/docker.sock"]
-    subgraph HostControl["在宿主机上等同于 root"]
-        FS["宿主文件系统<br/>任意路径，任意容器"]
-        Net["宿主机网络"]
-        Ctrs["机器上的每一个容器"]
+    subgraph HostControl["Effective root on the host"]
+        FS["Host filesystem<br/>any path, any container"]
+        Net["Host network"]
+        Ctrs["Every container on the machine"]
     end
-    Terminal -->|"已挂载 socket"| Socket
+    Terminal -->|"socket mounted"| Socket
     Socket --> FS
     Socket --> Net
     Socket --> Ctrs

@@ -75,7 +75,7 @@ docker compose -f docker-compose.otel.yaml up -d
       - OTEL_METRICS_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
       - OTEL_LOGS_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
       - OTEL_SERVICE_NAME=open-webui
-      # 如有需要，可在此设置 OTEL_BASIC_AUTH_USERNAME/PASSWORD
+      # You may set OTEL_BASIC_AUTH_USERNAME/PASSWORD here if needed
 ```
 
 ## 📊 数据收集 {#data-collection}

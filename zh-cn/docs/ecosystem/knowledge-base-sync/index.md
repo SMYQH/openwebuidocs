@@ -10,7 +10,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 # 知识库同步 (oikb) {#knowledge-base-sync-oikb}
 
 <ThemedImage
-  alt="知识库同步：多种不同的源连接器通过 oikb 同步枢纽流入 Open WebUI 知识库"
+  alt="知识库同步：两座塔，中间有一块正在传输的方块"
   sources={{
     light: useBaseUrl('/images/banners/kbsync-light.svg'),
     dark: useBaseUrl('/images/banners/kbsync-dark.svg'),
@@ -88,7 +88,7 @@ pip install oikb[gdrive]   # Google Drive
 pip install oikb[all]      # every optional connector at once
 ```
 
-完整的可选组件列表为：`s3`、`gcs`、`azure`、`dropbox`、`r2`、`gdrive`、`gmail`、`gsites`、`web`、`oracle`、`sharepoint-cert` 和 `all`。表中未列出的连接器（GitHub、Confluence、Notion、Jira、Slack 以及大多数其他连接器）无需额外安装。
+完整的可选组件列表为：`s3`、`gcs`、`azure`、`dropbox`、`r2`、`gdrive`、`gmail`、`gsites`、`web`、`oracle`、`sharepoint-cert` 和 `all`。上面未列出的连接器（GitHub、Confluence、Notion、Jira、Slack 以及大多数其他连接器）无需额外安装。
 
 对于生产环境，Docker 镜像发布在 `ghcr.io/open-webui/oikb`。请参阅[运行守护进程](/ecosystem/knowledge-base-sync/daemon#deployment)。
 
@@ -100,13 +100,13 @@ pip install oikb[all]      # every optional connector at once
 export OPEN_WEBUI_URL=http://localhost:3000
 export OPEN_WEBUI_API_KEY=sk-your-api-key   # Settings → Account → API keys
 
-# 将本地文件夹同步到知识库
+# Sync a local folder into a Knowledge Base
 oikb sync ./docs --kb-id your-kb-id
 
-# 或者同步 GitHub 仓库，无需本地克隆
+# Or a GitHub repo, no local clone needed
 oikb sync github:owner/repo --kb-id your-kb-id
 
-# 预览将要发生的变化，不上传任何内容
+# Preview exactly what would change and upload nothing
 oikb sync ./docs --kb-id your-kb-id --dry-run
 ```
 
@@ -313,7 +313,7 @@ Docker 镜像可以作为一次性命令运行，使其成为[GitHub Actions](/e
 在任何命令后添加 `-q` / `--quiet` 可抑制非错误输出（在脚本中很有用），添加 `-v` / `--verbose` 可查看每个文件的详细信息。
 
 :::warning `oikb reset` 会删除知识库中的所有内容
-`reset` 会删除目标知识库中的**所有**文件，而不仅仅是 oikb 上传的文件。这是唯一一个有破坏性的命令。确认提示的存在是有原因的。
+`reset` 会删除目标知识库中的所有文件，而不仅仅是 oikb 上传的文件。这是唯一一个有破坏性的命令。确认提示的存在是有原因的。
 :::
 
 ---
@@ -350,7 +350,7 @@ Docker 镜像可以作为一次性命令运行，使其成为[GitHub Actions](/e
 
 ### 守护进程以单进程运行 {#the-daemon-runs-as-one-process}
 
-定时调度和每个知识库的锁位于单个进程中，因此[守护进程](/ecosystem/knowledge-base-sync/daemon#deployment)应以**一个副本**的形式运行。要覆盖更多来源，请在一个守护进程中添加条目，而不是运行多个副本。
+定时调度和每个知识库的锁位于单个进程中，因此[守护进程](/ecosystem/knowledge-base-sync/daemon#deployment)应以一个副本的形式运行。要覆盖更多来源，请在一个守护进程中添加条目，而不是运行多个副本。
 
 ### 索引仍在服务端进行 {#indexing-still-happens-server-side}
 

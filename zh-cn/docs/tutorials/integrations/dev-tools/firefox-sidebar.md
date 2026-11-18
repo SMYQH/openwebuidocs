@@ -36,7 +36,7 @@ title: "Firefox 侧栏"
 3. 搜索 `browser.ml.chat.enabled`，若未在 Firefox Labs 启用则将其设为 `true`
 4. 搜索 `browser.ml.chat.hideLocalhost` 并设为 `false`
 
-### browser.ml.chat.prompts.{#browsermlchatprompts}
+### browser.ml.chat.prompts.\{#} \{#browsermlchatprompts}
 
 如需添加自定义提示词，请按以下步骤操作：
 
@@ -61,7 +61,7 @@ title: "Firefox 侧栏"
 
 ### YouTube 转录 {#youtube-transcription}
 
-- `youtube`：提供 YouTube 视频 ID，在聊天中转录该视频（例如 `/?youtube=VIDEO_ID`）
+- `youtube`：提供 YouTube 视频 ID，确认链接后即在聊天中转录该视频（例如 `/?youtube=VIDEO_ID`）
 
 ### Web Search {#web-search}
 
@@ -77,7 +77,7 @@ title: "Firefox 侧栏"
 
 ### 初始查询 {#initial-query-prompt}
 
-- `q`：设置聊天初始问题或提示词（例如 `/?q=Hello%20there`）
+- `q`：把提示词预先填入消息输入框，不会自动发送（例如 `/?q=Hello%20there`）
 
 ### 临时聊天会话 {#temporary-chat-sessions}
 

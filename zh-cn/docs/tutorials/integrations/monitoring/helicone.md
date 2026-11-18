@@ -50,11 +50,11 @@ Helicone 是一个开源 LLM 可观测性平台，帮助开发者监控、调试
 首次启动 Open WebUI 时，可参考 [Open WebUI 文档](https://docs.openwebui.com/)中的命令，并加入 Helicone 的 API BASE URL，以便自动接入查询与监控。
 
 ```bash
-   # 设置环境变量
+   # Set your environment variables
    export HELICONE_API_KEY=<YOUR_API_KEY>
    export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 
-  # 启动集成 Helicone 的 Open WebUI
+   # Run Open WebUI with Helicone integration
    docker run -d -p 3000:8080 \
      -e OPENAI_API_BASE_URL="https://oai.helicone.ai/v1/$HELICONE_API_KEY" \
      -e OPENAI_API_KEY="$OPENAI_API_KEY" \

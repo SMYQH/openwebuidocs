@@ -190,15 +190,15 @@ zip 压缩包、SQLite 数据库、视频文件、远超上下文窗口的导出
 
 ```mermaid
 flowchart TB
-    subgraph Compose["同一个 Docker Compose 项目"]
+    subgraph Compose["One Docker Compose project"]
         direction LR
         W1["Open WebUI"] -->|"http://open-terminal:8000"| T1["Open Terminal"]
     end
-    subgraph Separate["同一主机上的独立容器"]
+    subgraph Separate["Separate containers on one host"]
         direction LR
         W2["Open WebUI"] -->|"http://host.docker.internal:8000"| T2["Open Terminal"]
     end
-    subgraph Remote["位于其他位置的 Open Terminal"]
+    subgraph Remote["Open Terminal elsewhere"]
         direction LR
         W3["Open WebUI"] -->|"http://that-machines-ip:8000"| T3["Open Terminal"]
     end

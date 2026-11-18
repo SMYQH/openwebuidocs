@@ -10,7 +10,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 # 模型 {#models}
 
 <ThemedImage
-  alt="工作区地图，模型模块高亮：模型、知识、提示词、技能和工具围绕 Open WebUI 核心"
+  alt="工作区模型：一排积木，其中一块凸起"
   sources={{
     light: useBaseUrl('/images/banners/workspace-models-light.svg'),
     dark: useBaseUrl('/images/banners/workspace-models-dark.svg'),
@@ -30,7 +30,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 一个基础模型，多种角色 {#one-base-model-many-personas}
 
-同一个 GPT-4o 可以驱动编程助手、客户支持机器人和创意写作工具。每个预设都有自己的系统提示词、工具和知识库，因此根据所选预设，模型的行为会有所不同。
+同一个 GPT-5.6 可以驱动编程助手、客户支持机器人和创意写作工具。每个预设都有自己的系统提示词、工具和知识库，因此根据所选预设，模型的行为会有所不同。
 
 ### 知识库和工具预先附加 {#knowledge-and-tools-come-pre-attached}
 
@@ -459,7 +459,7 @@ API 调用方也能获得同样的控件。请求如何选择某个选项，请�
 
 这是为每个人提供统一策展体验的可靠方法：
 
-1. 将基础模型（例如"GPT-4o"）设置为**公开**，以便每个目标用户都能通过基础访问检查。
+1. 将基础模型（例如"GPT-5.6"）设置为**公开**，以便每个目标用户都能通过基础访问检查。
 2. **隐藏**基础模型（省略号 **...** > **隐藏**），使其不出现在模型选择器中。
 3. 在该基础之上创建一个策展工作区模型。赋予其自己的名称、头像、系统提示词、知识和工具，然后与你的用户共享（或保持公开）。
 

@@ -27,15 +27,14 @@ http://localhost:8000/v1
 
 ## 第 2 步：在 Open WebUI 中添加 API 连接 {#step-2-add-the-api-connection-in-open-webui}
 
-1. 进入 ⚙️ **Admin Settings**。
-2. 打开 **Connections > OpenAI > Manage**（查找扳手图标）。
-3. 点击 ➕ **Add New Connection**。
-4. 选择 **Standard / Compatible** 标签（如果可见）。
-5. 填写以下内容：
-   - **API URL**：`http://localhost:8000/v1`（或你的 vLLM 服务器 URL）
+1. 转到 **Settings > Connections**（管理员区域）。
+2. 找出 **Manage OpenAI API Connections** 列表。
+3. 点击 **Add Connection**。
+4. 填写以下内容：
+   - **URL**：`http://localhost:8000/v1`（或你的 vLLM 服务器 URL）
      *   **Docker 用户：** 如果 Open WebUI 运行在容器中，请使用 `http://host.docker.internal:8000/v1`。
-   - **API Key**：`none`（如果未配置密钥，也可以留空）
-6. 点击 **Save**。
+   - **Auth**：如果未配置密钥，请选择 **None**。否则，请选择 **Bearer** 并输入您的密钥。
+5. 点击 **Save**。
 
 ---
 

@@ -172,7 +172,7 @@ OAUTH_PROVIDER_NAME="Okta"
 
 ```bash
 
-# 示例：生成强密钥（例如使用 openssl rand -hex 32）
+# Example: Generate a strong secret key (e.g., using openssl rand -hex 32)
 WEBUI_SECRET_KEY="YOUR_UNIQUE_AND_SECURE_SECRET_KEY"
 ```
 

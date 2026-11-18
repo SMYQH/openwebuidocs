@@ -20,6 +20,11 @@ Hard failures cover missing documents/categories, changed code (including
 comments), code fence metadata, inline literals, identifiers, terminology, link
 destinations, MDX code/props, metadata keys, heading levels/order/anchors,
 duplicate anchors, malformed fences/admonitions, and replacement characters.
+Unexpected ASCII control characters also fail. In table cells, an escaped pipe
+preserves the rendered code value; an unescaped pipe inside code splits the cell
+and fails the target check.
+The literal Markdown marker `{#}` may gain a backslash to render correctly in
+a heading; the check still fails if the marker disappears or MDX code changes.
 Localizable metadata values and quoted `alt`, `title`, `label`, `placeholder`,
 and `aria-label` attributes are prose; other attributes and expressions are code.
 Code strings and comments must match verbatim. Only a code fence's `title`
@@ -60,6 +65,10 @@ and a code span that exists only in the removed sentence disappears with it.
 Warnings cover untranslated English after exclusions, verbatim copied prose,
 number drift, Markdown/list/table differences, and unusually short sections.
 An empty section is an error. Section checks continue when heading counts differ.
+For settings with an upstream `Type` and a backticked numeric `Default`,
+`setting-default` checks the first number in the corresponding default row.
+A value in another section cannot satisfy it. Reordering fields or converting
+units can produce a warning; compare both rows before changing a translation.
 English terminology alone never triggers untranslated-prose warnings.
 The same exclusions apply to fence titles. Keyword lists do not contribute to
 copied-section warnings. Dollar prices are not inline math, and sentence-ending

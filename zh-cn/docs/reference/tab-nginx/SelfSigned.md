@@ -41,20 +41,20 @@
             client_max_body_size 20M;
             proxy_read_timeout 10m;
 
-            # 认证端点不缓存
+            # Disable caching for auth endpoints
             proxy_no_cache 1;
             proxy_cache_bypass 1;
             add_header Cache-Control "no-store, no-cache, must-revalidate" always;
             expires -1;
         }
 
-        # 个人资料和模型图片 - 缓存以提升性能
+        # Profile and model images - cached for performance
         location ~ ^/api/v1/(users/[^/]+/profile/image|models/model/profile/image)$ {
             proxy_pass http://host.docker.internal:3000;
             proxy_http_version 1.1;
             proxy_set_header Host $host;
 
-            # 图片缓存 1 天
+            # Cache images for 1 day
             expires 1d;
             add_header Cache-Control "public, max-age=86400";
         }
@@ -84,8 +84,8 @@
             proxy_cache off;
 
             client_max_body_size 20M;
-
-            # 长时间 LLM 补全的扩展超时（30 分钟）
+            
+            # Extended timeout for long LLM completions (30 minutes)
             proxy_read_timeout 1800;
             proxy_send_timeout 1800;
             proxy_connect_timeout 1800;

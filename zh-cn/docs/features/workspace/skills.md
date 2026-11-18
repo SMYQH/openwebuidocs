@@ -10,7 +10,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 # 技能 {#skills}
 
 <ThemedImage
-  alt="工作区技能：四个方块，第五组置于其上"
+  alt="工作区技能：四块玩具积木，上面还放着一块。"
   sources={{
     light: useBaseUrl('/images/banners/workspace-skills-light.svg'),
     dark: useBaseUrl('/images/banners/workspace-skills-dark.svg'),

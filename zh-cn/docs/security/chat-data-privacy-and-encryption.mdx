@@ -35,36 +35,35 @@ Open WebUI 的标准体验旨在提供自托管控制、可审计性、历史记
 
 对于生产部署，请使用 PostgreSQL 并在 PostgreSQL 或存储层配置加密。使用加密卷、提供商管理的加密、TDE（如可用）、TLS 用于数据库连接、加密备份和网络隔离。
 
+```bash
+DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
+```
 
 数据库加密保护静态数据。运行中的 Open WebUI 应用程序使用数据库密钥为经过身份验证的用户提供服务并执行正常产品工作流。
 
-对于仅 SQLite 部署，SQLCipher 可以加密本地 SQLite 数据库文件：
+对于仅部署 SQLite 的情况，请将数据目录放置在加密文件系统上（Linux 上的 LUKS、Windows 上的 BitLocker、macOS 上的 FileVault）。不支持 SQLCipher。
 
-
-``` bash
-DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
-```
 ### 限制管理员聊天和导出表面 {#limit-admin-chat-and-export-surfaces}
 
-
-这些设置减少了管理员通过 Open WebUI 可访问的内容。数据库、主机、备份和应用密钥的直接访问应限于您批准的信任边界内的操作员。
-
-``` bash
+```bash
 ENABLE_ADMIN_CHAT_ACCESS=false
 ENABLE_ADMIN_EXPORT=false
 BYPASS_ADMIN_ACCESS_CONTROL=false
 ```
+
+这些功能会在界面中隐藏其他用户的聊天记录和导出内容，使其不被管理员看到。但这并不会阻止管理员访问这些数据；请参阅 [管理员用户](#admin-users)。
+
 ### 使用 SSO 并限制账户 {#use-sso-and-restrict-accounts}
 
-
-使用您的身份提供商进行 MFA、条件访问、设备状态、组成员资格和用户生命周期管理。尽可能使用 SCIM。对于仍然直接登录 Open WebUI 的账号，请开启内置的[双因素登录](/features/authentication-access/mfa)。
-
-``` bash
+```bash
 ENABLE_LOGIN_FORM=false
 ENABLE_PASSWORD_AUTH=false
 ENABLE_PASSWORD_CHANGE_FORM=false
 DEFAULT_USER_ROLE=pending
 ```
+
+使用您的身份提供商进行 MFA、条件访问、设备状态、组成员资格和用户生命周期管理。尽可能使用 SCIM。对于仍然直接登录 Open WebUI 的账号，请开启内置的[双因素登录](/features/authentication-access/mfa)。
+
 ### 在不需要历史记录时使用临时聊天 {#use-temporary-chat-where-history-is-not-needed}
 
 临时聊天减少保存的聊天历史。强制临时聊天可以要求用户默认使用此行为，而不是让其可选。
@@ -86,7 +85,9 @@ USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true
 - **聊天 > 临时聊天**
 - **聊天 > 强制临时**
 
-临时聊天是保存历史记录的数据最小化控制。活跃提示仍由 Open WebUI 和配置的模型端点处理。
+对于同时拥有这两项权限的用户，服务器将拒绝在所有路径下保存聊天记录，包括直接调用 API、导入聊天、克隆和分叉操作。用户仍可打开已有的聊天记录。此限制不适用于管理员。
+
+临时聊天减少保存的聊天历史。当前活动的提示仍由 Open WebUI 和配置好的模型端点处理。您保持启用的工具仍会在临时聊天中运行，并可能存储自己的数据，因此请在需要时在相关模型上禁用这些工具。
 
 ### 将敏感提示保留在私有模型上 {#keep-sensitive-prompts-on-private-models}
 
@@ -94,10 +95,7 @@ USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true
 
 ### 限制高级功能 {#restrict-advanced-capabilities}
 
-
-仅向批准的组授予高级功能。
-
-``` bash
+```bash
 USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS=false
 USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ACCESS=false
 USER_PERMISSIONS_CHAT_FILE_UPLOAD=false
@@ -105,6 +103,9 @@ ENABLE_DIRECT_CONNECTIONS=false
 ENABLE_COMMUNITY_SHARING=false
 ENABLE_API_KEYS=false
 ```
+
+仅向批准的组授予高级功能。
+
 ### 默认保持日志仅为元数据 {#keep-logs-metadata-only-by-default}
 
 ``` bash
@@ -123,7 +124,7 @@ LOG_FORMAT=json
 
 ### 管理员用户 {#admin-users}
 
-管理员按设计拥有广泛的控制权限。`ENABLE_ADMIN_CHAT_ACCESS=false` 和 `ENABLE_ADMIN_EXPORT=false` 可防止通过 Open WebUI 产品表面的随意访问。基础设施级别的访问应通过操作员信任、访问审查和职责分离来处理。
+管理员控制着该实例，因此请将每位管理员视为能够阅读所有聊天记录。`ENABLE_ADMIN_CHAT_ACCESS=false` 和 `ENABLE_ADMIN_EXPORT=false` 仅在界面中隐藏其他用户的聊天记录和导出内容。 管理员仍可通过其他方式访问数据，例如安装在服务器上运行代码的功能或工具，以及通过内部聊天（如子代理聊天），这些聊天内容可通过 ID 读取。请将管理员角色以及数据库、主机和备份的访问权限，仅授予您信任且能够妥善保管数据的人员。
 
 ### 数据库、主机和备份操作员 {#database-host-and-backup-operators}
 
@@ -182,7 +183,6 @@ LOG_FORMAT=json
 
 - [加固 Open WebUI](/getting-started/advanced-topics/hardening)
 - [HTTPS 参考](/reference/https)
-- [使用 SQLCipher 进行数据库加密](/reference/database-schema#database-encryption-with-sqlcipher)
 - [认证与访问](/features/authentication-access)
 - [RBAC 权限](/features/authentication-access/rbac/permissions)
 - [临时聊天 URL 参数](/features/chat-conversations/chat-features/url-params#8-temporary-chat-sessions)

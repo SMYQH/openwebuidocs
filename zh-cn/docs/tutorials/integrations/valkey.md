@@ -13,20 +13,20 @@ title: "使用 Valkey（兼容 Redis）"
 
 ## 什么是 Valkey？ {#what-is-valkey}
 
-[Valkey](https://valkey.io/) 是 Redis 的开源（BSD 协议）分支，由社区和 Linux 基金会在 Redis 更改许可证后启动。它使用 **Redis 协议**，因此 Open WebUI 通过完全相同的 `REDIS_*` 设置与它通信；在缓存和 WebSocket 方面并没有针对 Valkey 的专属代码路径。如果你想要一个宽松许可证的方案，Valkey 是 Redis 在 Open WebUI 所有使用场景下的直接替代品：登出时的令牌撤销、WebSocket 协调，以及多个 Worker 或实例之间的共享状态。
+[Valkey](https://valkey.io/) 是 Redis 的开源（BSD 协议）分支，由社区和 Linux 基金会在 Redis 更改许可证后启动。它使用 **Redis 协议**，因此 Open WebUI 通过完全相同的 `REDIS_*` 设置与它通信。
 
-简而言之，这就是 **[Redis 教程](/tutorials/integrations/redis)** 的同款配置，只是把镜像换成了 Valkey。Open WebUI 所需的全部内容依然通过 `REDIS_URL` 和其他 `REDIS_*` 变量传递。
+简而言之，这就是 **[Redis 教程](/tutorials/integrations/redis)** 的同款配置，只是把镜像换成了 Valkey。Open WebUI 不测试 Valkey。详情请参见 [步骤 2：添加 Redis](/getting-started/advanced-topics/scaling#step-2-add-redis)。
 
 :::info 两个不同的 "Valkey" 功能，请勿混淆
 - **Valkey 作为 Redis 层（本文）** 是缓存、WebSocket 和会话存储。它使用 **`REDIS_URL`** 和 `redis://` 协议配置，因为 Open WebUI 使用的是 Redis 协议。
-- **Valkey 作为向量数据库** 是一项独立的、由社区维护的 [向量存储](/reference/env-configuration#valkey)（`VECTOR_DB=valkey`，使用 `valkey-search` 模块）。它使用 **`VALKEY_URL`** 和 `valkey://` 协议配置。
+- **Valkey 作为向量数据库** 是一项独立的非核心 [向量存储](/reference/env-configuration#valkey)（`VECTOR_DB=valkey`，使用 `valkey-search` 模块）。它使用 **`VALKEY_URL`** 和 `valkey://` 协议配置。
 
 两者互不相关，你可以单独使用其中一个、同时使用两者，或都不用。本教程讨论的是前者。
 :::
 
 ## 何时需要它？ {#when-do-you-need-it}
 
-规则与 Redis 相同：单实例且 `UVICORN_WORKERS=1` 的部署并不严格要求它，但多 Worker（`UVICORN_WORKERS > 1`）和多实例部署需要；没有它时，登出操作无法在 JWT 过期前使其失效。完整分析请参阅 [何时需要 Redis？](/tutorials/integrations/redis#when-is-redis-required)，以及 [扩展指南](/getting-started/advanced-topics/scaling) 中它在更大部署中的位置。
+与 Redis 相同：参见 [“何时需要 Redis？”](/tutorials/integrations/redis#when-is-redis-required)。
 
 ## 设置 Valkey {#setting-up-valkey}
 

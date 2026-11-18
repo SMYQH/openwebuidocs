@@ -102,20 +102,20 @@ title: "Azure AD LDAP"
 2. **生成密钥和证书：**
 
     ```bash
-    # 生成私钥
+    # Generate a private key
     openssl genrsa -out privatekey_wildcard.key 2048
 
-    # 创建证书签名请求（CSR）
+    # Create a Certificate Signing Request (CSR)
     openssl req -new -key privatekey_wildcard.key \
       -out wildcard.csr -config openssl_wildcard.cnf
 
-    # 创建自签名证书（有效期 365 天）
+    # Create a self-signed certificate (valid for 365 days)
     openssl x509 -req -days 365 -in wildcard.csr \
       -signkey privatekey_wildcard.key \
       -out certificate_wildcard.crt \
       -extensions v3_req -extfile openssl_wildcard.cnf
 
-    # 打包为 PFX 文件
+    # Package into a PFX file
     openssl pkcs12 -export -out certificate_wildcard.pfx \
       -inkey privatekey_wildcard.key -in certificate_wildcard.crt
     ```
@@ -171,23 +171,23 @@ LDAP_SERVER_LABEL="Azure AD DS"
 LDAP_SERVER_HOST="1.222.222.222"
 LDAP_SERVER_PORT="636"
 
-# TLS 选项
+# TLS Options
 LDAP_USE_TLS="true"
-LDAP_VALIDATE_CERT="false"          # 公共 CA 请设置为 true
+LDAP_VALIDATE_CERT="false"          # Set to true for a public CA
 
 #LDAP_CA_CERT_FILE="/etc/ssl/certs/openwebui_ca.crt"
 
-# 绑定账户
+# Bind Account
 LDAP_APP_DN="ldap@{your_domain}.onmicrosoft.com"
 LDAP_APP_PASSWORD="<STRONG-PASSWORD>"
 
-# 搜索范围
+# Search Scope
 LDAP_SEARCH_BASE="DC={your_domain},DC=onmicrosoft,DC=com"
 LDAP_ATTRIBUTE_FOR_USERNAME="sAMAccountName"
 LDAP_ATTRIBUTE_FOR_MAIL="userPrincipalName"
 LDAP_SEARCH_FILTER="(&(objectClass=user)(objectCategory=person))"
 
-# 群组同步（可选）
+# Group Synchronization (Optional)
 
 # ENABLE_LDAP_GROUP_MANAGEMENT="true"
 
