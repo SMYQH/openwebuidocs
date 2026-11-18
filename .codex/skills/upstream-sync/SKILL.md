@@ -33,7 +33,8 @@ Other conventions:
 
 - The Chinese version removes non-compliant external links (Discord, Reddit, X, etc.). The hosts are listed in `non_compliant_link_patterns` in `test/translation_config.json`; the verifier allows the link to be absent and reports `non-compliant-link` when a translation keeps one
 - An interface label that upstream marks with a code span (`Settings`, `Admin Panel`, `Image Generation Engine`) may be translated, because the Chinese site shows a Chinese interface. Identifiers, commands, paths, values and product names stay verbatim inside code spans
-- Code fence titles are prose: translate `title="..."` like any other label
+- Translate prose in code fence `title="..."` values; filename/path titles stay literal
+- Preserve code comments and string values byte for byte. Preserve fence directives other than the title value. JSON-LD prose may be localized, but its types, contexts, URLs and surrounding code stay unchanged
 - `tab-*/` content is included via MDX `<Tabs>` and does not appear in the sidebar
 - Static assets (images, etc.) are copied from `en-us/static/` to `zh-cn/static/` at the same relative path
 - For site config differences see `AGENTS.MD` section 3; do not blindly overwrite `zh-cn` localized configuration
@@ -85,6 +86,8 @@ When the user requests verification/tooling only, do not translate or apply tran
 
 Choose the translation mode from the user's request. Default to **autonomous**; the current AI translates without API configuration. **DeepL** requires only `DEEPL_AUTH_KEY` in root `.env` (see `.env.example`); do not ask for an endpoint or model setting. Never display or commit the key. Do not silently switch providers after a failure.
 
+When the user assigns translation to sub-agents, delegate translation edits directly. The parent handles tooling, integration, and validation; it must not translate on their behalf. Respect the user's concurrency limit; run one translation agent at a time when requested. A provider/capacity failure must be reported, never hidden by certifying unfinished review.
+
 Prepare small, explicit file batches. Paths are relative to `en-us/docs/`:
 
 ```powershell
@@ -122,6 +125,8 @@ python -m unittest discover -s test -p "test_*.py"
 python test/translation_check.py --strict --report test/.reports/audit.json
 python test/translation_check.py --files path/to/page.mdx --review-bundle test/.reports/review.json
 ```
+
+Fully quoted headings inside upstream troubleshooting/error sections are source-derived literal diagnostics. Preserve those messages, including when translating with either provider; other quoted headings remain prose.
 
 The deterministic audit checks file/category coverage, code/literal preservation, heading structure/anchors, Markdown structure, metadata, terminology, untranslated prose, and omission signals. It compares matched sections even when heading counts differ. A dropped literal fails; an added or re-counted literal, a translated interface label and a repaired upstream fence are review signals. File coverage and matching headings **do not establish semantic completeness**. Do not invent a quality score or claim a semantic pass from static checks. Treat findings as leads, not proof: read the pair before changing a translation, and improve the checker when a finding turns out to be a tool defect.
 

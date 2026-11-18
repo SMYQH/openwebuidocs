@@ -3,10 +3,14 @@
     "Open WebUI", "OpenAI", "ChatGPT", "Claude", "Anthropic", "Gemini",
     "Ollama", "DeepL", "Docusaurus", "Cloudflare", "GitHub", "Docker",
     "Kubernetes", "Python", "JavaScript", "TypeScript", "PostgreSQL", "SQLite",
-    "Redis", "Valkey", "HAProxy", "NGINX", "Nginx", "AnythingLLM", "LibreChat",
+    "Redis", "Valkey", "HAProxy", "NGINX", "Nginx", "AnythingLLM", "LibreChat", "Kagi",
     "LangChain", "LlamaIndex", "Open Terminal", "Tether", "MCP", "API", "RAG",
     "RBAC", "SSO", "OIDC", "LDAP", "SCIM", "OAuth", "JWT", "HTTP", "HTTPS",
-    "WebSocket", "JSON", "YAML", "MDX", "HTML", "CSS", "SQL", "GPU", "CPU"
+    "WebSocket", "JSON", "YAML", "MDX", "HTML", "CSS", "SQL", "GPU", "CPU",
+    "Okta", "Google", "Microsoft", "Tailscale", "Tailscale Serve", "oauth2-proxy",
+    "Authentik", "Authelia", "Keycloak", "OpenTelemetry", "Docker Compose",
+    "Kubernetes Secret", "Syntegon Technology GmbH", "Noerr Partnerschaftsgesellschaft mbB",
+    "Noerr", "TRG, Inc."
   ],
   "untranslated_min_words": 6,
   "length_ratio_warning": 0.15,

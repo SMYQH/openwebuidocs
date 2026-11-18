@@ -52,7 +52,7 @@ def prepare(source_root: Path, target_root: Path, config: dict, patterns: list[s
                         "source": text_bytes(raw),
                         "target_sha256": digest(target_raw) if target_raw is not None else None,
                         "current_target": text_bytes(target_raw) if target_raw is not None else None,
-                        "segments": [{"id": i, "source": mask(s.text, config["terms"])[0], "translation": None}
+                        "segments": [{"id": i, "source": mask(s.text, doc.terms)[0], "translation": None}
                                      for i, s in enumerate(doc.segments)]})
     if not entries:
         raise ValueError("No source files matched")
@@ -104,13 +104,13 @@ def apply_bundle(bundle: dict, source_root: Path, target_root: Path, config: dic
             raise ValueError(f"{path}: segment count changed")
         values = []
         for index, (segment, original) in enumerate(zip(segments, doc.segments)):
-            if segment["id"] != index or segment["source"] != mask(original.text, config["terms"])[0]:
+            if segment["id"] != index or segment["source"] != mask(original.text, doc.terms)[0]:
                 raise ValueError(f"{path}: segment identity changed")
             value = segment["translation"]
             if not isinstance(value, str):
                 raise ValueError(f"{path}: segment {index} has no translation")
             # A copied English answer must not silently complete an AI task.
-            clean = prose(original.text, config["terms"])
+            clean = prose(original.text, doc.terms)
             if len(WORDS.findall(clean)) >= 3 and value == segment["source"]:
                 raise ValueError(f"{path}: segment {index} still contains unchanged English prose")
             values.append(value)

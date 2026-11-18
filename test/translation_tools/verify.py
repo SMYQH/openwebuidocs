@@ -10,8 +10,8 @@ from pathlib import Path
 import posixpath
 import re
 
-from .document import (ATTRIBUTE, CJK, KEYWORD_FIELDS, LAYOUT_FIELDS, TEXT_FIELDS, URL, WORDS,
-                     Document, digest, inline_protected, opaque_signature, prose)
+from .document import (ATTRIBUTE, CJK, FENCE_TITLE, KEYWORD_FIELDS, LAYOUT_FIELDS, TEXT_FIELDS, URL, WORDS,
+                     Document, digest, inline_protected, literal_fence_title, opaque_signature, prose)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -84,8 +84,13 @@ def metadata_literals(value):
 def count_literals(doc: Document, kind: str) -> Counter:
     if not hasattr(doc, "_literal_counts"):
         doc._literal_counts = {}
-        # Tokenize each segment once, not once per check kind.
+        # Reuse body tokens, including lines that contain literals but no prose.
+        for span in getattr(doc, "literal_spans", []):
+            doc._literal_counts.setdefault(span.kind, Counter())[span.value] += 1
+        # Metadata and localizable attributes sit outside the body token stream.
         for segment in doc.segments:
+            if segment.kind == "prose":
+                continue
             for span in inline_protected(segment.text, doc.terms):
                 doc._literal_counts.setdefault(span.kind, Counter())[span.value] += 1
     # Include structural MDX expressions/tags excluded from multiline segments.
@@ -164,25 +169,6 @@ def canonical_destination(value: str, base: str) -> str:
     return "(" + result + ")" if wrapped else result
 
 
-COMMENT_LINE = re.compile(r"^\s*(#|//|<!--)")
-STRING_LITERAL = re.compile(r"\"[^\"\n]*\"|\'[^\'\n]*\'")
-
-
-def code_signature(block: str) -> str:
-    """Structural signature of a code block.
-
-    Comment lines and the contents of string literals are prose in practice:
-    the project localizes them on purpose. Commands, identifiers, options and
-    structure stay in the signature, so a changed command still fails.
-    """
-    lines = []
-    for line in block.split("\n"):
-        if COMMENT_LINE.match(line):
-            continue
-        lines.append(STRING_LITERAL.sub('""', line))
-    return "\n".join(lines)
-
-
 def canonical_url(value: str) -> str:
     """Normalize a URL literal for comparison.
 
@@ -252,14 +238,15 @@ def ui_label(value: str) -> bool:
 FENCE_MARKER = re.compile(r"```|~~~")
 
 
-def fence_language(info: str) -> str:
-    """The language of a fence info string; the rest is a localizable title."""
-    return info.strip().split()[0] if info.strip() else ""
+def fence_metadata(info: str) -> str:
+    """Exclude only the localizable title value; retain every other directive."""
+    return FENCE_TITLE.sub(lambda m: m[0] if literal_fence_title(m[1][1:-1]) else 'title="<prose>"', info.strip())
 
 
 def fence_titles(doc: Document) -> list[str]:
     """Titles carried by code fences. They are prose, not fence metadata."""
-    return re.findall(r'title="([^"]*)"', " ".join(info for _, info in doc.fences))
+    return [title[1][1:-1] for _, info in doc.fences for title in FENCE_TITLE.finditer(info)
+            if not literal_fence_title(title[1][1:-1])]
 
 
 def malformed_fence_markup(doc: Document) -> bool:
@@ -299,19 +286,21 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
     structural = "warning" if source_broken else "error"
     src_code, dst_code = [v for _, v in source.code], [v for _, v in target.code]
     if src_code != dst_code:
-        if [code_signature(v) for v in src_code] != [code_signature(v) for v in dst_code]:
-            add("code-changed", "Code block content/order differs from upstream; commands and identifiers are literal too")
-        else:
-            add("code-text-changed", "Code blocks differ only in comments or string values", severity="warning")
+        unreliable_fences = any("Unclosed fenced code block" in error for _, error in source.errors)
+        unreliable_fences |= malformed_fence_markup(source) and len(src_code) != len(dst_code)
+        add("code-changed", "Code block content/order differs from upstream; comments and string values are literal too"
+            + ("; upstream fence defects require direct review" if unreliable_fences else ""),
+            severity="warning" if unreliable_fences else "error")
     if [opaque_signature(v) for v in source.opaque_code] != [opaque_signature(v) for v in target.opaque_code]:
         add("opaque-code-changed", "MDX imports/exports or script/style structure changed")
-    if [(d, fence_language(i)) for d, i in source.fences] != [(d, fence_language(i)) for d, i in target.fences]:
+    if [(d, fence_metadata(i)) for d, i in source.fences] != [(d, fence_metadata(i)) for d, i in target.fences]:
         # Upstream that writes a fence marker inside a code span has broken
         # markup; a translation that repairs it must not inherit the defect.
         severity = "warning" if malformed_fence_markup(source) else structural
         add("fence-structure", "Code fence delimiters or language metadata changed", severity=severity)
     for title in fence_titles(target):
-        if len(WORDS.findall(title)) >= 4 and not CJK.search(title):
+        clean = prose(title, target.terms)
+        if len(WORDS.findall(clean)) >= 4 and not CJK.search(clean):
             add("untranslated-prose", "Code fence title remains English after exclusions", severity="warning")
     src_head, dst_head = [(v[0], v[3]) for v in source.headings], [(v[0], v[3]) for v in target.headings]
     if src_head != dst_head:
@@ -343,6 +332,14 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
             add("markdown-" + kind, difference(a, b), severity="warning")
     for kind in ["inline_code", "identifier", "term", "destination", "reference", "jsx", "expression", "math", "comment"]:
         a, b = count_literals(source, kind), count_literals(target, kind)
+        if kind in {"identifier", "term"}:
+            b = b.copy()
+            # Adding backticks around a preserved identifier or product name
+            # changes its token kind, not its spelling or meaning.
+            for value in count_literals(target, "inline_code"):
+                for span in inline_protected(value.strip("`"), target.terms):
+                    if span.kind == kind and span.value in a and span.value not in b:
+                        b[span.value] = 1
         if kind == "destination":
             a, b = canonical_destinations(a, path), canonical_destinations(b, path)
             a = policy_removed_destinations(a, patterns)
@@ -399,10 +396,16 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
     for doc, code in [(source, "source-corruption"), (target, "target-corruption")]:
         if "\ufffd" in doc.text:
             add(code, "Unicode replacement character U+FFFD found", doc.line(doc.text.index("\ufffd")))
-    source_prose = [prose(s.text, source.terms) for s in source.segments]
+    language_terms = config["terms"] + list(source.error_messages.values())
+    target_headings = {anchor: (line, title) for _, line, title, anchor in target.headings}
+    for anchor, message in source.error_messages.items():
+        line, title = target_headings.get(anchor, (1, ""))
+        if message not in title:
+            add("literal-error-message", "Quoted diagnostic heading changed: " + repr(message), line)
+    source_prose = [prose(s.text, language_terms) for s in source.segments]
     normalized_source = {re.sub(r"\s+", " ", p).strip().lower() for p in source_prose}
     for segment in target.segments:
-        value = prose(segment.text, target.terms)
+        value = prose(segment.text, language_terms)
         words = WORDS.findall(value)
         normalized = re.sub(r"\s+", " ", value).strip().lower()
         if segment.kind == "keyword":
@@ -415,7 +418,7 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
         if words and not CJK.search(value) and segment.kind in {"yaml", "json", "attribute"}:
             add("untranslated-metadata", "Localizable metadata or accessibility text remains English after exclusions", target.line(segment.start), "warning")
     for _, line, title, _ in target.headings:
-        value = prose(title, target.terms)
+        value = prose(title, language_terms)
         if WORDS.search(value) and not CJK.search(value):
             add("untranslated-heading", "Heading remains English after terminology/code exclusions", line, "warning")
     # Compare every matched section even when heading counts differ. Alignment
@@ -425,7 +428,8 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
         heading_offsets = [(line, anchor) for _, line, _, anchor in doc.headings]
         for i, (line, anchor) in enumerate([(0, "<preamble>")] + heading_offsets):
             end = heading_offsets[i][0] if i < len(heading_offsets) else doc.text.count("\n") + 2
-            content = " ".join(prose(s.text, doc.terms) for s in doc.segments if line < doc.line(s.start) < end)
+            content = " ".join(prose(s.text, language_terms) for s in doc.segments
+                               if s.kind != "keyword" and line < doc.line(s.start) < end)
             result[anchor] = (line, content)
         return result
     src_sections, dst_sections = sections(source), sections(target)

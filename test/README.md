@@ -22,6 +22,19 @@ destinations, MDX code/props, metadata keys, heading levels/order/anchors,
 duplicate anchors, malformed fences/admonitions, and replacement characters.
 Localizable metadata values and quoted `alt`, `title`, `label`, `placeholder`,
 and `aria-label` attributes are prose; other attributes and expressions are code.
+Code strings and comments must match verbatim. Only a code fence's `title`
+value is localizable; its language, line highlights and other directives remain
+protected. JSON-LD permits changes to `name`, `text`, `description`, `headline`
+and `abstract` prose while retaining types, contexts, URLs and surrounding code.
+Literal-only lines are checked even when they contain no translatable prose.
+Indented JSX children remain prose, and backticked HTML examples cannot hide
+subsequent paragraphs. Backticks around preserved identifiers or product names
+do not count as missing literals. Fully quoted headings inside upstream
+troubleshooting/error sections are literal diagnostics: both providers preserve
+them, language checks exclude them, and changed messages fail preservation.
+Other quoted headings still require translation.
+Both update providers receive prose fence titles as segments. Titles consisting
+of filenames or paths remain literal, along with code bodies and other directives.
 
 A literal that upstream uses and the translation never uses is a failure. A
 literal the translation adds, or mentions a different number of times, is a
@@ -48,10 +61,16 @@ Warnings cover untranslated English after exclusions, verbatim copied prose,
 number drift, Markdown/list/table differences, and unusually short sections.
 An empty section is an error. Section checks continue when heading counts differ.
 English terminology alone never triggers untranslated-prose warnings.
+The same exclusions apply to fence titles. Keyword lists do not contribute to
+copied-section warnings. Dollar prices are not inline math, and sentence-ending
+periods are not part of bare filesystem paths; backticked paths remain exact.
 Admonition types may differ at the same position; a different number of
 admonitions is a failure. An upstream parse defect is reported as a warning:
 the translation must not inherit broken upstream structure, so block-level
-comparisons for that file become review signals.
+comparisons for that file become review signals. Code differences become review
+signals only when unclosed upstream fences, or malformed inline fences with a
+changed block count, make the code comparison unreliable. An unrelated upstream
+admonition defect never relaxes code preservation.
 
 Use `--files` for paths, directory prefixes, or globs relative to `docs/`:
 
@@ -106,9 +125,11 @@ Only prepare/apply translations when the user requests translation work.
 python test/translation_update.py --files path/to/page.mdx --bundle test/.reports/task.json
 ```
 
-The current agent translates `source` prose segments and fills only their
-`translation` fields. Full source/current target context is included. Protected
-terms, code, URLs, numbers, and Markdown symbols become ordered `⟦Pn⟧`
+The assigned AI translates `source` prose segments and fills only their
+`translation` fields. When the user delegates translation, sub-agents make the
+translation edits and the parent handles tooling and validation. Respect any
+user limit on agent concurrency. Full source/current target context is included.
+Protected terms, code, URLs, numbers, and Markdown symbols become ordered `⟦Pn⟧`
 placeholders. Keep each placeholder exactly once, in order. No model endpoint,
 model key, or additional provider configuration is needed.
 

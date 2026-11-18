@@ -29,6 +29,7 @@ KEYWORD_FIELDS = {"keywords"}
 # Ordering and layout directives may be adjusted for the translated site.
 LAYOUT_FIELDS = {"sidebar_position", "position", "collapsible", "collapsed", "hidden", "link", "custom", "className"}
 ATTRIBUTE = re.compile(r'''\b(alt|title|label|placeholder|aria-label)\s*=\s*("[^"\n]*"|'[^'\n]*')''')
+FENCE_TITLE = re.compile(r'''(?<!\S)title=("[^"\n]*"|'[^'\n]*')''')
 PLACEHOLDER = re.compile(r"⟦P\d+⟧")
 CJK = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\U00020000-\U0002fa1f]")
 WORDS = re.compile(r"[A-Za-z]+(?:['’-][A-Za-z]+)*")
@@ -43,6 +44,11 @@ EXPLICIT_ID = re.compile(r"\\?\{#([^}]+)\}\s*$")
 
 def digest(text: str | bytes) -> str:
     return hashlib.sha256(text.encode("utf-8") if isinstance(text, str) else text).hexdigest()
+
+
+def literal_fence_title(value: str) -> bool:
+    """A title consisting of a filename or path is a literal, not prose."""
+    return bool(re.fullmatch(r"(?:[A-Za-z]:)?[\w.@~\\/-]*[\\/][\w.@~\\/-]+|[\w.@~-]+\.[A-Za-z0-9]{1,10}", value))
 
 
 @dataclass(frozen=True)
@@ -122,7 +128,7 @@ def inline_protected(text: str, terms: list[str]) -> list[Protected]:
     for pattern, kind in [
         (r"<!--.*?-->", "comment"),
         (r"\\?\{#[^}\n]+\}", "anchor"),
-        (r"\$\$.*?\$\$|(?<!\$)\$[^\n$]+\$", "math"),
+        (r"(?<![\\$])\$\$.*?(?<!\\)\$\$(?!\$)|(?<![\\$])\$(?![\s$])(?:\\.|[^\\\n$])*(?<![\s\\])\$(?![\d$])", "math"),
     ]:
         for m in re.finditer(pattern, text, re.S):
             add(m.start(), m.end(), kind)
@@ -178,6 +184,10 @@ def inline_protected(text: str, terms: list[str]) -> list[Protected]:
     ]:
         for m in re.finditer(pattern, text):
             start, end = m.span(1) if m.lastindex else m.span()
+            if kind == "identifier" and text[start:end].startswith(("/", "./", "../")):
+                # A sentence-ending period is prose, not part of a bare path.
+                while end > start and text[end - 1] == "." and text[end - 2:end] != "/.":
+                    end -= 1
             add(start, end, kind)
     return sorted(ranges, key=lambda p: p.start)
 
@@ -204,7 +214,7 @@ def prose(text: str, terms: list[str]) -> str:
 
 class Document:
     def __init__(self, text: str, suffix: str, terms: list[str]):
-        self.text, self.suffix, self.terms = text, suffix, terms
+        self.text, self.suffix, self.terms = text, suffix, list(terms)
         self._line_offsets = [0] + [m.end() for m in re.finditer("\n", text)]
         self.segments: list[Segment] = []
         self.code: list[tuple[int, str]] = []
@@ -214,6 +224,7 @@ class Document:
         self.errors: list[tuple[int, str]] = []
         self.metadata = None
         self.headings: list[tuple[int, int, str, str]] = []
+        self.error_messages: dict[str, str] = {}
         self.structure: list[tuple[str, int]] = []
         self.admonitions: list[str] = []
         self.body_start = 0
@@ -304,6 +315,11 @@ class Document:
                     opened = None
             elif candidate and not (candidate[1][0] == "`" and "`" in candidate[2]):
                 opened = (index, candidate[1], candidate[2].strip())
+                for title in FENCE_TITLE.finditer(candidate[2]):
+                    if literal_fence_title(title[1][1:-1]):
+                        continue
+                    start = offsets[index] + candidate.start(2) + title.start(1)
+                    self.segments.append(Segment(start, start + len(title[1]), title[1][1:-1], "fence-title"))
         if opened:
             begin, marker, info = opened
             protect(offsets[begin], len(self.text))
@@ -312,20 +328,44 @@ class Document:
             self.errors.append((self.line(offsets[begin]), "Unclosed fenced code block"))
         parse_body = "".join("\n" if c == "\n" else " " if blocked[self.body_start + i] else c for i, c in enumerate(body))
         tokens = PARSER.parse(parse_body)
+        body_spans = inline_protected(parse_body, self.terms)
+        jsx_tags = [span for span in body_spans if span.kind == "jsx"]
+        jsx_cursor, jsx_stack = 0, []
+        void_tags = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
         for token in tokens:
             if token.type == "code_block" and token.map:
                 start, end = (offsets[n] for n in token.map)
+                # Indentation inside JSX children is prose/layout, not a
+                # CommonMark indented code block. Fences remain protected above.
+                while jsx_cursor < len(jsx_tags) and self.body_start + jsx_tags[jsx_cursor].start < start:
+                    span = jsx_tags[jsx_cursor]
+                    jsx_cursor += 1
+                    if blocked[self.body_start + span.start]:
+                        continue
+                    tag = re.match(r"<(\/?)([\w.-]*)", span.value)
+                    if tag[1]:
+                        if tag[2] in jsx_stack:
+                            del jsx_stack[len(jsx_stack) - 1 - jsx_stack[::-1].index(tag[2]):]
+                    elif not span.value.rstrip().endswith("/>") and tag[2].lower() not in void_tags:
+                        jsx_stack.append(tag[2])
+                if jsx_stack:
+                    continue
                 protect(start, end)
                 self.code.append((self.line(start), token.content))
             if token.type in {"bullet_list_open", "ordered_list_open", "list_item_open", "tr_open", "th_open", "td_open", "blockquote_open", "hr"}:
                 self.structure.append((token.type, token.level))
+        opaque_body = list(parse_body)
+        for span in body_spans:
+            if span.kind in {"inline_code", "comment"}:
+                opaque_body[span.start:span.end] = ["\n" if c == "\n" else " " for c in span.value]
+        opaque_body = "".join(opaque_body)
         for pattern in [r"(?ms)^\s*(?:import|export)\s+.*?(?:;[ \t]*(?:\n|$)|\n\s*\n|\Z)", r"(?is)<(script|style|pre|code)\b[^>]*>.*?</\1\s*>"]:
-            for m in re.finditer(pattern, self.text[self.body_start:]):
+            for m in re.finditer(pattern, opaque_body):
                 first = self.body_start + m.start() + len(m[0]) - len(m[0].lstrip())
                 if first < len(blocked) and blocked[first]:
                     continue
                 protect(self.body_start + m.start(), self.body_start + m.end())
-                self.opaque_code.append(m[0])
+                self.opaque_code.append(self.text[self.body_start + m.start():self.body_start + m.end()])
         # Inline ranges may cross lines (JSX props, code spans, expressions).
         # Scan only unblocked runs: braces/backticks in code must never eat prose.
         ranges: list[Protected] = []
@@ -407,6 +447,22 @@ class Document:
                 if WORDS.search(clean) or CJK.search(clean):
                     self.segments.append(Segment(pos, end, value))
                 pos = end
+        # A fully quoted heading inside an explicit troubleshooting/error
+        # section denotes a literal diagnostic, rather than a display label.
+        # Derive the spelling from the source instead of storing log messages.
+        parents = []
+        for level, _, title, anchor in self.headings:
+            while parents and parents[-1][0] >= level:
+                parents.pop()
+            title = EXPLICIT_ID.sub("", title).strip()
+            quoted = re.fullmatch(r'"([^"\n]+)"|“([^”\n]+)”', title)
+            if quoted and any(re.search(r"\b(?:troubleshooting|errors?|exceptions?)\b", parent, re.I)
+                              for _, parent in parents):
+                self.error_messages[anchor] = quoted[1] or quoted[2]
+            parents.append((level, title))
+        self.terms.extend(self.error_messages.values())
+        self.segments = [s for s in self.segments if s.kind != "prose"
+                         or WORDS.search(prose(s.text, self.terms)) or CJK.search(prose(s.text, self.terms))]
         self.segments.sort(key=lambda s: s.start)
         self.code.sort(key=lambda pair: pair[0])
         for line in admonition_stack:
@@ -421,7 +477,7 @@ class Document:
                 raise ValueError("Translation must be nonempty and preserve prose line boundaries")
             masked, spans = mask(segment.text, self.terms)
             restored = unmask(value, spans)
-            if segment.kind in {"yaml", "keyword", "json"}:
+            if segment.kind in {"yaml", "keyword", "json", "fence-title"}:
                 restored = json.dumps(restored, ensure_ascii=False)
             elif segment.kind == "attribute":
                 restored = '"' + html.escape(restored, quote=True) + '"'
@@ -470,16 +526,17 @@ def opaque_signature(block: str) -> str:
     except ValueError:
         return block
 
-    def shape(value):
+    def shape(value, field=None):
         if isinstance(value, dict):
-            return {k: shape(v) for k, v in value.items()}
+            return {k: shape(v, k) for k, v in value.items()}
         if isinstance(value, list):
-            return [shape(v) for v in value]
+            return [shape(v, field) for v in value]
         if isinstance(value, str):
-            return "<prose>" if value not in {"@type", "@context"} else value
+            return "<prose>" if field in {"name", "text", "description", "headline", "abstract"} else value
         return value
 
-    return json.dumps(shape(payload), ensure_ascii=False, sort_keys=True)
+    signature = json.dumps(shape(payload), ensure_ascii=False, sort_keys=True)
+    return block[:match.start("payload")] + signature + block[match.end("payload"):]
 
 
 def slug(text: str) -> str:
