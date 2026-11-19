@@ -6,7 +6,7 @@ title: "Docker Swarm"
 
 # Docker Swarm {#docker-swarm}
 
-本栈将 Open WebUI、ChromaDB 与 Ollama 作为三个服务部署在 Docker Swarm 中。它假设你已经运行了一个 Swarm。
+此部署栈在 Docker Swarm 中运行三个服务：Open WebUI、ChromaDB 和 Ollama。开始前，你需要一个正在运行的 Swarm。
 
 ChromaDB 作为独立的 HTTP 服务器运行，Open WebUI 通过 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) 访问它。默认的本地 ChromaDB 无法被多个 worker 或副本共享。在把 `openWebUI` 服务扩展到超过一个副本之前，还需迁移到 PostgreSQL、Redis 和共享文件存储，参见[扩缩容 Open WebUI](/getting-started/advanced-topics/scaling)。
 
@@ -14,13 +14,13 @@ ChromaDB 作为独立的 HTTP 服务器运行，Open WebUI 通过 [`CHROMA_HTTP_
 
 嵌入模型运行在 Ollama 中，因此 Open WebUI 容器不加载本地嵌入模型。栈启动后使用 `docker exec <ollama-container> ollama pull nomic-embed-text` 拉取一次模型。
 
-在 `docker-stack.yaml` 旁创建数据目录：
+在 `docker-stack.yaml` 所在目录中创建数据目录：
 
 ```bash
 mkdir -p data/open-webui data/chromadb data/ollama
 ```
 
-#### Docker-stack.yaml {#docker-stackyaml}
+#### Docker-stack.yaml 配置示例 {#docker-stackyaml}
 
 ```yaml title="docker-stack.yaml"
 services:
@@ -75,7 +75,7 @@ services:
                 value: 0
 ```
 
-请把 `your-secret-key` 替换为 `openssl rand -hex 32` 的输出。服务之间通过栈网络中的服务名互相访问，因此只有 Open WebUI 发布端口。像 `./data/...` 这样的绑定挂载只存在于任务所在的节点上，因此请通过放置约束把服务固定到单个节点，或使用每个节点都能访问的卷。
+请把 `your-secret-key` 替换为 `openssl rand -hex 32` 的输出。各服务在栈的网络中通过服务名互相访问，因此只有 Open WebUI 对外发布端口。`./data/...` 等绑定挂载只在运行任务的节点上可用。请用部署约束将各服务固定到同一个节点，或采用所有节点都能访问的卷。
 
 **GPU：** `generic_resources` 块用于 GPU 节点。它需要 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)，以及每个 GPU 节点上的 GPU 资源广播：在 `/etc/nvidia-container-runtime/config.toml` 中取消注释 `swarm-resource = "DOCKER_RESOURCE_GPU"`，然后重启 Docker 守护进程。参见[为 GPU 配置 Docker Swarm](https://gist.github.com/tomlankhorst/33da3c4b9edbde5c83fc1244f010815c#configuring-docker-to-work-with-your-gpus)。
 

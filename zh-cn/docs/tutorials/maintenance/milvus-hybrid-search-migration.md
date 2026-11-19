@@ -32,7 +32,7 @@ Open WebUI 在 Milvus 2.5 及更高版本上使用原生混合搜索。旧版本
 
 下面的脚本可以显示迁移进度。它可以在任何能访问 Milvus 的机器上运行，每分钟打印一行，且只读取元数据，因此不会拖慢迁移速度。
 
-它使用 Milvus REST API，Milvus standalone 与集群版本都提供该 API。Milvus Lite 没有 REST API，因此该脚本无法与其配合使用。
+它调用 Milvus REST API，Milvus 的独立部署版和集群版都支持此接口。Milvus Lite 不提供 REST API，因此无法使用此脚本。
 
 1. 把脚本保存为 `milvus-progress.sh`。
 2. 如果 Milvus 需要认证，把 `TOKEN` 设为你的 `MILVUS_TOKEN` 值；否则留空。

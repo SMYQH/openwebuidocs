@@ -5,19 +5,19 @@ title: "Brave"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎参与贡献，请参阅贡献指南。
 
 :::
 
 :::tip
 
-若要查看所有与 Web Search 相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
+若要查看所有与网页搜索相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
 
 :::
 
 :::tip 故障排查
 
-如果你在 web search 上遇到问题，请查看 [Web Search 故障排查指南](/troubleshooting/web-search)，其中涵盖了代理配置、连接超时、内容为空等常见问题。
+遇到网页搜索问题时，请参阅[网页搜索故障排查指南](/troubleshooting/web-search)，了解如何解决代理配置、连接超时和内容为空等常见问题。
 
 :::
 
@@ -28,7 +28,7 @@ Open WebUI 内置了两个由 Brave 提供支持的搜索引擎，它们共用�
 | 引擎 | 端点 | 行为 |
 | :--- | :--- | :--- |
 | `brave` | `/res/v1/web/search` | 经典网页搜索。返回简短摘要；随后 Open WebUI 会抓取每个结果 URL 来构建 LLM 上下文。 |
-| `brave_llm_context` | `/res/v1/llm/context` | 面向 LLM 优化的搜索。直接返回预先抽取、按相关性评分的完整页面段落，完全跳过抓取步骤。拉取规模由 [`BRAVE_SEARCH_CONTEXT_TOKENS`](/reference/env-configuration#brave_search_context_tokens) 限制（默认 `8192`，范围 `1024`–`32768`）。 |
+| `brave_llm_context` | `/res/v1/llm/context` | 针对 LLM 优化的搜索。将预先提取并按相关性评分的完整网页段落作为每条结果的摘要返回。所有引擎都使用**绕过网页加载器**设置来决定搜索后是否抓取页面。开启该设置即可跳过抓取，直接使用这些段落。返回内容的大小由 [`BRAVE_SEARCH_CONTEXT_TOKENS`](/reference/env-configuration#brave_search_context_tokens) 限制（默认 `8192`，范围 `1024`–`32768`）。 |
 
 如果你希望减少往返、获得更高保真度的段落且不需要抓取步骤，就选 `brave_llm_context`；如果你依赖经典的“先摘要后抓取”流程（例如抓取步骤会在你的管线中做有用的归一化），就选 `brave`。两个引擎在收到 HTTP 429 后都会自动重试一次，并退避 1 秒。
 
@@ -54,12 +54,12 @@ Brave 的免费 API 层有严格限制：**每秒仅允许 1 次请求**。如�
 
 **给免费层用户的推荐配置：**
 
-- 在 **设置 > 网页搜索**（管理员区域）中，将 “并发请求数” 设为 `1`；或者直接使用环境变量
+- 在设置 > 网页搜索（管理员区域）中，将“并发请求数”设为 `1`。也可以使用环境变量：
 - 将 `WEB_SEARCH_CONCURRENT_REQUESTS: 1`，确保请求按顺序执行而不是并行发送
 
 **自动重试机制：**
 
-Open WebUI 会自动处理 Brave API 返回的 429 限流响应。当系统检测到 rate limit 错误时，会：
+Open WebUI 会自动处理 Brave API 返回的 429 限流响应。收到限流错误后，系统会：
 
 1. 等待 1 秒（以遵守 Brave 的限速规则）
 2. 自动重试一次请求
@@ -76,7 +76,7 @@ Open WebUI 会自动处理 Brave API 返回的 429 限流响应。当系统检�
 `WEB_SEARCH_CONCURRENT_REQUESTS` 控制的是**单次搜索请求内部**的并发度，而不是整个应用全局的总并发。
 
 - **何时不是问题**：对于单用户实例，或低流量环境中用户很少在同一秒同时按下 Enter，通常将并发设为 `1` 就足以满足免费层（1 req/sec）限制
-- **何时会成为问题**：如果多个用户在同一时刻同时触发网页搜索（例如 3 个用户在同一秒搜索），Open WebUI 会并行处理这些请求。每个用户请求会建立自己的连接池，这意味着 3 个请求会同时被发往 API，从而在免费层下触发限流
+- **何时会成为问题**：如果多个用户同时触发网页搜索（例如 3 个用户在同一秒搜索），Open WebUI 会并行处理这些请求。所有 Brave 调用共用一个 HTTP 会话，但并发限制按每次搜索单独计算。因此，3 位用户的搜索不会相互限流，3 个请求会同时发往 API，触发免费套餐的限流。
 
 **注意：** 如果你运行的是一个有多个并发用户同时使用网页搜索的环境，强烈建议升级到付费 API 层。免费层并不是为多用户吞吐量设计的。
 :::

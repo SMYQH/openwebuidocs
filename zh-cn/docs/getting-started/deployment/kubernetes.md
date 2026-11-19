@@ -62,7 +62,7 @@ kubectl -n openwebui create secret generic openwebui-secrets \
   --from-env-file=secrets.env
 ```
 
-**预期结果：** Secret `openwebui-secrets` 已创建。Kubernetes Secret 需要恰当的 RBAC 与静态加密。你也可以让密钥运维工具创建同名 Secret 与同名键。
+**预期结果：** Secret `openwebui-secrets` 已创建。Kubernetes Secret 需要恰当的 RBAC 与静态加密。你也可以使用负责管理密钥的 Operator 创建同名的 Secret 和键。
 
 ### 保存共享的 Helm 配置值 {#save-the-shared-helm-values}
 
@@ -132,7 +132,7 @@ extraEnvVars:
 
 </details>
 
-这些配置为应用提供了可预期的资源名称、通过 Secret 引用其凭据，并配置健康探针。`/ready` 会在启动完成、且数据库与 Redis（配置了的话）响应之后才返回。`Recreate` 会在滚动更新期间先停止旧的应用 Pod，再启动替代者。资源请求与上限只是起点；请根据实际观测到的用量进行调整。
+这些配置为应用提供了可预期的资源名称，通过 Secret 引用凭据，并配置健康探针。应用完成启动，且数据库与 Redis（如果已配置）能响应后，`/ready` 才会返回就绪。更新部署时，`Recreate` 会先停止旧的应用 Pod，再启动新 Pod。资源请求与上限只是起点；请根据实际用量进行调整。
 
 该 chart 支持映射式的 `extraEnvVars`，此处用于跨文件合并配置。Helm 3 可能报告合并警告，因为 chart 的默认值是一个列表；安装前请在渲染出的 manifest 中确认环境变量与 Secret 引用。
 
@@ -176,7 +176,7 @@ extraEnvVars:
 
 该 PVC 会在 `/app/backend/data` 下保存 SQLite、本地向量数据、上传文件和模型缓存。副本数与工作进程数都请保持为 1。keep 注解会在 Helm 卸载时保留这个 PVC。
 
-本地嵌入模型可能会在首次启动时下载。请允许必要的模型下载访问，或提前准备好这些资源文件。这条路径中 Redis 是可选的；在生产环境中使用它之前，请先了解[令牌吊销](/getting-started/advanced-topics/hardening#token-revocation)。
+首次启动时可能会下载本地嵌入模型。请允许下载模型所需的网络访问，或提前准备好这些文件。此方案中 Redis 是可选的；将此方案用于生产环境之前，请先了解[令牌吊销](/getting-started/advanced-topics/hardening#token-revocation)。
 
 ### 生产环境 {#production}
 
@@ -191,7 +191,7 @@ extraEnvVars:
 | 内容提取 | 一个可达的 Apache Tika 服务。 |
 | HTTPS 访问 | 已安装的 ingress controller、一个 DNS 主机名，以及它的 TLS 证书与私钥。 |
 
-PGVector 会取代默认的 ChromaDB，因为 ChromaDB 的本地 SQLite 存储无法由多个副本共享。参见[外部向量数据库](/getting-started/advanced-topics/scaling#step-4-switch-to-an-external-vector-database)。
+PGVector 会取代默认的 ChromaDB，因为后者的本地 SQLite 存储无法由多个副本共享。参见[外部向量数据库](/getting-started/advanced-topics/scaling#step-4-switch-to-an-external-vector-database)。
 
 在应用网络内，验证数据库登录与向量扩展、Redis 访问、存储桶的上传/下载/删除、模型响应、嵌入请求以及 Tika 访问。按需为这些服务配置网络策略与私有 CA 信任。
 
@@ -355,8 +355,8 @@ metadata:
 ### 验证部署 {#verify-the-deployment}
 
 - **聊天：** 登录，流式接收模型响应，然后重新打开已保存的会话。
-- **持久性：** 运行 `kubectl -n openwebui rollout restart deployment/openwebui`，等待滚动完成，必要时重新建立端口转发，并确认会话仍然存在。
-- **生产文档：** 上传一份包含醒目事实的小文档。确认索引完成，并就该事实提问以验证能检索到正确的来源。检查上传的对象确实存在于存储桶中。
+- **持久性：** 运行 `kubectl -n openwebui rollout restart deployment/openwebui`，等待重启完成，必要时重新建立端口转发，并确认会话仍然存在。
+- **生产环境的文档检索：** 上传一份包含容易辨认的事实的小文档。确认索引完成，再就该事实提问，验证能否检索到正确的来源。检查上传的对象是否存在于存储桶中。
 - **多副本：** 在不同本地端口上分别端口转发两个不同的 Pod，分别登录，并验证两者都能访问同一份已保存的会话和同一个上传文件。同时也要通过 ingress 测试。运行在被替换 Pod 上的流式响应可能需要重试。
 
 就绪的 Pod 只是连上了数据库与 Redis；模型 API、存储和许可仍需按上面的检查项验证。许多应用设置在首次启动后会被持久化保存，因此之后修改环境变量可能无法覆盖它们。参见[配置持久化](/reference/env-configuration#important-note-on-configvar-environment-variables)。
@@ -416,7 +416,7 @@ kubectl -n openwebui create secret generic openwebui-registry \
 
 ## 更新与恢复 {#updates-and-recovery}
 
-请安排一个维护窗口。`Recreate` 可以防止普通的 Deployment 滚动更新让新旧 Pod 重叠，但无法在多个新副本之间串行化迁移。
+请安排一个维护窗口。`Recreate` 可避免 Deployment 更新期间新旧 Pod 同时运行，但不能确保多个新副本逐个执行迁移。
 
 1. 记录已部署的镜像、chart 与配置值，保留你的签名密钥，并准备好备份。停止入口流量，并暂停任何可能重启应用 Pod 的自动扩缩容器或 GitOps 协调流程。
 2. 停止**所有**共享该数据库的应用实例，并等待它们终止：
@@ -441,7 +441,7 @@ helm upgrade openwebui open-webui/open-webui \
 kubectl -n openwebui logs deployment/openwebui -c open-webui --tail=100
 ```
 
-5. 使用端口转发验证启动情况与已有数据。对于生产环境，请运行**完成生产环境安装**的命令，以恢复正常的副本数、ingress 以及禁用迁移的状态。单副本配置会在它唯一的工作进程上保持迁移启用。在恢复正常流量与控制器之前，请重复执行上述验证检查。
+5. 使用端口转发验证启动情况与已有数据。对于生产环境，请运行**完成生产环境安装**一节中的命令，恢复正常的副本数，重新启用 ingress，并禁用迁移。单副本配置会在它唯一的工作进程上保持迁移启用。在恢复正常流量与控制器之前，请重复执行上述验证检查。
 
 更换 chart 版本时，还应查看其发布说明并更新命令中的 `--version`。如果初始化失败，请保持其他副本处于停止状态并加以排查。Helm 回滚（包括 `--atomic`）无法撤销数据库迁移。恢复到不兼容的旧版本应用，需要还原兼容的数据库与存储状态。参见[备份与恢复](/getting-started/updating#backup--restore)。
 

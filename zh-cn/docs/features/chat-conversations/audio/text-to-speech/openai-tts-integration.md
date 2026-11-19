@@ -1,6 +1,6 @@
 ---
 sidebar_position: 0
-title: "OpenAI 文本转语音集成"
+title: "OpenAI TTS 集成"
 ---
 
 # 使用 OpenAI 实现文本转语音 {#using-openai-for-text-to-speech}
@@ -41,9 +41,7 @@ title: "OpenAI 文本转语音集成"
 | `tts-1-hd` | 更高音质 | 预录内容、高品质音频 |
 
 :::caution OpenAI 正在停用这些模型
-
 OpenAI 将于 2027-01-06 从其 API 中移除 `tts-1`、`tts-1-hd` 和 `gpt-4o-mini-tts`。官方推荐的替代模型 `gpt-realtime-2.1-mini` 不支持 `OpenAI` 引擎所调用的 `/audio/speech` 端点，因此仅修改 **TTS 模型**并不够。若要继续用 OpenAI 做语音合成，请改用 [OpenAI Realtime 引擎](#using-the-openai-realtime-engine)。详情见 [OpenAI 弃用页面](https://developers.openai.com/api/docs/deprecations#2026-10-01-text-to-speech-models)。
-
 :::
 
 ## 可用语音 {#available-voices}
@@ -182,7 +180,6 @@ OpenRouter 的 [`/audio/speech` 端点](https://openrouter.ai/docs/guides/overvi
 :::important
 
 **OpenAI Params** 字段必须包含 `{"response_format": "mp3"}`。没有它，OpenRouter 会默认使用 `pcm`，语音请求将因 `400 Bad Request` 错误而失败。
-
 :::
 
 5. 点击 **保存**
@@ -208,7 +205,6 @@ services:
 :::info
 
 OpenRouter 支持 `mp3` 和 `pcm` 两种输出格式。在 Open WebUI 中请始终选择 `mp3`；PCM 输出是为实时流式流水线设计的，Open WebUI 无法播放它。
-
 :::
 
 ## 测试 TTS {#testing-tts}
@@ -238,6 +234,7 @@ OpenRouter 支持 `mp3` 和 `pcm` 两种输出格式。在 Open WebUI 中请始�
 1. 检查 OpenAI API 密钥是否有效，并确认已开通 Audio API
 2. 确认 API 基础 URL 是否正确（`https://api.openai.com/v1`）
 3. 检查浏览器控制台（F12）是否有报错
+4. 如果 API 基础 URL 指向其他 OpenAI 兼容服务，请把默认的 `tts-1` 和 `alloy` 换成该服务支持的 **TTS 模型** 和 **TTS 语音**
 
 ### 音质问题 {#audio-quality-issues}
 
@@ -257,5 +254,5 @@ OpenAI Audio API 有速率限制。如果你经常触发限制：
 OpenAI 的 TTS 按字符数计费。当前价格请查看 [OpenAI Pricing](https://platform.openai.com/docs/pricing)。注意 `tts-1-hd` 的价格高于 `tts-1`。
 
 :::info
-如果你想要免费替代方案，可考虑 [OpenAI Edge TTS](/features/chat-conversations/audio/text-to-speech/openai-edge-tts-integration)，它利用Microsoft Edge 浏览器的免费 TTS 能力。
+如果你想要免费替代方案，可考虑 [OpenAI Edge TTS](/features/chat-conversations/audio/text-to-speech/openai-edge-tts-integration)，它利用 Microsoft Edge 浏览器的免费 TTS 能力。
 :::

@@ -7,7 +7,7 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 
 ## 进入导入与导出 {#accessing-import--export}
 
-1. 点击侧边栏左下角的**用户名**或头像
+1. 点击侧边栏左下角的**个人资料名称**或头像
 2. 在菜单中选择 **Settings**
 3. 进入 **Data Controls** 标签
 4. 使用 **Import Chats** 或 **Export Chats** 按钮
@@ -134,32 +134,32 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `chat` | object | ✅ | 对话数据（见下方 Chat Data） |
+| `chat` | object | ✅ | 对话数据（见下方聊天数据对象） |
 | `meta` | object | ❌ | 元数据，如 `tags`（字符串数组）。默认 `{}` |
 | `pinned` | boolean | ❌ | 聊天是否置顶。默认 `false` |
 | `archived` | boolean | ❌ | 聊天是否已归档。默认 `false`。已归档的聊天会被导入到 **设置 > 已归档聊天** |
 | `variables` | object | ❌ | 为该聊天的[聊天变量](/features/chat-conversations/chat-features/chat-params#chat-variables)填入的值。默认 `{}` |
-| `folder_id` | string \| null | ❌ | 聊天应放入的文件夹 ID。默认 `null`。它必须指向一个你有权写入的文件夹，可以是你拥有的，也可以是你被授予写入权限的 |
+| `folder_id` | string \| null | ❌ | 聊天应放入的文件夹 ID。默认 `null`。它必须指向你拥有的文件夹，或他人与你共享且授予你**写入**权限的文件夹。如果该文件夹不存在或你只有读取权限，系统会清除该值，将聊天导入到文件夹之外，而不会中止导入 |
 | `created_at` | integer \| null | ❌ | 聊天创建时间的 Unix 时间戳（秒） |
 | `updated_at` | integer \| null | ❌ | 聊天最后更新时间的 Unix 时间戳（秒） |
 
-#### Chat Data 对象 {#chat-data-object}
+#### 聊天数据对象 {#chat-data-object}
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `title` | string | ❌ | 对话标题。默认 `"New Chat"` |
 | `models` | string[] | ❌ | 该对话使用的模型标识符列表 |
-| `history` | object | ✅ | 包含消息树（见下方 History） |
+| `history` | object | ✅ | 包含消息树（见下方历史记录对象） |
 | `options` | object | ❌ | 聊天级选项 / 参数 |
 
-#### History 对象 {#history-object}
+#### 历史记录对象 {#history-object}
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `currentId` | string | ✅ | 当前活动对话分支中最后一条消息的 ID |
-| `messages` | object | ✅ | 消息 ID → 消息对象的映射（见下方 Message） |
+| `messages` | object | ✅ | 从消息 ID 到消息对象的映射（见下方消息对象） |
 
-#### Message 对象 {#message-object}
+#### 消息对象 {#message-object}
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
@@ -207,7 +207,7 @@ Open WebUI 提供工具让你备份聊天历史、稍后恢复，或从其他平
 
 它使用的是旧格式（没有 `chat` 包装），并且只包含一条用户消息。
 
-## FAQ {#faq}
+## 常见问题 {#faq}
 
 **Q：导入聊天会覆盖现有对话吗？**  
 **A：** 不会。导入的聊天会与现有对话并列存在。

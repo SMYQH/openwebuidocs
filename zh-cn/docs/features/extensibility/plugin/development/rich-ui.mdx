@@ -322,7 +322,7 @@ iframe 可以向父页面请求数据负载。加载完成后把动态数据传�
 :::
 
 :::note `window.args` 在哪些场景下会被设置，哪些场景下不会
-- ✅ **Tool 方法返回 `HTMLResponse` 或 `(HTMLResponse, context)` 元组** —— 在 "View Result from..." 工具调用指示器位置以**内联**方式渲染。`window.args` 会被注入（前提是满足上面的 `allowSameOrigin` 要求）。
+- ✅ **Tool 方法返回 `HTMLResponse` 或 `(HTMLResponse, context)` 元组**：在 "View Result from..." 工具调用指示器处内联渲染。满足上述 `allowSameOrigin` 要求时，会注入 `window.args`。
 - ❌ **`__event_emitter__({"type": "embeds", "data": {"embeds": [...]}})`** —— 通过 chat-controls 嵌入面板渲染，这个路径根本不会绑定 `args`。无论 sandbox 怎么设置，`window.args` 都会是 undefined。这是设计如此：embeds-event 路径没有挂载工具调用，也就没有 args 可注入。
 - ❌ **Action 嵌入** —— 由用户而不是模型触发，所以也没有模型提供的 args 可注入。
 
@@ -333,7 +333,7 @@ iframe 可以向父页面请求数据负载。加载完成后把动态数据传�
 
 当启用 `allowSameOrigin` 时，iframe 组件会自动检测你的 HTML 中是否使用了某些库，并自动注入它们——不需要再手写 CDN `<script>` 标签：
 
-- **Alpine.js** —— 当 HTML 中出现任意 `x-data`、`x-init`、`x-show`、`x-bind`、`x-on`、`x-text`、`x-html`、`x-model`、`x-modelable`、`x-for`、`x-if`、`x-effect`、`x-ignore`、`x-transition`、`x-cloak`、`x-ref`、`x-teleport` 或 `x-id` 指令时就会被检测到
+- **Alpine.js**：出现 `x-data`、`x-init`、`x-show`、`x-bind`、`x-on`、`x-text`、`x-html`、`x-model`、`x-modelable`、`x-for`、`x-if`、`x-effect`、`x-ignore`、`x-transition`、`x-cloak`、`x-ref`、`x-teleport` 或 `x-id` 中的任一指令时即可检测到
 - **Chart.js** —— 当 HTML 中出现 `new Chart(` 或 `Chart.` 时就会被检测到
 
 这意味着你可以直接在 HTML 中编写 Alpine 或 Chart.js 代码；只要同源功能开启，它就会直接工作，无需导入脚本。

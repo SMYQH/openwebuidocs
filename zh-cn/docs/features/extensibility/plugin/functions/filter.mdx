@@ -28,10 +28,10 @@ Filter 位于流程中间，就像检查点一样，你可以在这里决定哪�
 
 1. **修改用户输入（Inlet 函数）**：在输入到达 AI 模型之前对其进行调整。你可以在这里增强清晰度、补充上下文、清理文本，或者按照特定要求重新格式化消息。
 2. **修改每一次发出的调用（Request 函数）**：在载荷被交给模型提供方之前的最后一刻进行调整，每一次发送都会执行。详见下文的 [`request` 步骤](#the-request-step)。
-3. **拦截模型输出（Stream 函数）**：在模型生成回复时就捕获并调整 AI 的响应。这对实时修改很有用，比如过滤敏感信息或重新格式化输出以提升可读性。
-4. **修改模型输出（Outlet 函数）**：在 AI 响应处理完成后、展示给用户之前进行调整。这有助于改进、记录或适配数据，让用户体验更干净。
+3. **拦截模型输出（Stream 函数）**：在模型**生成回复的过程中**捕获并调整 AI 的响应。这适合实时修改，例如过滤敏感信息或调整输出格式以提高可读性。
+4. **修改模型输出（Outlet 函数）**：在 AI 响应**处理完成后**、展示给用户之前进行调整。这有助于改进、记录或适配数据，为用户提供更清晰的结果。
 
-> **核心概念：** Filter 不是独立模型，而是用于增强或转换模型*输入与输出之间*数据的工具。
+> **核心概念：** Filter 不是独立模型，而是增强或转换数据的工具，既能处理*发给模型*的数据，也能处理*模型返回*的数据。
 
 Filter 就像 AI 工作流里的**翻译器或编辑器**：你可以在不打断流程的情况下拦截并修改对话内容。
 
@@ -93,13 +93,13 @@ class Filter:
 
 `inlet` 每个用户轮次运行**一次**。`request` 每次**调用模型**运行一次，而这两者并不是同一个次数。
 
-一个使用工具的轮次会发起多次调用：一次用于决定使用哪个工具，然后每返回一组工具结果再来一次，直到模型给出最终答案。`inlet` 只看到了其中的第一次。`request` 会在每一次调用之前运行，包括工具运行后用户批准过的那次调用。批准之后，`request` 过滤器会在被批准的工具执行之前运行，因此过滤器仍能在工具产生任何影响之前拒绝该请求。
+如果一轮对话使用了工具，就会多次调用模型：先决定使用哪个工具，然后每返回一组工具结果就再调用一次，直到模型给出最终答案。`inlet` 只处理第一次调用前的输入。`request` 会在每次调用前运行，也包括需要用户批准的工具运行后的那次调用。用户批准后，`request` 过滤器还会在获准的工具执行之前运行，因此仍可在工具产生任何影响之前拒绝请求。
 
 这个区别决定了你该用哪一个：
 
 | 何时使用 `inlet` | 何时使用 `request` |
 | :--- | :--- |
-| 你要对用户输入的内容做出反应 | 你要在传输层强制执行某些约束 |
+| 你要对用户输入的内容做出反应 | 你要对发出的请求强制执行某些约束 |
 | 每轮运行多次逻辑是错误的，例如计费、限流或记录某一轮 | 每次调用都运行正是目的，例如为参数打标记、注入请求头或脱敏内容 |
 | 你想修改用户的消息 | 你想修改整个请求，无论其中的消息来自用户、模型还是工具 |
 
@@ -111,7 +111,7 @@ class Filter:
 
 **等到 `request` 运行时已经消失的东西。** 在 `inlet` 返回之后，流水线会把若干键从 body 中弹出：`features`、`tool_ids`、`terminal_id`、`files`、`folder_id` 和 `skill_ids`。需要其中任何一项的过滤器只能写成 `inlet`。`variables`、`regeneration_prompt` 和 `params` 被弹出的时间更早，在 `inlet` 运行之前就已移除，而 `variables` 仍可通过 `__metadata__["variables"]` 读取。（`features` 在 `request` 中仍可通过保留参数 `__features__` 取到，因为流水线在弹出该键之前会把它另存一份；其余的则不行。）
 
-**等到 `request` 运行时才存在的东西。** 用 `<source>` 标签包裹的 RAG 检索 chunk、解析完成的 `tools` 数组（服务端工具与过滤器或调用方添加的内容合并而成）、聊天自身的系统消息与文件夹系统提示词（工作区模型自己的 System Prompt 是在 `request` 返回之后由 provider 路由添加的），以及网页搜索上下文，在旧版函数调用下还包括记忆上下文。在原生函数调用下，召回的记忆、技能列表和附加的知识列表会在 `inlet` 和第一次 `request` 调用之后以隐藏的工具结果形式加入，因此 `inlet` 永远看不到它们，而 `request` 从一次回复的第二次调用起会以工具消息的形式看到它们。如果你想读取或改写的是*检索到的 chunk 文本*而不是文件引用，`request` 原生就能看到，无需 `file_handler` 开关，也不需要自己写检索代码。这通常比[自行接管检索](#owning-retrieval-with-file_handler)更简单：当你要*替换*检索方式时用 `file_handler`，只需要*转换*检索结果时用 `request`。
+**等到 `request` 运行时才存在的东西。** 用 `<source>` 标签包裹的 RAG 检索 chunk、解析完成的 `tools` 数组（服务端工具与过滤器或调用方添加的内容合并而成）、聊天自身的系统消息与文件夹系统提示词（工作区模型自己的 System Prompt 是在 `request` 返回之后由 provider 路由添加的），以及网页搜索上下文，在旧版函数调用下还包括记忆上下文。在原生函数调用下，召回的记忆、技能列表和附加的知识列表会在 `inlet` 和第一次 `request` 调用之后以隐藏的工具结果形式加入，因此 `inlet` 永远看不到它们，而 `request` 从一次回复的第二次调用起会以工具消息的形式看到它们。如果你想读取或改写的是*检索到的 chunk 文本*而不是文件引用，`request` 原生就能看到，无需 `file_handler` 开关，也不需要自己写检索代码。这通常比[自行接管检索](#owning-retrieval-with-file_handler)更简单：当你要*替换*检索方式时用 `file_handler`，只需要转换检索结果时用 `request`。
 
 提供商消息格式的归一化发生在 `request` 返回之后，因此你看到的仍然是 Open WebUI 的内部消息结构，而不是提供商的。
 
@@ -138,7 +138,7 @@ async def request(self, body: dict) -> dict:
 
 要检查系统消息是否**包含**你的文本，而不是是否与它完全相等。每次调用模型之前，Open WebUI 会把所有系统消息合并成一条，因此在下一跳中，只要聊天里还有另一条系统消息（例如聊天自身的 system prompt、文件夹的 prompt，或另一个过滤器添加的），你那一行就会成为更长消息的一部分。等值判断在那种情况下会漏掉它，于是每一跳都会再加一遍。
 
-天然幂等的转换（把数值限制在范围内、缩小已经低于上限的图片、遮盖已经不再匹配的某种模式）不需要任何保护。凡是追加、前置、递增或累积的都需要。如果你真正想要的是“每轮只保证一次”，那正是 `inlet` 的用途。
+天然幂等的转换不需要额外保护，例如限制数值范围、将超限图片缩小到上限以内，或遮盖处理后就不再匹配的文本。在末尾或开头添加内容、递增数值或累积数据时，则需要防止重复处理。如果必须保证每轮只运行一次，请使用 `inlet`。
 
 #### 其它需要留意的地方 {#other-things-to-watch-for}
 
@@ -225,7 +225,7 @@ class Filter:
 
 当用户在聊天中挂载知识库或上传文件，并且模型的 **Preload files** 能力处于开启状态（使用 Legacy function calling 时默认开启）时，Open WebUI 会在**所有 inlet filter 全部返回之后**才运行内置 RAG 流程：chat-completion 处理程序会基于用户的最后一条消息在向量库中查询相关 chunk，把它们包进 `<source>` 标签，再追加到最后一条用户消息（或者，根据 `RAG_SYSTEM_CONTEXT`，追加到系统消息）中，最后才调用 LLM。
 
-这一点对 filter 编写者来说很关键：在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件和知识库的**引用**（ID、名称、类型）。**真正的 chunk 文本此刻还不存在**——检索还没发生。因此，如果你想检查或改写这些 chunk 本体（PII / PHI 脱敏、重排序、自定义混合打分、翻译、chunk 级访问控制、匿名化），标准的 inlet 契约就不够了——你要的数据还没生成。
+这一点对 filter 编写者来说很关键：在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件和知识库的*引用*（ID、名称、类型）。**真正的 chunk 文本此刻还不存在**：检索还没发生。因此，如果你想检查或改写这些 chunk 本体（PII / PHI 脱敏、重排序、自定义混合打分、翻译、chunk 级访问控制、匿名化），标准的 inlet 契约还不够，因为此时没有所需数据。
 
 **`file_handler = True`** 正是为这种场景准备的“自助”开关。它声明在 `Filter` 实例上——可以是在 `__init__` 中写成 `self.file_handler = True`，也可以写成类属性——含义是告诉 Open WebUI：“我自己来处理检索和 chunk 注入——请跳过内置 RAG 步骤。”一旦开启，后端会在你的 `inlet()` 返回后剥离 `body["metadata"]["files"]` 和 `body["files"]`，于是 chat-completion 处理程序找不到可检索的文件，就会带着你注入的内容直接调用 LLM。
 
@@ -267,12 +267,12 @@ Open WebUI 从 `Filter` 实例上读取 `file_handler`，读取方式与读取 `
 
 - **按模型脱敏。** 只有当请求目标是远端模型时才对 PII / PHI 做脱敏，让自托管模型看到原始 chunk。可以在 inlet 内根据 `__model__["owned_by"]`（或其他信号）分支判断后再改写 chunk。
 - **自定义检索逻辑。** 混合 BM25 + dense 打分、查询改写、多集合路由、用与 Open WebUI 默认不同的模型做重排序、基于改写后查询做结果缓存。
-- **注入前变换。** 翻译、摘要、去重，或任何需要拿到**实际 chunk 文本**而不仅仅是引用的转换。
+- **注入前变换。** 翻译、摘要、去重，或任何需要*实际 chunk 文本*而不仅仅需要引用的转换。
 - **chunk 级访问控制。** 根据源文档上附带的元数据，过滤掉当前用户不应看到的 chunk。
 
 #### 完整步骤 {#the-recipe}
 
-1. 在 filter 模块顶部设置 `file_handler = True`。
+1. 按上方示例，将 `file_handler = True` 设为实例属性或类属性，不要设为模块级变量。
 2. 在 `inlet()` 中，从 `body["metadata"]["files"]`（以及临时挂载的 `body["files"]`）读取文件引用。
 3. 自行检索 chunk。两种方式：
    - **HTTP 方式**：调用 `POST /api/v1/retrieval/query/doc`（单集合）或 `POST /api/v1/retrieval/query/collection`（多集合），把用户最后一条消息作为查询串，并传入请求里的 bearer token，使权限仍受用户范围限制。
@@ -295,7 +295,7 @@ Open WebUI 从 `Filter` 实例上读取 `file_handler`，读取方式与读取 `
 
 实际含义是：只要你用了 `file_handler = True`，你的 filter 就必须**穷尽**内置路径会处理的所有检索场景，包括那些你本来觉得用默认行为就行的场景。检索调用本身在两种路径下是相同的；只有“条件式的*转换*”（例如“只对远端模型脱敏”）按上下文分支。
 
-如果你确实需要“同一模型上，部分用户走内置 RAG、部分用户走自定义 RAG”这种 per-request 切换，最干净的做法是：把自定义 RAG filter 套用 `self.toggle = True`，让它只在用户选中时运行——filter 没被选中时根本不跑，`file_handler` 也不生效，内置 RAG 正常处理请求。不要试图在 `inlet()` 里动态改 `file_handler`；这个标志在 inlet 被调用前就从模块对象上读走了。
+如果确实需要按请求切换检索方式，例如让同一模型的部分用户使用内置 RAG，其他用户使用自定义检索，可为实现自定义 RAG 的 Filter 设置 `self.toggle = True`。它只在用户选中时运行。未选中时，它不会运行，`file_handler` 也不生效，请求仍由内置 RAG 正常处理。不要在 `inlet()` 中动态修改 `file_handler`，因为调用该方法之前就会从模块对象读取此标志。
 
 #### 与“在 inlet 中改 `body["files"]`”相比，这为什么重要 {#why-this-matters-compared-to-mutating-bodyfiles-in-inlet}
 
@@ -356,14 +356,14 @@ Open WebUI 使用一个复杂的双层系统来按模型管理 Filter。乍看�
 
 #### 第一层：FiltersSelector（哪些 Filter 可用？） {#tier-1-filtersselector-which-filters-are-available}
 
-**位置：** 模型设置 → Filters → “Filters” 部分
+**位置：** 模型设置中的 **Filters** 行
 
 它控制某个特定模型有哪些 Filter **可用**。
 
 **行为：**
-- 显示**所有** Filter（包括全局与模型专属）
-- **全局 Filter** 会以已勾选且禁用的状态显示（不能取消勾选）
-- **普通 Filter** 可以开关切换
+- 打开可搜索的选择器，列出**所有** Filter（全局与模型专属）
+- **全局 Filter** 标记为 **Global**，不可点击
+- **普通 Filter** 可通过点击来添加或移除
 - 保存到数据库中的 `model.meta.filterIds`
 
 **示例：**
@@ -377,9 +377,9 @@ Open WebUI 使用一个复杂的双层系统来按模型管理 Filter。乍看�
 
 #### 第二层：DefaultFiltersSelector（哪些可切换 Filter 默认启用？） {#tier-2-defaultfiltersselector-which-toggleable-filters-start-enabled}
 
-**位置：** 模型设置 → Filters → “Default Filters” 部分
+**位置：** 模型设置中的 **Filters** 行，使用 **Start enabled in new chats** 开关
 
-只有在至少选择了一个可切换 Filter（或它是全局 Filter）时，这一部分才会**显示**。
+每个已选中或全局启用且可切换的 Filter 下方都会显示此开关。
 
 **用途：** 控制哪些可切换 Filter 在新聊天中**默认启用**。
 
@@ -426,8 +426,8 @@ class Filter:
 **特点：**
 - 只要该 Filter 对某个模型处于激活状态，就会自动运行
 - 在聊天界面中**没有用户控制**
-- 不会出现在 “Default Filters” 部分
-- 不会显示在聊天集成菜单（⚙️ 图标）中
+- 模型的 **Filters** 行中没有 **Start enabled in new chats** 开关
+- **不会**显示在聊天输入框的 **+** 菜单中
 
 **适用场景：**
 - **内容审核** —— 过滤脏话、仇恨言论或不当内容
@@ -457,9 +457,9 @@ class ContentModerationFilter:
 #### 可切换的 Filter（`toggle=True`） {#toggleable-filters-toggletrue}
 
 **特点：**
-- 以**聊天输入栏中的可点击标签**和**集成菜单（⚙️ 图标）中的开关**两种形式出现。
-- 用户可以按聊天会话**启用/禁用**它们。选中状态保存在浏览器的 sessionStorage 中，**不会**持久化到服务器上的聊天记录。
-- **会**出现在模型的 “Default Filters” 配置中。
+- 在聊天输入框的 **+** 菜单中显示为**开关**。开启 **Show Input Selections** 时，它还会在 **+** 按钮旁显示为标签。
+- 用户可在各个聊天的当前会话中将其加入或移出启用列表。选中状态保存在浏览器的 sessionStorage 中，不会写入服务器上的聊天记录。
+- 模型的 **Filters** 行中有 **Start enabled in new chats** 开关。
 - 模型上的 `defaultFilterIds` 控制**初始选中状态**（哪些可切换 Filter 在新聊天开始时默认开启）。
 - `self.toggle` 本身**永远不会被运行时改写**——它只是一个在请求分发时读取一次的可见性/门控标志。`inlet()` 只会在 Filter 当前被选中时执行，没有“else”分支可写。详见上面的[说明](#what-selftoggle--true-actually-does)。
 
@@ -469,7 +469,7 @@ class ContentModerationFilter:
 - **详细/啰嗦模式** —— 用户在简洁和详细回复之间切换
 - **翻译 Filter** —— 用户启用特定语言之间的翻译
 - **代码格式化** —— 用户决定何时应用语法高亮或 lint
-- **思考/推理开关** —— 用户通过启用/禁用 Filter 来切换底层模型的思考模式（在 `inlet()` 中无条件执行即可；用户通过移除标签来关闭）
+- **思考/推理开关** —— 用户通过启用/禁用 Filter 来切换底层模型的思考模式（在 `inlet()` 中无条件执行即可；用户通过开关来关闭）
 - **Markdown 渲染** —— 在原始文本与格式化输出之间切换
 - **匿名化模式** —— 用户在讨论敏感话题时启用
 - **专家模式** —— 注入领域上下文（法律、医疗、技术）
@@ -523,7 +523,7 @@ class WebSearchFilter:
 
 **3. 聊天界面（用户交互，仅限可切换的 Filter）**
 - 聊天输入框 → **+** 菜单 → 逐个切换可切换的 Filter
-- 聊天输入框 → 每个已选 Filter 对应一个标签；打开 **Show Input Selections** 后，点击标签会打开 UserValves 弹窗（如果已定义），否则移除该 Filter
+- 聊天输入框 → 打开 **Show Input Selections** 时，每个已选 Filter 都会显示一个标签（点击标签会打开 UserValves 弹窗；若没有定义，则移除该 Filter）
 - 前端在 sessionStorage 中跟踪 `selectedFilterIds`（按聊天、按会话分别保存）
 - 初始选中项由模型的 `defaultFilterIds` 播种
 - 始终启用的 Filter（没有 `self.toggle`）会自动运行，没有任何界面控件
@@ -568,7 +568,7 @@ class WebSearchFilter:
 
 #### 通过 `__metadata__` 实现 Inlet ↔ Outlet 关联 {#inlet--outlet-correlation-via-\_\_metadata\_\_}
 
-`__metadata__` 是一个贯穿整个请求生命周期的实时字典，因此你在 `inlet()` 中存放的任何值，都可以在**同一请求**的 `outlet()` 中看到——这对于记录开始时间、关联 ID、每次调用的临时 valves 很有用，**前提是 `outlet()` 确实运行**。这涵盖了 WebUI 请求，以及直连 `/api/chat/completions` 调用时的内联 outlet——在后者中，同一个字典对象会从 `inlet()` 一直传到 `outlet()`。但这不涵盖 `/api/chat/completed`：该端点会新建一份 metadata 字典，其中只有 `chat_id`、`message_id`、`filter_ids`、`session_id` 和 `user_id`。
+`__metadata__` 是贯穿请求生命周期的可变字典。在 `inlet()` 中存入的值可在*同一请求*的 `outlet()` 中读取。这适合记录开始时间、关联 ID 或单次调用的 valves，*前提是 `outlet()` 确实运行*。这适用于 WebUI 请求和直接调用 `/api/chat/completions` 时的内联 outlet：同一个字典对象从 `inlet()` 传到 `outlet()`。但这不适用于 `/api/chat/completed`，该端点会新建一个 metadata 字典，其中只有 `chat_id`、`message_id`、`filter_ids`、`session_id` 和 `user_id`。
 
 ```python
 import time
@@ -748,14 +748,14 @@ class Filter:
 | `2` | 在 priority 为 1 的之后执行 |
 
 :::tip 数值越小 = 越先执行
-Filter 按 priority **升序**排列。`priority=0` 的 Filter 会在 `priority=1` 之前执行，后者在 `priority=2` 之前执行，依此类推。当多个 Filter 共享同一个 priority 值时，会按函数 ID 的字母顺序排序，以保证顺序可预测。
+Filter 按 priority **升序**排列。`priority=0` 的 Filter **先于** `priority=1` 执行，后者又先于 `priority=2` 执行，依此类推。多个 Filter 的 priority 相同时，**按函数 ID 的字母顺序**排序，以保证执行顺序一致。
 :::
 
 ---
 
 ### 🔗 Filter 之间的数据传递 {#data-passing-between-filters}
 
-当多个 Filter 同时启用时，每个 Filter 都会收到**上一个 Filter 修改后的数据**。某个 Filter 的返回值会成为下一个 Filter 的输入。
+当多个 Filter 同时启用时，链中的每个 Filter 都会收到**上一个 Filter 修改后的数据**。按优先级依次执行时，上一项的返回值就是下一项的输入。
 
 ```
 User Input
@@ -811,7 +811,7 @@ Filter 只能修改 **请求体**（`form_data`）。出站 HTTP 标头是单独
 
 #### 通过 Filter 注入 OpenAI 风格的 `tools` {#injecting-openai-style-tools-from-a-filter}
 
-Inlet Filter 还可以向 `body["tools"]` 中追加 OpenAI 风格的函数调用工具。这些工具会**与** Open WebUI 在服务端从 `tool_ids`、MCP 服务器以及模型内置工具中解析出的工具**合并**，而不会替换它们。
+Inlet Filter 还可以向 `body["tools"]` 中追加 OpenAI 风格的函数调用工具。追加的工具会**合并到现有列表**，而不会取代 Open WebUI 在服务端根据 `tool_ids`、MCP 服务器和模型内置工具解析出的工具。
 
 ```python
 class Filter:
@@ -834,7 +834,7 @@ class Filter:
 行为：
 
 - **原生函数调用**（默认）。在 chat completion 发送前，由 Filter 注入的工具会被追加到服务端解析出的工具列表后。同一请求中，两套工具对模型都可见。
-- **由原始 API 调用方提供的工具。** 如果**进入** Filter 管道的请求中已经带有 `body["tools"]`（例如外部客户端在调用 `/api/chat/completions` 时自带 `tools` 数组），那么这些由调用方提供的工具会优先，Open WebUI 会**完全跳过服务端的工具解析**。在这种情况下，Filter inlet 也应当以追加方式加入工具——调用方的工具和你的工具都会一起发送给 LLM。
+- **由原始 API 调用方提供的工具。** 如果*进入* Filter 管道的请求中已经带有 `body["tools"]`（例如外部客户端在调用 `/api/chat/completions` 时自带 `tools` 数组），那么这些由调用方提供的工具会优先，Open WebUI 会**完全跳过服务端的工具解析**。此时，Filter inlet 同样应追加工具。调用方提供的工具和你追加的工具都会发送给 LLM。
 - **非原生函数调用。** 服务端工具解析仍会走 Open WebUI 提示驱动的工具处理流程；由 Filter 注入的工具会被转发给 LLM，但这些工具的运行时执行者取决于你在上游调用中接入的实现。
 
 这种能力适合那些在 workspace 中没有对应 Tool 的工具——例如，你希望只在特定用户的某些聊天里临时告诉模型它的能力。
@@ -983,12 +983,12 @@ class Valves(BaseModel):
     OPTION_NAME: str = "Default Value"
 ```
 
-For example:
+例如：
 如果你正在创建一个把响应转为大写的过滤器，可以允许用户通过类似 `TRANSFORM_UPPERCASE: bool = True/False` 的 valve 来配置是否将输出完全大写。
 
 ##### 使用下拉菜单（枚举）配置 Valves {#configuring-valves-with-dropdown-menus-enums}
 
-你可以为 `Valves` 提供下拉菜单，替代自由文本输入，从而优化过滤器的用户体验。这是通过在 Pydantic `Field` 定义中使用 `json_schema_extra` 结合 `enum` 关键字实现的。
+你可以为 `Valves` 的部分选项提供下拉菜单，替代自由文本输入，从而让过滤器更易用。在 Pydantic `Field` 定义中，将 `enum` 关键字放入 `json_schema_extra` 即可。
 
 `enum` 关键字允许你指定一组预定义值，供 UI 以下拉选项的形式呈现。
 
@@ -1084,11 +1084,11 @@ class Filter:
 🚀 **你的任务**：
 修改并返回 `body`。LLM 处理的是修改后的 `body`，所以这是你为输入补充清晰度、结构和上下文的机会。
 
-:::info 想转换 RAG chunk？`inlet()` 在检索之前运行
-在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件和知识库的**引用**——真正的 chunk 文本会在所有 inlet filter 全部返回之后才被取出并注入。有两条途径可以拿到 chunk 文本本身（PII 脱敏、重排序、翻译、chunk 级 ACL）：
+:::info 想转换 RAG chunk？`inlet()` 在检索**之前**运行
+在 `inlet()` 时刻，`body["metadata"]["files"]` 和 `body["files"]` 里只有文件和知识库的*引用*。所有 inlet filter 返回后，才会检索并注入实际 chunk 文本。有两种方式可以获取 chunk 文本（例如用于 PII 脱敏、重排序、翻译或 chunk 级 ACL）：
 
-- **[`request()`](#the-request-step)** 在检索之后运行，因此注入的 chunk 已经在 body 里了。用它来**转换**内置 RAG 的产出——这是最简单的选项，无需任何开关。
-- **[`file_handler`](#owning-retrieval-with-file_handler)** 会完全跳过内置 RAG，把引用交给你。用它来**替换**检索方式，改成你自己的实现。
+- **[`request()`](#the-request-step)** 在检索之后运行，因此 body 中已有注入的 chunk。用它来*转换*内置 RAG 的结果。这是最简单的选项，无需开启额外设置。
+- **[`file_handler`](#owning-retrieval-with-file_handler)** 会完全跳过内置 RAG，把引用交给你。用它以自定义实现*替换*检索方式。
 :::
 
 ##### 🍳 为什么要使用 `inlet`？ {#why-would-you-use-the-inlet}
@@ -1166,7 +1166,7 @@ async def inlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
 ##### 🔄 什么是 `stream` 钩子？ {#what-is-the-stream-hook}
 **`stream` 函数** 是 Open WebUI **0.5.17** 中新增的功能，允许你实时 **拦截并修改流式模型响应**。
 
-与会处理整段完成响应的 `outlet` 不同，`stream` 会在模型收到每个 **单独片段** 时逐个处理。
+与处理完整响应的 `outlet` 不同，`stream` 会在收到模型发来的**每个片段**时立即处理。
 
 ##### 🛠️ 什么时候使用 stream 钩子？ {#when-to-use-the-stream-hook}
 - **实时内容过滤** —— 在内容流式输出时屏蔽脏话或敏感内容
@@ -1195,7 +1195,7 @@ async def stream(self, event: dict) -> dict:
 - 每一行都代表模型流式响应中的一个**小片段**。
 - **`delta.content` 字段**包含逐步生成的文本。
 
-##### 🔄 示例：从流式数据中过滤表情符号 {#example-filtering-out-markers-from-streamed-data}
+##### 🔄 示例：从流式数据中过滤标记 {#example-filtering-out-markers-from-streamed-data}
 ```python
 async def stream(self, event: dict) -> dict:
     for choice in event.get("choices", []):
@@ -1278,7 +1278,7 @@ async def stream(self, event: dict) -> dict:
 
 #### 4️⃣ **`outlet` 函数（输出后处理）** {#outlet-function-output-post-processing}
 
-`outlet` 函数就像一位 **校对员**：它会在 LLM 处理完之后，对 AI 的响应进行整理（或者做最后修改）。
+`outlet` 函数就像一位 **校对员**：它在 *LLM 处理完成后*整理 AI 的回复或进行最后修改。
 
 📤 **输入**：
 - **`body`**：这里包含聊天中的**所有当前消息**（用户历史 + LLM 回复）。
@@ -1303,7 +1303,7 @@ async def stream(self, event: dict) -> dict:
 - **质量评分** —— 对模型输出执行自动化质量检查
 
 :::info Outlet 与 API 请求
-对于直接调用 `/api/chat/completions` 的客户端，`outlet()` 在流式和非流式两条路径上**默认都会运行**，由 [`ENABLE_API_OUTLET_FILTERS`](/reference/env-configuration#enable_api_outlet_filters) 控制。把它关掉之后，直接 API 集成就必须在请求之后再调用一次 `POST /api/chat/completed`。无论哪种情况，过滤后的内容都不会被写回 HTTP 响应。完整情况请参阅 [Filter Behavior with API Requests](#filter-behavior-with-api-requests)。
+对于直接调用 `/api/chat/completions` 的客户端，`outlet()` 在流式和非流式路径上默认运行，由 [`ENABLE_API_OUTLET_FILTERS`](/reference/env-configuration#enable_api_outlet_filters) 控制。关闭后，直接集成 API 的客户端必须在请求结束后调用 `POST /api/chat/completed`。无论哪种情况，过滤后的内容都不会写回 HTTP 响应。详见 [API 请求中的 Filter 行为](#filter-behavior-with-api-requests)。
 :::
 
 一个会修改回复的 outlet，同时会改动该消息的 `content` 以及 `output` 里的文本——因为聊天界面展示的回复正是取自 `output`。
@@ -1367,7 +1367,7 @@ class Filter:
 
 ### 📚 示例 #3：流式可观测性提示（概念性模式） {#example-3-streaming-observability-hints-conceptual-pattern}
 
-管理员有时希望在模型**流式输出**过程中，从 UI 上获得**轻量**的提示——例如大致的**首 token 延迟**、**流式总时长**或**粗略的 tokens/s**——而无需另搭一套仪表盘或修改前端。Filter 完全可以靠前面介绍过的 **`stream`** 钩子做到这一点。
+管理员有时希望在模型流式输出时，直接在**界面中显示简短提示**，例如估算的**首 token 延迟**、**流式输出总时长**或**粗略的 tokens/s**。借助前面介绍的 **`stream`** 钩子，Filter 无需另建仪表盘或修改前端即可做到。
 
 本节描述的是**行为与注意要点**，不是开箱即用的完整脚本。Filter 会执行**任意 Python**；请把任何你拼出来的片段都当作**特权服务端代码**对待。部署前请仔细审查，只通过可信渠道共享，并参考本页面顶部的**关键安全警告**。
 
@@ -1379,11 +1379,11 @@ class Filter:
 
 #### 关联一条流（"这条流属于哪条消息？"） {#correlating-one-stream-which-message-is-this}
 
-per-request 的 **`__metadata__`**（`stream` 上的保留参数）里包含 `chat_id`、`message_id` 等标识。请用**复合键**维护一个内存中的 map，以免并发聊天之间互相冲突。处理完一个键的流后，记得把已保存的状态清掉，防止 map 无限增长。
+每个请求的 **`__metadata__`**（`stream` 的保留参数）都包含 **`chat_id`**、**`message_id`** 等标识。在内存映射中使用**复合键**，避免并发聊天之间发生冲突。该键对应的流结束后，清除保存的状态，防止映射不断增长。
 
 #### 在 Web UI 中展示提示（`status`） {#surfacing-hints-in-the-web-ui-status}
 
-UI 已经知道如何通过 **`status`** 负载显示与 assistant 消息绑定的简短进度文本。Filter 收到的 **`__event_emitter__`**：发射一个字典，**`type`** 设为 **`"status"`**，**`data`** 中至少包含 **`description`**（人类可读文字）和 **`done`**（该状态行是否已结束）。如果你想在自己的工具里标识该插件，可选设置一个稳定的 **`data.action`** 字符串。
+界面可以通过 **`status`** 负载显示与助手消息关联的简短进度。Filter 会收到 **`__event_emitter__`**。用它发出一个字典，指定 **`type`: `"status"`**，并在 **`data`** 中至少包含 **`description`**（可读文本）和 **`done`**（该状态是否已结束）。若要在工具中识别此插件，可选用一个固定的 **`data.action`** 字符串。
 
 流中段发提示的粗略模式：
 
@@ -1393,15 +1393,15 @@ await __event_emitter__(
 )
 ```
 
-在生成**真正结束**时再发一条 `done: True` 的 status 来汇总总耗时，否则 spinner 会一直转。
+在生成**真正结束**时，再发一条 **`done: True`** 的 status 来汇总统计值并停止加载指示器。
 
 #### 如何判定流真的结束了 {#knowing-when-the-stream-really-ended}
 
-务必保守：**`usage`** 字段可能在中途出现。建议在看到 `finish_reason`、显式的 `stop`、`event["done"]` 或协议相关的 **DONE** 标志时，再把这一轮回复视为结束——此时再发最终的 `status` 并清空已保存的状态。
+判断时应谨慎：**只包含 `usage` 的 chunk** 可能在流式输出中途出现。看到 **`finish_reason`**、显式的 **`stop`**、**`event["done"]`** 或协议特定的 **DONE** 标记时，再将回复视为结束。然后发出最终的 **`status`** 并清除保存的状态。
 
 #### 大致吞吐 {#rough-throughput}
 
-如果 **`usage.completion_tokens`**（或等效字段）在最后一个 chunk 上正常出现，可以用首段文本到现在经过的**秒数**算出 **tokens ÷ 秒数**。
+如果最后一个 chunk 提供了合理的 **`usage.completion_tokens`** 值（或等效字段），可计算 **tokens ÷ 所用秒数**，从首次收到正文时开始计时。
 
 如果对某个 provider 来说 **`usage`** 要到末尾才出现——或者根本不会出现，许多 Filter 的**兜底方案**是按流式字符数粗略估算 token（经验法则做除法；很粗略且依赖模型）。**不要把**启发式得到的数字当作计费级别或科学基准使用。
 

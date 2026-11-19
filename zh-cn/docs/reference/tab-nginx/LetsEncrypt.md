@@ -15,7 +15,7 @@ Let's Encrypt 提供免费的 SSL 证书，被大多数浏览器信任，非常�
 * 具备在终端中执行命令的基础知识。
 
 :::info
-**注意！** Let's Encrypt **不能**为 IP 地址签发证书。你**必须**使用域名。
+**注意！** Let's Encrypt 已支持[**短期 IP 地址证书**](https://letsencrypt.org/2026/01/15/6day-and-ip-general-availability/)，但本指南的配置针对域名。按本指南操作时，**必须**使用域名。
 :::
 
 -----
@@ -179,7 +179,7 @@ Let's Encrypt 提供免费的 SSL 证书，被大多数浏览器信任，非常�
 
 1. **更新用于 SSL 的 Nginx 配置**
 
-   **将** `nginx/conf.d/open-webui.conf` **的全部内容替换为下面的最终配置。**
+   将 `nginx/conf.d/open-webui.conf` 的**全部内容替换为下面的最终配置。**
 
    **把 `<YOUR_DOMAIN_NAME>` 的 4 处都替换成你的域名。**
 
@@ -306,7 +306,7 @@ Let's Encrypt 提供免费的 SSL 证书，被大多数浏览器信任，非常�
 
 ### （可选）第 5 步：设置自动续期 {#optional-step-5-setting-up-automatic-renewal}
 
-Let's Encrypt 证书会在 90 天后过期。你应该设置一个 `cron` 任务来自动续期。
+Let's Encrypt 默认签发有效期为 90 天的证书。建议设置 `cron` 任务，自动检查并续期。
 
 1. 打开 crontab 编辑器：
 

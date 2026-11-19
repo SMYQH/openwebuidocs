@@ -28,6 +28,11 @@ The audit checks counterpart coverage, code and literal preservation, Markdown/M
 - For `setting-type` or `setting-default`, compare type, value, and unit within the same setting. If upstream pages disagree, check the application revision that corresponds to the docs and record it in `STATUS.md`.
 - For `literal-inline-code-substitution`, compare identifiers in the affected section; an occurrence elsewhere does not prove preservation. Preserve literal diagnostic headings in troubleshooting sections. For an upstream fence repair, compare every code body and any inline sample moved into a block; do not exempt surrounding prose.
 - Fix confirmed translation defects only when authorized. Fix confirmed checker defects in this skill's `scripts/` with narrow, source-derived rules and generated regression fixtures. Update this skill and its usage reference when behavior or commands change. Never hard-code translations, answer tables, or expected Chinese snapshots in the tooling; only terminology and other literal exclusions may be stored verbatim.
+- Editing a translated file invalidates the exact exceptions that belonged to it, because a fingerprint mixes the file path, both file hashes, the finding line, the rule and the finding text. After such an edit, keep the audit report from before the edit as a baseline, run a fresh audit, and re-bind the surviving exceptions:
+```powershell
+python .agents/skills/translation-checker/scripts/restamp_exceptions.py --baseline .agents/skills/translation-checker/.reports/audit-before.json --current .agents/skills/translation-checker/.reports/audit.json
+```
+  The tool keeps the reason of every finding that still exists, drops exceptions whose finding disappeared, and prints the findings that need manual review. Review those findings yourself before adding an exception; the tool never invents a reason.
 - Use an exact exception in `.agents/skills/translation-checker/translation_config.json` only for a verified intentional difference or reviewed upstream defect. Record the current finding's `fingerprint` and a specific `reason`. Either document changing expires it. Retest exceptions after rule changes and remove stale entries. Never loosen checks or exempt whole directories to clear warnings.
 
 ## Review Artifacts

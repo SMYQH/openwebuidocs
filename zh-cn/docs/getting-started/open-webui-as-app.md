@@ -11,9 +11,9 @@ title: "将 Open WebUI 作为应用安装"
 
 - 出现在主屏幕、任务栏或 Dock 上的**应用图标**
 - **全屏体验**，没有浏览器工具栏或地址栏
-- 桌面端为**独立窗口**，移动端为**全屏**
+- 桌面端为**独立窗口**，移动端为全屏
 - **与浏览器分离**，拥有独立的窗口和任务入口
-- **推送通知**（由管理员开启后可用）
+- **浏览器通知**：在设置 > 通知中开启**浏览器通知**后，可收到回复完成、频道消息和日历提醒。通知仅在应用打开时触发，没有推送服务。如果管理员启用了用户 Webhook（并为非管理员用户授予使用权限），同一页面的**通知目标**可通过 Webhook 发送聊天完成或失败、频道消息、日历事件和文件处理失败通知。可选择仅在离开时发送，或始终发送。
 
 ---
 
@@ -53,4 +53,4 @@ Safari 是 iOS 上唯一支持 PWA 安装的浏览器。iOS 上的 Chrome 和 Fi
 
 ## 自定义 PWA（管理员） {#customizing-the-pwa-admins}
 
-管理员可以通过 [`EXTERNAL_PWA_MANIFEST_URL`](/reference/env-configuration#external_pwa_manifest_url) 环境变量指向自定义 manifest，对 PWA 进行白标定制。这让你可以设置自定义的应用名称、图标和主题色。服务器会在每次 `/manifest.json` 请求时自行拉取该 URL，因此它必须能从服务器访问，而不只是从浏览器访问。如果不设置该变量，manifest 会使用 `WEBUI_NAME` 作为应用名称（当它不是默认值时会追加 ` (Open WebUI)`），并以 Open WebUI 标志作为图标。
+管理员可以将 [`EXTERNAL_PWA_MANIFEST_URL`](/reference/env-configuration#external_pwa_manifest_url) 环境变量指向自定义清单，为 PWA 设置自己的应用名称、图标和主题色。服务器会在每次收到 `/manifest.json` 请求时访问该 URL，因此该地址必须对服务器可达，仅能从浏览器访问还不够。如果不设置该变量，清单会使用 `WEBUI_NAME` 作为应用名称（当它不是默认值时会追加 ` (Open WebUI)`），并以 Open WebUI 标志作为图标。

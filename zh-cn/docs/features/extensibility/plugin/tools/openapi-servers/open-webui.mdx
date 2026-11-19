@@ -48,7 +48,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 1. 在浏览器中打开 Open WebUI
 2. 打开 **设置 → 集成**
 3. 在 **工具** 分区点击加号，添加一个新的工具服务器
-4. 输入你的 OpenAPI 工具服务器运行地址（例如 `http://localhost:8000`）
+4. 输入 OpenAPI 工具服务器的 URL（例如 `http://localhost:8000`）
 5. 点击 “保存”
 
 ![设置页面](/images/openapi-servers/open-webui/settings.png)
@@ -79,14 +79,14 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 - **用户级工具服务器**
   - 请求由**你的浏览器直接发出**
-  - 这意味着你可以安全地连接 localhost 地址（如 `http://localhost:8000`）——甚至暴露你自己的本地文件系统或开发环境 endpoint，而不会把它们暴露给外网或其他用户
+  - 这意味着你可以安全地连接 localhost URL（如 `http://localhost:8000`）——甚至暴露你自己的本地文件系统或开发环境端点，而不会把它们暴露给外网或其他用户
   - 你的连接是隔离的，只有你的浏览器可以访问该工具服务器
 
 - **全局工具服务器**
   - 请求由 **Open WebUI 后端 / 服务器** 发出，而不是浏览器
-  - 因此这里的 `localhost` 指的是后端服务器自身，而不是你的个人电脑
+  - 后端必须能访问你指定的工具服务器 URL，因此这里的 `localhost` 指后端服务器本身，*不是*你的个人电脑
   - 适合需要在整个部署中共享的工具，但要注意：由于是后端发请求，所以它不能通过这种方式访问你个人电脑上的本地资源（例如你自己的文件系统）
-  - 因此在安全上要格外注意：只暴露那些适合被多个用户访问的远程 / 全局 endpoint
+  - 因此在安全上要格外注意：只暴露那些适合被多个用户访问的远程 / 全局端点
 
 **总结表：**
 
@@ -114,9 +114,8 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 这意味着：
 
-- 在 Open WebUI 中连接工具时，你必须填写该工具的**完整路径**
-- **不要**只填写根 URL（`http://localhost:8000`）
-- 你需要在 Open WebUI Settings 中用各自的子路径 URL 分别添加每个工具
+- 在 Open WebUI 中连接工具时，必须填写该工具的完整路径，不要只填写根 URL（`http://localhost:8000`）。
+- 在 Open WebUI 设置中，用各自的子路径 URL 分别添加每个工具。
 
 ![MCPO 配置工具设置](/images/openapi-servers/open-webui/mcpo-config-tools.png)
 
@@ -174,9 +173,9 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ![全局工具服务器消息输入](/images/openapi-servers/open-webui/global-message-input.png)
 
-⚠️ 关于 Global Tool Servers 的重要说明：
+⚠️ 全局工具服务器注意事项：
 
-- 在你从 ➕ 菜单启用之前，它们不会显示在工具指示器弹窗中
+- 在你从 **+** 菜单启用之前，它们不会显示在工具指示器弹窗中
 - 每个全局工具都必须单独打开，才能在当前聊天中生效
 - 一旦启用，它们的使用方式就和用户级工具一样
 - 管理员可通过基于角色的权限控制来限制全局工具访问
@@ -237,14 +236,14 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 **理解 “localhost” 指向的是哪台机器。** 这是最常见的问题，而且会随工具服务器类型不同而变化：
 
-- **用户级工具服务器** —— 请求来自**你的浏览器**。这里的 `localhost` 指的是*运行浏览器的那台机器*
-- **全局工具服务器** —— 请求来自 **Open WebUI 后端**。这里的 `localhost` 指的是*后端服务器本身*，而不是你的电脑。如果后端跑在 Docker 中，那么容器里的 `localhost` 不会指向宿主机——此时应改用 `host.docker.internal` 或后端服务器实际 IP
+- **用户级工具服务器**：请求来自**你的浏览器**。`localhost` 指*运行浏览器的那台机器*。在本地开发时通常可用，但有下文所述的限制。
+- **全局工具服务器**：请求来自 **Open WebUI 后端**。`localhost` 指*后端服务器*，不是你的电脑。如果后端在 Docker 中运行，容器里的 `localhost` 不会指向宿主机。此时应改用 `host.docker.internal` 或宿主机的实际 IP。
 
 :::warning 用户级工具服务器：浏览器所在地址也很重要
 
 即使是用户级工具服务器，只有当你在浏览器中通过 `http://localhost:...` 访问 Open WebUI 时，`localhost` 才通常会正常工作。
 
-如果你访问 Open WebUI 用的是其他 IP 地址——例如通过局域网里的 `http://10.0.0.5:3000` 从另一台设备访问，或者使用 `npm run dev` 输出的 network URL——那么此时浏览器眼中的 `localhost` 就**不是**工具服务器所在机器，而是**浏览器当前运行的设备**。
+如果你通过其他 IP 地址访问 Open WebUI，例如从另一台局域网设备打开 `http://10.0.0.5:3000`，或者使用 `npm run dev` 输出的网络 URL，浏览器就*不在工具服务器所在的本机*。它会访问运行浏览器的设备上的 `localhost`，而不是承载工具服务器的机器。
 
 **解决办法：** 把 `localhost` 换成实际运行工具服务器那台机器的 IP（例如 `http://10.0.0.5:8000`），并确保工具服务器绑定在 `0.0.0.0` 上，而不是仅绑定到 `127.0.0.1`。
 
@@ -258,6 +257,6 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 - 🔒 如果你使用远程服务器，请检查防火墙与 HTTPS 配置
 - 📝 如果你希望服务器在重启后仍保持运行，建议用 Docker 或系统服务来部署
-- 🔍 不确定时，直接在**同一个浏览器**中打开工具服务器 URL（例如 `http://localhost:8000/docs`）——如果能打开，说明浏览器能访问该服务器
+- 🔍 不确定时，直接在用于访问 Open WebUI 的同一浏览器中打开工具服务器 URL（例如 `http://localhost:8000/docs`）——如果能打开，说明浏览器能访问该服务器
 
 需要帮助？请访问 👉 [Discussions 页面](https://github.com/open-webui/openapi-servers/discussions) 或 [提交 issue](https://github.com/open-webui/openapi-servers/issues)。

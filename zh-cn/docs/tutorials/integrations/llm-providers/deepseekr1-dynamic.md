@@ -1,9 +1,9 @@
 ---
 sidebar_position: 1
-title: "DeepSeek R1 Dynamic"
+title: "DeepSeek R1 动态量化"
 ---
 
-衷心感谢 **UnslothAI** 的卓越贡献！得益于他们的辛勤工作，我们现在可以在 **Llama.cpp** 上以动态 1.58 位量化形式（压缩至仅 131GB）运行**完整的 DeepSeek-R1** 671B 参数模型！最棒的是？您不再需要担心必须拥有大型企业级 GPU 或服务器——在个人机器上运行此模型已成为可能（尽管对大多数消费级硬件来说速度较慢）。
+感谢 **UnslothAI** 的贡献！借助他们的动态 1.58 位量化版本，我们现在可以用 **Llama.cpp** 运行 **完整的 DeepSeek-R1** 671B 参数模型，模型大小压缩到了 131GB。不需要大型企业级 GPU 或服务器，在个人电脑上也能运行，不过大多数消费级硬件的运行速度较慢。
 
 :::note
 
@@ -72,7 +72,7 @@ DeepSeek-R1-GGUF/
 
 如果您尚未安装 **Open WebUI**，不用担心！设置非常简单。只需按照 [Open WebUI 文档](https://docs.openwebui.com/)操作。安装完成后，启动应用程序——我们将在后续步骤中连接它以与 DeepSeek-R1 模型交互。
 
-## 第 4 步：使用 Llama.cpp 服务模型 {#step-4-serve-the-model-using-llamacpp}
+## 第 4 步：使用 Llama.cpp 提供模型服务 {#step-4-serve-the-model-using-llamacpp}
 
 模型下载完成后，下一步是使用 **Llama.cpp 的服务器模式**运行它。开始之前：
 
@@ -89,8 +89,8 @@ DeepSeek-R1-GGUF/
    cd ~/Documents/workspace/llama.cpp/build/bin
    ```
 
-2. **指向您的模型文件夹。**
-   使用第 2 步中创建的下载 GGUF 文件的完整路径。启动模型服务时，指定分割 GGUF 文件的第一部分（例如 `DeepSeek-R1-UD-IQ1_S-00001-of-00003.gguf`）。
+2. **指定模型文件所在的位置。**
+   使用第 2 步下载的 GGUF 文件的完整路径。启动模型服务时，指定分片 GGUF 文件的第一部分（例如 `DeepSeek-R1-UD-IQ1_S-00001-of-00003.gguf`）。
 
 以下是启动服务器的命令：
 
@@ -109,7 +109,7 @@ DeepSeek-R1-GGUF/
 - **`--model`：** 将 `/[your-directory]/` 替换为第 2 步中下载 GGUF 文件的路径。
 - **`--port`：** 服务器默认端口为 `8080`，您可以根据端口可用性自行更改。
 - **`--ctx-size`：** 确定上下文长度（令牌数量）。如果硬件允许，可以增大此值，但要注意 RAM/VRAM 使用量的增加。
-- **`--n-gpu-layers`：** 设置要卸载到 GPU 以加快推理速度的层数。具体数量取决于 GPU 的内存容量——请参考 Unsloth 的表格获取具体建议。
+- **`--n-gpu-layers`：** 设置交由 GPU 处理的模型层数，以加快推理。具体层数取决于 GPU 的显存容量，请参考 Unsloth 的表格。
 
 :::
 
@@ -123,7 +123,7 @@ DeepSeek-R1-GGUF/
     --n-gpu-layers 40
 ```
 
-服务器启动后，将在以下地址托管一个**本地 OpenAI 兼容 API** 端点：
+服务器启动后，可通过以下地址访问 **兼容 OpenAI 的本地 API**：
 
 ```txt
 http://127.0.0.1:10000
@@ -147,7 +147,7 @@ http://127.0.0.1:10000
 2. 导航至 **Connections > OpenAI Connections**。
 3. 为新连接添加以下详细信息：
    - URL：`http://127.0.0.1:10000/v1`（在 Docker 中运行 Open WebUI 时使用 `http://host.docker.internal:10000/v1`）
-   - API Key：`none`
+   - API 密钥：`none`
 
 :::info
 
@@ -159,7 +159,7 @@ http://127.0.0.1:10000
 
 :::
 
-保存连接后，您可以直接从 Open WebUI 开始查询 **DeepSeek-R1**！🎉
+保存连接后，您就可以直接在 Open WebUI 中向 **DeepSeek-R1** 提问！🎉
 
 ---
 

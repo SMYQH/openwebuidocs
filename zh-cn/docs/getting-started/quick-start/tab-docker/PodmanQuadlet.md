@@ -13,7 +13,7 @@ Podman Quadlet 允许你把容器作为原生 systemd 服务进行管理。这�
 2. **创建容器文件：**
    新建 `~/.config/containers/systemd/open-webui.container`，内容如下：
 
-``` ini title="open-webui.container"
+   ``` ini title="open-webui.container"
    [Unit]
    Description=Open WebUI Container
    After=network-online.target
@@ -35,7 +35,7 @@ Podman Quadlet 允许你把容器作为原生 systemd 服务进行管理。这�
 
    [Install]
    WantedBy=default.target
-```
+   ```
 
 3. **重新加载 systemd 并启动服务：**
    ```bash

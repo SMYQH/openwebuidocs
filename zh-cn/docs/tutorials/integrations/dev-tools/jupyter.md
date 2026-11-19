@@ -118,11 +118,11 @@ Open-WebUI 和 Jupyter 都运行后，我们需要在 Settings -> Code Execution
 Prompt: Create two CSV files using fake data. The first CSV should be created using vanilla python and the second CSV should be created using the pandas library. Name the CSVs data1.csv and data2.csv
 ```
 
-![代码执行配置](/images/tutorials/jupyter/jupyter-create-csv.png)
+![Open WebUI 对话中，模型使用代码解释器创建两个 CSV 文件](/images/tutorials/jupyter/jupyter-create-csv.png)
 
 我们可以看到 CSV 文件已创建，现在可以在 Jupyter 中访问。
 
-![代码执行配置](/images/tutorials/jupyter/jupyter-view-csv.png)
+![在 Jupyter 中打开的 data1.csv，文件浏览器中还列有 data2.csv](/images/tutorials/jupyter/jupyter-view-csv.png)
 
 ### 创建可视化图表 {#create-a-visualization}
 
@@ -132,11 +132,11 @@ Prompt: Create two CSV files using fake data. The first CSV should be created us
 Prompt: Create several visualizations in python using matplotlib and seaborn and save them to jupyter
 ```
 
-![代码执行配置](/images/tutorials/jupyter/jupyter-create-viz.png)
+![Open WebUI 对话中，模型使用 matplotlib 和 seaborn 创建图表](/images/tutorials/jupyter/jupyter-create-viz.png)
 
 我们可以看到可视化图表已创建，现在可以在 Jupyter 中访问。
 
-![代码执行配置](/images/tutorials/jupyter/jupyter-view-viz.png)
+![模型保存的 Seaborn 箱线图已在 Jupyter 中打开](/images/tutorials/jupyter/jupyter-view-viz.png)
 
 ### 创建 Notebook {#create-a-notebook}
 
@@ -146,11 +146,11 @@ Prompt: Create several visualizations in python using matplotlib and seaborn and
 Prompt: Write python code to read and write json files and save it to my notebook called notebook.ipynb
 ```
 
-![代码执行配置](/images/tutorials/jupyter/jupyter-create-notebook.png)
+![Open WebUI 对话中，模型创建名为 notebook.ipynb 的笔记本](/images/tutorials/jupyter/jupyter-create-notebook.png)
 
 我们可以看到 notebook 已创建，现在可以在 Jupyter 中访问。
 
-![代码执行配置](/images/tutorials/jupyter/jupyter-view-notebook.png)
+![在 Jupyter 中打开的 notebook.ipynb，含一个 Markdown 单元格和两个代码单元格](/images/tutorials/jupyter/jupyter-view-notebook.png)
 
 ## 关于工作流的说明 {#note-about-workflow}
 

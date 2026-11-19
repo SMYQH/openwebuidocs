@@ -241,24 +241,72 @@
   ],
   "exceptions": [
     {
-      "fingerprint": "7ae4f38ed3c358b21e697c8afbf5a10c4224883ed9908b1623f352fc943b6318",
+      "fingerprint": "d64cc20590f8e65a2a4eb9b9d08f2ec791b86d6a1f108167343cbdc24c296246",
+      "reason": "Open Terminal Docker tab: the editor-only MD041 directive permits a tab fragment without a standalone title. It does not change rendered content."
+    },
+    {
+      "fingerprint": "2a15086f1f7aa9bb4186ae176ccf59a2c1f7d350bd964f64aba4143d858db476",
+      "reason": "Caddy: the contents list adds one entry for the existing top-level security-headers section. All other block structure matches."
+    },
+    {
+      "fingerprint": "facf569ba311897a25541e1047144fab27c46e7c24ea3d7b6c245563ff9c7587",
+      "reason": "Caddy: the additional list marker belongs only to the contents entry for the existing security-headers section."
+    },
+    {
+      "fingerprint": "849643c1387b8f3464ef908254d0925aeb52c4dae4f6c61f5bffff69e7131262",
+      "reason": "Caddy: the extra bracket pair belongs only to the contents link for the existing security-headers section."
+    },
+    {
+      "fingerprint": "d1b24e3fd25ba18f235441e7843d40f739620442962a715fb83c0ed48e87abaa",
+      "reason": "Caddy: four upstream OpenWebUI spellings in two headings and their contents labels are corrected to Open WebUI. The matching fragments are unchanged."
+    },
+    {
+      "fingerprint": "596adbd85be5161caf05f527051ef9a1b89bf139fd725fae25d4b42203358c02",
+      "reason": "Caddy: the extra destination links to the existing security-headers section on the same page. No upstream destination changed."
+    },
+    {
+      "fingerprint": "269a606ca70d1835cd96d454ae8cd7dacd3e2109bbc813e05bac2a29a40c7264",
+      "reason": "Nginx: the local MD060 directive allows the editor's table formatting and does not change rendered content."
+    },
+    {
+      "fingerprint": "a8115a7bb0f1836875fe2439dc0374168dba34f642e0dd1d5c55e273a5d3495f",
+      "reason": "Monitoring: retain the published authentication-setup-for-api-key- fragment next to the API key setup guidance. The anchor is empty, and the built page exposes the ID."
+    },
+    {
+      "fingerprint": "b5a87373b34fe6d591c532afd5e62b34b643a25c9208cb911d730b004bd0b779",
       "reason": "OpenTelemetry: the local MD060 directive allows the editor's table formatting and does not change rendered content."
+    },
+    {
+      "fingerprint": "b2b83e3d0d4e698a36684286ac8ed018145e2cfe5b4a9396f0824db30e892bc1",
+      "reason": "Firefox sidebar: the bare upstream documentation URL becomes a labeled link to the same page on the localized site."
+    },
+    {
+      "fingerprint": "0efd529de854c29555f6a9432cc98475e983e8570e62d2191b46f194d13846cf",
+      "reason": "Azure OpenAI overview: the requirement for 0.6.30 or later uses the standard Open WebUI spelling where upstream writes OpenWebUI. No product mention was added."
+    },
+    {
+      "fingerprint": "1b61337fe97a6ccab02bbc15eeed41270a2db1fc07fb3b9b6a7f2ce1bcd04399",
+      "reason": "Kokoro Web: four upstream OpenWebUI spellings in the setup heading, settings step, and two closing statements are normalized to Open WebUI. All ten mentions refer to the same product."
     },
     {
       "fingerprint": "c0bd78bea53fba4933a11a204dba2de5dd69edba362669aace1ed7c970def6a4",
       "reason": "Sponsorships: the alt text identifies the GitHub Sponsors badge instead of repeating its generic upstream label. The badge and its link are unchanged."
     },
     {
-      "fingerprint": "7c7a6e8e247a65bc4c257ad5a78a4c20ec2b200412220162208467cda53f9137",
-      "reason": "INCIBE: the original record excerpt is quoted verbatim as evidence that the entry retained its original wording. The surrounding explanation is translated."
+      "fingerprint": "4e77101868b01ea4ff27f84731233bddfa7f77b8f71cbafba94fd743613b1787",
+      "reason": "Azure CLI authentication: Windows is present as lowercase windows in the upstream credentials bullet. This is a capitalization correction, not a new platform or an extra mention."
     },
     {
-      "fingerprint": "64637db77c060daafbb0fe9ea7f21b462f1f8d0754dd050dc5ce8d9d4850ec1b",
-      "reason": "INCIBE: the copied text in this section comes from the exact excerpt of the original record, preserved as evidence of the missing rejection notice."
+      "fingerprint": "b9523ab93fcba7c373ff1f78e528edfce2b7d2e311187f27d415bb3bebec399c",
+      "reason": "Email processing: the unchanged screenshot shows five urgent action items in deadline order and states that all five are overdue. The localized alt text includes the visible count for accessibility; it does not change a number in the workflow."
     },
     {
       "fingerprint": "57b0765c9de5834b6b651b365bbc172b721896c40c1c52accc5fba786b2346c5",
       "reason": "LDAP: the upstream Bash fence at EOF lacks its closing delimiter. The Chinese file closes it and every fenced code body matches."
+    },
+    {
+      "fingerprint": "3726b6da3be4acb47e74bddd0f02fc830cb5c01eded3f6bd82b6c96fa0ef370b",
+      "reason": "Keycloak: the upstream env fence at EOF lacks its closing delimiter. The Chinese file closes it and every fenced code body matches."
     },
     {
       "fingerprint": "26392da9138680c7c5679ab570b732868c07e796f3dde8eddf891daeb80c2fbb",
@@ -309,8 +357,100 @@
       "reason": "HAProxy: the restored compatibility prose retains the original HAProxy 3.x, HTTP/2, HTTP/1.1 and RFC 8441 values. None of the commands or configuration values changed."
     },
     {
-      "fingerprint": "accf8288dfb7adbd571eed3342bd379b75dba8f92b915925e64cf8bc7de11dae",
-      "reason": "The localized text-to-speech permission label gives the standard abbreviation TTS, matching the adjacent expanded STT label. It describes the same voice-output permission."
+      "fingerprint": "c1e53375e6bd5710894ceb04d4b8b4883b0784eb28cb8df9ac999cb4eeabd831",
+      "reason": "Nginx Proxy Manager: the upstream CORS example ends with an orphan callout closer. The Chinese file omits the orphan and retains all paired callouts."
+    },
+    {
+      "fingerprint": "36f3f00c8b5a45757a959fee35aaa12c5e1629283817e1f21feca5fe4eca6b5f",
+      "reason": "Nginx Proxy Manager: the Chinese file moves the single-line DuckDNS assignment into its own fence. All eight code bodies match the upstream text in order."
+    },
+    {
+      "fingerprint": "262100490fb2972414eba198eda2a122ff179c531f8e57b6a92a45540dd80e35",
+      "reason": "Nginx Proxy Manager: the Chinese file adds a Bash fence for the single-line DuckDNS assignment. Existing fence metadata is retained."
+    },
+    {
+      "fingerprint": "61820ac6d9751aedba163a286ad9e50b195d381cda802878978c28a18e285aa8",
+      "reason": "Nginx Proxy Manager: the single removed Markdown marker is the orphan callout closer after the upstream CORS example."
+    },
+    {
+      "fingerprint": "4209b36fb496b7d137f57eb0fe61be2c0bdbc7434e7c5b0acd36912ac1b6ee38",
+      "reason": "The Chinese Knowledge and RAG overview adds one link to its own oikb guide. The source table, feature links, and original knowledge-base link are retained."
+    },
+    {
+      "fingerprint": "b9cfbcd479c95bff9e0701ca998d727a1148405f4ef223acb7f553a827a5cc0b",
+      "reason": "The extra Git mention is in the local oikb cross-reference; the pinned upstream Knowledge Base Sync guide lists Git among its supported connectors."
+    },
+    {
+      "fingerprint": "2bfb1694f377258817403905b2dca7de5e33fed94b76a26fdd82f360d98def7d",
+      "reason": "The added local oikb guide explains how to keep knowledge bases synchronized with folders, Git repositories, wikis, and storage buckets."
+    },
+    {
+      "fingerprint": "5ee78d53b92d10a33e6d24628671d602b5c9f06a34716c178ae45f1dd1169593",
+      "reason": "The Encryption table cell contains one additional local cross-reference to storage encryption guidance. The original advice to encrypt backup data at rest remains."
+    },
+    {
+      "fingerprint": "882177c7468b2ea9951212a1f8bd14bedcac05c23292ed30dd8b6b85b005ec7b",
+      "reason": "The extra reference points to the existing database encryption section explaining supported encrypted storage and that SQLCipher is not supported."
+    },
+    {
+      "fingerprint": "ef600f982a7f664cfec81be8d72d7ee77934fbabcf0de64176980d84cf05727b",
+      "reason": "The new link documents short-lived IP address certificates, available since January 15, 2026. The domain-only requirement still applies to this guide's unchanged setup."
+    },
+    {
+      "fingerprint": "67b3f17ddbdbabbeb9970079e3be83516226c522518d9e424943df5d58ec583e",
+      "reason": "The official Let's Encrypt January 15, 2026 announcement corrects the source's obsolete assertion that no IP certificates are available. This guide's domain name setup remains unchanged."
+    },
+    {
+      "fingerprint": "f000a37442cd648416c90286907bc11b97cd7f126e08fac7b5f885d23fcf9554",
+      "reason": "The translation repeats HTTPS to clarify the mobile browser requirement, explicitly locates Settings in Open WebUI, and uses a straight apostrophe in Let's Encrypt where upstream uses a curly apostrophe."
+    },
+    {
+      "fingerprint": "4f065d43dbebe6d9f3808d0b89274bfe1de8781eee14ef14b2f62126460a90c2",
+      "reason": "The translated Windows Firewall instruction uses the correct Windows capitalization; upstream writes 'windows firewall' in lowercase. The installation and firewall instructions match."
+    },
+    {
+      "fingerprint": "705f80d97a4dbda533fecf140007ca2a5e87bffba8102dea2a2a36b2eb6f7038",
+      "reason": "The service verification step formats the unchanged filename docker-compose.yml as inline code. Upstream leaves the filename bare, so the scanner counts its docker prefix as prose terminology."
+    },
+    {
+      "fingerprint": "82035265ed6b9a9b504694a642fca82ae89619aff24df86eed90550369c514c2",
+      "reason": "The one added pair of Markdown brackets labels a link to Dify's native app API documentation in the integration section."
+    },
+    {
+      "fingerprint": "902b27d37e333b2eff48c9fc3409639e8b74dcda95b38a4f335985c5283913f5",
+      "reason": "The integration section, recommendation, and both FAQs replace the repeated direct OpenAI-compatibility claim with the adapter requirement. Dify documents its own chat and workflow routes, not a drop-in Chat Completions API. Counts reflect the corrected procedure."
+    },
+    {
+      "fingerprint": "69fc9b4c83a4a3009b0c7441065ac85a55ebb67e01fbdb8c0b092416e4bd6c62",
+      "reason": "The added Dify API quickstart is first-party evidence for the distinction between Dify apps' native API and the OpenAI-compatible service that an adapter must expose."
+    },
+    {
+      "fingerprint": "f8472ae1c27f41c2366ca8d46d5f263b960a94b2be2db985cfe278076d299573",
+      "reason": "The Onyx access-control table and FAQ distinguish one self-hosted SSO provider from paid multi-provider SSO and group-level controls. The cloud paragraph distinguishes Google OAuth from OIDC/SAML per the linked pricing page. Group permissions remain explicit even where the RBAC acronym is not repeated."
+    },
+    {
+      "fingerprint": "20f36fc9a2088cc55e34aed90ce28f788fb0d25b55fd5e1e580b3a2cec7c1aad",
+      "reason": "The Chinese homepage keeps its translation-status notice and its link to the English source; the extra bold delimiters belong to that notice."
+    },
+    {
+      "fingerprint": "dc55ef344e5cf95c0fad78911f0d0236d36bf1df03398ad5c41c2407fb29a841",
+      "reason": "The Chinese translation Beta notice directs readers to the official English documentation because translated content may be out of date or incomplete."
+    },
+    {
+      "fingerprint": "4d3286795fe74649ec978352643f42082250143ef857fcc19df1200893796a9b",
+      "reason": "The community-support bullet keeps the upstream Discord and Reddit wording and adds the GitHub Discussions link; the extra bracket pair belongs to that link."
+    },
+    {
+      "fingerprint": "67d88e2dc9a029948e6e67e414e5e9006a074cba462a994b887b0557110a6eec",
+      "reason": "The community-support bullet adds the GitHub Discussions link because the upstream Discord and Reddit links are removed under the site's external-link policy."
+    },
+    {
+      "fingerprint": "e9307bd2d6d3664debb447d1a756e8baa4c015c35fd9aef3c4c21075ea9076c7",
+      "reason": "OpenAI image generation: the two bare Azure AI Foundry URLs become descriptive links to the exact same destinations."
+    },
+    {
+      "fingerprint": "883e29b8740240abe11526f84397505bcfdc911556c70551b4379455db654d5f",
+      "reason": "The Prerequisites heading uses the product name Open WebUI instead of upstream's OpenWebUI. It retains the original openwebui fragment and introduces no additional product reference."
     }
   ]
 }

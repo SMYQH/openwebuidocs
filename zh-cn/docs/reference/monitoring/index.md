@@ -5,11 +5,9 @@ title: "监控"
 
 # 监控 {#monitoring}
 
-<a id="authentication-setup-for-api-key-"></a>
-
 **在用户发现问题之前就先发现问题。**
 
-Open WebUI 提供健康检查和模型接口，便于与你现有的监控系统对接，用于模型连通性检查和端到端响应测试。无论你运行的是单实例还是多节点部署，这些检查都能帮助你确认服务正常、模型可访问，而且推理流程确实在工作。
+Open WebUI 提供健康检查和模型端点，便于接入可用性监控、检查模型连通性并测试端到端响应。无论是单实例还是多节点部署，这些检查都能确认服务是否在线、模型是否可达，以及推理是否正常。
 
 ---
 
@@ -23,9 +21,9 @@ Open WebUI 提供健康检查和模型接口，便于与你现有的监控系统
 
 Open WebUI 可能运行正常，而你的模型提供商却已经离线。监控 `/api/models` 接口就能发现这类情况。
 
-### 端到端信心 {#end-to-end-confidence}
+### 验证端到端响应 {#end-to-end-confidence}
 
-最深度的检查会发送真实提示并验证响应。如果检查通过，就说明整条链路都正常：API、后端、模型提供商以及推理本身。
+深度检查会发送真实提示词并验证响应。检查通过，说明 API、后端、模型提供商和推理组成的整条链路都正常。
 
 ---
 
@@ -40,7 +38,7 @@ Open WebUI 可能运行正常，而你的模型提供商却已经离线。监控
 
 ---
 
-## 第一级：基础健康检查 {#level-1-basic-health-check}
+## 第 1 级：基础健康检查 {#level-1-basic-health-check}
 
 `/health` 接口公开可访问（无需认证），服务运行时返回 `200 OK`。
 
@@ -52,14 +50,14 @@ curl http://your-open-webui-instance:8080/health
 
 ### Uptime Kuma 配置（健康检查） {#uptime-kuma-setup}
 
-1. **Add New Monitor**，类型选择 **HTTP(s)**
-2. **URL:** `http://your-open-webui-instance:8080/health`
-3. **Interval:** `60 seconds`
-4. **Retries:** `3`
+1. 选择 **添加新监控项**，类型选 **HTTP(s)**
+2. **URL：** `http://your-open-webui-instance:8080/health`
+3. **间隔：** `60 seconds`
+4. **重试次数：** `3`
 
 ---
 
-## 第二级：模型连通性检查 {#level-2-model-connectivity-check}
+## 第 2 级：模型连通性检查 {#level-2-model-connectivity-check}
 
 `/api/models` 端点**需要认证**，它能确认 Open WebUI 可以访问你的模型提供商并列出可用模型。
 
@@ -67,6 +65,8 @@ curl http://your-open-webui-instance:8080/health
 curl -H "Authorization: Bearer YOUR_API_KEY" \
   http://your-open-webui-instance:8080/api/models
 ```
+
+<a id="authentication-setup-for-api-key-"></a>
 
 你需要一个 API key。配置说明请参阅 [API 密钥](/features/authentication-access/api-keys)。
 
@@ -76,13 +76,13 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 ### Uptime Kuma 配置（模型连通性） {#uptime-kuma-setup-1}
 
-1. **Monitor Type:** HTTP(s) - JSON Query
-2. **URL:** `http://your-open-webui-instance:8080/api/models`
-3. **Method:** GET
-4. **Header:** `Authorization: Bearer YOUR_API_KEY`
-5. **JSON Query:** `$count(data[*])>0`
-6. **Expected Value:** `true`
-7. **Interval:** `300 seconds` (5 minutes)
+1. **监控类型：** HTTP(s) - JSON Query
+2. **URL：** `http://your-open-webui-instance:8080/api/models`
+3. **请求方法：** GET
+4. **请求头：** `Authorization: Bearer YOUR_API_KEY`
+5. **JSON 查询：** `$count(data[*])>0`
+6. **预期值：** `true`
+7. **间隔：** `300 seconds`（5 分钟）
 
 ### 高级 JSONata 查询 {#advanced-jsonata-queries}
 
@@ -96,7 +96,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 ---
 
-## 第三级：深度健康检查 {#level-3-deep-health-check}
+## 第 3 级：深度健康检查 {#level-3-deep-health-check}
 
 发送一条真实的聊天补全请求，以端到端验证整条推理链路。
 
@@ -111,10 +111,10 @@ curl -X POST http://your-open-webui-instance:8080/api/chat/completions \
   }'
 ```
 
-成功响应会返回 `200 OK`，并带有包含 “HEALTHY” 的聊天补全结果。这样可以捕捉模型加载失败、后端处理错误以及第一级和第二级检查无法发现的提供商问题。
+成功响应会返回 `200 OK`，并带有包含 “HEALTHY” 的聊天补全结果。这样可以发现模型加载失败、后端处理错误，以及第 1 级和第 2 级检查无法发现的提供商问题。
 
 :::info
-在 Uptime Kuma 中配置第三级检查，需要一个带 POST 请求体、认证头和 JSON 查询的 HTTP(s) 监控项来验证响应。有关 POST 监控配置，请参阅 [Uptime Kuma 文档](https://github.com/louislam/uptime-kuma)。
+在 Uptime Kuma 中配置第 3 级检查，需要用带有 POST 请求体、认证头和 JSON 查询的 HTTP(s) 监控项来验证响应。有关 POST 监控配置，请参阅 [Uptime Kuma 文档](https://github.com/louislam/uptime-kuma)。
 :::
 
 ---

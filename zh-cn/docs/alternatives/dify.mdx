@@ -9,7 +9,7 @@ keywords: ["Open WebUI vs Dify", "Dify alternative", "AI workflow builder", "AI 
 import Head from '@docusaurus/Head';
 
 <Head>
-<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Dify 和 Open WebUI 如何对比？", "acceptedAnswer": {"@type": "Answer", "text": "Dify 采用可视化、工作流优先的方法来构建 AI 应用。Open WebUI 更多倾向于对话和日常 AI 使用。它们从不同的角度处理 AI，许多团队可能两者都会使用。"}}, {"@type": "Question", "name": "我可以将 Dify 与 Open WebUI 一起使用吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。Dify 公开与 OpenAI 兼容的 API。将 Open WebUI 连接到 Dify 的 API，以在 Open WebUI 内使用您的 Dify 工作流作为模型。"}}]})}</script>
+<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Dify 和 Open WebUI 有什么区别？", "acceptedAnswer": {"@type": "Answer", "text": "Dify 以可视化工作流为核心，适合构建 AI 应用。Open WebUI 更侧重对话和日常使用。两者侧重点不同，团队可以搭配使用。"}}, {"@type": "Question", "name": "可以同时使用 Dify 和 Open WebUI 吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以，但不能将 Dify 原生应用 API 直接添加为 OpenAI 连接。需要先用适配器将 Dify 应用封装为 OpenAI 兼容服务。"}}]})}</script>
 </Head>
 
 
@@ -17,16 +17,16 @@ import Head from '@docusaurus/Head';
 
 *最后更新：2026 年 8 月*
 
-[Dify](https://dify.ai/) 由 LangGenius 提供，采用了根本不同的 AI 工具方法。虽然本页面上的大多数工具侧重于对话，但 Dify 专注于 *构建*：可视化工作流设计、代理协调、提示工程和部署 AI 动力应用。如果您认为 AI 是构建事物的平台而不仅仅是聊天，Dify 值得认真考虑。
+[Dify](https://dify.ai/) 由 LangGenius 开发，采用了不同的思路。这里介绍的许多工具侧重对话，Dify 则专注于*构建*：设计可视化工作流、编排智能体、调试提示词，以及部署由 AI 驱动的应用。如果你想用 AI 构建产品、自动化流程和面向用户的功能，Dify 值得考虑。
 
-[GitHub](https://github.com/langgenius/dify) · [源可用（修改 Apache 2.0）](https://github.com/langgenius/dify/blob/main/LICENSE)
+[GitHub](https://github.com/langgenius/dify) · [源代码可用（修改版 Apache 2.0 许可证）](https://github.com/langgenius/dify/blob/main/LICENSE)
 
 ---
 
 ## Dify 擅长的领域 {#what-dify-does-well}
 
 - **可视化工作流构建器**，具有拖放界面，用于设计复杂的 AI 管道和逻辑
-- **代理框架**，用于构建能够推理、使用工具和采取行动的自主代理
+- **智能体框架**，用于构建能够推理、使用工具和采取行动的自主智能体
 - **提示工程 IDE**，用于在专用环境中制作、版本控制、测试和比较提示
 - **工作流市场**，用于共享和导入社区构建的工作流和模板
 - **模型路由**，具有跨多个提供商的智能路由，用于成本和功能优化
@@ -63,30 +63,30 @@ import Head from '@docusaurus/Head';
 | **代理功能** | 具有绑定工具和知识的模型代理 | 具有推理和工具使用的代理框架 |
 | **多供应商** | 任何与 OpenAI 兼容的 API + Ollama | 具有模型路由的多提供商 |
 | **可观测性** | OpenTelemetry、分析仪表板 | 内置监控、日志记录和成本跟踪 |
-| **许可证** | Open WebUI 许可证 | 源可用（修改 Apache 2.0，有商业限制） |
+| **许可证** | Open WebUI 许可证 | 源代码可用（修改版 Apache 2.0 许可证，有商业限制） |
 
 ---
 
-## 何时使用每一个 {#when-to-use-each}
+## 如何选择 {#when-to-use-each}
 
-**选择 Dify** 如果您想使用可视化工作流构建 AI 动力应用。拖放构建器、提示 IDE 和代理框架是为开发人员和产品团队设计的，他们正在创建 AI 功能，而不是仅仅聊天。
+**选择 Dify**：如果你想用可视化工作流构建由 AI 驱动的应用。拖放构建器、提示词 IDE 和智能体框架适合开发人员和产品团队构建 AI 功能。
 
-**选择 Open WebUI** 如果您的团队需要日常 AI 工作区用于聊天、知识管理和协作。Open WebUI 专注于使用 AI 而不是构建 AI 应用。
+**选择 Open WebUI**：如果你的团队需要一个日常聊天、管理知识和协作的 AI 工作区。Open WebUI 侧重使用 AI，而不是构建 AI 应用。
 
-**两者都使用**。Dify 公开与 OpenAI 兼容的 API。将 Open WebUI 连接到 Dify 的 API，您的 Dify 工作流将作为 Open WebUI 中的模型出现。在 Dify 中构建，在 Open WebUI 中使用。
+**搭配使用**。通过适配器将 Dify 的应用 API 封装为 OpenAI 兼容服务，就能在 Dify 中构建工作流，并在 Open WebUI 中以模型的形式使用。
 
 ---
 
-## 将它们一起使用 {#use-them-together}
+## 搭配使用 {#use-them-together}
 
-Dify 为您构建的任何工作流或应用公开与 OpenAI 兼容的 API。您可以将 Open WebUI 连接到 Dify 的 API 端点，以在 Open WebUI 内使用您构建的 Dify AI 应用作为模型，将 Dify 的工作流协调与 Open WebUI 的聊天界面、知识管理和团队功能相结合。
+Dify 发布的应用有自己的[应用 API](https://docs.dify.ai/en/api-reference/guides/get-started)，请求和响应格式不同于 OpenAI。Open WebUI 不能直接将它作为 OpenAI 连接使用。通过兼容适配器，可以将 Dify 的工作流编排与 Open WebUI 的聊天、知识管理和团队功能结合起来。
 
 **如何连接：**
 
-1. 在 Dify 中，发布您的应用并复制 API 端点和密钥
-2. 在 Open WebUI 中，转到 **Settings → Connections**（管理员区域）
-3. 使用 Dify 的 API URL 和密钥添加新的与 OpenAI 兼容的连接
-4. 您的 Dify 应用将作为模型出现在 Open WebUI 中
+1. 在 Dify 中发布应用，获取应用的 API 端点和密钥。
+2. 配置适配器。让它接收 OpenAI Chat Completions 请求，并按 Dify 应用所需的格式转发请求和转换响应。
+3. 在 Open WebUI 管理员区域的**设置 → 连接**中添加 OpenAI 兼容连接，填写适配器的 URL 和连接凭据。
+4. 选择适配器为该应用提供的模型。如果适配器不返回模型列表，请在连接中手动填写模型 ID。
 
 ---
 
@@ -100,14 +100,14 @@ Dify 为您构建的任何工作流或应用公开与 OpenAI 兼容的 API。您
 
 ## 常见问题 {#frequently-asked-questions}
 
-**Dify 和 Open WebUI 如何对比？**
-Dify 采用可视化、工作流优先的方法来构建 AI 应用。Open WebUI 更多倾向于对话和日常 AI 使用。它们从不同的角度处理 AI，许多团队可能两者都会使用。
+**Dify 和 Open WebUI 有什么区别？**
+Dify 以可视化工作流为核心，适合构建 AI 应用。Open WebUI 更侧重对话和日常使用。两者侧重点不同，团队可以搭配使用。
 
-**我可以将 Dify 与 Open WebUI 一起使用吗？**
-可以。Dify 公开与 OpenAI 兼容的 API。将 Open WebUI 连接到 Dify 的 API，以在 Open WebUI 内使用您的 Dify 工作流作为模型。
+**可以同时使用 Dify 和 Open WebUI 吗？**
+可以，但不能将 Dify 原生应用 API 直接添加为 OpenAI 连接。需要先用适配器将 Dify 应用封装为 OpenAI 兼容服务。
 
 **Dify 免费吗？**
-社区版可免费自托管。Dify 在修改的 Apache 2.0 许可证下源可用。
+社区版可免费自托管。Dify 以修改版 Apache 2.0 许可证提供源代码。
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-title: "Updating"
+title: "更新"
 ---
 
 import Tabs from '@theme/Tabs';
@@ -8,11 +8,11 @@ import TabItem from '@theme/TabItem';
 
 # 更新 Open Terminal {#updating-open-terminal}
 
-Open Terminal 是独立于 Open WebUI 的另一个程序，因此更新 Open WebUI 并不会更新它。如果这些页面中描述的某个功能缺失，或者某个预览效果不如预期，通常原因是一个已经很久没有动过的终端服务器。
+Open Terminal 是独立于 Open WebUI 的程序，不会随 Open WebUI 一起更新。如果文档介绍的功能不可用，或某项预览的效果不如预期，通常是终端服务器版本太旧。
 
 ## 查看你正在运行的版本 {#check-which-version-you-are-running}
 
-在浏览器中打开 `http://localhost:8000/docs`，使用你给 Open WebUI 配置的那个地址。版本号位于页面顶部 **Open Terminal** 标题旁边。
+在浏览器中打开 `http://localhost:8000/docs`，将示例中的服务器地址换成你在 Open WebUI 中配置的终端地址。版本号显示在页面顶部的 **Open Terminal** 标题旁。
 
 如果你更想用 shell 来查看：
 
@@ -20,7 +20,7 @@ Open Terminal 是独立于 Open WebUI 的另一个程序，因此更新 Open Web
 curl -s http://localhost:8000/openapi.json | python -c "import json,sys; print(json.load(sys.stdin)['info']['version'])"
 ```
 
-把它与[最新发布版本](https://github.com/open-webui/open-terminal/releases)做对比。这两个请求都不需要你的 API key。
+将版本号与[最新发布版本](https://github.com/open-webui/open-terminal/releases)对照。以上两种查询都不需要 API 密钥。
 
 ---
 
@@ -59,7 +59,7 @@ docker run -d \
 在使用较小的镜像吗？请拉取你实际运行的标签，例如 `ghcr.io/open-webui/open-terminal:slim`，并在 `docker run` 那一行写上同一个标签。
 
   </TabItem>
-  <TabItem value="bare-metal" label="Bare Metal">
+  <TabItem value="bare-metal" label="裸机">
 
 **通过 pip 安装：**
 
@@ -93,7 +93,7 @@ docker compose pull open-terminal
 docker compose up -d open-terminal
 ```
 
-第一条命令拉取新镜像，第二条命令用它重建容器。你的 Compose 文件里已经带有卷和 API key，无需重新输入。
+第一条命令拉取新镜像，第二条命令使用它重新创建容器。Compose 文件已经保存了卷和 API 密钥的配置，无需重新输入。
 
 两条命令中都不写服务名，即可更新该文件中的全部内容，包括 Open WebUI。
 
@@ -104,7 +104,7 @@ docker compose up -d open-terminal
 
 ## 确认是否成功 {#confirm-it-worked}
 
-重新加载 `http://localhost:8000/docs` 并再次查看版本号。只要地址和 API key 没有变化，Open WebUI 里就不需要做任何改动。
+重新加载 `http://localhost:8000/docs` 并再次查看版本号。只要地址和 API 密钥不变，就无需修改 Open WebUI 中的配置。
 
 ---
 

@@ -36,7 +36,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 | 🔀 **多模型聊天** | 并排运行两个模型并比较它们的响应 |
 | 📎 **文件与图像上传** | 附加文档、图像和代码供 AI 分析 |
 | 🔍 **网页搜索** | AI 实时搜索网页并引用信息来源 |
-| 🐍 **代码执行** | 直接在浏览器中运行 Python，或通过 [终端](/features/open-terminal) 运行 |
+| 🐍 **代码执行** | 直接在浏览器中运行 Python，或通过 [Open Terminal](/features/open-terminal) 运行 |
 | 📝 **消息队列** | 在 AI 回复时继续输入——消息将自动排队发送 |
 | 🧠 **记忆** | AI 能够跨对话记住关于你的事实 |
 | 🗂️ **文件夹、标签、固定** | 按照你的工作方式组织对话 |
@@ -62,11 +62,12 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 | 🔍 **混合搜索** | BM25 + 带有交叉编码器重排的向量搜索 |
 | 📑 **8 种提取引擎** | Tika、Docling、Azure、Mistral OCR、Datalab Marker、MinerU、PaddleOCR 以及自定义加载器 |
 | 🤖 **智能体检索** | 模型自主搜索并阅读你的文档 |
-| 📄 **完整上下文模式** | 注入完整文档——无需切块，无需猜测 |
-| 🗂️ **带预览的文件浏览器** | 浏览知识库中的文件和文件夹，并[就地预览](/features/workspace/knowledge#browsing-and-previewing-files) |
-| 🔄 **知识库同步** | 通过 [oikb](/ecosystem/knowledge-base-sync) 让 KB 与文件夹、Git 仓库、Wiki 或存储桶保持同步 |
+| 📄 **始终使用全文** | 注入完整文档，无需切块或猜测 |
+| 🗂️ **[带预览的文件浏览器](/features/workspace/knowledge#browsing-and-previewing-files)** | 浏览知识库中的文件和文件夹，并直接预览 |
 
-[**了解知识库 →**](/features/workspace/knowledge) · [**知识库同步 →**](/ecosystem/knowledge-base-sync)
+[**了解知识库 →**](/features/workspace/knowledge)
+
+也可以通过 [oikb](/ecosystem/knowledge-base-sync) 让知识库与文件夹、Git 仓库、Wiki 或存储桶保持同步。
 
 ---
 
@@ -128,7 +129,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 
 ---
 
-## ⚡ 终端 {#open-terminal}
+## ⚡ Open Terminal {#open-terminal}
 
 <Banner slug="terminal" alt="Open Terminal" />
 **为你的 AI 提供一台真正的计算机去工作。**
@@ -142,7 +143,7 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 | 🌐 **网站预览** | 在 Open WebUI 中实时预览 Web 项目 |
 | 🔒 **可选的隔离机制** | Docker 容器或裸机 |
 
-[**了解终端 →**](/features/open-terminal)
+[**了解 Open Terminal →**](/features/open-terminal)
 
 
 ---
@@ -150,13 +151,13 @@ Open WebUI 旨在取代团队日常繁杂的各种 AI 工具——用来写作�
 ## 🔌 扩展能力 {#extensibility}
 
 <Banner slug="extensibility" alt="扩展能力" />
-**通过 Python 工具、管道、MCP 或 OpenAPI 服务器添加任何功能。**
+**通过 Python 工具、MCP 或 OpenAPI 服务器添加功能。**
 
-Open WebUI 是一个平台，而不是一个封闭的产品。编写可以在聊天中运行的 Python 工具。通过 OpenAPI 或 MCP 连接外部服务。构建可以过滤、转换或路由每条消息的 Pipeline。一键导入社区构建的扩展程序。
+Open WebUI 是一个平台，而不是封闭的产品。你可以编写在聊天中运行的 Python 工具，通过 OpenAPI 或 MCP 连接外部服务，构建用于筛选、转换或路由每条消息的函数，或一键导入社区贡献的扩展。
 
 | | |
 | :--- | :--- |
-| 🐍 **工具与函数** | 在聊天中运行的 Python 脚本——包含内置代码编辑器，并为大量工具提供[版本历史](/features/extensibility/plugin/tools#version-history)和[工具搜索](/features/extensibility/plugin/tools#tool-search) |
+| 🐍 **工具与函数** | 在聊天中运行的 Python 脚本，支持内置代码编辑器和[版本历史](/features/extensibility/plugin/tools#version-history)；工具较多时可使用[工具搜索](/features/extensibility/plugin/tools#tool-search) |
 | 🔗 **MCP 支持** | 原生支持模型上下文协议 (Model Context Protocol) 服务器的流式 HTTP |
 | 🌐 **OpenAPI 服务器** | 自动发现并接入任何兼容 OpenAPI 端点的工具 |
 | 📝 **技能** | Markdown 指令集，教导模型如何处理特定任务，并支持配套文件和版本历史 |
@@ -204,7 +205,7 @@ Open WebUI 从第一天起就支持多用户。定义角色、创建用户组、
 
 ## 🏗️ 随处部署 {#deploy-anywhere}
 
-**Docker、Kubernetes、pip、裸机——支持横向扩展与生产级可观测性。**
+**无状态架构支持横向扩展，可部署在 Docker、Kubernetes 或裸机，也可使用 pip 安装。** 数据保存在共享数据库和存储中，由 Redis 协调各个实例。负载增长时，可在负载均衡器后增加应用副本。
 
 | | |
 | :--- | :--- |

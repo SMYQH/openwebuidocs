@@ -3,11 +3,11 @@
 - 一个正在运行的 Kubernetes 集群 (v1.24+)
 - 已安装 [Helm](https://helm.sh/docs/intro/install/) v3
 - 已配置 `kubectl` 以访问你的集群
-- [Open WebUI 企业版许可证](/enterprise)（生产环境使用必须）
+- [Open WebUI 企业版许可证](/enterprise)（生产环境必需）
 
 ## 使用 Helm 部署 {#deploy-with-helm}
 
-Open WebUI Helm chart 包含 Terminals 作为可选子 chart。在你的 values 文件中添加 `terminals` 部分：
+Open WebUI 的 Helm chart 将 Terminals 作为可选子 chart 提供。在 values 文件中添加 `terminals` 部分：
 
 ```yaml
 # values.yaml
@@ -75,7 +75,7 @@ kubectl get crd terminals.openwebui.com
 
 当用户激活终端时，编排器会创建一个 `Terminal` CR。Operator 会配置一个带有 Service、Secret 和可选 PVC 的 Pod。一旦 Pod 通过就绪检查，编排器就会将流量代理到它。
 
-当终端空闲时间超过 `idleTimeoutMinutes` 时，Operator 会删除 Pod，但保留 PVC 和 Secret。在下一次请求时，将创建一个连接了相同 PVC 的新 Pod，因此在空闲周期内**用户数据能够持久化**。
+当终端空闲时间超过 `idleTimeoutMinutes` 时，Operator 会删除 Pod，但保留 PVC 和 Secret。收到下一次请求时，它会创建新 Pod 并重新挂载同一个 PVC，因此**终端空闲后重建 Pod 不会丢失用户数据**。
 
 ```bash
 # List all terminals
@@ -163,9 +163,9 @@ kubectl logs -n open-webui deployment/<release>-terminals-orchestrator --tail=50
 
 | 资源 | 动作 (Verbs) |
 | :--- | :--- |
-| `terminals.openwebui.com` | get, list, watch, create, update, patch, delete |
-| `pods`, `services`, `persistentvolumeclaims`, `secrets` | get, list, watch, create, update, patch, delete |
-| `events` | create |
-| `configmaps`, `leases` | get, list, watch, create, update, patch |
+| `terminals.openwebui.com` | `get`、`list`、`watch`、`create`、`update`、`patch`、`delete` |
+| `pods`, `services`, `persistentvolumeclaims`, `secrets` | `get`、`list`、`watch`、`create`、`update`、`patch`、`delete` |
+| `events` | `create` |
+| `configmaps`, `leases` | `get`、`list`、`watch`、`create`、`update`、`patch` |
 
 </details>

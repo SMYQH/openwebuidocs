@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: "Artifacts"
+title: "交互式产物（Artifacts）"
 ---
 
 ## 什么是 Artifacts？如何在 Open WebUI 中使用它们？ {#what-are-artifacts-and-how-do-i-use-them-in-open-webui}
@@ -36,7 +36,7 @@ Open WebUI 中的 Artifacts 是一项受 Claude.AI Artifacts 启发的创新功�
 
 Artifact 预览渲染在经过沙箱限制的 `srcdoc` iframe 中。若想更严格地控制这段生成的 HTML 能做什么（对外网络请求、脚本、样式），可以通过 [`IFRAME_CSP`](/reference/env-configuration#iframe_csp) 环境变量为预览注入一条专门的内容安全策略，它与主应用使用的 `CONTENT_SECURITY_POLICY` 相互独立。
 
-该变量默认为空（iframe 的 `sandbox` 已经提供了基础隔离），并且作用于界面中**每一个** `srcdoc` iframe：Artifacts、代码 / HTML 预览、文件预览以及引用弹窗。设置之后，Open WebUI 会在 iframe 文档前插入 `<meta http-equiv="Content-Security-Policy">` 标签；按照 CSP 规范，第一条策略生效，因此它会覆盖生成的 HTML 中已经声明的任何 CSP。一个合理的起点是：
+该变量默认为空（iframe 的 `sandbox` 已提供基础隔离），并且作用于界面中**每一个** `srcdoc` iframe：Artifacts、代码 / HTML 预览、文件预览以及引用弹窗。设置后，Open WebUI 会在 iframe 文档开头插入 `<meta http-equiv="Content-Security-Policy">` 标签。按照 CSP 规范，此策略与生成的 HTML 中其他生效的 CSP 一并执行；其他策略不能放宽此策略的限制。可以从以下配置开始：
 
 ```bash
 IFRAME_CSP=default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'none'
@@ -107,7 +107,7 @@ Open WebUI 中的 Artifacts 让不同团队和个人能够快速高效地创建�
 2. **单页 Web 应用**
 
 - 组件：HTML、CSS、JavaScript
-- 优势：可直接在 Open WebUI 中开发单页 Web 应用，并通过定向更新或整体重写不断迭代内容
+- 优势：可直接在 Open WebUI 中开发单页 Web 应用，并通过定向更新和整体重写不断迭代内容
 
 示例项目：设计一个基于 HTML 和 CSS 的待办事项应用，并用 JavaScript 增加交互功能。随后通过定向更新和整体重写，持续改进布局与 UI/UX。
 
@@ -130,7 +130,7 @@ Open WebUI 中的 Artifacts 让不同团队和个人能够快速高效地创建�
 - 组件：HTML、CSS、JavaScript
 - 优势：可创建带滚动效果、动画及其他交互元素的互动故事。Open WebUI 的 Artifacts 支持你持续优化故事内容，并测试不同版本
 
-示例项目：制作一个讲述公司发展历史的交互式故事，使用滚动效果和动画增强阅读体验，并通过定向更新优化叙事内容，再利用版本选择器测试不同故事版本。
+示例项目：制作一个讲述公司发展历史的交互式故事，使用滚动效果和动画吸引读者。通过定向更新优化叙事，再用 Open WebUI 的版本选择器测试不同版本。
 
 ## 故障排查 {#troubleshooting}
 

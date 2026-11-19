@@ -17,7 +17,7 @@ Open WebUI 自带一组针对高频操作的键盘快捷键，其中大多数都
 
 要停用单个快捷键，只需取消它的绑定，其按键组合随后就会像普通按键一样传到浏览器。这通常是解决 **Regenerate Response** 与浏览器刷新快捷键冲突的办法——它默认就绑定在浏览器用于刷新页面的按键上。
 
-这不会把你锁在门外：快捷键禁用期间 **Settings > Keyboard** 标签页依然可用，你随时可以重新绑定或重新开启它们。聊天输入框的触发符（`/`、`@`、`#`）、用于接受自动补全建议的 `Tab`，以及用于停止回复或关闭对话框的 `Esc` 都不受影响，因为它们并不是全局快捷键。
+禁用快捷键后，**Settings > Keyboard** 标签页依然可用。你可以随时修改绑定或重新开启快捷键。聊天输入框的触发符（`/`、`@`、`#`）、用于接受自动补全建议的 `Tab`，以及用于停止回复或关闭对话框的 `Esc` 都不受影响，因为它们不是全局快捷键。
 
 下文的 `Cmd` 在 Windows 和 Linux 上表示 `Ctrl` 键。在 macOS 上它专指 `Command` 键：`Ctrl` 在那里被当作独立的修饰键，不能代替 `Cmd`，因此在 Mac 上 `Ctrl+K` 不会打开搜索，只有 `Cmd+K` 才可以。
 
@@ -49,7 +49,7 @@ Open WebUI 自带一组针对高频操作的键盘快捷键，其中大多数都
 | 复制最后一个代码块 | `Cmd+Shift+;` |
 | 复制最后一条回复 | `Cmd+Shift+C` |
 
-**Generate Message Pair** 会把聊天输入框中的文字作为你的消息发出，并为每个选中的模型生成一条占位回复，你随后可以手动编辑这些回复。
+**Generate Message Pair** 会将输入框中的文字添加为你的消息，并为每个选中的模型添加一条可手动编辑的占位回复。
 
 **Clear Input Selections** 会重置聊天输入框中的各项选择：移除模型覆盖、取消选中工具与筛选器，并关闭 Web 搜索、图像生成和代码解释器。它只在聊天输入框获得焦点时触发。
 
@@ -57,7 +57,7 @@ Open WebUI 自带一组针对高频操作的键盘快捷键，其中大多数都
 
 ### 标签页快捷键 {#tab-shortcuts}
 
-这些位于 **Settings > Keyboard** 的 **Tabs** 之下，在[工作区标签页](/features/chat-conversations/chat-features/#tabs-side-panel)中生效。如上所述，`Cmd` 在非 Mac 上表示 `Ctrl`，但 **New Terminal** 在所有系统上都使用 `Ctrl`。当对应标签页不可用时，快捷键不会有任何作用，例如在没有选中支持终端的终端时，那些终端相关的快捷键就无效。
+这些快捷键位于 **Settings > Keyboard** 的 **Tabs** 下，在[工作区标签页](/features/chat-conversations/chat-features/#tabs-side-panel)中生效。如上所述，`Cmd` 在非 Mac 设备上表示 `Ctrl`，但 **New Terminal** 在所有系统上都使用 `Ctrl`。对应的标签页不可用时，快捷键不会生效。例如，未选中支持相关操作的终端时，终端快捷键不会生效。
 
 | 操作 | 默认按键 |
 |---|---|
@@ -94,7 +94,7 @@ Open WebUI 自带一组针对高频操作的键盘快捷键，其中大多数都
 
 **Allow Tool Call** 与 **Deny Tool Call** 作用于正在等待批准的回复，这只会在启用 [Tool Permissions](/features/extensibility/plugin/tools#tool-approval) 且聊天设置为"先询问"时发生。它们作用于最近一个仍在等待的调用，因此有多个待处理项时，你会一次按键处理一个。在其他任何时刻它们都不起作用，按键会直接传递出去。
 
-其中三个默认是**未绑定**的，在你在 **Settings > Keyboard** 中为它们指定按键之前不会有任何作用。**Navigate to Previous Chat** 与 **Navigate to Next Chat** 会按顺序在侧边栏的聊天列表中移动，跳到当前聊天上方或下方的那个；若当前聊天不在列表中，则从列表顶部开始。**Toggle Controls** 在小屏幕上打开或关闭[标签页面板](/features/chat-conversations/chat-features/#tabs-side-panel)。它们保持未绑定，是为了避免初次启用时与已有绑定冲突；请自行挑选合适的按键。
+三个可配置快捷键默认**未绑定**，在 **Settings > Keyboard** 中为它们指定按键后才会生效。**Navigate to Previous Chat** 与 **Navigate to Next Chat** 按侧边栏的列表顺序切换到当前聊天的上一项或下一项。当前聊天不在列表中时，则从列表顶部开始。**Toggle Controls** 在小屏幕上打开或关闭[标签页面板](/features/chat-conversations/chat-features/#tabs-side-panel)。它们没有预设按键，以免与现有绑定冲突，你可自行选择合适的按键。
 
 **Delete Chat** 受[聊天删除权限](/features/authentication-access/rbac/permissions#3-chat-permissions)约束。如果管理员收走了该权限，该快捷键不会出现在 **Settings > Keyboard** 中，也不会起作用，这与侧边栏和菜单中隐藏删除操作的做法保持一致。**New Temporary Chat** 同样在缺少 **Allow Temporary Chat** 权限时不会列出。管理员始终不受限制。
 

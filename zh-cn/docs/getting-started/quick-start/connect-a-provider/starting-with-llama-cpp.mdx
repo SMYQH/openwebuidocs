@@ -78,8 +78,8 @@ DeepSeek-R1-GGUF/
 🛠️ 可根据你的机器调整参数：
 
 - --model：`.gguf` 模型文件路径
-- --port：`10000`（或任意其他可用端口）
-- --ctx-size：上下文长度（若内存允许可调大）
+- --port：10000（或任意其他可用端口）
+- --ctx-size：上下文的 token 数上限（内存允许时可调大）
 - --n-gpu-layers：卸载到 GPU 的层数，用于提升性能
 
 服务启动后，会在以下地址暴露一个本地**兼容 OpenAI 的 API**（聊天补全）：
@@ -105,7 +105,7 @@ http://127.0.0.1:10000
    - **URL**：`http://127.0.0.1:10000/v1`
      （如果 WebUI 运行在 Docker 中，请使用 `http://host.docker.internal:10000/v1`。**注意末尾一定要有 `/v1`！**）
    - **Auth**：无需密钥的服务器选 **None**。选择 **Bearer** 且密钥留空时，Open WebUI 会发送一个空的 bearer token，而一些服务器会拒绝这种请求
-   - **Provider**：展开 **Advanced**，从 **Provider** 下拉中选择 `llama.cpp`。这会解锁模型选择器中的“已加载”指示符和管理员的 **Eject** 按钮，以及[在 Open WebUI 中管理本地模型](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#managing-local-models-from-open-webui)中描述的管理员模型管理面板。详见下方[卸载已加载的模型](#unloading-loaded-models)。如果不需要这些功能，请保持为 `Default`。
+   - **Provider**：展开 **Advanced**，从 **Provider** 下拉列表中选择 `llama.cpp`。这样就能在模型选择器中看到加载状态指示，管理员也能使用 **Eject** 按钮及[在 Open WebUI 中管理本地模型](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#managing-local-models-from-open-webui)中介绍的管理面板。详见下方[卸载已加载的模型](#unloading-loaded-models)。如果不需要这些功能，请保留 `Default`。
 
 💡 保存后，Open WebUI 就会开始把你的本地 Llama.cpp 服务器作为后端使用！
 
@@ -130,7 +130,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 
 当模型被你的 `llama-server` 实例加载到内存后，Open WebUI 会在模型选择器中为其加上一个绿色的 "Loaded" 指示符。管理员还会在该行看到一个 **Eject** 按钮——它会在不重启服务器的前提下卸载模型，方法是调用 `POST /api/models/unload`，进而访问 llama.cpp 在该 OpenAI 兼容连接根 URL 上的 `POST /models/unload` 端点。
 
-要使上述功能正常工作，**Settings → Connections → OpenAI**（管理员区域）中对应的连接必须把 **Provider** 设为 `llama.cpp`（Open WebUI 用这个提示来选取正确的卸载机制）。仍保留默认 OpenAI 兼容 provider 类型的连接，在管理员尝试卸载模型时会返回错误。
+要使上述功能正常工作，**Settings → Connections → OpenAI**（管理员区域）中对应的连接必须把 **Provider** 设为 `llama.cpp`（Open WebUI 用这个提示来选取正确的卸载机制）。如果连接仍保留默认的 OpenAI 兼容提供商类型，管理员尝试卸载模型时会返回错误。
 
 同一个 **Provider** 设置还会在 **Settings > Models > ⋯ > Manage**（管理员区域）下为管理员提供一个管理面板，其中列出了服务器上的模型，并可以下载、加载、卸载和删除它们。参见[在 Open WebUI 中管理本地模型](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#managing-local-models-from-open-webui)。
 
@@ -144,12 +144,12 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 
 ---
 
-## 现在可以开始了！ {#youre-ready-to-go}
+## 现在可以开始了！{#youre-ready-to-go}
 
 完成配置后，Open WebUI 能让你轻松：
 
 - 管理并切换由 Llama.cpp 提供的本地模型
-- 使用兼容 OpenAI 的 API，且无需 API key
+- 无需密钥即可使用兼容 OpenAI 的 API
 - 直接在自己的机器上试验像 DeepSeek-R1 这样的大模型
 
 ---

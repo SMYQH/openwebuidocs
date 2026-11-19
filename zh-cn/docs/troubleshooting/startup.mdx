@@ -17,11 +17,11 @@ Open WebUI 完全无法启动？从这里开始。关于 Alembic 迁移的问题
 WARNING: CORS_ALLOW_ORIGIN IS SET TO '*' - NOT RECOMMENDED FOR PRODUCTION DEPLOYMENTS.
 ```
 
-没有 `Started server process`、没有 ASCII 横幅、没有错误。它会**无限期**卡住（一小时后仍然没有响应），即使在**全新的空数据卷**上也会重现。`OFFLINE_MODE` / `HF_HUB_OFFLINE` 没有区别。使用 `Ctrl+C` 停止会留下仍在运行的容器，必须使用 `docker kill` 才能终止。
+没有 `Started server process`、没有 ASCII 横幅，也没有错误。容器会**无限期**卡住（一小时后仍没有响应），即使使用**全新的空数据卷**也会重现。`OFFLINE_MODE` / `HF_HUB_OFFLINE` 都不能缓解此问题。按 `Ctrl+C` 后容器仍在运行，必须用 `docker kill` 终止。
 
 ### 原因 {#cause}
 
-在此窗口中没有运行 Open WebUI 自身的任何逻辑，迁移已经完成，也没有发生数据库查询或网络调用。这完全是 Python `import` 应用及其原生依赖项（`pycrdt`、嵌入/向量库、`pydub` 等）的过程。
+此时迁移已完成，Open WebUI 自身的逻辑还未执行，也尚未发起数据库查询或网络请求。Python 正通过 `import` 加载应用及其原生依赖（`pycrdt`、嵌入或向量库、`pydub` 等）。
 
 通常的触发原因是**架构不匹配**：主机全局设置了 `DOCKER_DEFAULT_PLATFORM=linux/amd64`，导致 Docker 拉取 **x86_64 镜像并在 ARM 主机上通过 Rosetta 仿真运行**。原生扩展在仿真环境下导入时卡住。
 
@@ -89,9 +89,9 @@ SentenceTransformer model name, or configure an external RAG_EMBEDDING_ENGINE
 
 选择一种方案：
 
-- **先缓存。** 在不设置 `OFFLINE_MODE` / `HF_HUB_OFFLINE` 的情况下启动一次，让嵌入模型下载并缓存，然后在后续运行中重新启用离线模式。
+- **先缓存。** **不启用** `OFFLINE_MODE` / `HF_HUB_OFFLINE`，启动一次以下载和缓存嵌入模型。之后再启用离线模式。
 - **使用外部嵌入器**，这样无需下载：将 [`RAG_EMBEDDING_ENGINE`](/reference/env-configuration#rag_embedding_engine) 设置为 `ollama`（配合已拉取的 [`RAG_EMBEDDING_MODEL`](/reference/env-configuration#rag_embedding_model)）、`openai` 或 `azure_openai`。
-- **预烘焙或挂载模型缓存**到镜像/卷中，用于离线部署。
+- 对于与外网隔离的部署，**将模型缓存预先打包到镜像中，或通过卷挂载**。
 
 有关完整的离线设置，请参阅[离线模式指南](/tutorials/maintenance/offline-mode)。
 

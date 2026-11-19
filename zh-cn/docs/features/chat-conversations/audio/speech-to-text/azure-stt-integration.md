@@ -5,7 +5,7 @@ title: "Azure AI Speech 语音转文本"
 
 # 使用 Azure AI Speech 实现语音转文本 {#using-azure-ai-speech-for-speech-to-text}
 
-本指南介绍如何在 Open WebUI 中使用 Azure AI Speech 进行语音转文本。Open WebUI 会将每段录音发送到 Azure 的[快速转录 API](https://learn.microsoft.com/azure/ai-services/speech-service/fast-transcription-create)，该 API 在单次请求中返回文本。
+本指南介绍如何在 Open WebUI 中使用 Azure AI Speech 进行语音转文本。Open WebUI 会将每段录音发送到 Azure 的[快速转录 API](https://learn.microsoft.com/azure/ai-services/speech-service/fast-transcription-create)，并在同一次请求中收到文本。
 
 :::tip 想配置 TTS？
 请查看配套指南：[使用 Azure AI Speech 实现文本转语音](/features/chat-conversations/audio/text-to-speech/azure-tts-integration)
@@ -13,12 +13,12 @@ title: "Azure AI Speech 语音转文本"
 
 ## 前置要求 {#requirements}
 
-- 一个 Azure Speech 资源（Microsoft文档中也称其为 Speech 的 Foundry 资源），且所在区域需提供**快速转录**功能。并非所有区域都支持：请查看Microsoft [Speech 服务区域表](https://learn.microsoft.com/azure/ai-services/speech-service/regions?tabs=stt)中的 **Fast transcription** 列。
+- 一个 Azure Speech 资源（Microsoft 文档中也称其为 Speech 的 Foundry 资源），且所在区域需提供**快速转录**功能。并非所有区域都支持：请查看 Microsoft [Speech 服务区域表](https://learn.microsoft.com/azure/ai-services/speech-service/regions?tabs=stt)中的 **Fast transcription** 列。
 - 该资源的密钥，可在 Azure 门户的 **Resource Management** > **Keys and Endpoint** 中获取。两个密钥任选其一均可使用。
 - 已安装并运行 Open WebUI
 
 :::caution Azure Government
-Microsoft说明快速转录在 Azure Government 中不受支持，因此该引擎无法在其中使用。请参阅 [Speech service in sovereign clouds](https://learn.microsoft.com/azure/ai-services/speech-service/sovereign-clouds)。
+Microsoft 说明快速转录在 Azure Government 中不受支持，因此该引擎无法在其中使用。请参阅 [Speech service in sovereign clouds](https://learn.microsoft.com/azure/ai-services/speech-service/sovereign-clouds)。
 :::
 
 ## 快速配置（UI） {#quick-setup-ui}
@@ -34,31 +34,31 @@ Microsoft说明快速转录在 Azure Government 中不受支持，因此该引�
 | **API 密钥** | 你的 Speech 资源密钥 |
 | **Azure 区域** | 你的 Speech 资源所在区域的标识符，例如 `westus` 或 `westeurope`。留空时，Open WebUI 使用 `eastus` |
 | **语言区域** | 用户所使用的语言，以逗号分隔且不含空格，例如 `en-US,de-DE`。参见[语言区域](#language-locales) |
-| **终结点 URL** | 留空，除非你使用资源自身的终结点（参见[终结点 URL](#endpoint-url)） |
+| **端点 URL** | 留空，除非你使用资源自身的端点（参见[端点 URL](#endpoint-url)） |
 | **最大说话人数** | 留空以使用默认值 `3` |
 
 5. 点击 **Save**
 
-该密钥只能配合创建资源时所在的区域使用。Microsoft说明密钥按区域限定（region-scoped），因此将密钥搭配其他区域使用会导致认证失败。
+该密钥只能配合创建资源时所在的区域使用。Microsoft 说明密钥按区域限定（region-scoped），因此将密钥搭配其他区域使用会导致认证失败。
 
 ## 语言区域 {#language-locales}
 
 Azure 会根据 Open WebUI 随每段录音一起发送的区域列表来判断所使用的语言：
 
-- 设置了**语言区域**时，Azure 会将这些区域作为候选项。Microsoft说明，如果音频中不包含其中任何一种语言，服务会尝试自行识别语言。
+- 设置了**语言区域**时，Azure 会将这些区域作为候选项。Microsoft 说明，如果音频中不包含其中任何一种语言，服务会尝试自行识别语言。
 - 留空时，Open WebUI 会发送以下列表：`en-US`、`es-ES`、`es-MX`、`fr-FR`、`hi-IN`、`it-IT`、`de-DE`、`en-GB`、`en-IN`、`ja-JP`、`ko-KR`、`pt-BR` 和 `zh-CN`。
 
-Azure 只会为每段录音识别出一种主要语言。Microsoft说明，更小且准确的候选区域集合可以提升识别效果，因此请仅列出用户实际使用的语言。有关 Azure 支持的区域，请参阅 [Language and voice support](https://learn.microsoft.com/azure/ai-services/speech-service/language-support?tabs=stt)。
+Azure 只会为每段录音识别出一种主要语言。Microsoft 说明，更小且准确的候选区域集合可以提升识别效果，因此请仅列出用户实际使用的语言。有关 Azure 支持的区域，请参阅 [Language and voice support](https://learn.microsoft.com/azure/ai-services/speech-service/language-support?tabs=stt)。
 
 区域之间只能用逗号分隔。Open WebUI 不会去除空格，因此 `en-US, de-DE` 会发送带前导空格的 `" de-DE"`。
 
 用户在 **Settings** → **Audio** 下可设置的**语言**不会被该引擎使用。只有管理员的**语言区域**列表会被发送到 Azure。
 
-## 终结点 URL {#endpoint-url}
+## 端点 URL {#endpoint-url}
 
-默认情况下，Open WebUI 会根据 **Azure 区域**构建 `https://<region>.api.cognitive.microsoft.com` 并向其发送请求。**终结点 URL** 会替换该地址，Open WebUI 会在其后追加 `/speechtotext/transcriptions:transcribe?api-version=2024-11-15`。请仅填写协议和主机名，不要包含路径。
+默认情况下，Open WebUI 会根据 **Azure 区域**构建 `https://<region>.api.cognitive.microsoft.com` 并向其发送请求。**端点 URL** 会替换该地址，Open WebUI 会在其后追加 `/speechtotext/transcriptions:transcribe?api-version=2024-11-15`。请仅填写协议和主机名，不要包含路径。
 
-你可以使用 **Keys and Endpoint** 中资源自身的终结点，例如 `https://<resource-name>.cognitiveservices.azure.com`。Microsoft的快速转录示例也是在该地址上调用同一路径。请去掉 Azure 显示的结尾 `/`，因为 Open WebUI 会直接追加路径，否则会造成斜杠重复。
+你可以使用 **Keys and Endpoint** 中资源自身的端点，例如 `https://<resource-name>.cognitiveservices.azure.com`。Microsoft 的快速转录示例也是在该地址上调用同一路径。请去掉 Azure 显示的结尾 `/`，因为 Open WebUI 会直接追加路径，否则会造成斜杠重复。
 
 ## 最大说话人数 {#max-speakers}
 
@@ -99,7 +99,7 @@ services:
 
 在转录之前，Open WebUI 会将不受支持格式的录音转换为 MP3。大于 20 MB 的音频会被重新编码为更小的 MP3，如果仍然过大，则会拆分为每份不超过 20 MB 的片段。每一份片段都会作为独立请求发送到 Azure，因此每份片段会单独检测语言，最后再将文本拼接起来。
 
-精简镜像（即 `BYPASS_PYDUB_PREPROCESSING=true`）会跳过该步骤，直接发送完整文件。此时 Open WebUI 会拒绝超过 200 MB 的文件，而Microsoft针对 Open WebUI 所用 API 版本（`2024-11-15`）的参考文档将音频时长限制在 2 小时以内。
+使用精简镜像或设置 `BYPASS_PYDUB_PREPROCESSING=true` 时，会跳过该步骤并直接发送完整文件。此时 Open WebUI 会拒绝超过 200 MB 的文件。根据 Microsoft 针对 Open WebUI 所用 API 版本（`2024-11-15`）的参考文档，音频时长必须少于 2 小时。
 
 ## 使用 STT {#using-stt}
 
@@ -120,11 +120,11 @@ Azure 拒绝了该密钥。请检查：
 
 1. 密钥是否从 **Keys and Endpoint** 正确复制
 2. **Azure 区域** 是否为你的 Speech 资源所在区域
-3. 如果设置了**终结点 URL**，它是否为不含路径的资源终结点
+3. 如果设置了**端点 URL**，它是否为不含路径的资源端点
 
 ### “External: Resource not found” {#external-resource-not-found}
 
-Azure 无法识别该地址。如果设置了**终结点 URL**，请确认主机名之后没有路径。
+Azure 无法识别该地址。如果设置了**端点 URL**，请确认主机名之后没有路径。
 
 ### 无法识别语言 {#language-could-not-be-identified}
 
@@ -145,7 +145,7 @@ Azure 无法识别该地址。如果设置了**终结点 URL**，请确认主机
 
 ## 成本说明 {#cost-considerations}
 
-Azure 会根据你的 Azure 订阅对 Speech 用量计费。当前费率请查看 [Azure 的 Speech 定价页面](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/)。Microsoft的[配额与限制](https://learn.microsoft.com/azure/ai-services/speech-service/speech-services-quotas-and-limits)仅列出了 Standard (S0) 层级的快速转录限制。
+Azure 会根据你的 Azure 订阅对 Speech 用量计费。当前费率请查看 [Azure 的 Speech 定价页面](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/)。Microsoft 的[配额与限制](https://learn.microsoft.com/azure/ai-services/speech-service/speech-services-quotas-and-limits)仅列出了 Standard (S0) 层级的快速转录限制。
 
 :::tip
 如需免费的 STT，请使用 **Local Whisper**（默认）或浏览器的 **Web API** 进行基础转录。

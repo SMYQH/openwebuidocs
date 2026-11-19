@@ -28,7 +28,7 @@ title: "参与文档贡献"
 3. **启用 GitHub Pages**
 
    - 在你 Fork 的仓库进入 **Settings** > **Pages**。
-   - 在 **Build and deployment > Source** 下，选择 **GitHub Actions**。该工作流同时处理构建和发布。 您无需选择分支或文件夹。
+   - 在 **Build and deployment** > **Source** 下，选择 **GitHub Actions**。工作流会构建并发布站点，无需选择分支或文件夹。
 
 4. **配置 GitHub 环境变量**
 
@@ -37,7 +37,7 @@ title: "参与文档贡献"
      - `BASE_URL` 设置为 `/docs`（或你为 Fork 站点选择的 base URL）。
      - `SITE_URL` 设置为 `https://<your-github-username>.github.io/`。
 
-   只有在您按下文说明编辑工作流和配置后，这些变量才会生效。 在上游仓库中，`gh-pages.yml` 中的构建步骤没有设置 `env`，且 `docusaurus.config.ts` 将 `url` 和 `baseUrl` 设置为硬编码值。
+   这些变量要在按下一节修改工作流和配置后才会生效。上游的 `gh-pages.yml` 构建步骤未设置 `env`，而 `docusaurus.config.ts` 中的 `url` 和 `baseUrl` 都是硬编码值。
 
 ### 📝 更新 GitHub Pages 工作流与配置文件 {#updating-the-github-pages-workflow-and-config-file}
 
@@ -59,7 +59,7 @@ b. **修改 `docusaurus.config.ts` 以使用环境变量**
 
 - 更新 `docusaurus.config.ts`，改为读取这些环境变量，并保留本地或直连部署的默认值：
 
-``` typescript
+     ```typescript
      const config: Config = {
        title: "Open WebUI",
        tagline: "On a mission to build the best AI interface",
@@ -68,11 +68,11 @@ b. **修改 `docusaurus.config.ts` 以使用环境变量**
        baseUrl: process.env.BASE_URL || "/",
        ...
      };
-```
+     ```
 
 - 这样可确保 Fork 仓库和自定义部署场景下的行为一致。
 
-5. **运行 `gh-pages` GitHub 工作流**
+5. **运行 Deploy site to Pages 工作流**
 
    - 打开 **Actions** ，然后选择 **Deploy site to Pages** 工作流（`gh-pages.yml`）。
    - 视你的配置而定，可手动触发，也可能自动运行。

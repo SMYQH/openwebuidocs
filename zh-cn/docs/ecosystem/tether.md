@@ -6,25 +6,25 @@ sidebar_position: 3
 
 # Open WebUI Tether {#open-webui-tether}
 
-**即使你不在电脑前，也让 AI 在你的电脑上干活。**
+**即使你不在电脑前，也能让 AI 在你的电脑上工作。**
 
-让它把一批导出文件整理成报告、修掉项目里的一个 bug，或者归类你的文件。用手机查看结果。回来继续处理它在电脑上创建的文件。
+让它把一个文件夹中的导出文件整理成报告、修复项目中的错误，或整理你的文件。你可以用手机查看结果，回到电脑前再处理它创建的文件。
 
-Tether 是把你的电脑连接到你的 Open WebUI 的桌面应用。它把你的文件、工具和本地模型带进聊天，并提供可选的工作区沙箱，用来限定 AI 可以在哪里工作。
+Tether 是将你的电脑连接到 Open WebUI 的桌面应用。它让你在聊天中使用电脑上的文件、工具和本地模型，并可通过工作区沙箱限制 AI 的工作范围。
 
 **[下载 macOS、Windows 和 Linux 版本](https://github.com/open-webui/tether/releases/latest)** · **[开始使用](#get-started)**
 
 ## 触手可及的工作区 {#your-workspace-within-reach}
 
-该项目已安装好所需依赖项，文档已存放在相应文件夹中，相关工具也已配置完毕。Tether 让你的 AI 通过 **Open Terminal** 在这个环境中工作。在 Open WebUI 中观察命令的执行过程，检查文件，并提出修改请求。你也可以在终端环境里安装并登录[受支持的智能体，例如 Claude Code 和 Codex](/getting-started/quick-start/connect-an-agent)后使用它们。
+项目的依赖已就绪，文档已归档，工具也已安装。Tether 让 AI 通过 **Open Terminal** 在这个环境中工作。你可以在 Open WebUI 中查看命令执行过程、检查文件并提出修改请求。也可以先在终端环境中安装并登录[受支持的智能体，例如 Claude Code 和 Codex](/getting-started/quick-start/connect-an-agent)，再使用它们。
 
-在另一台设备上打开同一个 Open WebUI 实例，用相同账户登录，然后在终端菜单的 **Your devices** 下选择你的电脑。工作会运行在已连接的电脑上。对团队来说，每个人的设备各自连接到共享实例上的自己的账户。
+在另一台设备上打开同一个 Open WebUI 实例，用同一个账户登录，再从终端菜单的 **Your devices** 中选择你的电脑。任务会在已连接的电脑上运行。团队成员各自将设备连接到共享 Open WebUI 实例上的个人账户。
 
 Tether 是向外连接的，所以你不需要入站端口，也不需要路由器端口转发。让电脑保持唤醒、联网并运行 Tether。启用 **Run in background**，这样关闭窗口后仍能保持连接；再在 Open WebUI 中开启 **Browser Notifications**，聊天完成或失败时就能收到提醒。系统层面也要允许通知。
 
 ## 询问你屏幕上的内容 {#ask-about-whats-on-your-screen}
 
-一个你认不出来的报错。一张你想让人解释的图表。一段你原本得从头描述的东西。
+遇到不认识的报错、看不懂的图表，或其他难以从头描述的屏幕内容，都可以直接提问。
 
 在 macOS 上按 **Cmd+Shift+I**，在 Windows 和 Linux 上按 **Ctrl+Shift+I**，在当前应用之上打开 **Spotlight**。截取一块屏幕区域或附上剪贴板图片，提出你的问题，然后发给 Open WebUI。截图请使用支持图像的模型；快捷键可在 **Tether Settings > General** 中自定义。
 
@@ -32,7 +32,7 @@ Tether 是向外连接的，所以你不需要入站端口，也不需要路由�
 
 Tether 可选的**工作区沙箱**让你从一个明确的文件集合开始。操作系统层面的限制会把 Open Terminal 及其命令限定在选定的工作区、临时存储和必要的程序文件内。沙箱中的命令默认关闭网络访问；任务需要时再打开。
 
-沙箱原生运行在 **macOS 和受支持的 Windows 设备**上，不需要 Docker 或虚拟机，在 **Linux** 上**不可用**。在 **Tether Settings > Open Terminal > Sandbox** 下选择 **Restrict file access**，选定文件夹，然后点击 **Apply and restart**。Tether 会在启动前检查这些限制；等到出现 **Sandbox active** 再继续。
+沙箱原生运行在 **macOS 和受支持的 Windows 设备**上，不需要 Docker 或虚拟机，在 **Linux 上不可用**。在 **Tether Settings > Open Terminal > Sandbox** 下选择 **Restrict file access**，选定文件夹，然后点击 **Apply and restart**。Tether 会在启动前检查这些限制；等到出现 **Sandbox active** 再继续。
 
 <details>
 <summary>沙箱范围</summary>
@@ -49,7 +49,7 @@ Tether 可选的**工作区沙箱**让你从一个明确的文件集合开始。
 
 对于浏览器相关的工作，Open Terminal 可以使用独立的 Chrome 配置文件，或者在你开启远程调试并同意后使用你正在运行的 Chrome 会话。桌面控制在受支持的系统上可用。两者都要求关闭工作区沙箱。
 
-集成用的密钥留在 Tether 电脑上。聊天中使用的提示、文件内容和工具结果仍会经过 Open WebUI 以及相关的模型服务。
+集成密钥留在运行 Tether 的电脑上。聊天中使用的提示词、文件内容和工具结果仍会经过 Open WebUI 和相关的模型服务。
 
 ## 开始使用 {#get-started}
 

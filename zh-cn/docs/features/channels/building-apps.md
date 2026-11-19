@@ -94,7 +94,7 @@ Open WebUI 会携带 API key 发送 `GET <App URL>`。请在 10 秒内以 HTTP 2
    { "status": 200, "data": { "installation_id": "<UUID>", "connection_token": "<string>", "proof": "<JWT>" } }
    ```
 
-   由应用自行选择 `installation_id`（在该次安装中保持不变的 UUID）和 `connection_token`（最长 8,192 个字符）。管理员点击 **Connect** 时，Open WebUI 会加密保存该令牌，并在每次重连时发送它。自动重连时，Open WebUI 会继续使用已保存的令牌，忽略应用返回的令牌，因此应用必须始终接受自己签发的令牌。
+   由应用自行选择 `installation_id`（在该次安装中保持不变的 UUID）和 `connection_token`（最长 8,192 个字符）。管理员点击 **Connect** 时，Open WebUI 会加密保存该令牌，并在每次重连时发送它。自动重连时会继续使用已保存的令牌，忽略应用返回的令牌，因此应用必须继续接受先前签发的令牌。
 
    **App** 使用其 **Ed25519 私钥**签署 `proof`（JWT 算法 `EdDSA`，头部 `typ` 为 `oix-connect+jwt`）。Open WebUI 使用 manifest 中固定的公钥进行验证。必需的声明包括：
 

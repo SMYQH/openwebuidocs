@@ -17,7 +17,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
 />
 
-**在管理面板中监控使用情况、评估模型质量，并与用户沟通，一切尽在掌握。**
+**在管理面板中监控使用情况、评估模型质量，并与用户沟通。**
 
 Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的模型及其费用。通过盲测评估找到最适合工作负载的模型。向所有用户推送可定制的横幅公告。配置 Webhook 以在用户注册或长时间任务完成时收到通知。
 
@@ -30,9 +30,9 @@ Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的
 | **[Task Models（任务模型）](/features/administration/task-models)** | 为标题、标签、追问、自动补全、搜索查询和压缩摘要提供后端模型与参数 |
 | **[Analytics（分析）](/features/administration/analytics)** | 包含消息量、Token 消耗、模型明细及每用户活动的使用仪表板 |
 | **[Evaluation（评估）](/features/administration/evaluation)** | 模型竞技场、盲测 A/B 对比、基于 ELO 的排行榜及用于微调的对话快照 |
-| **[Banners（横幅）](/features/administration/banners)** | 可定制的全系统公告，支持用户关闭通知 |
+| **[Banners（横幅）](/features/administration/banners)** | 可定制的全系统公告，用户可关闭单条通知 |
 | **[Default Interface Settings（默认界面设置）](/features/administration/interface-defaults)** | 所有人「设置 > 界面」页面的实例级初始选项值 |
-| **[Translations（翻译）](/features/administration/translations)** | 为你创建的内容提供按语言区分的名称、描述、阀门标签和横幅文本 |
+| **[Translations（翻译）](/features/administration/translations)** | 为你创建的内容提供各语言版本的名称、描述、配置项标签和横幅文本 |
 | **[Webhooks](/features/administration/webhooks)** | 用户注册、对话完成及外部服务集成的自动通知 |
 
 ---
@@ -41,7 +41,7 @@ Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的
 
 ## Task Models（任务模型） {#task-models}
 
-聊天标题、标签、追问建议、自动补全、搜索查询改写和上下文压缩摘要，都会在后台作为独立的模型调用运行。默认情况下它们跑在用户当前对话所用的模型上——这正是旗舰模型可能悄悄写出大量三个字标题的原因。
+聊天标题、标签、追问建议、自动补全、搜索查询改写和上下文压缩摘要，都会在后台单独调用模型。默认使用当前聊天的模型，因此旗舰模型也可能被频繁调用来生成寥寥数词的标题。
 
 **适合用来：** 把这类工作挪到一个小而快的模型上，限制这些请求允许消耗的额度，并关掉你的实例不需要的那部分。
 
@@ -88,7 +88,7 @@ Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的
 
 ## Default Interface Settings（默认界面设置） {#default-interface-settings}
 
-你可以决定每个人「设置 > 界面」页面的初始值，而不是让每个账户都停留在出厂默认值。可在管理面板中设置，或用 `DEFAULT_INTERFACE_SETTINGS` 环境变量以适配 GitOps 工作流。
+你可以决定每个人 **设置 > 界面** 页面的初始值，而不是让每个账户都停留在出厂默认值。可在管理面板中设置，或用 `DEFAULT_INTERFACE_SETTINGS` 环境变量以适配 GitOps 工作流。
 
 **适合用来：** 让团队第一天就拥有一致的界面，关掉某个默认开启但碍眼的选项，或者推行一套团队风格同时仍允许个人自行调整。没有被改动的选项会继续跟随你的默认值，因此之后的变更会传达到所有没有覆盖过它的用户。
 
@@ -96,13 +96,13 @@ Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的
 
 ---
 
-## Webhooks {#webhooks}
+## Webhook 通知 {#webhooks}
 
 三种 Webhook 集成类型让您的外部服务保持同步：
 
 | Webhook | 用途 |
 |---------|---------|
-| **事件 Webhooks** | 把事件目录中的任意事件（包括注册事件）推送到 Slack、Discord 或你自己的 endpoint |
+| **事件 Webhooks** | 把事件目录中的任意事件（包括注册事件）推送到 Slack、Discord 或你自己的端点 |
 | **用户 Webhook** | 长时间运行的对话响应就绪时通知对应用户 |
 | **频道 Webhooks** | 允许外部服务（CI/CD、监控、脚本）向 Open WebUI 频道发送消息 |
 

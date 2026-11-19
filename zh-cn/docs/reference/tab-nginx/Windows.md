@@ -1,6 +1,6 @@
 ### 在 Windows 上不使用 Docker，配合自签名证书与 Nginx 使用 {#using-a-self-signed-certificate-and-nginx-on-windows-without-docker}
 
-对于基础的内部/开发环境安装，你可以使用 nginx 加自签名证书把 Open WebUI 反向代理到 https，从而能够使用诸如在局域网中输入麦克风之类的功能。（默认情况下，大多数浏览器不会允许在不安全的非 localhost URL 上使用麦克风输入）
+对于基本的内部部署或开发环境，你可以使用 nginx 和自签名证书，通过 HTTPS 访问 Open WebUI。这样就能在局域网内使用麦克风等功能。（大多数浏览器默认不允许在 localhost 之外的不安全 URL 上使用麦克风。）
 
 本指南假设你已通过 pip 安装了 Open WebUI，并正在运行 `open-webui serve`
 
@@ -50,7 +50,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx.key -out nginx
 
 用文本编辑器打开 `C:\nginx\conf\nginx.conf`。
 
-如果你希望 Open WebUI 可以在本地 LAN 中访问，请先用 `ipconfig` 查看你的 LAN IP 地址，例如 `192.168.1.15`。
+如果要从局域网访问 Open WebUI，请先用 `ipconfig` 查出本机的局域网 IP 地址，例如 192.168.1.15。
 
 将配置修改为如下内容：
 
@@ -168,9 +168,9 @@ http {
 }
 ```
 
-保存文件后，运行 `nginx -t` 检查配置是否有语法或错误。根据你的安装方式，可能需要先 `cd C:\nginx`。
+保存文件后，运行 `nginx -t` 检查配置是否存在语法问题或其他错误。根据安装方式，可能需要先运行 `cd C:\nginx`。
 
-运行 `nginx` 启动服务。如果 nginx 服务已经在运行，可以通过 `nginx -s reload` 重新加载新配置。
+运行 `nginx` 启动 nginx。如果 nginx 服务已经在运行，可以通过 `nginx -s reload` 重新加载配置。
 
 ---
 

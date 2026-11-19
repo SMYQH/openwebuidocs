@@ -41,7 +41,7 @@ Code Interpreter 是一种模型能力，可让 LLM 在对话过程中自主编�
 
 这些设置可以在 **Settings → Code Execution**（管理员区域） 中配置：
 - 全局启用 / 禁用 code interpreter
-- 选择引擎：**Pyodide**（推荐）或 **Jupyter（旧版）**
+- 选择引擎：**Pyodide（旧版）** 或 **Jupyter（旧版）**（如需完整的 Python 与 shell 访问权限，请改用 [Open Terminal](/features/open-terminal)）
 - 配置 Jupyter 连接设置
 - 设置被禁用模块
 
@@ -110,7 +110,7 @@ plt.close()
 6. 图像最终在聊天中内联渲染
 
 :::info 理解整个流程
-模型编写的代码应打印 base64 data URL。Open WebUI 会拦截该输出，并将其转换为永久文件 URL。模型随后应在回复中使用这个**转换后的 URL**，例如以 markdown 形式写成 `![Chart](/api/v1/files/abc123/content)`——而**不是**直接把原始 base64 字符串粘贴到回复文本里。
+模型编写的代码应打印 base64 data URL。Open WebUI 会拦截该输出，并将其转换为永久文件 URL。模型随后应在回复中使用这个**转换后的 URL**，例如以 markdown 形式写成 `![Chart](/api/v1/files/abc123/content)`——而不是直接把原始 base64 字符串粘贴到回复文本里。
 
 如果你在聊天回复中看到原始 base64 文本，说明模型错误地回显了 base64，而不是使用代码输出中转换后的 URL。
 :::

@@ -17,7 +17,7 @@ title: "Firefox 侧栏"
 
 在 Firefox 中把 Open WebUI 集成为 AI 聊天机器人助手前，请先确认：
 
-- 已准备 Open WebUI 实例 URL（本地或域名均可）
+- 已准备 Open WebUI 实例 URL（本地地址或域名均可）
 - 已安装 Firefox 浏览器
 
 ## 在 Firefox 中启用 AI Chatbot {#enabling-ai-chatbot-in-firefox}
@@ -36,16 +36,16 @@ title: "Firefox 侧栏"
 3. 搜索 `browser.ml.chat.enabled`，若未在 Firefox Labs 启用则将其设为 `true`
 4. 搜索 `browser.ml.chat.hideLocalhost` 并设为 `false`
 
-### browser.ml.chat.prompts.\{#} \{#browsermlchatprompts}
+### 自定义提示词：browser.ml.chat.prompts.\{#} \{#browsermlchatprompts}
 
 如需添加自定义提示词，请按以下步骤操作：
 
 1. 搜索 `browser.ml.chat.prompts.{#}`（将 `{#}` 替换为数字，如 `0`、`1`、`2`）
 2. 点击 `+` 新增提示词
-3. 填写提示词 label、value 和 ID（例如 `{"id":"My Prompt", "value": "This is my custom prompt.", "label": "My Prompt"}`）
+3. 填写提示词的标签、内容和 ID（例如 `{"id":"My Prompt", "value": "This is my custom prompt.", "label": "My Prompt"}`）
 4. 按需重复以上步骤添加更多提示词
 
-### browser.ml.chat.provider {#browsermlchatprovider}
+### 设置提供商：browser.ml.chat.provider {#browsermlchatprovider}
 
 1. 搜索 `browser.ml.chat.provider`
 2. 填入你的 Open WebUI 实例 URL，并可附带可选参数（例如 `https://my-open-webui-instance.com/?model=browser-productivity-assistant&temporary-chat=true&tools=jina_web_scrape`）
@@ -63,7 +63,7 @@ title: "Firefox 侧栏"
 
 - `youtube`：提供 YouTube 视频 ID，确认链接后即在聊天中转录该视频（例如 `/?youtube=VIDEO_ID`）
 
-### Web Search {#web-search}
+### 网页搜索 {#web-search}
 
 - `web-search`：将此参数设为 `true` 以启用网页搜索（例如 `/?web-search=true`）
 
@@ -84,7 +84,7 @@ title: "Firefox 侧栏"
 - `temporary-chat`：将此参数设为 `true` 可标记为临时会话（例如 `/?temporary-chat=true`）
   - *注意：临时聊天中的文档处理仅在前端执行。需要后端解析的复杂文件可能无法工作。*
 
-更多 URL 参数及用法请见 [url-params](/features/chat-conversations/chat-features/url-params)。
+更多 URL 参数及用法请参阅[参数文档](/features/chat-conversations/chat-features/url-params)。
 
 ## 其他 about:config 设置 {#additional-aboutconfig-settings}
 
@@ -98,8 +98,8 @@ title: "Firefox 侧栏"
 - `browser.ml.defaultModelMemoryUsage`：设置模型默认内存占用
 - `browser.ml.enable`：启用 Firefox 机器学习功能
 - `browser.ml.logLevel`：设置机器学习功能日志级别
-- `browser.ml.maximumMemoryPressure`：设置最大内存压力阈值
-- `browser.ml.minimumPhysicalMemory`：设置最小物理内存要求
+- `browser.ml.maximumMemoryPressure`：设置内存压力上限
+- `browser.ml.minimumPhysicalMemory`：设置最低物理内存要求
 - `browser.ml.modelCacheMaxSize`：设置模型缓存最大容量
 - `browser.ml.modelCacheTimeout`：设置模型缓存超时时间
 - `browser.ml.modelHubRootUrl`：设置模型仓库根 URL

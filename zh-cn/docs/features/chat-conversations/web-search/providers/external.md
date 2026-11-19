@@ -5,25 +5,25 @@ title: "外部"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎参与贡献，请参阅贡献指南。
 
 :::
 
 :::tip
 
-若要查看所有与 Web Search 相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
+若要查看所有与网页搜索相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
 
 :::
 
 :::tip 故障排查
 
-如果你在 web search 上遇到问题，请查看 [Web Search 故障排查指南](/troubleshooting/web-search)，其中涵盖了代理配置、连接超时、内容为空等常见问题。
+遇到网页搜索问题时，请参阅[网页搜索故障排查指南](/troubleshooting/web-search)，了解如何解决代理配置、连接超时和内容为空等常见问题。
 
 :::
 
 ## 外部 Web Search API {#external-web-search-api}
 
-这个选项允许你把 Open WebUI 连接到你自己托管的 web search API 端点。适用场景包括：
+此选项可将 Open WebUI 连接到你自己托管的网页搜索 API 端点。适用场景包括：
 
 - 集成 Open WebUI 原生未支持的搜索引擎
 - 实现自定义搜索逻辑、过滤规则或结果处理流程
@@ -36,14 +36,14 @@ title: "外部"
 3. 将 `启用 Web Search` 切换为开启
 4. 将 `网页搜索引擎` 从下拉菜单设为 `external`
 5. 在 **External Web Search URL**（`EXTERNAL_WEB_SEARCH_URL`）中填写你自定义搜索 API 的完整 URL（例如 `http://localhost:8000/search` 或 `https://my-search-api.example.com/api/search`）
-6. 在 **External Web Search API Key**（`EXTERNAL_WEB_SEARCH_API_KEY`）中填写访问该搜索端点所需的密钥。如果你的端点不需要鉴权，也可以留空（但对于公网端点，不推荐）
+6. 在 **External Web Search API Key**（`EXTERNAL_WEB_SEARCH_API_KEY`）中填写验证自定义搜索端点所需的 API 密钥。如果端点不需要身份验证，可以留空，但不建议对公网端点这么做。
 7. 点击 `Save`
 
 ![Open WebUI 管理面板中的 External Search 配置](/images/tutorial_external_search.png)
 
 ### API 规范 {#api-specification}
 
-Open WebUI 会按如下方式与你的 `External Search URL` 交互：
+Open WebUI 会按如下方式向 **External Web Search URL** 发送请求：
 
 - **方法：** `POST`
 - **请求头：**
@@ -64,7 +64,7 @@ Open WebUI 会按如下方式与你的 `External Search URL` 交互：
   - `count`（integer）：Open WebUI 希望获取的最大结果数。必要时，你的 API 也可以返回更少结果
 
 - **期望的响应体（JSON）：**
-    你的 API 端点 **必须**返回一个 JSON 数组，其中每个元素都是搜索结果对象，结构如下：
+    你的 API 端点 *必须* 返回一个由搜索结果对象组成的 JSON 数组。每个对象的结构如下：
 
     ```json
     [
@@ -86,7 +86,7 @@ Open WebUI 会按如下方式与你的 `External Search URL` 交互：
   - `title`（string）：网页标题
   - `snippet`（string）：页面内容中与查询相关的简要描述
 
-    如果发生错误，或未找到结果，建议你的端点返回空数组 `[]`
+    如果发生错误或未找到结果，建议端点返回空 JSON 数组 `[]`。
 
 ### 示例实现（Python/FastAPI） {#example-implementation-pythonfastapi}
 

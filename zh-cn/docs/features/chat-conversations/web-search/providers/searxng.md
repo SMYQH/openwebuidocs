@@ -29,7 +29,7 @@ title: "SearXNG"
 
 1. 克隆 `searxng-docker` 仓库
 
-  克隆后会生成一个名为 `searxng-docker` 的目录，其中包含 SearXNG 配置文件。更多说明请参阅 [SearXNG 文档](https://docs.searxng.org/)。
+  克隆 searxng-docker 仓库后，会生成一个名为 `searxng-docker` 的目录，其中包含 SearXNG 配置文件。配置说明请参阅 [SearXNG 文档](https://docs.searxng.org/)。
 
 ```bash
 git clone https://github.com/searxng/searxng-docker.git
@@ -261,7 +261,7 @@ docker compose up -d
 
 :::note
 
-首次运行时，你必须先从 `docker-compose.yaml` 中移除 `searxng` 服务下的 `cap_drop: - ALL`，否则 SearXNG 无法成功创建 `/etc/searxng/uwsgi.ini`。原因是 `cap_drop: - ALL` 会移除所有 capability，其中也包括创建 `uwsgi.ini` 所需的权限。首次运行完成后，出于安全考虑，应重新加回 `cap_drop: - ALL`。
+首次运行时，必须先从 `docker-compose.yaml` 中移除 `searxng` 服务下的 `cap_drop: - ALL`，以便该服务创建 `/etc/searxng/uwsgi.ini`。`cap_drop: - ALL` 会移除所有能力，其中包括创建 `uwsgi.ini` 所需的权限。出于安全考虑，请在首次运行后把 `cap_drop: - ALL` 加回 `docker-compose.yaml`。
 
 :::
 
@@ -293,7 +293,7 @@ search:
     - json  # Add this line to enable JSON format support for Open WebUI
 ```
 
-或者你也可以用下面命令自动添加：
+也可以运行以下命令，自动启用 JSON 格式：
 
 ```bash
 sed -i '/formats:/,/]/s/html/html\n    - json/' searxng/settings.yml
@@ -336,7 +336,7 @@ docker exec -it open-webui curl http://host.docker.internal:8080/search?q=this+i
 - `http://searxng:8080/search`（使用容器名与暴露端口，适用于 Docker 部署）
 - `http://host.docker.internal:8080/search`（使用 `host.docker.internal` DNS 名称与宿主机端口，适用于 Docker 部署）
 - `http://<searxng.local>/search`（使用本地域名，适用于局域网访问）
-- `https://<search.domain.com>/search`（使用自定义域名，适用于公网或私有部署）
+- `https://<search.domain.com>/search`（为自托管的 SearXNG 实例使用自定义域名，适合公开或私有访问）
 
 请将 URL 指向 `/search` 端点。Open WebUI 会自行添加查询参数（`q`、`format=json`、`language` 等）。旧式的 `/search?q=<query>` 写法仍然可用，因为 Open WebUI 在看到 `<query>` 时会去掉查询字符串，但这并非必需。
 
@@ -354,7 +354,7 @@ SEARXNG_CLIENT_CERT_FILE=/certs/searxng-client.pem
 SEARXNG_CLIENT_KEY_FILE=/certs/searxng-client.key
 ```
 
-如果证书文件中已经包含私钥，可以省略 `SEARXNG_CLIENT_KEY_FILE`。请把这两个文件挂载进容器（`-v /path/to/certs:/certs:ro`），使路径在容器内能够解析。只有发往 SearXNG 的请求会使用该证书；其他所有对外连接仍保持各自的正常 TLS 设置。证书只在首次使用时读取一次，因此在磁盘上替换证书后需要重启服务。
+如果证书文件中已经包含私钥，可以省略 `SEARXNG_CLIENT_KEY_FILE`。请将所需文件挂载到容器中（`-v /path/to/certs:/certs:ro`），确保容器能访问这些路径。只有发往 SearXNG 的请求会使用该证书，其他外连仍沿用原有 TLS 设置。证书仅在首次使用时读取，因此在磁盘上替换证书后需要重启服务。
 
 ![SearXNG 图形界面配置](/images/tutorial_searxng_config.png)
 

@@ -3,11 +3,11 @@ sidebar_position: 1
 title: "架构与高可用性"
 ---
 
-### 为关键任务级可靠性而构建 {#built-for-mission-critical-reliability}
+### 为关键业务提供可靠性 {#built-for-mission-critical-reliability}
 
 当 AI 成为组织运营的核心组成部分，停机就不只是“不方便”，而是真正的成本。Open WebUI 从底层开始就以支持企业级部署为目标，在这里，可靠性不是可选项。
 
-无论你是在支持一个 15 人的试点团队，还是服务覆盖全球、拥有数千名用户的组织，Open WebUI 的架构都能随你的需求一起扩展，而无需在规模增长后推倒重来。
+无论是为 15 人的团队试点，还是为全球数千名员工提供服务，Open WebUI 的无状态架构都能随需求扩展，无需重建系统。
 
 ### 架构概览 {#architecture-overview}
 
@@ -21,7 +21,7 @@ Open WebUI 采用**无状态、容器优先架构**。在扩展部署中，状�
 
 对于决策者来说，这意味着你在 Open WebUI 上的前期投入不会演变成技术债。支撑 PoC 的同一套架构，也可以继续扩展到支撑整个组织。
 
-默认的单实例部署使用本地 SQLite 和 ChromaDB 存储。在增加副本之前，请先按[扩展指南](/getting-started/advanced-topics/scaling)中的说明配置共享服务和配套的密钥。
+默认的单实例部署使用本地 SQLite 和 ChromaDB 存储。在增加副本前，按[扩展指南](/getting-started/advanced-topics/scaling)配置共享服务，并确保每个副本使用相同的密钥。
 
 ### 高可用配置 {#high-availability-configuration}
 
@@ -46,7 +46,7 @@ Open WebUI 并不是“理论上可扩展”，而是已经**在大规模场景�
 * 🏢 **跨国企业**：横跨多个区域和业务单元进行部署。
 * 🏛️ **大型组织**：在高负载下仍要求稳定一致的性能。
 
-在合适的基础设施配置下，Open WebUI 可以从试点项目扩展到全球范围的关键任务级上线。
+配置合适的基础设施后，Open WebUI 可以从试点扩展到支撑全球关键业务。
 
 ### 这对你的组织意味着什么 {#what-this-means-for-your-organization}
 

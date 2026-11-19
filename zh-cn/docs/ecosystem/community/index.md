@@ -9,7 +9,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 # Open WebUI 社区 {#open-webui-community}
 
 <ThemedImage
-  alt="Open WebUI 社区：一面帖子看板，其中一张被取出并指向你的实例"
+  alt="Open WebUI 社区：一块帖子看板，其中一张帖子卡片从看板上浮起，朝你的实例移去"
   sources={{
     light: useBaseUrl('/images/banners/community-platform-light.svg'),
     dark: useBaseUrl('/images/banners/community-platform-dark.svg'),
@@ -17,9 +17,9 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
 />
 
-**使用别人已经构建好的模型、提示、技能和插件，也把你自己的分享出去。**
+**使用其他人构建的模型、提示词、技能和插件，也分享你自己的作品。**
 
-你不必亲手编写每一条系统提示、每一个 Tool 或 Function。[Open WebUI 社区](https://openwebui.com/)是一个独立的网站，人们在那里发布自己为 Open WebUI 构建的东西，在那里发布的任何内容都可以用几次点击导入你的实例。
+你不必自己编写每条系统提示词、每个 Tool 或 Function。[Open WebUI 社区](https://openwebui.com/)是一个独立的网站，用户可以在那里发布为 Open WebUI 构建的作品。只需点击几下，就能把发布的内容导入你的实例。
 
 你在运维这个服务器吗？[面向管理员](#for-admins)一节讲清了谁可以通过该网站把代码带到你的服务器上、哪些内容会到达 openwebui.com，以及如何把它关闭。
 
@@ -29,35 +29,35 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 1. 在 openwebui.com 上打开该帖子并点击 **Get**。
 2. 输入你的 Open WebUI URL，例如 `http://localhost:3000`，然后点击 **Import**。
-3. 如果尚未登录，你会在登录后看到实例在新标签页中打开、编辑器中已填好内容。阅读该条目（包括 Tool 或 Function 的全部代码），然后保存。
+3. 你的实例会在新标签页中打开（如果尚未登录，请先登录），编辑器已预填内容。阅读该条目（包括 Tool 或 Function 的全部代码），然后保存。
 
 | 帖子类型 | 导入到 | 谁可以导入 |
 | :--- | :--- | :--- |
 | 模型预设 | **Workspace > Models** | 被允许创建模型的用户 |
-| 提示 | **Workspace > Prompts** | 被允许创建提示的用户 |
+| 提示词 | **Workspace > Prompts** | 被允许创建提示词的用户 |
 | 技能 | **Workspace > Skills** | 被允许创建和导入技能的用户 |
 | Tool | **Workspace > Tools** | 被允许创建 Tool 的用户 |
 | Function | **Admin Panel > Functions** | 仅管理员 |
 
-## 分享你构建的东西 {#share-what-you-built}
+## 分享你的作品 {#share-what-you-built}
 
 **Share** 会在新标签页中打开 openwebui.com，并预填一篇新帖子。在那里完成帖子之前，什么都不会被发布。
 
-- **模型预设、提示或 Tool：** 在 **Workspace** 中打开该条目的菜单并点击 **Share**。
+- **模型预设、提示词或 Tool：** 在 **Workspace** 中打开该条目的菜单并点击 **Share**。
 - **技能：** 在 **Workspace > Skills** 中打开该技能的菜单并点击 **Share**。这需要 **Export Skills** 权限。帖子会带上该技能及其所有文件，总计最多 15 MiB。
 - **Function（仅管理员）：** 在 **Admin Panel > Functions** 中打开该函数的菜单并点击 **Share**。
 - **聊天：** 在聊天的 **Share** 对话框中点击 **Share to Open WebUI Community**。
 
-分享 Tool 或 Function 会发布其完整的源代码。请检查其中是否含有 API key、内部地址或其他你不愿公开的内容。你在 Valves 中填写的内容不会被包含。
+分享 Tool 或 Function 会发布其完整的源代码。请检查代码中是否含有 API 密钥、内部地址或其他你不愿公开的内容。你在 Valves 中填写的值不会随源码发布。
 
-## 为模型写评测 {#review-a-model}
+## 阅读和撰写模型评测 {#review-a-model}
 
 openwebui.com 上的评测能让你在花时间配置某个模型之前，先了解它对其他人而言表现如何；你的评测对别人也有同样作用。Open WebUI 中有两个链接会跳转到某个模型的评测：
 
 - **阅读评测：** 在模型选择器中打开某个模型的菜单并点击 **Community Reviews**。
 - **撰写评测：** 用点赞或点踩为一条回复评分，然后在打开的面板中点击该模型的 **Leave a public review for**。在 openwebui.com 上从搜索结果中打开该模型。在 **Write a review** 下填写星级、标题，以及对你而言哪些地方好用、哪些不好用，然后点击 **Post**。
 
-这两个链接都会在该站点的 [Models](https://openwebui.com/models) 目录中按该模型在你实例上的 ID 查找，因此自定义模型或预设可能匹配不到条目。你的聊天内容不会被发送，你的评测会以你的 openwebui.com 账号公开发布。
+这两个链接都会在该站点的 [Models](https://openwebui.com/models) 目录中按该模型在你实例上的 ID 查找，因此自定义模型或预设可能匹配不到条目。不会发送任何与你的聊天有关的信息。评测会以你的 openwebui.com 账号公开发布。
 
 ## 把你的使用情况加入排行榜 {#add-your-usage-to-the-leaderboard}
 
@@ -77,14 +77,14 @@ openwebui.com 上的评测能让你在花时间配置某个模型之前，先了
 从该网站导入的 Tool 或 Function 是一段 Python 代码，从保存的那一刻起就在你的服务器上运行。
 
 - **Function** 只能由管理员导入。
-- **Tool**、模型预设和提示可以由任何[工作区权限](/features/authentication-access/rbac/permissions#1-workspace-permissions)允许创建该类条目的用户导入。
+- **Tool**、模型预设和提示词可以由任何[工作区权限](/features/authentication-access/rbac/permissions#1-workspace-permissions)允许创建该类条目的用户导入。
 - Tool 或 Function 可以在顶部的 `requirements` 一行列出 Python 包，Open WebUI 在加载该插件时会用 pip 安装它们。若要阻止这一点，请把 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS`](/reference/env-configuration#enable_pip_install_frontmatter_requirements) 设为 `False`。
 
 ### 哪些内容会到达 openwebui.com {#what-reaches-openwebuicom}
 
 openwebui.com 从不连接你的服务器。所有内容都在用户浏览器的两个标签页之间传递，因此运行在 `localhost` 或私有网络上的实例与公开实例表现相同，并且在用户主动点击之前不会发送任何内容。用户可以发送两类东西：
 
-- **一次分享。** 用户分享的内容会作为帖子发布：按当前配置导出的模型预设或提示、带上所有文件的技能、Tool 的完整源代码，或一份聊天快照（含消息）。管理员还可以分享 Function 的完整源代码。
+- **一次分享。** 用户分享的内容会作为帖子发布：按当前配置导出的模型预设或提示词、带上所有文件的技能、Tool 的完整源代码，或一份聊天快照（含消息）。管理员还可以分享 Function 的完整源代码。
 - **一次统计同步**，用于[排行榜](#add-your-usage-to-the-leaderboard)。每位用户自行决定是否同步，且只覆盖他自己的聊天。他们会在你实例上的 **Sync Usage Stats** 对话框中确认。
 
 一次统计同步会发送：
@@ -94,7 +94,7 @@ openwebui.com 从不连接你的服务器。所有内容都在用户浏览器的
 - 每条消息：其 ID、角色、模型、以字符计的长度、token 数、时间戳，以及它获得的评分与标签
 - 每个聊天的汇总：消息数量、使用过的模型、平均消息长度与平均响应时间
 
-它不会发送消息正文、提示、模型回复、聊天标题，也不会发送上传的文件和图片。
+它不会发送消息正文、提示词、模型回复、聊天标题，也不会发送上传的文件和图片。
 
 你实例自身的[评估](/features/administration/evaluation)排行榜由用户的评分构建而成，它永远不会离开你的实例。
 
@@ -109,7 +109,7 @@ openwebui.com 从不连接你的服务器。所有内容都在用户浏览器的
 关闭它会对所有用户（包括管理员）隐藏以下内容：
 
 - Models、Prompts、Skills、Tools 和 Functions 页面上的 **Made by Open WebUI Community** 链接
-- 模型、提示、技能、Tool 和 Function 菜单中的 **Share**
+- 模型、提示词、技能、Tool 和 Function 菜单中的 **Share**
 - 聊天分享对话框中的 **Share to Open WebUI Community**
 - 模型选择器中的 **Community Reviews**，以及为回复评分后出现的评测链接
 - **Sync Usage Stats** 对话框

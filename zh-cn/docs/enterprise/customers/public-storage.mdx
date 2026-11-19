@@ -1,18 +1,18 @@
 ---
 sidebar_position: 2
 title: "Public Storage"
-description: "Public Storage 如何通过冠军驱动的推出方式在 GCP 上部署安全的私有生成式 AI 平台（使用 Open WebUI），在 30 天内达到约 50% 的活跃采用率，并将关键操作工作流的时间减少超过 80%。"
+description: "Public Storage 在 GCP 上使用 Open WebUI 部署安全、私有的生成式 AI 平台，由内部推广负责人带头推广。平台在 30 天内达到约 50% 的活跃使用率，并将一项关键运营流程的耗时缩短了超过 80%。"
 keywords: ["Public Storage AI", "Open WebUI case study", "enterprise AI platform", "private AI deployment", "GCP AI deployment", "PII redaction AI", "AI productivity", "secure generative AI", "champion-driven AI adoption", "real estate AI"]
 ---
 
-# Public Storage 使用 Open WebUI 在所有企业职能部门扩展安全的冠军驱动 AI 平台 {#public-storage-scales-a-secure-champion-driven-ai-platform-across-every-corporate-function-with-open-webui}
+# Public Storage 使用 Open WebUI 搭建安全 AI 平台，由内部推广负责人带动各部门使用 {#public-storage-scales-a-secure-champion-driven-ai-platform-across-every-corporate-function-with-open-webui}
 
 ![Public Storage](/images/enterprise/customers/public-storage/hero.png)
 
 ## 概述 {#overview}
 
 :::info
-Public Storage 如何通过**冠军驱动的推出方式**在 GCP 上部署安全的私有生成式 AI 平台（使用 **Open WebUI**），在 **30 天内达到约 50% 的活跃采用率**，并将关键操作工作流的时间减少**超过 80%**。
+Public Storage 在 GCP 上使用 **Open WebUI** 部署了安全、私有的生成式 AI 平台，由**内部推广负责人带头推广**。平台在 **30 天内达到约 50% 的活跃使用率**，一项关键运营流程的耗时缩短了**超过 80%**。
 :::
 
 ### 一览 {#at-a-glance}
@@ -21,20 +21,20 @@ Public Storage 如何通过**冠军驱动的推出方式**在 GCP 上部署安�
 - **地区**：美国（强制执行数据驻留）
 - **行业**：房地产
 - **部署**：GCP（容器化、私有网络）
-- **模型**：Anthropic Claude（主要）、OpenAI GPT（高流量）、Llama、Gemma（开源权重）
+- **模型**：Anthropic Claude（主要）、OpenAI GPT（高用量）、Llama、Gemma（开放权重）
 - **部署时间**：2 周试点，30 天内完全可用
 - **采用率**：第一个月约 50% 活跃使用率
 - **关键成果**：操作工作流显著节省时间、跨职能部门 AI 赋能、企业级治理
 
 ## 关于 Public Storage {#about-public-storage}
 
-[Public Storage](https://www.publicstorage.com/) 是一家财富 500 强自存储房地产投资信托基金，在美国运营 3,000 多处设施。拥有数百万客户和数千名员工，跨越公司办公室、呼叫中心和现场运营，该公司管理着世界上最大的房地产组合之一。这种运营足迹使得对 AI 的一致、受治理的访问成为有意义的竞争优势。
+[Public Storage](https://www.publicstorage.com/) 是一家财富 500 强自助仓储房地产投资信托基金，在美国运营 3,000 多处设施。公司拥有数百万客户，数千名员工分布在办公室、呼叫中心和现场运营团队，并管理着全球规模最大的房地产资产组合之一。以这样的运营规模，统一提供受管控的 AI 访问是一项竞争优势。
 
 ## 挑战：在企业范围内安全地扩展 AI {#the-challenge-scaling-ai-safely-across-the-enterprise}
 
-随着生成式 AI 工具的普及，Public Storage 认识到了机遇和风险。整个组织的团队开始独立试验 AI，创建了零散的临时订阅和无治理使用的局面。
+随着生成式 AI 工具普及，Public Storage 看到了机遇和风险。各团队开始自行尝试 AI，零散地订阅和使用服务，缺少统一管理。
 
-领导层设定了明确的目标：提供**安全的集中式 AI 平台**，提高整个组织的 AI 素养，显示高价值的商业使用案例，并实现可重复的生产力收益，同时不影响数据安全或合规性。
+领导层的目标是提供**安全的集中式 AI 平台**，提高全公司的 AI 素养，发掘有价值的业务场景，并让提效成果可以复用，同时保证数据安全和合规。
 
 **关键需求**
 
@@ -55,10 +55,10 @@ Public Storage 如何通过**冠军驱动的推出方式**在 GCP 上部署安�
 
 - **计算/编排**：GCP 上的容器化工作负载，根据内部需求自动扩展
 - **存储/数据库**：托管 PostgreSQL 和安全对象存储（GCP 原生）
-- **网络**：私有网络；访问限制在企业防火墙后的已认证员工；开源权重 LLM API 的私有端点
+- **网络**：采用私有网络，仅允许企业防火墙内已通过身份验证的员工访问；为开放权重 LLM 的 API 提供私有端点
 - **CI/CD**：用于受控 Open WebUI 升级的自动化管道
-- **日志/监控**：通过 GCP 原生工具和 **Langfuse** 的集中日志和使用仪表板用于 LLM 可观测性
-- **安全控制**：通过 IdP 的 MFA、基于群组的 RBAC、强制执行数据驻留、通过面向用户的中断进行 PII 脱敏、调节护栏、向 SIEM 的审计导出、DLP 政策、出站限制
+- **日志/监控**：通过 GCP 原生工具和 **Langfuse** 集中记录日志并展示用量，以观测 LLM 的运行情况
+- **安全控制**：通过 IdP 实施 MFA，按群组实施 RBAC，强制执行数据驻留要求；检测到 PII 时进行脱敏、中断处理并通知用户；实施内容审核、向 SIEM 导出审计记录、执行 DLP 策略并限制出站流量
 
 > "我们的目标不仅是部署 AI，而是负责任地扩展它。Open WebUI 允许我们从业务中众包高价值的使用案例，同时保持所需的治理。" — Public Storage 首席技术官
 
@@ -67,28 +67,28 @@ Public Storage 如何通过**冠军驱动的推出方式**在 GCP 上部署安�
 Public Storage 采用**多模型策略**以平衡能力、隐私和成本：
 
 - **主要**：Anthropic Claude（零数据保留）
-- **高流量**：OpenAI GPT 模型（零数据保留）
-- **开源权重**：Llama 和 Gemma 用于私有、基础设施工作负载
+- **高用量**：OpenAI GPT 模型（零数据保留）
+- **开放权重**：在自有基础设施上使用 Llama 和 Gemma 处理私有工作负载
 - **RAG**：默认 Sentence Transformers 用于嵌入，持续优化检索性能
-- **PII 处理**：自定义过滤器**在任何敏感数据到达模型之前剥除 PII 并以面向用户的通知停止处理**。这种主动中断方法超越了静默脱敏
+- **PII 处理**：自定义过滤器在任何敏感数据到达模型前，**移除 PII、停止处理并通知用户**。它不只是静默脱敏，还会主动中断处理
 
-## 采用和赋能 {#adoption--enablement}
+## 推广与培训 {#adoption--enablement}
 
-Public Storage 采取了深思熟虑的、冠军驱动的推出方法。**为期两周的试点，配备指定的采用冠军**，在 30 天内进行了更广泛的启动，达到完全可用。
+Public Storage 按计划由内部推广负责人带头推广。公司先指定推广负责人开展**为期两周的试点**，随后扩大覆盖范围，在 30 天内向全公司开放。
 
-赋能专注于**实际、特定角色的使用案例**，而不是抽象的 AI 培训。团队为早期采用者进行了 1.5 小时的"PS.AI 定向"会议，分享了针对每个职能定制的真实示例和最佳实践。
+培训侧重**各岗位的实际使用场景**，而非抽象的 AI 知识。团队为早期用户举办了 1.5 小时的“PS.AI 入门培训”，向各部门分享适合其职责的实例和最佳实践。
 
 在第一个月内：
 
-- **约 50% 的已载入用户**在积极使用该平台
+- 完成入门流程的用户中，**约 50%** 活跃使用该平台
 - 随着团队**与同行分享成功的工作流**，使用量继续增长
-- **所有企业职能部门**都得到了代表，包括 HR、市场营销、财务、法律、呼叫中心、运营、销售/收购、IT 和风险管理
+- 用户覆盖**所有企业职能部门**，包括 HR、市场营销、财务、法律、呼叫中心、运营、销售/收购、IT 和风险管理
 
-> "我们看到来自业务而非仅 IT 构建的使用案例的真实操作时间节省，这加快了采用并交付了实际成果。" — Public Storage 数字技术副总裁
+> “不仅 IT 部门，业务部门也提出了实际应用场景，确实节省了运营时间。这加快了推广，也带来了实实在在的成果。” — Public Storage 数字技术副总裁
 
 ## 成果：生产力、采用和治理 {#results-productivity-adoption-and-governance}
 
-![显示由 Open WebUI 提供支持的 Public Storage 内部 AI 平台的电话屏幕截图。](/images/enterprise/customers/public-storage/open-webui.png)
+![Public Storage 内部 AI 平台的手机截图，该平台由 Open WebUI 提供支持。](/images/enterprise/customers/public-storage/open-webui.png)
 
 ### 01. 操作时间节省 {#01-operational-time-savings}
 
@@ -100,8 +100,8 @@ Public Storage 采取了深思熟虑的、冠军驱动的推出方法。**为期
 
 ### 03. 企业治理 {#03-enterprise-governance}
 
-- **完全私有部署**，数据驻留在 GCP 内强制执行
-- 内置 PII 脱敏、调节护栏、DLP 政策和审计导出确保**无摩擦合规**
+- **完全私有部署**，数据必须留在 GCP 环境内
+- 内置 PII 脱敏、内容审核措施、DLP 策略和审计导出，**减少合规操作负担**
 - RBAC、MFA 和出站限制在整个平台提供**分层安全**
 
 ## 主要使用案例 {#top-use-cases}
@@ -113,10 +113,10 @@ Public Storage 采取了深思熟虑的、冠军驱动的推出方法。**为期
 
 ## 为什么 Public Storage 选择 Open WebUI {#why-public-storage-chose-open-webui}
 
-Open WebUI 因为能够随着 Public Storage 的野心而成长而脱颖而出：
+Open WebUI 能随 Public Storage 的需求扩展，因此脱颖而出：
 
 - **可扩展的基础**：从聊天演变为完整的内部 AI 平台
-- **多模型灵活性**：商业和开源权重模型，无锁定
+- **多模型选择**：支持商业模型和开放权重模型，不受供应商锁定
 - **企业级治理**：PII 脱敏、审计跟踪、RBAC、DLP
 - **快速部署**：IT 开销最少
 - **开放架构**：支持迭代，无供应商依赖
@@ -129,6 +129,6 @@ Open WebUI 因为能够随着 Public Storage 的野心而成长而脱颖而出�
 
 **寻找 [企业计划](/enterprise)？** — **[立即与我们的销售团队联系！](/enterprise)**
 
-获取**增强功能**，包括**自定义主题和品牌**、**服务级别协议 (SLA) 支持**、**长期支持 (LTS) 版本**等！
+获取**增强功能**，包括**自定义主题和品牌**、**服务级别协议 (SLA) 支持**、**长期支持 (LTS)**、**更多功能**！
 
 :::

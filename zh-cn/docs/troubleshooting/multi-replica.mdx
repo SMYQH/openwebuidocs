@@ -138,7 +138,7 @@ env:
 
 **解决方法：**
 
-| Option | Change | Tradeoff |
+| 选项 | 调整 | 取舍 |
 |--------|--------|----------|
 | **保持 1 个 worker** | `UVICORN_WORKERS=1`（默认值），通过增加副本来扩容 | 副本超过一个之后，仍需采用下面某种方案 |
 | **使用 ChromaDB HTTP 模式** | 把 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) / [`CHROMA_HTTP_PORT`](/reference/env-configuration#chroma_http_port) 指向独立的 Chroma 服务 | 每个进程都通过 HTTP 连接同一个服务 |
@@ -158,7 +158,7 @@ CHROMA_HTTP_PORT=8000
 ### 7. 云上 Kubernetes 比本地更慢 {#7-slow-performance-in-cloud-vs-local-kubernetes}
 
 **症状：**
-- 本地运行良好，但部署到 AKS、EKS 或 GKE 后性能下降甚至超时
+- Open WebUI 在本地运行良好，但部署到 AKS、EKS 或 GKE 后性能下降或出现超时。
 - 即使资源充足，并发负载下性能也会急剧下降
 
 **原因：**

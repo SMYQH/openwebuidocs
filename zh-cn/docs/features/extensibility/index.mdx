@@ -54,7 +54,7 @@ Open WebUI 内置了强大的默认功能，但你的工作流并不是"默认"�
 
 ### 连接任意外部服务 {#connect-any-external-service}
 
-拥有内部 API？有 OpenAPI 规范的第三方 SaaS？堆栈中已有 MCP 服务器？将规范指向 Open WebUI，它就会自动发现端点并将其暴露为模型可调用的工具。无需胶水代码，无需包装层。
+已有内部 API、提供 OpenAPI 规范的第三方 SaaS，或正在运行的 MCP 服务器？让 Open WebUI 指向该规范，它就会自动发现端点，并将其作为模型可调用的工具提供。无需额外编写集成代码或包装层。
 
 ### 控制每条消息 {#control-every-message}
 
@@ -105,7 +105,7 @@ Open WebUI 的后端**完全异步**。长时运行的 Tools 和 Functions（等
 
 ### 实时数据丰富 {#real-time-data-enrichment}
 
-销售团队构建一个查询 CRM API 的 Tool。当销售代表问"Acme 这个项目最新进展如何？"时，模型调用该工具，检索管道阶段、最后活动和交易金额，并综合出一份基于实时数据（而非陈旧训练知识）的简报。
+销售团队构建了一个查询 CRM API 的 Tool。当销售代表问 *“Acme 这笔交易的最新进展如何？”* 时，模型调用该工具获取销售阶段、最近一次活动和交易金额，再根据实时数据而非过时的训练知识整理出一份简报。
 
 ### 企业合规过滤器 {#enterprise-compliance-filters}
 

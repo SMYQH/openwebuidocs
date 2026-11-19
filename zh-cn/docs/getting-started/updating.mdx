@@ -23,9 +23,9 @@ import TabItem from '@theme/TabItem';
 | **个人 / homelab** | 使用 `:main` 标签，需要最新版本时手动拉取 |
 | **共享 / 团队实例** | 固定特定版本（例如 `:vX.Y.Z`），并使用 [Diun](#diun) 接收更新通知 |
 | **生产 / 关键系统** | 固定版本，升级前查看[发布说明](https://github.com/open-webui/open-webui/releases)，先在预发布环境测试 |
+| **测试下一个发布版** | 在一个拥有自己卷的第二个实例上运行 `:dev` 预发布镜像，与你生产环境并行 |
 
 无论你处于哪一行，都很值得在 `:dev` 上运行一个第二实例：它只需一个标签、一个卷和一个端口。它能让你在新版本到达用户之前就看到它，能告诉你你的插件和配置是否仍然可用，而它发现的问题也能在发布前得到修复，而不是发布后。
-| **测试下一个发布版** | 在一个拥有自己卷的第二个实例上运行 `:dev` 预发布镜像，与你生产环境并行 |
 
 ### `:main` 与固定版本 {#main-vs-pinned-versions}
 
@@ -50,17 +50,17 @@ ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 3. 更新后**清理浏览器缓存**（`Ctrl+F5` / `Cmd+Shift+R`），避免旧前端资源残留。
 
 :::info 个人集成标签页
-个人工具服务器受 **Settings > Integrations**（管理员区域） 的 **User Connections** 分区中 **Direct Integrations** 开关控制（或 [`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)），该开关默认关闭。开关关闭时，用户设置中的 **Integrations** 标签页对所有人隐藏，包括管理员，不箣理 `direct_tool_servers` 权限如何设置。
+个人工具服务器受 **Settings > Integrations**（管理员区域）的 **User Connections** 分区中 **Direct Integrations** 开关控制（或 [`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)），该开关默认关闭。开关关闭时，用户设置中的 **Integrations** 标签页对所有人隐藏，包括管理员，不管 `direct_tool_servers` 权限如何设置。
 :::
 
 :::info v0.12.1 为 SCIM 用户添加登录记录
 这个版本会运行一次数据库迁移，为每个缺少登录记录的账号补上一条——实际上就是通过 [SCIM](/features/authentication-access/auth/scim#integration-with-sso) 创建的账号。它只会改动数据。请先备份。新增的记录不包含可用的密码，因此这些用户仍然通过 SSO 登录。
 :::
 
-:::warning 正在运行多个 worker 或副本？
+:::warning 正在运行多个副本？
 请在同一时间更新每个实例。对于会改变数据库 schema 的发布版，不支持滚动更新：迁移会一次性把整个数据库向前推进，而仍在旧版本上的实例会继续按旧结构查询。请停止所有副本，让其中一个实例完成迁移，再把其余实例以新版本启动。
 
-在除一个实例之外的所有实例上设置 `ENABLE_DB_MIGRATIONS=false` 只是决定**哪个**实例运行迁移，并不会让混合版本的集群变安全。完整流程参见[更新与迁移](/troubleshooting/multi-replica#updates-and-migrations)，相关搭置参见[扩展指南](/getting-started/advanced-topics/scaling)。
+在除一个实例之外的所有实例上设置 `ENABLE_DB_MIGRATIONS=false` 只是决定**哪个**实例运行迁移，并不会让混合版本的集群变安全。完整流程参见[更新与迁移](/troubleshooting/multi-replica#updates-and-migrations)，周边配置参见[扩展指南](/getting-started/advanced-topics/scaling)。
 :::
 
 ---
@@ -68,9 +68,9 @@ ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 ## 手动更新 {#manual-update}
 
 <Tabs groupId="setup-method">
-  <TabItem value="docker-run" label="Docker Run" default>
+  <TabItem value="docker-run" label="Docker 容器" default>
 
-``` bash
+```bash
 # 1. Stop and remove the container (data in the volume is preserved)
 docker rm -f open-webui
 
@@ -98,7 +98,7 @@ docker compose up -d
 
 请确认你的 `docker-compose.yml` 包含 `WEBUI_SECRET_KEY`：
 
-``` yaml title="docker-compose.yml"
+```yaml title="docker-compose.yml"
 services:
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -117,7 +117,7 @@ volumes:
 ```
 
   </TabItem>
-  <TabItem value="python" label="Python (pip)">
+  <TabItem value="python" label="Python（pip 安装）">
 
 ```bash
 pip install -U open-webui
@@ -155,9 +155,9 @@ open-webui serve
 如果更新引发问题，你可以通过固定旧版本标签回退到之前的版本。
 
 <Tabs groupId="setup-method">
-  <TabItem value="docker-run" label="Docker Run" default>
+  <TabItem value="docker-run" label="Docker 容器" default>
 
-``` bash
+```bash
 docker rm -f open-webui
 docker pull ghcr.io/open-webui/open-webui:v0.8.3
 docker run -d -p 3000:8080 -v open-webui:/app/backend/data \
@@ -184,7 +184,7 @@ docker compose up -d
 ```
 
   </TabItem>
-  <TabItem value="python" label="Python (pip)">
+  <TabItem value="python" label="Python（pip 安装）">
 
 ```bash
 pip install open-webui==0.8.3
@@ -295,7 +295,7 @@ docker run --rm -v open-webui:/data -v $(pwd):/backup \
   alpine tar czf /backup/openwebui-$(date +%Y%m%d).tar.gz /data
 ```
 
-建议在**每次更新前**以及固定周期（按你的使用频率决定每天或每周）进行备份。
+建议在**每次更新前**以及固定周期（按你使用 Open WebUI 的频率决定每天还是每周）进行备份。
 
 ### 恢复 {#restore}
 
@@ -318,7 +318,7 @@ docker start open-webui
 
 ## 相关指南 {#related-guides}
 
-- [扩展 Open WebUI](/getting-started/advanced-topics/scaling)：多 worker 与多实例部署
+- [扩展 Open WebUI](/getting-started/advanced-topics/scaling)：多副本部署
 - [连接错误](/troubleshooting/connection-error)：更新后连通性问题排查
 - [环境变量参考](/reference/env-configuration)：包含 `WEBUI_SECRET_KEY` 在内的全部配置项
 - [发布说明](https://github.com/open-webui/open-webui/releases)：每个版本的变更日志

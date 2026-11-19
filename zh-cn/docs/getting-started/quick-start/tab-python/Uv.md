@@ -20,7 +20,7 @@
 
 ### 2. 运行 Open WebUI {#2-run-open-webui}
 
-安装好 `uv` 后，就可以直接运行 Open WebUI。建议设置 `DATA_DIR`，避免数据丢失。下面分别给出了各平台示例：
+安装 `uv` 后，使用以下命令运行 Open WebUI。请务必设置 `DATA_DIR`，避免数据丢失。下面是各平台的示例：
 
 - **macOS/Linux**：
 

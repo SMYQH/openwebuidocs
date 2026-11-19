@@ -5,7 +5,7 @@ title: "应用变更"
 
 # 应用变更 {#applying-changes}
 
-策略变更在终端新预配时应用。它们不会重写已经正在运行的容器。
+策略变更会在新建终端时生效，不会修改正在运行的容器。
 
 这影响镜像变更、环境变量变更、资源变更、存储变更和重置设置。
 
@@ -36,7 +36,7 @@ curl -X POST http://terminals-orchestrator:3000/api/v1/terminals/refresh \
 }
 ```
 
-这会覆盖该用户在同一策略下的所有终端。如果某个连接使用了 [终端上下文](/features/open-terminal/terminals/orchestration/contexts)、因而拥有多个终端，请再加上 `context_id` 以只刷新其中一个：
+这会刷新该用户在此策略下的所有终端。如果连接使用[终端上下文](/features/open-terminal/terminals/orchestration/contexts)，同一用户会有多个终端。加上 `context_id` 可以只刷新其中一个：
 
 ```json
 {

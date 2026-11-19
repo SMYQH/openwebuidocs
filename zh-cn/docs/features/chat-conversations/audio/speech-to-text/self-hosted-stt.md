@@ -6,7 +6,7 @@ description: "将 Open WebUI 连接到自托管的 OpenAI 兼容转录服务器�
 
 # 自托管语音转文本 {#self-hosted-speech-to-text}
 
-Open WebUI 可以将录音发送到实现了 OpenAI 兼容 `/v1/audio/transcriptions` 终结点的自托管服务器。本指南以 LocalAI 搭配原生 Whisper base 模型为例。服务器负责转录音频；Open WebUI 负责录音并将返回的文本插入聊天输入框。
+Open WebUI 可以将录音发送到提供 OpenAI 兼容的 `/v1/audio/transcriptions` 端点的自托管服务器。本指南以 LocalAI 搭配标准 Whisper base 模型为例。服务器负责转录音频；Open WebUI 负责录音，并将返回的文本填入聊天输入框。
 
 :::warning
 
@@ -16,7 +16,7 @@ Open WebUI 可以将录音发送到实现了 OpenAI 兼容 `/v1/audio/transcript
 
 ## 配置 Open WebUI {#configure-open-webui}
 
-在你的转录服务器运行后，打开 **Settings > Audio**（管理员区域） 并设置：
+转录服务器启动后，打开管理面板中的**设置 > 音频**，按下表配置：
 
 | 设置 | 下方 LocalAI 示例中的值 |
 |---------|------------------------------------|
@@ -26,7 +26,7 @@ Open WebUI 可以将录音发送到实现了 OpenAI 兼容 `/v1/audio/transcript
 | **请求格式** | `Multipart Upload` |
 | **STT 模型** | `whisper-1` |
 
-点击 **Save**。在你的用户音频设置中，请将**语音转文本引擎**保持为 **Default**，以使录音使用管理员配置的服务器。
+点击**保存**。在用户音频设置中，将**语音转文本引擎**保持为**默认**，以便使用管理员配置的服务器转录录音。
 
 `OpenAI` 引擎仅决定使用哪种 API 协议。使用上述基础 URL 时，请求会被发往你的 LocalAI 服务器。你不需要 OpenAI 账号或 OpenAI API 密钥。模型名称必须与转录服务器提供的名称一致。
 
@@ -82,7 +82,7 @@ AUDIO_STT_OPENAI_API_KEY=replace-with-your-own-secret
 AUDIO_STT_MODEL=whisper-1
 ```
 
-请根据你的部署方式使用可访问的基础 URL，并与 LocalAI 使用相同的密钥。已保存在 Open WebUI 数据库中的设置可能会覆盖这些初始值；重启后请检查 **Settings > Audio**（管理员区域）。
+请根据部署方式填写后端可访问的基础 URL，并使用与 LocalAI 相同的密钥。Open WebUI 数据库中保存的设置可能会覆盖这些初始值；重启后，请检查管理面板中的**设置 > 音频**。
 
 ## 测试与排查 {#test-and-troubleshoot}
 
@@ -91,7 +91,7 @@ AUDIO_STT_MODEL=whisper-1
 - **连接被拒绝或超时**：检查从 Open WebUI 后端所在主机或容器访问时使用的地址。确认 LocalAI 正在可访问的接口和端口上监听。
 - **401 或 403**：检查已保存的 STT API 密钥是否与 LocalAI 的密钥一致。
 - **模型未找到**：使用相同的授权头通过 `GET /v1/models` 检查已安装的模型名称。
-- **404**：将 API 基础 URL 设置为以 `/v1` 结尾，而不是 `/v1/audio/transcriptions`；Open WebUI 会自动追加终结点路径。
+- **404**：基础 API 端点的 URL 应以 `/v1` 结尾，而不是 `/v1/audio/transcriptions`；Open WebUI 会自动追加转录端点的路径。
 - **音频解码错误**：确认 LocalAI 可以访问 FFmpeg，并用 `curl` 命令直接尝试一个 WAV 文件。对于浏览器录音，还要检查 Open WebUI 允许的扩展名和内容类型是否包含你的浏览器所发送的格式。
 
 该配置仅针对录音转文本，不涉及文本转语音或实时语音 API。

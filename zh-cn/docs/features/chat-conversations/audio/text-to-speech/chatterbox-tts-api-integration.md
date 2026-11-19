@@ -194,7 +194,7 @@ cd frontend && npm install && npm run build
 
 ### 端口说明 {#port-configuration}
 
-- **仅 API**：通过 `http://localhost:4123` 访问
+- **仅 API**：通过 `http://localhost:4123` 访问（直接 API 访问）
 - **带前端**：Web UI 位于 `http://localhost:4321`，API 请求通过反向代理转发
 
 因此，当使用 `--profile frontend` 运行时，Web 界面位于 `http://localhost:4321`，而 API 则在代理后端运行。
@@ -233,6 +233,7 @@ Chatterbox 初次启动时可能比较折腾，如果某种安装方式不顺利
 如需了解更多 `chatterbox-tts-api` 信息，请访问其 [GitHub 仓库](https://github.com/travisvn/chatterbox-tts-api)。
 
 - 📖 **文档**：参见 [API 文档](https://github.com/travisvn/chatterbox-tts-api/blob/main/docs/API_README.md) 和 [Docker 指南](https://github.com/travisvn/chatterbox-tts-api/blob/main/docs/DOCKER_README.md)
+- **Discord**：加入本项目的 Discord 社区
 
 ## 故障排查 {#troubleshooting}
 
@@ -256,7 +257,6 @@ Chatterbox 的内存要求高于其他 TTS 方案：
 ### 首次启动 {#first-time-startup}
 
 第一次 TTS 请求通常会更慢，因为模型需要先加载。可使用以下命令查看日志：
-
 ```bash
 docker logs chatterbox-tts-api -f
 ```

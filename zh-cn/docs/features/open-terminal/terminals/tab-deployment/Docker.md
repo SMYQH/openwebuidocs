@@ -75,7 +75,7 @@ TERMINALS_API_KEY=change-me-to-a-strong-random-value
 docker compose up -d
 ```
 
-Open WebUI 将在 `http://localhost:3000` 上可用。当任何用户激活终端时，编排器会自动配置其个人容器。
+可以通过 `http://localhost:3000` 访问 Open WebUI。用户启用终端时，编排器会自动为其创建个人容器。
 
 :::warning Docker 套接字访问
 编排器需要访问 Docker 套接字 (`/var/run/docker.sock`) 来管理容器。在生产环境中，请使用 Docker 套接字代理，如 [Tecnativa/docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy)，以限制其可以进行的 API 调用。
@@ -125,5 +125,5 @@ Open WebUI 将在 `http://localhost:3000` 上可用。当任何用户激活终�
 ## 限制 {#limitations}
 
 - **单主机。** 所有用户容器都在一个 Docker 主机上运行。如需高可用性或服务更大的团队，请使用 Kubernetes Operator 后端。
-- **没有内置高可用性。** 如果编排器宕机，活动的终端会话将被中断（尽管容器继续运行并在重新启动时被协调）。
+- **没有内置高可用性。** 编排器宕机会中断正在使用的终端会话。容器仍会运行，编排器重启后会重新接管。
 - **需要 Docker 套接字。** 编排器需要访问 Docker 套接字来管理容器。

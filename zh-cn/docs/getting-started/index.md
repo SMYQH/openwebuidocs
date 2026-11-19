@@ -46,7 +46,7 @@ Open WebUI 几乎可以运行在任何环境中（Docker、Kubernetes、pip、�
 
 **已经在跑 Open WebUI？把它安装成任意设备上的应用。**
 
-Open WebUI 是一个渐进式 Web 应用（PWA）。你可以把它添加到手机主屏、桌面任务栏或 Dock 中，无需单独下载。从任何浏览器都能获得全屏、原生体验。
+Open WebUI 是一个渐进式 Web 应用（PWA）。你可以把它添加到手机主屏、桌面任务栏或 Dock 中，无需单独下载。从任何浏览器都能获得近似原生应用的全屏体验。
 
 | | |
 | :--- | :--- |
@@ -58,7 +58,7 @@ Open WebUI 是一个渐进式 Web 应用（PWA）。你可以把它添加到手�
 
 ---
 
-## ✨ 新用户必读 {#essentials-for-open-webui}
+## ✨ Open WebUI 新用户必读 {#essentials-for-open-webui}
 
 **已经安装并开始聊天了——接下来呢？**
 
@@ -74,7 +74,7 @@ Open WebUI 是一个渐进式 Web 应用（PWA）。你可以把它添加到手�
 | 🌐 **Web 搜索** | 选择一个搜索提供商，需要时模型就会自行搜索 |
 | 🧰 **Open Terminal** | 模型可以在其中构建并运行内容的沙箱化 shell |
 
-[**阅读必读内容 →**](/getting-started/essentials)
+[**阅读入门指南 →**](/getting-started/essentials)
 
 ---
 
@@ -114,11 +114,11 @@ Open WebUI 不只是本地 AI 界面，更可以作为团队的集中式 AI 操�
 
 **扩展、观测并自定义你的部署。**
 
-如果你需要超越基础配置，这里就是下一站。你可以配置环境变量、连接外部数据库、接入云存储、启用 OpenTelemetry，或借助 Redis 和多 worker 实现横向扩展。
+在基础配置之上，你可以配置环境变量、连接外部数据库、接入云存储、启用 OpenTelemetry，或使用 Redis 和多个副本实现横向扩展。
 
 | | |
 | :--- | :--- |
-| ⚖️ **扩展** | 多 worker、多节点、Redis 支持的会话 |
+| ⚖️ **扩展** | 多副本、多节点、由 Redis 支持的会话 |
 | 📊 **日志与可观测性** | OpenTelemetry 链路、指标和结构化日志 |
 | 🧪 **开发环境** | 从源码运行，进行本地开发与测试 |
 

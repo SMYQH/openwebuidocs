@@ -47,7 +47,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 多日历组织 {#multi-calendar-organization}
 
-跨多个日历组织事件（例如"个人"、"团队会议"），并使用颜色编码。每个用户首次访问时会自动创建**个人**和**定时任务**日历。
+跨多个日历组织事件（例如"个人"、"团队会议"、"值班"），并使用颜色编码。每个用户首次访问时会自动创建**个人**和**定时任务**日历。
 
 ---
 
@@ -260,7 +260,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 |--------|----------|
 | **无** | 不提示 |
 | **事件开始时** | 事件开始时提示 |
-| **提前 5/10/15/30 分钟** | 提前相应分钟数提示 |
+| **提前 5 / 10 / 15 / 30 分钟** | 提前相应分钟数提示 |
 | **提前 1 小时** | 提前 60 分钟提示 |
 
 默认为**提前 10 分钟**。
@@ -271,7 +271,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 2. **浏览器通知** — 如果用户设置中启用了浏览器通知，会显示原生 OS 通知。
 3. **Webhook** — 如果用户在 **设置 > 通知** 中配置了 Webhook URL，会发送 `calendar_alert` 负载。
 
-提示通过 `meta.alerted_at` 在服务端进行去重，因此每个事件每个开始时间最多触发一次——即使重启或多实例部署也不例外。
+提示通过 `meta.alerted_at` 在服务端进行去重，因此每个事件每个开始时间最多触发一次——即使重启或多实例部署也不例外。把事件移动到新的开始时间后，其提示会重新触发。
 
 全局提示轮询窗口可通过 [`CALENDAR_ALERT_LOOKAHEAD_MINUTES`](/reference/env-configuration#calendar_alert_lookahead_minutes) 配置（默认：10 分钟）。
 

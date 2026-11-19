@@ -1,10 +1,10 @@
 ---
 sidebar_position: 202
-title: "使用 Caddy 的 HTTPS"
+title: "使用 Caddy 配置 HTTPS"
 ---
 
 
-## 使用 Caddy 的 HTTPS {#https-using-caddy}
+## 使用 Caddy 配置 HTTPS {#https-using-caddy}
 
 确保用户与 Open WebUI 之间的通信安全至关重要。HTTPS（HyperText Transfer Protocol Secure）会对传输中的数据进行加密，防止窃听和篡改。通过将 Caddy 配置为反向代理，你可以轻松为 Open WebUI 部署添加 HTTPS，同时提升安全性和可信度。
 
@@ -12,7 +12,7 @@ title: "使用 Caddy 的 HTTPS"
 
 接下来我们将按以下步骤完成配置：
 
-- [使用 Caddy 的 HTTPS](#https-using-caddy)
+- [使用 Caddy 配置 HTTPS](#https-using-caddy)
 - [Docker](#docker)
   - [安装 Docker](#installing-docker)
 - [Open WebUI](#openwebui)
@@ -21,7 +21,7 @@ title: "使用 Caddy 的 HTTPS"
   - [安装 Caddy](#installing-caddy)
   - [配置 Caddy](#configure-caddy)
 - [测试 HTTPS](#testing-https)
-  - [可选：通过反向代理设置安全头](#optional-security-headers-via-reverse-proxy)
+- [可选：通过反向代理设置安全头](#optional-security-headers-via-reverse-proxy)
 - [更新 Open WebUI](#updating-open-webui)
   - [停止 Open WebUI](#stopping-open-webui)
   - [拉取最新镜像](#pulling-the-latest-image)
@@ -79,7 +79,7 @@ Caddy 是一个强大的 Web 服务器，会自动替你管理 TLS 证书，因�
 
 ### 配置 Caddy {#configure-caddy}
 
-接下来需要修改 `CaddyFile`，将其替换为你的域名。
+接下来需要修改 `CaddyFile`，填入你的域名。
 
 要完成修改，请编辑 `/etc/caddy/Caddyfile` 文件：
 

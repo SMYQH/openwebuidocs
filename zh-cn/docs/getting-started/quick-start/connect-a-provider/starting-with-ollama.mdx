@@ -31,8 +31,8 @@ Open WebUI 的设计是**面向协议（Protocol-Oriented）**的。当我们提
 
 在 Open WebUI 中管理 Ollama 的步骤如下：
 
-1. 打开 Open WebUI 中的 **Admin Settings**。
-2. 进入 **Connections > Ollama > Manage**（点击扳手图标）。
+1. 在 Open WebUI 管理面板中前往 **Settings > Connections**。
+2. 在 **Manage Ollama API Connections** 下找到你的实例，并点击 **Manage**（下载图标）。
    在这里，你可以下载模型、调整设置并管理 Ollama 连接。
 
 ### 连接提示 {#connection-tips}
@@ -44,7 +44,7 @@ Open WebUI 的设计是**面向协议（Protocol-Oriented）**的。当我们提
 ### 高级配置 {#advanced-configuration}
 
 *   **Prefix ID：** 如果你有多个 Ollama 实例都在提供相同模型名，可加上前缀（例如 `remote/`）加以区分。
-*   **Model IDs (Filter)：** 在这里列出需要展示的特定模型（白名单）。留空则显示全部。
+*   **Model IDs (Filter)**：列出需要显示的模型 ID（白名单）。留空则显示全部。每个 ID 只能添加一次。系统会去掉输入中的首尾空格，若 ID 已在列表中，则拒绝添加并显示 **Model ID is already added**。
 
 :::tip 连接超时配置
 
@@ -75,8 +75,6 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=3
 
 如果你不想在 Admin Settings 菜单里来回切换，而是想直接开始用模型，这种方式会非常方便。
 
----
-
 ### 从 Hugging Face 下载 GGUF 模型 {#downloading-gguf-models-from-hugging-face}
 
 Ollama 也可以直接从 Hugging Face 下载 GGUF 模型。在 **从 Ollama.com 拉取模型** 或模型选择器中，把模型写成 `hf.co/{username}/{repository}:{quantization}`，例如 `hf.co/ggml-org/gemma-3-270m-it-GGUF:Q8_0`。量化标识要与 GGUF 文件名中的写法一致，例如 `Q4_K_M` 或 `Q8_0`。之后该模型会以这个完整名称列出。关于哪些仓库可用，请参阅 Hugging Face 的 [Ollama 指南](https://huggingface.co/docs/hub/en/ollama)。
@@ -90,8 +88,6 @@ Ollama 也可以直接从 Hugging Face 下载 GGUF 模型。在 **从 Ollama.com
 ## 更新与删除模型 {#updating-and-deleting-models}
 
 这两个操作都位于下载功能所在的同一个 **管理** 对话框中（参见[第 2 步](#step-2-managing-your-ollama-instance)）。它们只作用于你打开 **管理** 的那个连接背后的 Ollama 服务器，因此当你有多个 Ollama 连接时，需要在每个想要修改的连接上分别打开 **管理**。
-
----
 
 ### 更新所有模型 {#updating-all-models}
 

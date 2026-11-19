@@ -1,9 +1,9 @@
 ---
 sidebar_position: 50
-title: "Redis WebSocket 支持"
+title: "Redis Websocket 支持"
 ---
 
-# 🔗 Redis WebSocket 支持 {#redis-websocket-support}
+# 🔗 Redis Websocket 支持 {#redis-websocket-support}
 
 :::warning
 本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
@@ -15,7 +15,7 @@ title: "Redis WebSocket 支持"
 
 ## 何时需要 Redis？ {#when-is-redis-required}
 
-只要运行了多个 Open WebUI 进程（多个 Uvicorn worker 或多个实例），就需要 Redis；它也是让登出能够撤销令牌的关键。[第 2 步：添加 Redis](/getting-started/advanced-topics/scaling#step-2-add-redis) 说明了 Redis 协调哪些内容，以及单实例何时需要它。
+只要运行了多个 Open WebUI 进程（多个 Uvicorn worker 或多个实例），就需要 Redis；它也是让登出能够撤销令牌的关键。[第 2 步：添加 Redis](/getting-started/advanced-topics/scaling#step-2-add-redis) 说明了它协调哪些内容，以及单实例何时需要它。
 
 ### 前提条件 {#prerequisites}
 
@@ -50,7 +50,7 @@ Open WebUI 使用 Redis 进行：
 
 将以下设置添加到您的 Redis 配置中：
 
-``` conf
+```conf
 # Allow sufficient concurrent connections
 maxclients 10000
 
@@ -61,7 +61,7 @@ timeout 1800
 
 **Docker 部署**时，将以下内容添加到 Redis 命令中：
 
-``` yml
+```yml
 services:
   redis:
     image: redis:7-alpine
@@ -79,7 +79,7 @@ services:
 **监控：**
 
 检查当前连接数：
-``` bash
+```bash
 redis-cli INFO clients | grep connected_clients
 ```
 
@@ -105,7 +105,7 @@ Open WebUI 把 Redis 当作**有状态存储，而不是一次性缓存**。它�
 
 请使用 **`noeviction`**（安全的默认值）。内存耗尽时，Redis 会以错误拒绝新的写入——这是一个响亮的、可恢复的信号，而不是静默丢弃认证和会话状态：
 
-``` conf
+```conf
 maxmemory-policy noeviction
 ```
 
@@ -119,9 +119,9 @@ Open WebUI 的 Redis 工作集很小（websocket 池、吊销记录、锁、任�
 
 示例命令使用 `--save 30 1`（在 30 秒后生成一次 RDB 快照，前提是至少有一个键发生了变化）。在**非正常**重启时，Redis 会丢失自上次快照以来的所有写入，包括令牌撤销和会话状态，因此崩溃可能导致已登出的令牌被复活，或活动会话被丢弃。
 
-对于生产环境，还应启用追加文件（AOF），使持久化粒度在秒级而非分钟级：
+对于生产环境，还应启用追加文件（AOF），使丢失量控制在约一秒：
 
-``` conf
+```conf
 appendonly yes
 appendfsync everysec
 ```
@@ -130,9 +130,9 @@ appendfsync everysec
 
 ## 设置 Redis {#setting-up-redis}
 
-要为 WebSocket 支持配置 Redis，需要创建一个包含以下内容的 `docker-compose.yml` 文件：
+要为 websocket 支持配置 Redis，需要创建一个包含以下内容的 `docker-compose.yml` 文件：
 
-``` yml
+```yml
 services:
   redis:
     image: redis:7-alpine
@@ -175,7 +175,7 @@ networks:
 
 此配置中未包含 `ports` 指令，因为大多数情况下不需要。Redis 服务仍可在 Docker 网络内被 Open WebUI 服务访问。但是，如果需要从 Docker 网络外部访问 Redis 实例（例如用于调试或监控），可以添加 `ports` 指令来暴露 Redis 端口（例如 `6379:6379`）。
 
-上述配置会创建一个名为 `redis` 的 Redis 容器，并挂载一个持久化数据的卷。`healthcheck` 指令确保容器在无法响应 `ping` 命令时重启。`--save 30 1` 命令选项会在至少 1 个键发生更改时，每 30 分钟将 Redis 数据库保存到磁盘，而 `--appendonly yes` 则提供了秒级持久化。
+上述配置会创建一个名为 `redis` 的 Redis 容器，并挂载一个持久化数据的卷。`healthcheck` 指令确保容器在无法响应 `ping` 命令时重启。`--save 30 1` 命令选项会在至少 1 个键发生更改后 30 秒写入一次 RDB 快照，而 `--appendonly yes` 则提供了秒级持久化。
 
 **重要提示：** `--maxclients 10000 --timeout 1800` 标志用于防止连接耗尽，而 `--maxmemory-policy noeviction` 可防止 Redis 静默驱逐 Open WebUI 的会话和令牌撤销键。详情请参阅上方的[关键：Redis 服务器配置](#critical-redis-server-configuration)、[关键：内存驱逐策略](#critical-memory-eviction-policy)和[关键：持久化](#persistence)部分。
 
@@ -183,9 +183,9 @@ networks:
 
 ### WebSocket Pub/Sub 缓冲区限制 {#websocket-pubsub-buffer-limits}
 
-当 `WEBSOCKET_MANAGER=redis` 启用时，Open WebUI 通过 Redis Pub/Sub 使用 Socket.IO。流式响应和工具事件可能产生较大的 WebSocket 事件，因为部分更新会包含累积的消息状态，而不仅仅是最新的 token 增量。如果 Redis 在传递这些事件时断开了 Pub/Sub 客户端，用户可能会看到流停滞、实时更新丢失，或日志中出现类似以下的消息：
+当 `WEBSOCKET_MANAGER=redis` 启用时，Open WebUI 通过 Redis Pub/Sub 使用 Socket.IO。流式响应和工具事件可能产生较大的 websocket 事件，因为部分更新会包含累积的消息状态，而不仅仅是最新的 token 增量。如果 Redis 在传递这些事件时断开了 Pub/Sub 客户端，用户可能会看到流停滞、实时更新丢失，或日志中出现类似以下的消息：
 
-``` text
+```text
 Cannot publish to redis... retrying
 Cannot publish to redis... giving up
 redis.exceptions.TimeoutError: Timeout connecting to server
@@ -193,7 +193,7 @@ redis.exceptions.TimeoutError: Timeout connecting to server
 
 可通过以下方式检查 Redis 是否因输出缓冲区限制而断开了 Pub/Sub 客户端：
 
-``` bash
+```bash
 redis-cli INFO stats | grep client_output_buffer_limit_disconnections
 redis-cli SLOWLOG GET 50
 redis-cli CONFIG GET client-output-buffer-limit
@@ -201,24 +201,24 @@ redis-cli CONFIG GET client-output-buffer-limit
 
 如果慢日志中出现较大的 `PUBLISH socketio ...` 负载，并且 `client_output_buffer_limit_disconnections` 计数持续增加，则应提高 Redis 的 Pub/Sub 输出缓冲区限制。例如：
 
-``` conf
+```conf
 # Keep normal clients unchanged; allow larger websocket Pub/Sub bursts.
 client-output-buffer-limit normal 0 0 0 replica 268435456 67108864 60 pubsub 1073741824 268435456 180
 ```
 
-上述配置将 Pub/Sub 硬上限设为 1 GB，软上限设为 256 MB，持续 180 秒。请根据你的 Redis 可用内存与预期的 WebSocket 负载大小调整这些数值。较高的限制会让 Redis 对临时较慢的订阅者更具容忍度，但同时也会让每个较慢的 Pub/Sub 客户端在被 Redis 断开前缓存更多内存。
+上述配置将 Pub/Sub 硬上限设为 1 GB，软上限设为 256 MB，持续 180 秒。请根据你的 Redis 可用内存与预期的 websocket 负载大小调整这些数值。较高的限制会让 Redis 对临时较慢的订阅者更具容忍度，但同时也会让每个较慢的 Pub/Sub 客户端在被 Redis 断开前缓存更多内存。
 
 默认开启[按房间划分的 Redis 频道](../../getting-started/advanced-topics/scaling.md#per-room-redis-channels)后，Redis 只会把与该实例相连用户的更新发送给它，从而在多实例部署中让这些缓冲区保持更小。房间频道在慢日志中显示为 `PUBLISH socketio#...`。
 
 如果你是运行时修改的 Redis 配置，可通过以下命令验证当前生效的值：
 
-``` bash
+```bash
 redis-cli CONFIG GET client-output-buffer-limit
 ```
 
 要为 Open WebUI 和 Redis 之间的通信创建 Docker 网络，运行以下命令：
 
-``` bash
+```bash
 docker network create openwebui-network
 ```
 
@@ -226,16 +226,16 @@ docker network create openwebui-network
 
 ### 基本配置（所有部署） {#basic-configuration-all-deployments}
 
-``` bash
+```bash
 REDIS_URL="redis://redis:6379/0"
 WEBSOCKET_MANAGER="redis"
 ```
 
 `REDIS_URL` 是用于令牌撤销、锁、任务跟踪、速率限制和共享缓存的连接。`WEBSOCKET_MANAGER=redis` 让 websocket 层也使用 Redis，因此实时更新能够到达连接到任意 worker 或实例的用户。
 
-### WebSocket 配置 {#websocket-configuration}
+### Websocket 配置 {#websocket-configuration}
 
-WebSocket 默认开启（[`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configuration#enable_websocket_support)）。websocket 层使用 `REDIS_URL`，并遵循 `REDIS_CLUSTER`。只有在需要把 websocket 流量放到不同的 Redis 服务器或数据库时（例如 `redis://redis:6379/1`），才设置 [`WEBSOCKET_REDIS_URL`](/reference/env-configuration#websocket_redis_url)（以及 `WEBSOCKET_REDIS_CLUSTER`）。
+WebSockets 默认开启（[`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configuration#enable_websocket_support)）。websocket 层使用 `REDIS_URL`，并遵循 `REDIS_CLUSTER`。只有在需要把 websocket 流量放到不同的 Redis 服务器或数据库时（例如 `redis://redis:6379/1`），才设置 [`WEBSOCKET_REDIS_URL`](/reference/env-configuration#websocket_redis_url)（以及 `WEBSOCKET_REDIS_CLUSTER`）。
 
 :::warning CORS 与 websocket
 如果你设置了 [`CORS_ALLOW_ORIGIN`](/reference/env-configuration#cors_allow_origin)，请用分号分隔，列出用户打开 Open WebUI 时会用到的每一个源，例如 `https://chat.example.com`。来自其他任何源的 websocket 连接都会被拒绝。参见[连接错误](/troubleshooting/connection-error#https-tls-cors--websocket-issues)。
@@ -243,7 +243,7 @@ WebSocket 默认开启（[`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configurati
 
 ### 可选配置 {#optional-configuration}
 
-``` bash
+```bash
 REDIS_KEY_PREFIX="open-webui"
 ```
 
@@ -262,7 +262,7 @@ Redis Sentinel 设置需要明确的套接字连接超时配置，以确保正�
 - 主节点故障转移后恢复需要几分钟而非几秒
 
 **所需配置：**
-``` bash
+```bash
 REDIS_SOCKET_CONNECT_TIMEOUT=5
 ```
 
@@ -274,8 +274,8 @@ REDIS_SOCKET_CONNECT_TIMEOUT=5
 
 **如果使用 WEBSOCKET_REDIS_OPTIONS**
 
-当您明确设置 `WEBSOCKET_REDIS_OPTIONS` 时，`REDIS_SOCKET_CONNECT_TIMEOUT` 不会自动应用于 WebSocket 连接。您必须在两处都包含超时：
-``` bash
+当您明确设置 `WEBSOCKET_REDIS_OPTIONS` 时，`REDIS_SOCKET_CONNECT_TIMEOUT` 不会自动应用于 websocket 连接。您必须在两处都包含超时：
+```bash
 REDIS_SOCKET_CONNECT_TIMEOUT=5
 WEBSOCKET_REDIS_OPTIONS='{"socket_connect_timeout": 5}'
 ```
@@ -316,7 +316,7 @@ WEBSOCKET_REDIS_OPTIONS='{"socket_connect_timeout": 5}'
 
 对于使用 Redis 集群（包括 **AWS Elasticache Serverless** 等托管服务）的部署，使用以下配置启用集群模式：
 
-``` bash
+```bash
 REDIS_URL="redis://your-cluster-endpoint:6379/0"
 REDIS_CLUSTER="true"
 ```
@@ -335,7 +335,7 @@ REDIS_CLUSTER="true"
 
 对于 AWS Elasticache Serverless 部署，使用以下配置：
 
-``` bash
+```bash
 REDIS_URL="rediss://your-elasticache-endpoint.serverless.use1.cache.amazonaws.com:6379/0"
 REDIS_CLUSTER="true"
 ```
@@ -348,7 +348,7 @@ Redis 集群模式与 OpenTelemetry 仪表完全兼容。启用 `ENABLE_OTEL` �
 
 ### 完整配置示例 {#complete-example-configuration}
 
-``` bash
+```bash
 # Required for multi-replica deployments
 REDIS_URL="redis://redis:6379/0"
 WEBSOCKET_MANAGER="redis"
@@ -367,7 +367,7 @@ REDIS_SOCKET_KEEPALIVE=True
 
 #### Redis 集群模式示例 {#redis-cluster-mode-example}
 
-``` bash
+```bash
 REDIS_URL="rediss://your-cluster-endpoint:6379/0"
 REDIS_CLUSTER="true"
 WEBSOCKET_MANAGER="redis"
@@ -377,7 +377,7 @@ WEBSOCKET_MANAGER="redis"
 
 将 Open WebUI 连接到与 Redis 相同的 Docker 网络：
 
-``` bash
+```bash
 docker run -d \
   --name open-webui \
   --network openwebui-network \
@@ -409,7 +409,7 @@ docker run -d \
 
 首先，确认 Redis 实例正在运行并接受连接：
 
-``` bash
+```bash
 docker exec -it redis redis-cli -p 6379 ping
 ```
 
@@ -423,11 +423,11 @@ docker exec -it redis redis-cli -p 6379 ping
 
 查找表明 Redis 正在用于应用程序状态的日志消息：
 
-``` bash
+```bash
 docker logs open-webui 2>&1 | grep -i redis
 ```
 
-#### 检查 WebSocket Redis 连接 {#check-for-websocket-redis-connection}
+#### 检查 Websocket Redis 连接 {#check-for-websocket-redis-connection}
 
 如果你设置了 `WEBSOCKET_MANAGER=redis` 和 `GLOBAL_LOG_LEVEL=DEBUG`，你应当看到这条日志消息：
 
@@ -437,14 +437,14 @@ DEBUG:open_webui.socket.main:Using Redis to manage websockets.
 
 专门检查此项：
 
-``` bash
+```bash
 docker logs open-webui 2>&1 | grep "Using Redis to manage websockets"
 ```
 ### 验证 Redis 键 {#verify-redis-keys}
 
 您还可以验证 Open WebUI 实际上正在向 Redis 写入数据：
 
-``` bash
+```bash
 docker exec -it redis redis-cli --scan --pattern "open-webui*"
 ```
 
@@ -462,7 +462,7 @@ docker exec -it redis redis-cli --scan --pattern "open-webui*"
 
 - 日志中出现关于 Redis 连接的错误消息
 - 应用程序无法启动或崩溃
-- WebSocket 不工作
+- Websocket 不工作
 
 **解决方案：**
 
@@ -472,7 +472,7 @@ docker exec -it redis redis-cli --scan --pattern "open-webui*"
 4. 确保 `REDIS_URL` 使用正确的容器名称，而非 `127.0.0.1` 或 `localhost`
 5. 检查两个容器是否在同一 Docker 网络上
 
-#### 问题："WebSocket 不工作" {#issue-websockets-not-working}
+#### 问题："Websocket 不工作" {#issue-websockets-not-working}
 
 **症状：**
 
@@ -491,14 +491,13 @@ docker exec -it redis redis-cli --scan --pattern "open-webui*"
 
 **症状：**
 
-- 配置更改影响其他实例
-- 部署之间会话冲突
-- 运行多个 Open WebUI 安装时出现意外行为
+- 两个独立的 Open WebUI 安装共用同一个 Redis 服务器
+- 其中一个安装的活跃用户数或模型列表会出现在另一个安装中
 
 **解决方案：**
 为每个安装使用不同的 `REDIS_KEY_PREFIX` 值：
 
-``` bash
+```bash
 # Instance 1
 REDIS_KEY_PREFIX="openwebui-prod"
 
@@ -604,7 +603,7 @@ REDIS_KEY_PREFIX="openwebui-dev"
 
 将 `REDIS_HEALTH_CHECK_INTERVAL` 环境变量设置为**小于** Redis 服务器 `timeout` 的值：
 
-``` bash
+```bash
 # Redis server timeout is 1800s (30 min), so check every 60s
 REDIS_HEALTH_CHECK_INTERVAL=60
 ```
@@ -638,6 +637,4 @@ REDIS_HEALTH_CHECK_INTERVAL=60
 2. 检查完整配置是否有拼写错误
 3. 验证所有容器可以在 Docker 网络上通信
 4. 收集 Open WebUI 和 Redis 容器的相关日志
-5. 在 [Open WebUI GitHub Discussions](https://github.com/open-webui/open-webui/discussions) 获取社区支持
-
-按照这些步骤和故障排除提示，您应该能够为 Open WebUI 配置 Redis，实现应用程序状态管理和 WebSocket 支持，从而实现可靠的多实例部署和客户端与应用程序之间的实时通信。
+5. 加入 Open WebUI Discord 社区，获取社区支持

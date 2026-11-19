@@ -5,7 +5,7 @@ title: "Docling 文档提取"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程由社区贡献，不在 Open WebUI 团队的支持范围内。它仅演示如何按实际需求自定义 Open WebUI。欢迎贡献，详情请参阅贡献教程。
 
 :::
 
@@ -75,7 +75,7 @@ services:
 
 :::danger 重要：UVICORN_WORKERS 设置
 
-当默认 `LocalOrchestrator` 与 `UVICORN_WORKERS > 1` 一起使用时，你会遇到 **"Task Not Found (404)"** 错误。原因是每个 worker 都维护自己的内存任务存储，从而导致某个 worker 创建的任务无法被另一个 worker 访问。
+使用默认的 `LocalOrchestrator` 时，如果 `UVICORN_WORKERS` 大于 1，就会遇到 **"Task Not Found (404)"** 错误。每个 worker 都在自己的内存中保存任务，因此另一个 worker 无法访问这些任务。
 
 **除非你已配置 Redis 等共享状态机制，否则始终使用 `UVICORN_WORKERS=1`。**
 
@@ -95,7 +95,7 @@ services:
 若要启用文档中的 AI 图片描述，请在 **文档** 标签中 Docling 设置的 **Parameters** JSON 字段中加入图片描述选项。共有两种模式：
 
 - **local**：Vision 模型在 Docling 容器内部运行，通过 `picture_description_local` 配置
-- **API**：Docling 调用外部服务（如 Ollama 或兼容 OpenAI 的 endpoint），通过 `picture_description_api` 配置
+- **API**：Docling 调用外部服务（如 Ollama 或兼容 OpenAI 的端点），通过 `picture_description_api` 配置
 
 :::danger API 模式的必要条件
 
@@ -141,7 +141,7 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 
 | 变量 | 默认值 | 说明 |
 | -------- | ------- | ---- |
-| `DOCLING_SERVE_ENABLE_UI` | `false` | 在 `/ui` endpoint 启用 Web UI |
+| `DOCLING_SERVE_ENABLE_UI` | `false` | 在 `/ui` 端点启用 Web UI |
 | `DOCLING_SERVE_ENABLE_REMOTE_SERVICES` | `false` | **API 模式图片描述所必需** |
 | `DOCLING_SERVE_MAX_SYNC_WAIT` | `120` | 同步请求最大等待秒数 |
 | `DOCLING_SERVE_ENG_LOC_NUM_WORKERS` | `1` | 本地引擎 worker 数量 |
@@ -166,8 +166,8 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 
 :::tip 语言代码
 
-- **Tesseract**：使用 3 位 ISO 639-2（例如 `eng`、`deu`、`fra`）
-- **EasyOCR**：使用 2 位 ISO 639-1（例如 `en`、`de`、`fr`）
+- **Tesseract**：使用 3 字母的 ISO 639-2 代码（例如 `eng`、`deu`、`fra`）
+- **EasyOCR**：使用 2 字母的 ISO 639-1 代码（例如 `en`、`de`、`fr`）
 :::
 
 **配置示例：**
@@ -229,8 +229,8 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 
 **解决方案：**
 
-- Tesseract 使用 3 位代码：`["eng", "deu"]`
-- EasyOCR 使用 2 位代码：`["en", "de"]`
+- Tesseract 使用 3 字母代码：`["eng", "deu"]`
+- EasyOCR 使用 2 字母代码：`["en", "de"]`
 
 ### 引用指向错误的页码 {#citations-point-to-the-wrong-page}
 

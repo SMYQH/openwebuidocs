@@ -5,12 +5,12 @@ title: "HTTPS 与反向代理"
 
 # HTTPS 与反向代理 {#https--reverse-proxies}
 
-**使用 TLS 加密、反向代理或托管隔道保护你的 Open WebUI 部署。**
+**使用 TLS 加密、反向代理或托管隧道保护你的 Open WebUI 部署。**
 
 HTTPS 对用户与 Open WebUI 之间的所有流量进行加密，保护聊天历史、凭据和上传的文件。它同时是语音通话等浏览器功能的**必要条件**，这些功能需要安全上下文才能访问麦克风。
 
 :::warning 语音通话需要 HTTPS
-现代浏览器在非 HTTPS 源上阻止麦克风访问。除非你在 `localhost` 上，否则**语音通话无法工作**，无法通过纯 `http://` 使用。
+现代浏览器会阻止非 HTTPS 源访问麦克风。除 `localhost` 外，**语音通话无法通过**纯 `http://` 使用。
 :::
 
 ---

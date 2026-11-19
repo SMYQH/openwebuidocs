@@ -13,13 +13,11 @@ Open WebUI 可以连接**任何实现兼容 OpenAI API 的服务端或提供商*
 
 如果你要连接的是 OpenAI 本身（或 Azure OpenAI），请参见专门的 **[OpenAI 指南](/getting-started/quick-start/connect-a-provider/starting-with-openai)**。
 
----
-
 ## 官方合作伙伴 {#official-partners}
 
 浏览我们的官方合作伙伴及其配置指南：
 
-- **[ai&：来自日本的 AI 推理](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible/aiand)**：把开放权重模型带到你的团队工作区，推理托管在日本境内，按用量计费，并通过兼容 OpenAI 的接口轻松接入。非常适合在日本构建和部署 AI 的团队。
+- **[ai&：来自日本的 AI 推理](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible/aiand)**：将开放权重模型引入团队工作区。推理服务托管在日本境内，按用量计费，可通过兼容 OpenAI 的连接轻松接入。适合在日本构建和部署 AI 的团队。
 
 ---
 
@@ -38,11 +36,11 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
 :::warning 重要：某些提供商的连接验证可能会失败
 
-添加连接时，Open WebUI 会通过标准 `Bearer` token 调用提供商的 `/models` 端点进行验证。**有些提供商根本不实现 `/models` 端点**，或者对该端点使用了非标准认证方式。在这类情况下：
+保存连接并不会进行测试。点击 URL 字段旁的 **Verify Connection** 按钮，会使用标准 `Bearer` token 调用提供商的 `/models` 端点，并返回 **Server connection verified**。**有些提供商根本不实现 `/models` 端点**，或者对该端点使用了非标准认证方式。在这类情况下：
 
 - 连接验证会**报错失败**（例如 400、401 或 403）。
 - 这**并不意味着提供商不兼容**——**聊天补全依然可以正常工作**。
-- 你只需要在连接设置中的 **Model IDs (Filter)** 白名单里**手动添加模型名**即可。
+- 你只需要在连接设置中的 **Model IDs** 白名单里**手动添加模型名**即可。
 
 **已知存在 `/models` 问题的提供商：**
 
@@ -59,7 +57,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 | Mistral | 可以 | 自动发现可用 |
 | Groq | 可以 | 自动发现可用 |
 
-**如何手动添加模型：** 在连接设置中找到 **Model IDs (Filter)**，输入模型 ID，点击 **+** 图标后保存。即使连接验证显示错误，这些模型依然会出现在模型选择器中。
+**如何手动添加模型：** 在连接设置中找到 **Model IDs**，输入模型 ID，点击 **+** 图标后保存。即使连接验证显示错误，这些模型依然会出现在模型选择器中。每个模型 ID 只会加入一次：如果输入的 ID 已经在列表中，会被拒绝并提示 **Model ID is already added**；输入内容前后的空格会先被自动去除。
 
 :::
 
@@ -68,10 +66,10 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 ## 第 1 步：添加提供商连接 {#step-1-add-your-provider-connection}
 
 1. 在浏览器中打开 Open WebUI。
-2. 进入 ⚙️ **Admin Settings** → **Connections** → **OpenAI**。
-3. 点击 ➕ **Add Connection**。
+2. 在管理员区域打开**设置 > 连接**，找到**管理 OpenAI API 连接**列表。
+3. 点击**添加连接**。
 4. 填写提供商的 **URL** 和 **API Key**（见下方标签页）。输入 URL 时，字段会**自动提示常见提供商端点**。
-5. 如果你的提供商不支持 `/models` 自动发现，请把模型 ID 加入 **Model IDs (Filter)** 白名单。
+5. 如果你的提供商不支持 `/models` 自动发现，请把模型 ID 加入 **Model IDs** 白名单。**Verify Connection** 成功后，**Model IDs** 字段会在你输入时提示该提供商的模型 ID。
 6. 点击 **Save**。
 
 :::tip
@@ -115,15 +113,15 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   :::
 
   :::warning 该端点的原生工具调用存在缺陷
-  谷歌的兼容层在两个方面偏离了 OpenAI 的流式 schema：它省略了 schema 在每个流式工具调用中都携带的 `index` 字段；同时 Gemini 3 模型会附加一个专有的 `thought_signature`，而谷歌又要求在后续请求中原样带回。Open WebUI 使用的是 OpenAI schema，因此只要某一轮模型决定调用工具，该调用就会被丢弃，**助手消息将返回空内容**，并且日志中没有任何记录。
+  Google 的兼容层在两个方面偏离了 OpenAI 的流式 schema：它省略了 schema 在每个流式工具调用中都携带的 `index` 字段；同时 Gemini 3 模型会附加一个专有的 `thought_signature`，而 Google 又要求在后续请求中原样带回。Open WebUI 使用的是 OpenAI schema，因此只要某一轮模型决定调用工具，该调用就会被丢弃，**助手消息将返回空内容**，并且日志中没有任何记录。
 
   这也包括 Memory 等内置工具，因此看起来像是时有时无：只有模型选择调用某个工具时该轮才会出问题。你的可选方案：
 
   - 在模型的**高级参数（Advanced Params）**中把 **Function Calling** 设为 **Legacy**。此时工具会通过一个独立的非流式请求执行，不会触及受影响的代码路径。该模式下内置工具不可用。
   - 如果你只需要普通对话，请为该模型关闭**内置工具**能力。
-  - 若要使用可用的原生工具调用，请在前面架设一个能转换到谷歌原生 API 的网关，例如 LiteLLM 或 OpenRouter，或者使用直接调用 `generateContent` 的管道。
+  - 若要使用可用的原生工具调用，请在前面架设一个能转换到 Google 原生 API 的网关，例如 LiteLLM 或 OpenRouter，或者使用直接调用 `generateContent` 的管道。
 
-  这是谷歌一侧的偏差，Open WebUI 不会为此做变通。[模型使用工具时回复为空](/troubleshooting/connection-error#blank-replies-when-the-model-uses-a-tool) 详细说明了这一症状，包括如何针对其他提供商进行排查。该问题记录于 [#28492](https://github.com/open-webui/open-webui/issues/28492)。
+  这是 Google 一侧的偏差，Open WebUI 不会为此做变通。[模型使用工具时回复为空](/troubleshooting/connection-error#blank-replies-when-the-model-uses-a-tool) 详细说明了这一症状，包括如何针对其他提供商进行排查。该问题记录于 [#28492](https://github.com/open-webui/open-webui/issues/28492)。
   :::
 
   </TabItem>
@@ -189,7 +187,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   </TabItem>
   <TabItem value="minimax" label="MiniMax">
 
-  **MiniMax** 是一家专注高性能模型的 AI 公司。其最新模型 **MiniMax M3** 针对智能体推理、工具使用、代码编写和长上下文任务做了优化。其 **Coding Plan** 订阅对于高频编程使用场景，相比按量计费通常更具性价比。
+  **MiniMax** 是一家领先的 AI 公司，提供面向编程的高性能模型。其最新模型 **MiniMax M3** 针对智能体推理、工具使用、代码编写和长上下文任务做了优化。对于频繁编程的用户，订阅 **Coding Plan** 比标准按量计费划算得多。
 
   | 设置项 | 值 |
   |---|---|
@@ -227,7 +225,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   **第 3 步：在 Open WebUI 中配置连接**
 
-  1. 打开 Open WebUI，进入 **Settings** > **Connections**（管理员区域）。
+  1. 打开 Open WebUI，进入 **Settings > Connections**（管理员区域）。
   2. 点击 **OpenAI API** 区域下的 **+** 图标。
   3. 填写上表中的 URL 和 API key。
   4. **重要：** MiniMax 不提供 `/models` 端点，所以你必须手动添加模型。
@@ -273,7 +271,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   :::tip
   OpenRouter 会暴露**成千上万**个模型，这会让模型选择器非常混乱，也会拖慢管理界面。我们**强烈建议**：
   1. **使用白名单**——只添加你真正需要的模型 ID（例如 `anthropic/claude-sonnet-5`、`google/gemini-3.6-flash`）。
-  2. 通过 `Settings > Connections > Cache Base Model List` 或 `ENABLE_BASE_MODELS_CACHE=True` **启用模型缓存**。若不缓存，页面加载可能需要 10–15 秒甚至更久。详见[性能指南](/troubleshooting/performance)。
+  2. 在管理员区域通过 `Settings > Connections > Cache Base Model List` 或 `ENABLE_BASE_MODELS_CACHE=True` **启用模型缓存**。若不缓存，页面加载可能需要 10–15 秒甚至更久。详见[性能指南](/troubleshooting/performance)。
   :::
 
   </TabItem>
@@ -344,11 +342,11 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   如果容器启动后马上退出（尤其在 Windows 上），请先用 `docker logs <container_id>` 查看日志。若看到 Python/Uvicorn 相关错误，很可能是 **Python 3.13 兼容性问题**。请在构建前修改 `Dockerfile`，把 `python:3.13-slim` 改为 `python:3.12-slim`，然后重新构建。
   :::
 
-  ![Bedrock Access Gateway Swagger](/images/tutorials/amazon-bedrock/amazon-bedrock-proxy-api.png)
+  ![Bedrock Access Gateway 的 Swagger 页面](/images/tutorials/amazon-bedrock/amazon-bedrock-proxy-api.png)
 
   **第 2 步：在 Open WebUI 中添加连接**
 
-  1. 在 **Admin Panel** 中进入 **Settings** → **Connections**。
+  1. 进入 **Settings > Connections**（管理员区域）。
   2. 使用 **+** 按钮在 OpenAI 下新增连接。
   3. URL 填写 `http://host.docker.internal:8000/api/v1`。
   4. API Key 填写 BAG 默认设置中的 `bedrock`（你也可以通过 BAG 的 `DEFAULT_API_KEYS` 修改）。
@@ -358,7 +356,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   **其他有帮助的教程**
 
-  - [Connecting Open WebUI to AWS Bedrock](https://gauravve.medium.com/connecting-open-webui-to-aws-bedrock-a1f0082c8cb2)
+  - [将 Open WebUI 连接到 AWS Bedrock](https://gauravve.medium.com/connecting-open-webui-to-aws-bedrock-a1f0082c8cb2)
   - [在处理敏感数据时将 Amazon Bedrock 与 Open WebUI 结合使用](https://jrpospos.blog/posts/2024/08/using-amazon-bedrock-with-openwebui-when-working-with-sensitive-data/)
 
   #### 方案 2：stdapi.ai \{#solution-2-stdapiai}
@@ -369,15 +367,15 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   **部署到 AWS**
 
-  stdapi.ai 提供了完整的 Terraform 示例，可在 ECS Fargate 上同时部署 Open WebUI 与 stdapi.ai，并包含 Elasticache Valkey、Aurora PostgreSQL with vector extension、SearXNG 和 Playwright 等配套服务。
+  stdapi.ai 提供了完整的 Terraform 示例，可在 ECS Fargate 上部署 Open WebUI 并将其连接到 stdapi.ai。示例还包含 ElastiCache Valkey、带向量扩展的 Aurora PostgreSQL、SearXNG 和 Playwright 等配套服务。
   这种方式会同时完成 stdapi.ai 与 Open WebUI 的配置：
 
-  - [stdapi.ai Documentation - Open WebUI integration](https://stdapi.ai/use_cases_openwebui/)
-  - [stdapi-ai GitHub - Open WebUI Terraform sample](https://github.com/stdapi-ai/samples/tree/main/getting_started_openwebui)
+  - [stdapi.ai 文档 - Open WebUI 集成](https://stdapi.ai/use_cases_openwebui/)
+  - [stdapi-ai GitHub - Open WebUI Terraform 示例](https://github.com/stdapi-ai/samples/tree/main/getting_started_openwebui)
 
   如果你更希望把 stdapi.ai 独立部署，然后接到现有 Open WebUI 实例上，也可以参考它提供的独立文档与 Terraform 示例：
 
-  - [stdapi.ai Documentation - Getting started](https://stdapi.ai/operations_getting_started/)
+  - [stdapi.ai 文档 - 快速开始](https://stdapi.ai/operations_getting_started/)
 
   **本地部署**
 
@@ -401,7 +399,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   如果传入 `ENABLE_DOCS=true`，则可在 http://localhost:8000/docs 查看交互式 Swagger 文档。
 
-  你也可以通过 `API_KEY=my_secret_password` 为该应用设置自定义 API key（默认不要求）。如果该服务可能被他人访问，强烈建议启用此设置。稍后在 Open WebUI 中把它作为 `YOUR_STDAPI_KEY` 使用。
+  你也可以通过 `API_KEY=my_secret_password` 为该应用设置自定义 API 密钥（默认不要求 API 密钥）。如果可从其他位置访问该服务，强烈建议启用此设置。在下面的 Open WebUI 配置中，将此 API 密钥用作 `YOUR_STDAPI_KEY`。
 
   更多配置项请查看[官方文档](https://stdapi.ai/operations_configuration/)。
 
@@ -528,7 +526,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   | 设置项 | 值 |
   |---|---|
   | **Provider** | **Azure OpenAI**（参见[服务商设置](#the-provider-setting)） |
-  | **URL** | 你的 Azure endpoint（例如 `https://my-resource.openai.azure.com`） |
+  | **URL** | 你的 Azure 端点（例如 `https://my-resource.openai.azure.com`） |
   | **API Version** | 例如 `2024-02-15-preview` |
   | **API Key** | 你的 Azure API Key |
   | **Model IDs** | **必填**——填写具体 Deployment Name（例如 `my-gpt4-deployment`） |
@@ -609,7 +607,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   </TabItem>
   <TabItem value="lemonade" label="Lemonade">
 
-  **Lemonade** 是一个面向 Windows 的即插即用 ONNX 兼容 OpenAI 服务。
+  **Lemonade** 是一个面向 Windows 的即插即用服务，基于 ONNX，并兼容 OpenAI。
 
   | 设置项 | 值 |
   |---|---|
@@ -620,16 +618,16 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   1. [下载最新 `.exe`](https://github.com/lemonade-sdk/lemonade/releases) 安装程序。
   2. 运行 `Lemonade_Server_Installer.exe`。
-  3. 使用 Lemonade 安装器安装并下载模型。
+  3. 使用 Lemonade 安装器完成安装并下载一个模型。
   4. 启动后，API 端点会是 `http://localhost:8000/api/v1`。
 
-  ![Lemonade Server](/images/getting-started/lemonade-server.png)
+  ![Lemonade 服务器](/images/getting-started/lemonade-server.png)
 
   详情请查看[官方文档](https://lemonade-server.ai/docs/integrations/open-webui/)。
 
   然后在 Open WebUI 中用上面的 URL 和 API key 添加连接：
 
-  ![Lemonade Connection](/images/getting-started/lemonade-connection.png)
+  ![Open WebUI 中的 Lemonade 连接](/images/getting-started/lemonade-connection.png)
 
   </TabItem>
   <TabItem value="lmstudio" label="LM Studio">
@@ -770,9 +768,9 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 | `/v1/models` | `GET` | 推荐 | 用于模型发现和 UI 中的模型选择。如果没有，可手动将模型加入白名单。 |
 | `/v1/chat/completions` | `POST` | **必须** | 聊天核心端点，支持流式输出和 `temperature` 等参数。 |
 | `/v1/embeddings` | `POST` | 否 | 若要让该提供商用于 RAG（Retrieval Augmented Generation），则需要此端点。 |
-| `/v1/audio/speech` | `POST` | 否 | 用于文本转语音（TTS）。 |
-| `/v1/audio/transcriptions` | `POST` | 否 | 用于语音转文本（STT/Whisper）。 |
-| `/v1/images/generations` | `POST` | 否 | 用于图片生成（DALL-E）。 |
+| `/v1/audio/speech` | `POST` | 否 | 使用文本转语音（TTS）功能时需要此端点。 |
+| `/v1/audio/transcriptions` | `POST` | 否 | 使用语音转文本（STT/Whisper）功能时需要此端点。 |
+| `/v1/images/generations` | `POST` | 否 | 使用图片生成（GPT-Image）功能时需要此端点。 |
 
 ### 支持的参数 {#supported-parameters}
 

@@ -8,7 +8,7 @@ description: "使用 API 密钥将 Serper 网页搜索接入 Open WebUI，配置
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 [contributing 教程](/contributing)。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎参与贡献，请参阅[贡献指南](/contributing)。
 
 :::
 
@@ -16,7 +16,7 @@ description: "使用 API 密钥将 Serper 网页搜索接入 Open WebUI，配置
 
 - 一个正在运行的 Open WebUI 实例，以及一个管理员账号。
 - Open WebUI 服务器能够对外访问搜索提供商；如果需要整页抓取，还需要能够访问搜索返回的站点。
-- 一个原生工具调用稳定、且已启用 Web Search 能力的对话模型。
+- 一个能可靠地进行原生工具调用且已启用网页搜索能力的对话模型。
 
 前往 [Serper](https://serper.dev/) 注册账号，并从其控制台复制 API 密钥。确认你的账号还有可用的搜索额度。
 
@@ -25,7 +25,7 @@ description: "使用 API 密钥将 Serper 网页搜索接入 Open WebUI，配置
 1. 打开 **Settings → Web Search**（管理员区域），启用网页搜索。
 2. 将 **Web Search Engine** 设为 `serper`。
 3. 将密钥粘贴到 **Serper API Key**，并保存设置。
-4. 启用该模型的 **Web Search** 能力及其 **Web Search** 默认特性，或在当前对话中打开 Web Search。模型设置请参考 [原生搜索配置](/features/chat-conversations/web-search/agentic-search#how-to-enable-agentic-behavior)。
+4. 启用该模型的**网页搜索**能力及其**网页搜索**默认功能，或为当前对话开启网页搜索。模型设置请参考 [原生搜索配置](/features/chat-conversations/web-search/agentic-search#how-to-enable-agentic-behavior)。
 
 ## 环境变量示例 {#environment-example}
 
@@ -41,7 +41,7 @@ SERPER_API_KEY=your-api-key
 
 ## 验证 {#verify}
 
-用配置好的模型开始一段新对话；如果 **Web Search** 尚未启用，请在聊天的 **+** 菜单中打开它。提问：“搜索 Python 官方文档，并给我一个链接。”
+用配置好的模型开始一段新对话。如果**网页搜索**尚未开启，请在聊天的 **+** 菜单中开启它。提问：“搜索 Python 官方文档，并给我一个链接。”
 
 确认对话中出现了网页搜索工具调用和返回的来源，然后打开其中一个来源进行检查。没有搜索工具调用、只有看似合理的回答，并不能说明该提供商已经接入成功。
 
@@ -49,5 +49,5 @@ SERPER_API_KEY=your-api-key
 
 - **认证或配额错误：** 检查保存的 API 密钥是否正确，以及提供商账号是否有可用的搜索额度。
 - **没有结果或出现配额错误：** 在 Serper 控制台查看剩余的搜索额度，以及账号是否受到限制。
-- **没有搜索工具调用：** 使用 [原生搜索配置](/features/chat-conversations/web-search/agentic-search#how-to-enable-agentic-behavior) 检查模型的 Web Search 能力、聊天中的开关或默认特性，以及 Native function calling。
-- **搜索成功但页面内容为空：** 参阅 [Web Search 故障排查](/troubleshooting/web-search)，检查对外连通性、代理设置和网页加载器错误。搜索结果与整页抓取是两个独立的步骤。
+- **没有搜索工具调用：** 使用 [原生搜索配置](/features/chat-conversations/web-search/agentic-search#how-to-enable-agentic-behavior) 检查模型的网页搜索能力、聊天中的开关或默认功能，以及原生函数调用设置。
+- **搜索成功但页面内容为空：** 参阅[网页搜索故障排查指南](/troubleshooting/web-search)，检查对外连通性、代理设置和网页加载器错误。搜索结果与整页抓取是两个独立的步骤。

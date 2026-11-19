@@ -107,7 +107,7 @@ Tool 和 Function 带有 [valves](/features/extensibility/plugin/development/val
 
 ## 横幅 {#banners}
 
-横幅内容在 **Settings > General**（管理员区域） 中翻译，同样使用 Banners 标题旁的地球图标选择器。每条横幅都会保留其原始内容以及每种语言的一个版本，用户看到的是与其界面语言匹配的那一份。
+横幅内容在 **Settings > General**（管理员区域） 中翻译，同样使用 **Banners** 标题旁的地球图标选择器。每条横幅都会保留其原始内容以及每种语言的一个版本，用户看到的是与其界面语言匹配的那一份。
 
 ![正在以德语编辑的横幅，语言选择器位于 Banners 标题旁](/images/features/translations/banner-translations.png)
 

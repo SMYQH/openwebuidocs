@@ -6,7 +6,7 @@ title: "iTerm2"
 
 :::warning
 
-本教程由社区贡献，不属于 Open WebUI 团队官方支持范围。内容仅用于演示如何根据你的特定场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/contributing)。
+本教程由社区贡献，Open WebUI 团队不予支持。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/contributing)。
 
 :::
 
@@ -14,11 +14,11 @@ title: "iTerm2"
 
 ## 为什么使用 iTerm2 AI 插件？ {#why-use-the-iterm2-ai-plugin}
 
-当你忘记命令，或需要快速生成重复任务的 bash 脚本时，通常会借助 AI。iTerm2 AI 插件可以把这条流程直接集成到终端中，让你将请求发送到指定 AI 提供商或 Open WebUI。
+当你忘记命令，或需要快速生成重复任务的 bash 脚本时，通常会借助 AI。iTerm2 AI 插件允许你将请求发送到你指定的 AI 提供商或 Open WebUI。
 
 ## 为什么连接到 Open WebUI 实例？ {#why-connect-to-your-open-webui-instance}
 
-Open WebUI 通过 [API Endpoints](/reference/api-endpoints) 提供了简洁直接的 LLM 交互方式，尤其适合本地自托管模型。同时你还能复用已配置好的功能、监控与其他能力。
+Open WebUI 提供了简单直观的 [API 端点](/reference/api-endpoints)，方便你与 LLM 交互，尤其适合在本地运行自己的 LLM。你也可以继续使用已有的功能和监控配置。
 
 ## 前置条件 {#prerequisites}
 
@@ -27,20 +27,20 @@ Open WebUI 通过 [API Endpoints](/reference/api-endpoints) 提供了简洁直�
 如果你尚未安装 iTerm2 AI 插件，请先从[官方页面](https://iterm2.com/ai-plugin.html)下载。
 解压后将应用移动到 **Applications** 文件夹。
 
-### 2. 生成 Open WebUI API key {#2-generate-your-open-webui-api-key}
+### 2. 生成 Open WebUI API 密钥 {#2-generate-your-open-webui-api-key}
 
-要与 Open WebUI 实例进行认证，你需要生成 API key。
-请按 [API Endpoints 指南](/reference/api-endpoints)中的步骤创建。
+要向 Open WebUI 实例进行身份验证，需要生成 API 密钥。
+请按 [API 端点指南](/reference/api-endpoints)中的步骤创建。
 
 ## 配置 {#configuration}
 
 打开 iTerm2，进入 **iTerm2** 菜单中的 **Settings**（⌘,），然后选择 **AI** 标签页。
 
-![iterm2 menu before setup](/images/tutorials/iterm2/iterm2_ai_plugin_before.png)
+![配置前的 iTerm2 菜单](/images/tutorials/iterm2/iterm2_ai_plugin_before.png)
 
 ### 验证插件安装状态 {#verify-the-installed-plugin}
 
-安装完成后，请确认 **Plugin** 区域显示 `Plugin installed and working ✅`。
+安装 iTerm2 AI 插件后，确认 **Plugin** 区域显示 `Plugin installed and working`。
 
 ---
 
@@ -50,7 +50,7 @@ Open WebUI 通过 [API Endpoints](/reference/api-endpoints) 提供了简洁直�
 
 ---
 
-### 设置 API key {#set-api-key}
+### 设置 API 密钥 {#set-api-key}
 
 将前面创建的 Open WebUI API token 填入 **API Key** 字段。
 
@@ -78,7 +78,7 @@ The script should do this: \(ai.prompt)
 
 由于 iTerm2 AI 插件不会自动列出你的自定义模型，你需要手动添加。
 在 Open WebUI 中进入 `Settings` > `Models`（管理员区域），点击你要使用的 LLM。
-在模型显示名下方可以找到实际模型名，填写到 iTerm2 中（例如：name 为 Gemma3，对应 model name 为 `/models/gemma3-27b-it-Q4_K_M.gguf`）。
+在自定义的模型显示名下方可以找到实际模型名，将它填入 iTerm2。例如，显示名为 Gemma3，实际模型名为 `/models/gemma3-27b-it-Q4_K_M.gguf`。
 
 ---
 
@@ -92,25 +92,25 @@ The script should do this: \(ai.prompt)
 
 这是关键步骤：你需要将 iTerm2 AI 插件的请求指向 Open WebUI 实例。
 如果实例部署在远端，请使用域名（例如 `https://example.com/api/chat/completions`）；如果是本地部署，可使用本地地址（例如 `http://localhost:8080/api/chat/completions`）。
-URL 详情可参见 [API Endpoints 指南](/reference/api-endpoints)。
+URL 详情可参见 [API 端点指南](/reference/api-endpoints)。
 
 ---
 
 ### 旧版 Completions API {#legacy-completions-api}
 
-该设置在 Open WebUI 中通常不需要，如需了解可参考[原始文档](https://platform.openai.com/docs/guides/completions)。
+Open WebUI 不需要此设置，更多信息请参见[原始指南](https://platform.openai.com/docs/guides/completions)。
 
 ---
 
 配置完成后，**AI** 区域大致如下：
 
-![iterm2 menu after setup](/images/tutorials/iterm2/iterm2_ai_plugin_after.png)
+![配置后的 iTerm2 菜单](/images/tutorials/iterm2/iterm2_ai_plugin_after.png)
 
 ## 使用方式 {#usage}
 
 在终端会话中按 **command + y**（⌘y）打开提示词输入框。输入提示词后，点击 **OK** 或使用 **shift + enter**（⇧⌤）发送。
 
-![iterm2 prompt window](/images/tutorials/iterm2/iterm2_ai_plugin_prompt_window.png)
+![iTerm2 提示词窗口](/images/tutorials/iterm2/iterm2_ai_plugin_prompt_window.png)
 
 ---
 
@@ -122,4 +122,4 @@ URL 详情可参见 [API Endpoints 指南](/reference/api-endpoints)。
 
 :::
 
-![iterm2 prompt window](/images/tutorials/iterm2/iterm2_ai_plugin_result_window.png)
+![iTerm2 显示生成命令的结果窗口](/images/tutorials/iterm2/iterm2_ai_plugin_result_window.png)

@@ -25,8 +25,8 @@ title: "时间感知"
 当你使用启用了 **原生函数调用** 的模型时（参见 [**集中式工具调用指南**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)），模型就能更细粒度地执行时间查询与时间计算。
 
 ### 可用时间工具： {#available-time-tools}
-- **`get_current_timestamp`**：模型可获取精确的当前 Unix 时间戳（UTC）和 ISO 日期字符串
-- **`calculate_timestamp`**：模型可执行相对时间计算（例如“计算 3 天前的日期”或“下周五是哪天？”）
+- **`get_current_timestamp`**：模型可获取精确的当前 Unix 时间戳（UTC）和 ISO 日期字符串。
+- **`calculate_timestamp`**：从当前时间减去指定的天数、周数、月数或年数（例如“3 天前的日期”）。它无法计算“下周五”等未来日期。模型需要根据 `get_current_timestamp` 的结果自行推算；如果用户资料中有时区，该工具也会返回用户的本地时间和时区。
 
 ### 为什么时间要用原生工具调用？ {#why-use-native-tool-calling-for-time}
 静态变量只能告诉模型“现在是什么时间”，而原生工具能让模型**对时间进行推理**。

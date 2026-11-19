@@ -163,7 +163,7 @@ curl -s -X POST $OWUI_URL/api/chat/completions \
 | `session_id` | **内置工具的开关。** 任意非空字符串都可以。缺少它时，内置工具不会提供给模型。它还会让请求变为异步（你得到 `task_ids`，而不是阻塞等待）。 |
 | `features` | 开启四组可切换的内置工具：`web_search`、`code_interpreter`、`image_generation`、`memory`。其他内置工具（知识库、文件、笔记、频道、日历、自动化、聊天、时间、任务、子智能体）不需要开关，只要其全局设置、你的权限和模型类别允许，就会被提供。 |
 | `tool_ids` | 工作区工具和 MCP 服务器。可选。 |
-| `terminal_id` | Open Terminal服务器。可选，且与 `session_id` 相互独立。按聊天限定范围的编排器终端还要求 `chat_id` 是已保存的聊天，而路径 A 已经满足这一点。 |
+| `terminal_id` | Open Terminal 服务器。可选，且与 `session_id` 相互独立。按聊天限定范围的编排器终端还要求 `chat_id` 是已保存的聊天，而路径 A 已经满足这一点。 |
 | `background_tasks` | 关闭标题、标签和后续问题生成，除非你想要这些额外的模型调用。 |
 
 :::danger 不要发送你自己的 `tools` 数组

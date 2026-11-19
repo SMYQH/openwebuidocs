@@ -5,25 +5,25 @@ title: "Yandex"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎参与贡献，请参阅贡献指南。
 
 :::
 
 :::tip
 
-若要查看所有与 Web Search 相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
+若要查看所有与网页搜索相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
 
 :::
 
 :::tip 故障排查
 
-如果你在 web search 上遇到问题，请查看 [Web Search 故障排查指南](/troubleshooting/web-search)，其中涵盖了代理配置、连接超时、内容为空等常见问题。
+遇到网页搜索问题时，请参阅[网页搜索故障排查指南](/troubleshooting/web-search)，了解如何解决代理配置、连接超时和内容为空等常见问题。
 
 :::
 
-## Yandex Search API {#yandex-search-api}
+## Yandex 搜索 API {#yandex-search-api}
 
-Yandex Web Search 通过 [Yandex Cloud Search API](https://yandex.cloud/en/docs/search-api/api-ref/WebSearch/search) 集成到 Open WebUI 中。
+Yandex 网页搜索通过 [Yandex Cloud Search API](https://yandex.cloud/en/docs/search-api/api-ref/WebSearch/search) 接入。
 
 ### Docker Compose 设置 {#docker-compose-setup}
 

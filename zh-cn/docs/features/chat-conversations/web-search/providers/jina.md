@@ -47,7 +47,7 @@ Open WebUI 会把每个查询发送到 Jina 的 Search API，并把结果以链�
 
 ### 2. 配置 Open WebUI {#2-configure-open-webui}
 
-要在 Open WebUI 中启用 Jina 搜索集成，请在 Open WebUI 管理员设置中按以下步骤操作：
+要启用 Jina 网页搜索集成，请在 Open WebUI 管理员设置中按以下步骤操作：
 
 1. **以管理员身份登录：** 进入你的 Open WebUI 实例，并使用管理员账号登录
 2. **进入 Web Search 设置：** 前往 **Settings > Web Search**（管理员区域）

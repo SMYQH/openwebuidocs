@@ -23,10 +23,10 @@ Open WebUI 定义了三种主要的**系统角色**，用于确定用户账户�
 :::warning 管理员限制与最佳实践
 虽然管理员通常拥有不受限制的访问权限，但某些系统配置可能会出于安全和隐私原因限制其能力：
 *   **隐私控制**：[`ENABLE_ADMIN_CHAT_ACCESS=False`](/reference/env-configuration#enable_admin_chat_access) 会在界面中对管理员隐藏用户的对话。它并不会阻止管理员访问数据；参见[聊天数据隐私](/security/chat-data-privacy-and-encryption#admin-users)。
-*   **特定功能异常可能存在**：某些功能可以在标准管理员绕过行为之外强制执行额外检查。特别是对于 API Keys，只要启用了 `ENABLE_API_KEYS`，管理员就可以生成密钥。
+*   **个别功能可能有例外**：某些功能可能不受管理员绕过规则约束，仍会执行额外检查。对于 API 密钥，只要启用了 `ENABLE_API_KEYS`，管理员就可以生成密钥。
 *   **访问控制例外**：如果禁用了 `BYPASS_ADMIN_ACCESS_CONTROL`，管理员也会像其他人一样受到访问授权检查。私有的工作区项目（模型、知识库、提示词、工具、技能、笔记）仅所有者以及被共享的人可见。由管理员配置且没有任何授权的连接和 arena 模型仍仅对管理员可见。参见[各资源类型中“私有”的具体含义](/features/authentication-access/rbac/groups#what-private-means-for-each-resource-type)。
 
-为获得稳健的安全态势，我们建议通过用户组将管理员纳入您的权限体系，而不仅仅依赖角色的隐式绕过。这确保了在启用绕过限制时能保持一致的访问。
+为确保安全，建议通过用户组为管理员明确分配权限，不要只依赖管理员角色默认绕过检查。即使日后限制绕过权限检查，管理员也能保有原有的访问权限。
 :::
 
 ### 标准用户（`user`） {#standard-user-user}
@@ -86,13 +86,13 @@ DEFAULT_USER_ROLE=pending
 他们仍保持登录状态，并以新角色继续浏览。降级为 `pending` 确实会将其锁定，因为 `pending` 账户在每次 API 请求和 WebSocket 握手时都会被拒绝。若要同时结束其会话，请使用[退出所有设备](#signing-a-user-out-of-every-device)。
 :::
 
-## 将用户登出所有设备 {#signing-a-user-out-of-every-device}
+## 让用户在所有设备上退出登录 {#signing-a-user-out-of-every-device}
 
 在**管理面板 > 用户**中打开该用户，点击编辑对话框底部的**登出所有设备**，然后确认。该用户的每个会话都会结束：使用该账户登录的浏览器标签页和应用在下一次请求时会被拒绝，必须重新登录，它们的实时连接也会被关闭。该用户正在进行的自动化和子智能体运行同样会失去访问权限。当设备丢失、账户可能已被入侵或有人离职时，请使用该功能。
 
 ![登出所有设备？确认对话框，说明用户需要在每台设备上重新登录，并且 API 密钥仍然有效](/images/features/auth/sign-out-all-devices.webp)
 
-- **API 密钥仍然有效。** 请[删除或轮换该用户的密钥](/features/authentication-access/api-keys#managing-a-users-key-admin)以切断脚本和集成。
+- **API 密钥仍然有效。** 如需阻止脚本和集成继续访问，请[删除或轮换该用户的密钥](/features/authentication-access/api-keys#managing-a-users-key-admin)。
 - **无需 Redis 也能工作。** 登出记录保存在数据库中，因此对每个 worker 和每个副本都生效。
 - **主管理员**只能由其本人以这种方式登出。
 
@@ -106,9 +106,9 @@ DEFAULT_USER_ROLE=pending
 
 这是一项便利性保护措施，而非安全边界。所有管理员共享系统的完全控制权，因此任何管理员仍然可以在数据层更改或删除任何账户，包括主管理员账户。
 
-### 交换主管理员 {#swapping-the-primary-administrator}
+### 更换主管理员 {#swapping-the-primary-administrator}
 
-有时主管理员确实需要变更，例如首次部署的人员离开了组织。由于该角色纯粹由创建时间戳决定，主管理员即最旧的管理员账户，因此在数据库层面重组或删除账户会改变哪个账户被视为主管理员。
+有时需要更换主管理员，例如负责初始部署的人离开了组织。主管理员身份只按创建时间戳确定，由最早创建的管理员账户担任。因此，在数据库层面调整或删除账户，会改变系统认定的主管理员。
 
 这被设计为数据层操作而非一键按钮，以确保变更创始账户始终是一个有意的、经过深思熟虑的操作。在进行更改之前备份数据库，并在实例空闲时执行。此处不列出确切的查询语句，因为数据库架构在不同版本之间会有所变化；请根据当前架构操作，如需针对你的版本的指导，请通过社区渠道联系我们。
 

@@ -67,6 +67,6 @@ podman kube play ./play.yaml
 :::important
 
 要让 open-webui 容器成功访问 GPU，
-你需要在 Podman Machine 中安装对应 GPU 的 Container Device Interface（CDI）。可参考 [Podman GPU container access](https://podman-desktop.io/docs/podman/gpu)。
+你需要在 Podman Machine 中安装对应 GPU 的 Container Device Interface（CDI）。请参阅 [Podman 容器的 GPU 访问说明](https://podman-desktop.io/docs/podman/gpu)。
 
 :::

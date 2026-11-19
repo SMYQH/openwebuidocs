@@ -1,14 +1,14 @@
 ---
 sidebar_position: 1
 title: "ai&"
-description: "借助 ai& 把部署在日本的 AI 引入你的 Open WebUI 工作区：开放权重模型、本地推理与按量计费。"
+description: "借助 ai& 把部署在日本的 AI 引入你的 Open WebUI 工作区：开放权重模型、日本境内推理与按量计费。"
 ---
 
-[ai&](https://www.aiand.com/inference) 是 Open WebUI 的官方合作伙伴，通过自有的本地基础设施把开放权重的 AI 模型带给日本的团队。将 Open WebUI 的聊天与协作能力与 ai& 的托管推理相结合，无需运维 GPU 服务器就能为团队提供一个 AI 工作区。
+[ai&](https://www.aiand.com/inference) 是 Open WebUI 的官方合作伙伴，通过在日本的自有基础设施为当地团队提供开放权重的 AI 模型。将 Open WebUI 的聊天与协作功能和 ai& 的托管推理相结合，无需运维 GPU 服务器就能为团队提供 AI 工作区。
 
 ## 为什么日本团队选择 ai&？ {#why-choose-ai-for-teams-in-japan}
 
-- **让推理靠近你的用户。** ai& 在日本自有基础设施上处理推理，专为整个亚太地区的低延迟而设计。
+- **让推理服务靠近用户。** ai& 在日本的自有基础设施上运行推理，旨在降低整个亚太地区的访问延迟。
 - **让推理处理留在日本。** ai& 的[服务条款](https://www.aiand.com/legal/inference-terms-of-service)规定输入与输出在日本境内处理，并禁止使用这些内容训练模型。
 - **选择适合工作的模型。** 通过一个 API 访问 Kimi、DeepSeek 和 GLM 等模型家族。在 Open WebUI 中比较模型，并从 [ai& 模型目录](https://docs.aiand.com/models/catalog/)中挑选适合编码、推理和日常团队聊天的模型。
 - **从小处开始，再逐步扩大。** 先从按 token 计费开始，随着团队需求增长再探索预留算力和自定义 SLA。参见 [ai& 的套餐与价格](https://www.aiand.com/inference)。
@@ -33,12 +33,12 @@ description: "借助 ai& 把部署在日本的 AI 引入你的 Open WebUI 工作
 |---|---|
 | **URL** | `https://api.aiand.com/v1` |
 | **API Key** | 你的 ai& API key |
-| **Model IDs** | 留空以自动发现可用模型，或填写具体的模型 id 来限定列表 |
+| **Model IDs** | 留空以自动发现可用模型，或填写具体的模型 ID 来限定列表 |
 
 4. 保持 **Advanced** 下的 **Provider** 为 **Default**。
 5. 点击 **Verify Connection**，然后点击 **Save**。
 
-ai& 提供了一个用于发现模型的 [`/v1/models` 端点](https://docs.aiand.com/api/models/)。把模型加入允许列表时，请使用该端点返回的准确模型 id。
+ai& 提供了一个用于发现模型的 [`/v1/models` 端点](https://docs.aiand.com/api/models/)。把模型加入允许列表时，请使用该端点返回的准确模型 ID。
 
 ## 第 3 步：开始聊天 {#step-3-start-chatting}
 

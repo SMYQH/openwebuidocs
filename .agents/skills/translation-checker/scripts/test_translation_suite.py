@@ -1239,6 +1239,31 @@ class VerificationTests(Fixture):
         self.assertEqual(validate_review(results, self.source, self.target, [])["semantic_review"], "needs-review")
 
 
+class QuoteEvidenceTests(Fixture):
+    """Upstream quotes reproduced verbatim are evidence, not untranslated prose."""
+
+    def test_verbatim_upstream_quote_is_not_reported_as_untranslated(self):
+        quote = "> The scanner reports a denial of service condition on the upstream host.\n"
+        source = "## Findings\n\n" + quote
+        target = "## \u7ed3\u8bba\n\n" + quote
+        codes = self.codes(source, target)
+        self.assertNotIn("untranslated-prose", codes)
+        self.assertNotIn("copied-sentence", codes)
+
+    def test_english_prose_outside_an_upstream_quote_is_still_reported(self):
+        source = "## Findings\n\nThe scanner reports a denial of service condition on the host.\n"
+        target = "## \u7ed3\u8bba\n\nThe scanner reports a denial of service condition on the host.\n"
+        codes = self.codes(source, target)
+        self.assertIn("untranslated-prose", codes)
+
+    def test_quote_that_upstream_does_not_quote_is_still_reported(self):
+        quoted = "> The scanner reports a denial of service condition on the upstream host.\n"
+        source = "## Findings\n\nThe scanner reports a denial of service condition on the host.\n"
+        target = "## \u7ed3\u8bba\n\n" + quoted
+        codes = self.codes(source, target)
+        self.assertIn("untranslated-prose", codes)
+
+
 class UpdateTests(Fixture):
     def test_autonomous_prepare_no_config_or_network(self):
         self.put(self.source, "a.md", "# Source heading\n\nSource body paragraph.\n")
@@ -1721,6 +1746,51 @@ class WorkflowTests(Fixture):
             out, err = self.invoke(check_main, ["--summary-only", "--review-results", review], 2)
         self.assertNotIn("Semantic review: passed", out)
         self.assertIn("stale semantic review", err)
+
+
+class ExceptionRestamp(unittest.TestCase):
+    """The restamp tool re-binds exceptions to findings after edits."""
+
+    def report(self, issues):
+        return {"schema_version": 1, "issues": issues}
+
+    def issue(self, path, code, message, fingerprint, suppressed=False):
+        return {"path": path, "line": 1, "severity": "warning", "code": code,
+                "message": message, "fingerprint": fingerprint, "suppressed": suppressed,
+                "reason": "", "section_drift": None}
+
+    def test_existing_finding_keeps_reason_and_new_fingerprint(self):
+        from restamp_exceptions import restamp
+        config = {"exceptions": [{"fingerprint": "a" * 64, "reason": "reviewed difference"}]}
+        baseline = self.report([self.issue("a.md", "markdown-symbol", "added: '[' x1", "a" * 64, True)])
+        current = self.report([self.issue("a.md", "markdown-symbol", "added: '[' x2", "b" * 64)])
+        updated, review = restamp(baseline, current, config)
+        self.assertEqual([entry["fingerprint"] for entry in updated], ["b" * 64])
+        self.assertEqual(updated[0]["reason"], "reviewed difference")
+        self.assertEqual(review, [])
+
+    def test_disappeared_finding_drops_its_exception(self):
+        from restamp_exceptions import restamp
+        config = {"exceptions": [{"fingerprint": "a" * 64, "reason": "reviewed difference"}]}
+        baseline = self.report([self.issue("a.md", "markdown-symbol", "added: '[' x1", "a" * 64, True)])
+        current = self.report([])
+        updated, review = restamp(baseline, current, config)
+        self.assertEqual(updated, [])
+        self.assertEqual(review, [])
+
+    def test_new_finding_without_baseline_needs_review(self):
+        from restamp_exceptions import restamp
+        config = {"exceptions": []}
+        baseline = self.report([])
+        current = self.report([self.issue("a.md", "literal-term", "Recount: 'x' 1->2", "c" * 64)])
+        updated, review = restamp(baseline, current, config)
+        self.assertEqual(updated, [])
+        self.assertEqual([issue["code"] for issue in review], ["literal-term"])
+
+    def test_normalize_ignores_counts_but_keeps_rule_text(self):
+        from restamp_exceptions import normalize
+        self.assertEqual(normalize("added: '[' x1"), normalize("added: '[' x2"))
+        self.assertNotEqual(normalize("added: '[' x1"), normalize("missing: '[' x1"))
 
 
 if __name__ == "__main__":

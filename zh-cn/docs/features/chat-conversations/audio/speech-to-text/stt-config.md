@@ -1,17 +1,17 @@
 ---
 sidebar_position: 1
-title: "配置"
+title: "配置语音转文本"
 sidebar_label: "配置"
 description: "选择本地、浏览器或托管的语音转文本引擎，配置音频设置，并在 Open WebUI 中口述提示词。"
 ---
 
-Open WebUI 同时支持本地、浏览器内置和远程语音转文本。
+在 Open WebUI 中，你可以通过语音转文本口述提示词。选择本地 Whisper、浏览器内置语音识别或托管转写服务，再按下文配置对应的管理员设置和用户设置。
 
 ![STT 配置示意图](/images/tutorials/stt/image.png)
 
 ![STT 提供商示意图](/images/tutorials/stt/stt-providers.png)
 
-## 云端 / 远程语音转文本提供商 {#cloud--remote-speech-to-text-providers}
+## 选择语音转文本提供商 {#cloud--remote-speech-to-text-providers}
 
 当前支持以下语音转文本提供商：
 
@@ -38,18 +38,18 @@ Open WebUI 同时支持本地、浏览器内置和远程语音转文本。
 
 ### 限制可接受的音频扩展名 {#restricting-accepted-audio-extensions}
 
-Open WebUI 在 **管理员设置 → 音频 → STT** 下提供了 **Allowed Extensions** 列表，用于控制上传端点接受哪些音频文件扩展名（默认：`mp3,wav,m4a,webm,ogg,flac,mp4,mpga,mpeg`）。带有其他扩展名的上传会在转写运行之前被以 `400 Invalid audio file extension` 拒绝。
+Open WebUI 使用扩展名允许列表来限制上传端点接受的音频文件扩展名（默认：`mp3,wav,m4a,webm,ogg,flac,mp4,mpga,mpeg`）。若文件扩展名不在列表中，服务器会在转写前拒绝上传，并返回 `400 Invalid audio file extension`。
 
-这是在 MIME 类型检查（`AUDIO_STT_SUPPORTED_CONTENT_TYPES`）之外服务器端再额外做的校验，因此收紧这个列表是用很低的成本就能为 STT 端点抵御意外文件类型的方式。可在启动时通过相应的 `AUDIO_STT_ALLOWED_EXTENSIONS` 环境变量预设列表，或在 UI 中清空它以完全跳过扩展名检查。
+这是服务器在 MIME 类型检查（`AUDIO_STT_SUPPORTED_CONTENT_TYPES`）之外执行的校验。收紧列表即可限制 STT 端点接受的文件类型。管理员的**音频**设置不显示此列表；请通过 `AUDIO_STT_ALLOWED_EXTENSIONS` 环境变量设置。将该变量设为空值可完全跳过扩展名检查。
 
 ## 用户级设置 {#user-level-settings}
 
 除了在管理员面板中配置的实例级设置外，还有一些用户级设置可以提供额外功能。
 
-这些设置位于**设置**的**音频**标签页。管理员以及至少拥有 **Allow Speech to Text**、**Allow Text to Speech** 或 **Allow Call** 中之一的用户都能看到该标签页（参见[权限](/features/authentication-access/rbac/permissions#3-chat-permissions)）。
-
 - **STT 设置：** 包含与语音转文本相关的设置。
 - **语音转文本引擎：** 决定使用哪种语音识别引擎（默认值或 Web API）。
+
+这些设置位于**设置**的**音频**标签页。管理员以及至少拥有 **Allow Speech to Text**、**Allow Text to Speech** 或 **Allow Call** 中之一的用户都能看到该标签页（参见[权限](/features/authentication-access/rbac/permissions#3-chat-permissions)）。
 
 ![用户级音频设置截图](/images/tutorials/stt/user-settings.png)
 
@@ -84,8 +84,8 @@ Open WebUI 在 **管理员设置 → 音频 → STT** 下提供了 **Allowed Ext
 
 **解决方案：**
 - **升级到最新版本** —— 近期更新已改进 compute type 的持久化配置，以解决已知 CUDA 兼容性问题。
-- **改用标准 Docker 镜像** 而不是 `:cuda` 镜像 —— 较旧 GPU（Maxwell 架构，约 2014-2016 年）可能不受现代 CUDA 加速库支持。
-- 使用 `WHISPER_COMPUTE_TYPE` 环境变量调整计算类型：
+- **改用标准 Docker 镜像**而不是 `:cuda` 镜像：较旧的 GPU（Maxwell 架构，约 2014 至 2016 年间）可能不受现代 CUDA 加速库支持。
+- **调整计算类型**：设置 `WHISPER_COMPUTE_TYPE` 环境变量：
   ```yaml
   environment:
     - WHISPER_COMPUTE_TYPE=float16  # or float32

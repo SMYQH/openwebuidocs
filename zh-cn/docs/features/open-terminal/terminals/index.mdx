@@ -43,18 +43,16 @@ flowchart LR
 
 ## 工作原理 {#how-it-works}
 
-编排器位于 Open WebUI 和 Open Terminal 实例之间：
+编排器位于 Open WebUI 和各用户的 Open Terminal 工作区之间：
 
-1. 用户在 Open WebUI 中激活一个终端。
-2. Open WebUI 将请求代理到**编排器**——一个管理终端容器生命周期的服务。
+1. 用户在 Open WebUI 中启用 Open Terminal。
+2. Open WebUI 将请求代理到负责管理工作区生命周期的**编排器**。
 3. 编排器解析所选的策略：镜像、资源、存储、环境变量、安全上下文和空闲超时。
-4. 编排器为该用户与该策略分配或复用个人 Open Terminal 工作区；当连接按聊天或按自动化限定缩时，还会根据[终端上下文](/features/open-terminal/terminals/orchestration/contexts)区分。
+4. 编排器按用户和策略创建或复用专用 Open Terminal 工作区。若连接限定到某个聊天或自动化任务，还会按[终端上下文](/features/open-terminal/terminals/orchestration/contexts)区分。
 5. 所有流量均通过编排器代理。用户永远不会直接连接到自己的工作区。
 6. 空闲工作区在可配置的超时时间后自动清理。开启存储后，文件可在会话间持久化。
 
 编排器还暴露与 Open Terminal 相同的基于 OpenAPI 的工具接口，因此 AI 可以处理文件、运行代码、执行命令、启动服务器并查看结果，所有操作都限定在发起请求的用户工作区范围内。
-
----
 
 ## 为什么重要 {#why-it-matters}
 
@@ -85,7 +83,7 @@ Terminals 让完整的智能体框架在团队中真正可用。它让管理员�
       <Docker />
     </div>
   </TabItem>
-  <TabItem value="kubernetes" label="Kubernetes Operator">
+  <TabItem value="kubernetes" label="Kubernetes Operator 部署">
     <div className='mt-5'>
       <Kubernetes />
     </div>
@@ -100,8 +98,8 @@ Terminals 让完整的智能体框架在团队中真正可用。它让管理员�
 
 | 模式 | 适用场景 | 配置方式 |
 | :--- | :--- | :--- |
-| **Open WebUI JWT** | 生产环境。编排器验证 Open WebUI 实例的 token。 | 在编排器上将 `TERMINALS_OPEN_WEBUI_URL` 设置为你的 Open WebUI URL。 |
-| **共享 API Key** | 标准方式。Open WebUI 在每个请求中携带共享密钥。 | 在 Open WebUI 和编排器上将 `TERMINALS_API_KEY` 设置为相同的值。 |
+| **Open WebUI JWT** | 生产环境。编排器通过你的 Open WebUI 实例验证令牌。 | 在编排器上将 `TERMINALS_OPEN_WEBUI_URL` 设置为你的 Open WebUI URL，并在 Open WebUI 中将此连接的 **Auth** 设为 **Session**。 |
+| **共享 API Key** | 标准方式。Open WebUI 在每个请求中携带共享密钥。 | 在编排器上设置 `TERMINALS_API_KEY`。在 Open WebUI 中将此连接的 **Auth** 设为 **Bearer**，并在 **API Key** 中填入相同值。 |
 | **开放模式** | 仅用于开发。无认证，不可在生产中使用。 | 将 `TERMINALS_OPEN_WEBUI_URL` 和 `TERMINALS_API_KEY` 都留空。 |
 
 通过 Docker Compose 或 Helm 部署时，Open WebUI 和编排器之间的共享 API Key 会自动配置。
@@ -127,9 +125,9 @@ JWT 模式需要两边达成一致。编排器会针对发起请求的用户身�
 - 使用 **API Key 模式**时，确认两端的密钥完全一致。检查是否有多余的空格或换行。
 - 查看编排器日志中的 `401` 或 `403` 响应。
 
-### 容器被过快清理 {#workspace-is-reaped-too-quickly}
+### 工作区被过早回收 {#workspace-is-reaped-too-quickly}
 
-增大 `TERMINALS_IDLE_TIMEOUT_MINUTES`（或策略中的 `idle_timeout_minutes`）。默认值为 `0`（禁用），但如果设置过低，容器可能在用户还在工作时就被清理掉。`30` 是一个典型值。
+增大 `TERMINALS_IDLE_TIMEOUT_MINUTES`（或策略中的 `idle_timeout_minutes`）。默认值为 `0`（禁用）。如果设置过低，工作区可能在用户还在使用时被回收。`30` 是一个常用值。
 
 ### 连接被拒绝 {#connection-refused}
 

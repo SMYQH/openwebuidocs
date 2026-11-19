@@ -1,5 +1,5 @@
 ---
-title: Model Context Protocol (MCP)
+title: 模型上下文协议（MCP）
 sidebar_position: 200
 ---
 
@@ -48,7 +48,7 @@ MCP 服务器只能由 **管理员**在 **设置 > 集成**（管理员区域）
 
 这**不是**与 OpenAPI 相同的限制。当管理员开启**直接集成**（[`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)，默认关闭）并授予**直接工具服务器**权限（按用户或用户组，同样默认关闭）后，用户可以在**设置 → 集成**下添加自己的 **OpenAPI** 工具服务器，但那条路径是 OpenAPI 专属的：连接类型被锁定，不提供 MCP 选项。
 
-这其中的差别在于能力。用户提供的 OpenAPI 服务器是一个无状态的 HTTP URL，暴露一组固定的已声明端点。而 MCP 服务器强大得多：它有状态、能力强（支持 sampling、elicitation、持久会话以及通过 stdio 传输的任意主机命令执行），并运行在 Open WebUI 的信任边界内，拥有连接用户的完整权限范围。实际上，一个恶意的或被攻陷的 MCP 服务器可能会以该用户的访问权限执行代码、读取或外泄数据，因此该能力被限定为管理员才可使用。Open WebUI 自带的 MCP 支持仅限 Streamable HTTP，但协议本身具有特权性质，这正是为何新增 MCP 服务器只保留给管理员的原因。
+这其中的差别在于能力。用户提供的 OpenAPI 服务器是一个无状态的 HTTP URL，暴露一组固定的已声明端点。而 MCP 服务器强大得多：它有状态、能力强（支持 sampling、elicitation、持久会话以及通过 stdio 传输的任意主机命令执行），并运行在 Open WebUI 的信任边界内，拥有连接用户的完整权限范围。实际上，一个恶意的或被攻陷的 MCP 服务器可能会以该用户的访问权限执行代码、读取或外泄数据，因此该能力被限定为管理员才可使用。Open WebUI 自带的 MCP 支持仅限 Streamable HTTP，但由于协议本身拥有较高权限，仍只允许管理员添加此类服务器。
 
 若想在不让用户拥有服务器配置权限的前提下，让用户使用由 MCP 支持的能力，可以由管理员添加一次服务器，然后通过**访问控制**将其限定给指定用户或用户组。
 
@@ -80,12 +80,12 @@ MCP 服务器只能由 **管理员**在 **设置 > 集成**（管理员区域）
 ### 身份验证模式 {#authentication-modes}
 
 *   **None**：适用于**本地 MCP 服务器**或不需要令牌的内网。
-    *   **⚠️ 重要**：除非服务器严格要求令牌，否则默认选择 "None"。在未提供密鑰的情况下选择 "Bearer" 会发送空的 Authorization 标头（`Authorization: Bearer`），导致许多服务器立即拒绝连接。
+    *   **⚠️ 重要**：除非服务器严格要求令牌，否则默认选择 "None"。在未提供密钥的情况下选择 "Bearer" 会发送空的 Authorization 标头（`Authorization: Bearer`），导致许多服务器立即拒绝连接。
 *   **Bearer**：**仅**在你的 MCP 服务器需要特定 API 令牌时使用。**必须**填写 "Key" 字段。
 *   **Session**：将用户自身的 Open WebUI 会话令牌作为 bearer token 发送。适用于以 Open WebUI 自身为依据进行身份验证的服务器。
 *   **OAuth**：将用户通过 Open WebUI SSO 登录时生成的访问令牌作为 bearer token 发送。仅在用户通过同一 OAuth 提供商登录 Open WebUI，且其令牌包含 MCP 服务器所需的权限范围时，此方法才有效。
 *   **OAuth 2.1**：使用动态客户端注册（DCR）。最适合你的 MCP 服务器支持自动注册 OAuth 客户端的情况。
-*   **OAuth 2.1（静态）**：使用预先创建的客户端 ID/客户端密鑰。最适合你的提供商不支持 DCR，或你的安全团队要求手动管理凭据的情况。
+*   **OAuth 2.1（静态）**：使用预先创建的客户端 ID/客户端密钥。最适合你的提供商不支持 DCR，或你的安全团队要求手动管理凭据的情况。
 
 :::info OAuth Resource 参数
 
@@ -119,7 +119,7 @@ Open WebUI 通过服务器发布的 OAuth 发现文档来定位授权服务器�
 
 只有在找到发现文档时，该检查才会通过。未发布任何发现文档的服务器将导致检查失败，但对于该服务器而言，**注册客户端**仍可通过上述默认端点正常工作。
 
-在 **OAuth 2.1（静态）** 模式下，如果已设置 **OAuth 服务器 URL**，则检查该 URL；如果该字段留空，则检查 MCP **URL**。
+在 **OAuth 2.1（静态）** 模式下，如果已设置 **OAuth 服务器 URL**，则检查该地址；如果该字段留空，则检查 MCP **URL**。
 :::
 
 :::tip 在 OAuth 2.1 和 OAuth 2.1（静态）之间选择
@@ -131,7 +131,7 @@ Open WebUI 通过服务器发布的 OAuth 发现文档来定位授权服务器�
 
 ### 连接账户 {#connecting-an-account}
 
-管理员只需注册一次 MCP 服务器。之后每位用户各自把自己的账户连接到它：某人在对话中第一次从 **+** 菜单启用 OAuth 2.1 工具时，Open WebUI 会把用户引导到身份提供商，而授予的访问权限只存储在**他自己**的账户上，其他人不会继承。
+管理员只需注册一次 MCP 服务器，随后每位用户分别连接自己的账户。当用户首次在对话中从 **+** 菜单启用 OAuth 2.1 工具时，Open WebUI 会将其引导至提供商。授予的访问权限仅保存在该用户的账户下，不会由其他人继承。
 
 授权与发起它的账户以及发起它的浏览器会话绑定，因此必须在同一个浏览器中、以同一个人的身份、在 [`WEBUI_URL`](/reference/env-configuration#webui_url) 所指的地址上完成。退出登录会取消进行中的授权。任何其他情况都会让浏览器带着一条说明原因的通知回到 Open WebUI；重新启用该工具即可重试。
 
@@ -241,7 +241,7 @@ MCP 工具可以附带交互式应用（[MCP Apps](https://modelcontextprotocol.
 ### "Failed to connect to MCP server" {#failed-to-connect-to-mcp-server}
 
 **现象**：
-使用工具时对话显示 "Failed to connect to MCP server"，即使设置中的**验证连接**按钮显示"已连接"。在使用任一 OAuth 2.1 模式的连接上，该按钮显示为 **检查 OAuth 发现**，它只能确认已找到并解析出授权服务器的发现文档。
+使用工具时，即便设置中的验证按钮已报告成功，对话也可能显示 "Failed to connect to MCP server"。连接采用任一种 OAuth 2.1 模式时，该按钮显示为 **检查 OAuth 发现**，只确认能否找到并解析授权服务器的发现文档。
 
 服务器日志会以 error 级别记录每次失败，格式为 `Failed to connect to MCP server '<id>'`，随后是具体原因，因此请优先查看它。对话过程中变得不可达的服务器只会让那一次工具调用失败：模型会收到连接错误作为工具结果，并结束本次回复。
 

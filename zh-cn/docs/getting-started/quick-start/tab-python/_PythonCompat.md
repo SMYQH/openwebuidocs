@@ -6,11 +6,11 @@ Open WebUI 支持 **Python 3.11 和 3.12**。**不支持 Python 3.13**：部分�
 :::
 
 :::tip 没有 NVIDIA GPU？
-在 Linux x86_64 上，从 PyPI 安装 `open-webui` 会拉入默认的 PyTorch 构建，它会连同机器上的任何 GPU 一起带上 NVIDIA CUDA 库。在没有 NVIDIA GPU 的机器上，请先在同一个环境里安装 PyTorch 的 CPU 构建版，Open WebUI 的安装就会把它们排除在外：
+在 Linux x86_64 上，从 PyPI 安装 `open-webui` 会装入默认的 PyTorch 构建版本。无论机器使用哪种 GPU，这个版本都会附带 NVIDIA CUDA 库。没有 NVIDIA GPU 时，先在同一环境中安装 PyTorch 的 CPU 版本，安装 Open WebUI 时就不会装入这些库：
 
 ```bash
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 ```
 
-使用 uv 时，把同样的命令写成 `uv pip install`。若要在 AMD 显卡上获得加速，请改为安装 [PyTorch 安装页面](https://pytorch.org/get-started/locally/)提供的 ROCm 构建版。
+使用 uv 时，请将同一命令的开头改为 `uv pip install`。若要在 AMD GPU 上使用硬件加速，请改为安装 [PyTorch 安装页面](https://pytorch.org/get-started/locally/)提供的 ROCm 版本。
 :::

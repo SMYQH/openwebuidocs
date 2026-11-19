@@ -11,7 +11,7 @@ import DocCardList from '@theme/DocCardList';
 # 网络搜索 {#web-search}
 
 <ThemedImage
-  alt="网页搜索：一块方形透镜覆盖在一片瓷砖上，其下方的瓷砖微微凸起"
+  alt="网页搜索：方形透镜悬在一片方砖上方，正下方的一块方砖凸起"
   sources={{
     light: useBaseUrl('/images/banners/chat-conversations-websearch-light.svg'),
     dark: useBaseUrl('/images/banners/chat-conversations-websearch-dark.svg'),
@@ -36,7 +36,7 @@ import DocCardList from '@theme/DocCardList';
 
 这正是存在两个设置的原因：一个决定**由谁查找链接**，另一个决定**如何读取这些链接背后的页面**。
 
-即使关闭网页搜索，网页加载器的设置依然适用。**网页搜索引擎**只在开启 **网页搜索** 时才需要，因此**加载器**设置可以在没有引擎的情况下保存。当 **网页搜索** 关闭时，页面会隐藏 **网页搜索确认**、**网页搜索引擎**及其设置、**搜索限制**、**抓取 URL 内容长度上限**、**域名过滤列表** 和 **绕过网页加载器**。它们已保存的值会被保留。**绕过嵌入与检索** 和 **信任代理环境变量** 仍然可见。
+即使关闭网页搜索，网页加载器的设置依然有效。只有开启**网页搜索**时才必须选择**网页搜索引擎**，因此不选搜索引擎也能保存**加载器**设置。关闭**网页搜索**后，页面会隐藏**网页搜索确认**、**网页搜索引擎**及其设置、**搜索限制**、**抓取 URL 内容长度上限**、**域名过滤列表**和**绕过网页加载器**，但会保留已保存的值。**绕过嵌入与检索**和**信任代理环境变量**仍然可见。
 
 ## 为什么有这么多选项？ {#why-are-there-so-many-options}
 
@@ -53,7 +53,7 @@ Open WebUI 允许你为每项工作选择不同的服务。这些列表是**供�
 若想要最强的搜索结果，可以从为 LLM 工作流打造的托管搜索 API 开始，例如 [Exa](/features/chat-conversations/web-search/providers/exa)、[Tavily](/features/chat-conversations/web-search/providers/tavily)、[SearchApi](/features/chat-conversations/web-search/providers/searchapi)、[Serper](/features/chat-conversations/web-search/providers/serper)、[SerpApi](/features/chat-conversations/web-search/providers/serpapi)、[Brave](/features/chat-conversations/web-search/providers/brave) 或 [Kagi](/features/chat-conversations/web-search/providers/kagi)。若你需要一个自托管、保护隐私的元搜索引擎，[SearXNG](/features/chat-conversations/web-search/providers/searxng) 仍然很有用，但其结果质量很大程度上取决于上游引擎、速率限制和实例配置。
 :::
 
-1. **选择一个搜索引擎，并按照下方的配置指南进行设置。** 托管搜索 API 是 Open WebUI 连接的服务，用于代替你执行搜索。这类服务通常需要账号和 **API key**：也就是一段用于把 Open WebUI 与你在该服务上的账号连接起来的代码。
+1. **选择一个搜索引擎，并按照下方的配置指南进行设置。** Open WebUI 通过托管搜索 API 代表你发起搜索。这类服务通常需要账号和 **API 密钥**：它是用于授权 Open WebUI 使用该账号调用服务的凭据。
 2. **网页加载器保持默认设置即可。** 你不需要单独配置页面读取服务就能开始使用。如果页面无法被读取，[故障排查指南](/troubleshooting/web-search) 可以帮助你判断是否需要更换加载器。[加载器设置参考](/reference/env-configuration#web-loader-configuration) 会说明有哪些可选项。
 
 :::tip 搜索正常，但页面内容是空的？

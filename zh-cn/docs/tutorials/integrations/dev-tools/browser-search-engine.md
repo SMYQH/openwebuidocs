@@ -51,19 +51,19 @@ WEBUI_URL=https://<your-open-webui-url>
 
 ### 在 Chrome 中配置 {#for-chrome}
 
-1. 打开 Chrome 并进入 **Settings**。
-2. 在侧栏选择 **Search engine**，点击 **Manage search engines**。
-3. 点击 **Add** 新建搜索引擎。
+1. 打开 Chrome 并进入**设置**。
+2. 在侧栏选择**搜索引擎**，点击**管理搜索引擎**。
+3. 点击**添加**新建搜索引擎。
 4. 按如下填写：
-  - **Search engine**：Open WebUI Search
-  - **Keyword**：webui（或你喜欢的任意关键词）
-  - **URL 中用 %s 代替查询参数**：
+    - **搜索引擎**：Open WebUI Search
+    - **关键词**：webui（或你喜欢的任意关键词）
+    - **URL（用 %s 代替查询内容）**：
 
       ```txt
       https://<your-open-webui-url>/?q=%s
       ```
 
-5. 点击 **Add** 保存配置。
+5. 点击**添加**保存配置。
 
 ### 在 Firefox 中配置 {#for-firefox}
 
@@ -75,7 +75,7 @@ WEBUI_URL=https://<your-open-webui-url>
 
 1. 在 Firefox 中打开 Open WebUI。
 2. 右键地址栏。
-3. 在菜单中选择 “Add Open WebUI”（或类似选项）。
+3. 在菜单中选择“添加 Open WebUI”（或类似选项）。
 
 ### 可选：指定模型 {#optional-using-specific-models}
 
@@ -99,7 +99,7 @@ https://<your-open-webui-url>/?models=<model_id>&q=%s
 webui your search query
 ```
 
-该命令会跳转到 Open WebUI 并显示对应搜索结果。
+浏览器会打开 Open WebUI，并将查询内容填入消息输入框。按 Enter 发送。
 
 ## 故障排查 {#troubleshooting}
 

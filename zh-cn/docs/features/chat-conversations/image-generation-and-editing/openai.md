@@ -4,7 +4,7 @@ title: "OpenAI"
 ---
 
 :::warning
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程由社区贡献，不在 Open WebUI 团队的支持范围内。它仅演示如何按实际需求自定义 Open WebUI。欢迎贡献，详情请参阅贡献教程。
 :::
 
 Open WebUI 也支持通过 **OpenAI API** 进行图像生成。该方案可在各个 GPT-Image 模型（`gpt-image-1`、`gpt-image-1.5` 和 `gpt-image-2`）之间选择。`gpt-image-2` 是默认模型。
@@ -23,7 +23,7 @@ Open WebUI 也支持通过 **OpenAI API** 进行图像生成。该方案可在�
 
 ### Azure OpenAI {#azure-openai}
 
-Open WebUI 同样支持 Azure OpenAI 图像生成。配置方法如下：
+也可以通过 Azure OpenAI 生成图像。配置方法如下：
 
 1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
 2. 将 `Image Generation Engine` 设置为 `Default (Open AI)`（Azure OpenAI 使用与 OpenAI 相同的语法）
@@ -45,26 +45,26 @@ Open WebUI 同样支持 Azure OpenAI 图像生成。配置方法如下：
 :::
 
 :::tip
-另一种 `API Base URL` 写法是：`https://<endpoint name>.openai.azure.com/openai/deployments/<model name>/` —— 其中 endpoint name 可在 [Azure AI Foundry 概览](https://ai.azure.com/resource/overview) 中找到，model name 可在 [Azure AI Foundry 部署](https://ai.azure.com/resource/deployments) 中找到。
+另一种 `API Base URL` 写法是：`https://<endpoint name>.openai.azure.com/openai/deployments/<model name>/` —— 其中端点名称可在 [Azure AI Foundry 概览](https://ai.azure.com/resource/overview) 中找到，model name 可在 [Azure AI Foundry 部署](https://ai.azure.com/resource/deployments) 中找到。
 你也可以直接复制部署详情页中的 Target URI，但记得删除模型名称后面的多余字符串。
 例如，如果你的 Target URI 是 `https://test.openai.azure.com/openai/deployments/gpt-image-1/images/generations?api-version=2025-04-01-preview`，那么 Open WebUI 中应填写的 `API Base URL` 为 `https://test.openai.azure.com/openai/deployments/gpt-image-1/`。
 :::
 
-### 使用 OpenAI Endpoint 的 LiteLLM Proxy {#litellm-proxy-with-openai-endpoints}
+### 使用 OpenAI 端点的 LiteLLM 代理 {#litellm-proxy-with-openai-endpoints}
 
-Open WebUI 支持通过使用 OpenAI endpoints 的 LiteLLM proxy 进行图像生成。配置方法如下：
+Open WebUI 支持通过使用 OpenAI 端点的 LiteLLM 代理生成图像。配置方法如下：
 
 1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
 2. 将 `图像生成引擎` 设置为 `Default (Open AI)`
 3. 将 `API Base URL` 改为 `https://<your-litellm-url>:<port>/v1`
 4. 输入你的 LiteLLM API key
 5. API version 可留空
-6. 输入你在 LiteLLM 配置中使用的图像模型名称
+6. 输入 LiteLLM 配置中显示的图像模型名称
 7. 将图像尺寸设置为该模型支持的尺寸之一
 
 :::tip
 
 若要查看 LiteLLM 连接信息，请前往 **Settings** > **Connections**（管理员区域）。
-你的连接信息会显示在 OpenAI API connection 下方。
+连接信息列在 OpenAI API 连接条目下。
 
 :::

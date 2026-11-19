@@ -76,9 +76,10 @@ def __init__(self):
 
 - **定义**：承载你的自定义逻辑的核心函数。
 - **参数**：
-    - `body`：包含输入数据的字典，即去掉 `metadata` 之后的聊天补全请求。当请求经过基于该 pipe 构建的工作区模型时，`model` 已经被改写为 pipe 自身的 id，工作区模型的参数和系统提示词也会被合并进来。
-    - `__user__`、`__request__`、`__event_emitter__`、`__event_call__`、`__chat_id__`、`__session_id__`、`__message_id__`、`__task__`、`__task_body__`、`__files__`、`__metadata__`、`__oauth_token__` 和 `__tools__` 中的任意一个——只有当签名中写明了某个名字时才会传入。当请求不带 `session_id`、`chat_id` 和 `message_id`（例如纯 API 调用）时，`__event_emitter__` 和 `__event_call__` 为 `None`。参见[特殊参数](/features/extensibility/plugin/development/reserved-args)。
-    - 在 Web UI 聊天中启用原生函数调用且开启 **Builtin Tools** 能力时，如果召回了记忆、附加了知识库或用户拥有技能，`body["messages"]` 的末尾可能是工具消息而不是用户消息。它们是在用户消息之后作为隐藏的工具结果加入的。参见[提示词缓存](/features/chat-conversations/prompt-caching)。
+  - `body`：包含输入数据的字典，即去掉 `metadata` 之后的聊天补全请求。当请求经过基于该 pipe 构建的工作区模型时，`model` 已经被改写为 pipe 自身的 id，工作区模型的参数和系统提示词也会被合并进来。
+  - `__user__`、`__request__`、`__event_emitter__`、`__event_call__`、`__chat_id__`、`__session_id__`、`__message_id__`、`__task__`、`__task_body__`、`__files__`、`__metadata__`、`__oauth_token__` 和 `__tools__` 中的任意一个——只有当签名中写明了某个名字时才会传入。当请求不带 `session_id`、`chat_id` 和 `message_id`（例如纯 API 调用）时，`__event_emitter__` 和 `__event_call__` 为 `None`。参见[特殊参数](/features/extensibility/plugin/development/reserved-args)。
+  - 在 Web UI 聊天中启用原生函数调用且开启 **Builtin Tools** 能力时，如果召回了记忆、附加了知识库或用户拥有技能，`body["messages"]` 的末尾可能是工具消息而不是用户消息。它们是在用户消息之后作为隐藏的工具结果加入的。参见[提示词缓存](/features/chat-conversations/prompt-caching)。
+- **用途**：用自定义逻辑处理输入数据并返回结果。
 - **返回值**：对于流式请求，`str` 会变成一个分块；同步或异步生成器会逐项流式发送（`dict` 或 Pydantic 模型转成 JSON，已经以 `data:` 开头的 `str` 原样透传，其他 `str` 会被包装成一个聊天分块），Open WebUI 随后追加一个 `finish_reason: stop` 分块和 `data: [DONE]`。`StreamingResponse` 会被原样转发，`dict` 则以单行发送且不追加任何内容。对于非流式请求，`dict` 或 `StreamingResponse` 原样返回，Pydantic 模型会被序列化，`str` 或生成器会被合并成一段补全内容。从 `pipe()` 中抛出的异常会以 `{"error": {"detail": ...}}` 返回，并在消息上显示为错误。
 
 ```python
@@ -90,6 +91,7 @@ async def pipe(self, body: dict):
 
 **注意**：请始终将 `Valves` 放在 `Pipe` 类顶部，然后是 `__init__`，最后是 `pipe` 函数。这样的结构更清晰，也更一致。
 
+---
 
 ## 使用 Pipes 创建多个模型 {#creating-multiple-models-with-pipes}
 
@@ -125,7 +127,7 @@ class Pipe:
 
 - **`pipes` 函数**：
   - 返回一个字典列表。`pipes` 也可以是普通的列表属性，或者是一个异步函数。
-  - 每个字典代表一个模型，其中 `id` 和 `name` 键必须唯一。模型 id 会变成 `<function id>.<id>`，Open WebUI 通过按第一个点号切分来还原函数 id，因此子 id 本身可以包含点号。类上的 `name` 属性会被加到每个子模型名称的前面。
+  - 每个字典代表一个模型，包含该模型独有的 `id` 和 `name`。模型 id 会变成 `<function id>.<id>`，Open WebUI 通过按第一个点号切分来还原函数 id，因此子 id 本身可以包含点号。类上的 `name` 属性会被加到每个子模型名称的前面。
   - 这些模型会在 Open WebUI 的模型选择器中单独显示。
   - 如果 `pipes()` 抛出异常，该函数不会贡献任何模型。如果某个条目缺少 `id` 或 `name`，整个函数都会被跳过。
   - 函数 id 本身必须是合法的 Python 标识符，并且以小写形式保存。
@@ -133,6 +135,8 @@ class Pipe:
 - **更新后的 `pipe` 函数**：
   - 根据所选模型处理输入。
   - 在这个示例中，它会把模型 id 包含在返回的字符串里。
+
+---
 
 ## 示例：OpenAI 代理 Pipe {#example-openai-proxy-pipe}
 
@@ -240,49 +244,49 @@ class Pipe:
 #### Valves 配置 {#valves-configuration}
 
 - **`NAME_PREFIX`**：
-    - 为 Open WebUI 中显示的模型名称添加前缀。
-    - 默认值：`"OPENAI/"`。
+  - 为 Open WebUI 中显示的模型名称添加前缀。
+  - 默认值：`"OPENAI/"`。
 - **`OPENAI_API_BASE_URL`**：
-    - 指定 OpenAI API 的基础 URL。
-    - 默认值：`"https://api.openai.com/v1"`。
+  - 指定 OpenAI API 的基础 URL。
+  - 默认值：`"https://api.openai.com/v1"`。
 - **`OPENAI_API_KEY`**：
-    - 用于认证的 OpenAI API Key。
-    - 默认值：`""`（空字符串；必须提供）。
+  - 用于认证的 OpenAI API Key。
+  - 默认值：`""`（空字符串；必须提供）。
 
 #### `pipes` 函数 {#the-pipes-function}
 
 - **用途**：获取可用的 OpenAI 模型，并让它们在 Open WebUI 中可用。
 
-**流程**：
-        1. **检查 API Key**：确保已提供 API Key。
-        2. **获取模型**：向 OpenAI API 发起 GET 请求以检索可用模型。
-        3. **过滤模型**：只返回 `id` 中包含 `"gpt"` 的模型。
-        4. **错误处理**：如果出错，则返回错误消息。
+- **流程**：
+    1. **检查 API Key**：确保已提供 API Key。
+    2. **获取模型**：向 OpenAI API 发起 GET 请求以检索可用模型。
+    3. **过滤模型**：只返回 `id` 中包含 `"gpt"` 的模型。
+    4. **错误处理**：如果出错，则返回错误消息。
 
-**返回格式**：一个字典列表，每个模型都包含 `id` 和 `name`。
+- **返回格式**：一个字典列表，每个模型都包含 `id` 和 `name`。
 
 #### `pipe` 函数 {#the-pipe-function-1}
 
 - **用途**：处理对所选 OpenAI 模型的请求并返回响应。
 
 - **参数**：
-    - `body`：包含请求数据。
-    - `__user__`：包含用户信息（本示例中未使用，但可用于认证或日志记录）。
+  - `body`：包含请求数据。
+  - `__user__`：包含用户信息（本示例中未使用，但可用于认证或日志记录）。
 
 - **流程**：
-    1. **准备请求头**：使用 API Key 和内容类型设置请求头。
-    2. **提取模型 ID**：从所选模型名称中提取实际的模型 ID。
-    3. **准备负载**：将正确的模型 ID 更新到 body 中。
-    4. **发起 API 请求**：通过 `httpx.AsyncClient` 向 OpenAI API 的 chat completions 端点发送 POST 请求。
-    5. **处理流式输出**：如果 `stream` 为 `True`，则返回一个异步生成器，从上游响应中逐行输出 SSE。
-    6. **错误处理**：捕获异常并返回错误消息。
+  1. **准备请求头**：使用 API Key 和内容类型设置请求头。
+  2. **提取模型 ID**：从所选模型名称中提取实际的模型 ID。
+  3. **准备负载**：将正确的模型 ID 更新到 body 中。
+  4. **发起 API 请求**：通过 `httpx.AsyncClient` 向 OpenAI API 的 chat completions 端点发送 POST 请求。
+  5. **处理流式输出**：如果 `stream` 为 `True`，则返回一个异步生成器，从上游响应中逐行输出 SSE。
+  6. **错误处理**：捕获异常并返回错误消息。
 
 ### 扩展代理 Pipe {#extending-the-proxy-pipe}
 
 你可以通过调整 `pipes` 和 `pipe` 函数中的 API 端点、请求头与逻辑，把这个代理 Pipe 扩展到 Anthropic、Perplexity 等其他服务提供商。
 
 :::caution 要构建自包含 agent？不要发出 `delta.tool_calls`
-如果你的 Pipe 包装的是一个 agent（LangChain、LlamaIndex、自定义 planner 等），并且它会**在内部**执行工具，然后再把最终答案流回聊天，那么在流中发出 `delta.tool_calls` 会触发 Open WebUI 的工具执行重试循环——中间件会把 `delta.tool_calls` 视为“请客户端帮我执行这个”，然后反复回到你的 pipe，导致响应最多重复 [`CHAT_RESPONSE_MAX_TOOL_CALL_ITERATIONS`](/reference/env-configuration#chat_response_max_tool_call_iterations)（默认 256；v0.9.6 之前为 `CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES`，默认 30）次。
+如果你的 Pipe 包装的是一个 agent（LangChain、LlamaIndex、自定义 planner 等），并且它会**在内部**执行工具，然后再把最终答案流回聊天，那么在流中发出 `delta.tool_calls` 会触发 Open WebUI 的工具执行重试循环——中间件会把 `delta.tool_calls` 视为“请客户端帮我执行这个”，然后反复回到你的 pipe，导致响应最多重复 [`CHAT_RESPONSE_MAX_TOOL_CALL_ITERATIONS`](/reference/env-configuration#chat_response_max_tool_call_iterations) 次。
 
 对于自包含 agent，请改用 `<details type="tool_calls">` 内容块来表示工具执行——这和 Open WebUI 在内部工具执行后自己发出的内容格式一致。工具运行完成后，把该内容块作为普通内容 yield 出来即可：
 
@@ -336,18 +340,18 @@ class Pipe:
 ### 说明 {#explanation-1}
 
 - **导入**：
-    - `open_webui.models.users` 中的 `Users`：用于获取用户信息。
-    - `open_webui.utils.chat` 中的 `generate_chat_completion`：用于通过内部逻辑生成聊天回复。
+  - `open_webui.models.users` 中的 `Users`：用于获取用户信息。
+  - `open_webui.utils.chat` 中的 `generate_chat_completion`：用于通过内部逻辑生成聊天回复。
 
 - **异步 `pipe` 函数**：
-    - **参数**：
-        - `body`：模型输入数据。
-        - `__user__`：包含用户信息的字典。
-        - `__request__`：FastAPI 的 request 对象（`generate_chat_completion` 需要它）。
-    - **流程**：
-        1. **获取用户对象**：根据用户 ID 检索用户对象。
-        2. **设置模型**：指定要使用的模型。
-        3. **生成回复**：调用 `generate_chat_completion` 处理输入并生成输出。
+  - **参数**：
+    - `body`：模型输入数据。
+    - `__user__`：包含用户信息的字典。
+    - `__request__`：FastAPI 的 request 对象（`generate_chat_completion` 需要它）。
+  - **流程**：
+    1. **获取用户对象**：根据用户 ID 检索用户对象。
+    2. **设置模型**：指定要使用的模型。
+    3. **生成回复**：调用 `generate_chat_completion` 处理输入并生成输出。
 
 ### 重要说明 {#important-notes}
 
@@ -387,7 +391,6 @@ class Pipe:
 **A**：
 
 - **`pipe` 函数**：处理输入数据并生成输出的主要函数，负责单个模型的逻辑。
-
 - **`pipes` 函数**：通过返回一组模型定义，让你的 Pipe 代表多个模型。每个模型都会单独显示在 Open WebUI 中。
 
 ---

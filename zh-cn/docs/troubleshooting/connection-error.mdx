@@ -60,7 +60,7 @@ WEBSOCKET_REDIS_URL=redis://redis:6379/1
 
 在使用 OAuth/SSO 之前，必须先正确设置 `WEBUI_URL`。由于它是持久化配置变量，只能通过以下方式修改：
 - 临时设置 `ENABLE_PERSISTENT_CONFIG=false`
-- 在 **设置 > WebUI URL**（管理员区域） 中修改
+- 在设置 > 常规 > WebUI URL（管理员区域）中修改
 - 在首次启动前就正确设置
 
 **CORS 配置说明**
@@ -73,7 +73,7 @@ WEBSOCKET_REDIS_URL=redis://redis:6379/1
 
 ### WebSocket 故障排查 {#websocket-troubleshooting}
 
-Open WebUI v0.5.0 及更高版本需要 WebSocket 支持。如果 WebSocket 不能正常工作：
+如果 WebSocket 不能正常工作：
 
 1. **检查反向代理配置**——确认 `Upgrade` 和 `Connection` 头已正确设置
 2. **确认 CORS 设置**——WebSocket 连接同样遵守 CORS 策略
@@ -81,7 +81,7 @@ Open WebUI v0.5.0 及更高版本需要 WebSocket 支持。如果 WebSocket 不�
 4. **测试直连**——尝试绕过代理直接连接 Open WebUI，以隔离问题来源
 5. **检查 HTTP/2 与 WebSocket 的兼容问题**——某些代理（如 HAProxy 3.x）默认启用 HTTP/2。如果代理使用 HTTP/2 连接客户端，而后端/应用没有正确支持 RFC 8441（WebSockets over H2），实例可能会“卡住”或不响应。
    - **HAProxy 修复方式**：在配置中加入 `option h2-workaround-bogus-websocket-clients`，或强制后端连接使用 HTTP/1.1。
-   - **Nginx 修复方式**：确认 location 块中使用了 `proxy_http_version 1.1;`（Open WebUI 的多数 Nginx 示例默认如此）。
+   - **Nginx 修复方式**：确认 location 块中使用了 `proxy_http_version 1.1;`（Open WebUI 的许多示例默认采用此设置）。
 
 多实例部署中，请如上文所示设置 `WEBSOCKET_MANAGER=redis`。关于 Redis 配置细节，请参阅 [Redis WebSocket Support](/tutorials/integrations/redis)。完整的多实例扩缩容实践请参阅 [Scaling Open WebUI](/getting-started/advanced-topics/scaling)。如果你在多副本场景中遇到特定的 WebSocket 403 错误，请参见 [扩缩容与高可用故障排查](/troubleshooting/multi-replica#2-websocket-403-errors--connection-failures)。
 
@@ -204,7 +204,7 @@ Open WebUI 中有些功能提供**两种配置方式**：一种是**用户/直�
 
 ### 为什么同一个 URL 可能一边可用、一边失败 {#why-the-same-url-can-work-and-fail}
 
-当你把 `https://myserver.com/api` 添加为**用户/直连**连接时，浏览器会解析 `myserver.com` 并直接建立连接；而当你把同一个 URL 添加为**管理员/全局**连接时，则由 Open WebUI 后端去解析该主机名。在 Docker 容器里，这个域名甚至可能会被解析到 `127.0.0.1`，从而直接绕过你的反向代理。
+将 `https://myserver.com/api` 这样的 URL 添加为**用户/直连**连接时，浏览器会解析 `myserver.com` 并直接建立连接。将同一 URL 添加为**管理员/全局**连接时，由 Open WebUI 后端解析主机名。在 Docker 容器内，主机名可能解析到 `127.0.0.1`，完全绕过反向代理。
 
 **常见症状：**
 - 用户侧连接正常，但管理员配置的连接报 502 Bad Gateway
@@ -217,7 +217,7 @@ Open WebUI 中有些功能提供**两种配置方式**：一种是**用户/直�
 - 内网 IP（例如 `http://192.168.1.50:8000`）
 
 :::tip
-这适用于 Open WebUI 中**所有由后端代理的连接**，不仅仅是Open Terminal。包括[工具服务器连接](/features/extensibility/plugin/tools/openapi-servers/open-webui#main-difference-where-are-requests-made-from)、[Open Terminal管理员连接](/features/open-terminal#enterprise-multi-user) 以及 Ollama/OpenAI API 端点都遵循同样的规律。
+这适用于 Open WebUI 中**所有由后端代理的连接**，不仅仅是 Open Terminal。包括[工具服务器连接](/features/extensibility/plugin/tools/openapi-servers/open-webui#main-difference-where-are-requests-made-from)、[Open Terminal管理员连接](/features/open-terminal#enterprise-multi-user) 以及 Ollama/OpenAI API 端点都遵循同样的规律。
 :::
 
 ## "Open WebUI backend required" / 纯前端错误 {#open-webui-backend-required--front-end-only-error}
@@ -289,9 +289,9 @@ AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=true
 
 如果你启用了它，请在之后实际操作你的模型、网页搜索和各项内部服务，并注意那些并非来自 `/etc/resolv.conf` 或 hosts 文件的名称（通过 avahi/mDNS 提供的 `.local`、NIS 或 LDAP 目录、Windows NBNS）可能会停止解析。完整说明参见 [`AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER`](/reference/env-configuration#aiohttp_client_async_dns_resolver)，它能带来什么参见[性能 → DNS 解析器](/troubleshooting/performance#dns-resolver)。
 
-## ⏱️ 模型列表加载问题（UI 很慢 / endpoint 不可达） {#model-list-loading-issues-slow-ui--unreachable-endpoints}
+## ⏱️ 模型列表加载问题（UI 很慢 / 端点不可达） {#model-list-loading-issues-slow-ui--unreachable-endpoints}
 
-如果 Open WebUI 加载模型需要很久，或者模型选择器一直转圈，常见原因是你在连接配置中保存了不可达或非常慢的 API endpoint。
+如果 Open WebUI 加载模型需要很久，或者模型选择器一直转圈，常见原因是你在连接配置中保存了不可达或非常慢的 API 端点。
 
 ### 常见症状 {#common-symptoms-4}
 
@@ -300,11 +300,11 @@ AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=true
 - 打开 Settings 时 UI 明显卡顿
 - Docker/服务器日志出现：`Connection error: Cannot connect to host...`
 
-### 原因：endpoint 不可达 {#cause-unreachable-endpoints}
+### 原因：端点不可达 {#cause-unreachable-endpoints}
 
-当你配置多个 Ollama 或 OpenAI base URL（用于负载均衡或冗余）时，Open WebUI 会尝试从**所有**已配置 endpoint 拉取模型列表。只要其中任何一个 endpoint 不可达，系统就会一直等到超时后才返回结果。
+当你配置多个 Ollama 或 OpenAI base URL（用于负载均衡或冗余）时，Open WebUI 会尝试从**所有**已配置端点拉取模型列表。只要其中任何一个端点不可达，系统就会一直等到超时后才返回结果。
 
-默认情况下，Open WebUI 对每个不可达 endpoint 会等待 **10 秒**。坏 endpoint 越多，等待时间叠加越明显。
+默认情况下，Open WebUI 获取模型列表时对每个不可达端点会等待 **10 秒**。端点是并发查询的，因此总等待时间取决于最慢的端点，各端点的等待时间不会累加。
 
 ### 方案 1：缩短超时时间 {#solution-1-adjust-the-timeout}
 
@@ -315,7 +315,9 @@ AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER=true
 AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=3
 ```
 
-### 方案 2：修复或删除不可达 endpoint {#solution-2-fix-or-remove-unreachable-endpoints}
+这样可以缩短 Open WebUI 放弃等待每个端点并继续处理之前所用的时间。
+
+### 方案 2：修复或删除不可达端点 {#solution-2-fix-or-remove-unreachable-endpoints}
 
 1. 进入 **管理设置 → Connections**
 2. 检查你的 Ollama 与 OpenAI base URL
@@ -385,7 +387,7 @@ DATABASE_ENABLE_SESSION_SHARING=false
 如果你在连接 Hugging Face 时遇到 SSL 错误：
 
 1. **检查 Hugging Face 服务状态**：确认是否是其服务端故障
-2. **切换 endpoint**：如果 Hugging Face 服务异常，可在 Docker 命令中改用镜像
+2. **切换端点**：如果 Hugging Face 服务异常，请在 Docker 命令中切换端点
 
 **示例 Docker 命令：**
 ```bash
@@ -481,4 +483,4 @@ podman run -d -p 3000:8080 -e OLLAMA_BASE_URL=http://host.containers.internal:11
 
 #### 为什么独立脚本可以工作 {#why-standalone-scripts-work}
 
-直接运行 Python 脚本时，它未必继承 Open WebUI 服务所使用的代理环境变量。Open WebUI 服务通常会继承 systemd、Docker 或 shell profile 中的环境变量，因此代理配置可能与手动运行脚本时不同。
+直接运行 Python 脚本时，它未必继承 Open WebUI 服务所使用的代理环境变量。该服务通常从 systemd、Docker 或 shell 的配置文件继承环境变量，因此两者的代理配置可能不同。

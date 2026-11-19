@@ -5,13 +5,13 @@ title: "定时重置"
 
 # 定时重置 {#scheduled-resets}
 
-每个编排的终端可以在空闲清理和容器重新创建之间保持持久化文件。
+由编排器管理的终端可以保留持久化文件，即使空闲容器被清理或容器被重建。
 
 - Docker 将文件存储在编排器的 `TERMINALS_DATA_DIR` 下。
-- Kubernetes `per-user` 模式为每个用户/策略提供一个 PVC。
+- Kubernetes `per-user` 模式为每个用户与策略的组合提供一个 PVC。
 - Kubernetes `shared` 和 `shared-rwo` 使用带有每用户子路径的共享 PVC。
 
-当用户应定期回到一组干净的终端文件时，配置策略生命周期。生命周期配置与策略配置分开，因为它描述的是随时间推移的维护行为，而不是被预配的终端环境。
+如果需要定期清空用户的终端文件，请配置策略生命周期。生命周期配置与策略配置分开：前者定义定期维护，后者定义创建终端时使用的环境。
 
 ```bash
 curl -X PUT http://terminals-orchestrator:3000/api/v1/policies/training-lab/lifecycle \

@@ -89,7 +89,7 @@ Open WebUI 提供了一个可选的**上下文压缩**功能，帮你处理最�
 
   对话中显示的上下文用量，与压缩使用的阈值是同一个。
 
-  各服务商的词汇不同，常见 ones 都能读取：`prompt_tokens` / `completion_tokens`（OpenAI 风格）、`input_tokens` / `output_tokens`、`prompt_eval_count` / `eval_count`（Ollama），以及 `prompt_n` / `predicted_n` 加上 `cache_n`（llama.cpp）。因此本地后端会依据报告值而非估算值触发压缩。存储的用量会随对话历史一起保存，所以在后续轮次同样能取到报告的计数，而不仅仅是在产生它的那次请求上。
+  各服务商使用的字段名不同，常见字段都能读取：`prompt_tokens` / `completion_tokens`（OpenAI 风格）、`input_tokens` / `output_tokens`、`prompt_eval_count` / `eval_count`（Ollama），以及 `prompt_n` / `predicted_n` 加上 `cache_n`（llama.cpp）。因此本地后端会依据报告值而非估算值触发压缩。用量随对话历史保存，后续轮次也能读取提供商报告的计数。
 
 ## 官方支持的方式：使用 filter Function {#the-supported-way-use-a-filter-function}
 
@@ -399,7 +399,7 @@ Open WebUI 传给 `body["model"]` 的，不一定是提供商原始 id。如果�
 - **按提供商使用真实 tokenizer**——OpenAI 用 `tiktoken`、Claude 用 Anthropic tokenizer、Google 用 Gemini tokenizer、本地模型用 `transformers` tokenizer。本页的示例对所有模型共用同一个 tiktoken 编码（对 OpenAI 精确，对其他模型是近似）；生产级过滤器会为每个提供商使用各自的 tokenizer。
 - **正确统计图片 / 音频 / 文件 token**——按提供商和分辨率精确计算每种内容部分的 token，而不是对图片用单一最坏值、音频和文件按 0 计算。
 - **摘要替换策略**——窗口快溢出时，调用便宜模型把旧消息块总结成一条摘要，再替换原文，而不是直接遗忘。
-- **按用户 / 角色区分策略**——高级用户预算更大，服务账号与普通用户默认值不同。
+- **按用户 / 角色区分策略**——高级用户的预算高于免费用户，服务账号与人类用户的默认预算不同。
 - **按模型家族区分策略**——比简单前缀匹配更智能，例如用 regex 或 metadata 识别所有 Claude 3.x Sonnet 变体。
 - **优先裁剪工具结果或附件**——先删掉旧轮次中的超大网页抓取结果和 RAG 引用，再考虑删对话正文。
 - **带检查点的滑动摘要**——在 `__metadata__` 中保存运行中的摘要，避免每次请求都重新总结。

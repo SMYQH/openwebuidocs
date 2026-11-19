@@ -4,12 +4,12 @@ title: "环境变量配置"
 ---
 
 ## 概述 {#overview}
+
 Open WebUI 提供了大量环境变量，允许你定制和配置应用程序的各个方面。本页面作为所有可用环境变量的综合参考，提供它们的类型、默认值和描述。
+
 随着新变量的引入，本页面将不断更新，以反映日益增加的配置选项。
 
 :::info
-
-本页面与 Open WebUI 发布版本 [v0.10.0](https://github.com/open-webui/open-webui/releases/tag/v0.10.0) 保持同步，但仍在完善中，后续将包含更准确的描述、列出环境变量的可用选项、默认值以及改进的描述。
 
 :::
 
@@ -91,7 +91,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 由于这是一个持久化配置环境变量，你只能通过以下方式之一来修改它：
 
  - 使用 `ENABLE_PERSISTENT_CONFIG` 临时禁用持久化配置
- - 在管理面板 > 设置中修改“WebUI URL”。
+ - 在管理面板 > 设置中通过“WebUI URL”修改 `WEBUI_URL` 的值。
 
 在启用 OAuth/SSO 之前未设置 `WEBUI_URL` 将导致无法登录。
 
@@ -101,7 +101,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型： `bool`
 - 默认值： `True`
-- 说明： 启用后，**outlet** [过滤函数](/features/extensibility/plugin/functions/filter) 也会对通过 API 直接请求的补全结果运行（包括流式和非流式），而不仅限于从 Open WebUI 界面进行的聊天。禁用可跳过直接 API 流量上的 outlet 过滤。Inlet 过滤和其他管道阶段不受影响。
+- 描述： 启用后，**outlet** [过滤函数](/features/extensibility/plugin/functions/filter) 也会对通过 API 直接请求的补全结果运行（包括流式和非流式），而不仅限于从 Open WebUI 界面进行的聊天。禁用可跳过直接 API 流量上的 outlet 过滤。Inlet 过滤和其他管道阶段不受影响。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
@@ -151,7 +151,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 **安全注意事项**
 - 生产环境请使用强且唯一的密码
-- 建议使用 secrets 管理，不要明文保存
+- 建议使用 secrets 管理（Docker secrets、Kubernetes secrets、环境变量注入），而不是把密码明文保存在配置文件中
 - 初始设置后建议通过 UI 更改管理员密码
 - 不要提交到版本控制
 
@@ -185,14 +185,14 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 - 类型： `str`
 - 默认值： `bcrypt`
 - 选项： `bcrypt`, `argon2`
-- 说明： 选择用于哈希新用户密码的算法。`bcrypt`（默认）拒绝长度超过 **72 字节**的密码（这是 bcrypt 的硬限制）。`argon2` 移除了该限制，可接受任意长度的密码（需要 `argon2-cffi` 包）。切换后现有哈希仍然可用：验证时会从每个存储的哈希中自动检测算法（`$argon2` 前缀表示使用 argon2 验证，否则使用 bcrypt），因此更改此设置仅影响新设置的密码。
+- 描述： 选择用于哈希新用户密码的算法。`bcrypt`（默认）拒绝长度超过 **72 字节**的密码（这是 bcrypt 的硬限制）。`argon2` 移除了该限制，可接受任意长度的密码（需要 `argon2-cffi` 包）。切换后现有哈希仍然可用：验证时会从每个存储的哈希中自动检测算法（`$argon2` 前缀表示使用 argon2 验证，否则使用 bcrypt），因此更改此设置仅影响新设置的密码。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `ENABLE_PASSWORD_AUTH` {#enable\_password\_auth}
 - 类型：`bool`
 - 默认值：`True`
-- 描述：设为 `True` 时允许密码认证与 SSO 认证方式共存。设为 `False` 时会禁用 `/signin` 和 `/ldap` 端点上所有基于密码的登录尝试，强制仅使用 SSO 认证。在已完全配置 SSO 的生产环境中应禁用此设置，以防止基于凭证的账户接管攻击；如果需要密码认证作为后备或尚未完成 SSO 配置，则保持启用。如果未使用 OAUTH/SSO，则绝不应禁用此设置。此设置控制后端认证行为，而 `ENABLE_PASSWORD_CHANGE_FORM` 控制密码修改控件的 UI 可见性。
+- 描述：设为 `True` 时允许密码认证与 SSO 认证方式共存。设为 `False` 时会禁用登录（`/signin`）和 LDAP（`/ldap`）端点上所有基于密码的登录尝试，强制仅使用 SSO 认证。在已完全配置 SSO 的生产环境中应禁用此设置，以防止基于凭证的账户接管攻击；如果需要密码认证作为后备或尚未完成 SSO 配置，则保持启用。如果未使用 OAUTH/SSO，则绝不应禁用此设置。此设置控制后端认证行为，而 `ENABLE_PASSWORD_CHANGE_FORM` 控制密码修改控件的 UI 可见性。
 
 :::tip
 
@@ -202,7 +202,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 :::danger
 
-只有在同时启用 [ENABLE_OAUTH_SIGNUP](https://docs.openwebui.com/reference/env-configuration/#enable_oauth_signup)
+**只有**在同时启用 [ENABLE_OAUTH_SIGNUP](https://docs.openwebui.com/reference/env-configuration/#enable_oauth_signup)
 并将其设为 `True` 时，才应将此项设为 `False`。**如果未使用 OAUTH/SSO，绝不要禁用此项。** 否则将导致无法登录。
 
 :::
@@ -403,14 +403,14 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 - 类型：`str`
 - 选项：`members`、`true`、`false`
 - 默认值：`members`
-- 描述：控制新建用户组的默认共享权限。
+- 描述：控制新建用户组的默认“谁可以分享到此群组”设置。`members` 表示仅群组成员可分享到该群组，`true` 表示所有人都可以，`false` 表示无人可以。此设置适用于手动创建的群组，也适用于通过 SCIM 或 OAuth 群组同步等方式自动创建的群组。它只设定新群组的初始默认值，不影响现有群组。
 
 
 #### `PENDING_USER_OVERLAY_TITLE` {#pending\_user\_overlay\_title}
 
 - 类型：`str`
 - 默认值：空字符串（`''`）
-- 描述：为待处理用户遮罩设置自定义标题。
+- 描述：为待审核用户的提示层设置自定义标题。仅在关闭 [`ENABLE_MFA`](#enable_mfa) 时显示。开启 MFA 时，待审核用户将停留在登录页，并看到提示 “Your account is awaiting administrator approval.”
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -418,7 +418,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`str`
 - 默认值：空字符串（`''`）
-- 描述：为待处理用户遮罩设置自定义文本内容。
+- 描述：为待审核用户的提示层设置自定义文本。仅在关闭 [`ENABLE_MFA`](#enable_mfa) 时显示。开启 MFA 时，待审核用户将停留在登录页，并看到提示 “Your account is awaiting administrator approval.”
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -434,7 +434,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：用于启用或禁用频道支持。
+- 描述：启用或禁用频道支持。禁用时，**设置 > 界面**中的**压缩频道图片**选项会隐藏。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -538,7 +538,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型： `str` (duration)
 - 默认值： `1h`
-- 说明： 自动化在无头运行时用于回调 Open WebUI 的短期认证令牌的生命周期（这样定时运行可以访问经过会话认证的工具和终端）。接受持续时间字符串，如 `30m`、`1h`、`24h`。
+- 描述： 自动化在无头运行时用于回调 Open WebUI 的短期认证令牌的生命周期（这样定时运行可以访问经过会话认证的工具和终端）。接受持续时间字符串，如 `30m`、`1h`、`24h`。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::tip AUTOMATION_MIN_INTERVAL 常用取值
@@ -697,7 +697,7 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 - 默认值：`True`
 - 描述：控制管理员是否可以在 Open WebUI 内打开其他用户的聊天。它会在产品界面中隐藏聊天，但并不能阻止管理员接触到这些数据；参见[聊天数据隐私](/security/chat-data-privacy-and-encryption#admin-users)。启用后，管理员可以阅读任意用户的聊天，聊天将以只读方式打开。通过 API，管理员还可以编辑或删除其中的消息、删除该聊天、修改其共享设置并克隆它。回复、重新生成、停止回复以及批准工具调用仍归聊天所有者以及通过[允许回复](/features/chat-conversations/chat-features/chatshare#allowing-replies)共享该聊天的人所有。禁用后，管理面板会隐藏其他用户的聊天，[分析](/features/administration/analytics#sessions)中的**会话**视图会被隐藏且其端点返回 `403`，聊天端点也只会向管理员提供与普通共享相同的内容。仅限管理员的 `GET /api/tasks` 和 `POST /api/tasks/stop/{task_id}` 端点仍会列出并停止任何正在运行的任务，无论此设置如何。如果你禁用了此项，请考虑同时禁用 `ENABLE_ADMIN_EXPORT`（尤其是在 SQLite 上），因为导出内容包含用户聊天。此开关只覆盖产品界面：管理员仍可通过数据库、服务器本身或 Function/Tool 访问所有聊天。请参阅上文关于管理员态势开关的说明。
 
-  **内部聊天的例外：** 即使此值为 `False`，管理员仍可检索标记为内部的聊天。内部聊天是指 Open WebUI 代表用户创建、但用户并未主动打开的聊天：[子智能体](/features/chat-conversations/chat-features/subagents)聊天、[定时器](/features/chat-conversations/chat-features/timers)聊天以及附加笔记的聊天。正是这一豁免让管理员能够检索到它们，因为内部聊天**被排除在聊天列表界面之外**：它们不会出现在聊天列表、搜索、计数、导出或管理员聊天列表中。除了[分析](/features/administration/analytics#sessions)中的**会话**视图会与其他聊天一并列出它们之外，只能通过 ID 访问。
+  **内部聊天的例外：** 即使此值为 `False`，管理员仍可检索标记为内部的聊天。内部聊天是指 Open WebUI 代表用户创建、但用户并未主动打开的聊天：[子智能体](/features/chat-conversations/chat-features/subagents)聊天、[定时器](/features/chat-conversations/chat-features/timers)聊天以及附加笔记的聊天。正是这一豁免让管理员能够检索到它们，因为内部聊天**被排除在聊天列表界面之外**：它们不会出现在聊天列表、搜索、计数、导出或管理员聊天列表中。除了 Analytics 中的**会话**视图会与其他聊天一并列出它们之外，只能通过 ID 访问。
 
   这一点对审计很重要，对隐私的影响则较小：子智能体聊天承载着真实的模型工作，使用用户的模型和工具，并计入你的配额，但它不会出现在导出或管理员聊天列表中。在使用子智能体或定时器期间，不要把这些界面当作完整记录。
 
@@ -706,7 +706,7 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：控制管理面板中的 Analytics 选项卡是否可见且可访问。
+- 描述：控制是否显示管理面板的 **Analytics** 选项卡，以及是否挂载分析 API 路由。设为 `False` 时，选项卡会隐藏，对应端点也不会注册。关闭此功能不会停止底层数据收集，管理员仍可直接查询数据库中的数据。此开关只控制产品内的访问入口，参见上文有关管理界面开关的说明。重启后生效。
 
 
 #### `BYPASS_ADMIN_ACCESS_CONTROL` {#bypass\_admin\_access\_control}
@@ -717,7 +717,7 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 
   按 ID 直接访问的端点（`GET /api/v1/<resource>/id/{id}` 以及相应的更新/删除/访问授权路由）**有意**不受该标志约束，从设计上也从未受其约束。对它们加以限制既防不住任何管理员无法通过当初获取资源 ID 时所用的数据库查询轻易做到的事情，又会破坏管理员在已知条目 ID 上操作的正常流程。完整的架构论证参见上文的管理姿态开关说明。
 
-  同一个标志还决定管理员在管理员配置的资源上是否绕过访问授权，这些资源包括外部工具服务器、MCP 服务器、Open Terminal连接和竞技场模型。为 `True` 时，管理员可以看到并使用全部这些资源。为 `False` 时，管理员需要与每个资源的访问名单逐一比对，但完全没有授权记录的资源仍为管理员专用，因为它没有可以回退的所有者。参见[私密对各类资源意味着什么](/features/authentication-access/rbac/groups#what-private-means-for-each-resource-type)。
+  同一个标志还决定管理员在管理员配置的资源上是否绕过访问授权，这些资源包括外部工具服务器、MCP 服务器、Open Terminal 连接和竞技场模型。为 `True` 时，管理员可以看到并使用全部这些资源。为 `False` 时，管理员需要与每个资源的访问名单逐一比对，但完全没有授权记录的资源仍为管理员专用，因为它没有可以回退的所有者。参见[私密对各类资源意味着什么](/features/authentication-access/rbac/groups#what-private-means-for-each-resource-type)。
 
   本环境变量取代了 `ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS`。如果你仍在使用 `ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS`，请改用 `BYPASS_ADMIN_ACCESS_CONTROL`。
 
@@ -725,7 +725,7 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用或禁用用户 webhook（每个用户可设置一个 URL，其通知会以 POST 方式推送到该 URL）。出于 SSRF 安全考虑，凡是解析到私有或保留 IP 的 webhook URL 一律拒绝，除非 [`ENABLE_RAG_LOCAL_WEB_FETCH`](#enable_rag_local_web_fetch) 被设为 `true`。
+- 描述：启用或禁用用户 webhook（每个用户可设置接收 POST 通知的 URL）。出于 SSRF 安全考虑，凡是解析到私有或保留 IP 的 webhook URL 一律拒绝，除非 [`ENABLE_RAG_LOCAL_WEB_FETCH`](#enable_rag_local_web_fetch) 被设为 `true`。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -756,7 +756,7 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 
 - 类型：`str`
 - 默认值：空字符串（不注入 CSP）
-- 描述：为 UI 中所有渲染的 `srcdoc` iframe 设置统一的 Content-Security-Policy —— 包括 Artifacts、代码/HTML 预览、文件预览、引用弹窗。设置后会在 iframe 文档顶部注入一个 `<meta http-equiv="Content-Security-Policy">` 标签，限制 LLM 生成或用户上传的 HTML 能够加载和执行的内容（网络连接、脚本、样式、字体、frame）。iframe 上的 `sandbox` 属性仍然提供基础隔离；这里的 CSP 是为需要限制渲染 HTML 出站请求的部署提供的额外纵深防御。示例值：`default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'none'`。不设置则保持现有行为（仅 sandbox）。
+- 描述：设置 Content-Security-Policy，应用于界面中渲染的所有 `srcdoc` iframe，包括 Artifacts、代码和 HTML 预览、文件预览、引用弹窗以及 MCP Apps。设置后，系统会在 iframe 文档顶部插入 `<meta http-equiv="Content-Security-Policy">` 标签，限制由 LLM 生成或用户上传的 HTML 可以加载和执行的内容，包括网络连接、脚本、样式、字体和框架。iframe 的 `sandbox` 属性仍提供基础隔离。对于需要限制渲染后 HTML 发起出站网络请求的部署，此 CSP 提供额外的纵深防御。示例值：`default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'none'`。留空时仅使用沙箱。
 
 
 #### `THREAD_POOL_SIZE` {#thread\_pool\_size}
@@ -902,7 +902,7 @@ open-webui serve --port 9999
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用后，会自动把 Markdown 中超过 1KB 的 base64 图片上传并转换为图片 URL，以减小响应文本体积。
+- 描述：启用后，系统会自动上传 Markdown 中超过 1KB 的 Base64 编码图片，并将其替换为图片文件 URL，以减少响应文本的体积。部分多模态模型会直接在 Markdown 内容中以 Base64 字符串输出图片，导致响应体变大，加重 CPU、网络、Redis 和数据库的负担。
 
 
 #### `ENABLE_CHAT_RESPONSE_STREAM_INPLACE_APPEND` {#enable\_chat\_response\_stream\_inplace\_append}
@@ -945,7 +945,7 @@ open-webui serve --port 9999
 
 - 类型：`int`
 - 默认值：`1`
-- 描述：设置流式响应向客户端发送前的最小 token 批量大小。
+- 描述：设置流式响应每批发送给客户端的 token 数量下限，适用于整个系统。管理员可以由此避免分块过小导致的 CPU 高负载，维持系统整体的性能和稳定性。实际使用的分块大小取此全局变量、模型高级参数和当前聊天设置三者中的最大值。默认值为 1，即全局不设批量下限。
 
 
 #### `CHAT_STREAM_RESPONSE_CHUNK_MAX_BUFFER_SIZE` {#chat\_stream\_response\_chunk\_max\_buffer\_size}
@@ -975,11 +975,11 @@ open-webui serve --port 9999
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：通过向上游传递 `previous_response_id` 启用有状态的 Responses API 会话。
+- 描述：将 `previous_response_id` 转发给上游端点，为 Responses API 启用有状态会话。启用后，Open WebUI 会将每条响应关联到上一条响应，使 上游提供商能在服务器端维护对话状态。
 
 :::warning 实验性
 
-**只有在上游 Responses API 端点明确支持有状态会话时才启用此项。** 大多数代理和第三方端点是无状态的，启用后会出问题。
+**只有在上游 Responses API 端点支持有状态会话时才启用此项**（即在服务器端存储响应，并通过 `previous_response_id` 关联响应）。大多数代理和第三方端点是无状态的，启用后**将无法正常工作**。此功能适用于直接连接 OpenAI 等原生支持有状态 Responses API 的提供商。
 
 :::
 
@@ -988,7 +988,7 @@ open-webui serve --port 9999
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：控制是否绕过模型访问控制。启用后，所有用户都能访问所有模型。
+- 描述：绕过模型访问控制。设为 `true` 时，所有用户（包括管理员）均可访问所有模型，不受模型可见性设置限制，包括私有、公开和仅对指定群组共享。适合无需限制模型访问权限的小型或个人 Open WebUI 部署。
 
 
 #### `BYPASS_RETRIEVAL_ACCESS_CONTROL` {#bypass\_retrieval\_access\_control}
@@ -1001,7 +1001,7 @@ open-webui serve --port 9999
 #### `ENABLE_RETRIEVAL_UNSCOPED_COLLECTIONS` {#enable\_retrieval\_unscoped\_collections}
 
 - 类型：`bool`
-- 默认值：`True`
+- 默认值：`False`
 - 描述：控制 RAG 检索如何对待与任何已知集合都不匹配的集合名（既不是 `file-*`、`user-memory-*` 或 `web-search-*` 名称，也不是已有的知识库）。名称匹配时忽略字母大小写，并把连字符和下划线视为等同，因此 `File_abc` 会按 `file-abc` 检查。以数字开头的名称还会带上前导 `c` 进行检查，而“`c` 加数字”的名称也会去掉它来检查，因为 Weaviate 会给以数字开头的集合名加上 `C`。这些拼写中凡是指向已知集合的，都必须通过访问检查。被拒绝的拼写始终优先于被允许的拼写，也优先于本设置。默认情况下（`false`），非管理员用户使用这类未知名称会被拒绝，从而关闭了旧版“未限定范围”的集合命名空间。设为 `true` 可将它们作为旧版或临时集合放行，恢复较早的行为。与 `BYPASS_RETRIEVAL_ACCESS_CONTROL` 一样，默认值是安全的选择，你通常不需要修改它。
 
 
@@ -1039,7 +1039,7 @@ WEBUI_BANNERS="[{\"id\": \"1\", \"type\": \"warning\", \"title\": \"Your message
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：构建时启用 NVIDIA CUDA 支持，为本地 Whisper 和 embeddings 提供 GPU 加速。
+- 描述：构建支持 NVIDIA CUDA 的 Docker 镜像，为本地 Whisper 和嵌入计算启用 GPU 加速。
 
 
 #### `USE_SLIM_DOCKER` {#use\_slim\_docker}
@@ -1072,8 +1072,8 @@ WEBUI_BANNERS="[{\"id\": \"1\", \"type\": \"warning\", \"title\": \"Your message
 #### `EXTERNAL_PWA_MANIFEST_URL` {#external\_pwa\_manifest\_url}
 
 - 类型：`str`
-- 默认值：Empty string (' '), since `None` is set as default.
-- 描述：当设置为完整 URL（例如 `https://path/to/manifest.webmanifest`）时，发往 `/manifest.json` 的请求会使用外部 manifest；否则使用默认 manifest.json。
+- 默认值：空字符串（' '），因为默认值设为 `None`。
+- 描述：当设置为完整 URL（例如 `https://path/to/manifest.webmanifest`）时，发往 /manifest.json 的请求会使用外部 manifest；否则使用默认 manifest.json。
 
 
 #### `ENABLE_TITLE_GENERATION` {#enable\_title\_generation}
@@ -1219,7 +1219,7 @@ WEBUI_BANNERS="[{\"id\": \"1\", \"type\": \"warning\", \"title\": \"Your message
 
 - 类型：`int`
 - 默认值：未设置时继承 `AIOHTTP_CLIENT_TIMEOUT`
-- 描述：设置执行 tool server API 调用的超时时间（秒）。
+- 描述：设置执行工具服务器 API 调用的超时时间（秒），包括由 Open WebUI 代理的 OpenAPI 和 MCP 调用。此值控制 Open WebUI 等待实际工具执行结果的时间。超时后调用失败，模型会收到工具超时错误。对 MCP 工具调用，`0` 或更小的值表示不设上限。
 
 :::info
 
@@ -1242,7 +1242,7 @@ WEBUI_BANNERS="[{\"id\": \"1\", \"type\": \"warning\", \"title\": \"Your message
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：控制应用范围内的出站 HTTP 请求是否跟随 `3xx` 重定向。`False`（自 v0.9.5 起的默认值）下不跟随重定向——这关闭了一类 SSRF 攻击：攻击者把一个通过白名单校验的公网 URL `302`-重定向到内部地址（RFC 1918、回环地址 `127.0.0.1`、云元数据 `169.254.169.254`），从而绕过原本的 allowlist 检查。受影响的调用方包括 RAG 网页加载器、图片加载与 base64 转换、OAuth 预检、code-interpreter 登录、tool-server 执行。只有当你的部署确实需要跟随重定向（例如短链 URL）**且**已经部署了其他 SSRF 防护（通常是出站防火墙或覆盖了内网范围的 `WEB_FETCH_FILTER_LIST`），才将其设为 `True`。
+- 描述：控制应用范围内的出站 HTTP 请求是否跟随 `3xx` 重定向。`False`（默认值）下不跟随重定向——这关闭了一类 SSRF 攻击：攻击者把一个通过白名单校验的公网 URL `302`-重定向到内部地址（RFC 1918、回环地址 `127.0.0.1`、云元数据 `169.254.169.254`），从而绕过原本的 allowlist 检查。受影响的调用方包括 RAG 网页加载器、图片加载与 base64 转换、OAuth 预检、code-interpreter 登录、tool-server 执行。只有当你的部署确实需要跟随重定向（例如短链 URL）且已经部署了其他 SSRF 防护（通常是出站防火墙或覆盖了内网范围的 `WEB_FETCH_FILTER_LIST`），才将其设为 `True`。
 
 
 #### `AIOHTTP_CLIENT_ASYNC_DNS_RESOLVER` {#aiohttp\_client\_async\_dns\_resolver}
@@ -1303,7 +1303,7 @@ c-ares 会读取 `/etc/resolv.conf` 和 hosts 文件，但不读取其它名称�
 
 - 类型：`int`
 - 默认值：未设置（无限制）
-- 描述：共享 AIOHTTP 客户端池中总并发连接数上限。
+- 描述：设置共享 AIOHTTP 客户端池的并发连接总数上限。该连接池用于向 Ollama、OpenAI 兼容端点等发出请求。未设置时不限制总数。如需限制发往上游的并发请求总数，可调低此值。
 
 
 #### `AIOHTTP_POOL_CONNECTIONS_PER_HOST` {#aiohttp\_pool\_connections\_per\_host}
@@ -1444,10 +1444,10 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`str`
 - 默认值：空字符串（禁用）
-- 描述：要包含在审计日志中的 URL 路径列表，逗号分隔。
+- 描述：以逗号分隔的 URL 路径列表，用于指定要记录到审计日志中的路径（白名单模式）。设置后，**仅**审计匹配的路径，并忽略 `AUDIT_EXCLUDED_PATHS`。匹配项不带前导斜杠，用于匹配以 `/api/` 或 `/api/v1/` 为前缀的路由。登录、退出、注册及 MFA 等身份验证端点始终会被记录，不受筛选模式影响。
 
 :::tip 白名单与黑名单
-默认情况下审计日志使用黑名单模式；如果设置了 `AUDIT_INCLUDED_PATHS`，则切换为白名单模式。若两者都设置，白名单优先。
+默认情况下，审计日志使用**黑名单模式**，记录除 `AUDIT_EXCLUDED_PATHS` 中所列路径之外的所有路径。设置 `AUDIT_INCLUDED_PATHS` 后，改用**白名单模式**，仅记录指定的路径。如果两者都已设置，白名单优先，系统会在启动时记录警告。
 :::
 
 
@@ -1503,7 +1503,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：如果启用，则按 Helm 部署处理，并将 `OLLAMA_BASE_URL` 指向集群内的 Ollama 服务。
+- 描述：启用后，按 Helm chart 部署处理，并将 [`OLLAMA_BASE_URL`](#ollama_base_url) 设置为 `http://ollama-service.open-webui.svc.cluster.local:11434`。
 
 
 ### OpenAI {#openai}
@@ -1563,11 +1563,11 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用后，OpenAI 代理的兜底端点（`/{path:path}`）会使用管理员配置的 API 密钥转发请求，且不再额外做访问控制。
+- 描述：启用后，OpenAI 代理的兜底端点（`/{path:path}`）使用管理员配置的 API 密钥，将任意请求转发给兼容 OpenAI 的上游 API，且不再做额外访问控制。禁用时（默认），兜底端点返回 `403 Forbidden`。其他路由（Ollama 和 Responses）没有兜底代理。
 
 :::danger
 
-**除非你明确需要，否则请保持关闭。** 该兜底代理会使用管理员密钥直通上游 API，且不做模型级访问控制。
+**除非你明确需要，否则请保持关闭。** 该兜底代理使用管理员的 API 密钥将请求转发到上游 API，且不执行模型级访问控制。任何已通过身份验证的用户都能借助管理员的凭据访问上游的任意端点，包括 Open WebUI 未原生支持的端点。只有在了解并接受这些影响后，才应启用此功能。
 
 :::
 
@@ -1610,7 +1610,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：在聊天输入框的 **+** 菜单中新增**工具权限**条目，用户可在此选择**完全访问**（无需询问即运行工具；当未提供**自动**时为默认）、**请求批准**（每次工具调用前都停下，直到被允许或拒绝），或在 [`ENABLE_TOOL_PERMISSIONS_AUTO`](#enable_tool_permissions_auto) 开启时选择**自动**。实验性功能。该设置关闭时，所有请求都以完全访问运行，`tool_approval_mode` 参数会被忽略。频道回复始终以完全访问运行。自动化没有选定模式，因此在提供**自动**时按**自动**运行，否则以完全访问运行。也可在 **设置 > 界面**（管理员区域） 中切换。
+- 描述：在聊天输入框的 **+** 菜单中新增**工具权限**条目，用户可在此选择**完全访问**（无需询问即运行工具；当未提供**自动**时为默认）、**请求批准**（每次工具调用前都停下，直到被允许或拒绝），或在 [`ENABLE_TOOL_PERMISSIONS_AUTO`](#enable_tool_permissions_auto) 开启时选择**自动**。实验性功能。该设置关闭时，所有请求都以完全访问运行，`tool_approval_mode` 参数会被忽略。频道回复始终以完全访问运行。自动化没有选定模式，因此在提供该选项时按**自动**运行，否则以完全访问运行。也可在 **设置 > 界面**（管理员区域） 中切换。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_permissions.enable`。
 
 #### `ENABLE_TOOL_PERMISSIONS_AUTO` {#enable\_tool\_permissions\_auto}
@@ -1679,7 +1679,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型： `int`
 - 默认值： `80000`
-- 说明： 当 `ENABLE_CONTEXT_COMPACTION` 开启时，触发较早消息压缩的估算上下文大小（以 token 计）。对于小上下文模型可调低此值，对于大上下文模型可调高。这是全局默认阈值：单个模型可以通过**上下文压缩阈值**高级参数（`compact_token_threshold`）覆盖此值，设置更高或更低的值，但受 `CONTEXT_COMPACTION_TOKEN_CAP` 的限制。
+- 描述： 当 `ENABLE_CONTEXT_COMPACTION` 开启时，触发较早消息压缩的估算上下文大小（以 token 计）。对于小上下文模型可调低此值，对于大上下文模型可调高。这是全局默认阈值：单个模型可以通过**上下文压缩阈值**高级参数（`compact_token_threshold`）覆盖此值，设置更高或更低的值，但受 `CONTEXT_COMPACTION_TOKEN_CAP` 的限制。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -1687,7 +1687,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型： `int`
 - 默认值： falls back to `CONTEXT_COMPACTION_TOKEN_THRESHOLD` when unset
-- 说明： 任何按模型上下文压缩阈值的绝对上限（以 token 计）。模型可以通过 `compact_token_threshold` 高级参数提高或降低自己的阈值，但有效值会被限制在此上限内。未设置时等同于 `CONTEXT_COMPACTION_TOKEN_THRESHOLD`，重现了以前按模型阈值只能降低的行为。也可在**设置 > 界面**（管理员区域）（**Token Cap**）中设置。
+- 描述： 任何按模型上下文压缩阈值的绝对上限（以 token 计）。模型可以通过 `compact_token_threshold` 高级参数提高或降低自己的阈值，但有效值会被限制在此上限内。未设置时等同于 `CONTEXT_COMPACTION_TOKEN_THRESHOLD`，重现了以前按模型阈值只能降低的行为。也可在**设置 > 界面**（管理员区域）（**Token Cap**）中设置。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -1813,7 +1813,7 @@ JSON format: { "title": "your concise title here" }
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用后续问题生成。
+- 描述：启用或禁用后续问题生成。禁用时，**设置 > 界面**中的**自动生成后续问题**开关会隐藏。重新启用后，已保存的选择会恢复生效。保留和插入后续提示的设置仍然可见，因为它们也适用于现有聊天中保存的后续提示。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -1904,14 +1904,14 @@ The format for the JSON response is strictly:
 
 - 类型：`str`
 - 默认值：`pyodide`
-- 描述：指定要使用的代码执行引擎。
+- 描述：指定使用的代码执行引擎。`pyodide`（浏览器端）和 `jupyter`（服务器端）是**旧版**引擎。如需完整的 Python 和 shell 访问权限，请改用 [Open Terminal](/features/open-terminal)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `CODE_EXECUTION_JUPYTER_URL` {#code\_execution\_jupyter\_url}
 
 - 类型：`str`
-- 默认值：`None`
+- 默认值：空字符串
 - 描述：指定代码执行要使用的 Jupyter URL。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -1919,7 +1919,7 @@ The format for the JSON response is strictly:
 #### `CODE_EXECUTION_JUPYTER_AUTH` {#code\_execution\_jupyter\_auth}
 
 - 类型：`str`
-- 默认值：`None`
+- 默认值：空字符串
 - 描述：指定代码执行要使用的 Jupyter 认证方式。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -1927,7 +1927,7 @@ The format for the JSON response is strictly:
 #### `CODE_EXECUTION_JUPYTER_AUTH_TOKEN` {#code\_execution\_jupyter\_auth\_token}
 
 - 类型：`str`
-- 默认值：`None`
+- 默认值：空字符串
 - 描述：指定代码执行要使用的 Jupyter 认证 token。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -1935,7 +1935,7 @@ The format for the JSON response is strictly:
 #### `CODE_EXECUTION_JUPYTER_AUTH_PASSWORD` {#code\_execution\_jupyter\_auth\_password}
 
 - 类型：`str`
-- 默认值：`None`
+- 默认值：空字符串
 - 描述：指定代码执行要使用的 Jupyter 认证密码。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -1950,7 +1950,7 @@ The format for the JSON response is strictly:
 
 - 类型： `bool`
 - 默认值： `False`
-- 说明： 控制基于浏览器的 **Pyodide** 引擎是否在**页面重新加载后保持**其虚拟文件系统（`/mnt/uploads/`，由 IndexedDB 支持）**持久化**。设为 `False`（默认）时，Pyodide 在隔离的沙盒（不透明源）iframe 中运行，其文件系统在重新加载后不会保留。设为 `True` 可启用持久文件存储，这需要在同源中运行 Pyodide 并放宽隔离。在单次会话中创建的文件无论哪种方式都能正常工作；此标志仅影响跨重新加载的持久性和文件浏览器的稳定性。
+- 描述： 控制基于浏览器的 **Pyodide** 引擎的虚拟文件系统（`/mnt/uploads/`，由 IndexedDB 支持）**在重新加载页面后是否保留**。设为 `False`（默认）时，Pyodide 在隔离的沙盒（不透明源）iframe 中运行，其文件系统在重新加载后不会保留。设为 `True` 可启用持久文件存储，这需要在同源中运行 Pyodide 并放宽隔离。在单次会话中创建的文件无论哪种方式都能正常工作；此标志仅影响跨重新加载的持久性和文件浏览器的稳定性。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
@@ -1984,7 +1984,7 @@ The format for the JSON response is strictly:
 #### `CODE_INTERPRETER_PROMPT_TEMPLATE` {#code\_interpreter\_prompt\_template}
 
 - 类型：`str`
-- 默认值：`None`
+- 默认值：空字符串（使用内置提示词）
 - 描述：指定代码解释器使用的提示词模板。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -2034,7 +2034,7 @@ The format for the JSON response is strictly:
 #### `ENABLE_DIRECT_CONNECTIONS` {#enable\_direct\_connections}
 
 - 类型：`bool`
-- 默认值：`True`
+- 默认值：`False`
 - 描述：启用或禁用直接连接。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -2043,7 +2043,7 @@ The format for the JSON response is strictly:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：控制用户能否进入**设置**中的个人**集成**标签页，在那里添加自己的工具服务器和Open Terminal连接。默认关闭，因此在管理员于**设置 > 集成**（管理员区域）的**用户连接**部分开启之前，该标签页不会显示。开启后，管理员和拥有 `direct_tool_servers` 权限的用户都会看到该标签页，仅有权限并不够。关闭期间，用户和管理员在该标签页中保存的工具服务器与Open Terminal连接不会在聊天中被使用，即使请求中仍包含它们，服务器也会忽略。这些配置会保留保存，重新开启后再次生效。分组和默认权限中的**直接工具服务器**开关也仅在开启时显示。
+- 描述：控制用户能否进入**设置**中的个人**集成**标签页，在那里添加自己的工具服务器和 Open Terminal 连接。默认关闭，因此在管理员于**设置 > 集成**（管理员区域）的**用户连接**部分开启之前，该标签页不会显示。开启后，管理员和拥有 `direct_tool_servers` 权限的用户都会看到该标签页，仅有权限并不够。关闭期间，用户和管理员在该标签页中保存的工具服务器与 Open Terminal 连接不会在聊天中被使用，即使请求中仍包含它们，服务器也会忽略。这些配置会保留保存，重新开启后再次生效。分组和默认权限中的**直接工具服务器**开关也仅在开启时显示。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `TOOL_SERVER_CONNECTIONS` {#tool\_server\_connections}
@@ -2095,7 +2095,7 @@ The format for the JSON response is strictly:
 - 类型：`str`（JSON 数组）
 - 默认值：`[]`
 - 描述：指定终端服务器连接配置的 JSON 数组。每个连接定义连接到 [Open Terminal](/features/open-terminal)实例或[终端编排器](/features/open-terminal/terminals/)所需的参数。与用户级的工具服务器连接不同，这些连接由管理员配置并通过 Open WebUI 代理，因此终端 URL 和 API 密钥不会暴露给浏览器。支持通过 `access_grants` 进行基于用户组的访问控制。
-- 示例（直连Open Terminal）：
+- 示例（直连 Open Terminal）：
 ```json
 [
   {
@@ -2172,7 +2172,7 @@ The format for the JSON response is strictly:
 #### `ENABLE_AUTOCOMPLETE_GENERATION` {#enable\_autocomplete\_generation}
 
 - 类型：`bool`
-- 默认值：`True`
+- 默认值：`False`
 - 描述：启用或禁用自动补全生成。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -2305,7 +2305,7 @@ Output:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用标签生成。
+- 描述：启用或禁用标签生成。禁用时，**设置 > 界面**中的**自动生成聊天标签**开关会隐藏。重新启用后，已保存的选择会恢复生效。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -2479,7 +2479,7 @@ Open WebUI 有**两种模型缓存机制**，它们彼此独立运行：
 
 | 设置 | 类型 | 默认值 | 刷新触发条件 |
 |---------|------|---------|-----------------|
-| `ENABLE_BASE_MODELS_CACHE` | 内存，或在配置了 Redis 时使用 Redis | `False` | 管理员保存，或未使用 Redis 时应用重启 |
+| `ENABLE_BASE_MODELS_CACHE` | 内存；配置了 Redis 时则使用它 | `False` | 管理员保存，或未使用 Redis 时应用重启 |
 | `MODELS_CACHE_TTL` | 基于 TTL | `1` 秒 | TTL 到期后自动刷新 |
 
 若要获得最佳性能，请同时启用两者：`ENABLE_BASE_MODELS_CACHE=True` 搭配 `MODELS_CACHE_TTL=300`。
@@ -2490,7 +2490,7 @@ Open WebUI 有**两种模型缓存机制**，它们彼此独立运行：
 
 - 类型：`str`
 - 默认值：`4w`
-- 说明：设置 JWT 过期时间。有效时间单位：`s`、`m`、`h`、`d`、`w`，或 `-1` 表示永不过期。
+- 描述：设置登录令牌的有效期。填写数字和单位：`ms`、`s`、`m`、`h`、`d` 或 `w`，例如 `4w` 或 `12h`。使用 `-1` 表示永不过期。不带单位的数字（如 `30`）无效，管理员区域的**设置 > 身份验证**不会保存此类值。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 :::warning
@@ -2521,8 +2521,8 @@ Open WebUI 有**两种模型缓存机制**，它们彼此独立运行：
 
 - 类型：`bool`
 - 默认值：`False`
-- 说明：启用后，Open WebUI 会定期在后台审查最近的对话，并自动更新用户的 `context` 记忆，而非仅在显式保存时更新。默认关闭。
-- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
+- 描述：启用后，Open WebUI 会定期在后台审查最近的对话，并自动更新用户的 `context` 记忆，而非仅在显式保存时更新。默认关闭。
+- 持久化：此环境变量是 `ConfigVar`，界面中没有对应的开关。实例首次启动后，存储值优先，环境变量不再生效。要修改该值，请使用管理员令牌将新值 POST 到 `/api/v1/configs/import`，或把 [`ENABLE_PERSISTENT_CONFIG`](#enable_persistent_config) 设为 `False`，让每次启动时都以环境变量为准。
 
 
 #### `MEMORIES_REVIEW_INTERVAL_TURNS` {#memories\_review\_interval\_turns}
@@ -2537,16 +2537,16 @@ Open WebUI 有**两种模型缓存机制**，它们彼此独立运行：
 
 - 类型：`int`
 - 默认值：`2000`
-- 说明：注入到提示词中的 `context` 类型记忆的最大字符数。超出此预算的较旧或较低优先级的上下文记忆将不会被包含。
-- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
+- 描述：注入到提示词中的 `context` 类型记忆的最大字符数。超出此字符数上限的内容会被截断。
+- 持久化：此环境变量是 `ConfigVar`，界面中没有对应的开关。实例首次启动后，存储值优先，环境变量不再生效。要修改该值，请使用管理员令牌将新值 POST 到 `/api/v1/configs/import`，或把 [`ENABLE_PERSISTENT_CONFIG`](#enable_persistent_config) 设为 `False`，让每次启动时都以环境变量为准。
 
 
 #### `MEMORIES_USER_CHAR_LIMIT` {#memories\_user\_char\_limit}
 
 - 类型：`int`
 - 默认值：`2000`
-- 说明：注入到提示词中的 `user` 类型记忆的最大字符数。
-- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
+- 描述：注入到提示词中的 `user` 类型记忆的最大字符数。
+- 持久化：此环境变量是 `ConfigVar`，界面中没有对应的开关。实例首次启动后，存储值优先，环境变量不再生效。要修改该值，请使用管理员令牌将新值 POST 到 `/api/v1/configs/import`，或把 [`ENABLE_PERSISTENT_CONFIG`](#enable_persistent_config) 设为 `False`，让每次启动时都以环境变量为准。
 
 
 ## 安全变量 {#security-variables}
@@ -2648,7 +2648,7 @@ FORWARD_SESSION_INFO_HEADER_MESSAGE_ID=X-Amzn-Bedrock-AgentCore-Runtime-Custom-M
 
 - 类型：`str`
 - 默认值：`X-OpenWebUI-User-Jwt`
-- 描述：当设置了 `FORWARD_USER_INFO_HEADER_JWT_SECRET` 时，承载已签名 JWT 的标头名称。如果设置，则在每个出站请求中携带一份用 `FORWARD_USER_INFO_HEADER_JWT_SECRET` 签名的 JWT，载荷中包含当前用户 ID、角色和（可选的）会话上下文；下游服务可以独立校验其真实性，而不必信任透传过来的标头值。仅当确实有下游消费者需要 JWT 校验时再设置。**该变量只在启动时读取一次——它不是 `ConfigVar`，无法在管理面板中修改。**
+- 描述：当设置了 `FORWARD_USER_INFO_HEADER_JWT_SECRET` 时，承载已签名 JWT 的标头名称。此变量仅在启动时读取，不是 `ConfigVar`，无法在管理面板中修改。
 
 
 #### `FORWARD_USER_INFO_HEADER_JWT_EXPIRES_SECONDS` {#forward\_user\_info\_header\_jwt\_expires\_seconds}
@@ -2704,7 +2704,7 @@ OpenAI、Ollama 和直连模型连接、工具服务器（OpenAPI 与 MCP）以�
 #### `ENABLE_WEB_LOADER_SSL_VERIFICATION` {#enable\_web\_loader\_ssl\_verification}
 - 类型：`bool`
 - 默认值：`True`
-- 描述：为网站上的 RAG 绕过 SSL 验证。
+- 描述：在网页加载器获取内容时验证 SSL 证书。`fetch_url` 工具首次发出请求以判断 URL 指向网页还是文件时，也会验证证书。设为 `False` 可跳过验证，例如目标站点使用自签名证书时。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -3036,7 +3036,7 @@ openssl rand -hex 32
 
 :::warning
 
-**此变量必须设置**，否则你可能会遇到 WebSocket 问题以及奇怪的 `\{\}` 响应，或者 `Unexpected token 'd', "data: \{"id"... is not valid JSON` 之类的错误。
+**此变量必须设置**，否则你可能会遇到 WebSocket 问题以及奇怪的 \{\} 响应，或者 "Unexpected token 'd', "data: \{"id"... is not valid JSON". 之类的错误。
 
 :::
 
@@ -3097,7 +3097,7 @@ CORS_ALLOW_ORIGIN: "https://yourdomain.com;http://yourdomain.com;https://yourhos
 #### `RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE` {#rag\_embedding\_model\_trust\_remote\_code}
 
 - 类型：`bool`
-- 默认值：`False`
+- 默认值：`True`
 - 描述：决定是否允许 Hub 上定义的自定义模型在其自己的模型文件中使用远程代码。
 
 
@@ -3105,7 +3105,7 @@ CORS_ALLOW_ORIGIN: "https://yourdomain.com;http://yourdomain.com;https://yourhos
 #### `RAG_RERANKING_MODEL_TRUST_REMOTE_CODE` {#rag\_reranking\_model\_trust\_remote\_code}
 
 - 类型：`bool`
-- 默认值：`False`
+- 默认值：`True`
 - 描述：决定是否允许 Hub 上定义的自定义模型在其自己的模型文件中用于重排序时使用远程代码。
 
 
@@ -3135,9 +3135,7 @@ CORS_ALLOW_ORIGIN: "https://yourdomain.com;http://yourdomain.com;https://yourhos
 
 :::danger ChromaDB（默认）不适用于多 Worker 或多副本部署
 
-默认的 ChromaDB 配置使用基于 **SQLite** 的本地 `PersistentClient`。SQLite 不是 fork-safe 的——当 uvicorn fork 出多个 worker 进程（`UVICORN_WORKERS > 1`）时，每个 worker 都会继承同一条 SQLite 连接的副本。来自这些 fork 出来的进程的并发写入会立即导致崩溃（`Child process died`）或数据库损坏。
-
-**这同样适用于多副本部署**（Kubernetes、Docker Swarm），当多个容器指向同一个 ChromaDB 数据目录时也会发生。
+默认的 ChromaDB 配置以内嵌模式运行，数据存储在本地 **SQLite** 文件中，同一时刻只允许一个进程写入。多个 worker 或副本共享 ChromaDB 数据目录时，并发写入会导致进程崩溃（`Child process died`）。
 
 如果你需要多个 worker 或副本，**必须**二选一：
 1. **切换到客户端/服务器模式的向量数据库**，例如 [PGVector](/reference/env-configuration#pgvector_db_url)、[MariaDB Vector](/reference/env-configuration#mariadb_vector_db_url)、Milvus 或 Qdrant（推荐）。
@@ -3171,7 +3169,7 @@ pip install open-webui[all]
 
 :::warning 本地模式与 HTTP 模式
 
-默认情况下（未设置 `CHROMA_HTTP_HOST` 时），ChromaDB 会作为使用 SQLite 存储的本地 `PersistentClient` 运行。此模式**仅适用于单 worker、单实例部署**（`UVICORN_WORKERS=1`，一个副本）。
+默认情况下（**未**设置 `CHROMA_HTTP_HOST` 时），ChromaDB 会作为使用 SQLite 存储的本地 `PersistentClient` 运行。此模式**仅适用于单 worker、单实例部署**（`UVICORN_WORKERS=1`，一个副本）。
 
 对于多 worker 或多副本部署，你**必须**配置 `CHROMA_HTTP_HOST` 和 `CHROMA_HTTP_PORT`，将其指向独立的 ChromaDB 服务器，或者直接切换到其他向量数据库。请参阅上面的 [VECTOR_DB](#vector_db) 警告。
 
@@ -3195,7 +3193,7 @@ pip install open-webui[all]
 #### `CHROMA_HTTP_HOST` {#chroma\_http\_host}
 
 - 类型：`str`
-- 描述：指定远程 ChromaDB Server 的主机名。如果未设置，则使用本地 ChromaDB 实例。**多 worker 或多副本部署必须设置此变量**——它会将 ChromaDB 从本地 SQLite-backed `PersistentClient` 切换为 fork-safe 的 `HttpClient`。
+- 描述：指定远程 ChromaDB 服务器的主机名。未设置时使用本地 ChromaDB 实例。**多 worker 或多副本部署必须设置此变量**。它会将 ChromaDB 从使用 SQLite 的嵌入式 `PersistentClient` 切换为连接独立 ChromaDB 服务器、可安全用于派生进程的 `HttpClient`。
 
 
 #### `CHROMA_HTTP_PORT` {#chroma\_http\_port}
@@ -3314,7 +3312,7 @@ Milvus 是非核心集成，不由 Open WebUI 核心团队维护。相关修复�
 
 :::
 
-#### `MILVUS_URI` **(Required)** {#milvus\_uri-required}
+#### `MILVUS_URI` **（必填）** {#milvus\_uri-required}
 - 类型：`str`
 - 默认值：`${DATA_DIR}/vector_db/milvus.db`
 - 示例（远程）：`http://your-server-ip:19530`
@@ -3404,7 +3402,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 
 - 类型：`int`
 - 默认值：`56`
-- 描述：在 Milvus 处于 DISKANN 索引模式时设置最大度数。通常建议保持默认值。
+- 描述：设置 Milvus 的最大度数，仅在 Milvus 使用 DISKANN 索引时生效。通常建议保持默认值。
 
 
 #### `MILVUS_DISKANN_SEARCH_LIST_SIZE` {#milvus\_diskann\_search\_list\_size}
@@ -3467,7 +3465,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 **从普通 Milvus 干净地迁移到多租户 milvus：**
 - 启用多租户之前，尽可能从界面导出重要的知识内容
 - 设置 `ENABLE_MILVUS_MULTITENANCY_MODE=true` 并重启 Open WebUI
-- 进入 **设置 > 文档**（管理员区域），在**重建知识与记忆向量**旁点击**重建索引**
+- 进入管理员区域的`设置 > 文档`，在**重建知识与记忆向量**旁点击**重建索引**
 
 **这会把知识库向量和用户记忆向量重建到新的多租户集合中，同时包含这些知识库内每个文件的按文件向量**
 **网络搜索历史以及从未加入知识库的文件不会被该操作迁移**
@@ -3482,7 +3480,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 
 **当前界面的限制：**
 - 没有一键式的"迁移并清理"按钮
-- 界面中的向量数据库重置（设置 > 文档 > 重置向量存储（管理员区域）/知识库）只影响当前模式的集合
+- 在管理员区域的设置 > 文档 > 重置向量存储/知识库执行重置只影响当前模式的集合
 - 旧集合需要通过 Milvus 客户端工具手动清理
 
 :::
@@ -3492,7 +3490,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 **关键注意事项**
 
 **在已有安装上启用多租户之前：**
-- 数据丢失风险：不在知识库中的文件的向量**不会**被迁移。重建索引会迁移知识库及其所含文件的按文件向量，以及用户记忆。
+- 数据丢失风险：不在知识库中的文件的向量不会被迁移。重建索引会迁移知识库及其所含文件的按文件向量，以及用户记忆。
 - 集合命名依赖：多租户依赖 Open WebUI 内部的集合命名约定（user-memory-、file-、web-search-、哈希模式）。**如果 Open WebUI 在未来的更新中更改这些约定，多租户路由可能失效，导致隔离资源之间出现数据损坏或数据检索错误。**
 - 没有自动回滚：在写入数据之后关闭多租户不会恢复对共享集合的访问。数据需要手动提取并重新导入。
 
@@ -3506,8 +3504,8 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 
 **要执行完整重置并切换到多租户：**
 - 在外部备份任何重要的知识库内容
-- 进入 **设置 > 文档**（管理员区域）
-- 点击**重置向量存储/知识库**（这会删除当前模式的所有集合和已存储的知识元数据）
+- 进入管理员区域的`设置 > 文档`
+- 点击`重置向量存储/知识库`（这会删除当前模式的所有集合和已存储的知识元数据）
 - 设置 `ENABLE_MILVUS_MULTITENANCY_MODE=true`
 - 重启 Open WebUI
 - 从头重新上传/重新创建知识库
@@ -3537,7 +3535,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 
 :::warning
 
-MariaDB Vector 目前并未由 Open WebUI 团队积极维护。它是社区添加的功能，由社区维护。
+MariaDB Vector 是非核心集成，不由 Open WebUI 核心团队维护。修复由 Open WebUI 核心维护流程之外的贡献者提供。
 如果你要使用 MariaDB Vector，请在升级 Open WebUI 时格外小心（请为回滚创建备份和快照），以防 Open WebUI 的内部变更导致故障。
 
 :::
@@ -3681,19 +3679,19 @@ pip install open-webui[all]
 
 - 类型：`str`
 - 默认值：`DATABASE_URL` 环境变量的值
-- 描述：设置用于模型存储的数据库 URL。
+- 描述：设置 PGVector 向量存储使用的 PostgreSQL URL。未设置时，向量写入 `DATABASE_URL` 指定的主数据库。此时主数据库必须是安装了 `vector` 扩展的 PostgreSQL。
 
 
 #### `PGVECTOR_INITIALIZE_MAX_VECTOR_LENGTH` {#pgvector\_initialize\_max\_vector\_length}
 
-- 类型：`str`
+- 类型：`int`
 - 默认值：`1536`
 - 描述：指定 PGVector 初始化时的最大向量长度。
 
 
 #### `PGVECTOR_CREATE_EXTENSION` {#pgvector\_create\_extension}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`true`
 - 描述：在数据库中创建 vector 扩展。
 
@@ -3745,7 +3743,7 @@ pip install open-webui[all]
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 :::info IVFFlat 会等待行数据后才建索引
-IVFFlat 通过查看建索引时已存在的行来决定各簇的位置，它需要每个列表 50 行才能定位，因此在默认 100 个列表时需要 5,000 行。Open WebUI 现在会等待 `document_chunk` 表达到这一行数后再创建索引，并记录正在等待。在此之前搜索会以精确扫描的方式执行，这在该数据量下既正确又快速。
+IVFFlat 根据建索引时已有的数据行确定各簇的位置。每个列表需要 50 行，因此在默认 `100` 个列表时需要 5,000 行。Open WebUI 会等到 `document_chunk` 表达到这一行数才创建索引，并记录等待状态。在此之前，搜索会执行精确扫描；在该数据量下，这种方式既准确又快速。
 
 在更早版本上创建的实例是在表刚建好、还是空表的时候立刻建立索引的，因此它的簇定位在空无一物的基础上，此后加入的每个分块都被归入其中。在一个有 20,000 行的表上，这会返回不到一半的正确分块：10 的召回率为 0.480，而索引建立在真实行上之后则为 1.000，两者的查询耗时都在约 5 毫秒。可用下面的命令一次性修复：
 
@@ -3887,7 +3885,7 @@ pip install open-webui[postgres]
 
 :::warning
 
-Qdrant 目前并未由 Open WebUI 团队积极维护。它是社区添加的功能，由社区维护。
+Qdrant 是非核心集成，不由 Open WebUI 核心团队维护。修复由 Open WebUI 核心维护流程之外的贡献者提供。
 如果你要使用 Qdrant，请在升级 Open WebUI 时格外小心（请为回滚创建备份和快照），以防 Open WebUI 的内部变更导致故障。
 
 :::
@@ -3936,7 +3934,7 @@ Qdrant 目前并未由 Open WebUI 团队积极维护。它是社区添加的功�
 
 - 类型：`int`
 - 默认值：`5`
-- 描述：设置对 Qdrant 服务器发出的所有请求的超时时间（秒），以防长时间运行的查询阻塞应用。
+- 描述：设置对 Qdrant 服务器发出的所有请求的超时时间（秒），以防缓慢或无响应的 Qdrant 服务器让请求无限期挂起。
 
 
 #### `QDRANT_HNSW_M` {#qdrant\_hnsw\_m}
@@ -4122,16 +4120,16 @@ Open WebUI 在 Weaviate 连接中使用 `connect_to_custom`，它同时支持本
 
 #### `ORACLE_DB_USER` {#oracle\_db\_user}
 
-- 类型：`str`
-- 默认值：`DEMOUSER`
-- 描述：指定用于连接 Oracle Database 的用户名。
+- **类型**：`str`
+- **默认值**：`DEMOUSER`
+- **描述**：指定用于连接 Oracle Database 的用户名。
 
 
 #### `ORACLE_DB_PASSWORD` {#oracle\_db\_password}
 
-- 类型：`str`
-- 默认值：`Welcome123456`
-- 描述：指定 `ORACLE_DB_USER` 的密码。
+- **类型**：`str`
+- **默认值**：`Welcome123456`
+- **描述**：指定 `ORACLE_DB_USER` 的密码。
 
 
 #### `ORACLE_DB_DSN` {#oracle\_db\_dsn}
@@ -4143,44 +4141,44 @@ Open WebUI 在 Weaviate 连接中使用 `connect_to_custom`，它同时支持本
 
 #### `ORACLE_WALLET_DIR` {#oracle\_wallet\_dir}
 
-- 类型：`str`
-- 默认值：空字符串（`' '`）
-- 描述：**在 `ORACLE_DB_USE_WALLET` 为 `true` 时必需**。指定包含 Oracle Cloud Wallet 文件（例如 `cwallet.sso`、`sqlnet.ora`、`tnsnames.ora`）的目录绝对路径。
+- **类型**：`str`
+- **默认值**：空字符串（`' '`）
+- **描述**：**在 `ORACLE_DB_USE_WALLET` 为 `true` 时必需**。指定包含 Oracle Cloud Wallet 文件（例如 `cwallet.sso`、`sqlnet.ora`、`tnsnames.ora`）的目录绝对路径。
 
 
 #### `ORACLE_WALLET_PASSWORD` {#oracle\_wallet\_password}
 
-- 类型：`str`
-- 默认值：空字符串（`' '`）
-- 描述：**在 `ORACLE_DB_USE_WALLET` 为 `true` 时必需**。指定 Oracle Cloud Wallet 的密码。
+- **类型**：`str`
+- **默认值**：空字符串（`' '`）
+- **描述**：**在 `ORACLE_DB_USE_WALLET` 为 `true` 时必需**。指定 Oracle Cloud Wallet 的密码。
 
 
 #### `ORACLE_VECTOR_LENGTH` {#oracle\_vector\_length}
 
-- 类型：`int`
-- 默认值：`768`
-- 描述：设置存储在 Oracle Database 中的向量嵌入的预期维度或长度。这必须与所用嵌入模型匹配。
+- **类型**：`int`
+- **默认值**：`768`
+- **描述**：设置存储在 Oracle Database 中的向量嵌入的预期维度或长度。这必须与所用嵌入模型匹配。
 
 
 #### `ORACLE_DB_POOL_MIN` {#oracle\_db\_pool\_min}
 
-- 类型：`int`
-- 默认值：`2`
-- 描述：Oracle Database 连接池中要维护的最小连接数。
+- **类型**：`int`
+- **默认值**：`2`
+- **描述**：Oracle Database 连接池中要维护的最小连接数。
 
 
 #### `ORACLE_DB_POOL_MAX` {#oracle\_db\_pool\_max}
 
-- 类型：`int`
-- 默认值：`10`
-- 描述：Oracle Database 连接池允许的最大连接数。
+- **类型**：`int`
+- **默认值**：`10`
+- **描述**：Oracle Database 连接池允许的最大连接数。
 
 
 #### `ORACLE_DB_POOL_INCREMENT` {#oracle\_db\_pool\_increment}
 
-- 类型：`int`
-- 默认值：`1`
-- 描述：当连接池需要扩容时创建的连接数。
+- **类型**：`int`
+- **默认值**：`1`
+- **描述**：当连接池需要扩容时创建的连接数。
 
 
 ### S3 向量桶 {#s3-vector-bucket}
@@ -4239,8 +4237,8 @@ pip install --upgrade "valkey-glide-sync>=2.5.2"
 #### `VALKEY_COLLECTION_PREFIX` {#valkey\_collection\_prefix}
 
 - 类型：`str`
-- 默认值：`open-webui`
-- 描述：所有 Valkey 集合（collection）名称的前缀。用于在同一 Valkey 实例上区分多个 Open WebUI 部署。
+- 默认值：`open_webui`
+- 描述：Open WebUI 在 Valkey 中创建的所有索引和键的前缀，使多个实例可以共用同一台服务器而不会发生名称冲突。
 
 
 #### `VALKEY_INDEX_TYPE` {#valkey\_index\_type}
@@ -4257,7 +4255,7 @@ pip install --upgrade "valkey-glide-sync>=2.5.2"
 
 - 类型：`int`
 - 默认值：`16`
-- 描述：HNSW 索引中每个节点的最大出度。更大的值带来更高的召回率，但写入更慢、内存占用更高。16 是常见折中。
+- 描述：设置 HNSW 图的连通度（每个节点的边数）。增大此值可提高召回率，但会增加内存消耗和构建时间。仅在 `VALKEY_INDEX_TYPE=HNSW` 时使用。
 
 
 #### `VALKEY_HNSW_EF_CONSTRUCTION` {#valkey\_hnsw\_ef\_construction}
@@ -4327,7 +4325,7 @@ pip install --upgrade "valkey-glide-sync>=2.5.2"
 
 - 类型：`str`
 - 默认值：`None`
-- 描述：设置外部文档加载器服务的 URL。
+- 描述：设置外部文档加载器服务的 URL。该服务必须遵守的请求和响应约定见[外部文档提取](/features/chat-conversations/rag/document-extraction/external)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4593,7 +4591,7 @@ Open WebUI 会向 `/marker` 端点发起请求，而 Datalab 的 API 参考文�
 
 - 类型： `int`
 - 默认值： unset (no limit)
-- 说明：限制 Open WebUI 从 MinerU 结果 ZIP 文件中读取的 Markdown 文件大小（以字节为单位），该 ZIP 文件由 MinerU 云服务和自托管的 MinerU 4.1 服务器返回。超过此限制的文件将被拒绝，文档会因 `Markdown file in results ZIP is too large` 而失败，此机制可防止单个超大文档耗尽内存。来自自托管的 MinerU 3.x 或 4.0 服务器的结果将被完整读取。若不设置此参数，则表示无限制。
+- 描述：限制 Open WebUI 从 MinerU 结果 ZIP 文件中读取的 Markdown 文件大小（以字节为单位），该 ZIP 文件由 MinerU 云服务和自托管的 MinerU 4.1 服务器返回。超过此限制的文件将被拒绝，文档会因 `Markdown file in results ZIP is too large` 而失败，此机制可防止单个超大文档耗尽内存。来自自托管的 MinerU 3.x 或 4.0 服务器的结果将被完整读取。若不设置此参数，则表示无限制。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
@@ -4687,7 +4685,7 @@ PaddleOCR-vl 只接收 `pdf`、`png`、`jpg`、`jpeg`、`bmp`、`tiff` 和 `webp
 
 - 类型：`float`
 - 默认值：`0.0`
-- 描述：设置使用重排序时文档的相关性阈值。
+- 描述：设置重排序时的相关性阈值。仅保留得分达到或超过该值的分块。`0` 表示不设阈值。如果重排序器返回的原始分数不局限于 0 到 1，则可使用负值。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4750,7 +4748,7 @@ PaddleOCR-vl 只接收 `pdf`、`png`、`jpg`、`jpeg`、`bmp`、`tiff` 和 `webp
 
 - 类型：`float`
 - 默认值：`0.5`
-- 描述：设置混合搜索中关键词搜索（BM25）的权重。`1` 表示仅关键词搜索，`0` 表示仅向量搜索。
+- 描述：设置混合搜索中关键词搜索（BM25）的权重。1 表示仅使用关键词搜索，0 表示仅使用向量搜索。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4758,7 +4756,7 @@ PaddleOCR-vl 只接收 `pdf`、`png`、`jpg`、`jpeg`、`bmp`、`tiff` 和 `webp
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：通过将文档元数据（包括文件名、标题、章节和片段）充实到索引文本中，增强 BM25 混合搜索。这提高了基于元数据查询的关键词召回率，使搜索能够匹配文档名称和结构元素以及内容。
+- 描述：将文件名、标题、章节和片段等文档元数据补充到索引文本中，以增强 BM25 混合搜索。这样可以提高基于元数据的查询的关键词召回率，使查询除了正文，还能匹配文档名称和结构元素。启用后，Milvus 2.5 或更新版本以及 PGVector 的原生混合搜索会被跳过。每次搜索都会取回该集合中的所有文本块，由 Open WebUI 自行计算 BM25 得分。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::info
@@ -4963,8 +4961,8 @@ Provide a clear and direct response to the user's query, including inline citati
 #### `FILE_IMAGE_COMPRESSION_WIDTH` {#file\_image\_compression\_width}
 
 - 类型：`int`
-- 默认值：空（不调整宽度）
-- 描述：把上传的图片在嵌入到知识库/聊天之前压缩到的最大宽度（像素）。`0` 或空值表示不调整宽度。等比例缩放，纵横比始终保留；超过此宽度的图会被等比缩小，小于此宽度的图保持原样。把它和 `FILE_IMAGE_COMPRESSION_HEIGHT` 一起设置可以控制上限尺寸；与 [`RAG_FILE_MAX_SIZE`](#rag_file_max_size) 不同，**这个值作用于像素，不是文件字节数**。通常需要配合调小 embedding 成本、限制上下文占用、或对齐多模态模型的最大尺寸。低于 100 的值通常没有实际意义（图片太小反而丢失关键信息）。
+- 默认值：`None`
+- 描述：设置客户端压缩上传图片时的最大宽度，单位为像素。未设置时，不应用由后端配置的宽度限制。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5052,7 +5050,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 :::tip
 
-如果你遇到了嵌入服务提供商的速率限制（例如 429 错误），请将该值设置在 API 套餐速率限制之内（例如 `5` 或 `10`）。这在上传会产生大量嵌入批次的文档时尤其有用。
+如果嵌入服务提供商触发速率限制（例如返回 429 错误），请设置一个符合 API 套餐速率限制的值（例如 `5` 或 `10`）。这在上传会产生大量嵌入批次的大型文档时尤其有用。重新索引记忆时，同样会应用此限制和 [`RAG_EMBEDDING_BATCH_SIZE`](#rag_embedding_batch_size)。可通过管理员区域的 **设置 > 文档** 中的 **重新索引知识与记忆向量** 或通过 API 启动重新索引。切换到向量维度不同的嵌入模型后，保存记忆也会自动触发此操作。
 
 :::
 
@@ -5074,7 +5072,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`str`
 - 默认值：`None`
-- 描述：设置在生成嵌入之前添加到文档内容前面的前缀字符串。某些嵌入模型（如 nomic-embed-text）需要任务特定的前缀来区分存储的内容和搜索的查询。对于 nomic-embed-text，将此设置为 `search_document: `。仅在嵌入模型的文档指定了内容/文档前缀时才需要。
+- 描述：设置在生成嵌入之前添加到文档内容前面的前缀字符串。某些嵌入模型（如 nomic-embed-text）需要任务特定的前缀来区分存储的内容和搜索的查询。对于 nomic-embed-text，将此设置为 `search_document: `。仅在嵌入模型的文档指定了内容/文档前缀时才需要。也可以在管理员区域的**设置 > 文档**中，打开嵌入设置的**高级**选项，配置**内容前缀**。保留模型所需的尾随空格。更改后，请为现有数据重建索引。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5082,7 +5080,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`str`
 - 默认值：`None`
-- 描述：设置在生成检索嵌入之前添加到用户查询前面的前缀字符串。这是 `RAG_EMBEDDING_CONTENT_PREFIX` 的对应项。对于 nomic-embed-text，将此设置为 `search_query: `。仅在嵌入模型的文档指定了查询前缀时才需要。
+- 描述：设置在生成检索嵌入之前添加到用户查询前面的前缀字符串。这是 `RAG_EMBEDDING_CONTENT_PREFIX` 的对应项。对于 nomic-embed-text，将此设置为 `search_query: `。仅在嵌入模型的文档指定了查询前缀时才需要。也可以在管理员区域的**设置 > 文档**中，打开嵌入设置的**高级**选项，配置**查询前缀**。保留模型所需的尾随空格。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5093,7 +5091,7 @@ Provide a clear and direct response to the user's query, including inline citati
 - 描述：指定用于将前缀传递到嵌入 API 请求体的 JSON 字段名。当与前缀值一起设置时，前缀作为 API 请求中的单独字段发送，而不是添加到文本前面。适用于将前缀作为专用参数而非内联文本接受的嵌入 API。
 
 
-#### OpenAI Embeddings {#openai-embeddings}
+#### OpenAI 嵌入模型 {#openai-embeddings}
 
 
 #### `RAG_OPENAI_API_BASE_URL` {#rag\_openai\_api\_base\_url}
@@ -5116,11 +5114,11 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`int`
 - 默认值：`1`
-- 描述：设置 OpenAI 嵌入的批处理大小。
+- 描述：[`RAG_EMBEDDING_BATCH_SIZE`](#rag_embedding_batch_size) 的旧名称。仅当 `RAG_EMBEDDING_BATCH_SIZE` 未设置或为空时才读取，并为所有外部嵌入引擎设置批大小。请使用 `RAG_EMBEDDING_BATCH_SIZE`。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
-#### Azure OpenAI Embeddings {#azure-openai-embeddings}
+#### Azure OpenAI 嵌入模型 {#azure-openai-embeddings}
 
 
 #### `RAG_AZURE_OPENAI_BASE_URL` {#rag\_azure\_openai\_base\_url}
@@ -5160,7 +5158,7 @@ Provide a clear and direct response to the user's query, including inline citati
 #### `RAG_OLLAMA_API_KEY` {#rag\_ollama\_api\_key}
 
 - 类型：`str`
-- 描述：设置 RAG 模型中使用的 Ollama API 密钥。
+- 描述：为 RAG 模型访问 Ollama API 设置 API 密钥。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5333,7 +5331,7 @@ Strictly return in JSON format:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：指定是否使用完整上下文进行 RAG。
+- 描述：始终将文档全文纳入上下文，而不是检索文档片段。可在**设置** > **文档**（管理员区域）中通过**始终使用全文**设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5404,7 +5402,7 @@ Strictly return in JSON format:
 #### `GOOGLE_DRIVE_CLIENT_ID` {#google\_drive\_client\_id}
 
 - 类型：`str`
-- 描述：设置 Google Drive 的 OAuth 客户端 ID（客户端必须配置为启用 Drive API 和 Picker API）。请完全按照 Google Cloud 展示的形式填写客户端 ID，即 `<project number>-<id>.apps.googleusercontent.com`。文件选择器会从其前导数字中取出项目编号并发送给 Google，Google 需要它才能授予对所选文件的访问权限。选择器只申请 `drive.file` 权限范围，该范围涵盖用户所选的文件。
+- 描述：设置 Google Drive 的 OAuth 客户端 ID（客户端必须启用 Drive API 和 Picker API）。请按 Google Cloud 显示的原样填写客户端 ID，格式为 `<project number>-<id>.apps.googleusercontent.com`。文件选择器会从开头的数字中提取项目编号，并发给 Google 以授予对所选文件的访问权限。选择器只请求 `drive.file` 权限范围，该范围涵盖用户所选的文件。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
@@ -5444,16 +5442,16 @@ Strictly return in JSON format:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：控制"个人 OneDrive"选项是否出现在附件菜单中。需要配置 `ONEDRIVE_PERSONAL_CLIENT_ID`。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 描述：控制附件菜单是否显示“个人 OneDrive”选项。只有配置了 `ONEDRIVE_CLIENT_ID_PERSONAL`（或旧版 `ONEDRIVE_CLIENT_ID`）时才会显示此选项。若未配置客户端 ID，即使将此变量设为 `True`，选项也不会显示。
+- 持久化：通过环境变量设置，启动时生效（不是 `ConfigVar`）。
 
 
 #### `ENABLE_ONEDRIVE_BUSINESS` {#enable\_onedrive\_business}
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：控制"工作/学校 OneDrive"选项是否出现在附件菜单中。需要配置 `ONEDRIVE_CLIENT_ID`。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 描述：控制附件菜单是否显示“工作/学校 OneDrive”选项。只有配置了 `ONEDRIVE_CLIENT_ID_BUSINESS`（或旧版 `ONEDRIVE_CLIENT_ID`）时才会显示此选项。若未配置客户端 ID，即使将此变量设为 `True`，选项也不会显示。
+- 持久化：通过环境变量设置，启动时生效（不是 `ConfigVar`）。
 
 
 #### `ONEDRIVE_CLIENT_ID` {#onedrive\_client\_id}
@@ -5533,8 +5531,8 @@ Strictly return in JSON format:
 #### `WEB_SEARCH_TRUST_ENV` {#web\_search\_trust\_env}
 
 - 类型：`bool`
-- 默认值：`False`
-- 描述：在 Web 搜索内容获取期间启用由 `http_proxy` 和 `https_proxy` 设置的代理。
+- 默认值：`True`
+- 描述：使网页内容获取器使用 http_proxy / https_proxy 环境变量定义的代理，同时遵循 no_proxy 和 .netrc。该获取器负责在搜索后抓取结果页面的内容，也负责通用的网站或 URL 加载。默认获取器使用 aiohttp。与 requests 不同，aiohttp 只有在明确允许读取环境配置时才会使用这些代理变量。此设置不影响搜索引擎查询本身，因为查询已遵循代理环境变量。此设置也不会覆盖显式配置的代理。对于 Firecrawl、Tavily 和 Playwright 加载器，它仅在未设置其他代理时作为后备。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5586,7 +5584,7 @@ Example:
 
 :::info
 
-"WEB_LOADER_CONCURRENT_REQUESTS" 之前名为 "WEB_SEARCH_CONCURRENT_REQUESTS"。变量 "WEB_SEARCH_CONCURRENT_REQUESTS" 已改为控制搜索引擎请求的并发数（见上文）。要控制网页*加载器*的并发数（从搜索结果中抓取内容），你**必须**使用 "WEB_LOADER_CONCURRENT_REQUESTS"。
+"WEB_LOADER_CONCURRENT_REQUESTS" 之前名为 "WEB_SEARCH_CONCURRENT_REQUESTS"。变量 "WEB_SEARCH_CONCURRENT_REQUESTS" 已改为控制搜索引擎请求的并发数（见上文）。要控制网页*加载器*的并发数（从搜索结果中抓取内容），必须使用 "WEB_LOADER_CONCURRENT_REQUESTS"。
 
 :::
 
@@ -5860,7 +5858,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 #### `BING_SEARCH_V7_SUBSCRIPTION_KEY` {#bing\_search\_v7\_subscription\_key}
 
 - 类型：`str`
-- 默认值：`https://api.bing.microsoft.com/v7.0/search`
+- 默认值：空字符串
 - 描述：设置 Bing Search API 的订阅密钥。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -6100,7 +6098,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型： `str`
 - 默认值： Empty string (' ')
-- 说明： 设置 [SERPHouse](https://www.serphouse.com/) 网络搜索引擎的 API 密钥。当 `WEB_SEARCH_ENGINE` 设为 `serphouse` 时必需。
+- 描述： 设置 [SERPHouse](https://www.serphouse.com/) 网络搜索引擎的 API 密钥。当 `WEB_SEARCH_ENGINE` 设为 `serphouse` 时必需。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -6108,7 +6106,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型： `str`
 - 默认值： `google.com`
-- 说明： SERPHouse 查询的 Google 域名（例如 `google.com`、`google.co.uk`）。仅在 `WEB_SEARCH_ENGINE` 设为 `serphouse` 时使用。
+- 描述： SERPHouse 查询的 Google 域名（例如 `google.com`、`google.co.uk`）。仅在 `WEB_SEARCH_ENGINE` 设为 `serphouse` 时使用。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -6116,7 +6114,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型： `str`
 - 默认值： Empty string (' ')
-- 说明： **Microsoft Web IQ** 搜索引擎的 API 密钥。当 `WEB_SEARCH_ENGINE` 设为 `microsoft_web_iq` 时必需。
+- 描述： **Microsoft Web IQ** 搜索引擎的 API 密钥。当 `WEB_SEARCH_ENGINE` 设为 `microsoft_web_iq` 时必需。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -6124,7 +6122,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型： `str`
 - 默认值： `https://api.microsoft.ai/v3`
-- 说明： Microsoft Web IQ API 的基础 URL。仅在 `WEB_SEARCH_ENGINE` 设为 `microsoft_web_iq` 时使用。
+- 描述： Microsoft Web IQ API 的基础 URL。仅在 `WEB_SEARCH_ENGINE` 设为 `microsoft_web_iq` 时使用。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -6132,7 +6130,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型： `str`
 - 默认值： `en`
-- 说明： Microsoft Web IQ 结果的语言代码（例如 `en`、`de`）。仅在 `WEB_SEARCH_ENGINE` 设为 `microsoft_web_iq` 时使用。
+- 描述： Microsoft Web IQ 结果的语言代码（例如 `en`、`de`）。仅在 `WEB_SEARCH_ENGINE` 设为 `microsoft_web_iq` 时使用。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -6140,7 +6138,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型： `bool`
 - 默认值： `False`
-- 说明： 启用后，在进行网络搜索之前会向用户显示确认提示，这样未经同意不会将查询发送到外部提供商。提示文本由 `WEB_SEARCH_CONFIRMATION_CONTENT` 设置。
+- 描述： 启用后，在进行网络搜索之前会向用户显示确认提示，这样未经同意不会将查询发送到外部提供商。提示文本由 `WEB_SEARCH_CONFIRMATION_CONTENT` 设置。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -6148,7 +6146,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型： `str`
 - 默认值： `Your query will be sent to the configured web search provider.`
-- 说明： 当 `ENABLE_WEB_SEARCH_CONFIRMATION` 为 `True` 时，在网络搜索确认提示中显示的消息。
+- 描述： 当 `ENABLE_WEB_SEARCH_CONFIRMATION` 为 `True` 时，在网络搜索确认提示中显示的消息。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -6212,9 +6210,9 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 #### `FIRECRAWL_TIMEOUT` {#firecrawl\_timeout}
 
-- 类型：`str`
-- 默认值：空字符串（`''`）
-- 描述：设置 Firecrawl 加载器请求的超时时间，单位为秒，必须为正整数。运行时该值会转换为毫秒写入 scrape 负载，并限制在 1–300 秒之间；未设置、为空或不是正整数时，不会覆盖 Firecrawl 请求的默认超时。仅对加载器（web loader）生效。
+- 类型：`int`
+- 默认值：`None`
+- 描述：指定 Firecrawl 请求的超时时间，单位为毫秒。未设置时使用 Firecrawl 的默认超时时间。
 - 持久化：这是一个 `ConfigVar` 变量。可在**设置 > Web 搜索 > Firecrawl 超时**（管理员区域）中配置。
 
 
@@ -6235,8 +6233,8 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 #### `WEB_FETCH_MAX_CONTENT_LENGTH` {#web\_fetch\_max\_content\_length}
 
 - 类型：`int`
-- 默认值：None (no limit)
-- 描述：从抓取的 URL 返回的最大字符数。设置后，超过此限制的内容将被截断。此前硬编码为 50,000 个字符。留空或不设置则返回完整内容而不截断。用于控制大型网页的上下文窗口使用量。
+- 默认值：未设置（无限制）
+- 描述：限制从抓取的网页（例如通过 `fetch_url` 工具或 URL 内容检索）保留的字符数。超出限制的内容会被截断，避免单个超大页面占满上下文。保持未设置即可取消限制。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -6269,7 +6267,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 #### `BYPASS_PYDUB_PREPROCESSING` {#bypass\_pydub\_preprocessing}
 
 - 类型：`bool`
-- 默认值：`False`
+- 默认值：`False`（在 slim 镜像上始终为 `True`）
 - 描述：启用后，在音频发送到语音转文本引擎之前，跳过基于 pydub 的预处理（格式转换为 MP3、压缩和按大小分块分割）。当上游提供商已处理这些步骤、主机上未安装 ffmpeg、或需要原样传递音频时有用。适用于所有 STT 引擎。
 
 
@@ -6342,8 +6340,8 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 #### `AUDIO_STT_MODEL` {#audio\_stt\_model}
 
 - 类型：`str`
-- 默认值：`whisper-1`
-- 描述：指定用于兼容 OpenAI 端点的语音转文本模型。
+- 默认值：空字符串。填写你的端点所需的模型，例如 OpenAI API 使用的 `whisper-1`。
+- 描述：指定兼容 OpenAI 的端点使用的语音转文本模型。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -6366,7 +6364,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 - 类型： `str`
 - 默认值： `multipart`
 - 选项： `multipart`, `json`
-- 说明： 控制音频发送到兼容 OpenAI 的语音转文本端点的方式。`multipart` 将音频作为文件上传（标准的 OpenAI 格式）；`json` 将音频以 base64 编码形式放入 JSON 请求体中发送，某些兼容 OpenAI 的转录服务需要这种格式。
+- 描述： 控制音频发送到兼容 OpenAI 的语音转文本端点的方式。`multipart` 将音频作为文件上传（标准的 OpenAI 格式）；`json` 将音频以 base64 编码形式放入 JSON 请求体中发送，某些兼容 OpenAI 的转录服务需要这种格式。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -6570,7 +6568,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 - 类型：`str`
 - 选项：
   - `openai`：OpenAI 或其它 OpenAI 兼容的 Realtime API（**OpenAI / 兼容**）。
-  - `azure`：Azure OpenAI 资源（**Azure OpenAI**）。此时 `AUDIO_REALTIME_OPENAI_API_BASE_URL` 是 Azure 终结点，`AUDIO_REALTIME_MODEL` 是部署名称。参见[使用 Azure OpenAI](/features/chat-conversations/chat-features/voice-mode#using-azure-openai)。
+  - `azure`：Azure OpenAI 资源（**Azure OpenAI**）。此时 `AUDIO_REALTIME_OPENAI_API_BASE_URL` 是 Azure 端点，`AUDIO_REALTIME_MODEL` 是部署名称。参见[使用 Azure OpenAI](/features/chat-conversations/chat-features/voice-mode#using-azure-openai)。
 - 默认值：`openai`
 - 描述：设置实时通话的**服务提供方**。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -6589,7 +6587,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`str`
 - 默认值：`https://api.openai.com/v1`
-- 描述：设置 Realtime API 的基础 URL。Open WebUI 会向 `<base URL>/realtime?model=<AUDIO_REALTIME_MODEL>` 打开一个 WebSocket。该 URL 必须以 `http://` 或 `https://` 开头，且不含查询字符串、用户名或密码。当 `AUDIO_REALTIME_PROVIDER=azure` 时，请使用 Azure 终结点并追加 `/openai/v1`，例如 `https://<resource>.openai.azure.com/openai/v1`。
+- 描述：设置 Realtime API 的基础 URL。Open WebUI 会向 `<base URL>/realtime?model=<AUDIO_REALTIME_MODEL>` 打开一个 WebSocket。该 URL 必须以 `http://` 或 `https://` 开头，且不含查询字符串、用户名或密码。当 `AUDIO_REALTIME_PROVIDER=azure` 时，请使用 Azure 端点并追加 `/openai/v1`，例如 `https://<resource>.openai.azure.com/openai/v1`。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `AUDIO_REALTIME_OPENAI_API_KEY` {#audio\_realtime\_openai\_api\_key}
@@ -6726,7 +6724,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 #### `IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE` {#image\_prompt\_generation\_prompt\_template}
 
 - 类型：`str`
-- 默认值：`None`
+- 默认值：空字符串（使用下面的内置提示词）
 - 描述：指定用于生成图片提示词的模板。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -6815,8 +6813,8 @@ Strictly return in JSON format:
 
 #### `ENABLE_IMAGE_EDIT` {#enable\_image\_edit}
 
-- 类型：`boolean`
-- 默认值：`true`
+- 类型：`bool`
+- 默认值：`False`
 - 描述：禁用后，图片编辑将不被使用，图片将仅通过图片生成引擎创建。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -7147,9 +7145,6 @@ Strictly return in JSON format:
 - 描述：以 JSON 格式传递给 AUTOMATIC1111 API 请求的额外参数（例如 `{"cfg_scale": 7, "sampler_name": "Euler a", "scheduler": "normal"}`）。
 - 持久化：这是一个 `ConfigVar` 变量。
 
----
-
-
 ## OAuth {#oauth}
 
 
@@ -7362,14 +7357,16 @@ curl -X POST "http://localhost:8080/api/v1/oauth/oidc/token/exchange" \
 :::warning
 
 **JWT 吊销对 Redis 的要求**
-后通道注销通过基于 Redis 的吊销键来吊销现有的 Open WebUI JWT 会话。没有 Redis 时，Open WebUI 仍可移除已存储的 OAuth 会话，但已签发的 JWT 在自然过期之前依然有效。
-对于生产环境的 SSO 部署（尤其是多 worker 或多副本），启用此功能时请配置 `REDIS_URL`。
+
+仅在配置 Redis 后，后通道注销才会让受影响的用户退出所有 Open WebUI 会话。没有 Redis 时，Open WebUI 仍可移除已存储的 OAuth 会话，但已签发的 JWT 在自然过期之前依然有效。
+
+对于生产环境的 SSO 部署（尤其是多副本部署），启用此功能时请配置 `REDIS_URL`。
 
 :::
 
 :::info
 
-**Behavior Notes**
+**行为说明**
 
 - 对于有效请求（包括未找到匹配用户的情况），该端点返回 `200` 和空响应体。
 - 无效或格式错误的 `logout_token` 请求返回 `400`，并附带 `invalid_request` 详情。
@@ -7612,7 +7609,7 @@ GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
-### Feishu {#feishu}
+### 飞书 {#feishu}
 
 
 参见 https://open.feishu.cn/document/sso/web-application-sso/login-overview
@@ -7672,7 +7669,7 @@ GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com
 :::danger
 
 必须配置环境变量 `OPENID_PROVIDER_URL`，否则对大多数提供商而言注销功能将无法正常工作。
-即使使用 Microsoft、GitHub 或其他提供商，你也**必须**设置 `OPENID_PROVIDER_URL` 环境变量。
+即使使用 Microsoft、GitHub 或其他提供商，你也必须设置 `OPENID_PROVIDER_URL` 环境变量。
 此外，如果你的提供商不支持标准 OIDC 发现（例如 AWS Cognito），可以改为将 `OPENID_END_SESSION_ENDPOINT` 设置为自定义的注销 URL。
 
 :::
@@ -7719,7 +7716,7 @@ GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com
 - 选项：
   - `S256`——使用 SHA-256 哈希 `code_verifier`。
 - 默认值：空字符串（' '），因为默认设为 `None`。
-- 描述：指定 OAuth 认证的代码挑战方法。当提供商要求 PKCE 时设置为 `S256`。
+- 描述：指定 OAuth 认证的代码挑战方法。提供商要求 PKCE 时设为 `S256`。过去此设置只对 OIDC 提供商生效，现在适用于**所有**登录提供商，包括 Google、Microsoft、GitHub 和通用 OpenID Connect 提供商。启动时会拒绝 `S256` 以外的值。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8012,21 +8009,21 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 说明：设置是否验证 LDAP CA 证书。
+- 描述：设置是否验证 LDAP CA 证书。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
 #### `LDAP_CA_CERT_FILE` {#ldap\_ca\_cert\_file}
 
 - 类型：`str`
-- 说明：设置 LDAP CA 证书文件的路径。
+- 描述：设置 LDAP CA 证书文件的路径。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
 #### `LDAP_VALIDATE_CERT` {#ldap\_validate\_cert}
 
 - 类型：`bool`
-- 说明：设置是否验证 LDAP CA 证书。
+- 描述：设置是否验证 LDAP CA 证书。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -8034,7 +8031,7 @@ environment:
 
 - 类型：`str`
 - 默认值：`ALL`
-- 说明：设置 LDAP 连接使用的密码套件。
+- 描述：设置 LDAP 连接使用的密码套件。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -8042,7 +8039,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`False`
-- 说明：启用群组管理功能。
+- 描述：启用群组管理功能。也可在管理面板的 **设置 > 认证** 中通过 LDAP 区域配置。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -8050,7 +8047,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`False`
-- 说明：如果 LDAP 中的群组在 Open WebUI 中不存在，将自动创建。
+- 描述：如果 LDAP 中的群组在 Open WebUI 中不存在，将自动创建。也可以在管理员区域的**设置 > 身份验证**下的 LDAP 部分配置。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -8058,7 +8055,7 @@ environment:
 
 - 类型：`str`
 - 默认值：`memberOf`
-- 说明：指定包含用户群组成员身份的 LDAP 属性。`memberOf` 是 Active Directory 环境中用于此目的的标准属性。
+- 描述：指定包含用户所属群组的 LDAP 属性。`memberOf` 是 Active Directory 环境中用于此目的的标准属性。也可以在管理员区域的**设置 > 身份验证**下的 LDAP 部分配置。此字段留空时，无法保存群组管理设置。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -8083,7 +8080,7 @@ environment:
 
 - 类型：`str`
 - 默认值：`""`
-- 说明：指定要与 SCIM `externalId` 值关联的 OAuth 提供商名称（例如 `microsoft`、`oidc`）。设置后，SCIM 操作将在用户的 `scim` JSON 字段中的此提供商键下存储和查找 `externalId`，从而实现 SCIM 配置身份与 OAuth 登录之间的账户关联。如果 SCIM 已启用但未设置此变量，启动时会记录警告。
+- 描述：账户由 SCIM 配置时，指定这些身份所对应的 OAuth 提供商名称，例如 `microsoft` 或 `oidc`。Open WebUI 由此可以为每个用户保存该提供商的 `externalId`。启用 SCIM 后若未设置此值，系统会在启动时记录警告，并跳过 `externalId` 的存储。因此，自动配置的账户可能无法与同一用户通过 SSO 登录的账户对应。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
@@ -8095,7 +8092,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：充当主开关，用于启用或禁用聊天界面中的"Controls"按钮和面板。该部分包含聊天文件、阀门、系统提示和高级参数。 **当设置为 False 时，用户将无法看到“控件”部分，且下方的细粒度权限设置将不生效**。**设置 > 常规** 中的 **系统提示** 和 **高级参数** 部分也将被隐藏。任何有权访问该模型的用户仍可使用其 [模型控制](/features/workspace/models#using-model-controls-in-chat)。设置 **允许聊天控制** 以按组进行配置。
+- 描述：这是消息输入框旁**模型控制**菜单中**控件**部分的总开关。该部分包含聊天文件、阀门、系统提示和高级参数。**设为 False 时，用户看不到控件部分，下方的细粒度权限也不生效**。用户**设置 > 常规**中的**系统提示**和**高级参数**也会隐藏。任何有权访问该模型的用户仍可使用[模型控制](/features/workspace/models#using-model-controls-in-chat)。可按组配置**允许聊天控制**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8103,7 +8100,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：当 `USER_PERMISSIONS_CHAT_CONTROLS` 启用时，此设置专门控制聊天控制面板中"Valves"部分的可见性。
+- 描述：启用 `USER_PERMISSIONS_CHAT_CONTROLS` 后，此设置控制**模型控制**菜单下**控件**中的“阀门”部分是否可见。禁用时，带有用户阀门的 Pipe 模型也不会在聊天输入框中向非管理员显示**阀门**按钮。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8111,7 +8108,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：当 `USER_PERMISSIONS_CHAT_CONTROLS` 启用时，此设置专门控制聊天控制面板、文件夹和用户设置中可自定义"System Prompt"部分的可见性。
+- 描述：启用 `USER_PERMISSIONS_CHAT_CONTROLS` 后，此设置控制可自定义的“系统提示”部分是否可见。该部分位于**模型控制**菜单下的**控件**中，也可在文件夹和用户设置中找到。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8119,7 +8116,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：当 `USER_PERMISSIONS_CHAT_CONTROLS` 启用时，此设置生效。它控制用户是否能在聊天控制菜单及其通用设置中看到高级参数。 此设置不会影响 [模型控制项](/features/workspace/models#using-model-controls-in-chat)：任何有权访问该模型的用户仍可从中进行选择。无论此设置如何，保存到用户账户中的参数都会被保留。此设置仅隐藏相关面板。 用户仍可通过 API 设置参数，包括在聊天请求中或保存设置时。这使管理员能够在提供模型控制功能的同时隐藏面板。请将 **允许聊天参数** 设置为按组配置。
+- 描述：启用 `USER_PERMISSIONS_CHAT_CONTROLS` 后，此设置控制**模型控制**菜单下**控件**中的“高级参数”部分，以及用户**设置 > 常规**中的**高级参数**部分是否可见。此设置不影响[模型控制项](/features/workspace/models#using-model-controls-in-chat)，有权访问模型的用户仍可选择这些控件。无论此设置如何，已保存到账户的参数都会保留。此设置仅隐藏面板。用户仍可在聊天请求或保存设置时通过 API 设置参数。因此，管理员可以隐藏面板，同时保留模型控制功能。可按组配置**允许聊天参数**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8135,7 +8132,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用用户通过"Attach Webpage"选项在聊天中附加网页（URL）的权限。设为 `False` 时，非管理员用户将看不到"Attach Webpage"按钮。也可按组在**管理面板 → 用户 → 组 → 权限 → 聊天权限 → 允许网页上传**中配置。
+- 描述：启用或禁用用户在聊天中附加网页的权限。设为 `False` 时，非管理员仍能在附件菜单中看到**附加网页**选项，但选项呈灰色并带有提示。即使发出附加请求，也会被拒绝。可在管理面板的群组聊天权限中按组配置**允许网页上传**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8143,7 +8140,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用用户删除聊天的权限。
+- 描述：启用或禁用用户删除聊天的权限。设为 `False` 时，侧边栏、聊天菜单、搜索、已归档聊天和数据控制中的删除控件均不向非管理员显示，**删除聊天**快捷操作也不再生效。归档不受影响。若勾选**删除此文件夹中的所有内容**，删除文件夹同样需要此权限；缺少权限时，操作不会隐藏，但请求会被拒绝。不勾选时，文件夹会删除，聊天会保留。可按组配置**允许删除聊天**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8228,9 +8225,9 @@ environment:
 
 #### `USER_PERMISSIONS_CHAT_MULTIPLE_MODELS` {#user\_permissions\_chat\_multiple\_models}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用用户在聊天中使用多个模型的权限。
+- 描述：控制用户能否在聊天中使用多个模型。禁用后，非管理员开启新聊天时，仅使用原本会加载的第一个模型；打开现有的多模型聊天时，也只继续使用其中第一个模型。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8261,7 +8258,7 @@ environment:
 
 #### `USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS` {#user\_permissions\_features\_direct\_tool\_servers}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
 - 描述：启用或禁用用户访问直接工具服务器的权限。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8269,7 +8266,7 @@ environment:
 
 #### `USER_PERMISSIONS_FEATURES_WEB_SEARCH` {#user\_permissions\_features\_web\_search}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`True`
 - 描述：启用或禁用用户使用 Web 搜索功能的权限。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8285,7 +8282,7 @@ environment:
 
 #### `USER_PERMISSIONS_FEATURES_CODE_INTERPRETER` {#user\_permissions\_features\_code\_interpreter}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`True`
 - 描述：启用或禁用用户使用代码解释器功能的权限。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8293,15 +8290,15 @@ environment:
 
 #### `USER_PERMISSIONS_FEATURES_MEMORIES` {#user\_permissions\_features\_memories}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用用户使用[记忆功能](/features/chat-conversations/memory)的权限。
+- 描述：启用或禁用用户使用[记忆功能](/features/chat-conversations/memory)的权限。设为 `False` 时，受影响的用户看不到**个性化**设置标签页，访问记忆端点会收到 `403`。模型不会获得记忆工具，用户已保存的记忆也不会纳入系统上下文。管理员不受此限制。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `USER_PERMISSIONS_FEATURES_AUTOMATIONS` {#user\_permissions\_features\_automations}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
 - 描述：启用或禁用非管理员用户的自动化访问。启用后，用户可以访问 `/automations` 并管理自己的定时自动化。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8335,7 +8332,7 @@ environment:
 
 #### `USER_PERMISSIONS_FEATURES_FOLDERS` {#user\_permissions\_features\_folders}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`True`
 - 描述：启用或禁用文件夹功能（聊天侧边栏）对用户的可见性。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8343,9 +8340,9 @@ environment:
 
 #### `USER_PERMISSIONS_FEATURES_NOTES` {#user\_permissions\_features\_notes}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用笔记功能对用户的可见性。
+- 描述：控制用户是否能看到笔记功能。禁用时，非管理员也不会在聊天输入框的 **+** 菜单中看到**附加笔记**选项。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8416,7 +8413,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用或禁用用户访问工作区工具的权限。
+- 描述：启用或禁用用户访问工作区工具的权限。启用后，该用户使用的模型还可以通过内置的 **工具创建** 工具在聊天中创建工作区工具。保存工具时，服务器会执行其 Python 代码。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8430,7 +8427,7 @@ environment:
 
 - 类型： `bool`
 - 默认值： `False`
-- 说明： 启用或禁用用户**导入**技能到技能工作区的权限。请参阅 [所需权限](/features/workspace/skills#required-permissions)。
+- 描述： 启用或禁用用户**导入**技能到技能工作区的权限。请参阅 [所需权限](/features/workspace/skills#required-permissions)。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -8438,7 +8435,7 @@ environment:
 
 - 类型： `bool`
 - 默认值： `False`
-- 说明：启用或禁用用户从“技能”工作区 **导出** 技能的权限。请参阅 [所需权限](/features/workspace/skills#required-permissions)。
+- 描述：启用或禁用用户从“技能”工作区 **导出** 技能的权限。请参阅 [所需权限](/features/workspace/skills#required-permissions)。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -8449,41 +8446,41 @@ environment:
 
 #### `USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_SHARING` {#user\_permissions\_workspace\_models\_allow\_sharing}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
-- 描述：启用或禁用工作区模型的**私密共享**。
+- 描述：允许非管理员共享工作区模型。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ALLOW_SHARING` {#user\_permissions\_workspace\_knowledge\_allow\_sharing}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
-- 描述：启用或禁用工作区知识的**私密共享**。
+- 描述：允许非管理员共享工作区知识。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_SHARING` {#user\_permissions\_workspace\_prompts\_allow\_sharing}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
-- 描述：启用或禁用工作区提示词的**私密共享**。
+- 描述：允许非管理员共享工作区提示词。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_SHARING` {#user\_permissions\_workspace\_tools\_allow\_sharing}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
-- 描述：启用或禁用工作区工具的**私密共享**。
+- 描述：允许非管理员共享工作区工具。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_SHARING` {#user\_permissions\_workspace\_skills\_allow\_sharing}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
-- 描述：启用或禁用工作区技能的**私密共享**。
+- 描述：允许非管理员共享工作区技能。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8511,7 +8508,7 @@ environment:
 
 #### `USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_PUBLIC_SHARING` {#user\_permissions\_workspace\_models\_allow\_public\_sharing}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
 - 描述：启用或禁用工作区模型的**公开共享**。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8519,7 +8516,7 @@ environment:
 
 #### `USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ALLOW_PUBLIC_SHARING` {#user\_permissions\_workspace\_knowledge\_allow\_public\_sharing}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
 - 描述：启用或禁用工作区知识的**公开共享**。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8527,7 +8524,7 @@ environment:
 
 #### `USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_PUBLIC_SHARING` {#user\_permissions\_workspace\_prompts\_allow\_public\_sharing}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
 - 描述：启用或禁用工作区提示词的**公开共享**。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8535,15 +8532,15 @@ environment:
 
 #### `USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_PUBLIC_SHARING` {#user\_permissions\_workspace\_tools\_allow\_public\_sharing}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
-- 描述：启用或禁用工作区工具的**公开共享**。
+- 描述：启用或禁用工作区工具的**公开共享**。该功能要求启用 `USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_SHARING`；若未启用，**公开**选项和此开关均不会显示。可按组配置**工具公开共享**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_PUBLIC_SHARING` {#user\_permissions\_workspace\_skills\_allow\_public\_sharing}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
 - 描述：启用或禁用工作区技能的**公开共享**。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8551,9 +8548,9 @@ environment:
 
 #### `USER_PERMISSIONS_NOTES_ALLOW_PUBLIC_SHARING` {#user\_permissions\_notes\_allow\_public\_sharing}
 
-- 类型：`str`
-- 默认值：`True`
-- 描述：启用或禁用笔记的**公开共享**。
+- 类型：`bool`
+- 默认值：`False`
+- 描述：启用或禁用笔记的**公开共享**。该功能要求启用 `USER_PERMISSIONS_NOTES_ALLOW_SHARING`；若未启用，**公开**选项和此开关均不会显示。可按组配置**笔记公开共享**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8601,16 +8598,16 @@ environment:
 
 #### `USER_PERMISSIONS_WORKSPACE_MODELS_IMPORT` {#user\_permissions\_workspace\_models\_import}
 
-- 类型：`str`
-- 默认值：`True`
+- 类型：`bool`
+- 默认值：`False`
 - 描述：启用或禁用用户导入工作区模型的权限。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `USER_PERMISSIONS_WORKSPACE_MODELS_EXPORT` {#user\_permissions\_workspace\_models\_export}
 
-- 类型：`str`
-- 默认值：`True`
+- 类型：`bool`
+- 默认值：`False`
 - 描述：启用或禁用用户导出工作区模型的权限。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -8624,23 +8621,23 @@ environment:
 
 #### `USER_PERMISSIONS_WORKSPACE_PROMPTS_IMPORT` {#user\_permissions\_workspace\_prompts\_import}
 
-- 类型：`str`
-- 默认值：`True`
+- 类型：`bool`
+- 默认值：`False`
 - 描述：启用或禁用用户导入工作区提示词的权限。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `USER_PERMISSIONS_WORKSPACE_PROMPTS_EXPORT` {#user\_permissions\_workspace\_prompts\_export}
 
-- 类型：`str`
-- 默认值：`True`
+- 类型：`bool`
+- 默认值：`False`
 - 描述：启用或禁用用户导出工作区提示词的权限。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT` {#user\_permissions\_workspace\_tools\_import}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
 - 描述：启用或禁用用户导入工作区工具的权限。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8648,7 +8645,7 @@ environment:
 
 #### `USER_PERMISSIONS_WORKSPACE_TOOLS_EXPORT` {#user\_permissions\_workspace\_tools\_export}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
 - 描述：启用或禁用用户导出工作区工具的权限。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -8660,7 +8657,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 说明：控制用户自定义其界面设置（外观、语言等）的权限。禁用后，用户将无法更改其界面首选项。
+- 描述：控制用户自定义其界面设置（外观、语言等）的权限。禁用后，用户将无法更改其界面首选项。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -8741,14 +8738,14 @@ environment:
 
 #### `S3_USE_ACCELERATE_ENDPOINT` {#s3\_use\_accelerate\_endpoint}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
 - 描述：指定是否使用 S3 存储的加速端点。
 
 
 #### `S3_ENABLE_TAGGING` {#s3\_enable\_tagging}
 
-- 类型：`str`
+- 类型：`bool`
 - 默认值：`False`
 - 描述：启用上传后的 S3 对象标记，以便更好地组织、搜索和与文件管理策略集成。使用 Cloudflare R2 时始终设为 `False`，因为 R2 不支持对象标记。
 
@@ -8798,6 +8795,7 @@ environment:
 :::warning 可能需要额外依赖
 
 OpenTelemetry 支持需要额外的 Python 依赖，而根据安装方式的不同，这些依赖**默认可能并未包含**（例如标准的 `pip install open-webui` 与 Docker 镜像）。
+
 如果你遇到与 OpenTelemetry 相关的 `ImportError` 或模块缺失错误，可能需要手动安装它们：
 
 ```bash
@@ -8832,7 +8830,7 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用 OpenTelemetry 日志的导出。需要 `ENABLE_OTEL=True`。
+- 描述：将应用日志发送到配置的 OTLP 端点。需要 `ENABLE_OTEL=True`。
 
 
 #### `OTEL_EXPORTER_OTLP_ENDPOINT` {#otel\_exporter\_otlp\_endpoint}
@@ -9190,7 +9188,7 @@ Total connections = (DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW) × Number 
 
 - 类型：`int`
 - 默认值：`0`
-- 描述：指定数据库连接池的最大溢出数。这允许在流量高峰期间超出 `DATABASE_POOL_SIZE` 创建额外的连接。
+- 描述：设置流量高峰时 PostgreSQL 可在 `DATABASE_POOL_SIZE` 之外额外打开的连接数。仅适用于 PostgreSQL，并且必须先设置 `DATABASE_POOL_SIZE`。
 
 :::info
 
@@ -9228,7 +9226,7 @@ Total connections = (DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW) × Number 
 #### `DATABASE_ENABLE_SQLITE_WAL` {#database\_enable\_sqlite\_wal}
 
 - 类型：`bool`
-- 默认值：`False`
+- 默认值：`True`
 - 描述：启用或禁用 SQLite WAL（预写日志）模式。启用后，SQLite 事务可以更高效地管理，允许多个读取者和一个写入者并发操作，这可以提高数据库性能，尤其是在高并发下。**此设置仅适用于 SQLite 数据库。**
 
 
@@ -9644,14 +9642,14 @@ WEBSOCKET_REDIS_OPTIONS='{"socket_connect_timeout": 5}'
 
 - 类型：`int`
 - 默认值：`20`
-- 描述：到 Redis 的 ping 超时时间（秒）。
+- 描述：Socket.IO/Engine.IO 服务器等待客户端 pong 响应的秒数。超时后，服务器会判定 WebSocket 连接已断开。网络较慢、浏览器标签页可能短暂停止运行，或部署会发送大型 WebSocket 事件时，可增大此值。
 
 
 #### `WEBSOCKET_SERVER_PING_INTERVAL` {#websocket\_server\_ping\_interval}
 
 - 类型：`int`
 - 默认值：`25`
-- 描述：到 Redis 的 ping 频率（秒）。
+- 描述：Socket.IO/Engine.IO 服务器向已连接的 WebSocket 客户端发送心跳 ping 的时间间隔，单位为秒。
 
 
 #### `WEBSOCKET_HEARTBEAT_INTERVAL` {#websocket\_heartbeat\_interval}
@@ -9663,7 +9661,7 @@ WEBSOCKET_REDIS_OPTIONS='{"socket_connect_timeout": 5}'
 #### `WEBSOCKET_EVENT_CALLER_TIMEOUT` {#websocket\_event\_caller\_timeout}
 
 - 类型：`int`
-- 默认值：`300`
+- 默认值：未设置，表示不超时
 - 描述：服务器等待有人回应由工具或 action 提出的交互式提示、表单或下拉菜单的时长。留空则无限期等待，因此一个无人回应的提示会让该调用一直挂起。超时后，调用会向调用方插件返回一个 `error` 键而不会抛出异常，所以请检查返回值；try/except 捕获不到它。非整数的值会回退到 `300`。浏览器会话不受影响，因此一个只是暂时无人看管的标签页仍保持连接，并可再次收到提示。它同时限制了 [MCP 输入请求](/features/extensibility/mcp#requests-for-your-input)的等待时间，以及在临时聊天中**询问用户**问题和[工具审批](/features/extensibility/plugin/tools#tool-approval)提示的等待时间（这些提示原本在 120 秒后放弃）。参见[交互式事件](/features/extensibility/plugin/development/events#interactive-events)。
 
 
@@ -9761,7 +9759,7 @@ Open WebUI 使用以下环境变量：
 
 - 类型： `bool`
 - 默认值： `True`
-- 说明：Open WebUI 中所有来自其自身代码之外、用于运行代码或工具的总开关。设为 `False` 时，无论 [`ENABLE_TOOLS`](#enable_tools)、[`ENABLE_FUNCTIONS`](#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](#enable_tool_servers) 如何设置，都会同时关闭它们：工作区工具、函数（过滤器、操作、管道）、OpenAPI 与 MCP 工具服务器、Open Terminal连接以及用户自行添加的直接工具服务器都将停止工作。启动时的插件依赖安装也会被跳过。该值在启动时读取一次，因此修改它需要重启。
+- 描述：Open WebUI 中所有来自其自身代码之外、用于运行代码或工具的总开关。设为 `False` 时，无论 [`ENABLE_TOOLS`](#enable_tools)、[`ENABLE_FUNCTIONS`](#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](#enable_tool_servers) 如何设置，都会同时关闭它们：工作区工具、函数（过滤器、操作、管道）、OpenAPI 与 MCP 工具服务器、Open Terminal 连接以及用户自行添加的直接工具服务器都将停止工作。启动时的插件依赖安装也会被跳过。该值在启动时读取一次，因此修改它需要重启。
 - 仍然可用：[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)（记忆、知识库、网页搜索、子代理等）、代码解释器以及直连模型，因为它们属于 Open WebUI 自身的一部分。
 - 注意：它决定插件和工具服务器是否*运行*。关闭后部分管理端点仍可访问，例如删除工具或函数、保存工具服务器列表，因此应将其视为执行开关，并把创建工具与函数的权限限制给你信任的人。
 
@@ -9800,7 +9798,7 @@ Open WebUI 提供了若干环境变量来自定义 pip 安装过程。以下是 
 
 **强烈建议：在生产环境中设置 `ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`。** 运行时 pip 安装允许任何由管理员上传的函数或工具向正在运行的进程中安装任意 Python 包。禁用它可以：
 - **阻止用户上传的代码安装任意包**
-- **消除竞态条件**——当 `UVICORN_WORKERS > 1` 或多个副本尝试并发执行 pip 安装时，这些竞态会导致 worker 崩溃
+- **消除竞态条件**——当同一容器中的多个进程（`UVICORN_WORKERS > 1`）同时安装依赖时，这些竞态会导致 worker 崩溃
 - **确保部署可复现**——所有依赖都已固化在容器镜像中
 请改为在 Dockerfile 中预装所需的包：
 

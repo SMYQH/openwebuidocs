@@ -48,7 +48,7 @@ bin/kc.sh start-dev --http-port=9090
 4. 保持 **Client protocol** 为 `openid-connect`。
 5. 将 **Access Type** 设置为 `confidential`，点击 **Save**。
 
-![访问设置客户端](/images/features/auth/keycloak/access-setting-client.png)
+![客户端的访问设置](/images/features/auth/keycloak/access-setting-client.png)
 
 ## 4. 启用客户端认证并获取凭据 {#4-enable-client-authentication-and-get-credentials}
 
@@ -59,7 +59,7 @@ bin/kc.sh start-dev --http-port=9090
 3. 将"None"更改为 **Client ID and secret**，点击 **Save**。
 4. 点击 **Advanced** 选项卡。
 5. 在 **Client authentication** 部分，点击 **Reveal secret** 并复制密钥。
-6. 将此密钥粘贴到 `.env` 文件中的 `OAUTH_CLIENT_SECRET` 变量。
+6. 在 `.env` 文件中将 `OAUTH_CLIENT_SECRET` 设置为复制的密钥。
 
 {/* TODO: Insert image of Advanced tab Client Authenticator settings */}
 
@@ -101,7 +101,7 @@ OPENID_REDIRECT_URI=http://localhost:8080/oauth/oidc/callback
     -   协议：`http://`
     -   示例：`http://localhost:9090`
 -   **HTTPS（生产环境推荐）**：
-    -   需要 Keycloak TLS 设置或带 SSL 终止的反向代理。
+    -   需要为 Keycloak 配置 TLS，或使用在代理端终止 SSL 的反向代理。
     ```bash
     bin/kc.sh start --https-port=9090 \
       --https-key-store=keystore.jks \
@@ -110,38 +110,38 @@ OPENID_REDIRECT_URI=http://localhost:8080/oauth/oidc/callback
 
 ## 8. 测试集成 {#8-test-the-integration}
 
-1. 访问 `http://localhost:8080`，您应该会看到"Continue with Keycloak"按钮。
-2. 点击该按钮，应该会重定向到 Keycloak 登录页面。
-3. 使用 `testuser` / `Test1234!` 登录，应该成功重定向回 Open WebUI。
+1. 访问 `http://localhost:8080`，页面应显示“Continue with Keycloak”按钮。
+2. 点击该按钮，浏览器应跳转至 Keycloak 登录页。
+3. 使用 `testuser` / `Test1234!` 登录，浏览器应跳转回 Open WebUI。
 
 {/* TODO: Insert image of the actual login screen */}
 
 ## 9. 配置 Keycloak 用户组映射 {#9-configure-keycloak-group-mapping}
 
 ### 9.1. 概述 {#91-overview}
-默认情况下，Keycloak 客户端不在 token 中包含用户组信息。按照以下步骤传递用户组信息。
+默认情况下，Keycloak 客户端的令牌不包含用户组信息。按以下步骤将用户组信息加入令牌。
 
-### 9.2. 找到 Mapper 创建入口 {#92-locate-mapper-creation}
+### 9.2. 找到映射器的创建入口 {#92-locate-mapper-creation}
 1. 进入 Keycloak 管理控制台：`http://localhost:9090/admin`。
 2. 选择 `openwebui` realm。
 3. 导航到 **Clients**，选择 `open-webui` 客户端。
 4. 进入 **Client scopes** 选项卡。
-5. 选择将包含用户组信息的 scope（例如 `profile` 或 `open-webui-dedicated`）。
+5. 选择要承载用户组信息的客户端作用域（例如 `profile` 或 `open-webui-dedicated`）。
 
-    ![scope 客户端](/images/features/auth/keycloak/scope-client.png)
+    ![选择客户端作用域](/images/features/auth/keycloak/scope-client.png)
 
-6. 在所选 scope 的详情中，进入 **Mappers** 选项卡。
+6. 在所选作用域的详情页中，打开 **Mappers** 选项卡。
 
-### 9.3. 创建 Mapper {#93-create-mapper}
-点击 **Create** 或 **Add builtin** 开始创建新 mapper。
+### 9.3. 创建映射器 {#93-create-mapper}
+点击 **Create** 或 **Add builtin** 开始创建映射器。
 
-### 9.4. Mapper 设置 {#94-mapper-settings}
-使用适当的设置配置 mapper，以包含用户组成员资格。
+### 9.4. 配置映射器 {#94-mapper-settings}
+配置映射器，使令牌包含用户所属的用户组。
 
-![mapper 设置用户组客户端](/images/features/auth/keycloak/mappers-setting-group-client.png)
+![将用户组信息加入令牌的映射器设置](/images/features/auth/keycloak/mappers-setting-group-client.png)
 
 ### 9.5. 保存并应用 {#95-save-and-apply}
--   **保存** mapper 配置。
+-   **保存**映射器配置。
 -   **重启** Open WebUI 服务器以应用更改。
 
 ### 9.6. 配置 Open WebUI 环境变量 {#96-configure-open-webui-environment-variables}

@@ -5,7 +5,7 @@ title: "使用 Docker 部署 Edge TTS"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅演示如何按你的使用场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 
 :::
 
@@ -24,7 +24,7 @@ title: "使用 Docker 部署 Edge TTS"
   <!-- markdownlint-disable-next-line MD033 -->
   <summary>它和 `openedai-speech` 有什么不同？</summary>
 
-与 [openedai-speech](https://github.com/matatonic/openedai-speech) 类似，[openai-edge-tts](https://github.com/travisvn/openai-edge-tts) 也是一个模拟 OpenAI API 端点的文本转语音服务，因此在可配置 OpenAI Speech 端点 URL 的场景下，可以直接替代原接口。
+与 [openedai-speech](https://github.com/matatonic/openedai-speech) 类似，[openai-edge-tts](https://github.com/travisvn/openai-edge-tts) 也提供兼容 OpenAI API 的文本转语音 API 端点。只要应用能调用 OpenAI Speech 端点并允许你配置服务端点 URL，就可以直接替换。
 
 `openedai-speech` 功能更全面，支持多种模态，并可完全离线生成语音。
 
@@ -135,7 +135,7 @@ python app/server.py
 
 #### 6. 测试 API {#6-test-the-api}
 
-现在你可以访问 `http://localhost:5050/v1/audio/speech` 以及其他可用端点。请求示例可参考下方“使用详情”部分。
+现在你可以通过 `http://localhost:5050/v1/audio/speech` 或其他可用端点调用 API。请求示例见下文的“使用详情”。
 
 </details>
 
@@ -154,7 +154,7 @@ python app/server.py
 
 **可选参数：**
 
-- **model**（string）：设置为 `tts-1` 或 `tts-1-hd`（默认：`"tts-1"`）。
+- **model**（string）：设置为 “tts-1” 或 “tts-1-hd”（默认：`"tts-1"`）。
 - **voice**（string）：可使用 OpenAI 兼容语音（alloy、echo、fable、onyx、nova、shimmer），也可使用任意有效的 `edge-tts` 语音（默认：`"en-US-AvaNeural"`）。
 - **response_format**（string）：音频格式，可选 `mp3`、`opus`、`aac`、`flac`、`wav`、`pcm`（默认：`mp3`）。
 - **speed**（number）：播放速度（0.25 到 4.0，默认 `1.0`）。
@@ -256,7 +256,7 @@ docker run -d -p 5050:5050 \
 
 如需了解更多 `openai-edge-tts` 信息，可查看其 [GitHub 仓库](https://github.com/travisvn/openai-edge-tts)。
 
-如需直接支持，可访问 Voice AI & TTS Discord。
+如需直接支持，可访问 Voice AI & TTS 的 Discord 社区。
 
 ## 🎙️ 语音样本 {#voice-samples}
 
@@ -314,7 +314,7 @@ curl -X POST http://localhost:5050/v1/audio/speech \
   --output test.mp3
 ```
 
-如果这个请求成功，但 Open WebUI 仍然连接失败，那么问题通常出在容器间网络。
+如果请求成功但 Open WebUI 仍无法连接，问题出在容器间的网络。
 
 ### Open WebUI 中没有音频输出 {#no-audio-output-in-open-webui}
 

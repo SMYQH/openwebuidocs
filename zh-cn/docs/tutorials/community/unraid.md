@@ -99,14 +99,14 @@ title: "Unraid 部署（新手友好）"
 5. 验证聊天记录和设置是否完整。
 6. 如有需要，回滚到旧镜像并恢复备份。
 
-更多升级方式请参阅 [Updating Open WebUI](/getting-started/updating)。
+更多升级方式请参阅[更新 Open WebUI](/getting-started/updating)。
 
 ## 故障排查 {#troubleshooting}
 
 ### 无法连接 Ollama {#cannot-reach-ollama}
 
 现象：
-- `Connection error` in Open WebUI
+- Open WebUI 显示 `Connection error`
 - 模型无法加载
 
 检查项：
@@ -126,11 +126,12 @@ title: "Unraid 部署（新手友好）"
 - 登录页或静态资源返回 `404`
 - WebSocket 断开或长期停留在加载状态
 
+检查项：
 - 确保代理正确转发 WebSocket 升级头。
 - Open WebUI 没有 base-path 设置，因此像 `/openwebui` 这样的子路径无法工作：前端会从域名根路径请求 `/api/...`、`/ws/socket.io` 和 `/_app/...`。请改用子域名或部署在根路径下。
 - 将 `WEBUI_URL` 设为该公开 URL（不带末尾斜杠），例如 `WEBUI_URL=https://ai.example.com`；它会用于 OAuth 重定向和链接，而不是路由。如果安装已经启动过，请改在设置 > 通用（管理员区域）中修改 **WebUI URL**，因为该环境变量只在首次启动时生效。
 
-更多反向代理排障方法请参阅 [Connection Errors](/troubleshooting/connection-error)。
+更多反向代理排障方法请参阅[连接错误](/troubleshooting/connection-error)。
 
 ### 更新或重建后数据丢失 {#data-missing-after-updateredo}
 

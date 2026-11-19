@@ -4,10 +4,10 @@ title: "ComfyUI"
 ---
 
 :::warning
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看贡献教程。
 :::
 
-ComfyUI 是一个强大且模块化的 Stable Diffusion 节点式图形界面，为用户提供了对图像生成流程的高度控制。了解更多信息或下载安装，请访问其 [GitHub page](https://github.com/comfyanonymous/ComfyUI)。
+ComfyUI 是一个强大且模块化的 Stable Diffusion 节点式图形界面，为用户提供了对图像生成流程的高度控制。了解更多信息或下载安装，请访问其 [GitHub 页面](https://github.com/comfyanonymous/ComfyUI)。
 
 若要运行 ComfyUI 并让 Open WebUI 能访问它，你必须在启动时添加 `--listen` 参数，并绑定到 `0.0.0.0`。这样它才能接受来自局域网其他设备的连接。
 
@@ -19,7 +19,7 @@ ComfyUI 是一个强大且模块化的 Stable Diffusion 节点式图形界面，
 
 由于 Open WebUI 通常运行在 Docker 中，你必须确保容器能通过 `host.docker.internal` 访问宿主机上的 ComfyUI 应用。
 
-1. **检查宿主机绑定：** 确保 ComfyUI 使用 `--listen 0.0.0.0` 启动（见上文）
+1. **检查宿主机绑定：** 确保 ComfyUI 使用 `--listen 0.0.0.0` 启动（第 5 步）
 2. **检查防火墙：** 如果宿主机启用了防火墙（如 UFW），请确认已放行 8188 端口（`sudo ufw allow 8188/tcp`）
 
 3. **Docker 运行命令（Linux 原生 Docker）：**  
@@ -40,11 +40,11 @@ docker run -d -p 3000:8080 \
 
 ## 图像提示词生成 {#image-prompt-generation}
 
-该功能会使用语言模型，根据你的初始输入自动生成更详细、更有创意的提示词，从而提升图像生成效果。
+该功能会使用语言模型，根据你的初始输入自动生成更详细、更有创意的提示词，从而提升图像生成效果。它仅适用于旧版函数调用（Legacy function calling）；在默认的 Native 模式下，模型调用工具时会自行编写提示词。
 
-**Image Prompt Generation** 开关位于 **Settings > Images**（管理员区域） 的 “Image Generation” 区域中，并且在选择图像生成引擎之前就可以设置。
+**Image Prompt Generation** 开关位于 **Settings > Images**（管理员区域）的 **Create Image** 部分。
 
-若要自定义用于生成提示词的模板，请前往 **Settings > Interface > Tasks**（管理员区域）。
+若要自定义用于生成提示词的模板，请前往 **Settings > Interface**（管理员区域），在 **Generation** 部分。
 
 ![显示“图像设置”中“图像提示生成”开关位置的截图](/images/image-generation-and-editing/image-prompt-generation-toggle.png)
 
@@ -58,9 +58,9 @@ docker run -d -p 3000:8080 \
     - **Model**：选择用于生成图像的基础模型
     - **Image Size**：定义输出分辨率（例如 512x512、1024x1024）
     - **Steps**：采样步数；数值越高，图像质量通常越高，但生成时间也更长
-    - 在 **ComfyUI Base URL** 字段中输入运行中的 ComfyUI 地址（例如 `http://host.docker.internal:8188/`）
+    - 在 **Base URL** 字段中输入运行中的 ComfyUI 地址（例如 `http://host.docker.internal:8188/`）
     - 点击 URL 字段旁的 **refresh icon**（🔄）验证连接；成功后应出现提示
-    - 如果你的 ComfyUI 实例需要 API key，请在 **ComfyUI API Key** 字段中填写
+    - 如果你的 ComfyUI 实例需要 API key，请在 **API Key** 字段中填写
 
     ![Open WebUI“图片”设置页面的截图，其中已选择 ComfyUI 用于生成图片。](/images/image-generation-and-editing/comfyui-generation-settings.png)
 
@@ -82,9 +82,9 @@ docker run -d -p 3000:8080 \
     - **Key（左侧字段）**：workflow 中的输入参数名（例如 `text`、`ckpt_name`、`seed`）
     - **Node Ids（右侧字段）**：包含该输入的 node ID，多个 ID 用逗号分隔
 
-    UI 中会显示 6 个可配置的图像生成参数：
+    UI 中会显示六个可配置的图像生成参数：
 
-    | Parameter | Default Key | Required | Description |
+    | 参数 | 默认键 | 是否必填 | 说明 |
     |-----------|-------------|----------|-------------|
     | Prompt* | `text` | Yes | 正向提示词文本 |
     | Model | `ckpt_name` | No | Checkpoint 模型名 |
@@ -106,7 +106,7 @@ docker run -d -p 3000:8080 \
     :::
 
     :::tip
-    某些 workflow（例如使用 Flux 模型的 workflow）可能需要在单个字段中填写多个 node ID。若某个 node 输入框需要多个 ID，请使用逗号分隔（例如 `1` 或 `1, 2`）。
+    某些 workflow（例如使用 Flux 模型的 workflow）可能需要使用多个 node ID，才能在 Open WebUI 中填充对应的 node 输入字段。若某个 node 输入框需要多个 ID，请使用逗号分隔（例如 `1` 或 `1, 2`）。
     :::
 
 5. **保存配置：**
@@ -125,14 +125,15 @@ Open WebUI 同样支持通过 ComfyUI 进行图像编辑，从而修改已有图
 1. **进入图像设置：** 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）。
 
 2. **配置图像编辑：**
-    - 在 **编辑图像** 部分，将 **图像编辑引擎** 设为 `ComfyUI`
-    - **模型**：选择用于编辑任务的模型
-    - **图像尺寸**：定义输出图像的分辨率
-    - **ComfyUI 基础 URL** 和 **API 密钥**：这两个字段与图像生成设置共用
+    - 在 **Edit Image** 部分，开启 **Image Edit** 开关。它默认关闭，不开启就不会使用编辑引擎。
+    - 将 **Image Edit Engine** 设为 `ComfyUI`
+    - **Model**：选择用于编辑任务的模型
+    - **Image Size**：定义输出图像的分辨率
+    - **Base URL** 和 **API Key**：**Edit Image** 部分为它们提供了各自的字段。它们不会回退到图像生成的设置，因此即使同一个 ComfyUI 实例同时承担两种任务，也需要分别填写。
     - **ComfyUI Workflow**：单独上传一个专为图像编辑设计的 workflow 文件，操作流程与图像生成相同
-    - **映射 Workflow Nodes**：图像编辑有 5 个可配置参数，其默认值与图像生成不同：
+    - **映射 Workflow Nodes**：图像编辑有五个可配置参数，其默认值与图像生成不同：
 
-    | Parameter | Default Key | Required | Description |
+    | 参数 | 默认键 | 是否必填 | 说明 |
     |-----------|-------------|----------|-------------|
     | Image* | `image` | Yes | 待编辑的输入图像 |
     | Prompt* | `prompt` | Yes | 编辑提示词文本 |
@@ -154,7 +155,7 @@ Open WebUI 同样支持通过 ComfyUI 进行图像编辑，从而修改已有图
 
 Open WebUI 的 **ComfyUI Workflow Nodes** 区域允许你把通用控制项映射到静态 ComfyUI workflow JSON 中的特定 node 输入。每一行有两个字段：
 
-| Field | Description | Example |
+| 字段 | 说明 | 示例 |
 |-------|-------------|---------|
 | **Key**（左侧） | node 的 `inputs` 块中的输入参数名 | `text`、`ckpt_name`、`seed` |
 | **Node Ids**（右侧） | 目标 node ID，可为逗号分隔 | `6` 或 `1, 2, 3` |
@@ -229,7 +230,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 
 假设你想控制 KSampler node 的 `seed`，它的 node ID 是 `3`。那么在 Open WebUI 设置中的 `Seed` 区域应填写：
 
-| Key | Node Ids |
+| Key | 节点 ID |
 |-----|----------|
 | `seed` | `3` |
 
@@ -237,7 +238,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 
 如果多个 node 需要使用相同值（例如多个 sampler 共享同一个 seed），请填写逗号分隔的多个 ID：
 
-| Key | Node Ids |
+| Key | 节点 ID |
 |-----|----------|
 | `seed` | `3, 15, 22` |
 
@@ -245,7 +246,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 
 对于某些特殊 node，Key 可能不只是简单文本字段。
 
-| Parameter | Key | Node Ids | Note |
+| 参数 | Key | 节点 ID | 说明 |
 |-----------|-----|----------|------|
 | **Prompt** | `text` 或 `prompt` | `76` | 取决于 node 类型（CLIPTextEncode 或 TextEncodeQwen） |
 | **Model** | `ckpt_name` | `37` | 用于 CheckpointLoaderSimple |
@@ -256,7 +257,7 @@ Key 就是该 node JSON 结构里你要控制的确切字段名（例如 `seed`�
 
 如果 ComfyUI 卡住或抛出校验错误，请结合日志和 JSON 结构排查：
 
-| Error Type | Cause & Debugging | Solution |
+| 错误类型 | 原因与排查 | 解决方案 |
 |---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `Value not in list: ckpt_name: 'xyz.safetensors'` | 你映射了正确的 node ID（如 37），但传入值（如 `xyz.safetensors`）对该 node 类型来说不是合法模型名（例如把 VAE 模型错误传给了 checkpoint loader） | 修正 Open WebUI 中图像生成或编辑使用的模型名，确保它与 ComfyUI node 所期望的模型类型一致 |
 | `Missing input <key>` | 你的 workflow 需要某个输入（如 `cfg` 或 `sampler_name`），但 Open WebUI 没有发送该值，因为该字段未映射 | 要么在 workflow JSON 中硬编码默认值，要么把对应输入 key 映射到正确的 node ID |
@@ -377,11 +378,8 @@ ComfyUI/
 ## 配置 SwarmUI {#configuring-with-swarmui}
 
 SwarmUI 使用 ComfyUI 作为后端。若要让 Open WebUI 与 SwarmUI 协同工作，你需要在 `Base URL` 末尾追加 `ComfyBackendDirect`。此外，还建议为 SwarmUI 启用局域网访问。完成这些调整后，SwarmUI 在 Open WebUI 中的设置方式，与前文所述的 ComfyUI 图像生成步骤基本一致。
-
 ![启用局域网访问安装 SwarmUI。](https://github.com/user-attachments/assets/a6567e13-1ced-4743-8d8e-be526207f9f6)
 
-### SwarmUI API 地址 {#swarmui-api-url}
+### SwarmUI API URL {#swarmui-api-url}
 
-你在 **Base URL** 中填写的地址通常如下：
-
-`http://<your_swarmui_address>:7801/ComfyBackendDirect`
+你在 **Base URL** 中填写的地址通常如下：`http://<your_swarmui_address>:7801/ComfyBackendDirect`

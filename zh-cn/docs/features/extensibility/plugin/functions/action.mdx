@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: "Action Function"
+title: "Action 函数"
 ---
 
 # 🎬 Action Function：自定义交互按钮 {#action-function-custom-interactive-buttons}
@@ -230,7 +230,7 @@ async def action(self, body: dict, __user__=None):
 - `icon_url (optional)`：图标 URL，可指向 PNG、SVG、JPEG 等。虽然技术上也支持 base64 data URI，但**强烈建议使用托管 URL**——见下方警告
 
 :::danger 避免使用 Base64 图标——请改用 URL
-不要把 base64 编码图片直接嵌入到 `icon_url` 中。每个 action 的图标数据都会被包含在 `/api/models` API 响应中，而该响应会在每次页面加载时，为**每个启用了该 action 的模型**发送到前端。
+**不要**在 `icon_url` 中直接嵌入 base64 编码图片。每个 action 的图标数据都包含在 `/api/models` API 响应中。每次加载页面时，响应都会把图标数据发送到前端，覆盖**每个启用了该 action 的模型**。
 
 **影响示例：** 如果你给某个 action 使用了一个 500 KB 的 base64 图标，并且该 action 被 20 个模型启用，那么这个 API 响应就会额外膨胀 **20 × 500 KB = 约 10 MB**。如果再有 3 个类似 action，就会变成 **约 30 MB 的无谓载荷**。这会：
 - **显著拖慢前端加载速度**

@@ -2,11 +2,11 @@
 
 [Open WebUI](https://github.com/open-webui/open-webui) 是一款功能丰富的自托管 AI 聊天界面，本仓库是其[文档站点](https://docs.openwebui.com)的**非官方中文翻译版本**。
 
-> **翻译模型**：GPT mini & Luna ；DeepSeek flash & pro ; Minimax......
+> **翻译模型**：GPT Luna & Terra & Sol (Major) & Astra ; DeepSeek Flash
 
-> **代码模型**：Claude Fable & Opus ; GLM ; DeepSeek pro ; GPT Terra & sol ; Minimax ; Kimi code......
+> **代码模型**：GPT Terra & Sol (Major) & Astra ; Claude Fable & Opus
 
-> 🤝 社区被寄予持续驱动此仓库翻译完善的期望，但请勿使用 `Gemini`、`Qwen`、`Doubao` 系列模型贡献。
+> 🤝 社区被寄予持续驱动此仓库翻译完善的期望，但请勿使用 `Minimax`、`Doubao` 系列模型贡献。
 
 ## 仓库结构
 

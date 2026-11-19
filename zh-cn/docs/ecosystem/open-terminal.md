@@ -1,24 +1,24 @@
 ---
-title: "Open Terminal & Terminals"
+title: "Open Terminal 与 Terminals"
 description: "在 Open WebUI 中构建应用、产出报告并运行编码智能体。Open Terminal 为你的 AI 提供一台计算机；Terminals 为每个人或项目提供独立工作区。"
 sidebar_position: 2
 ---
 
-# Open Terminal & Terminals {#open-terminal--terminals}
+# Open Terminal 与 Terminals {#open-terminal--terminals}
 
 **给你的 AI 一台计算机。在聊天里把活干完。**
 
-要一个仪表盘，就在对话旁边打开一个能用的应用。给 AI 一份电子表格，拿回一份可以直接发送的报告。丢给它一个代码库，让它做修改、跑测试、修掉失败的部分。
+让 AI 做一个仪表盘，然后在对话旁打开可用的应用。给它一份电子表格，它就能生成一份可以直接发送的报告。提供一个代码库，它可以修改代码、运行测试并修复发现的问题。
 
 **Open Terminal** 为你的 AI 提供文件、软件、浏览器和命令行，让它能真正动手。**Terminals** 则按需提供这些环境：既可以按人、按项目隔离工作区，也可以共享一个用于协作。两者都直接接入 Open WebUI。
 
 **[安装 Open Terminal](/features/open-terminal/setup/installation)** · **[部署 Terminals](https://github.com/open-webui/terminals#quick-start)**
 
-## 从一个想法到可以打开的东西 {#from-an-idea-to-something-you-can-open}
+## 从想法到可用成果 {#from-an-idea-to-something-you-can-open}
 
-> 用这个 CSV 做一个小仪表盘。先按日期和类别过滤，然后启动它，让我在这里预览。
+> 用这个 CSV 做一个小仪表盘，让我能按日期和类别筛选。然后启动它，让我在这里预览。
 
-你的 AI 可以安装依赖、写出应用、启动服务器并检查输出。Open WebUI 把文件、终端和预览放在对话旁边，你可以在已经工作的位置试用结果并提出修改。
+你的 AI 可以安装依赖、编写应用、启动服务器并检查输出。Open WebUI 把文件、终端和预览放在对话旁边，你可以直接试用结果并提出修改意见。
 
 同一个循环也适用于演示文稿、一批修过的图片，或者对上千行数据的分析。脚本和交付物都是真实文件：可以检查、下载并在此基础上继续。持久化的工作区让下一个任务从你已经做完的部分开始。
 
@@ -44,9 +44,9 @@ sidebar_position: 2
 
 人们通过 Open WebUI 干活；运维人员在集中位置维护模板、访问权限和资源限制。你可以为整个团队提供一个有用的助手，而不必在每台笔记本上都搭一套开发环境。
 
-## 让有用的工作可以重复 {#make-useful-work-repeatable}
+## 自动重复执行任务 {#make-useful-work-repeatable}
 
-在个人或共享工作区里写一个报表脚本，然后给 Open WebUI 的[自动化任务](/features/chat-conversations/chat-features/automations)指定该终端和工作目录。安排一个提示，让它对新数据运行并汇总结果。这个工作区既能承载交互式工作，也能承载周期性任务，模型或受支持的编码智能体都可以。
+在个人或共享工作区里写一个报表脚本，然后为 Open WebUI 的[自动化任务](/features/chat-conversations/chat-features/automations)指定该终端和工作目录。定时发送提示词，让模型或受支持的编码智能体用新数据运行脚本并汇总结果。同一工作区既可供交互式使用，也可用于定期任务。
 
 Terminals 可以停止空闲的环境，同时保留其持久化文件，然后按需重新启动。为每个模板设置 CPU 和内存上限。工作区可以为下一个任务保持可用，而不必让它的容器整天运行。
 

@@ -5,7 +5,7 @@ title: "Apache Tika 提取"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程由社区贡献，Open WebUI 团队不提供支持。它仅演示如何针对你的使用场景自定义 Open WebUI。想投稿？请查看教程投稿指南。
 
 :::
 
@@ -38,7 +38,7 @@ services:
     restart: unless-stopped
 ```
 
-然后执行以下命令启动：
+执行以下命令，使用 Docker Compose 文件启动服务：
 
 ```bash
 docker compose up -d
@@ -46,7 +46,7 @@ docker compose up -d
 
 **方式 2：使用 Docker Run 命令**
 
-你也可以直接运行以下命令启动 Apache Tika：
+也可以用以下 Docker 命令直接启动 Apache Tika：
 
 ```bash
 docker run -d --name tika \
@@ -165,7 +165,7 @@ if __name__ == "__main__":
 
 ### 小结 {#conclusion}
 
-按照以上步骤，你就可以验证 Apache Tika 是否在 Docker 环境中正常工作。你可以通过上传文件进行分析、通过 GET 请求验证服务状态，或者使用脚本自动化验证流程。如果遇到问题，请确保 Apache Tika 容器运行正常，并确认文件发送地址无误。
+按上述步骤可以验证 Apache Tika 在 Docker 环境中是否正常工作。你可以发送文件进行分析、发出 GET 请求确认服务器正在运行，或使用脚本自动执行这些检查。如果遇到问题，请确认 Apache Tika 容器运行正常，且文件发送到了正确的 URL。
 
 ## 故障排查 {#troubleshooting}
 
@@ -177,10 +177,10 @@ if __name__ == "__main__":
 
 将 Apache Tika 集成到 Open WebUI 可带来以下优势：
 
-- **更强的元数据提取能力**：Apache Tika 在提取准确、相关元数据方面能力更强
+- **更强的元数据提取能力**：Apache Tika 能从文件中提取准确、相关的元数据
 - **支持多种文件格式**：Apache Tika 支持大量文件格式，非常适合需要处理多样文档类型的组织
 - **增强内容分析能力**：Apache Tika 的高级内容分析能力可以帮助你从文件中提取更多有价值的信息
 
 ## 结论 {#conclusion-1}
 
-将 Apache Tika 集成到 Open WebUI 是一个相对直接的过程，并且能够显著增强 Open WebUI 实例的元数据提取能力。按照本文步骤操作后，你就可以轻松将 Apache Tika 设置为上下文提取引擎。
+将 Apache Tika 集成到 Open WebUI 并不复杂，还能增强 Open WebUI 实例的元数据提取能力。按本文步骤操作，即可将 Apache Tika 设置为 Open WebUI 的上下文提取引擎。

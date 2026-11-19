@@ -5,7 +5,7 @@ sidebar_label: "网络搜索"
 description: "修复 Open WebUI 中的网络搜索连接失败、页面内容为空、代理错误以及搜索工具调用缺失等问题。"
 ---
 
-Open WebUI 中的 Web Search 让语言模型能够访问互联网中的实时信息。当它没有按预期工作时，本指南可以帮助你诊断并解决常见问题。
+网页搜索失败时，先区分是搜索请求失败，还是无法读取搜索结果中的网页。本指南涵盖代理设置、搜索服务错误、内容为空、超时，以及模型未调用搜索工具等问题。
 
 ## 常见 Web Search 问题 {#common-web-search-issues}
 
@@ -15,7 +15,7 @@ Open WebUI 中的 Web Search 让语言模型能够访问互联网中的实时信
 
 - `[Errno -3] Temporary failure in name resolution`
 - `Connection timeout to host`
-- `The content provided is empty`
+- `None of the web search results could be loaded`
 
 这是因为网页内容抓取器默认不会使用你的 `http_proxy`/`https_proxy` 环境变量。
 
@@ -64,7 +64,7 @@ search:
 
 ✅ **解决方法：**
 
-- **增加上下文长度**：网页通常包含 4,000 到 8,000 个 token或更多。 在显存小于 24 GiB 的 GPU 上，Ollama 的默认上下文长度为 4096 个 token。对于大多数网页内容而言，这太短了。请将上下文长度设置为 16384 个 token或更多。 要查找该设置，请在管理后台的 **设置 > 模型** 下编辑模型，并打开 **“高级参数”**。
+- **增加上下文长度**：网页通常包含 4,000 到 8,000 个 token 或更多。在显存小于 24 GiB 的 GPU 上，Ollama 默认使用 4096 个 token，模型会丢失大部分内容。在管理后台的 **设置 > 模型 > 编辑** 中打开模型的 **高级参数**，将上下文长度增加到至少 16384 个 token。低于这个值不适合处理网页内容。
 
 - **检查结果数量**：通过调整 `WEB_SEARCH_RESULT_COUNT` 控制抓取的结果数。
 
@@ -72,7 +72,7 @@ search:
 
 - **尝试不同 loader**：把 `WEB_LOADER_ENGINE` 改为 `playwright` 以处理 JavaScript 较重的网站，或使用 `firecrawl`/`tavily` 获得更好的提取效果。
 
-- **设置真实的 User-Agent**：如果来自维基百科、Cloudflare 受保护的网站或其他大型发布商的查询结果为空（或日志中显示为403），则默认 Python `requests`/`aiohttp` 用户代理正被机器人检测机制过滤。 请将 [`USER_AGENT`](/reference/env-configuration#user_agent) 设置为真实的、类似浏览器的字符串（例如 `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36`）。 这会影响网页搜索结果的获取、`fetch_url` 工具以及带有 `#`的网页，包括检查链接是否指向 PDF等文件。
+- **设置真实的 User-Agent**：如果来自维基百科、受 Cloudflare 保护的网站或其他大型发布商的结果为空（或日志中出现 403），说明网站的机器人检测机制过滤了 Python `requests`/`aiohttp` 的默认用户代理。请将 [`USER_AGENT`](/reference/env-configuration#user_agent) 设置为类似真实浏览器的字符串（例如 `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36`）。此设置影响网页搜索结果的抓取、`fetch_url` 工具和通过 `#` 附加的网页，包括检查链接是否指向 PDF 等文件。
 
 - **压缩响应会被拒绝**：Open WebUI 会请求未压缩的页面和文件，并以 `The server answered with a compressed response, which is not accepted.` 拒绝压缩响应。如果主机总是以压缩方式发送文件（例如上传时带有 `Content-Encoding` 说明头的 S3 或 MinIO 对象），就无法读取。请在不带该说明头的情况下重新上传文件。
 
@@ -89,7 +89,7 @@ search:
 **解决方法：**
 
 - **为网页搜索工作流使用现代的高质量工具调用模型。** 前沿模型或近期的大型开放权重模型，在判断何时该搜索以及正确组织工具调用方面，都比老旧或较小的模型可靠得多。有关模型要求与建议，请参阅[工具调用模式：原生与旧版](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
-- **确认原生函数调用已启用**：在 **设置 > 模型 > 编辑**（管理员区域） 中选中模型，进入 **高级参数 > 函数调用**。内置的网页搜索工具属于原生模式工具。
+- **确认原生函数调用已启用**：在管理后台的 **设置 > 模型 > 编辑** 中打开模型的 **高级参数 > 函数调用**。内置的网页搜索工具属于原生模式工具。
 - **检查三道网页搜索开关**：全局已启用网页搜索、模型上已启用网页搜索、对话中已打开网页搜索开关。
 - **对于 DDGS / DuckDuckGo 配置**，请参照 [DDGS 提供商指南](/features/chat-conversations/web-search/providers/ddgs)单独确认提供商配置；但如果 DDGS 在日志中返回了结果而助手却从不调用 `search_web`，请更换模型。
 
@@ -124,7 +124,7 @@ search:
 | `WEB_LOADER_ENGINE` | 内容提取引擎 |
 
 
-以上全部都是持久化设置，因此 **Settings > Web Search**（管理员区域） 才是它们的唯一真实来源。页面抓取器会在每次搜索时从这份已保存的配置中读取代理信任、加载器并发数和 SSL 校验设置，所以你在那里保存的变更会直接作用于下一次搜索，无需重启，并且与这些设置在其他位置的行为保持一致。如果你在管理面板中做的修改看起来没有生效，请回到那里重新确认，而不要想当然地认为环境变量仍在起作用：环境变量只用于设定初始值，之后保存的设置优先。
+以上都是持久化设置，当前生效的值以管理后台的 **设置 > Web Search** 为准。页面抓取器每次搜索时都会从已保存的配置中读取代理信任、加载器并发数和 SSL 校验设置。因此，保存的更改会在下次搜索时生效，无需重启。这与这些设置在其他位置的行为一致。如果管理面板中的更改似乎没有生效，请回到面板核对。环境变量只用于设定初始值，之后以已保存的设置为准。
 
 **Web Search Engine** 只在 **Web Search** 开启期间才是必需的，因此 **Loader** 设置可以在没有它的情况下保存。
 

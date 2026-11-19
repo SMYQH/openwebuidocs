@@ -43,13 +43,14 @@ flowchart TB
 
 ## 安装 {#installation}
 
-在每台 VM 上通过带 `postgres` 扩展的 pip 安装（它会添加 PostgreSQL 和 PGVector 驱动）：
+在每台 VM 上安装软件包时，加入 `postgres` 可选依赖。这些依赖包含 PostgreSQL 和 PGVector 驱动：
 
 ```bash
 python3.12 -m venv /opt/open-webui/venv
 /opt/open-webui/venv/bin/pip install "open-webui[postgres]"
 ```
-`all` 扩展还会添加可选的向量存储客户端、Playwright 和 Unstructured；只有在用到其中之一时才安装它。
+
+`all` 可选依赖组还包含可选的向量存储客户端、Playwright 和 Unstructured。仅在需要其中至少一项时才安装此组。
 
 创建一个 systemd unit 来管理该进程：
 

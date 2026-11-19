@@ -9,7 +9,7 @@ Automations 允许你按周期自动执行提示词。每次执行都会创建�
 
 运行与你的聊天使用相同的方式使用[记忆](/features/chat-conversations/memory)。当你的记忆已开启时，一次运行会获得记忆工具；开启 **Memory System Context** 后，你已存储的记忆也会进入其上下文，所用的模型、权限与管理员设置与聊天完全一致。记忆是否开启取决于你在 **Settings > Personalization** 中的 **记忆** 开关；如果你从未设置过它，则由[默认界面设置](/features/administration/interface-defaults)决定，而在连默认界面设置也没有的情况下，则取决于实例是否启用了 Memories。
 
-管理员可通过 [`ENABLE_AUTOMATIONS`](/reference/env-configuration#enable_automations) 环境变量，或 **Settings > General**（管理员区域） 中的开关，在全局启用或禁用自动化。禁用后，自动化 worker 会停止处理任务，API endpoint 会返回 `403`，侧边栏入口也会隐藏。
+管理员可通过 [`ENABLE_AUTOMATIONS`](/reference/env-configuration#enable_automations) 环境变量，或 **Settings > General**（管理员区域） 中的开关，在全局启用或禁用自动化。禁用后，自动化 worker 会停止处理任务，API 端点会返回 `403`，侧边栏入口也会隐藏。
 
 ## 你可以自动化什么 {#what-you-can-automate}
 
@@ -24,8 +24,8 @@ Automations 允许你按周期自动执行提示词。每次执行都会创建�
 
 对于非管理员用户，Automations 受权限控制。
 
-- **Admins**：始终拥有自动化访问权限
-- **Users**：需要具备 **Features > Automations** 权限
+- **管理员**：始终拥有自动化访问权限
+- **用户**：需要具备 **Features > Automations** 权限
 
 自动化对创建它的用户是私有的。只有所有者可以打开、编辑、运行或删除某个自动化；其他任何请求——包括来自管理员的请求——都会被当作该自动化不存在来处理。**Features > Automations** 权限决定的是某个人能否拥有自动化，而不是他能访问谁的自动化。
 
@@ -52,9 +52,9 @@ Automations 允许你按周期自动执行提示词。每次执行都会创建�
 | **最大自动化数量** | 限制用户可创建的自动化数量 | [`AUTOMATION_MAX_COUNT`](/reference/env-configuration#automation_max_count) |
 | **最小重复间隔** | 拒绝执行频率高于设定间隔（秒）的计划 | [`AUTOMATION_MIN_INTERVAL`](/reference/env-configuration#automation_min_interval) |
 
-- **Max count** 仅在创建时检查；若后续下调限制，不会删除现有自动化任务
-- **Min interval** 会在创建和更新时都进行检查；一次性自动化（`COUNT=1`）不受此限制
-- 两者默认都为空（即不限制）；如需强制执行，请设置为正整数
+- **Max count** 仅在创建时检查；若后续下调限制，不会删除现有自动化任务。
+- **Min interval** 会在创建和更新时都进行检查；一次性自动化（`COUNT=1`）不受此限制。
+- 两者默认都为空（即不限制）；如需强制执行，请设置为正整数。
 
 ## 创建一个自动化任务 {#create-an-automation}
 
@@ -154,14 +154,14 @@ Automations 允许你按周期自动执行提示词。每次执行都会创建�
 
 ## 说明 {#notes}
 
-- 自动化任务在后台 worker loop 中按轮询间隔执行
+- 自动化任务在后台 worker loop 中按轮询间隔执行。
 - 每次执行都会记录状态（`success` 或 `error`）以及可选的错误详情。在聊天中回复的运行在回复完成后记为 `success`；回复失败或被取消则记为 `error`，同时运行会保留 **View chat** 链接，方便你打开对应聊天。
 - 若想在运行失败时收到通知，把[通知目标](/features/chat-conversations/chat-features/notifications#events)订阅到 `automation.run_failed`。
 - 删除自动化任务时，也会同时删除其运行历史。
 
 ## 在对话中管理自动化 {#managing-automations-from-chat}
 
-在使用 **原生函数调用模式** 且模型能力足够时，也可以直接在对话中通过内置工具创建和管理自动化。这样你只需说出诸如“每天早上 9 点安排一份摘要报告”之类的话，模型就会为你创建该自动化。
+在使用 **原生函数调用模式** 且模型能力足够时，也可以直接在对话中通过内置工具创建和管理自动化。这样你只需说出诸如 *“每天早上 9 点安排一份摘要报告”* 之类的话，模型就会为你创建该自动化。
 
 ### 可用工具 {#available-tools}
 

@@ -14,13 +14,13 @@ title: "OAuth 令牌交换的客户端信任"
 
 ## 概述 {#summary}
 
-OAuth 令牌交换端点接受一个提供方的访问令牌，并为该令牌所标识的用户签发一个 Open WebUI 会话。提供方的 userinfo 端点只能确认令牌是否有效，却从不透露它是发给哪个 OAuth 客户端的，因此如果没有额外的检查，该端点会接受为同一提供方注册的任何客户端所签发的令牌，包括运维人员并不掌控的应用。
+OAuth 令牌交换端点接收提供方的访问令牌，并为令牌所标识的用户创建 Open WebUI 会话。提供方的 userinfo 端点可以确认令牌有效，却不会说明令牌发给了哪个 OAuth 客户端。若不额外检查，交换端点会接受提供方发给在其处注册的任一客户端的令牌，包括运维人员无法控制的应用。
 
 除非运维人员将 [`ENABLE_OAUTH_TOKEN_EXCHANGE`](/reference/env-configuration#enable_oauth_token_exchange) 设置为 `True`，否则该端点处于关闭状态；这并非默认设置，因此默认部署不受影响。以下内容仅涉及那些主动启用了它的部署。
 
-## 我们缓解的措施 {#what-we-mitigated}
+## 已采取的缓解措施 {#what-we-mitigated}
 
-0.11.0 新增了 `OAUTH_TOKEN_EXCHANGE_TRUSTED_CLIENT_IDS`。设置该变量后，Open WebUI 会通过 RFC 7662 令牌自省来解析签发该令牌的客户端，并拒绝任何为未列出的客户端签发的令牌，或签发客户端无法确定的令牌。只有自省得到的 `client_id` 才会被采信。`aud` 字段会被忽略，因为它标示的是预期的资源服务器而非签发客户端，并且多个提供方允许任何客户端在其中填入其他客户端的标识符。它是一个部署期环境变量，因此被攻陷的管理员会话无法在运行时扩大信任边界。
+0.11.0 新增了 `OAUTH_TOKEN_EXCHANGE_TRUSTED_CLIENT_IDS`。设置后，Open WebUI 通过 RFC 7662 令牌自省确定令牌发给了哪个客户端。如果客户端不在允许列表中，或无法确定客户端，就会拒绝令牌。系统只信任自省结果中的 `client_id`，并忽略 `aud`。后者表示预期接收令牌的资源服务器，而不是获发令牌的客户端，且多家提供方允许客户端在其中填入其他客户端的标识符。这是部署时配置的环境变量，管理员会话即使失陷，也无法在运行时扩大信任边界。
 
 ## 剩余部分，以及我们为何接受它 {#what-remains-and-why-we-accept-it}
 
@@ -28,7 +28,7 @@ OAuth 令牌交换端点接受一个提供方的访问令牌，并为该令牌�
 
 **有些部署依赖既有的行为，并且正当地需要它。** 对于在 Open WebUI 前接入多个自有应用的运维人员来说，接受来自多个客户端的令牌正是该功能的意义所在：这些应用各自在同一身份提供方上注册为独立的 OAuth 客户端，例如内部 CLI、报表或自动化服务、部门门户，或通过该提供方让用户登录的对外助手或聊天机器人。当运维人员期望的访问边界是"凡是我的提供方完成身份验证的人、在允许的域内即可"，而不是"仅限这些具名应用"时，强制进行客户端检查就等于加上了一条他们从未要求的限制，并在升级的那一刻就让他们的部署无法运行。
 
-**在多个提供方上，该控制项根本无法满足。** 解析签发客户端需要 RFC 7662 令牌自省，而 Google、Microsoft Entra ID、GitHub 与飞书均未实现它，因此无论 `OAUTH_TOKEN_EXCHANGE_TRUSTED_CLIENT_IDS` 取什么值，在这些提供方上都无法放行令牌。
+**多家提供方无法满足这项检查。** 确定令牌发给了哪个客户端需要 RFC 7662 令牌自省，而 Google、Microsoft Entra ID、GitHub 与飞书均未实现它。因此，无论 `OAUTH_TOKEN_EXCHANGE_TRUSTED_CLIENT_IDS` 取什么值，这些提供方的令牌都无法通过检查。
 
 如果该检查默认强制启用，那么每一个基于该端点构建的应用都会在升级后同时无法通过认证，暴露给运维人员的表现是"用户无法登录"，而不是"某项安全控制被打开了"。在确实实现了自省的提供方上（例如 Keycloak、Authentik、Okta 或 Zitadel），在运维人员列出其客户端 ID 之前，每一次交换都会被拒绝；每当自省解析出签发客户端时就会返回 `403`，待他们弄清原因后即可恢复服务。在上述四家提供方上，拒绝会返回 `400`，而且没有任何可配置项。它们唯一的选择要么是锁定在该变更之前的版本发布——这意味着放弃此后发布的所有安全修复——要么仅仅因为一个无法满足的设置被强制启用，就直接放弃一个可用的功能。
 
@@ -38,7 +38,7 @@ OAuth 令牌交换端点接受一个提供方的访问令牌，并为该令牌�
 
 与本页其他条目不同，这个残余问题并非技术限制，而是一个兼容性决策。约束它的是配置，而非可利用性：该端点默认关闭，并且每一个其提供方支持自省的运维人员都可以使用这项控制。
 
-请注意，在设置 [`OAUTH_TOKEN_EXCHANGE_TRUSTED_CLIENT_IDS`](/reference/env-configuration#oauth_token_exchange_trusted_client_ids) 时，该列表是全局的而非按提供方区分，因此在某个未发布自省端点的提供方上设置它，会拒绝该提供方上的每一次交换，即便另一个提供方支持自省。当所有已配置的提供方都不支持自省时，仅当域名允许列表本身就是一个可接受的边界时，才启用令牌交换。相关配置见 [SSO（OAuth、OIDC、Trusted Header）](/features/authentication-access/auth/sso#oauth-token-exchange-for-external-applications) 中的[为外部应用进行 OAuth 令牌交换](/features/authentication-access/auth/sso#oauth-token-exchange-for-external-applications)。
+设置 [`OAUTH_TOKEN_EXCHANGE_TRUSTED_CLIENT_IDS`](/reference/env-configuration#oauth_token_exchange_trusted_client_ids) 时请注意：该允许列表对所有提供方生效，不能为各提供方单独设置。设置后，未提供自省端点的提供方的所有令牌交换请求都会被拒绝，即便其他提供方支持自省。如果所有已配置的提供方都不支持自省，只有在域名允许列表本身足以满足安全要求时，才启用令牌交换。配置步骤请参阅[为外部应用进行 OAuth 令牌交换](/features/authentication-access/auth/sso#oauth-token-exchange-for-external-applications)。
 
 ## 参考 {#references}
 

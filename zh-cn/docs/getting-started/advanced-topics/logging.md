@@ -7,7 +7,7 @@ title: "Open WebUI 日志"
 
 **控制 Open WebUI 记录什么、输出到哪里、采用什么格式——从快速调试到生产日志管道都适用。**
 
-Open WebUI 有两个日志面：前端调试用的**浏览器控制台**，以及服务端事件用的 **Python 后端日志**。大多数配置都发生在后端：你可以通过一个环境变量调整详细程度，也可以切换到结构化 JSON 输出，以对接 Loki、Datadog、CloudWatch 等日志聚合器。
+Open WebUI 在两处记录日志：**浏览器控制台**用于调试前端，**Python 后端**记录服务端事件。大多数日志设置在后端。可以通过一个环境变量调整日志详细程度，也可以切换到结构化 JSON 输出，以对接 Loki、Datadog 或 CloudWatch 等日志聚合工具。
 
 ---
 
@@ -41,7 +41,7 @@ Open WebUI 有两个日志面：前端调试用的**浏览器控制台**，以�
 
 ### 设置全局日志级别 {#setting-the-global-log-level}
 
-设置 `GLOBAL_LOG_LEVEL` 即可调整整个后端的日志详细程度。它会通过 `logging.basicConfig(force=True)` 配置 Python 根 logger，从而影响所有 Open WebUI logger 以及大多数第三方库。
+设置 `GLOBAL_LOG_LEVEL` 可调整整个后端的日志详细程度。它通过 `logging.basicConfig(force=True)` 配置 Python 根日志记录器，影响所有 Open WebUI 日志记录器及大多数第三方库。
 
 **Docker：**
 
@@ -70,7 +70,7 @@ environment:
 
 ### 结构化 JSON 日志 {#structured-json-logging}
 
-如果生产环境使用日志聚合器，可设置 `LOG_FORMAT=json`，让所有 **标准输出（stdout）** 输出都变为单行 JSON 对象。
+如果生产环境使用日志聚合工具，可设置 `LOG_FORMAT=json`，将标准输出（stdout）的内容改为每行一个 JSON 对象。
 
 **Docker：**
 

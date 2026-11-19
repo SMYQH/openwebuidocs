@@ -46,6 +46,7 @@ API_SERVER_KEY=your-secret-key
 
 :::tip 可选配置
 你也可以自定义端口和监听地址：
+
 | 变量 | 默认值 | 说明 |
 |---|---|---|
 | `API_SERVER_PORT` | `8642` | API 服务监听端口 |
@@ -67,7 +68,7 @@ hermes gateway
 ```
 
 :::warning 保持它持续运行
-Open WebUI 需要依赖该 gateway 与你的 Agent 通信。对于长期部署，建议把它放进 `tmux`、`screen` 或配置成系统服务。
+网关必须持续运行，Open WebUI 才能与智能体通信。长期部署时，可以通过终端复用器（`tmux` 或 `screen`）运行网关，也可以将它配置为系统服务。
 :::
 
 ---
@@ -95,9 +96,10 @@ http://host.docker.internal:8642/v1
 :::
 
 ---
+
 ## 第 5 步：开始聊天！ {#step-5-start-chatting}
 
-现在，`hermes-agent` 模型应该已经出现在模型下拉框中。选中它即可开始聊天。你的 Agent 将通过 Open WebUI 界面直接获得其完整工具集（终端、文件操作、网页搜索、记忆、技能）的能力。
+现在，`hermes-agent` 模型应已出现在模型下拉列表中。选中它即可开始聊天。通过 Open WebUI 界面，你可以使用智能体的全部工具，包括终端、文件操作、网页搜索、记忆和技能。
 
 流式输出默认开启。工具执行时你会看到简短的内联提示，随后再出现 Agent 的最终回复。
 
@@ -129,6 +131,7 @@ volumes:
 ```bash
 docker compose up -d
 ```
+
 然后打开 [http://localhost:3000](http://localhost:3000)，创建你的管理员账户。
 
 :::note
@@ -177,4 +180,5 @@ docker run -e OPENAI_API_BASE_URL=http://172.17.0.1:8642/v1 ...
 ## 了解更多 {#learn-more}
 
 - [Hermes Agent 文档](https://hermes-agent.nousresearch.com/docs/) - 完整文档、技能与集成
+- Nous Research Discord - 社区支持
 - [GitHub](https://github.com/NousResearch/hermes-agent) - 源码与问题反馈

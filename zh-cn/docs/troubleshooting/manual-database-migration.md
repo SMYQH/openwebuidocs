@@ -43,7 +43,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
 - [ ] **已确认数据库位置**（Docker 默认是 `/app/backend/data/webui.db`）
 - [ ] **Open WebUI 已完全停止**（没有任何运行中的进程）
 - [ ] **备份已创建并验证**（见下文）
-- [ ] 你可以**进入容器**或运行 Open WebUI 的 **Python 环境**
+- [ ] **可访问容器或 Python 环境**，即 Open WebUI 运行的位置
 
 :::warning 先停止所有进程
 数据库迁移不能在 Open WebUI 仍然运行时执行。手动迁移前，**必须**先停止所有 Open WebUI 进程。
@@ -262,7 +262,6 @@ b8f2c6d91a04 (head)
 - `alembic current` = 数据库当前认为自己处在哪个版本
 - `alembic heads` = 代码期望的最新版本
 - `alembic history -r current:head` = 从当前版本到最新版本的所有迁移，最新的排在前面；最底下一行以上的迁移都尚未执行
-- `alembic upgrade head --sql` = 预览将要执行的 SQL（不会真正应用）
 - 如果 `current` 早于 `heads`，说明还有待执行的迁移
 - 如果 `current` 等于 `heads`，说明数据库已是最新
 :::
@@ -316,11 +315,11 @@ INFO  [alembic.runtime.migration] Running upgrade abc123 -> def456, add_new_colu
 对 SQLite 而言，这是一条**正常的提示信息**，不是错误。SQLite 不支持 schema 变更的回滚，因此迁移只能在没有事务保护的情况下执行。
 
 如果这条消息后进程似乎"卡住"，请等 2-3 分钟——某些迁移本就需要时间，尤其是：
-- 在大表上加索引（百万级行：1-5 分钟）
-- 涉及数据转换的迁移（十万级行：30 秒到数分钟）
+- 在大表上加索引（100 万行以上：1-5 分钟）
+- 涉及数据转换的迁移（10 万行以上：30 秒到数分钟）
 - 需要重建表的迁移（SQLite 不支持部分 ALTER 操作）
 
-对于超大数据库（千万级以上），建议安排维护窗口，并在另一个终端用 `sqlite3 /path/to/webui.db ".tables"` 监控进度。
+对于超大数据库（1000 万行以上），建议安排维护窗口，并在另一个终端用 `sqlite3 /path/to/webui.db ".tables"` 监控进度。
 :::
 
 ### 升级到指定版本 {#upgrade-to-specific-version}
@@ -435,7 +434,7 @@ sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: acces
 
 **原因：** 一个或多个 Alembic 迁移没有成功应用。常见原因包括：
 
-- 自动升级过程中某次迁移静默失败（Open WebUI 记录错误后继续启动）
+- 自动升级过程中某次迁移失败（Open WebUI 会记录异常堆栈并中止启动，导致容器反复重启）
 - 升级过程被中途打断
 - 环境变量中设置了 `ENABLE_DB_MIGRATIONS=False`（关闭启动时的自动迁移）
 - 多个 worker 或副本同时尝试运行迁移
@@ -505,8 +504,8 @@ sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) table chat_message a
 
 **原因：** 某次迁移**只完成了一部分**——表已经在数据库里创建出来，但 Alembic 的版本记录没有更新（通常是因为迁移在表创建之后的数据回填阶段被打断）。Alembic 依然认为该迁移没有应用，因此下次又尝试重新创建同一张表。
 
-:::tip v0.9.6 起迁移是幂等的
-v0.9.6 重做了内置的 Alembic 迁移，使其在运行时探查实际 schema，并**跳过已经存在的表、索引和列**（同时为遗留的 peewee 时代表补上缺失的主键）。许多过去会触发本错误的“半应用 schema”升级场景，现在直接 `alembic upgrade head` 就能顺利完成。如果你在旧版本上遇到 “table already exists”，先升级到 v0.9.6+ 再做手动处理通常是最简单的修法。下方的手动恢复步骤，对于被以其他方式改动的数据库仍然有效。
+:::tip 迁移可以重复执行
+内置的 Alembic 迁移会检查数据库的实际结构，**跳过已存在的表、索引和列**，并为 Peewee 时代遗留的表补上缺失的主键。如果先前只应用了部分数据库结构变更，许多情况下直接运行 `alembic upgrade head` 即可完成升级。如果数据库因其他操作而发生了变更，下方的恢复步骤仍然适用。
 :::
 
 **诊断：**
@@ -592,7 +591,7 @@ Stamp 只是把迁移标记为已完成，会跳过剩下的步骤（例如把�
 
 ### 跨大版本升级后的连续失败 {#multiple-failures-after-a-major-version-jump}
 
-**症状：** 跨多个版本升级后（例如 0.7.x → 0.8.x），Open WebUI 启动时崩溃并报 "no such column" 错误（例如 `no such column: user.scim`）。运行 `alembic upgrade head` 又会在**更早的**某个迁移上报 "duplicate column" 或 "already exists"。修好一个后又会在**下一个**迁移上失败，如此循环。
+**症状：** 跨多个版本升级后（例如 0.7.x → 0.8.x），Open WebUI 启动时崩溃并报 "no such column" 错误（例如 `no such column: user.scim`）。运行 `alembic upgrade head` 又会在*更早的*某个迁移上报 "duplicate column" 或 "already exists"。修好一个后又会在*下一个*迁移上失败，如此循环。
 
 **原因：** Open WebUI 在大版本跳跃后启动时，会依次尝试执行所有待执行的迁移。如果其中任意一条迁移中途失败（常见原因：SQLite `NOT NULL` 约束没有默认值、进程被打断、大数据量回填遭遇内存限制），部分 schema 变更会留下——因为 SQLite 迁移是非事务性的——但 `alembic_version` 不会前进。之后每次启动都会重试同一条失败迁移，又在已经应用的部分上崩溃，永远到不了后续迁移。结果就是数据库 schema 变成"补丁拼接"：早期迁移做了一些，后面的什么都没做。
 
@@ -651,7 +650,7 @@ alembic upgrade <next_revision>
 重复直到达到 head。
 
 :::info 这里的 stamp 什么时候是安全的？
-当你已经确认该迁移的 schema 变更**确实存在于数据库中**——而 "already exists" 或 "duplicate column" 错误本身就证明了这一点——此时 stamp 才安全。这与盲目执行 `alembic stamp head` 完全不同，后者会跳过**所有**待执行迁移，无论它们是否真的应用过。
+当你已经确认该迁移的数据库结构变更确实存在时，才可以使用 stamp；"already exists" 或 "duplicate column" 错误就是这类证据。这与盲目执行 `alembic stamp head` 不同：后者会跳过*所有*待执行的迁移，无论它们是否真的应用过。
 :::
 
 **特殊情况 —— 带数据回填的迁移：**
@@ -844,7 +843,7 @@ alembic heads
 **症状：** 你跑了 `alembic revision --autogenerate`，它建议删除一些已存在的表。
 
 :::warning 不要执行 autogenerate
-**普通用户绝对不要执行 `alembic revision --autogenerate`。** 这条命令是给**开发者生成新迁移文件**用的，不是给应用现有迁移用的。
+**普通用户绝对不要执行 `alembic revision --autogenerate`。** 此命令供开发者创建新的迁移文件，不用于执行现有迁移。
 
 你真正需要的是 `alembic upgrade head`（没有 `revision`，也没有 `--autogenerate`）。
 :::
@@ -1043,7 +1042,7 @@ alembic upgrade head
 ```
 
 :::tip
-从非常老的版本升级（< 0.3.x）时，更推荐**重新安装 + 数据导出/导入**，而不是硬跨多个大版本做 schema 迁移。
+从很旧的 Open WebUI 版本（< 0.3.x）升级时，建议考虑全新安装并导出、导入数据，而不是尝试跨多个主要版本迁移数据库结构。
 :::
 
 ## 高级操作 {#advanced-operations}
@@ -1210,7 +1209,7 @@ docker logs open-webui > migration-failure-logs.txt
 ```
 
 :::warning 不要用 "stamp" 跳过未完成的迁移
-如果某次迁移的 schema 变更*并没有*真正应用，就不要用 `alembic stamp` 把它标记为已完成。如果迁移失败时报的是"already exists"或"duplicate column"以外的错误，那么 schema 变更就是真的缺失，stamp 过去只会让数据库陷入损坏状态。具体什么情况下 stamp *可以*使用，见[跨大版本升级后的连续失败](#multiple-failures-after-a-major-version-jump)。
+如果某次迁移的 schema 变更*并没有*真正应用，就不要用 `alembic stamp` 把它标记为已完成。如果迁移失败时报的是 "already exists" 或 "duplicate column" *以外*的错误，那么 schema 变更就是真的缺失，stamp 过去只会让数据库陷入损坏状态。具体什么情况下 stamp *可以*使用，见[跨大版本升级后的连续失败](#multiple-failures-after-a-major-version-jump)。
 :::
 
 ### 验证数据库完整性 {#validate-database-integrity}
@@ -1259,6 +1258,22 @@ docker logs open-webui > migration-failure-logs.txt
 
 **收集诊断信息：**
 
+```bash title="终端 - 收集诊断数据"
+# Version information
+docker logs open-webui 2>&1 | head -20 > diagnostics.txt
+
+# Migration state
+cd /app/backend/open_webui
+alembic current -v >> diagnostics.txt
+alembic history >> diagnostics.txt
+
+# Database info (SQLite)
+sqlite3 /app/backend/data/webui.db ".tables" >> diagnostics.txt
+sqlite3 /app/backend/data/webui.db "SELECT * FROM alembic_version;" >> diagnostics.txt
+
+# Full migration log
+alembic upgrade head 2>&1 >> diagnostics.txt
+```
 
 **到哪里寻求帮助：**
 
@@ -1277,20 +1292,3 @@ docker logs open-webui > migration-failure-logs.txt
 :::note
 不要公开分享你的 `webui.db` 文件——里面有用户凭据和敏感数据。只分享文本形式的诊断输出。
 :::
-
-```bash title="终端 - 收集诊断数据"
-# Version information
-docker logs open-webui 2>&1 | head -20 > diagnostics.txt
-
-# Migration state
-cd /app/backend/open_webui
-alembic current -v >> diagnostics.txt
-alembic history >> diagnostics.txt
-
-# Database info (SQLite)
-sqlite3 /app/backend/data/webui.db ".tables" >> diagnostics.txt
-sqlite3 /app/backend/data/webui.db "SELECT * FROM alembic_version;" >> diagnostics.txt
-
-# Full migration log
-alembic upgrade head 2>&1 >> diagnostics.txt
-```

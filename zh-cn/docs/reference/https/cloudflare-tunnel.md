@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: "使用 Cloudflare Tunnel 的 HTTPS"
+title: "使用 Cloudflare Tunnel 配置 HTTPS"
 ---
 
 # 通过 Cloudflare Tunnel 配置 HTTPS {#https-using-cloudflare-tunnel}
@@ -11,7 +11,7 @@ title: "使用 Cloudflare Tunnel 的 HTTPS"
 Cloudflare Tunnel（`cloudflared`）会从你的机器向 Cloudflare 边缘网络建立一条仅出站连接。流量通过 Cloudflare 基础设施转发，并自动获得 TLS、DDoS 防护和访问控制，而你的服务器无需暴露任何端口。
 
 :::tip 何时使用 Cloudflare Tunnel
-如果你希望在**无需自己管理 TLS 证书或防火墙规则**的情况下获得**生产级公网访问**，这是推荐方案。它适用于各种网络环境，包括 NAT 后面或受限防火墙环境。
+如果你需要**生产级公网访问**，又不想管理 TLS 证书或防火墙规则，推荐使用此方案。它适用于各种网络，包括位于 NAT 或限制性防火墙之后的环境。
 :::
 
 ---
@@ -26,11 +26,11 @@ Cloudflare Tunnel（`cloudflared`）会从你的机器向 Cloudflare 边缘网�
 
 ---
 
-## 方案 A：Cloudflare 控制台配置（无需 CLI） {#option-a-dashboard-setup-no-cli}
+## 方案 A：控制台配置（无需 CLI） {#option-a-dashboard-setup-no-cli}
 
 最简单的方式。全部通过 Cloudflare 控制台完成。
 
-### 1. 创建 tunnel {#1-create-the-tunnel}
+### 1. 创建隧道 {#1-create-the-tunnel}
 
 1. 前往 [**Zero Trust → Networks → Connectors**](https://dash.cloudflare.com/?to=/:account/one/networks/connectors)
 2. 点击 **创建隧道** → 选择 **Cloudflared**
@@ -58,7 +58,7 @@ Cloudflare Tunnel（`cloudflared`）会从你的机器向 Cloudflare 边缘网�
 
 ## 方案 B：CLI 配置 {#option-b-cli-setup}
 
-适合自动化、基础设施即代码，或无头服务器场景。
+适合自动化、基础设施即代码，或没有图形界面的服务器。
 
 ### 1. 安装 cloudflared {#1-install-cloudflared}
 
@@ -98,7 +98,7 @@ cloudflared tunnel login
 
 该命令会打开浏览器，让你授权 `cloudflared` 访问你的 Cloudflare 账号。
 
-### 3. 创建 tunnel {#3-create-the-tunnel}
+### 3. 创建隧道 {#3-create-the-tunnel}
 
 ```bash
 cloudflared tunnel create open-webui
@@ -126,7 +126,7 @@ ingress:
 cloudflared tunnel route dns open-webui chat.your-domain.com
 ```
 
-### 6. 启动 tunnel {#6-start-the-tunnel}
+### 6. 启动隧道 {#6-start-the-tunnel}
 
 ```bash
 cloudflared tunnel run open-webui
@@ -138,7 +138,7 @@ cloudflared tunnel run open-webui
 
 ## 作为系统服务运行 {#run-as-a-system-service}
 
-若想让 tunnel 在系统重启后仍自动运行：
+若要让隧道在系统重启后仍自动运行：
 
 ```bash
 sudo cloudflared service install
@@ -167,7 +167,7 @@ docker run -d \
 
 ## 在 Docker Compose 中集成 cloudflared {#docker-compose-with-cloudflared}
 
-你也可以把 Open WebUI 与 tunnel connector 一起放进同一个 stack：
+在同一个 Compose 应用中运行 Open WebUI 和隧道连接器：
 
 ```yaml
 services:
@@ -190,10 +190,10 @@ volumes:
   open-webui:
 ```
 
-你可以在 [Cloudflare 控制台](https://dash.cloudflare.com/) 中获取隧道 token：进入 [**Networking → Tunnels**] → 选择你的隧道 → 选择 **Add a replica** → 从安装命令中复制 token。token 以 `eyJ...` 开头。
+在 [Cloudflare 控制台](https://dash.cloudflare.com/)中进入 [**Networking → Tunnels**]，选择你的隧道，点击 **Add a replica**，然后从安装命令中复制令牌。令牌以 `eyJ...` 开头。
 
 :::tip
-在这种部署方式中，`open-webui` 服务**不需要**暴露 `ports`。`cloudflared` 会通过 Docker 内部网络连接它。此时请把 tunnel config 中的 service URL 改成 `http://open-webui:8080`。
+`open-webui` 服务无需配置 `ports`。`cloudflared` 通过 Docker 内部网络连接该服务。要使用这种方式，请将隧道配置中的服务 URL 改为 `http://open-webui:8080`。
 :::
 
 ---
@@ -215,9 +215,9 @@ Cloudflare Zero Trust 可以在不改动 Open WebUI 的情况下，为你的实�
 
 | 操作 | 命令 / 值 |
 | :--- | :--- |
-| 创建 tunnel | `cloudflared tunnel create open-webui` |
-| 启动 tunnel | `cloudflared tunnel run open-webui` |
+| 创建隧道 | `cloudflared tunnel create open-webui` |
+| 启动隧道 | `cloudflared tunnel run open-webui` |
 | 添加 DNS | `cloudflared tunnel route dns open-webui chat.your-domain.com` |
 | 安装为系统服务 | `sudo cloudflared service install` |
-| Cloudflare 控制台 | [https://dash.cloudflare.com/?to=/:account/one/networks/connectors](https://dash.cloudflare.com/?to=/:account/one/networks/connectors) |
-| 设置 CORS origin | `CORS_ALLOW_ORIGIN=https://chat.your-domain.com` |
+| 控制台 | [https://dash.cloudflare.com/?to=/:account/one/networks/connectors](https://dash.cloudflare.com/?to=/:account/one/networks/connectors) |
+| 设置 CORS 来源 | `CORS_ALLOW_ORIGIN=https://chat.your-domain.com` |

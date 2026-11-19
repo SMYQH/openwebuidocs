@@ -38,7 +38,7 @@
     ```
 
 2.  **删除数据（警告：会删除所有数据）：**
-    如果没有设置 `DATA_DIR`，数据目录位于环境内部（`.../site-packages/open_webui/data`），因此上面的删除环境操作已经顺带把它删掉了。如果你设置了 `DATA_DIR`，则删除该目录：
+    如果没有设置 `DATA_DIR`，数据目录位于环境内部（`.../site-packages/open_webui/data`），移除环境时数据也会一并删除。如果设置了 `DATA_DIR`，则删除该变量所指向的目录：
     ```bash
     rm -rf ~/.open-webui
     ```

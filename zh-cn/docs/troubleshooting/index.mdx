@@ -23,7 +23,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 | 你看到的问题 | 跳转到 |
 | :--- | :--- |
-| 聊天返回空的 `"{}"`、Markdown 乱码、控制台出现 CORS 错误 | [连接错误 → HTTPS/CORS/WebSocket](./connection-error#https-tls-cors--websocket-issues) |
+| 聊天返回空的 `"{}"`、markdown 乱码、控制台出现 CORS 错误 | [连接错误 → HTTPS/CORS/WebSocket](./connection-error#https-tls-cors--websocket-issues) |
 | `WebSocket connection failed: 403` 或聊天卡住 | [连接错误 → WebSocket](./connection-error#websocket-troubleshooting) |
 | 助手回复随机为空，开启工具后更明显 | [连接错误 → 调用工具时回复为空](./connection-error#blank-replies-when-the-model-uses-a-tool) |
 | Open WebUI 无法连接 Ollama | [连接错误 → Ollama](./connection-error#connection-to-ollama-server) |
@@ -31,17 +31,17 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | 间歇性出现 "Model not found"、模型列表自行清空、`ClientConnectorDNSError` | [连接错误 → 间歇性名称解析失败](./connection-error#intermittent-name-lookup-failures-often-reported-as-model-not-found) |
 | `[SSL: CERTIFICATE_VERIFY_FAILED]` | [连接错误 → SSL](./connection-error#ssl-certificate-issues-with-internal-tools) |
 | 多副本场景下登录循环、401 Unauthorized、跨副本 token 错误 | [扩缩容与高可用 → 登录循环](./multi-replica#1-login-loops--401-unauthorized-errors) |
-| `database is locked`、不同实例之间数据忽隐忽现 | [扩缩容与高可用 → 数据库](./multi-replica#4-database-corruption--locked-errors) |
+| `database is locked`、跨实例时数据丢失 | [扩缩容与高可用 → 数据库](./multi-replica#4-database-corruption--locked-errors) |
 | 实时更新停止，日志中出现 `Redis denied publishing` 或 `Redis denied subscribing` | [扩缩容 → 按房间划分的 Redis 频道](/getting-started/advanced-topics/scaling#per-room-redis-channels) |
 | 上传时 worker 崩溃：`Child process [pid] died` | [RAG → Worker 崩溃](./rag#12-worker-dies-during-document-upload) |
 | 模型忽略已附加的知识库 | [RAG → 知识库不生效](./rag#13-knowledge-base-attached-to-model-not-working) |
 | `Knowledge base file limit exceeded (N files maximum).` 或 `You can only upload a maximum of N file(s) per batch.` | [知识库 → 文件数量上限](/features/workspace/knowledge#file-limits) |
 | `Could not read content from <url>`，或 YouTube 视频无法附加 | [RAG → 链接与 YouTube 附加失败](./rag#14-attaching-a-link-or-a-youtube-video-fails) |
 | Agent 在多次工具调用后中途停止，并直接给出最终答案而不再使用更多工具 | [`CHAT_RESPONSE_MAX_TOOL_CALL_ITERATIONS`](/reference/env-configuration#chat_response_max_tool_call_iterations) |
+| 使用 Responses 连接时，回复在生成结束后变空或只显示一部分 | [Open Responses → 不遵循该格式的提供商](/getting-started/quick-start/connect-a-provider/starting-with-open-responses#providers-that-deviate-from-the-responses-format) |
+| 使用 Responses 连接时，模型回答时仿佛没有发过上一条回复 | [Open Responses → 不遵循该格式的提供商](/getting-started/quick-start/connect-a-provider/starting-with-open-responses#providers-that-deviate-from-the-responses-format) |
 | `NoneType object has no attribute 'encode'` | [RAG → 嵌入错误](./rag#5-400-nonetype-object-has-no-attribute-encode) |
-| 嵌入时出现 CUDA out of memory | [RAG → CUDA OOM](./rag#10-cuda-out-of-memory-during-embedding) |
-| Responses 连接上的回复在生成结束时变空或中途停止 | [Open Responses → 偏离该格式的服务商](/getting-started/quick-start/connect-a-provider/starting-with-open-responses#providers-that-deviate-from-the-responses-format) |
-| Responses 连接上的模型仿佛从未见过自己上一条回复 | [Open Responses → 偏离该格式的服务商](/getting-started/quick-start/connect-a-provider/starting-with-open-responses#providers-that-deviate-from-the-responses-format) |
+| 嵌入时出现 CUDA 内存不足 | [RAG → CUDA OOM](./rag#10-cuda-out-of-memory-during-embedding) |
 | OAuth 重定向循环、CSRF state 不匹配 | [SSO 与 OAuth](./sso) |
 | `CSRF Warning! State not equal in request and response` | [SSO → CSRF 错误](./sso#9-session-state-mismatch-csrf-errors) |
 | SSO 登录以 "The email or password provided is incorrect" 结束，日志显示 `Unsupported {'app_id'} in header` | [SSO → 服务商自行添加 ID token 参数](./sso#providers-that-add-their-own-parameters-to-the-id-token) |
@@ -67,16 +67,16 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 | 指南 | 涵盖内容 |
 | :--- | :--- |
-| [连接错误](./connection-error) | HTTPS、CORS、WebSocket、反向代理、Ollama、SSL、Podman、MCP |
-| [性能与内存](./performance) | 速度调优、数据库优化、基础设施扩缩容、资源效率 |
+| [连接错误](./connection-error) | HTTPS、CORS、WebSocket、反向代理、流式传输、Ollama、DNS、SSL、Podman |
+| [性能与内存](./performance) | 速度调优、数据库优化、基础设施扩缩容、资源效率、slim 镜像 |
 | [上下文窗口 / Prompt Too Long](./context-window) | 为什么会出现 “prompt is too long” 以及如何用过滤器管理聊天历史 |
 | [RAG](./rag) | 文档导入、检索质量、嵌入、上传限制、worker 崩溃 |
 | [SSO 与 OAuth](./sso) | OIDC、Microsoft、Google、Authentik、cookie 与会话问题 |
-| [音频](./audio) | Speech-to-Text、Text-to-Speech、麦克风访问、ElevenLabs |
-| [扩缩容与高可用](./multi-replica) | 多副本、多 worker、Redis、共享存储、数据库并发 |
+| [音频](./audio) | 语音转文字、文本转语音、麦克风访问、ElevenLabs |
+| [扩缩容与高可用](./multi-replica) | 多副本、Redis、共享存储、数据库并发 |
 | [图像生成](./image-generation) | OpenAI、ComfyUI、Automatic1111、Gemini |
 | [Web Search](./web-search) | 代理问题、SearXNG、空结果、超时 |
-| [启动与 Docker 故障](./startup) | 容器启动卡住、Apple Silicon 仿真、离线模式嵌入失败 |
+| [启动与 Docker 故障](./startup) | 容器启动卡住、Apple Silicon 仿真、离线模式嵌入失败、Windows 上缺少密钥 |
 | [重置管理员密码](./password-reset) | Docker 与本地安装的密码重置 |
 | [数据库迁移](./manual-database-migration) | 手动 Alembic 迁移、升级失败后的恢复 |
 
@@ -99,6 +99,6 @@ Open WebUI 需要现代浏览器。最低支持版本：
 
 如果按照对应指南排查后仍然卡住：
 
-- 在 [GitHub](https://github.com/open-webui/open-webui/issues) 搜索现有 issues
-- 在 [GitHub Discussions](https://github.com/open-webui/open-webui/discussions) 提问
+- 在 [GitHub](https://github.com/open-webui/open-webui/issues) 搜索已有议题
+- 在 Discord 或 Reddit 上提问，或到[讨论区](https://github.com/open-webui/open-webui/discussions)发帖
 - [赞助支持](/sponsorships) 可使用专属支持渠道，响应更快

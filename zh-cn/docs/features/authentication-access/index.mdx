@@ -19,7 +19,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 **控制谁可以登录、他们能做什么，以及你的实例如何与身份体系集成。**
 
-Open WebUI 从第一天起就支持多用户。无论你是在运行个人实例还是跨组织管理数千个席位，你都可以完全控制认证、授权和程序化访问。连接你的身份提供商、定义细粒度权限、自动化用户生命周期管理——无需修改一行代码。
+Open WebUI 从一开始就支持多用户。无论你运行的是个人实例，还是为组织管理数千个用户账号，都可以完全控制认证、授权和程序化访问。无需编写代码，即可接入身份提供商、定义细粒度权限，并自动管理用户生命周期。
 
 ---
 
@@ -29,10 +29,10 @@ Open WebUI 从第一天起就支持多用户。无论你是在运行个人实例
 | :--- | :--- |
 | 👥 **[RBAC](/features/authentication-access/rbac)** | 角色、用户组和按资源设置的权限。定义谁可以访问什么，并可以使用[嵌套用户组](/features/authentication-access/rbac/groups#nested-groups)、[每个用户组的默认模型](/features/authentication-access/rbac/groups#default-models-per-group)和[**在所有设备上登出**](/features/authentication-access/rbac/roles#signing-a-user-out-of-every-device) |
 | 🔑 **[SSO / OIDC](/features/authentication-access/auth/sso)** | 使用 Google、Microsoft、Okta、Keycloak 或任何 OIDC 提供商进行联合认证 |
-| 📂 **[LDAP](/features/authentication-access/auth/ldap)** | 对你现有的目录服务进行认证 |
-| 📋 **[SCIM 2.0](/features/authentication-access/auth/scim)** | 从你的 IdP 自动化用户和用户组的预配与取消预配 |
-| 🔐 **[Two-Factor Sign-In (MFA)](/features/authentication-access/mfa)** | 每次登录时要求输入认证器应用生成的验证码 |
-| 🔐 **[API Keys](/features/authentication-access/api-keys)** | 用于脚本、机器人、流水线和集成的程序化访问 |
+| 📂 **[LDAP](/features/authentication-access/auth/ldap)** | 使用现有目录服务验证用户身份 |
+| 📋 **[SCIM 2.0](/features/authentication-access/auth/scim)** | 通过 IdP 自动预配和取消预配用户账号及用户组 |
+| 🔐 **[双因素登录（MFA）](/features/authentication-access/mfa)** | 每次登录时要求输入认证器应用生成的验证码 |
+| 🔐 **[API 密钥](/features/authentication-access/api-keys)** | 用于脚本、机器人、流水线和集成的程序化访问 |
 
 ---
 
@@ -55,7 +55,7 @@ flowchart LR
 2. **SCIM 从身份提供商自动预配**用户和用户组。
 3. **RBAC 根据角色（管理员、用户）和用户组成员资格确定访问权限**。
 4. **权限是累加的**：每个用户组成员资格都会增加能力，而不会减少。
-5. **API Keys** 继承创建用户的完整权限，用于程序化访问。
+5. **API 密钥**继承创建者的全部权限，用于程序化访问。
 
 :::tip 以 SSO 为中心的用户体验
 在仅 SSO 的环境中，你可以通过 `ENABLE_PASSWORD_AUTH=false` 禁用本地密码认证，并通过 `ENABLE_PASSWORD_CHANGE_FORM=false` 隐藏账户页面中的密码更新控件。
@@ -69,12 +69,12 @@ flowchart LR
 
 Open WebUI 开箱即用，支持本地邮箱/密码认证。不需要外部身份提供商。创建账户、分配管理员或用户角色，即可完成。
 
-### 组织？分层引入 SSO 和 SCIM {#organization-layer-in-sso-and-scim}
+### 组织部署：接入 SSO 和 SCIM {#organization-layer-in-sso-and-scim}
 
 1. **[设置 SSO](./auth/sso)**：配置你的身份提供商以实现单点登录
 2. **[配置 RBAC](./rbac)**：创建用户组、分配权限并设置访问控制列表
-3. **[启用 SCIM](./auth/scim)** *（可选）*：从你的 IdP 自动化用户生命周期
-4. **[生成 API Keys](./api-keys)** *（可选）*：为自动化启用程序化访问
+3. **[启用 SCIM](./auth/scim)** *（可选）*：通过 IdP 自动管理用户生命周期
+4. **[生成 API 密钥](./api-keys)** *（可选）*：为自动化任务提供程序化访问
 
 ---
 

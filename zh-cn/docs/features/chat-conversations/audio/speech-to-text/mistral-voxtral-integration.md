@@ -29,11 +29,12 @@ title: "Mistral Voxtral 语音转文本"
 | **API 密钥** | 你的 Mistral API 密钥 |
 | **STT 模型** | `voxtral-mini-2602`（或留空使用默认值） |
 
-5. 点击 **Save**
+5. 点击**保存**
 
 ## 可用模型 {#available-models}
+
 | 模型 | 说明 |
-|-------|-------------| 
+|-------|-------------|
 | `voxtral-mini-2602` | Voxtral Mini Transcribe 2 —— 当前的转录模型（推荐） |
 
 :::caution 请显式设置模型
@@ -62,7 +63,7 @@ services:
 | `AUDIO_STT_ENGINE` | 设置为 `mistral` | empty（使用本地 Whisper） |
 | `AUDIO_STT_MISTRAL_API_KEY` | 你的 Mistral API 密钥 | empty |
 | `AUDIO_STT_MISTRAL_API_BASE_URL` | Mistral API 基础 URL | `https://api.mistral.ai/v1` |
-| `AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS` | 使用 chat completions 端点 | `false` |
+| `AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS` | 使用聊天补全端点 | `false` |
 | `AUDIO_STT_MODEL` | STT 模型 | `voxtral-mini-2602` |
 
 ## 转录方式 {#transcription-methods}
@@ -75,15 +76,15 @@ Mistral 支持两种转录方式：
 
 ### Chat Completions 方式 {#chat-completions-method}
 
-将 `AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS=true` 后，可改用 Mistral 的 chat completions API 进行转录。该方式：
+设置 `AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS=true`，即可改用 Mistral 的 Chat Completions API 进行转录。该方式：
 - 要求音频为 mp3 或 wav 格式（系统会尝试自动转换）
-- 结果可能与标准端点有所不同
+- 结果可能与标准转录端点的结果不同
 
 ## 使用 STT {#using-stt}
 
 1. 点击聊天输入框中的**麦克风图标**
 2. 说出你的内容
-3. 再次点击麦克风，或等待静音检测结束
+3. 再次点击麦克风停止录音，或等待系统检测到静音
 4. 你的语音会被转录并显示在输入框中
 
 ## 支持的音频格式 {#supported-audio-formats}
@@ -96,7 +97,7 @@ Voxtral 接受常见音频格式。系统默认允许 `audio/*` 和 `video/webm`
 
 ### API 密钥错误 {#api-key-errors}
 
-如果你看到 “需要 Mistral API 密钥”：
+如果看到错误“Mistral API key is required”：
 
 1. 确认 API 密钥填写正确
 2. 检查 API 密钥是否已过期

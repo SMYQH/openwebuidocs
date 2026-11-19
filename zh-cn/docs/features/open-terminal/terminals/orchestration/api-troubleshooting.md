@@ -5,7 +5,7 @@ title: "API 和故障排除"
 
 # API 和故障排除 {#api-and-troubleshooting}
 
-所有编排器策略和生命周期端点都需要：
+调用编排器的任何策略或生命周期端点时，都必须提供以下请求头：
 
 ```http
 Authorization: Bearer {TERMINALS_API_KEY}
@@ -21,7 +21,7 @@ Authorization: Bearer {TERMINALS_API_KEY}
 | `PUT` | `/api/v1/policies/{policy_id}` | 创建或更新策略 |
 | `DELETE` | `/api/v1/policies/{policy_id}` | 删除策略 |
 
-策略负载示例：
+策略请求体示例：
 
 ```json
 {
@@ -45,7 +45,7 @@ Authorization: Bearer {TERMINALS_API_KEY}
 | `GET` | `/api/v1/policies/{policy_id}/lifecycle` | 读取策略生命周期配置 |
 | `PUT` | `/api/v1/policies/{policy_id}/lifecycle` | 创建或更新策略生命周期配置 |
 
-生命周期负载示例：
+生命周期请求体示例：
 
 ```json
 {
@@ -68,7 +68,7 @@ Authorization: Bearer {TERMINALS_API_KEY}
 | 方法 | 端点 | 用途 |
 | :--- | :--- | :--- |
 | `POST` | `/api/v1/terminals/refresh` | 停止匹配的终端，以便下次重新预配 |
-| `POST` | `/api/v1/terminals/stop` | 停止一个用户的终端，以便下次访问时重新开始 |
+| `POST` | `/api/v1/terminals/stop` | 停止指定用户的指定终端，下次访问时重新启动 |
 
 刷新请求体：
 
@@ -96,7 +96,7 @@ Authorization: Bearer {TERMINALS_API_KEY}
 
 `policy_id` 默认为 `default`。
 
-`context_id` 也默认为 `default`，即共享终端。传入 `chat:<chat-id>` 或 `automation:<automation-id>` 可以指定由[终端上下文](/features/open-terminal/terminals/orchestration/contexts)创建的其中一个独立终端。由于停止操作默认针对的是共享终端而不是全部，所以在按聊天连接的用户会保留其聊天终端，除非你显式指定。
+`context_id` 也默认为 `default`，对应共享终端。传入 `chat:<chat-id>` 或 `automation:<automation-id>`，可指定由[终端上下文](/features/open-terminal/terminals/orchestration/contexts)创建的一个独立终端。停止操作默认只影响共享终端。对于按聊天分配终端的连接，只有显式指定该聊天的终端才会将其停止。
 
 ## 故障排除 {#troubleshooting}
 
@@ -106,14 +106,14 @@ Authorization: Bearer {TERMINALS_API_KEY}
 
 ### 我可以将环境变量传递给编排器并让它转发吗？ {#can-i-pass-env-vars-to-the-orchestrator-and-have-it-forward-them}
 
-使用策略 `env` 放置应出现在每用户 Open Terminal 容器中的值。编排器进程环境变量配置编排器本身。
+在策略的 `env` 中设置要传入各用户 Open Terminal 容器的变量。编排器进程的环境变量只用于配置编排器本身。
 
 ### 为什么我的环境变量或镜像更改没有生效？ {#why-did-my-env-var-or-image-change-not-apply}
 
-用户可能已经有一个正在运行的终端。保存策略，然后刷新匹配的终端或等待空闲清理。
+用户可能已有正在运行的终端。保存策略，然后刷新匹配的终端，或等待终端因空闲而停止。
 
-### 为什么用户无法再在文件浏览器中浏览到 `/etc`？ {#why-cant-users-browse-to-etc-in-the-file-browser}
+### 为什么用户无法在文件浏览器中访问 `/etc`？ {#why-cant-users-browse-to-etc-in-the-file-browser}
 
-对于编排的终端，文件浏览器有意从 Open Terminal 报告的根目录内部开始，并隐藏该根目录以上的父目录。默认情况下，该根目录是 `Home`。这样可以避免产生令人困惑的支持工单。它不是安全边界。
+对于编排器管理的终端，文件浏览器从 Open Terminal 报告的根目录开始，不显示其上级目录。默认根目录为 `Home`。这项设计旨在减少用户困惑和相关支持请求，不构成安全边界。
 
-要使用不同的可视根目录，将 `OPEN_TERMINAL_FILE_BROWSER_ROOT` 设置为显式路径，例如 `/workspace`。若要取消这一限制，在策略 `env` 中设置 `OPEN_TERMINAL_FILE_BROWSER_ROOT=filesystem` 并刷新受影响的终端。
+要更改文件浏览器显示的根目录，请将 `OPEN_TERMINAL_FILE_BROWSER_ROOT` 设为明确的路径，例如 `/workspace`。若不想限制显示范围，请在策略的 `env` 中设置 `OPEN_TERMINAL_FILE_BROWSER_ROOT=filesystem`，然后刷新受影响的终端。

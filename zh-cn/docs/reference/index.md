@@ -14,9 +14,9 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   }}
   style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
 />
-**每个旋钮、接口和配置选项背后的技术细节。**
+**各项设置、端点和配置选项的技术细节。**
 
-Open WebUI 具有高度可配置性。本节是环境变量、API 接口、网络架构、反向代理配置和生产监控的权威参考来源。无论你是调整单项设置还是规划多节点部署，都可以从这里开始。
+Open WebUI 具有高度可配置性。本节是环境变量、API 端点、网络架构、反向代理配置和生产监控的权威参考。无论你是调整单项设置还是规划多节点部署，都可以从这里开始。
 
 ---
 
@@ -38,17 +38,17 @@ Open WebUI 具有高度可配置性。本节是环境变量、API 接口、网�
 
 ---
 
-## 🔌 API 接口 {#api-endpoints}
+## 🔌 API 端点 {#api-endpoints}
 
 **兼容 OpenAI 和 Anthropic 的 API，以及 RAG、文件管理和 Ollama 代理路由。**
 
-Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证。使用与 Web UI 相同的接口来构建自动化工具、聊天机器人和自定义集成。
+Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证。你可以调用 Web UI 使用的同一组端点，构建自动化工具、聊天机器人和自定义集成。
 
 | | |
 | :--- | :--- |
 | 💬 **聊天补全** | `POST /api/chat/completions`，兼容 OpenAI |
 | 🔮 **Anthropic 消息** | `POST /api/v1/messages`，兼容 Anthropic SDK 和 Claude Code |
-| 🦙 **Ollama 代理** | `/ollama/api/*`，直通到原生 Ollama 接口 |
+| 🦙 **Ollama 代理** | `/ollama/api/*`，将请求直接转发给 Ollama 原生端点 |
 | 📄 **文件与知识库** | 上传文件、创建知识库集合、通过 RAG 查询 |
 | 🔧 **过滤器（入口/流/出口）** | 每个请求的入口、流和出口钩子 |
 
@@ -95,13 +95,13 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 
 **为脚本、机器人和集成提供对 Open WebUI 的程序化访问。**
 
-生成个人访问令牌，让外部代码调用与 Web UI 相同的接口。每个密钥继承创建者的权限。
+生成个人访问令牌，让外部代码调用 Web UI 使用的同一组端点。每个密钥继承创建者的权限。
 
 | | |
 | :--- | :--- |
 | 🔐 **Bearer Token 认证** | 标准 `Authorization: Bearer` 头，适用于任何 HTTP 客户端 |
 | 🛡️ **用户范围** | 密钥继承你的角色和群组权限 |
-| 🚫 **接口限制** | 可选择限制密钥可访问的 API 路由 |
+| 🚫 **端点限制** | 可选择限制密钥可访问的 API 路由 |
 
 [**配置 API 密钥 →**](/features/authentication-access/api-keys)
 

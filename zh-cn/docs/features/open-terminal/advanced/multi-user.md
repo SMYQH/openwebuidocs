@@ -46,7 +46,7 @@ docker run -d --name open-terminal -p 8000:8000 \
 1. 根据该用户的 Open WebUI 用户 ID 为其创建个人账户
 2. 在 `/home/{user-id}` 设置私有主目录
 3. 在其自己的账户下运行所有命令
-4. 将其文件访问限制在自己的文件夹内
+4. 将每个用户的文件保留在自己的文件夹中
 
 每个用户在文件浏览器中只能看到自己的文件。
 
@@ -103,7 +103,7 @@ flowchart LR
 - **资源控制** — 可按用户或按环境设置 CPU、内存和存储限制
 - **多环境支持** — 为不同团队提供不同配置（如数据科学、开发等）
 - **Kubernetes 支持** — 支持 Docker、Kubernetes 和 k3s
-- **可选的工作区隔离** — 通过 [终端上下文](/features/open-terminal/terminals/orchestration/contexts)，可以让每个已保存的聊天或每个自动化拥有自己的工作区，而不是每个用户共用一个
+- **按范围限定的工作区** — 通过 [终端上下文](/features/open-terminal/terminals/orchestration/contexts)，可以让每个已保存的聊天或每个自动化拥有自己的工作区，而不是每个用户共用一个
 - **Docker 后端上的单一网络** — 所有工作区都位于同一个 Docker 网络中，以便编排器可以按名称访问每个工作区，这也使工作区能够访问其他用户工作区已打开的端口。文件和进程仍然相互隔离。对于互不信任的用户，请使用 Kubernetes 后端并添加 NetworkPolicy
 
 ```mermaid

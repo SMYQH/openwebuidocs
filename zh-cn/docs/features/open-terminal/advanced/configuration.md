@@ -35,8 +35,8 @@ Open Terminal 开箱即用，提供合理的默认值。本页面涵盖所有可
 | **System Prompt** | 自动生成 | `OPEN_TERMINAL_SYSTEM_PROMPT` | 用自定义模板替换生成的提示词 |
 | **Environment Info** | — | `OPEN_TERMINAL_INFO` | 追加操作员提供的环境上下文到生成的提示词 |
 | **File Browser Root** | `home` | `OPEN_TERMINAL_FILE_BROWSER_ROOT` | 使用 `home`、显式路径如 `/workspace`，或 `filesystem` 选择退出 |
-| **Multi-User** | `false` | `OPEN_TERMINAL_MULTI_USER` | 启用[每用户隔离](./multi-user.md) |
-| **CORS Origins** | `*` | `OPEN_TERMINAL_CORS_ALLOWED_ORIGINS` | 允许的跨域来源。默认 `*` 允许所有来源（宽松）；未设置时会打印启动警告（自 `~0.11.30`） |
+| **Multi-User** | `false` | `OPEN_TERMINAL_MULTI_USER` | 在一个共享容器中为每个用户提供独立的账户和主目录（[多用户配置](./multi-user.md)） |
+| **CORS Origins** | `*` | `OPEN_TERMINAL_CORS_ALLOWED_ORIGINS` | 允许的跨域来源。默认 `*` 允许所有来源（宽松）；未设置时会打印启动警告 |
 | **Allowed Domains** | — | `OPEN_TERMINAL_ALLOWED_DOMAINS` | [出站防火墙](./security.md#egress-filtering)：仅允许连接到这些域名 |
 | **Session CWD TTL** | `604800`（7 天） | `OPEN_TERMINAL_SESSION_CWD_TTL` | 会话保存的工作目录记忆时长 |
 | **Max Log Size** | `50000000`（50 MB） | `OPEN_TERMINAL_MAX_LOG_SIZE` | 日志轮转前的最大会话日志大小 |
@@ -155,5 +155,5 @@ Open Terminal 提供三种大小的镜像：
 
 ## 相关链接 {#related}
 
-- [安全最佳实践 →](./security)
-- [多用户配置 →](./multi-user)
+- [安全最佳实践 →](./security.md)
+- [多用户配置 →](./multi-user.md)

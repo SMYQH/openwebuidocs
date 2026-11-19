@@ -4,7 +4,7 @@ title: "Workload Identity 认证"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅演示如何按你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 
 :::
 
@@ -13,7 +13,7 @@ title: "Workload Identity 认证"
 
 本指南说明如何在 Azure Kubernetes Service（AKS）上配置 Open WebUI，并使用 Workload Identity 认证访问 Azure OpenAI。
 
-Workload Identity 允许 AKS Pod 通过 Azure Entra ID（原 Azure AD）访问 Azure 服务，而无需在集群中存储任何凭证。这是一种安全、托管式的身份方案，可用于访问 Azure OpenAI。
+Workload Identity 允许 AKS Pod 通过 Azure Entra ID（原 Azure AD）向 Azure 服务进行身份验证，无需在集群中存储凭据。这是一种安全的托管身份方案，可用于访问 Azure OpenAI。
 
 ## 前提条件 {#prerequisites}
 
@@ -22,10 +22,10 @@ Workload Identity 允许 AKS Pod 通过 Azure Entra ID（原 Azure AD）访问 A
 - **Open WebUI**：版本为 0.6.30 或更高
 - **AKS 集群配置**：你的 AKS 集群必须启用以下能力
   - **OIDC Issuer**
-    - 参考 [Microsoft Learn - Create an OpenID Connect provider on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-oidc-issuer)
+    - 参考 [Microsoft Learn：在 Azure Kubernetes Service（AKS）上创建 OpenID Connect 提供程序](https://learn.microsoft.com/en-us/azure/aks/use-oidc-issuer)
     - AzureRM Terraform: [`azurerm_kubernetes_cluster.oidc_issuer_enabled`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster#oidc_issuer_enabled-1)
   - **Workload Identity**
-    - 参考 [Microsoft Learn - Use Microsoft Entra Workload ID with Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=dotnet)
+    - 参考 [Microsoft Learn：在 Azure Kubernetes Service（AKS）中使用 Microsoft Entra Workload ID](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=dotnet)
     - AzureRM Terraform: [`azurerm_kubernetes_cluster.workload_identity_enabled`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster#workload_identity_enabled-1)
 
 ## Terraform 配置 {#terraform-configuration}
@@ -34,7 +34,7 @@ Workload Identity 允许 AKS Pod 通过 Azure Entra ID（原 Azure AD）访问 A
 
 ### 1. 创建 Kubernetes 命名空间 {#1-create-a-kubernetes-namespace}
 
-首先需要创建一个 Kubernetes 命名空间，这样后续就能把它统一用于 Helm 部署，也能在后续步骤中赋给用户分配身份和联合身份凭据。
+先创建 Kubernetes 命名空间，供 Helm 部署使用。后续配置用户分配身份和联合身份凭据时也会用到这个命名空间。
 
 ```hcl
 resource "kubernetes_namespace" "this" {
@@ -46,7 +46,7 @@ resource "kubernetes_namespace" "this" {
 
 ### 2. 创建用户分配身份（User Assigned Identity） {#2-create-a-user-assigned-identity}
 
-首先创建一个 Azure 用户分配身份（User Assigned Identity），后续 Open WebUI Pod 将使用它来访问 Azure 服务。
+先创建一个 Azure 用户分配身份（User Assigned Identity）。Open WebUI Pod 将使用该身份向 Azure 服务进行身份验证。
 
 ```hcl
 resource "azurerm_user_assigned_identity" "uai" {
@@ -58,7 +58,7 @@ resource "azurerm_user_assigned_identity" "uai" {
 
 ### 3. 创建联合身份凭据（Federated Identity Credential） {#3-create-federated-identity-credential}
 
-联合身份凭据（Federated Identity Credential）会在 Kubernetes service account 与 Azure 用户分配身份之间建立信任关系，从而允许 Pod 使用 Kubernetes token 交换 Azure token。
+联合身份凭据（Federated Identity Credential）在 Kubernetes 服务账户与 Azure 用户分配身份之间建立信任关系，让 Pod 可以用 Kubernetes 令牌换取 Azure 令牌。
 
 ```hcl
 resource "azurerm_federated_identity_credential" "federated_identity" {
@@ -80,7 +80,7 @@ resource "azurerm_federated_identity_credential" "federated_identity" {
 :::
 
 :::warning
-请务必将 `YOUR_COGNITIVE_ACCOUNT_ID` 替换为你 Azure OpenAI 实例对应的 cognitive account id。
+请务必将 `YOUR_COGNITIVE_ACCOUNT_ID` 替换为你的 Azure OpenAI 实例对应的认知服务账户 ID。
 :::
 
 ```hcl
@@ -133,11 +133,11 @@ resource "helm_release" "openwebui" {
 2. 点击 **添加连接**
 3. 选择 **Azure OpenAI** 作为提供商
 4. 选择 **Entra ID** 作为认证类型
-5. 填写 Azure OpenAI 终结点与部署细节
+5. 填写 Azure OpenAI 端点与部署细节
 6. 保存连接
 
-:::note 自定义 / 私有终结点主机名
-如果你的 Azure OpenAI 部署在私有终结点、API 网关或其他自定义域之后（即 Base URL **不是**标准的 `*.openai.azure.com` / `*.cognitiveservices.azure.com` 主机名——这在 AKS/企业部署中很常见），仅选择 **Azure OpenAI** 提供商即可：Open WebUI 的 Azure 请求处理是基于所选提供商，而不是基于主机名模式匹配。旧版本只能通过 `azure.*` 主机名识别 Azure 连接，因此自定义域名的 Azure 连接会**验证连接**和模型列表都会失败——如果遇到这种情况，请升级到 v0.9.6 或更高。
+:::note 自定义 / 私有端点主机名
+如果通过私有端点、API 网关或其他自定义域名访问 Azure OpenAI（即基础 URL **不是**标准的 `*.openai.azure.com` 或 `*.cognitiveservices.azure.com` 主机名，这在 AKS 或企业部署中很常见），选择 **Azure OpenAI** 提供商即可。Open WebUI 根据所选提供商处理 Azure 请求，不依赖主机名匹配。
 :::
 
 ## 关键组件说明 {#key-components-explained}
@@ -161,9 +161,9 @@ azure.workload.identity/use: "true"
 ### 联合身份凭据（Federated Identity Credential） {#federated-identity-credential}
 
 联合身份凭据会在以下三者之间建立信任关系：
-- 你的 AKS 集群 OIDC issuer
-- Kubernetes service account
-- Azure User Assigned Identity
+- 你的 AKS 集群的 OIDC 颁发者
+- Kubernetes 服务账户
+- Azure 用户分配身份
 
 其中 `subject` 字段格式如下：
 ```
@@ -175,13 +175,13 @@ system:serviceaccount:<namespace>:<service-account-name>
 ### 常见问题 {#common-issues}
 
 1. **认证失败**
-   - 确认 AKS 集群已启用 OIDC issuer
+   - 确认 AKS 集群已启用 OIDC 颁发者
    - 确认 AKS 集群已启用 Workload Identity
-   - 确认联合身份凭据的 subject 与 namespace / service account name 完全匹配
+   - 确认联合身份凭据的 subject 与命名空间及服务账户名称完全匹配
 
 2. **权限错误**
    - 确认用户分配身份已被赋予 `Cognitive Services OpenAI User` 角色
-   - 确认角色分配的 scope 覆盖了你的 Azure OpenAI 资源
+   - 确认角色分配的作用域包含你的 Azure OpenAI 资源
 
 3. **Pod Identity 问题**
    - 确认 Pod 带有 `azure.workload.identity/use: "true"` 标签

@@ -9,7 +9,7 @@ keywords: ["Open WebUI vs Onyx", "Onyx alternative", "Danswer alternative", "Ony
 import Head from '@docusaurus/Head';
 
 <Head>
-<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Onyx 和 Open WebUI 如何比较？", "acceptedAnswer": {"@type": "Answer", "text": "Onyx 使用 40 多个连接器和权限感知检索专注于企业搜索。Open WebUI 从更广泛的角度处理，包括聊天、知识库、团队协作和扩展性。不同工具用于不同的需求。"}}, {"@type": "Question", "name": "Onyx 是开源的吗？", "acceptedAnswer": {"@type": "Answer", "text": "部分开源。Onyx 社区版核心采用 MIT 许可证，而其 ee 目录下的所有内容都不在该授权范围内，而是适用单独的企业条款。许可证和价格是两个不同的问题：按 Onyx 的定价，访问控制位于 Business 层级，单点登录位于 Enterprise 层级，而 Open WebUI 在免费版中为无限用户提供了 SSO、LDAP、RBAC 和 SCIM 2.0。"}}, {"@type": "Question", "name": "Onyx 是免费的吗？", "acceptedAnswer": {"@type": "Answer", "text": "社区版可免费自托管。Onyx 云和企业计划可供想要托管主机或其他功能的团队使用。"}}, {"@type": "Question", "name": "我可以同时使用 Onyx 和 Open WebUI 吗？", "acceptedAnswer": {"@type": "Answer", "text": "是的。它们解决不同的问题。Onyx 将 AI 连接到您现有的企业工具。Open WebUI 还内置了知识管理、团队功能和扩展性。"}}]})}</script>
+<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Onyx 和 Open WebUI 有什么区别？", "acceptedAnswer": {"@type": "Answer", "text": "Onyx 侧重企业搜索，提供 40 多个连接器，并可按源系统权限检索。Open WebUI 更通用，提供聊天、知识库、团队协作和扩展功能。"}}, {"@type": "Question", "name": "Onyx 是开源的吗？", "acceptedAnswer": {"@type": "Answer", "text": "部分开源。Onyx 社区版核心采用 MIT 许可证，ee 目录则适用单独的企业条款。许可证与功能套餐是两回事：Onyx 社区版可启用一个单点登录提供商；同时启用多个提供商、按组授权或同步源权限需要 Business 或 Enterprise。Open WebUI 免费版为不限数量的用户提供 SSO、LDAP、RBAC 和 SCIM 2.0。"}}, {"@type": "Question", "name": "Onyx 是免费的吗？", "acceptedAnswer": {"@type": "Answer", "text": "社区版可免费自托管。需要托管服务或额外功能的团队可考虑 Onyx Cloud 和企业套餐。"}}, {"@type": "Question", "name": "我可以同时使用 Onyx 和 Open WebUI 吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。两者解决的问题不同。Onyx 将 AI 接入你现有的企业工具。Open WebUI 还内置知识管理、团队功能和扩展功能。"}}]})}</script>
 </Head>
 
 
@@ -17,7 +17,7 @@ import Head from '@docusaurus/Head';
 
 *最后更新时间：2026 年 8 月*
 
-[Onyx](https://onyx.app/)（前身为 Danswer）专注于一个具体且重要的问题：跨 Slack、Google Drive、Confluence、Jira、GitHub 以及数十种其他工具连接 AI 到您组织的内部知识，并具有权限感知检索。如果您团队的知识分散在许多工具中，您需要 AI 在尊重访问控制的同时跨所有工具搜索，那么这就是 Onyx 的强势所在。
+[Onyx](https://onyx.app/)（前身为 Danswer）专注于让 AI 检索组织在 Slack、Google Drive、Confluence、Jira、GitHub 等数十种工具中的内部知识，同时遵守来源系统的访问权限。这尤其适合知识分散在不同工具、又需要在搜索中保持访问控制的团队。
 
 发现错误或过时的信息？[请告诉我们](https://github.com/open-webui/docs/issues)。
 
@@ -28,10 +28,10 @@ import Head from '@docusaurus/Head';
 ## Onyx 的优势 {#what-onyx-does-well}
 
 - **企业连接器**，[按 Onyx 的统计有 40 多个](https://docs.onyx.app/admins/connectors/overview)，为 Slack、Google Drive、Confluence、Jira、GitHub、Notion 等提供原生集成
-- **自动同步**，无需手动重新摄取即可让连接的源保持最新
+- **自动同步**，无需手动重新导入即可更新已连接的数据源
 - **权限感知检索**，在返回搜索结果时尊重源系统访问控制
 - **企业搜索**，为跨组织内部知识搜索而专门设计
-- **多表面访问**，通过 Web 应用、Slack bot、Discord bot、Chrome 扩展和 CLI
+- **多种访问方式**，包括 Web 应用、Slack 机器人、Discord 机器人、Chrome 扩展和 CLI
 - **托管云选项**，适合不想自托管的团队
 - **带有操作的自定义智能体**，用于构建可以跨连接的工具采取行动的 AI 助手
 - **活跃开发**，版本发布频繁，社区反应迅速
@@ -65,18 +65,18 @@ import Head from '@docusaurus/Head';
 
 | 能力 | Open WebUI（免费版） | Onyx 社区版（免费版） |
 | :--- | :--- | :--- |
-| OIDC / OAuth 单点登录 | 包含 | Enterprise Edition |
-| SAML 单点登录 | 通过可[终止 SAML 的受信任请求头代理](/features/authentication-access/auth/sso#trusted-header) | Enterprise Edition 原生支持 |
+| OIDC / OAuth 单点登录 | 包含 | 可启用一个 SSO 提供商；多个需要 Business 或 Enterprise |
+| SAML 单点登录 | 由[受信任请求头代理](/features/authentication-access/auth/sso#trusted-header)处理 SAML | 可启用一个 SAML 提供商；与其他 SSO 提供商同时使用需 Business 或 Enterprise |
 | LDAP / Active Directory | 包含 | 未记录 |
 | 用户组和基于角色的访问控制 | 包含 | Business 层级及以上 |
 | 按资源授权（用户和组） | 包含 | Business 层级及以上 |
 | SCIM 2.0 用户预配 | 包含 | Enterprise 层级 |
-| 审计日志 | 包含 | 未记录 |
+| 审计日志 | 包含 | 记录结构化安全事件；导出日志包需要 Enterprise |
 | 付费前的用户数量上限 | 无 | 无 |
-| 让不同团队访问不同文档 | 独立的知识库，每个知识库按您选择的用户或组授权 | Enterprise Edition |
-| 对**同一个**集合内部单个文件的差异化访问 | 访问权限以整个知识库为单位生效 | Enterprise Edition |
-| 自动镜像来自 Slack、Drive 或 Confluence 的权限 | 目前不是 Open WebUI 的功能 | Enterprise Edition |
-| 移除产品品牌标识 | 50 个用户以内；超过后需企业许可证 | Enterprise Edition |
+| 让不同团队访问不同文档 | 创建独立知识库，分别授权给指定的用户或组 | 按组限制访问需 Business 或 Enterprise |
+| 对**同一个**知识库中的不同文件设置不同权限 | 访问权限以整个知识库为单位生效 | 按源文档的权限检索需 Business 或 Enterprise |
+| 自动同步 Slack、Drive 或 Confluence 中的权限 | 目前不是 Open WebUI 的功能 | Business 或 Enterprise |
+| 移除产品品牌标识 | 50 个用户以内；超过后需企业许可证 | Business 可自定义标志和名称；Enterprise 支持完整白标 |
 | 专属支持和 SLA | [企业许可证](/enterprise/support) | Enterprise Edition |
 | 功能请求的优先级 | 企业许可证 | Enterprise Edition |
 
@@ -86,13 +86,13 @@ Open WebUI 一列中所有标为“包含”的项目都不需要许可证密钥
 
 专属支持和路线图优先级在两边都是付费的，这也是两个项目的资金来源，双方都不加掩饰。
 
-截至 2026 年 7 月，在 [Onyx Cloud](https://onyx.app/pricing) 上，Business 层级为每位用户每月 20 美元，包含基于角色的访问控制和权限继承，但不含单点登录、SCIM 或出站 webhook。那些属于 Enterprise 层级，需要联系我们。
+英文原文记录了 2026 年 7 月的报价：[Onyx Cloud](https://onyx.app/pricing) 的 Business 套餐为每位用户每月 20 美元，包含基于角色的访问控制和权限继承；Enterprise 套餐需要询价。云端套餐页面将 Google OAuth 列入 Business，将 OIDC/SAML 单点登录列入 Enterprise，和上面的自托管功能对照不同。SCIM 和出站 webhook 的云端可用性请向 Onyx 确认。
 
 因此结论如下。如果您在自托管并需要在免费版中获得托管身份管理，Open WebUI 会为任意数量的用户提供它。如果您需要从 Slack 或 Drive 镜像单个文档的权限，那么 Onyx 的付费版本正是为此设计的。如果您打算 fork 或重新分发，Onyx 的核心采用的是更宽松的许可证。
 
 :::note 决定之前请两者都核对
 
-定价和层级会变化。这些数字来自页面顶部日期当天各项目自己公布的条款。请对照 [Onyx 的定价](https://onyx.app/pricing)和我们的[许可证](https://github.com/open-webui/open-webui/blob/main/LICENSE)进行核实，而不要直接相信任何一方的总结，包括本段。
+定价和套餐会变化。历史报价来自对应时间的条款；功能对照按当前 Onyx 文档核对。做决定前请查阅 [Onyx 的定价](https://onyx.app/pricing)和我们的[许可证](https://github.com/open-webui/open-webui/blob/main/LICENSE)，不要只依赖任一方的摘要。
 
 :::
 
@@ -116,18 +116,18 @@ Open WebUI 一列中所有标为“包含”的项目都不需要许可证密钥
 
 ## 何时选择各个平台 {#when-to-use-each}
 
-**选择 Onyx**（如果）您想要将 AI 连接到您组织现有的工具。如果您团队的知识位于 Slack、Confluence、Jira、Google Drive 和 GitHub 中，Onyx 的 40 多个具有自动同步和权限感知检索的连接器就是为此而设计的。
+**选择 Onyx**：如果你希望让 AI 使用组织已有工具中的知识。团队知识分散在 Slack、Confluence、Jira、Google Drive 或 GitHub 时，可以使用 Onyx 的 40 多个连接器；支持同步源权限的连接器可以按权限检索。
 
 其中两个方面值得说得更精确，因为这些正是 Onyx 有专门设计的领域：
 
-- **持续同步到知识库。** Open WebUI 在使用现场连接云存储：用户可以直接把 [Google Drive](/features/chat-conversations/rag#google-drive-integration)、OneDrive 和 SharePoint 的文件拉入聊天。知识库可以通过上传、目录同步或 API 来填充，[oikb](/ecosystem/knowledge-base-sync) 则把这一能力按计划扩展到代码仓库、对象存储桶和 wiki。Onyx 则把持续的连接器同步直接构建进产品之中。
-- **从源系统继承权限。** Open WebUI 按知识库授予访问权限，因此您需要把不同团队可读的内容放进不同的知识库来加以区分。Onyx 可以镜像源系统的访问控制列表，并在检索时强制执行，这需要其 Enterprise Edition。如果您正在索引一个大型共享 Drive，其权限已经编码了谁能看到什么，那么这个差别就是整个决策的关键。
+- **持续同步到知识库。** Open WebUI 支持在聊天时从云存储选取文件：用户可以直接添加 [Google Drive](/features/chat-conversations/rag#google-drive-integration)、OneDrive 和 SharePoint 中的文件。知识库可以通过上传、目录同步或 API 更新；[oikb](/ecosystem/knowledge-base-sync) 还可以按计划同步代码仓库、对象存储桶和 wiki。Onyx 把持续的连接器同步内置在产品中。
+- **从源系统继承权限。** Open WebUI 按知识库授权，需要将不同团队可读的内容分别放进不同的知识库。Onyx 的 Business 和 Enterprise 可同步源系统的访问控制列表，并在检索时按列表授权。若要索引权限复杂的大型共享 Drive，这项区别很重要。
 
-如果这两项中的任何一项是硬性要求，Onyx 是更合适的选择。请注意，在 Onyx 一侧，这两者都是 [Enterprise Edition 功能](https://docs.onyx.app/deployment/miscellaneous/enterprise_edition)，因此要做比较的对象是付费的 Onyx 部署，而不是免费的社区版。
+如果其中一项是硬性要求，可以重点考虑 Onyx。连接器的索引更新可以定期运行；同步源权限则是 [Business 和 Enterprise 的功能](https://docs.onyx.app/deployment/miscellaneous/enterprise_edition)，不能用免费社区版的权限功能来作对照。
 
-**选择 Open WebUI**（如果）您需要一个通用 AI 平台，具有聊天、知识库、团队协作、Python 扩展性和任何模型提供商支持。Open WebUI 在免费社区版中包含 SSO、LDAP、RBAC、SCIM 2.0 和审计日志，且用户数量不限——对于需要托管身份管理、但不想签订按席位计费合同的组织来说，这正是决定性因素。
+**选择 Open WebUI**：如果你需要通用 AI 平台，支持聊天、知识库、团队协作、Python 扩展和接入不同模型提供商。Open WebUI 免费社区版包含 SSO、LDAP、RBAC、SCIM 2.0 和审计日志，且不限制用户数量，适合需要集中管理身份、不想按席位付费的组织。
 
-**他们解决不同的问题。** Onyx 在企业搜索和连接 AI 到您现有的工具方面表现出色。Open WebUI 在通用 AI 平台方面表现出色。许多组织可以同时使用两者。
+**两者解决的问题不同。** Onyx 擅长企业搜索和连接已有工具；Open WebUI 更适合作为通用 AI 平台。组织也可以搭配使用两者。
 
 ---
 
@@ -139,17 +139,17 @@ Open WebUI 一列中所有标为“包含”的项目都不需要许可证密钥
 
 ## 常见问题 {#frequently-asked-questions}
 
-**Onyx 和 Open WebUI 如何比较？**
-Onyx 使用 40 多个连接器和权限感知检索专注于企业搜索。Open WebUI 从更广泛的角度处理，包括聊天、知识库、团队协作和扩展性。不同工具用于不同的需求。
+**Onyx 和 Open WebUI 有什么区别？**
+Onyx 侧重企业搜索，提供 40 多个连接器，并可按源系统权限检索。Open WebUI 更通用，提供聊天、知识库、团队协作和扩展功能。
 
 **Onyx 是开源的吗？**
-部分开源。Onyx 的社区版核心采用 MIT 许可证，而其 `ee` 目录下的所有内容都不在该授权范围内，适用单独的企业条款。其他[自托管条款](https://onyx.app/legal/self-host)也可能适用。请注意，许可证和价格是两个不同的问题：MIT 覆盖的是核心，而单点登录和访问控制位于 Onyx 的付费层级中。就再分发而言，该核心上的 MIT 比 Open WebUI 许可证更宽松。
+部分开源。Onyx 的社区版核心采用 MIT 许可证，`ee` 目录里的内容适用单独的企业条款。其他[自托管条款](https://onyx.app/legal/self-host)也可能适用。许可证与功能套餐是两回事：MIT 覆盖核心，而多个单点登录提供商、按组授权及源权限同步需要 Onyx 付费套餐。就再分发而言，核心代码的 MIT 许可比 Open WebUI 许可证宽松。
 
 **SSO 和 RBAC 如何比较？**
-Open WebUI 在免费版中包含 OIDC 和 OAuth 单点登录、LDAP、RBAC、SCIM 2.0 用户预配和审计日志，用户数量不限，且不需要许可证密钥。在 Onyx 中，对于自托管部署，[用户组、RBAC 和 SSO 属于付费层级功能](https://docs.onyx.app/deployment/miscellaneous/enterprise_edition)。在 Onyx Cloud 上，RBAC 从 Business 层级开始提供，SSO 则在 Enterprise 层级。
+Open WebUI 免费版包含 OIDC 和 OAuth 单点登录、LDAP、RBAC、SCIM 2.0 用户预配和审计日志，用户数量不限，且不需要许可证密钥。Onyx 自托管社区版可启用一个 SSO 提供商；[自定义用户组、按组授权和同时使用多个 SSO 提供商](https://docs.onyx.app/deployment/miscellaneous/enterprise_edition)需要 Business 或 Enterprise。Onyx Cloud 的功能以其现行套餐为准。
 
 **Onyx 是免费的吗？**
-社区版可免费自托管。其他[自托管条款](https://onyx.app/legal/self-host)可能适用。Onyx 云和企业计划可供想要托管主机或其他功能的团队使用。
+社区版可免费自托管。其他[自托管条款](https://onyx.app/legal/self-host)可能适用。需要托管服务或额外功能的团队可考虑 Onyx Cloud 和企业套餐。
 
 **我可以同时使用 Onyx 和 Open WebUI 吗？**
 是的。它们解决不同的问题。Onyx 将 AI 连接到您现有的企业工具。Open WebUI 还内置了知识管理、团队功能和扩展性。

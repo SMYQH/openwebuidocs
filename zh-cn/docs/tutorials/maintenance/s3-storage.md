@@ -6,7 +6,7 @@ title: "S3 存储"
 # 🪣 切换到 S3 存储 {#switching-to-s3-storage}
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+本教程由社区贡献，Open WebUI 团队不提供支持。它仅演示如何按具体使用场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
 本指南介绍如何将 Open WebUI 配置中默认的 `local` 存储切换为 Amazon S3。
@@ -16,8 +16,8 @@ title: "S3 存储"
 在学习本教程之前，您需要具备以下条件：
 
 - 一个有效的 AWS 账户
-- 有效的 AWS Access Key 和 Secret Key
-- 在 AWS 中具有创建 S3 存储桶并上传对象的 IAM 权限
+- AWS Access Key 和 Secret Key，或默认 AWS 凭据链可找到的其他凭据（例如 IAM 角色）
+- 在 S3 中创建和上传对象所需的 AWS IAM 权限
 - 已在系统上安装 Docker
 
 ## 什么是 Amazon S3 {#what-is-amazon-s3}
@@ -32,7 +32,7 @@ title: "S3 存储"
 
 ## 1. 所需环境变量 {#1-s3-environment-variables}
 
-要配置此选项，需要收集以下环境变量：
+配置 S3 前，请准备以下环境变量。只有 `S3_BUCKET_NAME` 是必填项，参见步骤 2：
 
 | **Open-WebUI 环境变量** | **示例值** |
 |-------------------------------------|---------------------------------------------|

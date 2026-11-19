@@ -17,7 +17,7 @@ title: "双因素登录（MFA）"
 
 - **已开启认证。** [`WEBUI_AUTH`](/reference/env-configuration#webui_auth) 必须保持默认的 `True`。
 - **已开启持久化配置。** [`ENABLE_PERSISTENT_CONFIG`](/reference/env-configuration#enable_persistent_config) 必须保持默认的 `True`。
-- **一个稳定的加密密钥。** 每个用户身份验证器的密钥都经过加密后存放在数据库中。该密钥派生自 [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key)，或在设置了 [`MFA_ENCRYPTION_KEY`](/reference/env-configuration#mfa_encryption_key) 时取自后者。如果在用户注册之后密钥发生变化，他们的身份验证器将无法再被读取。
+- **稳定的加密密钥。** 每位用户的身份验证器密钥都以加密形式存储在数据库中。如果设置了 [`MFA_ENCRYPTION_KEY`](/reference/env-configuration#mfa_encryption_key)，就使用它作为加密密钥；否则从 [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key) 派生。用户设置身份验证器后，如果加密密钥发生变化，已存储的身份验证器密钥将无法解密。
 
 在 MFA 开启期间，Open WebUI 会在启动时检查以上全部条件，并在认证或持久化配置关闭、`MFA_ENCRYPTION_KEY` 不是有效密钥、或已存储的身份验证器密钥无法用当前密钥解密时拒绝启动。在最后一种情况下，日志会显示 `ValueError: Stored MFA secrets cannot be decrypted. Restore the WEBUI_SECRET_KEY or MFA_ENCRYPTION_KEY they were encrypted with.`。请恢复先前的密钥，让实例重新运行起来。
 
@@ -38,7 +38,7 @@ title: "双因素登录（MFA）"
 对这三个开关的任何改动都会让每位用户在所有设备上退出登录（包括你自己），你会回到登录页。已设置身份验证器的用户需要输入验证码；尚未设置的用户则当场完成设置。
 :::
 
-只有管理员的登录会话才能修改这些开关；使用 API key 发出的请求会被拒绝。
+只有管理员的登录会话才能修改这些开关；使用 API 密钥发出的请求会被拒绝。
 
 同样的开关也可以通过环境变量设置：[`ENABLE_MFA`](/reference/env-configuration#enable_mfa)、[`MFA_ALLOW_OAUTH_BYPASS`](/reference/env-configuration#mfa_allow_oauth_bypass) 和 [`MFA_ALLOW_TRUSTED_HEADER_BYPASS`](/reference/env-configuration#mfa_allow_trusted_header_bypass)。它们设定的是首次启动时的初始值；此后以管理面板中保存的值为准。
 
@@ -67,7 +67,7 @@ MFA 开启后用户第一次登录时：
 
 输入密码后，Open WebUI 会要求提供当前的六位验证码。**Use a recovery code** 可把输入框切换为填写已保存的恢复码。
 
-验证码每 30 秒变化一次。Open WebUI 也会接受当前验证码的前一个和后一个，以吸收细小的时钟差异；每个验证码只会被接受一次。第二步必须在输入密码后的五分钟内完成，超时后用户需要从密码重新开始。
+验证码每 30 秒变化一次。为容许少量时钟偏差，Open WebUI 也接受前一个和后一个时间段的验证码。每个验证码只能使用一次。用户必须在输入密码后五分钟内完成第二步；超时后需重新输入密码。
 
 ---
 
@@ -115,8 +115,8 @@ docker exec -it open-webui python -c "from open_webui import app; app()" mfa res
 |---|---|
 | 每个账户每 15 分钟 10 次 | 密码与 LDAP 登录。成功次数同样计入。 |
 | 每个账户每 15 分钟 10 次 | 为该账户输入的身份验证器验证码与恢复码。 |
-| 每次登录 5 次 | 在一次登录中输入的验证码。超出后用户需从密码重新开始。 |
-| 每个 IP 地址每 15 分钟 100 次 | 会改动认证 API 状态的请求：登录、注册、MFA 步骤、修改密码，以及 `/api/v1/auths` 下的其他账户操作。 |
+| 每次登录 5 次 | 在一次登录中输入的验证码。达到上限后，用户需重新输入密码。 |
+| 每个 IP 地址每 15 分钟 100 次 | 通过认证 API 更改状态的请求：登录、注册、MFA 步骤、修改密码，以及 `/api/v1/auths` 下的其他账户操作。 |
 
 配置了 Redis 时，按地址计算的限制会在所有工作进程和副本之间共享；否则按进程分别计算。它依赖真实的客户端地址，因此请把 [`FORWARDED_ALLOW_IPS`](/reference/env-configuration#forwarded_allow_ips) 设置为你的反向代理地址。
 
@@ -124,15 +124,15 @@ docker exec -it open-webui python -c "from open_webui import app; app()" mfa res
 
 ## API 访问与自动化 {#api-access-and-automation}
 
-- **API key 不受影响。** 它们无需验证码即可继续工作，因此脚本和集成应使用 [API key](/features/authentication-access/api-keys)。
+- **API 密钥不受影响。** 使用密钥无需输入验证码，因此脚本和集成应使用 [API 密钥](/features/authentication-access/api-keys)。
 - **通过 API 登录**时，只要该登录需要验证码，返回的就是一个 MFA 步骤而非会话令牌。[OAuth 令牌交换](/reference/env-configuration#enable_oauth_token_exchange)端点同理，除非 OAuth 登录被豁免。
-- MFA 开启期间，通过 API **将用户添加为管理员**时，返回的新账户不含会话令牌。
+- MFA 开启期间，**管理员通过 API 添加用户**时，返回的新账户不含会话令牌。
 
 ---
 
 ## 事件与日志 {#events-and-logs}
 
-Open WebUI 会发出下列事件。[事件函数](/features/extensibility/plugin/functions/event)会在其中之一触发时运行你自己的 Python 代码，例如在某个账户不断出现错误验证码时提醒你的安全团队、在有人修改 MFA 开关时通知管理员，或把注册与恢复码使用情况记录到外部系统中：
+Open WebUI 会发出下列事件。[事件函数](/features/extensibility/plugin/functions/event)可在这些事件触发时运行你的 Python 代码。例如，某个账户反复输错验证码时可提醒安全团队，MFA 开关变更时可通知管理员，也可将身份验证器设置和恢复码使用情况记录到外部系统：
 
 | 事件 | 何时触发 |
 |---|---|

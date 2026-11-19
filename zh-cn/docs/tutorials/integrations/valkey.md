@@ -13,12 +13,12 @@ title: "使用 Valkey（兼容 Redis）"
 
 ## 什么是 Valkey？ {#what-is-valkey}
 
-[Valkey](https://valkey.io/) 是 Redis 的开源（BSD 协议）分支，由社区和 Linux 基金会在 Redis 更改许可证后启动。它使用 **Redis 协议**，因此 Open WebUI 通过完全相同的 `REDIS_*` 设置与它通信。
+[Valkey](https://valkey.io/) 是采用 BSD 许可证的 Redis 分支。它使用 **Redis 协议**，因此 Open WebUI 可以使用相同的 `REDIS_*` 设置与它通信。
 
-简而言之，这就是 **[Redis 教程](/tutorials/integrations/redis)** 的同款配置，只是把镜像换成了 Valkey。Open WebUI 不测试 Valkey。详情请参见 [步骤 2：添加 Redis](/getting-started/advanced-topics/scaling#step-2-add-redis)。
+**配置方式与 [Redis 教程](/tutorials/integrations/redis) 相同**，只需换用 Valkey 镜像。Open WebUI 的测试不覆盖 Valkey。具体含义请参见[步骤 2：添加 Redis](/getting-started/advanced-topics/scaling#step-2-add-redis)。
 
 :::info 两个不同的 "Valkey" 功能，请勿混淆
-- **Valkey 作为 Redis 层（本文）** 是缓存、WebSocket 和会话存储。它使用 **`REDIS_URL`** 和 `redis://` 协议配置，因为 Open WebUI 使用的是 Redis 协议。
+- **Valkey 作为 Redis 层（本文）** 用于缓存、WebSocket 和会话存储。由于 Open WebUI 使用 Redis 协议，请通过 **`REDIS_URL`** 配置，连接字符串以 `redis://` 开头。
 - **Valkey 作为向量数据库** 是一项独立的非核心 [向量存储](/reference/env-configuration#valkey)（`VECTOR_DB=valkey`，使用 `valkey-search` 模块）。它使用 **`VALKEY_URL`** 和 `valkey://` 协议配置。
 
 两者互不相关，你可以单独使用其中一个、同时使用两者，或都不用。本教程讨论的是前者。
@@ -76,7 +76,7 @@ docker network create openwebui-network
 ```
 
 :::tip 不要省略 `--maxclients` 和 `--timeout`
-这些标志不是装饰。默认 `timeout 0` 时，空闲连接永远不会关闭，会慢慢累积直到触达上限，届时所有用户都会在登录时遇到 500 而被锁在外面。完整的原理说明以及配套的客户端 `REDIS_HEALTH_CHECK_INTERVAL` 在 Redis 教程的 [关键：Redis 服务器配置](/tutorials/integrations/redis#critical-redis-server-configuration) 章节中介绍，对 Valkey 同样适用。
+使用默认值 `timeout 0` 时，空闲连接不会关闭，会不断累积直至达到上限，导致所有用户登录时收到 500 错误。[关键：Redis 服务器配置](/tutorials/integrations/redis#critical-redis-server-configuration)同样适用于 Valkey。
 :::
 
 ## 连接 Open WebUI {#connecting-open-webui}
@@ -92,8 +92,6 @@ WEBSOCKET_MANAGER="redis"
 Open WebUI 通过 Redis 协议连接，因此连接字符串是 `redis://...`，尽管服务器是 Valkey。这些变量没有 `valkey://` 形式（该协议属于上文提到的、不相关的向量数据库特性）。
 :::
 
-除基础配置之外的更多内容（Sentinel、Cluster、AWS Elasticache、键前缀、WebSocket 的 CORS、连接健康检查），请以 [Redis 教程的配置章节](/tutorials/integrations/redis#configuring-open-webui) 作为参考。每一个变量都完全一致。
-
 ## 验证 {#verify}
 
 ```bash
@@ -102,7 +100,7 @@ docker logs open-webui 2>&1 | grep -i redis                          # general c
 docker logs open-webui 2>&1 | grep "Using Redis to manage websockets"
 ```
 
-日志中出现 "Redis" 是预期的，因为 Open WebUI 使用的是 Redis 协议；当服务器是 Valkey 时，这是正常且正确的。
+即使服务器用的是 Valkey，日志中出现“Redis”也是正常的，因为 Open WebUI 使用 Redis 协议。
 
 ## 其他所有内容都与 Redis 完全一致 {#everything-else-is-identical-to-redis}
 

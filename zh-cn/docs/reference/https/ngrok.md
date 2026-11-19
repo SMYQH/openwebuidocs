@@ -1,17 +1,17 @@
 ---
 sidebar_position: 2
-title: "使用 ngrok 的 HTTPS"
+title: "通过 ngrok 启用 HTTPS"
 ---
 
-# 使用 ngrok 的 HTTPS {#https-using-ngrok}
+# 通过 ngrok 启用 HTTPS {#https-using-ngrok}
 
 
 **为本地 Open WebUI 立刻获得公网 HTTPS。零配置、零开放端口。**
 
-ngrok 会从公网 URL 向你的本地机器建立一条安全隧道。它是让本地 Open WebUI 快速支持 HTTPS 的最快方式，尤其适用于开发、演示或测试那些需要安全上下文的功能（例如 Voice Calls）。
+ngrok 会在公网 URL 和本机之间建立安全隧道。这样可以快速启用 HTTPS，便于开发、演示或测试语音通话等需要安全上下文的功能。
 
 :::tip 何时使用 ngrok
-ngrok 非常适合**开发与测试**。对于生产部署，请优先选择反向代理方案，例如 [Nginx](/reference/https/nginx)、[Caddy](/reference/https/caddy)，或使用 [Cloudflare Tunnel](/reference/https/cloudflare-tunnel) 获得 zero-trust 访问。
+ngrok 适合**开发与测试**。生产部署请使用 [Nginx](/reference/https/nginx) 或 [Caddy](/reference/https/caddy) 等反向代理，或使用 [Cloudflare Tunnel](/reference/https/cloudflare-tunnel) 实现零信任访问。
 :::
 
 ---
@@ -71,7 +71,7 @@ ngrok config add-authtoken YOUR_AUTH_TOKEN
 ngrok http 8080
 ```
 
-ngrok 会输出类似下面的公网地址：
+ngrok 会输出类似下面的公网 URL：
 
 ```
 Forwarding  https://a1b2-203-0-113-42.ngrok-free.app → http://localhost:8080
@@ -95,7 +95,7 @@ docker run -d \
 ```
 
 :::warning
-ngrok 免费层的 URL 会在每次重启 tunnel 后变化。请相应更新 `WEBUI_URL`，或者使用 [ngrok 自定义域名](https://ngrok.com/docs/guides/how-to-set-up-a-custom-domain/)（付费）来获得固定 URL。
+使用 ngrok 免费套餐时，每次重启隧道都会更换 URL。请相应更新 `WEBUI_URL`，或使用付费的 [ngrok 自定义域名](https://ngrok.com/docs/guides/how-to-set-up-a-custom-domain/)获得固定 URL。
 :::
 
 ---
@@ -108,7 +108,7 @@ ngrok 免费层的 URL 会在每次重启 tunnel 后变化。请相应更新 `WE
 ngrok http 8080 --url=your-name.ngrok-free.app
 ```
 
-这样你就能在 `WEBUI_URL` 中一次性配置固定地址，无需频繁更新。
+这样你就能将固定 URL 填入 `WEBUI_URL`，无需再更新。
 
 ---
 
@@ -116,11 +116,11 @@ ngrok http 8080 --url=your-name.ngrok-free.app
 
 | 操作 | 命令 / 值 |
 | :--- | :--- |
-| 启动 tunnel | `ngrok http 8080` |
+| 启动隧道 | `ngrok http 8080` |
 | 自定义域名 | `ngrok http 8080 --url=your-name.ngrok-free.app` |
 | 控制台 | [dashboard.ngrok.com](https://dashboard.ngrok.com) |
 | 查看请求流量 | `http://localhost:4040`（ngrok 本地调试面板） |
-| 设置 CORS origin | `CORS_ALLOW_ORIGIN=https://your-name.ngrok-free.app` |
+| 设置 CORS 来源 | `CORS_ALLOW_ORIGIN=https://your-name.ngrok-free.app` |
 
 ---
 
@@ -128,7 +128,7 @@ ngrok http 8080 --url=your-name.ngrok-free.app
 
 | 问题 | 说明 |
 | :--- | :--- |
-| **免费层 URL 会轮换** | 每次重启 tunnel 后 URL 都会变化，除非你使用自定义域名 |
-| **首次访问拦截页** | 免费层首次访问会显示 ngrok splash page |
-| **不适合生产环境** | ngrok 会增加额外延迟，并且本身是单点依赖；生产环境请改用反向代理或 Cloudflare Tunnel |
-| **速率限制** | 免费层有限速；付费计划可移除这类限制 |
+| **免费套餐的 URL 会变更** | 未使用自定义域名时，每次重启隧道都会更换 URL |
+| **首次访问提示页** | 免费套餐会在首次访问时显示 ngrok 提示页 |
+| **不适合生产环境** | ngrok 会增加延迟，也是单点故障；请改用反向代理或 Cloudflare Tunnel |
+| **速率限制** | 免费套餐有连接速率限制，付费套餐不受此限制 |

@@ -5,7 +5,7 @@ title: "Kokoro Web - Open WebUI 的轻量 TTS 集成"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程由社区贡献，Open WebUI 团队不提供支持。它仅演示如何针对你的使用场景自定义 Open WebUI。想投稿？请查看教程投稿指南。
 
 :::
 
@@ -43,7 +43,7 @@ services:
       （如果使用 Docker：`http://host.docker.internal:3000/api/v1`）
     - API 密钥：`your-api-key`（来自步骤 1）
     - TTS 模型：`model_q8f16`（体积 / 音质平衡最佳）
-    - TTS 语音：`af_heart`（默认温暖自然的英文声音）。你也可以切换为 [Kokoro Web Demo](https://voice-generator.pages.dev) 中的其他语音或发音
+    - TTS 语音：`af_heart`（默认使用温暖自然的英语语音）。也可以使用 [Kokoro Web Demo](https://voice-generator.pages.dev) 中的其他语音或语音混合配方。
 
 **完成！你的 Open WebUI 现在已经具备 AI 语音能力。**
 
@@ -88,7 +88,7 @@ Kokoro Web 支持 8 种语言，并为每种语言提供优化语音：
 
 ## 还需要更多帮助？ {#need-more-help}
 
-如需更多选项、语音定制指南或高级设置，请访问 [GitHub repository](https://github.com/eduardolat/kokoro-web)。
+如需更多选项、语音定制指南或高级设置，请访问 [GitHub 仓库](https://github.com/eduardolat/kokoro-web)。
 
 ## 故障排查 {#troubleshooting}
 
@@ -102,17 +102,15 @@ Kokoro Web 支持 8 种语言，并为每种语言提供优化语音：
 
 ### 语音无法工作 {#voice-not-working}
 
-1. 确认 Kokoro Web 配置和 Open WebUI 设置中的 secret API 密钥一致
+1. 确认 Kokoro Web 配置和 Open WebUI 设置中的 API 密钥一致
 2. 直接测试 API：
-
-
-更多排查建议请参阅 [音频故障排查指南](/troubleshooting/audio)。
-
-**祝你在 Open WebUI 对话中享受自然的 AI 语音体验！**
-
-``` bash
+   ```bash
    curl -X POST http://localhost:3000/api/v1/audio/speech \
      -H "Authorization: Bearer your-api-key" \
      -H "Content-Type: application/json" \
      -d '{"input": "Hello world", "voice": "af_heart"}'
-```
+   ```
+
+更多排查建议请参阅 [音频故障排查指南](/troubleshooting/audio)。
+
+**祝你在 Open WebUI 对话中享受自然的 AI 语音体验！**

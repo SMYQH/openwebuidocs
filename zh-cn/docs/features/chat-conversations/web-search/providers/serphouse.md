@@ -42,7 +42,7 @@ title: "SERPHouse"
 
 1. 使用管理员账户登录 Open WebUI。
 2. 打开**设置 → 网络搜索**（管理员区域）。
-3. 开启**网络搜索**开关。
+3. 将**网页搜索**开关切换到**开启**状态。
 4. 从**网络搜索引擎**下拉菜单中选择 **serphouse**。
 5. 将你的 SERPHouse API 密钥粘贴到 **SERPHouse API 密钥**字段。
 6. （可选）设置 **SERPHouse 域名**（要查询的 Google 域名，例如 `google.com`、`google.co.uk`）。

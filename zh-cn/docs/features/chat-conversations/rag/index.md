@@ -66,7 +66,7 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
    | 文档 ID | **文档 ID 字段** | `document_id` |
    | 页码 | **页码字段** | `page` |
    | 额外元数据 | **元数据字段** | `metadata` |
-   | 相关性评分 | **评分配对** | `score` |
+   | 相关性评分 | **评分字段** | `score` |
 
    嵌套字段支持点号路径（例如 `payload.text`）。
 3. **测试查询**，使用样本问题。Open WebUI 会针对该源执行实时检索并显示结果。成功测试后才能创建或保存该源。
@@ -84,7 +84,7 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 ## 用于 RAG 的网络搜索 {#web-search-for-rag}
 
 :::warning
-**致 Ollama 用户的上下文长度警告：** 即使经过内容提取，网页通常包含 4,000-8,000 多个 token，包括主要内容、导航元素、页眉、页脚和元数据。如果只有 4096 个可用 token，您获得的内容不到页面内容的一半，通常会丢失最相关的信息。甚至 4096 个 token 对于全面的网页内容分析也常常是不够的。
+**致 Ollama 用户的上下文长度警告：** 即使经过内容提取，网页通常包含 4,000-8,000 多个 token，包括主要内容、导航元素、页眉、页脚和元数据。如果只有 4096 个可用 token，往往只能获得约一半的页面内容，可能遗漏最相关的信息。即使有 4096 个 token，也往往不足以全面分析网页内容。
 
 **修复方法：** 导航至 **Settings > Models**（管理员区域）中（您的 Ollama 模型的）铅笔图标（**Edit**），打开 **Advanced Params** 并**将上下文长度增加到 8192+（或最好超过 16000）个 token**。此设置特别适用于 Ollama 模型。对于 OpenAI 和其他集成模型，请确保您使用的是具有足够内置上下文长度的模型（例如，拥有 1M token 上下文窗口的 GPT-5.6）。
 :::
@@ -199,7 +199,7 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 在某些方面，合并带来的效率提升呈非线性扩展。在 45 个向量而不是 588 个向量中进行检索不只是计算速度加快约 13 倍，您还会获得更清晰的 top-k 结果，因为您已经消除了可能在部分关键字匹配中得分很高但对 LLM 没有有益贡献的近乎空白语块的噪音。质量的提升通常比速度的提升更重要。
 
-测试表明，良好配置的阈值（例如 2000 大小的块用 1000）可以减少超 90% 的语块数量并提升检索精度，因为每个剩余的语块携带了有意义的语义上下文，而不是使得嵌入模型和检索排名双双困惑的片段。作为附带的正面影响，它还在向量数据库中使用了更少的存储空间，需要更少的嵌入操作，如果是把嵌入请求外包给服务商，这将节约显著的开销。
+合并后保留的每个语块都包含有意义的上下文，而不是干扰嵌入模型和检索排序的零散片段。
 
 </details>
 
@@ -225,7 +225,7 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 更改嵌入模型**需要对所有知识库文档进行重新索引**。不同模型产生的嵌入存在于不同的向量空间，互不兼容。不重新建立索引，针对旧嵌入进行检索将产生糟糕甚至荒谬的结果。
 
-在 `Settings` > `Documents`（管理员区域）更改嵌入模型后，导航至 `Settings` > `Documents`（管理员区域）并点击 **Reindex** 按钮，使用新模型重嵌所有知识库文档。
+更改嵌入模型后，在管理员区域的 **Settings** > **Documents** 中点击 **Reindex**，用新模型重新生成所有知识库文档的嵌入。
 
 ### 重建索引会做什么？ {#what-does-re-indexing-do}
 
@@ -260,11 +260,11 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 RAG 功能允许用户轻松追踪投喂给 LLMs 的文档上下文，并带有用于参考定位的引用信息。这确保了在您的对话中使用外部来源信息的透明度和问责机制。若要让模型引用页码或每个分块随附的其他细节，请设置 [`RAG_SOURCE_METADATA_KEYS`](/reference/env-configuration#rag_source_metadata_keys)。
 
-## 文件上下文 vs 内置工具 {#preload-files-vs-builtin-tools}
+## 预加载文件与内置工具 {#preload-files-vs-builtin-tools}
 
 Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之间的区别对于正确配置模型很重要。
 
-### 文件上下文能力 {#preload-files-capability}
+### 预加载文件能力 {#preload-files-capability}
 **预加载文件 (Preload files)** 能力控制 Open WebUI 是否对附件文件执行 RAG（检索增强生成）。在原生函数调用下它默认关闭，在旧版下默认开启。模型编辑器和 **模型默认值** 会显示其生效值。对于不是来自网页界面聊天的 API 请求，除非模型为它保存了某个值，否则它是开启的，因此放在 `files` 字段中的文件和知识可以到达模型。
 
 | 预加载文件 | 行为表现 |
@@ -282,7 +282,9 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 :::
 
 :::tip 基于单个文件的检索模式
-在聊天中附加的各个文件和知识库也可通过 **"Using Entire Document（使用整篇文档）"** 开关设置为完全绕开 RAG。无论原生函数调用设置如何，它都会把完整文件内容注入每条消息。**Settings** > **Documents**（管理员区域）中不超过**全文阈值（字符数）**的上传文件和文本附件会自动完整包含，而**始终使用全文**则对每个文档都应用这一规则。欲停止逐个选择，请在**设置 > 界面 > 文件**中设置**默认上传模式**：此后你附加的每个文件都会以你选定的模式开始，之后仍可单独切换。详情参阅[完全上下文 vs 重点检索](/features/workspace/knowledge#retrieval-modes)。
+聊天中的单个附件或知识库可通过 **“使用整篇文档（Using Entire Document）”** 开关完全绕过 RAG。无论原生函数调用如何设置，系统都会将文件全文注入每条消息。上传的文件和文本附件如果不超过管理员区域 **Settings** > **Documents** 中设定的**全文阈值（字符数）**，系统会自动包含全文。打开**始终使用全文**可将这条规则应用于所有文档。详情参阅[完整上下文与重点检索](/features/workspace/knowledge#retrieval-modes)。
+
+如果不想逐个选择，请在**设置 > 界面 > 文件**中设置**默认上传模式**。此后每个附件都会默认使用所选模式，之后仍可单独切换。
 :::
 
 :::info
@@ -291,15 +293,15 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 
 ### 内置工具能力 {#builtin-tools-capability}
 
-**内置工具 (Builtin Tools)** 能力控制模型是否获得原生函数调用工具以实现自动检索：
+**[内置工具 (Builtin Tools)](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)** 能力控制模型是否获得原生函数调用工具以实现自动检索：
 
 | 内置工具 | 行为表现 |
 |---------------|----------|
-| ✅ **启用** (默认) | 在原生函数调用 (Native Function Calling) 模式下，模型会接收诸如 `query_knowledge_bases`, `view_knowledge_file`, `search_chats` 等工具。 |
-| ❌ **禁用** | 不注入任何内置工具。模型只能依赖预先注入的上下文工作。 |
+| ✅ **启用**（默认） | 除非模型设为旧版函数调用，否则模型会收到 `query_knowledge_bases`、`view_knowledge_file`、`search_chats` 等工具。 |
+| ❌ **禁用** | 不注入任何[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。模型只能依赖预先注入的上下文。 |
 
-**何时禁用 Builtin Tools：**
-- **模型不支持 function calling (函数调用)**：较小或旧版的模型可能无法处理 `tools` 参数。
+**何时禁用[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)：**
+- **模型不支持函数调用**：较小或较旧的模型可能无法处理 `tools` 参数。
 - **需要可预测的行为**：你只希望模型在给定的有限信息内发挥作用。
 
 ### 结合使用两项能力 {#combining-the-two-capabilities}
@@ -368,7 +370,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 
 ### 详细说明 {#detailed-instructions}
 
-1. 创建一个 OAuth 2.0 客户端并将授权的 JavaScript 来源与授权的重定向 URI 配置为访问你 Open WebUI 实例使用的 URL (包括可能的端口)。
+1. 创建一个 OAuth 2.0 客户端，将授权的 JavaScript 来源和重定向 URI 都设为用于访问此实例的 URL（如有端口，也需包含）。
 2. 记录下与该 OAuth 客户端绑定的客户端 ID (Client ID)。请完全按照 Google 显示的形式使用它，即 `<project number>-....apps.googleusercontent.com`。选择器会从 Client ID 开头的几位数字读取 Cloud 项目编号。
 3. 确保你的项目启用了 Google Drive API 和 Google Picker API 两项服务。
 4. 在 OAuth 同意屏幕上，将应用设置为“正式发布 (In production)”；或者保持“测试中 (Testing)”，并把你的用户添加到测试用户列表中。
@@ -377,7 +379,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 7. 创建一个 API 密钥，并在应用限制 (Application restrictions) 中勾选网站 (Websites)。随后添入你的 Open-WebUI 实例 URL，内容等同于步骤 1 中的授权 JavaScript 来源和重定向 URI 的地址。
 8. 给该 API Key 配置 API 约束限制，使其只准存取 Google Drive API & Google Picker API。
 9. 配置环境变量，将 `GOOGLE_DRIVE_CLIENT_ID` 设置为步骤 2 里的 OAuth 客户端的客户端 ID。
-10. 将环境变量 `GOOGLE_DRIVE_API_KEY` 设为步骤 7 生成的 API Key 的值 (请注意**绝非**步骤 2 里的 OAuth client secret)。
+10. 将环境变量 `GOOGLE_DRIVE_API_KEY` 设为步骤 7 生成的 API 密钥，而不是步骤 2 的 OAuth 客户端密钥。
 11. 建立 `GOOGLE_REDIRECT_URI` 设定为你 Open-WebUI 实例的 URL (包含端口)。
 12. 接着，在环境里携带着那三项变量重新启动你的 Open-WebUI。
 13. 完成之后，去确保 Google Drive 已经在 `Settings` > `Documents` > `Google Drive`（管理员区域）被开启。

@@ -14,6 +14,7 @@ title: "❓ 常见问题"
 4. **保持友善。** 贡献者提供的是有限的志愿时间——礼貌且准备充分的问题更容易得到帮助。参与前请先阅读我们的 **[行为准则](https://github.com/open-webui/open-webui/blob/main/CODE_OF_CONDUCT.md)**。
 
 **提问渠道：**
+- **快速解答**：Discord #questions 频道——先试试机器人，它能回答大多数 Open WebUI 问题。
 - 🐛 **Bug 报告**：[GitHub Issues](https://github.com/open-webui/open-webui/issues)——请使用 issue 模板并补充所有要求的信息（Open WebUI 版本、浏览器、部署方式、预期行为与实际行为、日志）。清晰的复现步骤与相关设置非常关键——可复现性越高，问题修复越快。缺少关键信息的报告可能会被关闭或转为讨论。
 - 💬 **问题与帮助**：[GitHub Discussions](https://github.com/open-webui/open-webui/discussions)
 - 💡 **功能请求**：[GitHub Discussions](https://github.com/open-webui/open-webui/discussions/new/choose)
@@ -42,17 +43,17 @@ title: "❓ 常见问题"
 
 ### 问：聊天进行一段时间后，我收到 “The prompt is too long” / “context length exceeded”，该怎么处理？ {#q-i-get-the-prompt-is-too-long--context-length-exceeded-after-a-while-in-a-chat-how-do-i-fix-it}
 
-**答：** 这个错误来自**模型提供商**，而不是 Open WebUI——提供商会计算你发送的全部 token（系统提示词 + **完整**聊天历史 + 附件文件 + 工具调用 + 你的新消息），一旦超过模型上下文窗口就会拒绝请求。模型看到的 “prompt” 是整个会话，而不只是你刚输入的那一句。
+**答：** 这个错误来自**模型提供商**，而不是 Open WebUI——提供商会计算你发送的全部 token（系统提示词 + *完整*聊天历史 + 附件文件 + 工具调用 + 你的新消息），一旦超过模型上下文窗口就会拒绝请求。模型看到的 “prompt” 是整个会话，而不只是你刚输入的那一句。
 
 Open WebUI 有意**不内置**上下文裁剪器。不同模型使用不同 tokenizer，也有不同的上下文窗口；不同部署对截断策略的需求也不一样（按 token、按轮次、按消息数、优先裁掉附件、摘要替换、按模型预算等）。不存在一种适合所有人的统一策略，因此我们提供钩子，而不是替你强行做决定。
 
-上下文管理通过 [filter 函数](/features/extensibility/plugin/functions/filter) 完成：每次请求时，`inlet()` 都会收到完整的 `body["messages"]`，你可以自由修改它（删除旧轮次、限制对话轮数、做摘要、裁剪附件等）。很多社区维护的上下文过滤器已经可以在 [Open WebUI 社区](https://openwebui.com/) 一键安装——浏览、安装并调整阀门配置即可。如果没有完全合适的，就把最接近的那一个复制到 **Admin Panel → Functions** 里自行修改。
+上下文管理通过 [filter 函数](/features/extensibility/plugin/functions/filter) 完成：每次请求时，`inlet()` 都会收到完整的 `body["messages"]`，你可以自由修改它（删除旧轮次、限制对话轮数、做摘要、裁剪附件等）。很多已发布的上下文过滤器已经可以在 [openwebui.com](https://openwebui.com/) 上一键安装——浏览、安装并调整其参数即可。如果没有完全合适的，就把最接近的那一个复制到 **Admin Panel → Functions** 里自行修改。
 
 完整说明与示例请参阅 [上下文窗口 / 提示词过长](/troubleshooting/context-window)。
 
 ### 问：我可以在离线环境、隔离网络，甚至外太空这类极端环境中使用 Open WebUI 吗？ {#q-can-i-use-open-webui-offline-in-air-gapped-networks-or-in-extreme-environments-like-outer-space}
 
-**答：****可以。** Open WebUI 是一个自托管、**不依赖互联网的 AI 平台**，专为 **隔离网络**、**远程部署** 以及任何不适合或无法使用云系统的环境而设计。无论你是想**在无网络环境下运行 LLM**、部署**不依赖云的私有 AI**，还是离线运行**本地 AI 聊天机器人**，Open WebUI 都可以开箱即用。它完全运行在本地硬件上，默认不会主动发起外部请求。
+**答：** **可以。** Open WebUI 是一个自托管、**不依赖互联网的 AI 平台**，专为 **隔离网络**、**远程部署** 以及任何不适合或无法使用云系统的环境而设计。无论你是想**在无网络环境下运行 LLM**、部署**不依赖云的私有 AI**，还是离线运行**本地 AI 聊天机器人**，Open WebUI 都可以开箱即用。它完全运行在本地硬件上，默认不会主动发起外部请求。
 
 这种**不依赖地球网络的架构**也很适合作为**太空探索中的 AI 界面**——例如航天器、国际空间站、月球基地、火星栖息地和深空任务。在这些环境中，通信延迟甚至彻底断网都会让云端 AI 难以使用。无论你是需要**远程地点的自托管 AI**，还是要在**断联环境中运行 AI**，Open WebUI 的 **离线优先** 设计都能让模型、工具和数据始终保持本地、可预测，即使面对极高延迟或完全断网也一样。
 
@@ -99,7 +100,7 @@ Open WebUI 有意**不内置**上下文裁剪器。不同模型使用不同 toke
 **答：** 在 Docker 中，容器本来就是“可丢弃”的。只有在你**正确配置了 Volume** 时，数据才是安全的。
 
 :::danger 重要：数据持久化
-如果你在运行容器时**没有**使用 `-v open-webui:/app/backend/data`（或 Docker Compose 中等效的 volume 挂载），那么数据就保存在**容器内部**。在这种情况下，删除容器会导致**永久性数据丢失**。
+如果你在运行容器时*没有*使用 `-v open-webui:/app/backend/data`（或 Docker Compose 中等效的 volume 挂载），那么数据就保存在**容器内部**。在这种情况下，删除容器会导致**永久性数据丢失**。
 
 请务必按照我们的 **[快速开始指南](/getting-started/quick-start)** 正确配置持久化卷。
 :::
@@ -119,15 +120,15 @@ Open WebUI 有意**不内置**上下文裁剪器。不同模型使用不同 toke
 
 ### 问：Docker 支持 GPU 吗？ {#q-is-gpu-support-available-in-docker}
 
-**答：** Docker 中可以使用 GPU，但具体支持情况取决于平台。官方支持的主要是 Docker for Windows 和 Linux 上的 Docker Engine。其他平台（如 Docker Desktop for Linux 和 MacOS）目前不提供 GPU 支持。对于需要 GPU 加速的应用，这一点非常重要。若你希望获得更好的体验并启用 GPU 能力，建议在官方支持 GPU 集成的平台上使用 Docker。
+**答：** Docker 中可以使用 GPU，但具体支持情况取决于平台。官方提供的 GPU 支持覆盖 Docker for Windows 和 Linux 上的 Docker Engine。其他平台（如 Docker Desktop for Linux 和 MacOS）目前不提供 GPU 支持。对于需要 GPU 加速的应用，这一点非常重要。若你希望获得更好的体验并启用 GPU 能力，建议在官方支持 GPU 集成的平台上使用 Docker。
 
 ### 问：为什么 Open WebUI 强调使用 Docker？ {#q-why-does-open-webui-emphasize-the-use-of-docker}
 
-**答：** 之所以选择 Docker，是因为它能够确保环境一致性、隔离依赖，并简化跨环境部署。Docker 可以减少兼容性问题，让 WebUI 更容易在不同系统上快速运行。这是项目维护者综合权衡后的选择。我们理解 Docker 对部分用户来说有一定学习成本，也未必是所有人的首选；但从部署与维护角度看，这种方式对项目至关重要。对于希望使用其他部署方式的用户，我们也欢迎探索社区驱动的替代方案。
+**答：** 之所以选择 Docker，是因为它能够确保环境一致性、隔离依赖，并简化跨环境部署。Docker 可以减少兼容性问题，让 WebUI 更容易在不同系统上快速运行。这是项目维护者的一项战略性选择，旨在利用这些优势；同时也承认 Docker 存在学习成本，但其对部署和维护的收益非常可观。我们理解 Docker 并非所有人的首选，但这种方式是本项目设计与运维效率的核心。我们把项目对 Docker 的坚持视为一项基础安排，并鼓励希望采用其他部署方式的用户去探索独立维护的替代方案。
 
 ### 问：为什么我的部署中 Speech-to-Text (STT) 和 Text-to-Speech (TTS) 无法工作？ {#q-why-doesnt-speech-to-text-stt-and-text-to-speech-tts-work-in-my-deployment}
 
-**答：** 你的部署中的 Speech-to-Text (STT) 和 Text-to-Speech (TTS) 功能，可能需要 HTTPS 才能正常工作。现代浏览器会强制执行安全策略，限制 STT 和 TTS 这类功能只能在安全的 HTTPS 连接下使用。如果你的部署没有启用 HTTPS，这些服务可能无法按预期工作。确保通过 HTTPS 访问部署，通常就能解决此类问题。
+**答：** 你的部署中的 Speech-to-Text (STT) 和 Text-to-Speech (TTS) 功能，可能需要 HTTPS 才能正常工作。现代浏览器会强制执行安全策略，限制 STT 和 TTS 这类功能只能在安全的 HTTPS 连接下使用。如果你的部署没有启用 HTTPS，这些服务可能无法按预期工作。确保通过 HTTPS 访问部署，通常就能解决此类问题，让 STT/TTS 功能完整可用。
 
 ### 问：为什么 Open WebUI 不内置 HTTPS 支持？ {#q-why-doesnt-open-webui-include-built-in-https-support}
 
@@ -140,22 +141,22 @@ Open WebUI 有意**不内置**上下文裁剪器。不同模型使用不同 toke
 ### 问：我更新/重启后被登出了，或者我的工具出现 “Error decrypting tokens”，这是为什么？ {#q-i-updatedrestarted-and-now-im-being-logged-out-or-getting-error-decrypting-tokens-for-my-tools}
 
 **答：** 这通常是因为你没有在环境变量中设置持久化的 `WEBUI_SECRET_KEY`。
-- **被登出：** 没有该密钥时，Open WebUI 每次启动都会随机生成一个新的密钥，导致旧的会话 cookie（JWT）失效，你就必须重新登录。
-- **解密错误：** 一些重要机密（例如 MCP 工具的 OAuth token 或 API key）会使用该密钥加密。重启后如果密钥变了，Open WebUI 就无法解密这些内容，于是会报错。
+*   **被登出：** 没有该密钥时，Open WebUI 每次启动都会随机生成一个新的密钥，导致旧的会话 cookie（JWT）失效，你就必须重新登录。
+*   **解密错误：** 一些重要机密（例如 MCP 工具的 OAuth token 或 API key）会使用该密钥加密。重启后如果密钥变了，Open WebUI 就无法解密这些内容，于是会报错。
 
 **修复方法：** 在 Docker Compose 或环境配置中，把 `WEBUI_SECRET_KEY` 设置为固定且安全的字符串。
 
 ### 问：我更新/重启后登录失效了，不得不重新创建账号，而且所有聊天都没了。 {#q-i-updatedrestarted-and-now-my-login-isnt-working-anymore-i-had-to-create-a-new-account-and-all-my-chats-are-gone}
 
-**答：** 这个问题通常出现在 Docker 容器创建时没有为 `/app/backend/data` 挂载 volume，或者原本用于 Open WebUI 的 volume（示例里通常叫 `open-webui`）被意外删除。Docker volume 对跨容器生命周期保留数据至关重要。如果你在重启后发现必须重新创建账号，通常意味着你启动了一个新容器，却没有挂载保存旧数据的 volume。请确保 `docker run` 命令中包含正确的数据挂载路径，以避免数据丢失。
+**答：** 这个问题通常出现在 Docker 容器创建时没有为 `/app/backend/data` 挂载卷，或者原本用于 Open WebUI 的卷（示例中通常名为 `open-webui`）被意外删除。Docker 卷能在容器更换时保留数据。重启后如果需要重新创建账号，通常说明新容器没有挂载存放旧数据的卷。用 Docker 启动容器时，请确保 `docker run` 命令挂载了存放现有数据的正确卷，以免数据丢失。
 
 ### 问：我尝试登录失败后新建了账号，现在系统提示我的账号需要管理员激活。 {#q-i-tried-to-login-and-couldnt-made-a-new-account-and-now-im-being-told-my-account-needs-to-be-activated-by-an-admin}
 
-**答：** 这种情况通常发生在你忘记了首次安装时创建的初始管理员账号密码。第一个账号会自动成为管理员账号。如果失去该账号访问权限，再创建新账号时就会需要管理员激活。因此，妥善保管最初管理员账号的凭据非常重要。恢复管理员账号的方法请参见 [重置管理员密码](troubleshooting/password-reset)。
+**答：** 这种情况通常发生在你忘记了首次安装时创建的初始管理员账号密码。第一个账号会自动成为管理员账号。如果失去该账号访问权限，再创建新账号时就会需要管理员激活。因此，妥善保管初始管理员账号的凭据，对顺畅访问和管理 Open WebUI 至关重要。恢复管理员账号的方法请参见 [重置管理员密码](troubleshooting/password-reset)。
 
 ### 问：为什么 Open WebUI 启动时会出现 SSL 错误？ {#q-why-cant-open-webui-start-with-an-ssl-error}
 
-**答：** 启动 Open WebUI 时遇到的 SSL 错误，通常与 [huggingface.co](https://huggingface.co/) 的 SSL 证书缺失或配置不正确有关。你可以改用 HuggingFace 镜像，例如 [hf-mirror.com](https://hf-mirror.com/)，并在启动 Docker 容器时把它指定为 endpoint。使用 `-e HF_ENDPOINT=https://hf-mirror.com/` 即可在 Docker 运行命令中设置 HuggingFace 镜像地址，例如：
+**答：** 启动 Open WebUI 时遇到的 SSL 错误，通常与 [huggingface.co](https://huggingface.co/) 的 SSL 证书缺失或配置不正确有关。你可以使用 HuggingFace 镜像，例如 [hf-mirror.com](https://hf-mirror.com/)，在启动 Docker 容器时将其指定为端点。在 Docker 启动命令中使用 `-e HF_ENDPOINT=https://hf-mirror.com/` 设置 HuggingFace 镜像地址。例如，可按下方方式修改 Docker 命令：
 
 ```bash
 docker run -d -p 3000:8080 -e HF_ENDPOINT=https://hf-mirror.com/ --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
@@ -169,7 +170,7 @@ docker run -d -p 3000:8080 -e HF_ENDPOINT=https://hf-mirror.com/ --add-host=host
 
 **答：** 如果你使用的是 **Ollama**，请注意 Ollama 会根据 GPU 的显存来选择模型的默认上下文长度，在显存不足 24 GiB 的 GPU 上是 **4096 token**（参见 [Ollama 的上下文长度文档](https://docs.ollama.com/context-length)）。这意味着检索到的数据可能完全用不上，因为它超出了可用的上下文窗口。
 
-要提升 Open WebUI 中 Retrieval-Augmented Generation（**RAG**）的效果，你应该把上下文长度提高到更大的值（**8192+ tokens**），确保检索到的文档能有效参与模型回答。
+要提升 Open WebUI 中 Retrieval-Augmented Generation（**RAG**）的效果，你应该**大幅提高上下文长度**（**8192+ tokens**），确保检索到的文档能有效参与模型回答。
 
 做法是调整 **Ollama 模型参数**，为模型提供更大的上下文窗口。你可以直接在聊天中查看和修改，也可以在模型编辑页里调整，这通常会显著改善 RAG 体验。
 
@@ -212,7 +213,7 @@ def wait_for_processing(token, file_id):
 
 **要确认你实际用的是哪个模型：**
 1. 查看 Open WebUI 界面中的模型选择器
-2. 查看 **Settings > Connections**（管理员区域），确认实际 API endpoint
+2. 查看 **Settings > Connections**（管理员区域），确认实际 API 端点
 3. 在提供商的仪表板或日志中核对真实发出的 API 调用
 
 直接问模型本身**不能**作为诊断路由问题的方法。如果你怀疑配置出错，请改查连接设置和 API key。
@@ -253,8 +254,7 @@ def wait_for_processing(token, file_id):
 
 **答：** 支持。Open WebUI 原生支持 **MCP Streamable HTTP**，可直接、一等公民地集成通过标准 HTTP 传输通信的 MCP 工具。对于**其他 MCP 传输方式或非 HTTP 实现**，请使用我们的官方代理适配器 **MCPO**，地址见 👉 [https://github.com/open-webui/mcpo](https://github.com/open-webui/mcpo)。MCPO 提供统一、兼容 OpenAPI 的中间层，可把其他 MCP 传输方式稳定且安全地桥接到 Open WebUI。这样的架构能在不同环境下最大化兼容性、保持严格的安全边界，并让工具行为更可预测，同时维持 Open WebUI 后端无关、易于维护的设计。
 
-<span id="q-why-doesnt-open-webui-natively-support-provider-xs-proprietary-api"></span>
-### 问：为什么 Open WebUI 不原生支持某个提供商的专有 API？ {#q-why-doesnt-open-webui-natively-support-provider-xs-proprietary-api}
+### 问：为什么 Open WebUI 不原生支持 [Provider X] 的专有 API？ {#q-why-doesnt-open-webui-natively-support-provider-xs-proprietary-api}
 
 **答：** Open WebUI 采用高度模块化设计，提供了包括 tools、functions，尤其是 **[pipes](/features/extensibility/plugin/functions/pipe)** 在内的插件系统。通过这些模块化 pipe，你几乎可以为任何你想接入的提供商添加支持——可以自己构建，也可以直接使用许多已经存在、通常维护得不错的[社区方案](https://openwebui.com/)。
 
@@ -280,7 +280,7 @@ def wait_for_processing(token, file_id):
 - 每个集成都需要持续覆盖多种场景进行测试
 - 每当提供商发生变更，对应的 bug 报告都会大量涌入
 
-贡献者是**有全职工作的志愿者**。要求他们长期维护 10+ 家提供商的集成并不现实。
+Open WebUI 由一支小型核心团队维护。长期自行维护 10+ 家提供商的集成，会把核心工程精力从平台稳定性、发布质量以及各家提供商共有的功能上移开。
 
 #### 3. 技术复杂度 {#3-technical-complexity}
 
@@ -341,7 +341,7 @@ Open WebUI 从第一天起就是为大规模使用场景而打造，不只是“
 
 ### 问：Open WebUI 更新频率如何？（发布节奏） {#q-how-often-is-open-webui-updated-release-schedule}
 
-**答：** 我们的目标是**每周发布一次重大版本**，Bug 修复和小版本更新则按需发布。不过，这并不是死板的发布时间表——有些周可能会发布多个版本，也可能某些周完全没有发布。
+**答：** 我们的目标是**每周发布一次重大版本**，**Bug 修复和小版本更新则按需发布**。不过，这并不是死板的发布时间表——有些周可能会发布多个版本，也可能某些周完全没有发布。
 
 若想及时了解动态，可以关注我们的 [GitHub Releases 页面](https://github.com/open-webui/open-webui/releases)。
 

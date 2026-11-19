@@ -31,7 +31,7 @@ title: "OpenAI 语音转文本集成"
 | **STT 模型** | `gpt-transcribe` |
 | **支持的内容类型** | 可留空使用默认值，或设置为 `audio/wav,audio/mpeg,audio/webm` |
 
-5. 点击 **Save**
+5. 点击**保存**
 
 ## 可用模型 {#available-models}
 
@@ -42,7 +42,7 @@ title: "OpenAI 语音转文本集成"
 | `whisper-1` | 旧版 Whisper large-v2 模型，将于 2027-02-26 退役 |
 
 :::info
-OpenAI 推荐新部署使用 `gpt-transcribe`。`AUDIO_STT_MODEL` 默认为空，因此需要显式设置模型。若需要完全本地的转录，请使用本地 Whisper（内置于 Open WebUI）或 Deepgram 等其他提供商。
+OpenAI 推荐新部署使用 `gpt-transcribe`。`AUDIO_STT_MODEL` 默认为空，因此需要显式设置模型。需要完全在本地转录时，可使用 Open WebUI 内置的本地 Whisper。也可选择 Deepgram 等其他提供商。
 :::
 
 :::caution OpenAI 正在退役旧的转录模型
@@ -90,7 +90,7 @@ OpenAI Whisper API 支持：`mp3`、`mp4`、`mpeg`、`mpga`、`m4a`、`wav`、`w
 
 1. 点击聊天输入框中的**麦克风图标**
 2. 说出你的内容
-3. 再次点击麦克风，或等待静音检测结束
+3. 再次点击麦克风停止录音，或等待系统检测到静音
 4. 你的语音会被转录并显示在输入框中
 
 ## OpenAI 与 Local Whisper 对比 {#openai-vs-local-whisper}
@@ -100,7 +100,7 @@ OpenAI Whisper API 支持：`mp3`、`mp4`、`mpeg`、`mpga`、`m4a`、`wav`、`w
 | **延迟** | 取决于网络 | 短音频通常更快 |
 | **成本** | 按分钟计费 | 免费（使用你的硬件） |
 | **隐私** | 音频发送到 OpenAI | 音频留在本地 |
-| **需要 GPU** | 否 | 为了速度建议使用 |
+| **需要 GPU** | 否 | 建议使用，可加快转录 |
 | **模型选项** | `gpt-transcribe`、`gpt-live-transcribe`、`whisper-1` | tiny、base、small、medium、large |
 
 在以下情况下推荐选择 **OpenAI**：
@@ -123,10 +123,10 @@ OpenAI Whisper API 支持：`mp3`、`mp4`、`mpeg`、`mpga`、`m4a`、`wav`、`w
 
 ### 转录报错 {#transcription-errors}
 
-1. 检查 OpenAI API key 是否有效
-2. 确认 API Base URL 是否正确
+1. 检查 OpenAI API 密钥是否有效
+2. 确认 API 基础 URL 是否正确
 3. 查看容器日志中的报错信息
-4. 如果 API Base URL 指向其他兼容 OpenAI 的服务，请将 **STT 模型**设为该服务支持的模型 ID
+4. 如果 API 基础 URL 指向其他兼容 OpenAI 的服务，请将 **STT 模型**设为该服务支持的模型 ID
 
 ### 语言识别问题 {#language-issues}
 

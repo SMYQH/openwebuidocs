@@ -44,7 +44,7 @@ Open WebUI 从一开始就是面向多用户设计的。即使你是唯一使用
 
 **典型示例：**
 
-- 偏好的默认模型与 system prompt
+- 系统提示词，以及在模型选择器中用**设为默认**保存的默认模型
 - 界面主题与语言
 - 个人 API 密钥（如果启用了 [Direct Connections](/features/chat-conversations/direct-connections)）
 - 自动补全、富文本输入等功能的个人开关
@@ -85,7 +85,7 @@ Open WebUI 从一开始就是面向多用户设计的。即使你是唯一使用
 
 ## 快速对照 {#quick-reference}
 
-| | Admin Settings | User Settings |
+| | 管理员设置 | 用户设置 |
 |---|---|---|
 | **作用范围** | 整个实例（所有用户） | 单个用户 |
 | **访问权限** | 仅管理员 | 所有人 |
@@ -107,8 +107,8 @@ Open WebUI 从一开始就是面向多用户设计的。即使你是唯一使用
 **“我想用自己的 API 密钥，但不想和服务器共享。”**
 如果管理员启用了 **Direct Connections**，你可以在 用户设置 > 连接 中添加个人 API 密钥。详见 [Direct Connections](/features/chat-conversations/direct-connections)。
 
-**“我设置了 system prompt，但管理员在 Workspace 里的模型设置把它覆盖了。”**
-管理员在 Workspace 中为模型配置的 system prompt 优先于你个人的设置。高级参数则相反：你为账户设置的，或在 **模型控制 > 控制** 下为单个对话设置的值，才是实际发送的值。完整优先级见 [Chat Parameters](/features/chat-conversations/chat-features/chat-params)。
+**“我设置了系统提示词，但管理员的模型设置覆盖了它。”**
+管理员在工作空间中为模型配置的系统提示词优先于个人设置。高级参数则相反：实际发送的是你为账号设置的值，或在**模型控制 > 控制**中为单个聊天设置的值。完整优先级见[聊天参数](/features/chat-conversations/chat-features/chat-params)。
 
 **“设置 > 界面 中的某个开关旁边写着 Default。这是什么意思？”**
 这意味着你从未改动过该选项，因此它一直在跟随管理员配置的实例级[默认界面设置](/features/administration/interface-defaults)。改动之后它就归你了；把它改回当前默认值，它又会重新跟随。

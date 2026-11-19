@@ -5,9 +5,9 @@ title: "任务模型"
 
 # 任务模型 {#task-models}
 
-Open WebUI 会在后台进行一些规模较小的模型调用，与用户正在等待的答案分开进行。它们用于撰写聊天标题、生成标签、建议后续消息、产出自动补全的灰色提示文字、把一条消息改写成知识检索或 Web 搜索查询、把一条消息改写成图像提示词，以及在开启[上下文压缩](/troubleshooting/context-window#the-built-in-option-context-compaction)时总结较早的消息。
+除了生成用户正在等待的回复，Open WebUI 还会在后台发起轻量的模型请求。这些请求用于生成聊天标题、标签、后续消息建议和自动补全的淡色预览文字，将消息改写成用于知识检索或 Web 搜索的查询，或改写成图像提示词。开启[上下文压缩](/troubleshooting/context-window#the-built-in-option-context-compaction)时，后台请求也会总结较早的消息。
 
-默认情况下，这些工作全部运行在用户正在对话的那个模型上。在昂贵的旗舰模型上，这是一笔没人预期的账单；在缓慢的本地模型上，它会让整个界面显得迟滞。把后台工作指向一个小而快的模型，是管理员在这里能做的最有价值的改动。
+默认情况下，这些后台任务使用用户当前对话的模型。昂贵的旗舰模型会带来额外开支，速度慢的本地模型则会让整个界面变迟缓。对管理员来说，最值得做的调整是让后台任务使用一个小而快的模型。
 
 以下设置位于 **Settings > Interface**（管理员区域）。
 
@@ -77,13 +77,13 @@ Open WebUI 会在后台进行一些规模较小的模型调用，与用户正在
 图像提示词生成改为在 **Settings > Images**（管理员区域） 中关闭（[`ENABLE_IMAGE_PROMPT_GENERATION`](/reference/env-configuration#enable_image_prompt_generation)）。
 
 :::tip 硬件较弱时
-第一个该关掉的就是自动补全。它随用户输入而触发，因此一个迟缓的任务模型会让提示框变得像糖浆一样黏滞。
+优先关闭自动补全。它会在用户输入时触发，任务模型太慢会让输入框响应迟缓。
 :::
 
 ---
 
 ## 修改提示词 {#changing-the-prompts}
 
-大多数任务的提示词位于 **Generation** 下，默认都为空，表示使用内置提示词。知识检索与 Web 搜索共用一个 **Query Generation Prompt**；**Image Prompt Generation Prompt** 位于 Generation 下（当其开关在 Images 标签页中处于开启状态时）；**Context Compaction Prompt** 则位于 **Chat** 下。[环境变量配置参考的 Tasks 章节](/reference/env-configuration#tasks)给出了每个内置提示词的完整文本及其可用的占位符。
+大多数任务的提示词位于 **Generation** 下，默认留空，即使用内置提示词。知识检索与 Web 搜索共用 **Query Generation Prompt**。**Image Prompt Generation Prompt** 位于 Generation 下，但对应开关在 Images 标签页中。**Context Compaction Prompt** 位于 **Chat** 下。[环境变量配置参考的 Tasks 章节](/reference/env-configuration#tasks)列出了每个内置提示词的完整文本及其支持的占位符。
 
 这里值得了解[提示词修饰符](/features/workspace/prompts)，因为任务提示词常常需要应对粘贴进来的文档和长长的代码块。

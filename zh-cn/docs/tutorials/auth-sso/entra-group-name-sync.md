@@ -6,7 +6,7 @@ title: "Entra ID 群组名称同步"
 # Microsoft Entra ID 群组名称同步 {#microsoft-entra-id-group-name-sync}
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+本教程由社区贡献，Open WebUI 团队不提供支持。它仅演示如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
 默认情况下，当您为 Open WebUI 配置 Microsoft Entra ID OAuth 和自动群组创建时，安全组会使用其**群组 ID（GUID）**而非人类可读的群组名称进行同步。这是 Microsoft 的一个限制——ID 令牌默认不包含群组显示名称。
@@ -128,13 +128,13 @@ title: "Entra ID 群组名称同步"
 
 确保您的应用注册具有所需的 Microsoft Graph 权限：
 
-1. 在应用注册中，转到 **API permissions（API 权限）**
+1. 在应用注册中，转到 **API 权限**
 2. 点击 **Add a permission（添加权限）** > **Microsoft Graph** > **Delegated permissions（委托权限）**
 3. 如果尚未添加，请从 OpenID 部分添加以下权限：
    - `openid`
    - `email`
    - `profile`
-4. 点击 **Grant admin consent for [your organization]（为 [您的组织] 授予管理员同意）**
+4. 点击 **Grant admin consent for [your organization]（为你的组织授予管理员同意）**
 
 ## 步骤 5：配置 Open WebUI 环境变量 {#step-5-configure-open-webui-environment-variables}
 
@@ -211,7 +211,7 @@ WEBUI_SECRET_KEY=your_secure_secret_key
 4. 在 **ID** 令牌类型下，将群组标识符格式设置为 **sAMAccountName**
 5. 点击 **Save**
 
-这会告诉 Entra ID 在 AD 同步过来的群组中包含本地 `sAMAccountName` 属性，从而解析为人类可读的群组名称。
+这样，Entra ID 就会在令牌中为从 AD 同步的群组提供本地 `sAMAccountName` 属性，从而获得可读的群组名称。
 
 :::info 混合环境
 

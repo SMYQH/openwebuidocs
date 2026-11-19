@@ -5,11 +5,9 @@ title: "扩展 Open WebUI"
 
 # 扩展 Open WebUI {#scaling-open-webui}
 
-Open WebUI 的设计允许你随着需求增长而扩展——从单用户一路扩展到覆盖大型企业和机构的全组织部署。下面的步骤会带你了解在需求不断扩大时，应该如何逐步调整部署方式。
+Open WebUI 可以从单用户扩展到全组织部署。它采用**无状态、容器优先的架构**，扩展方式与其他现代 Web 应用相同：先将状态迁移到共享服务，再在负载均衡器后增加实例。
 
-Open WebUI 采用**无状态、容器优先架构**，因此它的扩展方式与大多数现代 Web 应用很相似。无论你是从个人兴趣项目升级到支撑一个部门，还是从数百用户扩展到数千用户，所需的基础构件基本是一致的。
-
-本指南会从较高层面介绍关键概念和配置。具体环境变量说明请参见[环境变量参考](/reference/env-configuration)。
+本指南概述扩展步骤。各变量的详细说明见[环境变量参考](/reference/env-configuration)。单实例调优请参见[优化、性能与内存占用](/troubleshooting/performance)。扩展后的部署出现问题时，请参见[扩缩容与高可用故障排查](/troubleshooting/multi-replica)。
 
 ---
 
@@ -97,7 +95,7 @@ Open WebUI 使用的是普通 Redis 命令，因此像 [**Valkey**](/tutorials/i
 - 设置 Redis 服务器的 `timeout`（例如 `1800`）以及足够高的 `maxclients`（10000+），以防止连接耗尽。
 - 对于大流量流式输出，请提高 Redis 的 Pub/Sub 输出缓冲区限制；参见 [WebSocket Pub/Sub 缓冲区限制](/tutorials/integrations/redis#websocket-pubsub-buffer-limits)。
 - 所有实例必须使用相同的 [`WEBSOCKET_REDIS_ROOM_CHANNELS`](/reference/env-configuration#websocket_redis_room_channels) 值。参见[按房间分配的 Redis 频道](#per-room-redis-channels)。
-- 对于绝大多数部署（即使有数千用户）），一个 **单个 Redis 实例** 就够用。在考虑 Redis Cluster 之前，请先检查是否存在可修复的配置问题（参见[常见错误模式](/troubleshooting/performance#common-anti-patterns)）。
+- 对于绝大多数部署，即使有数千名用户，**单个 Redis 实例**也足够。在考虑 Redis Cluster 之前，请先排查可修复的配置问题（参见[常见错误模式](/troubleshooting/performance#common-anti-patterns)）。
 
 如需完整的 Redis 搭置（Docker Compose、Sentinel、Cluster、验证），请参阅 [Redis WebSocket 支持](/tutorials/integrations/redis) 教程。若需处理反向代理后的 WebSocket 和 CORS 问题，请参见[连接错误](/troubleshooting/connection-error#https-tls-cors--websocket-issues)。
 
@@ -261,7 +259,7 @@ slim 镜像只支持 PGVector，也就是它默认的 `VECTOR_DB`。
 
 ## 第 5 步——在多个实例之间共享文件存储 {#step-5-share-file-storage-across-instances}
 
-**何时需要：** 当你运行多个实例，并且它们都需要访问上传文件、生成图片等用户数据时。
+**何时需要：** 当你运行多个实例时。要让附件、知识库文档和生成的图片在各副本上正常使用，**所有副本都必须能访问同一批上传文件**。
 
 默认情况下，Open WebUI 会把上传文件存到 `DATA_DIR`（通常是 `/app/backend/data`）下的本地文件系统。在多实例环境中，每个实例都必须能访问同一批文件。没有共享存储时，当请求打到不同副本上，你会看到[上传文件和 RAG 知识不可访问](/troubleshooting/multi-replica#5-uploaded-files-or-rag-knowledge-inaccessible)。
 
@@ -433,7 +431,7 @@ flowchart TD
     Storage -.-> StoreNote
 ```
 
-**遇到问题？** [扩缩容与高可用](/troubleshooting/multi-replica) 覆盖了常见问题（登录循环、WebSocket 失败、数据库锁、worker 崩溃）及其解决方法。性能调优请参见 [优化、性能与内存占用](/troubleshooting/performance)。
+**遇到问题？** 登录循环、WebSocket 故障、数据库锁和上传时崩溃等问题，请参见[扩缩容与高可用故障排查](/troubleshooting/multi-replica)。
 
 ### 扩展部署的最小环境变量集合 {#minimum-environment-variables-for-scaled-deployments}
 ``` bash

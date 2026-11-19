@@ -888,7 +888,7 @@ result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id
       return response.json()
   ```
 
-这些方法可以通过上传的文件和精心整理的知识库有效利用外部知识，增强聊天应用的能力。无论是单独使用文件还是将其纳入知识库，你都可以根据具体需要自定义集成方式。
+借助 Open WebUI API，这些方法可以利用上传的文件和整理好的知识库中的外部知识，增强聊天应用的能力。无论是单独使用文件还是将其纳入知识库，你都可以根据具体需要自定义集成方式。
 
 ## 将 Open WebUI 作为统一 LLM 提供商的优势 {#advantages-of-using-open-webui-as-a-unified-llm-provider}
 

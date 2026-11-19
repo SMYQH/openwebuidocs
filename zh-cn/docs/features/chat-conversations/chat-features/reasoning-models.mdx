@@ -41,12 +41,14 @@ Open WebUI 会自动：
 - **聊天历史**：推理内容会保留在聊天历史中。是否会被发回给模型，取决于具体连接；参见[推理内容是如何被重新发回的](#how-reasoning-is-sent-back)
 - **UI 渲染**：内部上，推理块会通过专门 UI 组件进行处理与渲染。保存或导出时，它们可能表现为 HTML `<details type="reasoning">` 标签
 
+---
+
 ## Open WebUI 设置 {#open-webui-settings}
 Open WebUI 提供多项内置设置，用于配置推理模型行为。你可以在以下位置找到：
 
 - **Model controls**（消息输入框旁）→ **Controls** → **Advanced Params** —— 按聊天设置
 - **Workspace** → **Models** → **Edit Model** → **Advanced Parameters** —— 按模型设置（仅管理员）
-- **Settings** → **AI** → **Models** → 选择某个模型 → **Advanced Parameters**（管理员区域） —— 另一个按模型设置入口
+- **Settings** → **Models** → 选择某个模型 → **Advanced Parameters**（管理员区域） —— 另一个按模型设置入口
 
 ### 推理标签设置 {#reasoning-tags-setting}
 
@@ -71,7 +73,7 @@ Open WebUI 提供多项内置设置，用于配置推理模型行为。你可以
 - 使用独特标签格式的自定义微调模型
 - 使用 XML 风格 reasoning marker 的模型
 
-### think（Ollama） {#think-ollama}
+### `think`（Ollama） {#think-ollama}
 这是一个 Ollama 专属设置，用于控制模型内置的 reasoning 功能。自 v0.9.0 起，Ollama 已原生将 thinking 与答案分离，因此无需设置任何服务端开关：
 
 | 选项 | 发送内容 | 说明 |
@@ -82,7 +84,7 @@ Open WebUI 提供多项内置设置，用于配置推理模型行为。你可以
 | **Off** | `think: false` | 关闭 thinking mode |
 
 :::note
-该设置会把 `think` 参数直接发送给 Ollama，Ollama 会在独立的 `thinking` 字段中返回推理轨迹，Open WebUI 将其作为 reasoning 读取（参见[推理内容是如何被重新发回的](#how-reasoning-is-sent-back)）。这与 Open WebUI 解析文本中 `<think>` 标签的机制相互独立，后者只对把推理直接写在正文里的模型才有影响。
+该设置会把 `think` 参数直接发送给 Ollama，由它在独立的 `thinking` 字段中返回推理轨迹，Open WebUI 将其作为 reasoning 读取（参见[推理内容是如何被重新发回的](#how-reasoning-is-sent-back)）。这与 Open WebUI 解析文本中 `<think>` 标签的机制相互独立，后者只对把推理直接写在正文里的模型才有影响。
 :::
 
 ### 推理力度 {#reasoning-effort}
@@ -94,6 +96,8 @@ Open WebUI 提供多项内置设置，用于配置推理模型行为。你可以
 :::info
 Reasoning Effort 仅适用于支持该参数的特定提供商模型。在原生 Ollama 连接上不会透传该参数——上面提到的 `think` 设置已经覆盖了同样的需求。如果把 Ollama 作为 OpenAI 连接接入，则 Ollama 的 OpenAI 兼容端点确实接受 `reasoning_effort`。
 :::
+
+---
 
 ## 工具调用中的交错式思考（Interleaved Thinking） {#interleaved-thinking-with-tool-calls}
 
@@ -147,6 +151,8 @@ Reasoning Effort 仅适用于支持该参数的特定提供商模型。在原生
 :::info 重要
 如果你正在使用 non-streaming 请求（通过 API 或某些配置发起），那么 **thinking 区块能否分离，取决于能否在完整响应中检测到相应标签**，或者后端是否把 reasoning 作为独立字段返回。
 :::
+
+---
 
 ## API 使用示例 {#api-usage}
 
@@ -270,7 +276,7 @@ Expected `thinking` or `redacted_thinking`, but found `text`. When `thinking` is
 a final `assistant` message must start with a thinking block.
 ```
 
-**原因：** 这是一个底层架构差异。Open WebUI 遵循 **OpenAI Chat Completions API 标准**，并不原生支持 Anthropic 的专有 API 格式。Anthropic 的 extended thinking 需要结构化内容块（`{"type": "thinking"}` 或 `{"type": "redacted_thinking"}`），而这些格式并不存在于 OpenAI 标准中。
+**原因：** 这是一个底层架构差异。Open WebUI 遵循 **OpenAI Chat Completions API 标准**，并不原生支持 Anthropic 的专有 API 格式。Anthropic 的 extended thinking 需要结构化内容块（`{"type": "thinking"}` 或 `{"type": "redacted_thinking"}`），而这些属于 Anthropic 特有的格式，并不存在于 OpenAI 标准中。
 
 Open WebUI 不会把 Anthropic 风格的 thinking block 发回，因此无法满足 Anthropic 对结构化 thinking block 的要求。
 
@@ -285,7 +291,7 @@ Open WebUI 不会把 Anthropic 风格的 thinking block 发回，因此无法满
 2. **关闭 Extended Thinking**：如果你的工具调用工作流并不需要 extended thinking，可以关闭它，以避免格式不匹配
 
 :::note
-这一限制只出现在 **Anthropic extended thinking + tool calls** 的组合场景中。单独使用 extended thinking 没问题，单独使用 tool calls 也没问题——只有两者一起通过 Anthropic API 使用时才会出错。
+这一限制只出现在 Anthropic extended thinking + tool calls 的组合场景中。单独使用 extended thinking 没问题，单独使用 tool calls 也没问题——只有两者一起通过 Anthropic API 使用时才会出错。
 :::
 
 ### 有状态推理模型（GPT-5.6 等） {#stateful-reasoning-models-gpt-56-etc}

@@ -30,12 +30,12 @@ Open WebUI 允许管理员在新建聊天界面展示自定义横幅。横幅仅
 
 ## 配置横幅 {#configuring-banners}
 
-### 方式一：使用管理面板 {#option-1-using-the-admin-panel}
+### 方式 1：使用管理面板 {#option-1-using-the-admin-panel}
 
 这是管理横幅最直接的方式：
 
 1. 以管理员身份登录 Open WebUI 实例。
-2. 导航到 **设置** → **系统** → **通用**（管理员区域）。
+2. 导航到 **设置** → **通用**（管理员区域）。
 3. 找到 **横幅** 部分。
 4. 点击 **+** 图标添加新横幅。
 5. 点击 **保存** 应用更改。
@@ -65,7 +65,7 @@ Open WebUI 允许管理员在新建聊天界面展示自定义横幅。横幅仅
 
 ---
 
-### 方式二：使用环境变量（`WEBUI_BANNERS`） {#option-2-using-environment-variables-webui\_banners}
+### 方式 2：使用环境变量（`WEBUI_BANNERS`） {#option-2-using-environment-variables-webui\_banners}
 
 对于自动化部署，可使用 `WEBUI_BANNERS` 环境变量配置横幅。该值必须是一个**JSON 字符串**，表示横幅对象的**列表**（数组）。
 
@@ -114,9 +114,9 @@ services:
 
 ---
 
-## 支持的内容格式（仅限 HTML） {#supported-content-formatting}
+## 支持的内容格式 {#supported-content-formatting}
 
-横幅的 `content` 会先按 Markdown 解析，再经过净化器处理，因此内联 Markdown（`**bold**`、`[link](url)`、反引号）和内联 HTML 均可正常渲染。由于解析前每个换行都会先变成换行符，跨行的块级 Markdown（多行列表、表格、引用块、后置标题）无法成形。HTML 列表、标题、表格和引用块则可以正常渲染。`title` 虽然在 JSON 中被接受，但从不显示：编辑器没有"标题"字段，横幅展示的是类型标签加上内容。
+横幅的 `content` 会先按 Markdown 解析，再经过净化器处理，因此内联 Markdown（`**bold**`、`[link](url)`、反引号）和内联 HTML 均可正常渲染。解析前，每个换行符都会转换成换行元素，因此跨行的块级 Markdown 无法形成，例如多行列表、表格、引用块或后续行上的标题。HTML 列表、标题、表格和引用块则可以正常渲染。JSON 接受 `title`，但不会显示其值：编辑器没有“标题”字段，横幅仅显示类型标签和内容。
 
 ### 文本格式 {#text-formatting}
 

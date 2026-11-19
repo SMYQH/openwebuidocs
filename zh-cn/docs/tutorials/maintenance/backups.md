@@ -6,7 +6,7 @@ title: "备份"
 # 备份您的实例 {#backing-up-your-instance}
 
  :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+本教程由社区贡献，Open WebUI 团队不提供支持。它仅演示如何按具体使用场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
  没有人喜欢数据丢失！
@@ -33,7 +33,7 @@ Docker 容器是临时性的，必须将数据持久化到宿主机文件系统�
 
 ## 使用 Docker 卷 {#using-docker-volumes}
 
-如果您使用的是项目仓库中的 Docker Compose，将通过 Docker 卷部署 Open Web UI。
+如果使用项目仓库中的 Docker Compose 配置，Open Web UI 的数据会保存在 Docker 卷中。
 
 Ollama 和 Open WebUI 的挂载配置为：
 
@@ -75,7 +75,7 @@ services:
       - /opt/open-webui:/app/backend/data
 ```
 
-如果您是这样部署的，需要记录根目录上的路径。
+如果采用这种部署方式，请记下这些绑定挂载在宿主机上的实际路径。
 
 ## 编写备份任务脚本 {#scripting-a-backup-job}
 
@@ -164,9 +164,9 @@ exit 0
 
 ## 带容器中断的 Rsync 任务 {#rsync-job-with-container-interruption}
 
-为保持数据完整性，通常建议在冷文件系统上运行数据库备份。我们的默认示范备份任务可以稍作修改，在运行备份脚本之前停止应用栈，备份完成后再重新启动。
+为保持数据完整性，通常建议在停止数据库写入后备份数据库文件。可修改上面的示例任务，在运行备份脚本前停止应用栈，完成后再启动。
 
-当然，这种方式的缺点是会导致实例停机。建议在不使用实例的时间段运行该任务，或者采用每日"软备份"（在运行中的数据上）和更稳健的每周备份（在冷数据上）相结合的策略。
+这种方式会导致实例停机。可在无人使用实例时运行该任务，也可每天在线备份，并每周停机做一次更稳妥的备份。
 
 ``` bash
 
@@ -409,7 +409,7 @@ exit 0
 | 主题 | 描述 |
 |---|---|
 | SQLite 内置备份 | 考虑使用 SQLite 的 `.backup` 命令实现一致的数据库备份方案。 |
-| 加密 | 修改备份脚本以加入静态加密。有关数据库级加密，请参阅 [使用 SQLCipher 进行数据库加密](/reference/database-schema#database-encryption-with-sqlcipher)。 |
+| 加密 | 修改备份脚本，对静态备份数据进行加密。若要加密运行中的数据库所用存储，请参阅[数据库静态加密说明](/reference/database-schema#database-encryption-with-sqlcipher)。 |
 | 灾难恢复与测试 | 制定灾难恢复计划，并定期测试备份和恢复流程。 |
 | 其他备份工具 | 探索其他命令行备份工具，如 `borgbackup` 或 `restic`，以获得更高级的功能。 |
 | 邮件通知与 Webhook | 实现邮件通知或 webhook，以监控备份成功或失败的情况。 |

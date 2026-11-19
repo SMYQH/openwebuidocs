@@ -5,7 +5,7 @@ title: "Mistral TTS 集成"
 
 # 使用 Mistral 实现文本转语音 {#using-mistral-for-text-to-speech}
 
-本指南介绍如何在 Open WebUI 中使用 Mistral 的 Text-to-Speech API。
+本指南介绍如何在 Open WebUI 中使用 Mistral 的文本转语音 API。
 
 :::tip 想配置 STT？
 请查看配套指南：[使用 Mistral Voxtral 实现语音转文本](/features/chat-conversations/audio/speech-to-text/mistral-voxtral-integration)
@@ -31,12 +31,13 @@ title: "Mistral TTS 集成"
 | **TTS 模型** | `voxtral-tts-26-03`（或留空使用默认值） |
 | **TTS 语音** | 从可用语音中选择 |
 
-5. 点击 **Save**
+5. 点击**保存**
 
 ## 可用模型 {#available-models}
+
 | 模型 | 说明 |
-|-------|-------------| 
-| `voxtral-tts-26-03` | Voxtral TTS —— 当前的 Mistral 文字转语音模型，支持零样本音色克隆 |
+|-------|-------------|
+| `voxtral-tts-26-03` | Voxtral TTS：Mistral 当前的文本转语音模型，支持零样本音色克隆 |
 
 :::info
 如果 `AUDIO_TTS_MODEL` 为空，Open WebUI 会回退到 `voxtral-mini-tts-2603`。选择 **MistralAI** 作为引擎时会填入该模型。
@@ -74,9 +75,9 @@ services:
 Open WebUI 会向已配置的 Mistral 端点请求可用语音列表，并在 **TTS 语音** 选择器中展示它们。
 
 如果语音列表没有显示：
-- 确认 API key 有效
-- 确认 Open WebUI 服务器 / 容器可以访问 API Base URL
-- 查看 `/audio/voices` 请求相关日志
+- 确认 API 密钥有效
+- 确认 Open WebUI 服务器或容器可以访问 API 基础 URL
+- 查看日志中是否有 `/audio/voices` 请求错误
 
 ## 测试 TTS {#testing-tts}
 
@@ -88,19 +89,19 @@ Open WebUI 会向已配置的 Mistral 端点请求可用语音列表，并在 **
 
 ### "Mistral API key is required for Mistral TTS" {#mistral-api-key-is-required-for-mistral-tts}
 
-1. 确认 `AUDIO_TTS_MISTRAL_API_KEY` 已设置（或已在 Admin Audio 设置中填写）
+1. 确认 `AUDIO_TTS_MISTRAL_API_KEY` 已设置（或已在管理面板的音频设置中填写）
 2. 保存设置后重试
 
 ### 下拉框中没有语音 {#no-voices-shown-in-the-dropdown}
 
 1. 确认 Open WebUI 到 `AUDIO_TTS_MISTRAL_API_BASE_URL` 的网络访问正常
 2. 查看 Open WebUI 日志中与 Mistral 语音列表相关的错误
-3. 确认你的 key 有权限访问 Mistral 音频 API
+3. 确认该密钥有权访问 Mistral 音频 API
 
 ### TTS 请求失败 {#tts-request-fails}
 
 1. 确认 `AUDIO_TTS_ENGINE=mistral`
-2. 尝试将模型留空（会使用 `mistral-tts-latest`）
+2. 将模型明确设为当前的模型 ID，例如 `voxtral-tts-26-03`
 3. 尝试切换为已获取列表中的其他语音 ID
 
 更广泛的音频调试请参阅 [音频故障排查指南](/troubleshooting/audio)。

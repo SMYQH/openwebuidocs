@@ -1,21 +1,21 @@
 ---
 sidebar_position: 3
-title: "使用 Tailscale 的 HTTPS"
+title: "使用 Tailscale 配置 HTTPS"
 ---
 
-# 使用 Tailscale 的 HTTPS {#https-using-tailscale}
+# 使用 Tailscale 配置 HTTPS {#https-using-tailscale}
 
 
 **在你的私有网络中，从任意位置安全访问 Open WebUI。无需开放端口、无需自己管理证书，也无需公网暴露。**
 
-Tailscale 会在你的设备之间建立一个加密 mesh VPN（即 “tailnet”）。每台设备都会获得一个稳定主机名，例如 `my-server.tail1234.ts.net`，并且 Tailscale 能自动为其申请受信任的 HTTPS 证书。你的 Open WebUI 实例可以保持完全私有，只允许 tailnet 中的设备访问。
+Tailscale 在你的设备之间建立加密的网状 VPN（即 tailnet）。每台设备都有固定的主机名，例如 `my-server.tail1234.ts.net`。Tailscale 可以为该主机名自动签发受信任的 HTTPS 证书。你的 Open WebUI 实例完全不对外公开，只有 tailnet 中的设备可以访问。
 
 :::tip 何时使用 Tailscale
 如果你希望在不将 Open WebUI 暴露到公网的情况下，实现**跨设备、私有且可认证的访问**，Tailscale 非常合适。它尤其适用于个人部署、小团队，或需要在外通过手机 / 笔记本访问家庭服务器的场景。
 :::
 
 :::info 想看完整指南？
-本页只聚焦于 **HTTPS 配置**。如果你还需要 SSO 认证、Docker Compose sidecar 配置等完整接入方案，请查看 [**Tailscale 集成教程**](/tutorials/auth-sso/tailscale)。
+本页只介绍 **HTTPS 配置**。如需完整的 Tailscale 接入方案，包括 SSO 认证和 Docker Compose 边车配置，请参阅[**Tailscale 集成教程**](/tutorials/auth-sso/tailscale)。
 :::
 
 ---
@@ -26,7 +26,7 @@ Tailscale 会在你的设备之间建立一个加密 mesh VPN（即 “tailnet�
 | :--- | :--- |
 | **Open WebUI** | 已在本地端口 `8080`（默认值）运行 |
 | **Tailscale 账号** | 个人用途可免费注册，见 [tailscale.com](https://tailscale.com) |
-| **已安装 Tailscale** | 服务端与客户端设备上都需要安装 |
+| **已安装 Tailscale** | 运行 Open WebUI 的服务器及所有客户端设备都需要安装 |
 
 ---
 
@@ -81,7 +81,7 @@ tailscale status
 http://my-server.tail1234.ts.net:8080
 ```
 
-此连接已由 WireGuard 端到端加密。如果你需要浏览器中要求 HTTPS 的功能（例如 Voice Calls），请继续执行下一步。
+此连接已由 WireGuard 端到端加密。若要使用要求 HTTPS 的浏览器功能（例如语音通话），请继续执行下一步。
 
 ---
 
@@ -139,7 +139,7 @@ docker run -d \
 
 ## Tailscale Funnel（可选的公网访问） {#tailscale-funnel-optional-public-access}
 
-如果你想在**客户端无需安装 Tailscale** 的情况下把 Open WebUI 公网开放出去，可以使用 Tailscale Funnel，把 `tailscale serve` 暴露到互联网：
+如果你想公开分享 Open WebUI，而不要求客户端安装 Tailscale，可以用 Tailscale Funnel 将 `tailscale serve` 的端点公开到互联网：
 
 ```bash
 sudo tailscale funnel https / http://localhost:8080

@@ -26,7 +26,7 @@ title: "导出与导入数据库"
    ```
 
 2. **把待处理的更改写入 `webui.db`**：
-   停止容器后，这些更改仍留在 `webui.db-wal` 中，因此单独复制 `webui.db` 可能会丢失它们。在容器停止的状态下，使用同一个镜像执行一次 checkpoint：
+   停止容器后，这些更改仍留在 `webui.db-wal` 中，因此单独复制 `webui.db` 可能会丢失它们。请在容器停止时，用同一个镜像执行一次检查点操作，将更改写回数据库文件：
    ``` bash
    docker run --rm --volumes-from open-webui --entrypoint python3 "$(docker inspect -f '{{.Config.Image}}' open-webui)" -c "import sqlite3; db = sqlite3.connect('/app/backend/data/webui.db'); db.execute('PRAGMA wal_checkpoint(TRUNCATE)'); db.close()"
    ```
@@ -91,18 +91,13 @@ title: "导出与导入数据库"
 
 ---
 
-### 为什么这很重要 {#why-its-important}
+### 适用场景 {#why-its-important}
 
 以下情况特别适合使用此方法：
 
 - 将 Open WebUI 数据迁移到新服务器或新机器。
 - 在更新或修改之前创建数据备份。
 - 在多台服务器上使用相同配置测试 Open WebUI。
-
-
-通过以上步骤，您可以轻松管理 Open WebUI 的迁移或备份流程。请注意您使用的数据库格式，以确保兼容性。
-
----
 
 ``` bash
 
@@ -124,6 +119,11 @@ docker cp ./webui.db open-webui:/app/backend/data/webui.db
 # Start container:
 docker start open-webui
 ```
+
+通过以上步骤，您可以轻松管理 Open WebUI 的迁移或备份流程。请注意您使用的数据库格式，以确保兼容性。
+
+---
+
 ## 相关指南 {#related-guides}
 
 - [SQLite 数据库概览](/reference/database-schema) — 详细的数据库 schema

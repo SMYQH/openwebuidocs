@@ -1,9 +1,9 @@
 ---
 sidebar_position: 2
-title: "Functions"
+title: "Functions（函数）"
 ---
 
-# 🧩 Functions {#functions}
+# 🧩 Functions（函数）{#functions}
 
 :::danger 重要安全警告
 **Functions 在你的服务器上执行任意 Python 代码。** Function 创建仅限管理员。只从受信任的来源安装，导入前审查代码。恶意 Function 可能访问你的文件系统、泄露数据或危害整个系统。详情参见[插件安全警告](/features/extensibility/plugin/)。
@@ -28,7 +28,7 @@ Open WebUI 支持四种类型的 Functions。类型根据你 Python 代码中的
 | **Action** | `class Action` | 为消息添加交互式按钮 | 显示为聊天消息上的可点击按钮 |
 | **Event** | `class Event` | 在系统事件发生时运行自定义逻辑 | 在后台运行；无直接 UI |
 
-### Pipe Functions {#pipe-functions}
+### Pipe 函数 {#pipe-functions}
 
 Pipe 将自己注册为 Open WebUI 中的新"模型"。当用户选择它并发送消息时，`pipe()` 方法处理整个请求，无需 LLM 后端。这使 Pipes 极其灵活：
 
@@ -39,9 +39,9 @@ Pipe 将自己注册为 Open WebUI 中的新"模型"。当用户选择它并发�
 
 单个 Pipe 还可以通过定义返回 `{"id": ..., "name": ...}` 字典列表的 `pipes()` 方法暴露**多个模型**（称为"manifold"），每个字典对应一个模型。
 
-→ **[Pipe Function 指南](/features/extensibility/plugin/functions/pipe)**
+→ **[Pipe 函数指南](/features/extensibility/plugin/functions/pipe)**
 
-### Filter Functions {#filter-functions}
+### Filter 函数 {#filter-functions}
 
 Filter 位于用户和模型之间，在三个阶段拦截数据：
 
@@ -53,9 +53,9 @@ Filters 支持强大的横切关注点，如实时翻译、内容审核、提示
 
 Filters 可以全局应用（到所有模型）或附加到特定模型。可切换的过滤器让用户按对话启用/禁用它们。
 
-→ **[Filter Function 指南](/features/extensibility/plugin/functions/filter)**
+→ **[Filter 函数指南](/features/extensibility/plugin/functions/filter)**
 
-### Action Functions {#action-functions}
+### Action 函数 {#action-functions}
 
 Action 向对话消息工具栏添加自定义按钮。当用户点击它时，`action()` 方法运行，可完全访问事件系统以进行实时 UI 反馈、用户提示和确认。
 
@@ -63,13 +63,13 @@ Actions 可以做 Python 能做的任何事情：摘要或翻译消息、复制�
 
 → **[Action Function 指南](/features/extensibility/plugin/functions/action)**
 
-### Event Functions {#event-functions}
+### 事件函数 {#event-functions}
 
 *Open WebUI 0.10.0 中的新功能。*
 
 Event Function 针对**系统事件**（用户注册、聊天删除、服务器启动、配置变更）运行自定义 Python。其 `event()` 方法针对每个事件被调用，并根据事件名称进行过滤。Event Function 可以注册自己的 API 端点并调用内部服务，这使其适用于生命周期自动化、审计日志、注册门控、资源预置和自安装插件。
 
-→ **[Event Function 指南](/features/extensibility/plugin/functions/event)**
+→ **[事件函数指南](/features/extensibility/plugin/functions/event)**
 
 ---
 
@@ -220,7 +220,7 @@ Functions 支持基于 [Pydantic](https://docs.pydantic.dev/) 的双层配置系
 
 两者都定义为你 `Pipe`、`Filter` 或 `Action` 类中的嵌套 Pydantic `BaseModel`。`Event` 类也可以携带 `Valves`，但绝不能携带 `UserValves`，因为事件处理器在没有用户的情况下运行。管理员配置的值会存储到数据库中，并在运行时自动加载。当 Valves 中包含机密信息时，管理员可以 [对存储的值进行加密](/features/extensibility/plugin/development/valves#encrypting-valve-values-at-rest)。
 
-→ **[Valves Development Guide](/features/extensibility/plugin/development/valves)**
+→ **[Valves 开发指南](/features/extensibility/plugin/development/valves)**
 
 ---
 
@@ -244,10 +244,11 @@ Functions 支持基于 [Pydantic](https://docs.pydantic.dev/) 的双层配置系
 
 | 指南 | 说明 |
 |:------|:-----------|
-| [Pipe Function Guide](/features/extensibility/plugin/functions/pipe) | 构建自定义模型、智能体和非 LLM 界面 |
-| [Filter Function Guide](/features/extensibility/plugin/functions/filter) | 拦截、翻译、审核并记录消息 |
-| [Action Function Guide](/features/extensibility/plugin/functions/action) | 添加用于导出、工作流和交互任务的按钮 |
+| [Pipe 函数](/features/extensibility/plugin/functions/pipe) | 构建自定义模型、智能体和非 LLM 界面 |
+| [Filter 函数](/features/extensibility/plugin/functions/filter) | 拦截、翻译、审核并记录消息 |
+| [Action Function](/features/extensibility/plugin/functions/action) | 添加用于导出、工作流和交互任务的按钮 |
+| [事件函数](/features/extensibility/plugin/functions/event) | 针对系统事件运行自定义逻辑 |
 | [Valves](/features/extensibility/plugin/development/valves) | 使用管理员和用户设置来配置函数 |
-| [Events](/features/extensibility/plugin/development/events) | 向 UI 发送实时更新 |
-| [Reserved Arguments](/features/extensibility/plugin/development/reserved-args) | `__user__`、`__event_emitter__`、`__metadata__` 等 |
-| [Rich UI](/features/extensibility/plugin/development/rich-ui) | 在响应中嵌入交互式 HTML/JS 内容 |
+| [事件](/features/extensibility/plugin/development/events) | 向 UI 发送实时更新 |
+| [保留参数](/features/extensibility/plugin/development/reserved-args) | `__user__`、`__event_emitter__`、`__metadata__` 等 |
+| [富 UI 嵌入](/features/extensibility/plugin/development/rich-ui) | 在响应中嵌入交互式 HTML/JS 内容 |

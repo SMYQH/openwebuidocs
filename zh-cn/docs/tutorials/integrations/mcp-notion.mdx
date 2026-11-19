@@ -23,15 +23,15 @@ Notion 在 `https://mcp.notion.com/mcp` 托管了一个远程 MCP 服务器，Op
 
 ### 1. 添加工具 {#1-add-the-tool}
 
-进入 **Settings → External Tools**（管理员区域），点击 **+** 添加新连接。填写以下信息：
+在管理员区域打开 **Settings > Integrations**，点击 **+** 添加新连接。填写以下信息：
 
 | 字段 | 值 |
 |-------|----|
 | **Type** | MCP Streamable HTTP |
 | **URL** | `https://mcp.notion.com/mcp` |
 | **Auth** | OAuth 2.1 |
-| **ID** | `ntn` |
 | **Name** | `Notion` |
+| **Connection ID** | `ntn`（默认根据名称填充，请改为与下方导入配置一致的值） |
 
 点击 **Register Client**，然后 **Save**。如果您已预先创建 OAuth 客户端凭据，请使用 `OAuth 2.1 (Static)`。
 
@@ -65,7 +65,7 @@ Notion 在 `https://mcp.notion.com/mcp` 托管了一个远程 MCP 服务器，Op
 
 ### 2. 授权 {#2-authorize}
 
-在任意聊天中，打开 **+ → Integrations → Tools** 并开启 **Notion**。您将被重定向到 Notion 的 OAuth 流程——选择您的工作区并授权访问。
+在任意聊天中打开 **+ > Tools** 并启用 **Notion**。进入 Notion 的 OAuth 流程后，选择工作区并授予访问权限。
 
 ![已开启 Notion 工具的聊天输入栏。](/images/mcp-notion/notion-setup-step6.png)
 
@@ -76,7 +76,7 @@ Notion 在 `https://mcp.notion.com/mcp` 托管了一个远程 MCP 服务器，Op
 :::
 
 :::note 重新验证
-Notion 的 OAuth 会话可能在空闲或容器重启后过期。如果出现 `Failed to connect to MCP server 'ntn'`，请在任意聊天中重新切换工具以触发授权流程。
+Notion 的 OAuth 会话可能因长时间未操作或容器重启而过期。如果出现 `Failed to connect to MCP server 'ntn'`，请在任意聊天中重新启用工具，启动授权流程。
 :::
 
 
@@ -91,15 +91,17 @@ Notion 的 OAuth 会话可能在空闲或容器重启后过期。如果出现 `F
 
 ### `Failed to connect to MCP server 'ntn'` {#failed-to-connect-to-mcp-server-ntn}
 
-OAuth 会话已过期。在任意聊天中重新切换 Notion 工具（**+** → **Integrations → Tools**）以重新授权。
+OAuth 会话已过期。在任意聊天中重新启用 Notion 工具（**+ > Tools**）以重新授权。
 
 ![聊天中 MCP 服务器连接失败错误。](/images/mcp-notion/notion-setup-step12.png)
 
 ### `OAuth callback failed: OAuth callback state is invalid or expired` {#oauth-callback-failed-oauth-callback-state-is-invalid-or-expired}
 
-您正在通过 `localhost` 访问 Open WebUI，但 `WEBUI_URL` 设置为公共域名。Notion 的重定向会跳转到一个地址，而该地址不具备您最初访问的地址所拥有的授权状态。请使用 `WEBUI_URL` 中的**确切 URL** 访问实例并重新授权。
+如果通过 `localhost` 访问 Open WebUI，但 `WEBUI_URL` 配置的是公共域名，Notion 会将你重定向到另一个地址，那里没有你发起授权时的状态。请使用 `WEBUI_URL` 中的**确切 URL** 访问实例并重新授权。
 
-![OAuth 回调状态错误。](/images/mcp-notion/notion-setup-step13.png)
+如果中途退出登录，或者在一个浏览器开始授权、又在另一个浏览器完成授权，也会出现同样的错误。请重新登录，再在当前浏览器中重新启用该工具。
+
+![从 Notion 返回后显示的 OAuth 回调状态错误。](/images/mcp-notion/notion-setup-step13.png)
 
 ### `Object not found` {#object-not-found}
 
@@ -107,4 +109,4 @@ OAuth 会话已过期。在任意聊天中重新切换 Notion 工具（**+** →
 
 ### 创建页面时出现 `missing_property` {#missing\_property-when-creating-a-page}
 
-Notion 需要父页面或数据库。请告知模型：*"先搜索我的'Notes'页面，然后在其中创建新页面。"*
+Notion 需要父页面或数据库。请告诉模型：*“先搜索我的‘Notes’页面，然后在其中创建新页面。”*

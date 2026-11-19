@@ -5,27 +5,27 @@ title: "Agentic 搜索与 URL 抓取"
 
 # Agentic 网络搜索与 URL 抓取 🌐 {#agentic-web-search--url-fetching}
 
-Open WebUI 的网络搜索已经不再只是简单地注入结果片段，而是演进为完整的 **agentic research system**。当你启用 **Native Function Calling (Agentic Mode)** 后，高质量模型就可以自主探索网页、校验事实并继续跟进链接。
+Open WebUI 的网络搜索已从简单地注入结果片段发展为完整的**智能体研究系统**。启用 **Native Function Calling (Agentic Mode)** 后，表现良好的模型可以自主浏览网页、核实事实并跟进链接。
 
 :::tip 最低模型档位（该列表不会持续维护）
 Agentic 网络搜索需要模型能够可靠地调用工具，并判断何时继续深挖。这**不**意味着必须使用 frontier 级模型——便宜且够快就行。**GPT-5.6 Luna**、**Gemini 3.5 Flash-Lite**、**MiniMax M3**、**DeepSeek V4 Flash**，或者本地运行的 **Gemma 4 31B**、**Qwen 3.6 27B**、**Muse Glimmer 30B** 都能很好地胜任并达到最低要求，每个都在撰写时验证过。只有真正过旧或非常小的模型难以完成这种多步骤推理。
 
-**该列表不会持续更新**——追逐每一次模型发布既不现实也没有价值。直接使用你的提供商当前提供的模型即可；你不需要最新最强的，只需要一个较新的。
+**该列表不会持续更新**：追逐每一次模型发布既不现实，也没有价值。使用提供商当前提供的模型即可；不必追求最新、*最强*的模型，够新就行。
 :::
 
 :::info 中央工具文档
-关于所有内置 agentic 工具（包括 web search、knowledge bases、memory 等）的完整说明，请参阅 [**Native/Agentic Mode Tools Guide**](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
+有关所有内置智能体工具（包括网页搜索、知识库、记忆等）的完整说明，请参阅[**原生模式与智能体工具指南**](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
 :::
 
 ## Native Mode 与传统 RAG 的区别 {#native-mode-vs-traditional-rag}
 
-| 维度 | 传统 RAG（默认） | Agentic Search（Native Mode） |
+| 维度 | 传统 RAG（Legacy Mode） | Agentic Search（Native Mode） |
 |---------|---------------------------|------------------------------|
 | **搜索决策** | 由 Open WebUI 基于提示词分析决定是否搜索 | 由**模型**自己决定是否需要搜索、何时搜索 |
 | **数据处理** | 拉取全部结果、切块并执行 **RAG** | 直接返回 **snippets**；不切块，也不使用 Vector DB |
 | **链接跟随** | 将顶部结果的 snippet 注入上下文 | 模型使用 `fetch_url` 直接读取**整页内容** |
 | **模型上下文** | 仅获取相关片段（Top-K chunks） | 通过 `fetch_url` 获取**整段文本**，长度不超过你设置的限制 |
-| **推理方式** | 模型在系统注入数据后再处理 | 模型可以搜索、阅读、核查，然后再次搜索 |
+| **推理方式** | 模型在系统注入数据*之后*才处理数据 | 模型可以搜索、阅读、核查，然后再次搜索 |
 
 ## 如何启用 Agentic 行为 {#how-to-enable-agentic-behavior}
 
@@ -46,7 +46,7 @@ Agentic 网络搜索需要模型能够可靠地调用工具，并判断何时继
 :::
 
 :::tip Model Capability、Default Features 与聊天开关
-在 **Native Mode**（当前受支持模式）下，`search_web` 与 `fetch_url` 工具要求同时满足：模型启用了 **Web Search** capability，且模型设置中的 **Default Features** 里也勾选了 **Web Search**（或在聊天中手动打开）。只要缺少其中任一项，这两个工具就不会被注入——即使其他 builtin tools 仍可能可用。
+在 **Native Mode**（受支持的模式）下，要使用 `search_web` 和 `fetch_url`，必须启用模型的 **Web Search** 能力，*还要*在模型设置的 **Default Features** 中勾选 **Web Search**（或在聊天中手动开启）。缺少任一条件都不会注入这两个工具，即使其他内置工具仍可能出现。
 
 这里提到 Legacy Mode 下的 RAG 式注入行为，仅用于兼容历史部署。Native Mode 是默认模式；Legacy Mode 是已不受支持的退出选项。
 
@@ -79,7 +79,7 @@ Agentic 网络搜索需要模型能够可靠地调用工具，并判断何时继
 *   **原始上下文**：提取后的文本会被**直接注入模型上下文窗口**。默认情况下整页内容都会进入上下文。若要设置上限，可在 **设置 > Web Search**（管理员区域） 中调整 **Fetch URL Content Length Limit**，或设置 [`WEB_FETCH_MAX_CONTENT_LENGTH`](/reference/env-configuration#web_fetch_max_content_length)；超过该字符数的页面会被截断，并以 `[Content truncated...]` 结尾。
 *   **文件**：在读取之前，Open WebUI 会检查该 URL 是网页还是文件。该检查发出的请求与网页加载器完全相同，使用相同的 [`USER_AGENT`](/reference/env-configuration#user_agent)、浏览器请求头和 **Verify SSL Certificate** 设置，因此那些屏蔽未知客户端的站点（例如 Wikimedia）会以同样的方式回应。PDF 或其他文档随后会进入文档提取流程，模型拿到的是它的文本。当文件名没有已知扩展名时（例如 `arxiv.org/pdf/1706.03762`），由服务器报告的文件类型决定该文件被如何读取。
 *   **可引用**：被抓取的页面会以 URL 命名的来源出现在引用面板中。在 Native 模式下，这是网页成为引用的唯一途径，而且它一定是模型真正读过的页面。
-*   **Agentic 优势**：由于不使用 RAG，模型拿到的是网页的“完整画面”，而不是零散片段。这使它能更好执行复杂页面级指令（例如：“Summarize the technical specifications table from this documentation link”）
+*   **智能体优势**：由于不使用 RAG，模型能看到完整的网页内容，而不是零散片段，因此可以执行针对特定页面的复杂指令，例如：“总结此文档链接中的技术规格表。”
 
 :::tip
 通过把 `search_web` 与 `fetch_url` 分离，并且不经过 RAG，模型就能像一个真正的 **Information Retrieval** agent 一样，自主判断哪些来源值得阅读全文。
@@ -154,15 +154,15 @@ Model calls: search_web("React client-side XSS CVE 2026")
 
 **🎯 自适应精度**：模型不会只搜一次然后直接接受表面结果。它会根据已发现的信息不断优化搜索策略。如果最初的宽泛搜索只得到浅层信息，模型会自动收缩范围，转向更具体的技术术语、产品名、版本号或专业词汇。每轮搜索都会越来越精确，从广义概念逐步深入到具体细节，使最终答案兼顾广度与准确度。
 
-**🔗 深度跟链与发现能力**：不同于只使用 snippet 的传统 RAG 系统，模型在 snippet 不够时可以阅读整页内容。更强的是，**当模型用 `fetch_url` 阅读一个页面时，它还能发现页面中提到的新 URL，并继续抓取这些新链接**。例如，一个页面引用了技术规格文档、官方 changelog 或研究论文时，模型可以再次调用 `fetch_url` 深挖这些新资源。这让模型呈现出类似“网页浏览”的自然行为：沿着引用链深入阅读，探索相关资源，并像人类研究者一样通过多来源建立完整理解。
+**🔗 跟踪链接与发现新资料**：传统 RAG 系统只使用搜索结果片段，而模型在片段不足时可以阅读整个页面。**当模型用 `fetch_url` 阅读页面时，还可以发现并跟进页面中提到的新 URL**。例如，页面引用了技术规格、官方更新日志或相关论文时，模型可以自行再次调用 `fetch_url` 抓取这些 URL，深入了解相关内容。这类似于人类研究者浏览网页：沿着引用链探索相关资料，再综合多个相互关联的来源。
 
 **✅ 事实核验与交叉验证**：模型可以自主通过多个独立来源交叉验证信息。如果一个来源提出某项说法，模型可以继续搜索权威来源进行佐证、对照官方文档中的版本号，或回溯到一手来源验证事实。这种多源校验显著减少幻觉，提高答案可靠性。
 
 **🧩 智能补全信息缺口**：如果初始搜索结果缺少关键内容，或只覆盖了问题的一部分，模型会识别这些缺口，并用不同关键词、不同表达方式或更精确的问题自动发起后续搜索。例如，搜索 “React performance issues” 如果没覆盖某个特定优化技术，模型就可能进一步搜索 “React useMemo optimization” 或 “React.memo vs useMemo comparison” 来补齐知识缺口。这让复杂问题能够通过多轮搜索被完整覆盖。
 
-**🌐 多源综合**：模型不会只返回单一来源的信息，而是把多个网页、文档站点、论坛和文章中的信息综合起来，形成更完整、更平衡的回答。
+**🌐 多源综合**：模型不会只返回单一来源的信息，而是整合多个网页、文档站点、论坛和文章中的见解。这样既能提供更广的背景，也能纳入不同观点，给出比单一来源更完整的回答。
 
-**📚 上下文感知式来源选择**：模型会智能判断：什么时候 snippet 已足够，什么时候必须抓整页内容；也能判断何时该停止继续研究，从而在效率与完整性之间取得平衡。
+**📚 按上下文选择来源**：片段信息充足时，模型可以直接使用；需要深入了解时，模型可以抓取整页。模型也能判断何时停止研究，在保证完整性的同时避免不必要的工具调用，让搜索兼顾速度和可靠性。
 
 这种 **Thought → Action → Thought** 的循环会持续下去，直到模型有足够信息以最高准确度回答你的请求。
 

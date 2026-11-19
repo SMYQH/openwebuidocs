@@ -4,30 +4,30 @@ title: "Gemini"
 ---
 
 :::warning
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程由社区贡献，Open WebUI 团队不提供支持。它仅演示如何针对你的使用场景自定义 Open WebUI。想投稿？请查看教程投稿指南。
 :::
 
 Open WebUI 也支持通过 **Google AI Studio API**（也称 **Gemini API**）进行图像生成。
 
 ### 初始设置 {#initial-setup}
 
-1. 从 Google AI Studio 获取一个 [API key](https://aistudio.google.com/api-keys)——或者从 Google Cloud 获取 API key，并为项目启用 `Generative Language API`
+1. 从 Google AI Studio 获取 [API 密钥](https://aistudio.google.com/api-keys)，或从 Google Cloud 获取 API 密钥并为项目启用 `Generative Language API`。
 2. 大多数情况下，你还需要创建项目、启用 `Generative Language API` 并配置计费信息，因为图像生成 API 不是免费提供的
 
 :::warning
-如果你使用的是免费 API key，请务必在账户中绑定支付方式。缺少有效支付方式是配置过程中最常见的报错原因之一。
+如果你使用免费 API 密钥，请务必在账户中添加支付方式。缺少有效支付方式是配置失败的常见原因。
 :::
 
 :::tip
-如果你使用的是 Vertex AI，也可以在 Google Cloud 中创建 API key，而不是 service account。只要它具备正确权限，并且项目已启用 Generative Language API，这个 key 同样可正常工作。
+使用 Vertex AI 时，也可以在 Google Cloud 中创建 API 密钥，而不必创建服务账号。为密钥授予相应权限，并在项目中启用 Generative Language API 后，即可使用该密钥。
 :::
 
 ### 配置 Open WebUI {#configuring-open-webui}
 
 1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
 2. 将 `Image Generation Engine` 设置为 `Gemini`
-3. 将 `API Base URL` 设置为 `https://generativelanguage.googleapis.com/v1beta`
-4. 输入你的 Google AI Studio [API key](https://aistudio.google.com/api-keys)
+3. 将 `Base URL` 设置为 `https://generativelanguage.googleapis.com/v1beta`。
+4. 输入你的 Google AI Studio [API 密钥](https://aistudio.google.com/api-keys)。
 5. 输入你想使用的模型名称，可以是 [Imagen 模型](https://ai.google.dev/gemini-api/docs/imagen#model-versions)，也可以是 [Gemini 模型](https://ai.google.dev/gemini-api/docs/image-generation)
 6. 将 `Gemini Endpoint Method` 设为与该模型匹配的值：Imagen 用 `predict`，Gemini 用 `generateContent`
 
@@ -101,21 +101,21 @@ Gemini 模型使用 `generateContent`：
 
 :::
 
-### 使用 Gemini Endpoints 的 LiteLLM Proxy {#litellm-proxy-with-gemini-endpoints}
+### 通过 LiteLLM 代理使用 Gemini 端点 {#litellm-proxy-with-gemini-endpoints}
 
 Open WebUI 支持通过使用 Gemini 或 Imagen 端点的 LiteLLM 代理进行图像生成。配置方式如下：
 
 1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
-2. 将 `Image Generation Engine` 设置为 `Open AI`
-3. 将 API endpoint URL 改为 `https://<your-litellm-url>:<port>/v1`
+2. 将 `Image Generation Engine` 设置为 `Default (Open AI)`。
+3. 将 `API Base URL` 改为 `https://<your-litellm-url>:<port>/v1`。
 4. 输入你的 LiteLLM API 密钥
-5. API version 可留空
+5. API 版本可留空。
 6. 输入你在 LiteLLM 配置中使用的图像模型名称
 7. 将图像尺寸设置为所选模型支持的可用尺寸之一
 
 :::tip
 
-若要查看 LiteLLM 连接信息，请前往 **Settings** > **连接**（管理员区域）。
+若要查看 LiteLLM 连接信息，请前往**设置** > **连接**（管理员区域）。
 你的连接信息会显示在 Gemini API 连接下方。
 
 :::

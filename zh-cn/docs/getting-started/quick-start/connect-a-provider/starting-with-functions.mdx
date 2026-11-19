@@ -1,16 +1,16 @@
 ---
 sidebar_position: 6
-title: "Functions"
+title: "函数"
 ---
 
 ## 概览 {#overview}
 
-**Pipe Functions** 是一类 Python 插件，会像模型一样出现在聊天侧边栏中。在底层，它们几乎能做任何 Python 能做的事：接入私有 AI 提供商、用自然语言控制智能家居、查询数据库、调用搜索引擎、构建多步 Agent、生成图表、自动化工作流，甚至充当计算器。它甚至**不一定需要 LLM**。只要你能用 Python 写出逻辑，它就能变成一个用户可聊天的“模型”。
+**Pipe Functions** 是一类 Python 插件，会作为可选模型出现在模型选择器中。它们可以完成 Python 能做的事：接入专有 AI 提供商、用自然语言控制智能家居、查询数据库、调用搜索引擎、构建多步骤智能体、生成图表、自动化工作流，或充当计算器，甚至不需要 LLM。只要能用 Python 编写逻辑，就能将它变成用户可与之聊天的“模型”。
 
 本指南会以 [Anthropic Pipe](https://openwebui.com/posts/60984ebf-cf4e-4822-98b8-0492463c2852) 为例，带你导入并启用第一个 Pipe Function。
 
 :::info 已经有兼容 OpenAI 的提供商？
-如果你的提供商支持 **OpenAI 聊天补全 API 协议**（如 OpenAI、Google Gemini、Mistral、Groq、DeepSeek 等），那你根本不需要 Function。直接[添加一个连接](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)即可。Anthropic 也已经通过其兼容 OpenAI 的端点获得原生支持；详见 [Anthropic 指南](/getting-started/quick-start/connect-a-provider/starting-with-anthropic)。Functions 适用于其他场景：私有 API、自定义 Agent，或完全全新的交互接口。
+如果你的提供商支持 **OpenAI 聊天补全 API 协议**（如 OpenAI、Mistral、Groq、DeepSeek 等），不需要使用函数，直接[添加连接](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)即可。Anthropic 也通过其兼容 OpenAI 的端点获得原生支持，详见 [Anthropic 指南](/getting-started/quick-start/connect-a-provider/starting-with-anthropic)。函数适用于其他场景，如专有 API、自定义智能体或全新的交互界面。
 :::
 
 ---
@@ -72,7 +72,7 @@ title: "Functions"
 
 ## 第 6 步：开始聊天 {#step-6-start-chatting}
 
-现在这个 Function 会作为可选模型出现在聊天侧边栏中。选中它，即可开始聊天。
+现在该函数会作为可选模型出现在聊天顶部的模型选择器中。选中它即可开始聊天。
 
 ![将 Pipe Function 作为模型选择的截图](/images/getting-started/pipe-select-model.png)
 

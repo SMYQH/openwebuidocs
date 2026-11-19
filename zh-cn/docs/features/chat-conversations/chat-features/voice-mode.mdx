@@ -57,7 +57,7 @@ title: "语音模式"
 
 **设置 > 音频** 中的**语音播放速度**设置回复的朗读快慢。
 
-语音本身来自管理员在 **设置 > 音频**（管理员区域） 中选择的文字转语音引擎。如果管理员保持为 **Web API**，则使用浏览器内置的声音。你也可以在 **设置 > 音频** 中把 **文字转语音引擎** 选择为 **Kokoro.js (Browser)**，在浏览器内生成语音，**朗读**功能也会使用它。Kokoro.js 在浏览器提供 GPU 时使用 GPU，否则使用 CPU。
+语音由管理员在 **设置 > 音频**（管理员区域）中选择的文字转语音引擎生成。如果管理员保留 **Web API**，则使用浏览器内置的声音。你也可以在 **设置 > 音频** 中将 **文字转语音引擎** 设为 **Kokoro.js (Browser)**，在浏览器内生成语音。**朗读**功能也会使用它。浏览器能访问 GPU 时，Kokoro.js 会使用它；否则改用 CPU。
 
 管理员的**回复分段**设置决定每次朗读多少内容：
 
@@ -153,9 +153,9 @@ title: "语音模式"
 
 #### 使用 Azure OpenAI {#using-azure-openai}
 
-1. 在 Azure 门户中，为你的 Azure OpenAI 资源部署一个诸如 `gpt-realtime` 的实时模型，并记下部署名称和资源终结点。
+1. 在 Azure 门户中，为你的 Azure OpenAI 资源部署一个诸如 `gpt-realtime` 的实时模型，并记下部署名称和资源端点。
 2. 将**服务提供方**设为 **Azure OpenAI**。
-3. 在 **Azure OpenAI API 基础 URL** 中填入终结点并追加 `/openai/v1`，例如 `https://<resource>.openai.azure.com/openai/v1`。Open WebUI 会连接到 `<base URL>/realtime?model=<deployment>`，因此不需要 `api-version`。
+3. 在 **Azure OpenAI API 基础 URL** 中填入端点并追加 `/openai/v1`，例如 `https://<resource>.openai.azure.com/openai/v1`。Open WebUI 会连接到 `<base URL>/realtime?model=<deployment>`，因此不需要 `api-version`。
 4. 在 **实时部署名称** 中填入部署名称。它可以与模型名称不同。
 5. 将**声音**和**输入转写模型**设为该部署所支持的取值。
 6. 选择**认证方式**：
@@ -243,7 +243,7 @@ Open WebUI 会保留通话的文本转写。音频本身只是流式传输并播
 
 ### 要求与服务提供方 {#requirements-and-providers}
 
-- **Open WebUI 服务器可访问的 Realtime API。** Open WebUI 会向 `<API Base URL>/realtime?model=<Voice Model>` 打开一个 WebSocket。使用 **OpenAI / 兼容** 时，密钥以 bearer token 形式发送，因此任何兼容 OpenAI Realtime API 的服务器都可以使用，本地语音到语音引擎同样适用。对于不校验密钥的本地服务器，填写任意占位值即可。Azure OpenAI 有自己的**服务提供方**设置，参见[使用 Azure OpenAI](#using-azure-openai)。基础 URL 必须以 `http://` 或 `https://` 开头，且不含查询字符串、用户名或密码，因此需要额外查询参数的终结点无法使用。开启 [`ENABLE_FORWARD_USER_INFO_HEADERS`](/reference/env-configuration#enable_forward_user_info_headers) 后，WebSocket 还会携带调用者的用户信息请求头，或在设置了 [`FORWARD_USER_INFO_HEADER_JWT_SECRET`](/reference/env-configuration#forward_user_info_header_jwt_secret) 时携带已签名的用户 JWT，使服务提供方前面的网关能够识别通话中的用户。
+- **Open WebUI 服务器可访问的 Realtime API。** Open WebUI 会向 `<API Base URL>/realtime?model=<Voice Model>` 打开一个 WebSocket。使用 **OpenAI / 兼容** 时，密钥以 bearer token 形式发送，因此任何兼容 OpenAI Realtime API 的服务器都可以使用，本地语音到语音引擎同样适用。对于不校验密钥的本地服务器，填写任意占位值即可。Azure OpenAI 有自己的**服务提供方**设置，参见[使用 Azure OpenAI](#using-azure-openai)。基础 URL 必须以 `http://` 或 `https://` 开头，且不含查询字符串、用户名或密码，因此需要额外查询参数的端点无法使用。开启 [`ENABLE_FORWARD_USER_INFO_HEADERS`](/reference/env-configuration#enable_forward_user_info_headers) 后，WebSocket 还会携带调用者的用户信息请求头，或在设置了 [`FORWARD_USER_INFO_HEADER_JWT_SECRET`](/reference/env-configuration#forward_user_info_header_jwt_secret) 时携带已签名的用户 JWT，使服务提供方前面的网关能够识别通话中的用户。
 - **语音模型上的函数调用。** 服务器和语音模型都必须支持函数调用：问题通过 `generate_chat_completion` 触达聊天模型，[语音头像](#voice-avatars)手势通过 `play_animation` 播放。
 - **一个由服务器配置的聊天模型。** 请恰好选择一个你有权限访问的模型。如果使用来自直连连接的模型，通话会以**请选择一个由服务器配置的聊天模型。**结束。
 - **麦克风访问。** 与标准模式一样，浏览器只允许在 HTTPS 或 `localhost` 下使用麦克风。浏览器还需要支持 24 kHz 音频处理；若不支持，通话会以提示使用标准通话模式的消息结束。

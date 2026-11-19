@@ -221,3 +221,4 @@ Open WebUI 提供了强大的基于文件夹的组织功能，可将简单的对
 | -------- | ----------- |
 | [`ENABLE_FOLDERS`](/reference/env-configuration#enable_folders) | 全局启用 / 禁用文件夹功能（默认：`True`） |
 | [`USER_PERMISSIONS_FEATURES_FOLDERS`](/reference/env-configuration#user_permissions_features_folders) | 控制用户层面对文件夹功能的访问权限（默认：`True`） |
+| [`USER_PERMISSIONS_FOLDERS_ALLOW_SHARING`](/reference/env-configuration#user_permissions_folders_allow_sharing) | 允许用户将文件夹共享给特定用户或群组（默认：`False`） |

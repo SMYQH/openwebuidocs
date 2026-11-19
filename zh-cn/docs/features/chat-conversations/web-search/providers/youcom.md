@@ -23,7 +23,7 @@ title: "You.com"
 
 ## You.com YDC Index API {#youcom-ydc-index-api}
 
-[You.com](https://you.com/) 提供 YDC Index API，这是一套会返回结构化搜索结果的 web search API，包括标题、URL、描述和 snippets。
+[You.com](https://you.com/) 提供 YDC Index API。这是一款网页搜索 API，返回包含标题、URL、描述和摘要片段的结构化搜索结果。
 
 ### 前提条件 {#prerequisites}
 

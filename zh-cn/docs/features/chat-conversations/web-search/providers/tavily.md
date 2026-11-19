@@ -35,7 +35,6 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 - **Tavily 账号**：以及来自 [Tavily](https://app.tavily.com/sign-in) 的 API key
 - **管理员权限**：对 Open WebUI 实例具备管理权限
 - **网络连接**：用于发起 Tavily API 请求
-- **WEBUI_URL 环境变量**：已正确指向你的 Open WebUI 实例。参阅 [环境变量配置](/reference/env-configuration/)
 
 ## 分步配置 {#step-by-step-configuration}
 
@@ -45,13 +44,13 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 2. 进入 **Dashboard**（控制台）或 **API Keys** 页面
 3. 复制现有 key，或生成一个新的 API key，并妥善保存
 
-> **注意：** 请在 [Tavily Pricing](https://tavily.com/#pricing) 页面查看你当前套餐的查询限制。
+> **注意：** 请在 [Tavily Pricing](https://tavily.com/#pricing) 页面查看你当前 Tavily 套餐的查询限制。
 
 ### 2. 配置 Open WebUI {#2-configure-open-webui}
 
 1. 使用管理员账号登录 Open WebUI
-2. 点击左下角 **用户图标**，选择 **Settings**
-3. 打开 **Web Search** 标签
+2. 打开 **管理面板**，进入 **Settings**
+3. 在 **Tools** 下打开 **Web Search** 标签
 4. 将 **Web Search** 切换为 **开启**
 5. 在 **Web Search Engine** 下拉框中选择 **tavily**
 6. 将你的 Tavily API key 粘贴到 **Tavily API Key** 字段
@@ -62,7 +61,7 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 ### 3. 测试集成 {#3-test-the-integration}
 
 1. 保存设置
-2. 开启一段新的聊天
+2. 在 Open WebUI 中开启一段新的聊天
 3. 点击提示词输入框中的 **加号（+）** 按钮以启用 web search
 4. 输入一个查询（例如 `+latest AI news`），确认 Tavily 能返回实时结果
 
@@ -85,7 +84,7 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 
 - **API Key 无效**：确认复制的 key 没有多余空格
 - **无搜索结果**：确认已启用 web search 开关（`+`）并且网络正常
-- **额度耗尽**：在 [Tavily Pricing](https://tavily.com/#pricing) 查看套餐配额
+- **额度耗尽**：在 [Tavily Pricing](https://tavily.com/#pricing) 查看你的 Tavily 套餐配额
 - **设置未保存**：确认你有管理员权限，并且 `webui.db` 可写
 
 若需进一步帮助，请访问 [Open WebUI 社区](https://openwebui.com/search) 或 [Tavily 支持](https://tavily.com/#contact)。

@@ -3,10 +3,6 @@ sidebar_position: 50
 title: "数据库 Schema"
 ---
 
-<!-- markdownlint-disable MD060 -->
-
-<a id="database-encryption-with-sqlcipher"></a>
-
 :::warning
 
 本教程是社区贡献，不受 Open WebUI 团队支持。它仅作为如何针对特定用例定制 Open WebUI 的演示。想做出贡献？请查看贡献教程。
@@ -14,7 +10,6 @@ title: "数据库 Schema"
 :::
 
 > [!WARNING]
-> 本文档反映了截至 Open WebUI v0.10.0 的 schema 更改。
 
 ## Open-WebUI 内部 SQLite 数据库 {#open-webui-internal-sqlite-database}
 
@@ -68,9 +63,9 @@ docker exec -it open-webui /bin/sh
 | 08 | channel_member | 跟踪频道内的用户成员资格和权限 |
 | 09 | chat | 存储聊天会话及其元数据 |
 | 10 | chat_file | 将文件链接到聊天和消息 |
-| 11 | chatidtag | 映射聊天与其关联标签之间的关系 |
+| 11 | chatidtag | **旧版。** `tag` 之前的聊天/标签映射；数据已迁移到 `chat`，不再使用（见下方说明） |
 | 12 | config | 维护系统范围的配置设置 |
-| 13 | document | 存储文档及其元数据以进行知识管理 |
+| 13 | document | **旧版。** Knowledge 之前的文档表；数据已迁移到 `knowledge`，不再使用（见下方说明） |
 | 14 | feedback | 捕获用户反馈和评分 |
 | 15 | file | 管理上传的文件及其元数据 |
 | 16 | folder | 将文件和内容组织成分层结构 |
@@ -82,14 +77,14 @@ docker exec -it open-webui /bin/sh
 | 22 | memory | 维护聊天历史和上下文记忆 |
 | 23 | message | 存储单个聊天消息及其内容 |
 | 24 | message_reaction | 记录用户对消息的反应（表情/响应） |
-| 25 | migrate_history | 跟踪数据库 schema 版本和迁移记录 |
+| 25 | migrate_history | **旧版。** Alembic 之前迁移系统的迁移记录，当前代码不再使用 |
 | 26 | model | 管理 AI 模型配置和设置 |
 | 27 | note | 存储用户创建的笔记和注释 |
 | 28 | oauth_session | 管理用户的活动 OAuth 会话 |
 | 29 | prompt | 存储 AI 提示词的模板和配置 |
 | 30 | prompt_history | 跟踪提示词的版本历史和快照 |
 | 31 | shared_chat | 存储共享聊天的快照以便链接共享 |
-| 32 | skill | 存储可重用的 Markdown 指令集 (Skills) |
+| 32 | skill | 存储可重用的 markdown 指令集 (Skills) |
 | 33 | tag | 管理内容分类的标签 |
 | 34 | tool | 存储系统工具和集成的配置 |
 | 35 | user | 维护用户资料和账户信息 |
@@ -123,7 +118,7 @@ docker exec -it open-webui /bin/sh
 | id | Text | PRIMARY KEY | 唯一标识符 |
 | resource_type | Text | NOT NULL | 资源类型（例如：`model`, `knowledge`, `tool`） |
 | resource_id | Text | NOT NULL | 特定资源的 ID |
-| principal_type | Text | NOT NULL | 授权对象类型：`user` 或 `group` |
+| principal_type | Text | NOT NULL | 授权对象类型：`user`、`group` 或 `anyone` |
 | principal_id | Text | NOT NULL | 用户或组的 ID（或使用 `*` 表示公开） |
 | permission | Text | NOT NULL | 权限级别：`read` 或 `write` |
 | created_at | BigInteger | NOT NULL | 授权创建时间戳 |
@@ -213,7 +208,7 @@ docker exec -it open-webui /bin/sh
 - 由迁移 `8bc7e5a902d1` 创建。表中的一行要么是已登录用户创建的会话，要么是待处理的登录请求，在应用完成登录后即会成为会话。登录流程参见 [Tether 客户端协议](/reference/tether-client-protocol)。
 - `user_id` 不带外键。它与 `user` 的关系是一对多：一个用户可以持有多个会话，每个已登录应用一个。
 - 在 `user_id` 和 `expires_at` 上建有索引（`idx_auth_session_user`、`idx_auth_session_expires`）。
-- 待处理请求的 `expires_at` 为创建后 10 分钟。会话的 `expires_at` 为创建或上次令牌刷新后 [`SESSION_EXPIRES_IN`](/reference/env-configuration#session_expires_in)。每创建新行时，已过期的行都会被删除。
+- 待处理请求的 `expires_at` 为创建后 10 分钟；会话则是创建或上次令牌刷新后 [`SESSION_EXPIRES_IN`](/reference/env-configuration#session_expires_in)。每创建新行时，已过期的行都会被删除。
 - 通过 API 退出登录或删除会话会移除该行。
 ## Channel 表 {#channel-table}
 
@@ -316,7 +311,7 @@ docker exec -it open-webui /bin/sh
 关于 channel_file 表的注意事项：
 
 - 在 (`channel_id`, `file_id`) 上的唯一约束以防止重复条目
-- 带有 CASCADE 删除的外键关系
+- 三个外键都采用 CASCADE 删除，其中包括 `message_id`：删除消息会同时删除此处的行，删除频道或文件亦然
 - 在 `channel_id`, `file_id` 和 `user_id` 上建立索引以提高性能
 
 ## Chat 表 {#chat-table}
@@ -390,11 +385,9 @@ docker exec -it open-webui /bin/sh
 | status_history | JSON | nullable | 生成期间的流式状态更新 |
 | error | JSON | nullable | 生成失败时的错误载荷 |
 | usage | JSON | nullable | Token/使用统计 |
-| context_summary | Text | nullable | 每条消息的上下文摘要（v0.10.0 新增） |
+| context_summary | Text | nullable | 每条消息的上下文摘要 |
 | created_at | BigInteger | indexed | 创建时间戳 |
 | updated_at | BigInteger | - | 最后更新时间戳 |
-
-`chat_message` 表是聊天会话的**标准化逐条消息存储**：每条消息一行，独立于 `chat.chat` 中的 JSON 历史 blob，并且与频道 [Message 表](#message-table)（保存频道/线程消息，而非聊天模型轮次）不同。
 
 关于 chat_message 表的注意事项：
 
@@ -503,7 +496,7 @@ docker exec -it open-webui /bin/sh
 
 - 在 (`calendar_id`, `start_at`) 上建立复合索引，以便在一个日历内进行高效的范围查询。
 - 在 (`user_id`, `start_at`) 上建立复合索引，以便每个用户进行高效的日期范围查询。
-- 重复事件存储 `rrule` 字符串，并在查询时扩展为单独的实例（使用 `dateutil` 进行服务器端 Python 扩展）。
+- 重复事件存储 `rrule` 字符串，并在查询时扩展为单独的实例（使用 `dateutil` 进行服务器端 Python 扩展）。扩展在用户所在时区进行，因此每个实例都保留所存储 `start_at` 的本地时钟时间，夏令时切换前后亦然。没有可用时区的账户则回退到服务器时区。
 - 取消的事件（`is_cancelled = True`）被排除在范围查询之外，但保留在数据库中。
 
 ## Calendar Event Attendee 表 {#calendar-event-attendee-table}
@@ -600,7 +593,7 @@ docker exec -it open-webui /bin/sh
 
 ## Config 表 {#config}
 
-自 v0.10.0 起，config 表采用**每键一行**格式：每个设置都在自己的行中，以点号路径为键，取代了以前的单行 JSON blob。
+config 表采用**每键一行**格式：每个设置都是独立的一行，以点号路径为键。
 
 | **列名** | **数据类型** | **约束** | **说明** |
 | --------------- | ------------- | --------------- | -------------------------------------------------------- |
@@ -710,7 +703,7 @@ docker exec -it open-webui /bin/sh
 
 关于 function history 表的注意事项：
 
-- 快照保存 `name`、源代码，以及 `meta` 中的描述和翻译。Valves、启用/全局开关以及检测到的类型仍保留在 `function` 行上。
+- 快照保存名称、源代码，以及 `meta` 中的描述和翻译。Valves、启用/全局开关以及检测到的类型仍保留在 `function` 行上。
 - 迁移 `f8c0e5b134cd` 与 `tool_history` 一同创建了该表，并为每个已有函数提供了一个起始版本。
 ## Group 表 {#group-table}
 
@@ -760,9 +753,6 @@ docker exec -it open-webui /bin/sh
 | meta | JSON | nullable | 额外的元数据 |
 | created_at | BigInteger | - | 创建时间戳 |
 | updated_at | BigInteger | - | 最后更新时间戳 |
-
-| created_at      | BigInteger    | -                   | 创建时间戳|
-| updated_at      | BigInteger    | -                   | 最后更新时间戳|
 
 ## Knowledge Directory 表 {#knowledge-directory-table}
 
@@ -878,10 +868,6 @@ docker exec -it open-webui /bin/sh
 | created_at | BigInteger | - | 创建时间戳 |
 | updated_at | BigInteger | - | 最后更新时间戳 |
 
-| is_active       | Boolean       | default=True    | 激活状态|
-| created_at      | BigInteger    | -               | 创建时间戳|
-| updated_at      | BigInteger    | -               | 最后更新时间戳|
-
 ## Model History 表 {#model-history-table}
 
 | **列名** | **数据类型** | **约束** | **说明** |
@@ -911,7 +897,7 @@ docker exec -it open-webui /bin/sh
 | created_at | BigInteger | nullable | 创建时间戳 |
 | updated_at | BigInteger | nullable | 最后更新时间戳 |
 
-笔记正文位于 `data` 的 `content.md` 下，是 Markdown 文本。如果某行在该位置存放的是对象或数组（模型向笔记工具传入结构化数据时可能产生这种情况），那么返回该内容时会将其渲染为围栏 `json` 代码块，并且在下一次保存该笔记时该行会被重写为与之匹配。
+笔记正文位于 `data` 的 `content.md` 下，是 markdown 文本。如果某行在该位置存放的是对象或数组（模型向笔记工具传入结构化数据时可能产生这种情况），那么返回该内容时会将其渲染为围栏 `json` 代码块，并且在下一次保存该笔记时该行会被重写为与之匹配。
 
 置顶状态不再存储在该表中。旧版的 `is_pinned` 列已在迁移 `4de81c2a3af1` 中移除，改为按用户存储的[置顶笔记表](#pinned-note-table)。此前已有的置顶会回填到笔记所有者；API 以针对调用用户行的按请求联接形式提供 `is_pinned`。
 ## Pinned Note 表 {#pinned-note-table}
@@ -989,12 +975,6 @@ docker exec -it open-webui /bin/sh
 | created_at | BigInteger | NOT NULL | 创建时间戳 |
 | updated_at | BigInteger | NOT NULL | 最后更新时间戳 |
 
-| is_active       | Boolean       | default=True    | 激活状态|
-| version_id      | Text          | nullable        | 当前版本标识符          |
-| tags            | JSON          | nullable        | 关联标签                     |
-| created_at      | BigInteger    | NOT NULL        | 创建时间戳|
-| updated_at      | BigInteger    | NOT NULL        | 最后更新时间戳|
-
 ## Prompt History 表 {#prompt-history-table}
 
 | **列名** | **数据类型** | **约束** | **说明** |
@@ -1041,11 +1021,6 @@ docker exec -it open-webui /bin/sh
 | commit_message | Text | nullable | 保存时填写的描述 |
 | created_at | BigInteger | NOT NULL | 创建时间戳 |
 
-关于 skill history 表的注意事项：
-
-- 快照保存技能内容及其关联文件。
-- 迁移 `e7b9d4a023bc` 创建了该表，并为每个已有技能提供了一个起始版本。
-
 ## Tag 表 {#tag-table}
 
 | **列名** | **数据类型** | **约束** | **说明** |
@@ -1075,9 +1050,6 @@ docker exec -it open-webui /bin/sh
 | created_at | BigInteger | - | 创建时间戳 |
 | updated_at | BigInteger | - | 最后更新时间戳 |
 
-| created_at      | BigInteger    | -               | 创建时间戳|
-| updated_at      | BigInteger    | -               | 最后更新时间戳|
-
 ## Tool History 表 {#tool-history-table}
 
 | **列名** | **数据类型** | **约束** | **说明** |
@@ -1092,7 +1064,7 @@ docker exec -it open-webui /bin/sh
 
 关于 tool history 表的注意事项：
 
-- 快照保存 `name`、源代码，以及 `meta` 中的描述和翻译。Valves 和访问授权仍保留在 `tool` 行上。
+- 快照保存名称、源代码，以及 `meta` 中的描述和翻译。Valves 和访问授权仍保留在 `tool` 行上。
 - 迁移 `f8c0e5b134cd` 创建了该表，并为每个已有工具提供了一个起始版本。
 ## User 表 {#user-table}
 
@@ -1159,7 +1131,7 @@ docker exec -it open-webui /bin/sh
 
 为帮助可视化表之间的关系，请参考下面使用 Mermaid 生成的实体关系图（ERD）。
 
-``` mermaid
+```mermaid
 erDiagram
     %% User and Authentication
     user ||--o{ auth : "has"
@@ -1691,7 +1663,7 @@ SELECT sqlcipher_export('plaintext');
 DETACH DATABASE plaintext;
 ```
 
-用 `webui-plain.db` 替换 `webui.db`，然后设置 `DATABASE_TYPE=sqlite`（或不设置 `DATABASE_TYPE`），并移除 `DATABASE_PASSWORD`。
+用 `webui-plain.db` 替换 `webui.db`，然后设置 `DATABASE_TYPE=sqlite`（或取消设置），并移除 `DATABASE_PASSWORD`。
 
 ### 相关的数据库环境变量 {#related-database-environment-variables}
 | 变量 | 默认值 | 说明 |

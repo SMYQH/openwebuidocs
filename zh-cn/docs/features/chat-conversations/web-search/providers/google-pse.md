@@ -13,19 +13,19 @@ title: "Google PSE"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎参与贡献，请参阅贡献指南。
 
 :::
 
 :::tip
 
-若要查看所有与 Web Search 相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
+若要查看所有与网页搜索相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
 
 :::
 
 :::tip 故障排查
 
-如果你在 web search 上遇到问题，请查看 [Web Search 故障排查指南](/troubleshooting/web-search)，其中涵盖了代理配置、连接超时、内容为空等常见问题。
+遇到网页搜索问题时，请参阅[网页搜索故障排查指南](/troubleshooting/web-search)，了解如何解决代理配置、连接超时和内容为空等常见问题。
 
 :::
 
@@ -33,20 +33,19 @@ title: "Google PSE"
 
 ### 设置 {#setup}
 
-1. 前往 Google Developers，使用 [Programmable Search Engine](https://developers.google.com/custom-search)，登录或创建账号
+1. 前往 Google Developers 的 [Programmable Search Engine](https://developers.google.com/custom-search) 页面，登录或创建账号。
 2. 前往 [control panel](https://programmablesearchengine.google.com/controlpanel/all)，点击 `添加`
 3. 输入搜索引擎名称，根据需要设置其他属性，通过机器人验证后点击 `创建`
 4. 生成 `API key` 并获取 `搜索引擎 ID`（创建完成后可用）
 5. 拿到 `API key` 与 `搜索引擎 ID` 后，打开 `Open WebUI 管理面板`，点击 `设置`，再进入 `网页搜索`
 6. 启用 `网页搜索`，并将 `网页搜索引擎` 设为 `google_pse`
-7. 将 `Google PSE API Key` 填为 `API key`，将 `Google PSE Engine Id` 填为第 4 步得到的值
+7. 使用第 4 步获得的信息：在 `Google PSE API Key` 中填写 `API key`，在 `Google PSE Engine Id` 中填写搜索引擎 ID。
 8. 点击 `保存`
 
 ![Open WebUI 管理面板](/images/tutorial_google_pse1.png)
 
 #### 注意 {#note}
 
-你还需要在提示词输入框中通过加号（`+`）按钮启用 `网页搜索`。
-然后就可以开始搜索网页了 ;-)
+要在聊天中搜索网页，请打开消息输入框中的 **+** 菜单，并开启**网页搜索**。
 
 ![启用 Web search](/images/tutorial_google_pse2.png)

@@ -5,7 +5,7 @@ title: "使用 Docker 部署 Openedai-speech"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅演示如何按你的使用场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 
 :::
 
@@ -71,7 +71,7 @@ HF_HOME=voices
 
 ## 步骤 4：构建所选 Docker 镜像 {#step-4-build-the-chosen-docker-image}
 
-在运行 Docker Compose 文件之前，你需要先构建镜像：
+运行 Docker Compose 文件前，先构建 Docker 镜像：
 
 - **Nvidia GPU（CUDA 支持）**：
 
@@ -93,13 +93,13 @@ docker build -f Dockerfile.min -t ghcr.io/matatonic/openedai-speech-min .
 
 ## 步骤 5：执行正确的 `docker compose up -d` 命令 {#step-5-run-the-correct-docker-compose-up--d-command}
 
-- **Nvidia GPU（CUDA 支持）**：使用以下命令以 detached 模式启动 `openedai-speech`：
+- **Nvidia GPU（CUDA 支持）**：使用以下命令在后台启动 `openedai-speech` 服务：
 
 ```bash
 docker compose up -d
 ```
 
-- **AMD GPU（ROCm 支持）**：使用以下命令以 detached 模式启动：
+- **AMD GPU（ROCm 支持）**：使用以下命令以后台模式启动 `openedai-speech` 服务：
 
 ```bash
 docker compose -f docker-compose.rocm.yml up -d
@@ -111,17 +111,17 @@ docker compose -f docker-compose.rocm.yml up -d
 docker compose -f docker-compose.min.yml up -d
 ```
 
-- **纯 CPU，无 GPU（仅 Piper）**：若你想使用更小的镜像（< 1GB，而不是 8GB）：
+- **纯 CPU，无 GPU（仅 Piper）**：如需仅支持 Piper 的精简 Docker 镜像（< 1GB，而不是 8GB）：
 
 ```bash
 docker compose -f docker-compose.min.yml up -d
 ```
 
-这会以 detached 模式启动 `openedai-speech` 服务。
+这会在后台启动 `openedai-speech` 服务。
 
 ## 方案 2：使用 Docker Run 命令 {#option-2-using-docker-run-commands}
 
-你也可以使用下列 Docker run 命令以 detached 模式启动 `openedai-speech`：
+你也可以使用下列 Docker run 命令在后台启动 `openedai-speech` 服务：
 
 - **Nvidia GPU（CUDA）**：构建并启动服务：
 
@@ -153,17 +153,17 @@ docker run -d -p 8000:8000 -v voices:/app/voices -v config:/app/config --name op
 打开 Open WebUI 设置，进入 **设置 > 音频**（管理员区域） 下的 TTS 设置，并填写：
 
 - **API 基础 URL**：`http://host.docker.internal:8000/v1`
-- **API 密钥**：`sk-111111111`（这是一个占位 key，因为 `openedai-speech` 实际上不需要 API 密钥。此字段只要填了任意值即可。）
+- **API 密钥**：`sk-111111111`（这是占位 API 密钥。因为 `openedai-speech` 不需要 API 密钥，此处填写任意非空值即可。）
 
 ## 步骤 7：选择语音 {#step-7-choose-a-voice}
 
-在同一音频设置菜单中的 `TTS 语音` 下，你可以为 `TTS 模型` 选择 `openedai-speech` 支持的声音。以下声音主要针对英文优化：
+在管理面板的同一音频设置菜单中，使用 `TTS 语音` 和 `TTS 模型` 选择下列受支持的模型及语音。可选语音针对英语优化：
 
-- `tts-1` 或 `tts-1-hd`：`alloy`、`echo`、`echo-alt`、`fable`、`onyx`、`nova`、`shimmer`（`tts-1-hd` 可配置，默认使用 OpenAI 采样）
+- `tts-1` 或 `tts-1-hd`：`alloy`、`echo`、`echo-alt`、`fable`、`onyx`、`nova`、`shimmer`（`tts-1-hd` 可配置，默认使用 OpenAI 语音样本）
 
 ## 步骤 8：点击 `保存` 应用设置并开始使用自然语音 {#step-8-press-save-to-apply-the-changes-and-start-enjoying-naturally-sounding-voices}
 
-点击 `保存` 让设置生效。刷新页面后效果会完全应用，你就可以在 Open WebUI 中通过 `openedai-speech` 集成来朗读文本回复，获得更自然的 TTS 体验。
+点击 `保存`，将变化应用到 Open WebUI 设置。刷新页面后，Open WebUI 即可通过 `openedai-speech` 的 TTS 功能以自然的声音朗读文本回复。
 
 ## 模型说明 {#model-details}
 
@@ -178,9 +178,9 @@ docker run -d -p 8000:8000 -v voices:/app/voices -v config:/app/config --name op
 如果你在将 `openedai-speech` 集成到 Open WebUI 时遇到问题，请尝试以下排查步骤：
 
 - **确认 `openedai-speech` 服务已运行**：检查服务是否正在运行，以及 `docker-compose.yml` 中指定的端口是否已暴露。
-- **检查 `host.docker.internal` 是否可访问**：确认 Open WebUI 容器内部能够解析 `host.docker.internal`。因为 `openedai-speech` 暴露在你电脑的 `localhost` 上，而 `open-webui` 容器默认无法直接访问宿主机 `localhost`。必要时可在 `docker-compose.yml` 中添加卷挂载，或调整网络方式。
-- **检查 API 密钥配置**：确认 API 密钥已填为任意占位值，或确保没有因未填写而被拒绝。
-- **检查语音配置**：确认你要使用的 TTS 语音确实存在于 `voice_to_speaker.yaml` 中，且对应文件（如 voice XML）位于正确目录。
+- **检查 `host.docker.internal` 是否可访问**：确认 Open WebUI 容器能够解析 `host.docker.internal`。这是因为 `openedai-speech` 暴露在宿主机的 `localhost` 上，而 `open-webui` 所在的 Docker 容器无法通过自身的 `localhost` 访问宿主机服务。如果需要让 `openedai-speech` 读取宿主机上的文件，可在 `docker-compose.yml` 中配置卷挂载。卷挂载不会解决网络连通问题。
+- **检查 API 密钥配置**：确认 API 密钥已填为占位值，或确认连接未因留空而被拒绝。`openedai-speech` 本身不要求 API 密钥。
+- **检查语音配置**：确认你要使用的 TTS 语音已在 `voice_to_speaker.yaml` 中定义，且对应文件（如语音 XML 文件）位于正确目录。
 - **确认语音模型路径正确**：如果语音模型加载失败，请再次核对 `voice_to_speaker.yaml` 中的路径是否与实际文件位置一致。
 
 ## 额外排查建议 {#additional-troubleshooting-tips}
@@ -207,7 +207,7 @@ docker run -d -p 8000:8000 -v voices:/app/voices -v config:/app/config --name op
 ### ARM64 / Apple Silicon {#arm64--apple-silicon}
 
 - XTTS 在 ARM64 上仅支持 CPU，**会非常慢**
-- 对 ARM 设备建议使用 Piper-only 镜像（`docker-compose.min.yml`）
+- 建议在 ARM 设备上使用仅支持 Piper 的镜像（`docker-compose.min.yml`），以获得可接受的性能
 - Apple M 系列可用，但更适合使用最小镜像
 
 ### 容器网络 {#container-networking}
@@ -232,7 +232,7 @@ networks:
 
 **语音文件存在哪里？配置文件呢？**
 
-定义可用语音及其属性的配置文件存放在 config volume 中。默认语音配置定义在 voice_to_speaker.default.yaml。
+定义可用语音及其属性的配置文件存放在 `config` 卷中。默认语音定义在 voice_to_speaker.default.yaml 中。
 
 ## 其他资源 {#additional-resources}
 

@@ -9,7 +9,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 # 提示词 {#prompts}
 
 <ThemedImage
-  alt="工作区提示：位于一排相同副本上方的模板块"
+  alt="工作区提示词：一个模板块，下方排列着多个相同的副本"
   sources={{
     light: useBaseUrl('/images/banners/workspace-prompts-light.svg'),
     dark: useBaseUrl('/images/banners/workspace-prompts-dark.svg'),
@@ -21,12 +21,12 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 提示词让您将常用指令保存为斜杠命令。在任何对话中输入 `/summarize`，完整提示词立即触发。添加自定义输入变量，用户在发送提示词前会看到一个弹出表单，包含下拉菜单、日期选择器和文本字段。无需记住确切的措辞或结构。
 
-每次更改都通过完整的版本历史记录跟踪。回滚到之前的版本、比较更改，并通过访问控制与团队共享提示词。
+所有内容变更都保存在版本历史中。你可以恢复旧版本、比较改动，并通过访问控制与团队共享提示词。
 
 ---
 
 ## 为什么使用提示词？ {#why-prompts}
-![Saved prompts in the workspace](/images/workspace/prompts-list.png)
+![工作空间中已保存的提示词](/images/workspace/prompts-list.png)
 ### 停止重复输入相同的指令 {#stop-retyping-the-same-instructions}
 
 保存一次提示词，用 `/command` 使用它。Bug 报告模板、会议记录、代码审查、内容简报：任何您输入超过两次的内容都应该成为提示词。
@@ -37,7 +37,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 带回滚的版本历史 {#version-history-with-rollback}
 
-每次更改都创建一个新版本。并排比较版本、将之前的版本恢复为生产版本、跟踪谁做了什么更改。
+每次修改提示词内容都会创建一个新版本。你可以浏览历史记录、预览版本、将它与当前生效的版本比较、编辑后另存为新版本、设为生效版本或删除。每个版本都会记录谁做了哪些更改。取消勾选 **Set as Production** 可以保存版本而不立即启用。重命名、更改标签或修改命令不会创建新版本。
 
 ### 受控共享 {#controlled-sharing}
 
@@ -220,7 +220,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 通过 API，`GET /api/v1/prompts/id/{prompt_id}/history/diff?from_id=...&to_id=...` 会返回两个快照、按行表示的内容差异，以及 `name_changed` 和 `line_endings_only`；后者在内容仅行尾符不同时为 `true`。
 
 :::note 迁移说明
-版本控制更新之前创建的提示词已自动迁移，内容保留为初始"使用中"版本。URL 结构从基于命令改为基于 ID，因此现有书签可能需要更新。从 v0.5.0 起，所有变量默认为可选。
+在引入版本控制之前创建的提示词已自动迁移，原内容保留为初始生效版本。URL 从基于命令改为基于 ID，因此现有书签可能需要更新。从 v0.5.0 起，所有变量默认为可选。
 :::
 
 ---

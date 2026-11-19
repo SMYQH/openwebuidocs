@@ -198,6 +198,19 @@ review digest. The exported result binds to the new config, and deterministic
 checks run again. A changed document or any other config change prevents reuse
 through this option.
 
+## Re-binding exceptions after an edit
+
+An exact exception is bound to a fingerprint that mixes the file path, the upstream and target hashes, the finding line, the rule and the finding text. Every edit to a translated file therefore expires the exceptions of that file, even when the reviewed difference is unchanged. Do not delete and retype the reason by hand; re-bind it:
+
+```powershell
+python .agents/skills/translation-checker/scripts/translation_check.py --strict --report .agents/skills/translation-checker/.reports/audit-before.json
+# edit the translated file
+python .agents/skills/translation-checker/scripts/translation_check.py --strict --report .agents/skills/translation-checker/.reports/audit-after.json
+python .agents/skills/translation-checker/scripts/restamp_exceptions.py --baseline .agents/skills/translation-checker/.reports/audit-before.json --current .agents/skills/translation-checker/.reports/audit-after.json
+```
+
+The tool reuses the reason of a finding that still exists with the same path, rule and message, drops the exception of a finding that disappeared, and lists findings without a baseline counterpart as `REVIEW` lines. A reviewed difference whose wording changed still needs a manual decision: read the finding, confirm the difference is still intended, and add the exception with its new fingerprint and a specific reason.
+
 ## Translation workflow
 
 1. Select explicit paths relative to `en-us/docs/`. Use `--plan` for a local

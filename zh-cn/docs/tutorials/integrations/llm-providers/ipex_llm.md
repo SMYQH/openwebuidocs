@@ -4,7 +4,7 @@ title: "Intel GPU (IPEX-LLM)"
 ---
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/contributing)。
+本教程由社区贡献，Open WebUI 团队不提供支持。它仅演示如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/contributing)。
 :::
 
 :::note
@@ -17,11 +17,11 @@ title: "Intel GPU (IPEX-LLM)"
 
 :::info
 
-[**IPEX-LLM**](https://github.com/intel-analytics/ipex-llm) 是一个用于在 Intel CPU 和 GPU（例如，配有集成显卡（iGPU）的本地 PC、Arc A 系列、Flex 和 Max 等独立显卡）上以极低延迟运行 LLM 的 PyTorch 库。
+[**IPEX-LLM**](https://github.com/intel-analytics/ipex-llm) 是一个 PyTorch 库，可在 Intel CPU 和 GPU 上以极低延迟运行 LLM。它支持配有集成显卡（iGPU）的本地 PC，以及 Arc A 系列、Flex 和 Max 等独立 GPU。
 
 :::
 
-本教程演示如何将 Open WebUI 与**在 Intel GPU 上运行的 IPEX-LLM 加速 Ollama 后端**配合使用。按照本指南，您甚至可以在低成本 PC（即仅有集成显卡）上流畅地设置 Open WebUI。
+本教程演示如何为 Open WebUI 配置**在 Intel GPU 上运行、由 IPEX-LLM 加速的 Ollama 后端**。即使在只有集成 GPU 的低成本 PC 上，也能流畅使用 Open WebUI。
 
 ## 在 Intel GPU 上启动 Ollama 服务 {#start-ollama-serve-on-intel-gpu}
 

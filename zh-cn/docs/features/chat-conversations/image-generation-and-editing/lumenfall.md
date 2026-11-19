@@ -4,10 +4,10 @@ title: "Lumenfall"
 ---
 
 :::warning
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
-Open WebUI 还支持通过 [Lumenfall](https://lumenfall.ai) 进行图像生成。Lumenfall 是一个 AI 媒体网关，可将多个提供商上的主流图像模型统一为兼容 OpenAI 的 API，并提供免费模型可用。
+Open WebUI 还支持通过 [Lumenfall](https://lumenfall.ai) 生成图像。这个 AI 媒体网关通过统一的 OpenAI 兼容 API 提供多个供应商的主流图像模型，其中包括免费模型。
 
 ### 初始设置 {#initial-setup}
 
@@ -16,7 +16,7 @@ Open WebUI 还支持通过 [Lumenfall](https://lumenfall.ai) 进行图像生成�
 
 ### 配置图像生成 {#configuring-image-generation}
 
-1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
+1. 在 Open WebUI 的管理员区域中打开 **设置** > **图像**。
 2. 将 `图像生成引擎` 设置为 `Default (Open AI)`（Lumenfall 使用与 OpenAI 相同的语法）
 3. 将 `API Base URL` 改为 `https://api.lumenfall.ai/openai/v1`
 4. 输入你的 Lumenfall API 密钥

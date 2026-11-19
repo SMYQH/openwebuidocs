@@ -537,7 +537,7 @@ echo "$cleaned_response" | jq '.'
 }
 ```
 
-#### ChatCompletionsRequest DTO {#chatcompletionsrequest-dto}
+#### 聊天补全请求 DTO（ChatCompletionsRequest） {#chatcompletionsrequest-dto}
 
 
 ```json
@@ -589,7 +589,7 @@ echo "$cleaned_response" | jq '.'
   ]
 }
 ```
-#### ChatCompletionMessage DTO {#chatcompletionmessage-dto}
+#### 聊天补全消息 DTO（ChatCompletionMessage） {#chatcompletionmessage-dto}
 
 ```json
 {
@@ -598,7 +598,7 @@ echo "$cleaned_response" | jq '.'
 }
 ```
 
-#### History DTO {#history-dto}
+#### 历史记录 DTO（History） {#history-dto}
 
 ```json
 {

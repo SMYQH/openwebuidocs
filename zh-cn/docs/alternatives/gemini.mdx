@@ -2,14 +2,14 @@
 sidebar_position: 32
 title: "自托管 Gemini 替代品"
 sidebar_label: "Open WebUI 与 Gemini"
-description: "寻找自托管 Gemini 替代品？通过 Open WebUI 在您自己的条件下使用 Google AI 模型。"
+description: "寻找自托管 Gemini 替代品？通过自托管的 Open WebUI 按需使用 Google AI 模型。"
 keywords: ["Open WebUI vs Gemini", "Gemini alternative", "self-hosted Gemini", "Gemini alternative self-hosted", "Google AI self-hosted", "open webui alternative", "open webui comparison"]
 ---
 
 import Head from '@docusaurus/Head';
 
 <Head>
-<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "我可以在 Open WebUI 中使用 Gemini 吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。在设置中添加您的 Google AI API 密钥，Gemini 模型将出现在模型选择器中。"}}, {"@type": "Question", "name": "我可以自托管 Gemini 吗？", "acceptedAnswer": {"@type": "Answer", "text": "不能自托管 Gemini 本身，但您可以通过 Google AI API 在 Open WebUI 中使用 Gemini 模型。Open WebUI 在您的基础设施上运行，尽管 API 调用仍然去 Google。"}}]})}</script>
+<script type="application/ld+json">{JSON.stringify({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "我可以在 Open WebUI 中使用 Gemini 吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。在设置中添加您的 Google AI API 密钥，Gemini 模型将出现在模型选择器中。"}}, {"@type": "Question", "name": "我可以自托管 Gemini 吗？", "acceptedAnswer": {"@type": "Answer", "text": "不能自托管 Gemini 本身，但您可以通过 Google AI API 在 Open WebUI 中使用 Gemini 模型。Open WebUI 在您的基础设施上运行，但 API 请求仍会发送至 Google。"}}]})}</script>
 </Head>
 
 
@@ -17,15 +17,15 @@ import Head from '@docusaurus/Head';
 
 *最后更新：2026 年 8 月*
 
-[Gemini](https://gemini.google.com/) 将 Google 的 AI 研究融入消费产品，具有强大的多模态能力（文本、视觉、音频、代码）、宽裕的上下文窗口，以及与 Google Workspace 的自然集成。Gemini 3.5 Pro 是可用于代码和复杂任务的最强大的模型之一。
+[Gemini](https://gemini.google.com/) 将 Google 的 AI 研究成果用于面向个人用户的产品，具有强大的多模态能力（文本、视觉、音频、代码）、宽裕的上下文窗口，以及与 Google Workspace 的自然集成。Gemini 3.5 Pro 是可用于代码和复杂任务的最强大的模型之一。
 
-商用 · 免费层可用
+商用 · 提供免费版
 
 ---
 
 ## Gemini 擅长的领域 {#what-gemini-does-well}
 
-- **多模态实力**，在单一模型中跨文本、图像、音频、视频和代码
+- **多模态能力**，同一个模型可处理文本、图像、音频、视频和代码
 - **Google Workspace 集成**，与 Gmail、Docs、Drive 和其他 Google 工具自然协作
 - **Gems** 用于创建具有特定指令和行为的自定义 AI 角色
 - **NotebookLM** 用于将文档转变为交互式学习指南和音频概览
@@ -33,7 +33,7 @@ import Head from '@docusaurus/Head';
 - **宽裕的上下文窗口**，Gemini 3.5 Pro 可处理大型文档和代码库
 - **竞争性 API 定价**，是高质量模型中最具成本效益的 API 之一
 - **代码生成**，其中 Gemini 3.5 Pro 是代码任务中最强的之一
-- **Google 搜索依据**，由 Google 搜索基础设施支持的回应
+- **以 Google 搜索结果为依据**，借助 Google 的搜索服务为回复提供参考
 - **零设置**，通过您的 Google 帐户立即可用
 
 ---
@@ -56,36 +56,36 @@ import Head from '@docusaurus/Head';
 | :--- | :--- | :--- |
 | **模型** | 任何提供商的任何模型 | Gemini 模型系列 |
 | **多模态** | 取决于连接的模型 | 原生文本、视觉、音频、视频、代码 |
-| **知识库和 RAG** | 13 个向量数据库、8 个提取引擎、混合搜索 | Google 搜索依据、文件上传 |
+| **知识库和 RAG** | 13 个向量数据库、8 个提取引擎、混合搜索 | 以 Google 搜索结果作为依据、文件上传 |
 | **生态系统** | 通过 MCP/OpenAPI 连接任何 API | 深度 Google Workspace 集成 |
 | **数据** | 自托管，您的基础设施 | 由 Google 云托管 |
 | **定价** | 免费社区版；企业计划可用 | 免费层、Advanced（Google One AI Premium） |
 
 ---
 
-## 何时使用每一个 {#when-to-use-each}
+## 如何选择 {#when-to-use-each}
 
-**选择 Gemini** 如果您生活在 Google 生态系统中，并希望 AI 与 Gmail、Docs、Drive 和搜索自然集成。NotebookLM 和深度研究是突出的功能，尤其适用于以 Google 为主的工作流。API 定价也是最具竞争力的之一。
+**选择 Gemini**：如果你常用 Google 的产品，并希望 AI 与 Gmail、Docs、Drive 和搜索顺畅集成。NotebookLM 和深度研究是突出的功能，尤其适用于以 Google 为主的工作流。API 定价也是最具竞争力的之一。
 
-**选择 Open WebUI** 如果您想在其他提供商旁边使用 Gemini、需要持久知识库，或想自托管。Open WebUI 连接到 Google AI API，所以您仍然可以获得 Gemini 的模型。
+**选择 Open WebUI**：如果你想同时使用 Gemini 和其他提供商的模型、需要持久化知识库，或希望自托管。Open WebUI 连接到 Google AI API，所以您仍然可以获得 Gemini 的模型。
 
-**两者都使用**。直接使用 Gemini 获得 Google Workspace 集成和 NotebookLM。将 Open WebUI 连接到 Google AI API，在一个界面中使用 Gemini 模型与 Claude、OpenAI 和本地模型并行。
+**两者都使用**。直接使用 Gemini 获得 Google Workspace 集成和 NotebookLM。将 Open WebUI 连接到 Google AI API，在同一界面中使用 Gemini、Claude、OpenAI 的模型以及本地模型。
 
 ---
 
 ## 通过 Open WebUI 使用 Gemini {#use-gemini-through-open-webui}
 
-Gemini 模型通过 Google AI API 在 Open WebUI 中可用。您可以在连接的其他模型旁边使用 Gemini 的多模态能力。
+Gemini 模型通过 Google AI API 在 Open WebUI 中可用。除了已接入的其他模型，你还可以使用 Gemini 的多模态能力。
 
 **如何连接：**
 
 1. 从 [aistudio.google.com](https://aistudio.google.com/) 获取 API 密钥
-2. 在 Open WebUI 中，转到 **Settings → Connections**（管理员区域）
+2. 在 Open WebUI 管理员区域打开**设置 → 连接**
 3. 使用基础 URL `https://generativelanguage.googleapis.com/v1beta/openai` 和您的 Google AI API 密钥添加新连接
 4. Gemini 模型将出现在您的模型选择器中
 
 :::warning 此端点上的工具需要额外设置
-Google 的 OpenAI 兼容层使用的工具调用格式与 OpenAI 兼容客户端所期望的并不相同，因此使用工具的那一轮可能返回一条空的 assistant 消息。这会影响 Memory 等内置工具。请在模型的高级参数中把 **Function Calling** 设为 **Legacy**，或者通过 LiteLLM、OpenRouter 之类的网关来路由 Gemini。参见[模型使用工具时回复为空](/troubleshooting/connection-error#blank-replies-when-the-model-uses-a-tool)以及[OpenAI 兼容提供商指南](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)。
+Google 的 OpenAI 兼容层使用的工具调用格式与 OpenAI 兼容客户端所期望的并不相同，因此使用工具的那一轮可能返回一条空的 assistant 消息。这会影响记忆等内置工具。请在模型的高级参数中把**函数调用**设为 **Legacy**，或者通过 LiteLLM、OpenRouter 等网关接入 Gemini。参见[模型使用工具时回复为空](/troubleshooting/connection-error#blank-replies-when-the-model-uses-a-tool)以及[OpenAI 兼容提供商指南](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)。
 :::
 
 ---
@@ -104,7 +104,7 @@ Google 的 OpenAI 兼容层使用的工具调用格式与 OpenAI 兼容客户端
 可以。在设置中添加您的 Google AI API 密钥，Gemini 模型将出现在模型选择器中。
 
 **我可以自托管 Gemini 吗？**
-不能自托管 Gemini 本身，但您可以通过 Google AI API 在 Open WebUI 中使用 Gemini 模型。Open WebUI 在您的基础设施上运行，尽管 API 调用仍然去 Google。
+不能自托管 Gemini 本身，但您可以通过 Google AI API 在 Open WebUI 中使用 Gemini 模型。Open WebUI 在您的基础设施上运行，但 API 请求仍会发送至 Google。
 
 **我可以同时使用 Gemini 和 Claude 吗？**
 可以，Open WebUI 支持同时连接多个提供商。

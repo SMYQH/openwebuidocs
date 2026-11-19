@@ -88,7 +88,7 @@ Open WebUI 中的权限是**累加**的。
 | **共享文件夹** | 将对话文件夹及其中的对话共享给特定用户或用户组的能力。参见[共享文件夹](/features/chat-conversations/chat-features/conversation-organization#sharing-folders)。 |
 | **对话公开共享** | *（需要共享对话）* 使对话分享链接可被该实例中每个已登录用户访问的能力。打开链接仍需要登录。禁用时，用户仍可通过访问控制选择器与特定用户或用户组共享对话，但非管理员的"公开"选项将被隐藏。管理员始终豁免。 |
 | **对话开放共享** | *（需要共享对话）* 使对话分享链接无需登录即可被任何持有链接的人阅读的能力。这是唯一会把内容暴露到实例之外的权限。默认关闭。参见[开放链接](/features/chat-conversations/chat-features/chatshare#open-links-no-sign-in)。 |
-| **日历公开共享** | *（需要功能 > 日历）* 让任何具备日历功能的用户对日历进行公开读取或写入的能力。没有它，所有者仍可与特定用户或用户组共享。 |
+| **日历公开共享** | *（需要功能 > 日历）* 可以向所有具备日历功能的用户授予读取或写入权限。未启用此权限时，所有者仍可与特定用户或用户组共享日历。 |
 | **允许共享给用户** | 与**特定用户**共享的能力（[`USER_PERMISSIONS_ACCESS_GRANTS_ALLOW_USERS`](/reference/env-configuration#user_permissions_access_grants_allow_users)）。 |
 | **允许共享给用户组** | 与**用户组**共享的能力（[`USER_PERMISSIONS_ACCESS_GRANTS_ALLOW_GROUPS`](/reference/env-configuration#user_permissions_access_grants_allow_groups)）。 |
 
@@ -118,17 +118,17 @@ Open WebUI 中的权限是**累加**的。
 | **编辑消息** | 编辑消息的能力（[`USER_PERMISSIONS_CHAT_EDIT`](/reference/env-configuration#user_permissions_chat_edit)），既包括自己的消息，也包括回复。 |
 | **继续响应** | 对截断的响应使用"继续"功能的能力。 |
 | **重新生成响应** | 重新生成 AI 响应的能力。 |
-| **允许对话导入** | 导入对话（将先前导出的对话重新上传到 Open WebUI）以及[分叉对话](/features/chat-conversations/chat-features/)或[克隆他人共享的对话](/features/chat-conversations/chat-features/chatshare#cloning-or-forking-a-shared-chat)（把现有对话复制为新对话）的能力（[`USER_PERMISSIONS_CHAT_IMPORT`](/reference/env-configuration#user_permissions_chat_import)）。默认开启。禁用后，**设置 > 数据控制**中的**导入对话**、共享对话上的**克隆对话**按钮、助手回复下方的**分叉对话**操作以及聊天输入框 `/` 菜单中的 `/fork` 条目都会对非管理员隐藏。管理员始终豁免。 |
-| **评价响应** | 为响应点赞/踩的能力。 |
+| **评价回复** | 可以给回复点赞或点踩。 |
 | **分享对话** | 为对话生成分享链接的能力（[`USER_PERMISSIONS_CHAT_SHARE`](/reference/env-configuration#user_permissions_chat_share)）。若希望被你分享的人可以回复，请参见[允许回复](/features/chat-conversations/chat-features/chatshare#allowing-replies)。 |
 | **导出对话** | 导出对话的能力（[`USER_PERMISSIONS_CHAT_EXPORT`](/reference/env-configuration#user_permissions_chat_export)）。默认开启。禁用后，所有下载或复制完整对话的选项都会被隐藏，包括文件夹的**导出**和**导出对话**。 |
-| **语音转文字（STT）** | 使用语音输入的能力。 |
-| **文字转语音（TTS）** | 使用语音输出的能力。 |
+| **允许对话导入** | 导入对话（将先前导出的对话重新上传到 Open WebUI）以及[分叉对话](/features/chat-conversations/chat-features/)或[克隆他人共享的对话](/features/chat-conversations/chat-features/chatshare#cloning-or-forking-a-shared-chat)（把现有对话复制为新对话）的能力（[`USER_PERMISSIONS_CHAT_IMPORT`](/reference/env-configuration#user_permissions_chat_import)）。默认开启。禁用后，**设置 > 数据控制**中的**导入对话**、共享对话上的**克隆对话**按钮、助手回复下方的**分叉对话**操作以及聊天输入框 `/` 菜单中的 `/fork` 条目都会对非管理员隐藏。管理员始终豁免。 |
+| **语音转文字** | 使用语音输入的能力。 |
+| **文字转语音** | 使用语音输出的能力。 |
 | **允许通话** | 发起[语音模式](/features/chat-conversations/chat-features/voice-mode)通话的能力，在标准通话模式和实时通话模式下均可用。 |
 | **多模型** | 同时使用多个模型的能力（[`USER_PERMISSIONS_CHAT_MULTIPLE_MODELS`](/reference/env-configuration#user_permissions_chat_multiple_models)）。禁用后，对话只使用其第一个模型。 |
 | **临时对话** | **（父级）** 切换"临时对话"（隐身模式/关闭历史记录）的能力。**注意：** 为保护隐私，此模式下后端文档解析被禁用。 |
-| **强制临时** | *（需要临时对话）* **限制**用户*始终*使用临时对话（禁用历史记录）（[`USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED`](/reference/env-configuration#user_permissions_chat_temporary_enforced)）。 |
 | **侧边对话** | 打开[侧边对话](/features/chat-conversations/chat-features/#tabs-side-panel)的能力（[`USER_PERMISSIONS_CHAT_SIDE_CHAT`](/reference/env-configuration#user_permissions_chat_side_chat)）。默认关闭。管理员始终拥有。用户组权限表单仅在**允许临时对话**打开时显示该开关。 |
+| **强制临时** | *（需要临时对话）* **限制**用户*始终*使用临时对话（禁用历史记录）（[`USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED`](/reference/env-configuration#user_permissions_chat_temporary_enforced)）。 |
 
 **设置**中的**音频**标签页需要**允许语音转文字**、**允许文字转语音**和**允许通话**三者中的至少一项。
 
@@ -148,8 +148,8 @@ Open WebUI 中的权限是**累加**的。
 | **直连工具服务器** | 在**设置 > 集成**中添加个人工具服务器和 Open Terminal 连接的能力。同时需要 [`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)。 |
 | **记忆** | 访问用于持久化用户上下文的记忆功能。收回该权限会隐藏**个性化**设置标签页、屏蔽记忆 API 端点、不向模型提供记忆工具，并阻止已存储的记忆被注入聊天的系统上下文中。注入检查会在每次聊天请求时于服务端执行，因此仍在请求记忆的客户端也不会得到它。管理员始终不受此限制。 |
 | **自动化** | 非管理员用户访问自动化页面并创建、编辑、运行、暂停或删除自己定时自动化的能力。 |
-| **用户 Webhooks** | 用户设置其个人 Webhook URL（位于 **设置 > 账户**）以接收通知的能力。默认禁用。 |
 | **日历** | 访问日历功能，用于创建日历、管理事件和查看共享日历。 |
+| **用户 Webhooks** | 用户设置其个人 Webhook URL（位于 **设置 > 账户**）以接收通知的能力。默认禁用。 |
 
 :::info 图像生成与当前启用模型
 

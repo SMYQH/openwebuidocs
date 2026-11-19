@@ -88,7 +88,7 @@ Open WebUI 中的安全问题通过一个单一的、明确定义的流程处理
 * **修复、标识、披露。** 确认的问题会在实际可行的情况下尽快修复，分配 CVE 标识符（如适用），并在修复发布后以安全公告形式公开披露。完整历史记录可在 [Security Advisories 页面](https://github.com/open-webui/open-webui/security/advisories) 上审计：你可以查看发现了什么、如何解决的以及哪个版本包含了修复。
 * **有争议的声明会得到公开回应。** 当外部 CVE 对软件或威胁模型进行错误描述时，团队会发布有理有据的[供应商立场声明](/security/vendor-dispositions)，而非让公开记录保持未质疑状态。
 
-参与规则、受支持版本、威胁模型以及什么被视为或不被视为漏洞，均记录在[安全策略](/security/security-policy)中。
+参与规则、受支持版本、威胁模型以及什么被视为或不被视为漏洞，均记录在[安全政策](/security/security-policy)中。
 
 ### 供应链与包完整性 {#supply-chain--package-integrity}
 

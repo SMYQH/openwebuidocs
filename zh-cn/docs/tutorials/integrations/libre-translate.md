@@ -1,10 +1,12 @@
 ---
 sidebar_position: 30
-title: "LibreTranslate"
+title: "LibreTranslate 集成"
 ---
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+
+本教程由社区贡献，Open WebUI 团队不提供支持。它仅演示如何按你的使用场景自定义 Open WebUI。想投稿？请查看教程投稿指南。
+
 :::
 
 ## 概述 {#overview}
@@ -62,7 +64,7 @@ LT_THREADS="12"
 LT_FRONTEND_TIMEOUT="2000"
 ```
 
-### 第 3 步：运行 Docker Compose 文件 {#step-3-run-the-docker-compose-file}
+### 第 3 步：使用 Docker Compose 启动服务 {#step-3-run-the-docker-compose-file}
 
 运行以下命令启动 LibreTranslate 服务：
 
@@ -70,21 +72,20 @@ LT_FRONTEND_TIMEOUT="2000"
 docker compose up -d
 ```
 
-这将以分离模式启动 LibreTranslate 服务。
+此命令会在后台启动 LibreTranslate 服务。
 
 ## 在 Open WebUI 中配置集成 {#configuring-the-integration-in-open-webui}
 
 在 Docker 中启动并运行 LibreTranslate 后，您可以在 Open WebUI 中配置集成。目前有多个社区集成可供选择，包括：
 
-- [LibreTranslate Filter Function](https://openwebui.com/posts/4993ae7e-bd2a-41dc-9e88-9941854495cc)
-- [LibreTranslate Action Function](https://openwebui.com/posts/103a14c1-174a-4445-bb9b-d48640e43b07)
-- [MultiLanguage LibreTranslate Action Function](https://openwebui.com/posts/f250971e-8163-4a0b-a30c-45fdfb2ba4f8)
-- [LibreTranslate Filter Pipeline](https://github.com/open-webui/pipelines/blob/main/examples/filters/libretranslate_filter_pipeline.py)
+- [LibreTranslate 过滤器函数](https://openwebui.com/posts/4993ae7e-bd2a-41dc-9e88-9941854495cc)
+- [LibreTranslate 动作函数](https://openwebui.com/posts/103a14c1-174a-4445-bb9b-d48640e43b07)
+- [多语言 LibreTranslate 动作函数](https://openwebui.com/posts/f250971e-8163-4a0b-a30c-45fdfb2ba4f8)
+- [LibreTranslate 过滤器管道](https://github.com/open-webui/pipelines/blob/main/examples/filters/libretranslate_filter_pipeline.py)
 
 选择最适合您需求的集成，并按照说明在 Open WebUI 中进行配置。
 
-LibreTranslate pipeline 和 function 支持的语言：
-基本上涵盖 LibreTranslate 中的所有语言，以下是列表：
+LibreTranslate 流水线和函数支持 LibreTranslate 提供的所有语言，列表如下：
 
 ```txt
 Albanian, Arabic, Azerbaijani, Bengali, Bulgarian, Catalan, Valencian, Chinese, Czech, Danish, Dutch, English, Flemish, Esperanto, Estonian, Finnish, French, German, Greek, Hebrew, Hindi, Hungarian, Indonesian, Irish, Italian, Japanese, Korean, Latvian, Lithuanian, Malay, Persian, Polish, Portuguese, Romanian, Moldavian, Moldovan, Russian, Slovak, Slovenian, Spanish, Castilian, Swedish, Tagalog, Thai, Turkish, Ukrainian, Urdu
@@ -106,4 +107,4 @@ Albanian, Arabic, Azerbaijani, Bengali, Bulgarian, Catalan, Valencian, Chinese, 
 
 ## 小结 {#conclusion}
 
-将 LibreTranslate 与 Open WebUI 集成的过程简单直接，能够增强 Open WebUI 实例的功能。按照本文档中介绍的步骤，你即可在 Docker 中部署 LibreTranslate 并在 Open WebUI 中配置集成。
+将 LibreTranslate 与 Open WebUI 集成的过程简单直接，能够增强 Open WebUI 实例的功能。按照本文档中介绍的步骤，您即可在 Docker 中部署 LibreTranslate 并在 Open WebUI 中配置集成。

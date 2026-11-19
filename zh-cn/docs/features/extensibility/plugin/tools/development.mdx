@@ -33,8 +33,8 @@ licence: MIT
 """
 ```
 
-:::tip 元数据自动填充（v0.9.6+）
-当你创建**新**工具（同样适用于 function 和 skill）时，编辑器会在你粘贴或输入代码的过程中读取 frontmatter，并在你尚未填写的情况下，从 `title` 和 `description` 自动填充 **Name**、**ID** 和 **Description** 字段。它**永远不会**覆盖你已经输入的内容，并且在编辑已有条目时也不会重新派生这些字段——你不再需要重复敲写源代码中已经声明过的元数据。
+:::tip 元数据自动填充
+创建**新**工具时，编辑器会在你粘贴或输入代码的过程中读取 frontmatter，并用 `title` 和 `description` 自动填充尚未填写的 **Name**、**ID** 和 **Description** 字段。这也适用于函数和技能。编辑器不会覆盖已输入的值，也不会在编辑现有条目时重新生成这些字段，因此无需重复输入源代码中已声明的元数据。
 :::
 
 ### Tools 类 {#tools-class}
@@ -102,7 +102,7 @@ Valves 和 UserValves 用于定义工具的可配置项，你可以在专门的 
 ### 可选参数 {#optional-arguments}
 下面是你的工具可以依赖的可选参数列表：
 - `__event_emitter__`：发出事件（见下一节）
-- `__event_call__`：与事件发射器类似，但可用于用户交互。事件调用的服务器端超时时间可通过 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout) 配置（默认：300 秒）。
+- `__event_call__`：与事件发射器类似，可用于用户交互。它会等待浏览器回复，默认不设超时。可将 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout) 设置为秒数以限制等待时间。
 - `__user__`：包含用户信息的字典，其中还包含 `__user__["valves"]` 中的 `UserValves` 对象。
 - `__metadata__`：聊天元数据字典
 - `__messages__`：历史消息列表
@@ -1128,7 +1128,7 @@ Legacy Mode **属于旧版且不再支持**。新工具应编写为在 Native Mo
 如果你的工具设计依赖某个只在 Legacy Mode 中存在的事件类型，请围绕 Native 兼容面重新设计 UX（`status`、`notification`、`citation`、`chat:message:files`、`confirmation`、`chat:message:follow_ups`，再加上从工具方法返回最终内容块）。要求用户为了运行你的工具而切换到旧模式，这种做法今后不可接受。
 :::
 
-**模式对比概览**（仅供迁移参考——Native 是唯一受支持的目标）：
+**模式对比概览** *（仅供迁移参考；Native 是唯一受支持的目标）*：
 
 | 方面 | Legacy Mode（旧版 / 不支持） | Native Mode（受支持） |
 |--------|-------------|-------------|
@@ -1368,7 +1368,7 @@ Tools 和 Actions 可以返回 HTML 内容，并在聊天中直接渲染为可�
 
 :::danger 生产 / 多 Worker 部署
 
-**不要在生产环境中依赖运行时 pip 安装。** 当使用 `UVICORN_WORKERS > 1` 或多个副本运行时，每个 worker/replica 都会在启动时独立尝试安装包。这会导致 **竞态条件**：并发的 pip 进程会因为 pip 的内部锁检测到同时安装而以 `AssertionError` 崩溃。
+**不要在生产环境中依赖运行时 pip 安装。** 每个副本都会在启动时自行安装软件包。当 `UVICORN_WORKERS > 1` 时，每个 worker 都会同时向同一环境安装软件包，并发的 pip 进程会因 `AssertionError` 而崩溃。
 
 **在生产环境中请设置 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements)**，彻底禁用运行时 pip 安装。然后使用自定义 Dockerfile 在镜像构建阶段预先安装所有必需包：
 

@@ -976,6 +976,18 @@ def numeral_difference(source: Counter, target: Counter, words: Counter) -> tupl
     return +src, +tgt, conflicts
 
 
+QUOTE_MARKER = re.compile(r"^[ \t]*(?:>[ \t]*)+")
+
+
+def quote_content(line: str) -> str:
+    """Strip the Markdown quote markers from a line and normalize its spacing."""
+    return re.sub(r"\s+", " ", QUOTE_MARKER.sub("", line)).strip()
+
+
+def quoted_lines(text: str) -> list[str]:
+    return [line for line in text.split("\n") if QUOTE_MARKER.match(line)]
+
+
 def compare(path: str, source: Document, target: Document, config: dict) -> list[Issue]:
     issues: list[Issue] = []
 
@@ -1267,6 +1279,14 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
     normalized_source = {re.sub(r"\s+", " ", p).strip().lower() for p in source_prose}
     target_prose = [prose(s.text, language_terms) for s in target.segments]
     heading_lines = {line for _, line, _, _ in target.headings}
+    # Upstream quotes evidence verbatim: a CNA notice, a scanner finding or a
+    # generated summary that upstream prints in English stays in the source
+    # language on purpose. Reproduce such a quote byte for byte and the page
+    # loses no meaning; quote something upstream does not quote and the rule
+    # does not apply.
+    source_quotes = {quote_content(line).lower() for line in quoted_lines(source.text)}
+    source_quote_blob = re.sub(r"\s+", " ", " ".join(prose(quote_content(line), language_terms)
+                                               for line in quoted_lines(source.text)).lower())
     for segment, value in zip(target.segments, target_prose):
         if segment.kind in {"keyword", "fence-title"}:
             # Search-term lists may stay in the upstream language on purpose.
@@ -1279,6 +1299,11 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
         if segment.kind in {"yaml", "json", "attribute"}:
             add("untranslated-metadata", "Localizable metadata or accessibility text remains English after exclusions", line, "warning")
         elif line not in heading_lines:
+            raw = target.text[segment.start:segment.end]
+            quoted = [l for l in raw.split("\n") if l.strip()]
+            if quoted and all(QUOTE_MARKER.match(l) and quote_content(l).lower() in source_quotes
+                              for l in quoted):
+                continue
             if len(words) >= config["untranslated_min_words"]:
                 add("untranslated-prose", "English prose remains after excluding terminology, code, and markup", line, "warning")
             elif len(words) >= 3 and re.sub(r"\s+", " ", value).strip().lower() in normalized_source:
@@ -1314,6 +1339,8 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
         # Same-language sentence copy can hide inside an otherwise Chinese paragraph.
         for sentence in re.split(r"(?<=[.!?])\s+", src):
             if len(WORDS.findall(sentence)) >= 8 and sentence.strip() in dst:
+                if re.sub(r"\s+", " ", sentence).strip().lower() in source_quote_blob:
+                    continue
                 add("copied-sentence", f"Untranslated upstream sentence in section {anchor!r}", dst_line or 1, "warning")
                 break
     return issues

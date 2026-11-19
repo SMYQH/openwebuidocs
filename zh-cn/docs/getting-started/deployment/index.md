@@ -24,7 +24,7 @@ title: "部署 Open WebUI"
 
 | 指南 | 内容范围 |
 | :--- | :--- |
-| [Docker Swarm](/deployment/docker-swarm) | 跨节点的 Swarm 栈，支持 GPU 与非 GPU 场景 |
+| [Docker Swarm](/deployment/docker-swarm) | 跨节点的 Swarm 堆栈，GPU 可选 |
 
 在你自己管理的机器上运行**单个实例**，或使用 Podman、WSL、Docker Desktop 扩展或纯 Python 环境，相关内容见[快速开始选项卡](/getting-started/quick-start)。镜像标签参考（包括 GPU、Ollama 与 slim 变体）见 [Docker 镜像与标签](/getting-started/quick-start#image-variants)。
 

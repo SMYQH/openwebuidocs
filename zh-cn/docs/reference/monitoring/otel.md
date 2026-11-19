@@ -19,7 +19,7 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 
 ## 🚀 使用 Docker Compose 快速开始 {#quick-start-with-docker-compose}
 
-启用可观测性的最快方式是下载示例 Compose 文件并启动一个本地 Grafana LGTM 栈与 Open WebUI：
+最快的上手方式是下载示例 Compose 文件，将 Open WebUI 与本地 Grafana LGTM 技术栈一起启动：
 
 ```bash
 curl -fsSLO https://docs.openwebui.com/docker-compose.otel.yaml
@@ -54,7 +54,7 @@ docker compose -f docker-compose.otel.yaml up -d
 | `OTEL_LOGS_EXPORTER_OTLP_ENDPOINT`    | 在 Compose 中为 `http://lgtm:4317`  | 用于日志的 OTLP 端点                                       |
 | `OTEL_EXPORTER_OTLP_INSECURE`         | 在 Compose 中为 **true**            | 使用不安全连接（无 TLS）连接 OTLP                          |
 | `OTEL_SERVICE_NAME`                   | `open-webui`                        | 服务名称（会显示在追踪和指标中）                           |
-| `OTEL_METRICS_EXPORT_INTERVAL_MILLIS` | `10000`                             | 指标导出间隔（毫秒）（10 秒约等于 6 次/分钟；`60000` 约 1 次/分钟） |
+| `OTEL_METRICS_EXPORT_INTERVAL_MILLIS` | `10000`                             | 指标导出间隔（毫秒）。10 秒对应约 6 个数据点/分钟；设为 `60000` 则约为 1 个数据点/分钟。 |
 | `OTEL_BASIC_AUTH_USERNAME` / `OTEL_BASIC_AUTH_PASSWORD` | *(为空)* | 如果收集器需要，可配置基本认证凭据                         |
 
 :::tip
@@ -82,7 +82,7 @@ docker compose -f docker-compose.otel.yaml up -d
 
 ### 分布式追踪 {#distributed-tracing}
 
-Open WebUI 后端自动检测：
+Open WebUI 后端会自动为以下组件启用追踪：
 
 - **FastAPI**（路由）
 - **SQLAlchemy**（数据库查询）
@@ -103,19 +103,19 @@ WebUI 通过 OpenTelemetry 导出以下指标：
 | ----------------------- | -------- | ---- | -------------------------------------------- |
 | `http.server.requests`  | 计数器   | 1    | `http.method`、`http.route`、`http.status_code` |
 | `http.server.duration`  | 直方图   | ms   | 同上                                         |
-| `webui.users.total`    | 仪表     | users | 无                                  |
-| `webui.users.active`   | 仪表     | users | 无                                  |
-| `webui.users.active.today` | 仪表 | users | 无                              |
+| `webui.users.total`    | 瞬时值   | users | 无                                  |
+| `webui.users.active`   | 瞬时值   | users | 无                                  |
+| `webui.users.active.today` | 瞬时值 | users | 无                              |
 
-这三个用户仪表盘在每次导出时从数据库读取：
+每次导出时，系统都会从数据库读取这三个用户数指标：
 
 - `webui.users.total`：已注册用户数。
 - `webui.users.active`：最近 3 分钟内活跃的用户数。
 - `webui.users.active.today`：自今天 **UTC** 午夜以来活跃的用户数，而非本地午夜。
 
-如果希望让健康检查等路由不出现在 trace 和 HTTP 指标中，请将 `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS`（或 `OTEL_PYTHON_EXCLUDED_URLS`）设为逗号分隔的正则表达式。每个表达式都会在请求 URL 中的任意位置匹配，因此 `/health,/_app/immutable/.*` 也覆盖 `/health/db`。
-
 指标会通过 OTLP 发送（默认每 10 秒一次，可通过 `OTEL_METRICS_EXPORT_INTERVAL_MILLIS` 配置），并可以在 **Grafana** 中通过 Prometheus/Mimir 进行可视化。
+
+如果希望将健康检查等路由同时排除在追踪和 HTTP 指标之外，请将 `OTEL_PYTHON_FASTAPI_EXCLUDED_URLS`（或 `OTEL_PYTHON_EXCLUDED_URLS`）设为逗号分隔的正则表达式。每个表达式都可以匹配请求 URL 中的任意位置，因此 `/health,/_app/immutable/.*` 也会匹配 `/health/db`。
 
 ## 🔧 自定义收集器设置 {#custom-collector-setup}
 

@@ -7,11 +7,11 @@ title: "使用 Entra ID 的 Azure OpenAI"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程由社区贡献，Open WebUI 团队不提供支持。它仅演示如何针对你的使用场景自定义 Open WebUI。想投稿？请查看教程投稿指南。
 
 :::
 
-本节介绍如何通过 Azure Entra ID（原 Azure AD）实现安全、无密钥的认证方式，将 Open WebUI 与 Azure OpenAI 集成。相比管理静态 API key，这种方式能更好地利用 Azure 的身份与访问管理体系。
+本节介绍如何通过 Azure Entra ID（原 Azure AD）将 Open WebUI 与 Azure OpenAI 集成。无需管理静态 API 密钥，即可利用 Azure 的身份和访问管理来提高安全性。
 
 :::warning
 要使用该能力，Open WebUI 版本必须为 0.6.30 或更高。
@@ -19,9 +19,9 @@ title: "使用 Entra ID 的 Azure OpenAI"
 
 ## 概览 {#overview}
 
-Open WebUI 支持通过 **Entra ID 认证** 集成 Azure OpenAI，这使你无需存储 API key 即可完成认证，带来以下优势：
+Open WebUI 支持通过 **Entra ID 认证** 集成 Azure OpenAI，无需存储 API 密钥即可完成认证，带来以下优势：
 
-- **更高安全性**：无需管理或轮换静态 API key
+- **更高安全性**：无需管理或轮换静态 API 密钥
 - **Azure RBAC 集成**：可通过 Azure 角色分配实现细粒度权限控制
 - **审计追踪**：所有访问都会进入 Azure 审计系统
 - **自动 Token 管理**：Token 生命周期由 Azure 自动处理
@@ -31,12 +31,12 @@ Open WebUI 支持通过 **Entra ID 认证** 集成 Azure OpenAI，这使你无�
 Open WebUI 支持 [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python) 所支持的全部 Azure OpenAI 认证方式。
 
 :::warning
-默认情况下，`DefaultAzureCredential` 会尝试所有 Azure Credential，包括开发环境和生产环境类型。如果你已经明确知道自己希望使用哪种认证方式，那么默认行为未必理想，因为：
+默认情况下，`DefaultAzureCredential` 会尝试开发和生产环境的各类 Azure 凭证。如果你已经明确要用哪种认证方式，默认行为未必合适，原因如下：
 - `DefaultAzureCredential` 会在**每一次请求**时依次尝试大部分认证方式，直到找到可用项
 - 某些认证方式会带来额外性能开销
 - 如果系统会去尝试你并未配置的认证方式，日志中可能会出现很多无意义的报错
 
-为解决此问题，如果你的 Open WebUI 版本 **>= 0.6.31**，可通过环境变量 `AZURE_TOKEN_CREDENTIALS` 指定为以下某一种：
+为解决此问题，**从 0.6.31 版起**可将环境变量 `AZURE_TOKEN_CREDENTIALS` 设为下列值之一：
 - `EnvironmentCredential`
 - `WorkloadIdentityCredential`
 - `ManagedIdentityCredential`
@@ -46,7 +46,7 @@ Open WebUI 支持 [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/p
 - `AzureDeveloperCliCredential`
 - `InteractiveBrowserCredential`
 
-_这样它就只会使用你选定的 credential 类型。_
+_这样只会使用你选定的凭证类型。_
 
 如果你仍希望保留自动选择行为，但希望只在“开发环境凭证”或“生产环境凭证”之间筛选，也可以使用：
 - `prod`：表示只尝试 `EnvironmentCredential`、`WorkloadIdentityCredential`、`ManagedIdentityCredential`
@@ -68,11 +68,11 @@ Azure CLI 认证使用你本机上的 Azure 凭证来访问 Azure OpenAI。
 
 [**→ 查看如何配置 Azure CLI 认证**](./azure-cli-auth.mdx)
 
-### Workload Identity 认证 {#2-workload-identity-authentication}
+### 2. 工作负载身份认证 {#2-workload-identity-authentication}
 
 **最适合：** Azure Kubernetes Service（AKS）生产部署，以及多租户环境
 
-- **工作负载身份（Workload Identity）** 为 AKS 集群提供托管身份方案，使 Pod 在无需存储任何集群内凭证的情况下即可访问 Azure 服务。
+工作负载身份（Workload Identity）为 AKS 集群提供托管身份方案，让 Pod 无需在集群内存储凭据即可向 Azure 服务进行身份验证。
 
 **特点：**
 - 集群中不存储任何凭证
@@ -100,7 +100,7 @@ Azure CLI 认证使用你本机上的 Azure 凭证来访问 Azure OpenAI。
 | **配置复杂度**         | 简单                     | 中等（需要 Terraform 或一定 Azure 经验）          |
 | **安全模型**           | Azure CLI 凭证           | Workload Identity 认证                            |
 | **最适合**             | 开发与测试               | 生产部署                                          |
-| **凭证存储**           | 本地 `.azure` 目录       | 无（federated tokens）                            |
+| **凭证存储**           | 本地 `.azure` 目录       | 无（使用联合身份令牌）                            |
 
 ## 下一步 {#next-steps}
 

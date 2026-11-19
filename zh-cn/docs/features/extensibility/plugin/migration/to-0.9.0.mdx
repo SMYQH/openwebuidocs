@@ -31,7 +31,7 @@ Open WebUI 0.9.0 对内部结构进行了大规模重构：后端数据层已从
 3. **数据库 session 现在是 `AsyncSession`。** 请使用 `get_async_db_context`（或不共享 session 的 `get_async_db`）替代旧的 `get_db_context`。同步 helper（如 `get_db`、`SessionLocal`）仍存在，但仅供启动阶段代码使用——如果在请求处理器或插件中调用，会阻塞事件循环并与异步连接池竞争。所有原始查询也需要改写为 SQLAlchemy 2.0 的异步风格
 4. **任何等待上述调用的插件 helper，本身也必须是 `async def`。** 一旦调用链中某个函数变成 coroutine，它的所有调用者都必须逐级异步化，直到插件入口
 
-插件入口本身（`pipe`、`inlet`、`outlet`、`stream`、`action` 以及 Tool 方法）在 0.5+ 中本来就是异步的，因此**签名通常无需变动**——需要更新的是函数体。
+插件入口本身（`pipe`、`inlet`、`outlet`、`stream`、`action` 以及 Tool 方法）在 0.5+ 中已经是异步的，因此通常无需改动签名，只需更新函数体。
 
 ---
 
@@ -156,7 +156,7 @@ class Pipe:
 
 ---
 
-### 🛠️ 4. Tools {#4-tools}
+### 🛠️ 4. 工具 {#4-tools}
 
 Tool 方法可以声明为 `async def`（如果它会访问数据库，也应该这么做）。如果 Tool 只调用外部 API、完全不访问 Open WebUI 数据库，则无需调整。
 

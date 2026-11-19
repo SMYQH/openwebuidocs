@@ -1,11 +1,11 @@
 ---
 sidebar_position: 3
-title: "RAG"
+title: "排查文档检索（RAG）问题"
 sidebar_label: "RAG"
 description: "排查 Open WebUI 中文档回答缺失、上传失败、上下文超限以及知识检索问题。"
 ---
 
-检索增强生成（RAG）让语言模型能够围绕外部内容——文档、知识库等——进行推理：先检索相关信息，再把它送入模型上下文。当结果不符合预期（例如模型“幻觉”或遗漏关键信息）时，问题往往并不在模型本身，而在上下文链路。
+如果模型在你的文档中找不到答案，请依次检查：文件是否已完成处理、对话是否能访问这些文件，以及模型是否拥有检索其内容所需的工具和上下文。本指南涵盖上传失败、检索设置以及与模型相关的上下文限制。
 
 本页汇总了最常见的 RAG 问题及其处理方法。
 
@@ -13,7 +13,7 @@ description: "排查 Open WebUI 中文档回答缺失、上传失败、上下文
 
 ## 按场景推荐设置 {#recommended-settings-by-scenario}
 
-RAG 性能很大程度上取决于你的模型配置。默认值较为保守以保证兼容性，但针对具体部署调优后效果会好得多。所有设置均在 **设置 > 文档**（管理员区域）中配置。
+RAG 性能很大程度上取决于你的模型配置。默认值较为保守以保证兼容性，但针对具体部署调优后效果会好得多。所有设置均在 **Settings > Documents**（管理员区域）中配置。
 
 :::tip Agentic 检索：启用 kb_exec
 如果你的模型使用 **原生函数调用**，设置 [`ENABLE_KB_EXEC=True`](/reference/env-configuration#enable_kb_exec) 会让知识库体验明显更好。它会给模型提供一套类 shell 的接口（`ls`、`tree`、`grep`、`cat`、按行读）来操作知识内容，能力强的模型会以一种比单一搜索工具更可靠的方式把它们串起来。在 Legacy 模式下它没有任何效果。参见 [类文件系统访问](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
@@ -25,15 +25,15 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 
 | 设置 | 值 | 原因 |
 |------|-----|------|
-| **文本分割器** | `token` | 基于实际 token 数的一致分块大小 |
-| **Markdown 标题分割** | **开启** | 保留文档结构 |
-| **分块大小** | `1000` | 较小的分块，使每个检索结果都能舒适地放入上下文 |
-| **分块重叠** | `100` | 标准重叠 |
+| **Text Splitter** | `token` | 基于实际 token 数的一致分块大小 |
+| **Markdown Header Text Splitter** | **开启** | 保留文档结构 |
+| **Chunk Size** | `1000` | 较小的分块，使每个检索结果都能舒适地放入上下文 |
+| **Chunk Overlap** | `100` | 标准重叠 |
 | **Top K** | `3` 到 `5` | 较少分块，避免耗尽有限的上下文预算 |
-| **完整上下文模式** | 关闭 | 无法承担发送完整文档的开销 |
+| **Always Use Full Text** | 关闭 | 无法承担发送完整文档的开销 |
 
 :::tip 上下文预算计算
-分块大小为 1000 tokens、Top K 为 5 时，RAG 会注入约 5000 tokens 的检索内容。开启混合搜索时，**Top K Reranker** 决定有多少个 chunk 会被送进模型，因此要按它来算这笔账。再算上系统提示词和对话历史——如果模型的上下文窗口为 8K，留给对话本身的大约只有 2–3K tokens。如果后续问题被截断，请适当降低 Top K。
+分块大小为 1000 tokens、Top K 为 5 时，RAG 会注入约 5,000 tokens 的检索内容。开启混合搜索时，**Top K Reranker** 决定有多少个 chunk 会被送进模型，因此要按它来算这笔账。再算上系统提示词和对话历史——如果模型的上下文窗口为 8K，留给对话本身的大约只有 2–3K tokens。如果后续问题被截断，请适当降低 Top K。
 :::
 
 ### 云模型，大上下文（32K+ tokens） {#cloud-models-with-large-context-32k-tokens}
@@ -42,15 +42,15 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 
 | 设置 | 值 | 原因 |
 |------|-----|------|
-| **文本分割器** | `token` | 一致的分块大小 |
-| **Markdown 标题分割** | **开启** | 保留文档结构 |
-| **分块大小** | `2000` | 较大的分块，每次命中保留更多上下文 |
-| **分块重叠** | `200` | 更多重叠防止句子被切断 |
+| **Text Splitter** | `token` | 一致的分块大小 |
+| **Markdown Header Text Splitter** | **开启** | 保留文档结构 |
+| **Chunk Size** | `2000` | 较大的分块，每次命中保留更多上下文 |
+| **Chunk Overlap** | `200` | 更多重叠防止句子被切断 |
 | **Top K** | `15` 到 `25` | 广撒网——你有足够的上下文预算 |
-| **完整上下文模式** | 小文档可考虑 | 文档不超过约 20K tokens 时，完整上下文通常优于检索。**Full Text Threshold (Characters)** 决定哪些文件会被整份放入上下文 |
+| **Always Use Full Text** | 小文档可考虑 | 文档不超过约 20K tokens 时，完整上下文通常优于检索。**Full Text Threshold (Characters)** 决定哪些文件会被整份放入上下文 |
 
-:::tip 何时使用完整上下文模式
-如果你处理的是单个中小型文档（不超过约 50 页）并且使用大上下文模型，完整上下文往往比分块检索效果更好，因为模型能看到全部内容而没有检索遗漏。在聊天中点击某个附件并切换到 **Using Entire Document**，即可对单个文件这样处理；也可以在 **设置 > 文档**（管理员区域）中打开 **Always Use Full Text**，对所有文件生效。
+:::tip 何时使用全文
+如果你处理的是单个中小型文档（不超过约 50 页）并且使用大上下文模型，完整上下文往往比分块检索效果更好，因为模型能看到全部内容而没有检索遗漏。在聊天中点击某个附件并切换到 **Using Entire Document**，即可对单个文件这样处理；也可以在 **Settings** > **Documents**（管理员区域）中打开 **Always Use Full Text**，对所有文件生效。
 :::
 
 ### 混合环境（本地 + 云端） {#mixed-environment-local--cloud}
@@ -59,10 +59,10 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 
 | 设置 | 值 | 原因 |
 |------|-----|------|
-| **文本分割器** | `token` | 适用于两者 |
-| **Markdown 标题分割** | **开启** | 适用于两者 |
-| **分块大小** | `1500` | 折中——不太大也不太小 |
-| **分块重叠** | `200` | 安全默认值 |
+| **Text Splitter** | `token` | 适用于两者 |
+| **Markdown Header Text Splitter** | **开启** | 适用于两者 |
+| **Chunk Size** | `1500` | 折中——不太大也不太小 |
+| **Chunk Overlap** | `200` | 安全默认值 |
 | **Top K** | `10` | 适中——混合模型使用的好平衡点 |
 
 ---
@@ -78,7 +78,7 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 | **生产环境，有 API 预算** | 通过 OpenAI 使用 `text-embedding-3-small` | 性价比最高的检索质量 |
 | **离线 / 自托管** | 通过 Ollama 使用 `nomic-embed-text` 或 `mxbai-embed-large` | 无需外部 API 调用 |
 
-更换嵌入模型后，请在 **设置 > 文档**（管理员区域）中**重新索引所有现有文档**，使新嵌入生效。
+更换嵌入模型后，请在 **Settings > Documents**（管理员区域）中**重新索引所有现有文档**，使新嵌入生效。
 
 ---
 
@@ -108,7 +108,7 @@ Open WebUI 在设计上默认与上下文窗口有限的模型配合使用。例
 
 **解决方法：**
 
-- 前往 **设置 > 文档**（管理员区域）
+- 前往 **Settings > Documents**（管理员区域）
 - 然后任选其一：
   - **启用 “Bypass Embedding and Retrieval”**——直接发送完整内容，不走检索过滤
   - **打开 “Always Use Full Text”**——把更完整的内容注入模型提示词
@@ -191,15 +191,15 @@ Open WebUI 在设计上默认与上下文窗口有限的模型配合使用。例
 
 Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用。不同上传方式受限方式不同：
 
-- **聊天上传：** 受全局文件大小和文件数量限制
-  - **最大文件大小：** 由 `RAG_FILE_MAX_SIZE` 控制（默认不限），可在 **Settings > Documents > Files > Max Upload Size**（管理员区域） 中配置
-  - **Office 与 EPUB 文档**还会额外按其实际内容检查，因为这些格式本质上是压缩包。解压后远大于自身体积的文件会被拒绝，并提示解压后体积过大，即便文件本身很小。真实文档很少触发这一限制；触发的要么是文件损坏，要么是刻意构造以耗尽打开它的程序的内存。
-  - **最大文件数量：** 由 `RAG_FILE_MAX_COUNT` 控制（默认不限），可在 **Settings > Documents > Files > Max Upload Count**（管理员区域） 中配置
-  - **允许的文件扩展名：** 由 `RAG_ALLOWED_FILE_EXTENSIONS` 控制（默认全部允许），可在 **Settings > Documents > Files > Allowed File Extensions**（管理员区域） 中配置
-- **文件夹上传：** 受 `FOLDER_MAX_FILE_COUNT` [environment variable](/reference/env-configuration/#folder_max_file_count) 限制（默认 100），限制的是与文件夹直接关联的文件数
-- **知识库上传：**
-  - **文件大小限制：** 受 `RAG_FILE_MAX_SIZE` 和知识库的[文件大小限制](/features/workspace/knowledge#file-limits)约束
-  - **RAG 行为：** 上传到 Knowledge Base 的所有文件都会自动建立索引。不过与聊天上传类似，Knowledge Base 也可以在聊天中使用 **Using Entire Document**（点击聊天中的附件），它会把完整文档内容直接交给模型，而不使用向量检索。
+*   **聊天上传：** 受全局文件大小和文件数量限制
+    *   **最大文件大小：** 由 `RAG_FILE_MAX_SIZE` 控制（默认不限），可在 **Settings > Documents > Files > Max Upload Size**（管理员区域） 中配置
+    *   **Office 与 EPUB 文档**还会额外按其实际内容检查，因为这些格式本质上是压缩包。解压后远大于自身体积的文件会被拒绝，并提示解压后体积过大，即便文件本身很小。真实文档很少触发这一限制；触发的要么是文件损坏，要么是刻意构造以耗尽打开它的程序的内存。
+    *   **最大文件数量：** 由 `RAG_FILE_MAX_COUNT` 控制（默认不限），可在 **Settings > Documents > Files > Max Upload Count**（管理员区域） 中配置
+    *   **允许的文件扩展名：** 由 `RAG_ALLOWED_FILE_EXTENSIONS` 控制（默认全部允许），可在 **Settings > Documents > Files > Allowed File Extensions**（管理员区域） 中配置
+*   **文件夹上传：** 受 `FOLDER_MAX_FILE_COUNT` [environment variable](/reference/env-configuration/#folder_max_file_count) 限制（默认 100），限制的是与文件夹直接关联的文件数
+*   **知识库上传：**
+    *   **文件大小限制：** 受 `RAG_FILE_MAX_SIZE` 和知识库的[文件大小限制](/features/workspace/knowledge#file-limits)约束
+    *   **RAG 行为：** 上传到 Knowledge Base 的所有文件都会自动建立索引。不过与聊天上传类似，Knowledge Base 也可以在聊天中使用 **Using Entire Document**（点击聊天中的附件），它会把完整文档内容直接交给模型，而不使用向量检索。
 
 :::info
 这些限制被拆分控制后，管理员就能更精细地管理不同功能的资源占用。例如，你可以允许在精心维护的 Knowledge Base 中上传更大的文件，同时限制临时 Folder 上传的文件数量。
@@ -209,13 +209,13 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
 
 ### 7. Chunk 过于碎片化或太小 {#7-fragmented-or-tiny-chunks}
 
-使用 **Markdown Header Splitter** 时，文档有时会被切得很碎（例如只剩一条目录项或一个很短的小标题）。这类小 chunk 往往缺乏足够语义上下文，嵌入模型难以准确表示，最终导致 RAG 效果差，而且还带来额外开销。
+使用 **Markdown Header Text Splitter** 时，文档有时会被切得很碎（例如只剩一条目录项或一个很短的小标题）。这类小 chunk 往往缺乏足够语义上下文，嵌入模型难以准确表示，最终导致 RAG 效果差，而且还带来额外开销。
 
 **解决方法：**
 
 - 前往 **Settings > Documents**（管理员区域）
 - 提高 **Chunk Min Size Target**
-- 例如设置为 `1000`（或约为 `CHUNK_SIZE` 的 50-60%），这样系统会把过小碎片与相邻 chunk 合并，获得更好的语义一致性，也能减少总 chunk 数量
+- 将其设置为 **Chunk Size** 的 50-60% 左右（例如 Chunk Size 为 `2000` 时设置为 `1000`），这样系统会把过小碎片与相邻 chunk 合并，获得更好的语义一致性，也能减少总 chunk 数量
 
 ---
 
@@ -244,7 +244,7 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
 | 📄 API 返回 “empty content” | 等文件处理完成后再加入知识库 |
 | 💥 嵌入时 CUDA OOM | 降低 batch size、隔离 GPU、或重启容器 |
 | 📷 PDF 图片无法提取 | 使用 Tika/Docling、启用 OCR、或更新 pypdf |
-| 💀 上传时 worker 瞬时死亡 | 在多 worker 下不要继续使用默认 ChromaDB（SQLite） |
+| 💀 上传时 worker 瞬时死亡 | 在多副本或多 worker 的部署下，不要继续使用默认 ChromaDB（SQLite） |
 | 💀 上传时 worker 超时死亡 | 更新 Open WebUI，或提高 `--timeout-worker-healthcheck` |
 | 🧠 模型忽略已附加 KB | 启用 Builtin Tools、添加系统提示、或在聊天中以整篇文档模式（Using Entire Document）附加一个小文档 |
 | 📄 附加单个文件时没有返回内容 | 重新索引以重建单文件索引 |
@@ -260,11 +260,11 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
 400: The content provided is empty. Please ensure that there is text or data present before proceeding.
 ```
 
-**问题根源：** 这其实是**竞争条件**，并不是真的空文件。默认情况下，文件上传是异步处理的——上传 endpoint 会立即返回文件 ID，而内容提取与 embedding 计算会在后台进行。如果你在处理完成前就把文件加入知识库，系统看到的内容自然还是空的。
+**问题根源：** 这其实是**竞争条件**，并不是真的空文件。默认情况下，文件上传是异步处理的——上传端点会立即返回文件 ID，而内容提取与 embedding 计算会在后台进行。如果你在处理完成前就把文件加入知识库，系统看到的内容自然还是空的。
 
 ✅ **解决方法：等待处理完成**
 
-在把文件加入知识库之前，先轮询状态 endpoint：
+在把文件加入知识库之前，先轮询状态端点：
 
 ```python
 import requests
@@ -364,7 +364,7 @@ Error generating embeddings: 429 Rate limit reached
 
 如果包含图片文字的 PDF 上传后返回空内容：
 
-**问题根源：** 默认的 `pypdf` 提取器对某些 PDF 格式支持有限，尤其是以图片为主的 PDF。
+**问题根源：** 默认的 "pypdf" 内容提取器对某些 PDF 格式支持有限，尤其是以图片为主的内容。
 
 ✅ **解决方法：**
 
@@ -372,9 +372,9 @@ Error generating embeddings: 429 Rate limit reached
    - 前往 **Settings > Documents**（管理员区域）
    - 尝试 **Apache Tika** 或 **Docling**，它们通常有更好的 OCR 支持
 2. **启用 PDF 图像提取**：
-   - 在 **设置 > 文档**（管理员区域） 中确认 **PDF Extract Images (OCR)** 已开启
+   - 在 **Settings > Documents**（管理员区域） 中确认 **PDF Extract Images (OCR)** 已开启
    - OCR 每次上传会占用一个处理器线程。如果你的服务器核心很多且处于空闲状态，可以提高 [`RAPIDOCR_PARAMS`](/reference/env-configuration#rapidocr_params) 中的 `intra_op_num_threads`，让单次上传的 OCR 更快完成
-3. **更新 pypdf**：
+3. **更新 pypdf**（如果使用默认引擎）：
    新版本 pypdf（6.0.0+）对各类 PDF 格式处理更好
 4. **检查 PDF 是否损坏**：
    上传前先确认该 PDF 能在常规 PDF 阅读器中正常打开
@@ -398,11 +398,13 @@ INFO:     Waiting for child process [pid]
 INFO:     Child process [pid] died
 ```
 
-**解决方案：** 将 `UVICORN_WORKERS=1`，并通过副本进行横向扩展。当副本数多于 1 时，请改用非内嵌式的 ChromaDB：
+**解决方案：** 将 `UVICORN_WORKERS=1`，并通过副本进行横向扩展。当副本数多于一个时，请改用非内嵌式的 ChromaDB：
 - 把 [`VECTOR_DB`](/reference/env-configuration#vector_db) 设置为 `pgvector`、`mariadb-vector`、`milvus` 或 `qdrant`
 - 或者把 ChromaDB 作为独立的 HTTP 服务器运行，并设置 [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) / [`CHROMA_HTTP_PORT`](/reference/env-configuration#chroma_http_port)
 
 完整细节请参见[扩缩容与高可用指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
+
+---
 
 ### 13. 模型附加的知识库不生效 {#13-knowledge-base-attached-to-model-not-working}
 
@@ -444,7 +446,7 @@ INFO:     Child process [pid] died
 **Settings > Models > Edit > Advanced Params**（管理员区域）（自己的模型则用 **Workspace > Models**）中的单模型设置，在显式设置时会覆盖全局默认值。没有自己 `function_calling` 值的模型会继承全局设置。当模型行为与预期不符时，这两处都要检查。
 :::
 
-2. **确认该模型已启用 Builtin Tools**（适用于 native mode）：
+2. **确保该模型已启用 Builtin Tools**：
    - 进入该模型的 **Settings > Models > Edit**（管理员区域）（自己的模型则用 **Workspace > Models**）
    - 在 **Builtin Tools** 下确认 **Knowledge Base** 类别已启用（默认启用）
    - 如果被关闭，模型就没有任何途径去查询附加知识库
@@ -485,7 +487,7 @@ YouTube 附加项就是视频的字幕，因此没有可用字幕的视频根本
 
 **解决方案：**
 
-1. 在 **设置 > 文档 > 重建知识库与记忆向量索引**（管理员区域） 处执行**重新索引**。这会重建每个知识库、其中每个文件的单文件索引，以及每位用户的记忆。它会重新提取并重新嵌入全部内容，因此请预留足够时间；如果使用的是付费嵌入模型，还要考虑相应费用。
+1. 在 **Settings > Documents > Reindex Knowledge and Memory Vectors**（管理员区域）执行**重新索引**。这会重建每个知识库、其中每个文件的单文件索引，以及每位用户的记忆。它会重新提取并重新嵌入全部内容，因此请预留足够时间；如果使用的是付费嵌入模型，还要考虑相应费用。
 2. 如果文件不属于任何知识库，请**重新上传**，因为重新索引只覆盖知识库。
 
 ---

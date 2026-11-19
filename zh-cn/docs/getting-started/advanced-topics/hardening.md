@@ -3,8 +3,6 @@ sidebar_position: 4
 title: "强化 Open WebUI 安全"
 ---
 
-<a id="hardening-open-webui"></a>
-
 # 强化 Open WebUI 安全 {#hardening-open-webui}
 
 Open WebUI 是一个自托管应用，会向已认证用户提供模型推理、工具执行、代码流水线等能力。与数据库、容器仓库、CI 服务器等其他自托管基础设施一样，部署方需要自行管理运行环境、网络暴露方式和配置。Open WebUI 提供了本指南中介绍的控制项；具体如何配置，取决于你的环境与威胁模型。
@@ -90,21 +88,19 @@ WEBUI_ADMIN_NAME=Admin
 ENABLE_LOGIN_FORM=false
 ```
 
-这会从 UI 中移除邮箱/密码登录入口，引导所有用户走 SSO 流程。同一个开关就是 **设置 > 认证**（管理员区域）中的 **登录表单**，因此 SSO 生效后无需重启即可将其关闭。你也可以在后端层面禁用本地密码认证：
+这会从 UI 中移除邮箱和密码登录表单，并拒绝本地注册，引导所有用户使用 SSO。同一个开关就是 **设置 > 认证**（管理员区域）中的 **登录表单**，因此 SSO 生效后无需重启即可将其关闭。你也可以在后端层面禁用本地密码认证：
 
 ```bash
 ENABLE_PASSWORD_AUTH=false
 ```
 
-如果你希望“登录页密码行为”和“账号页改密行为”分开控制，还可以隐藏 **Settings > Account** 中的修改密码表单：
+如果你想分别控制登录表单和账户页的密码修改，可以隐藏 **设置 > 账户** 中的修改密码表单：
 
 ```bash
 ENABLE_PASSWORD_CHANGE_FORM=false
 ```
 
 这对于以 SSO 为主的部署很有用，因为本地密码改动本就不应对用户展示。
-
----
 
 ### 双因素登录 {#two-factor-sign-in}
 
@@ -169,7 +165,7 @@ JWT_EXPIRES_IN=24h
 
 配置 Redis 后，登出会把该 token 加入一个会自动过期的撤销列表，而 OIDC back-channel logout 会让受影响的用户从所有设备登出。这才是面向生产的预期行为。
 
-**撤销检查采用 fail-open 策略。** 无法访问 Redis 的撤销检查会接受该 token，并且每个工作进程最多每分钟记录一次 `Revocation check failed; accepting token`。因此 Redis 故障期间，实例会退回到上面列出的无 Redis 行为，登出不会生效——请把 Redis 的可用性视为认证面的一部分，并针对这条日志配置告警。
+**撤销检查采用 fail-open 策略。** 撤销检查无法访问 Redis 时会接受该 token，每个工作进程最多每分钟记录一次 `Revocation check failed; accepting token`。Redis 故障期间，实例会退回到上述无 Redis 时的行为，单个会话的登出不会使 token 失效。请把服务可用性纳入身份验证监控，并针对这条日志配置告警。
 
 **如果你暂时无法部署 Redis**， 请缩短 `JWT_EXPIRES_IN`（例如 `1h` 或 `4h`）以缩小暴露窗口。Redis 配置请参考 [Redis 教程](/tutorials/integrations/redis)。
 
@@ -271,7 +267,7 @@ HSTS=max-age=31536000;includeSubDomains
 ```
 
 ### 可信代理 IP {#trusted-proxy-ips}
-[`FORWARDED_ALLOW_IPS`](/reference/env-configuration#forwarded_allow_ips) 决定哪些代理被信任可以发送 `X-Forwarded-For` 响应头。Docker 镜像、`open-webui serve` 和 `open-webui dev` 都会读取它。默认值为 `*`（信任全部），这只在前置一个会覆盖这些响应头的反向代理、且其他任何东西都无法访问后端时才合适。否则任何客户端都可以声称任意地址，这会破坏按地址的登录限制，并使审计日志中的地址失真。请将其限制为你的代理 IP：
+[`FORWARDED_ALLOW_IPS`](/reference/env-configuration#forwarded_allow_ips) 指定哪些代理可以发送可信的 `X-Forwarded-For` 请求头。Docker 镜像、`open-webui serve` 和 `open-webui dev` 都会读取它。默认值为 `*`（信任全部），仅适用于后端只能通过会覆盖这些请求头的反向代理访问的情况。否则，客户端可伪造地址，使按地址的登录限制失效，也会让审计日志中的地址失真。请将其限制为你的代理 IP：
 
 ```bash
 FORWARDED_ALLOW_IPS=192.168.1.100
@@ -335,7 +331,7 @@ WEBUI_AUTH_TRUSTED_NAME_HEADER=X-Forwarded-Name
 
 :::warning
 
-使用可信请求头时，你的代理**必须**先从客户端请求中剥离这些头，再注入自己可信的值。如果代理没有先剥离，任何客户端都可以自己发送伪造头并冒充任意用户。这是可信请求头认证最常见的错误配置。请查阅你的代理文档，确认如何清理上游请求头。
+使用可信请求头时，代理必须先移除客户端请求中的这些头，再注入代理生成的值。否则，客户端可通过伪造请求头冒充任意用户。这是可信请求头认证最常见的错误配置。请查阅代理文档，确认如何移除这些请求头。
 
 :::
 
@@ -497,7 +493,7 @@ AUDIT_LOG_LEVEL=METADATA
 | 级别 | 记录内容 |
 |---|---|
 | `NONE` | 不记录（默认） |
-| `METADATA` | 用户、IP、user agent、方法、URL、时间戳 |
+| `METADATA` | 用户、IP、用户代理、请求方法、URL、时间戳、请求的模型 |
 | `REQUEST` | 元数据 + 请求体 |
 | `REQUEST_RESPONSE` | 元数据 + 请求体和响应体 |
 
@@ -533,9 +529,11 @@ AUDIT_EXCLUDED_PATHS=/chats,/chat,/folders
 AUDIT_EXCLUDED_PATHS=/chats,/folders
 ```
 
-记录聊天请求后，对 `/api/chat/completions` 请求的每次模型回复都会在请求记录旁边写下自己的审计条目。当回复调用工具时，模型在两次工具调用之间的每一轮回答各有一条。这类条目在 `model_id` 中记录作出回答的模型，并在 `usage` 中记录提供商报告的 token 计数（`input_tokens`、`output_tokens` 和 `total_tokens`）。它的 `extra.request_id` 保存该请求条目的 `id`，两者由此关联。提供商未报告 token 计数的回复不写这些计数。后台任务（例如标题和标签生成）同样不写。
+启用聊天请求审计后，对 `/api/chat/completions` 请求的模型回复会在请求条目之外另写审计条目。如果回复调用工具，两次工具调用之间的每轮回答各记一条。条目在 `model_id` 中记录回答的模型，在 `usage` 中记录提供商报告的 token 计数（`input_tokens`、`output_tokens` 和 `total_tokens`）。`extra.request_id` 保存请求条目的 `id`，从而关联两条记录。如果提供商未报告 token 计数，则不写回复条目。标题和标签生成等后台任务也不写这类条目。
 
 在这些过滤范围内，审计日志覆盖携带凭据的 `POST`、`PUT`、`PATCH` 和 `DELETE` 请求（可通过 [`ENABLE_AUDIT_GET_REQUESTS`](/reference/env-configuration#enable_audit_get_requests) 加入 `GET`），以及上述认证端点。凭据是 `Authorization` 请求头（通常为 `Bearer`）、会话 cookie，或者 `x-api-key` 请求头中的 API 密钥（请求头名可通过 [`CUSTOM_API_KEY_HEADER`](/reference/env-configuration#custom_api_key_header) 重命名）。使用 API 密钥登录的请求会记在该密钥所有者名下。密钥错误的请求则不带用户记录。Socket.IO 流量在两种传输方式上都在其外，包括当 [`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configuration#enable_websocket_support) 关闭时浏览器使用的 `/ws/socket.io` 长轮询请求。
+
+---
 
 ## 网络与外发请求 {#network-and-outbound-requests}
 
@@ -638,7 +636,7 @@ RAG_ALLOWED_FILE_EXTENSIONS=.pdf,.txt,.md,.docx,.csv
 
 Tools 和 Functions 会在你的服务器上执行任意 Python 代码，权限级别与 Open WebUI 进程本身相同。这是它们的工作机制，因此它们可以读取文件、发起网络请求、访问环境变量并与数据库交互。
 
-关于其安全模型的详细说明，请参见 [安全策略](/security/security-policy#tools-functions-and-pipelines-security)。
+关于其安全模型的详细说明，请参见 [安全政策](/security/security-policy#tools-functions-and-pipelines-security)。
 
 由于 Tools 和 Functions 会执行服务端代码，因此任何拥有创建或导入权限的用户，实际上都等同于拥有 Open WebUI 进程级别的权限。这是扩展机制的天然属性。默认情况下，只有管理员可以创建和导入 Tools / Functions。下面这些设置用于控制相关权限。
 
@@ -785,7 +783,7 @@ SCIM token 是一个拥有完整用户管理权限的静态 bearer token。请�
 docker pull ghcr.io/open-webui/open-webui:main
 ```
 
-对于多副本部署，请遵循[滚动更新流程](/troubleshooting/multi-replica#updates-and-migrations)，避免停机。
+对于多副本部署，请统一更新所有实例：先停止所有副本，让一个实例执行数据库迁移，再启动其余已更新的副本。参见[更新与迁移](/troubleshooting/multi-replica#updates-and-migrations)。
 
 ---
 
@@ -802,13 +800,13 @@ docker pull ghcr.io/open-webui/open-webui:main
 | [启用密码校验](#password-validation) | 关闭 | `ENABLE_PASSWORD_VALIDATION=true` |
 | [加固 Cookie](#cookie-settings) | `Secure=false`、`SameSite=lax` | `Secure=true`、`SameSite=strict` |
 | [要求双因素登录](#two-factor-sign-in) | 关闭 | `ENABLE_MFA=true` |
-| [启用 token 撤销](#token-revocation) | 无撤销（无 Redis） | 配置 Redis 或缩短 `JWT_EXPIRES_IN` |
+| [启用 token 撤销](#token-revocation) | 单个会话登出需要 Redis | 配置 Redis 或缩短 `JWT_EXPIRES_IN` |
 | [限制 CORS](#cors) | `*` | 仅允许你的明确域名 |
 | [设置安全响应头](#security-headers) | 无 | HSTS、X-Frame-Options、CSP、Cross-Origin 策略 |
 | [限制 OAuth 域名](#domain-and-group-restrictions) | 全部允许 | `OAUTH_ALLOWED_DOMAINS=yourdomain.com` |
 | [启用审计日志](#audit-logging) | `NONE` | `METADATA` 或更高 |
 | [限制 API 密钥端点](#endpoint-restrictions) | 所有端点 | `ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS=true` |
-| [保持 OpenAI API 透传关闭](#openai-api-passthrough) | 已关闭 | 继续保持 `ENABLE_OPENAI_API_PASSTHROUGH=false` |
+| [保持 API 透传关闭](#openai-api-passthrough) | 已关闭 | 继续保持 `ENABLE_OPENAI_API_PASSTHROUGH=false` |
 | [不使用时禁用 Tools 与 Functions](#disabling-the-feature-entirely) | 已启用 | `ENABLE_PLUGINS=false` |
 | [禁用自动 pip 安装](#dependency-installation) | 已启用 | `ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false` |
 | [检查社区共享](#data-sharing-and-export) | `true` | 有敏感数据时关闭 |
@@ -827,7 +825,7 @@ docker pull ghcr.io/open-webui/open-webui:main
 
 ### 网络与传输 {#network-and-transport}
 
-1. **将 Open WebUI 放在 VPN、反向代理或 zero-trust 访问层之后，并启用限速与 IP allowlist。** Open WebUI 适合运行在私有、可信网络中。不要在没有额外访问控制层的情况下直接暴露到公网。请在代理上配置连接速率限制、重复认证尝试限制、已知 IP 范围访问限制，并使用 fail2ban 等工具阻断恶意来源。将 `--forwarded-allow-ips` 限制为代理自身 IP，避免头部伪造。[详情](#network-placement)
+1. **将 Open WebUI 放在 VPN、反向代理或 zero-trust 访问层之后，并启用限速与 IP allowlist。** Open WebUI 适合运行在私有、可信网络中。不要在没有额外访问控制层的情况下直接暴露到公网。请在代理上配置连接速率限制、重复认证尝试限制、已知 IP 范围访问限制，并使用 fail2ban 等工具阻断恶意来源。将 `FORWARDED_ALLOW_IPS` 限制为代理自身 IP，防止请求头被伪造。[详情](#network-placement)
 
 2. **所有流量都使用 HTTPS，并启用完整安全头。** 使用能够终止 TLS 的反向代理。把会话 Cookie 配置为 `Secure=true` 与 `SameSite=strict`。生产环境不要通过明文 HTTP 提供 Open WebUI。启用 HSTS、Content Security Policy、X-Frame-Options、X-Content-Type-Options、Referrer-Policy 和 Permissions-Policy。不要把 CORS 保持为 `*`；只允许确实需要访问的域名。[详情](#https-and-tls)
 
@@ -837,7 +835,7 @@ docker pull ghcr.io/open-webui/open-webui:main
 
 4. **使用身份提供商的 SSO，并关闭本地认证。** 集成组织现有的 OAuth/OIDC 或 LDAP。限制可登录的邮箱域名和 IdP 组，将 IdP 角色映射到 Open WebUI 角色，并完全关闭本地登录表单与密码认证。限制每用户并发会话数，借助 Redis 启用 backchannel logout，以便用户被回收时会话能立刻失效；除非你的提供商保证邮箱已验证，否则不要启用 OAuth 账户合并。[详情](#oauth-and-sso)
 
-5. **强制密码复杂度并缩短会话时长。** 如果仍使用本地账户，请启用密码校验。把默认 4 周的 JWT 过期时间缩短到适合你的环境（例如 8 到 24 小时）。生产环境不要禁用 token 过期。[详情](#password-validation)
+5. **强制密码复杂度并缩短会话时长。** 如果仍使用本地账户，请启用密码校验和双因素登录。把默认 4 周的 JWT 有效期缩短到适合你环境的时长（例如 8 到 24 小时）。生产环境不要关闭令牌过期机制。[详情](#password-validation)
 
 6. **定期审查用户账户和权限。** 清理不活跃账户，审计组成员关系，并确认工作区权限仍符合预期。可使用 SCIM 预配，通过身份提供商自动化账户生命周期管理。[详情](#access-control)
 
@@ -845,17 +843,17 @@ docker pull ghcr.io/open-webui/open-webui:main
 
 7. **将 Tool 和 Function 的创建权限严格限制给管理员，导入前审查所有代码。** 默认只有管理员可以创建、导入和管理 Tools / Functions。不要给不可信用户开放工作区权限。把第三方 Tool 看作与你基础设施上运行的其他代码一样进行审查。未经查看源码，不要导入任何 Tool。[详情](#tools-functions-and-pipelines)
 
-8. **如果不需要，就关闭自动依赖安装和代码执行。** 设置 `ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false`，阻止 Tool 在运行时拉取任意包。如果部署不需要聊天中执行代码，直接全部关闭；如果需要，请保持默认 `pyodide` 引擎，因为它运行在浏览器端而不是服务器端。在没有额外保护 Jupyter 实例的情况下，不要切换到 Jupyter 引擎。保持 direct connections 与 direct tool servers 关闭。[详情](#dependency-installation)
+8. **如果不需要，就关闭自动依赖安装和代码执行。** 设置 `ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false`，阻止 Tool 在运行时拉取任意包。如果部署不需要在聊天中执行代码，请彻底关闭代码执行（`ENABLE_CODE_EXECUTION=false`、`ENABLE_CODE_INTERPRETER=false`）。如果需要，请使用在容器中隔离的 **Open Terminal**，避免依赖旧版 `pyodide` 或 `jupyter` 引擎。对外提供 `jupyter` 引擎前，务必先保护 Jupyter 实例。保持 direct connections 与 direct tool servers 关闭。[详情](#dependency-installation)
 
 ### 数据保护 {#data-protection}
 
 9. **限制数据共享、文件上传和 API 密钥访问。** 设置最大文件大小、文件数量和允许的文件扩展名。若业务上不需要，可关闭社区共享（`ENABLE_COMMUNITY_SHARING=false`）和管理员批量导出（`ENABLE_ADMIN_EXPORT=false`）。将 API 密钥创建权限限制在管理员范围，并启用端点限制，让每个密钥只能访问特定路由。[详情](#data-sharing-and-export)
 
-10. **对静态数据进行加密，并保持定期备份。** 对 SQLite 使用 SQLCipher；对 PostgreSQL 使用磁盘级加密或透明数据加密。定期备份，并将备份存放在独立安全域中，同时定期演练恢复流程。[详情](#sqlcipher)
+10. **对静态数据进行加密，并保持定期备份。** 对 SQLite 使用加密文件系统；对 PostgreSQL 使用磁盘级加密或透明数据加密。定期备份，并将备份存放在独立安全域中，同时定期演练恢复流程。[详情](#sqlcipher)
 
 ### 外发网络控制 {#outbound-network-controls}
 
-11. **保持 SSRF 防护、外发 TLS 校验和网络限制开启。** 不要启用本地网页抓取。默认配置会阻止访问私有 IP 范围和云厂商元数据端点；你应继续将自身内部域名加入黑名单。不要关闭外发连接的证书校验。对于隔离网络环境，请启用离线模式以禁用所有外发调用。[详情](#ssrf-prevention)
+11. **保持 SSRF 防护、外发 TLS 校验和网络限制开启。** 不要启用本地网页抓取。默认配置会阻止访问私有 IP 范围和云厂商元数据端点；你应继续将自身内部域名加入黑名单。不要关闭外发连接的证书校验。对于物理隔离的环境，请启用离线模式，停止 Open WebUI 自身发起的出站调用。还需在网络层隔离实例，阻断 Open WebUI 无法控制的连接。[详情](#ssrf-prevention)
 
 ### 供应链与变更管理 {#supply-chain-and-change-management}
 
@@ -873,4 +871,4 @@ docker pull ghcr.io/open-webui/open-webui:main
 
 16. **监控异常。** 跟踪 CPU、内存、网络与磁盘使用情况。对接告警系统，尽早发现异常计算消耗、异常外发流量或存储突增。[详情](#observability)
 
-17. **准备事件响应方案。** 明确被盗账户、未授权访问和异常资源消耗时的处理流程。你需要知道如何禁用用户账户、撤销会话（需要 Redis）、轮换密钥，以及审查审计日志。
+17. **维护事件响应方案。** 明确账户失陷、未授权访问和资源消耗异常时的处理流程。熟悉如何禁用用户账户、让用户从所有设备登出、重置用户的双因素登录、轮换密钥，以及审查审计日志。

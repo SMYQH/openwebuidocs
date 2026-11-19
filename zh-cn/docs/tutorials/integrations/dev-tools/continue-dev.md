@@ -6,7 +6,7 @@ title: "Continue.dev"
 # 将 Continue.dev VS Code 扩展与 Open WebUI 集成 {#integrating-continuedev-vs-code-extension-with-open-webui}
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/contributing)。
+本教程由社区贡献，Open WebUI 团队不予支持。它仅作为演示，说明如何根据您的具体场景自定义 Open WebUI。想参与贡献？请查看[贡献教程](/contributing)。
 :::
 
 ## 下载扩展 {#download-extension}
@@ -16,7 +16,7 @@ title: "Continue.dev"
 
 **VS Code 侧边栏图标：**
 
-![continue.dev vscode icon](/images/tutorials/continue-dev/continue_dev_vscode_icon.png)
+![continue.dev VS Code 图标](/images/tutorials/continue-dev/continue_dev_vscode_icon.png)
 
 ---
 
@@ -25,19 +25,19 @@ title: "Continue.dev"
 点击主聊天输入框右侧的助手选择器，将鼠标悬停在 `Local Assistant` 上，然后点击设置图标（⚙️）。
 这将在编辑器中打开 `config.yaml` 文件。在这里您可以更改 `Local Assistant` 的设置。
 
-![continue.dev chat input](/images/tutorials/continue-dev/continue_dev_extension_input_field.png)
+![continue.dev 聊天输入框](/images/tutorials/continue-dev/continue_dev_extension_input_field.png)
 
 :::info
 
 目前 `ollama` 提供商不支持身份验证，因此我们无法在 Open WebUI 中使用此提供商。
-但是 Ollama 和 Open WebUI 都与 OpenAI API 规范兼容。请阅读 [Ollama 关于 OpenAI 兼容性的博客文章](https://ollama.com/blog/openai-compatibility)了解更多规范信息。
-我们仍然可以将 continue.dev 设置为使用 openai 提供商，这样就可以使用 Open WebUI 的身份验证令牌。
+不过，Ollama 和 Open WebUI 都兼容 OpenAI API 规范。详情见 [Ollama 关于 OpenAI 兼容性的博客文章](https://ollama.com/blog/openai-compatibility)。
+可以将 continue.dev 配置为使用 openai 提供商，从而使用 Open WebUI 的身份验证令牌。
 
 :::
 
 ### 配置示例 {#example-config}
 
-以下是使用 Llama3 作为模型，配合本地 Open WebUI 设置的配置示例。
+以下是本地 Open WebUI 设置的配置示例。
 
 ```yaml
 name: Local Assistant
@@ -77,7 +77,7 @@ version: 1.0.0
 schema: v1
 ```
 
-“上下文”部分为模型提供了额外信息。 更多信息请参阅 [官方配置指南](https://docs.continue.dev/reference#context) 以及 [上下文提供程序指南](https://docs.continue.dev/customize/model-providers/overview)。
+context 部分为模型提供了额外信息。更多信息请参阅 [官方配置指南](https://docs.continue.dev/reference#context) 以及 [上下文提供程序指南](https://docs.continue.dev/customize/model-providers/overview)。
 
 ```yaml
 context:
@@ -92,7 +92,7 @@ context:
 
 ---
 
-### 模型 {#models}
+### 模型列表 {#models}
 
 models 部分用于指定您要添加的所有模型。更多信息请参见[官方模型指南](https://docs.continue.dev/reference#models)。
 
@@ -111,7 +111,7 @@ models:
 name: Qwen3.6
 ```
 
-![continue.dev chat input](/images/tutorials/continue-dev/continue_dev_extension_input_field.png)
+![continue.dev 聊天输入框](/images/tutorials/continue-dev/continue_dev_extension_input_field.png)
 
 ---
 
@@ -125,10 +125,10 @@ provider: openai
 
 ---
 
-### 模型 {#model}
+### 模型名称 {#model}
 
-这是您在 Open WebUI 中模型的实际名称。导航至 `Settings` > `Models`（管理员区域），然后点击您偏好的 LLM。
-在用户指定的名称下方，您会找到实际的模型名称。
+这里填模型在 Open WebUI 中的实际名称。在管理界面打开 `Settings` > `Models`，点击要使用的 LLM。
+实际名称显示在用户自定义的名称下方。
 
 ```yaml
 model: qwen3.6:27b
@@ -147,11 +147,11 @@ env:
 
 ---
 
-### APIBase {#apibase}
+### 配置 APIBase {#apibase}
 
-这是关键步骤：您需要将 continue.dev 扩展的请求指向您的 Open WebUI 实例。
-如果实例托管在某处，请使用实际域名（例如 `https://example.com/api`），或使用本地设置（例如 `http://localhost:3000/api`）。
-有关 URL 的更多信息，请参见 [API 端点指南](/reference/api-endpoints)。
+这一步很关键：将 continue.dev 扩展的请求指向 Open WebUI 实例的基础 API 端点。
+对于远程实例，使用实际域名（例如 `https://example.com/api`）；对于本地实例，使用本地地址（例如 `http://localhost:3000/api`）。
+有关 URL 的更多信息，请参见[端点指南](/reference/api-endpoints)。
 
 ```yaml
 apiBase: http://localhost:3000/api

@@ -8,7 +8,7 @@ title: "开发 Open WebUI"
 :::danger 在 `dev` 上工作，永远不要在 `main` 上工作
 `dev` 是预发布分支，所有改动都会先落到那里。每一次修复、每一个功能都进入 `dev` 并留在 `dev`，因此今天修复的 bug 今天就在 `dev` 上，下一次发布时才会进入 `main`。`main` 只是发布当天从 `dev` 拍下的一份快照，也就是说从 `main` 构建出来的代码已经落后了。
 
-新克隆的 `git clone` 会把你放在 `main` 上。动手之前先切换分支：
+刚用 `git clone` 克隆仓库时，当前分支是 `main`。开始操作前先切换分支：
 
 ```bash
 git clone https://github.com/open-webui/open-webui.git
@@ -47,7 +47,7 @@ docker run -d -p 3001:8080 --add-host=host.docker.internal:host-gateway -v open-
 Open WebUI 支持 **Python 3.11 与 3.12**。**暂不支持 3.13** —— 我们的部分依赖还需要发布兼容 3.13 的版本，在此之前，在 3.13 上安装会失败或在运行时出错。
 
 - **生产环境**请使用 [Docker 镜像](/getting-started/quick-start) 或 **最新的 Python 3.12**。Docker 镜像在 Debian 13 上运行 Python 3.12。
-- **3.12 也可以工作**，但我们在 3.12 上收到过极个别、尚未在 3.11 上复现的异常行为报告。如果你在 3.12 上遇到难以解释的问题，先降到最新的 3.11 是首选排查步骤。
+- **3.11 也可用于**开发及通过 pip 安装。
 :::
 
 :::warning 将开发数据与生产数据分开
@@ -64,7 +64,7 @@ cd open-webui
 git checkout dev
 ```
 
-`git checkout dev` 是关键的一行。没有它，你构建的是上一个发行版，而不是当前代码。
+`git checkout dev` 是关键的一步。不切换分支，构建的就是最近一次发布的版本，而不是当前开发代码。
 
 ---
 
@@ -125,7 +125,7 @@ sh dev.sh
 如果你想在手机或同一网络中的另一台电脑上访问开发实例：
 
 1. 找到你机器的局域网 IP（例如 `192.168.1.42`）
-2. 将该来源加入 `backend/dev.sh` 中的 CORS：
+2. 在 `backend/dev.sh` 的 CORS 配置中允许该源：
 
 ```bash
 export CORS_ALLOW_ORIGIN="http://localhost:5173;http://localhost:8080;http://192.168.1.42:5173"
@@ -189,4 +189,4 @@ git checkout -b my-feature-branch
 3. **保持分支同步**，定期从 `dev` 合并更新
 4. 以清晰的标题和描述向 `dev` 分支**提交拉取请求（pull request）**
 
-贡献规范请参见 [Contributing](/contributing)。
+详细规范见[贡献指南](/contributing)。

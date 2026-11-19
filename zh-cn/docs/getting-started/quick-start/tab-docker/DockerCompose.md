@@ -60,7 +60,7 @@ volumes:
 ```
 
 :::warning 绝不要让 dev 指向你的生产数据卷
-开发构建可能包含发布镜像无法回读的数据库迁移，因此共用数据卷可能让你无法再退回 `:main`。请像上面那样，让 `open-webui-dev` 使用自己的数据卷。
+开发构建可能会迁移数据库，而正式发布的镜像可能无法读取迁移后的数据库。因此，共用数据卷可能导致你无法退回 `:main`。请像上面那样，让 `open-webui-dev` 使用独立的数据卷。
 :::
 
 把它作为第二个服务与你的常规服务并列添加，两者就会同时运行，分别占用 3000 和 3001 端口。若发现任何看起来不对的地方，请在 [GitHub](https://github.com/open-webui/open-webui/issues) 上反馈。预发布的测试充分程度取决于有多少人选择安装它，因此这是运维人员能够贡献的最有价值的一件事。
@@ -83,13 +83,13 @@ deploy:
           capabilities: [gpu]
 ```
 
-这样就能在可用时让应用使用 GPU 资源。`:cuda` 镜像会把 Open WebUI 自带的本地模型（嵌入、重排序和 Whisper 语音转文字）移到 GPU 上；Ollama 的模型只有在 Ollama 容器本身配备 GPU 时才会使用 GPU。如果没有检测到 GPU，镜像会回退到 CPU 且不会报错。预发布通道对应的标签是 `:dev-cuda`。
+这样，应用就能使用可用的 GPU 资源。`:cuda` 镜像会在 GPU 上运行 Open WebUI 自己的本地模型，包括嵌入、重排序和 Whisper 语音转文字。只有给 Ollama 容器分配 GPU 后，Ollama 的模型才会使用它。如果没有检测到 GPU，镜像会回退到 CPU，不会报错。预发布通道对应的标签是 `:dev-cuda`。
 
 ### 辅助脚本 {#helper-scripts}
 
 代码库中附带了一组辅助脚本，用于简化常见的 Docker 工作流：
 
-- `docker-compose-launcher.sh` —— 交互式 Compose 启动器，具备 GPU 自动检测、可配置的 WebUI/API 端口、用于存放 Ollama 模型的宿主机数据卷挂载以及可选的 Playwright 支持。运行 `./docker-compose-launcher.sh --help` 查看完整参数列表。使用 `--drop` 可以销毁整个项目。若使用方括号包裹选项，需要用引号括起来，例如 `./docker-compose-launcher.sh '--enable-gpu[count=1]'`，否则 zsh（macOS 的默认 shell）会报 `no matches found`。
+- `docker-compose-launcher.sh` —— 交互式 Compose 启动器，具备 GPU 自动检测、可配置的 WebUI/API 端口、用于存放 Ollama 模型的宿主机数据卷挂载以及可选的 Playwright 支持。运行 `./docker-compose-launcher.sh --help` 查看完整参数列表。使用 `--drop` 可以停止并移除 Compose 项目。含方括号的选项要用引号括起来，例如 `./docker-compose-launcher.sh '--enable-gpu[count=1]'`，否则 zsh（macOS 的默认 shell）会报 `no matches found`。
 - `docker-cleanup.sh` —— 停止 Compose 项目并**删除所有卷**，包括持久化数据。销毁数据前会要求确认。
 - `docker-run.sh` —— 构建 Open WebUI 镜像并运行单容器，通过 `OPEN_WEBUI_PORT`（默认 `3000`）对外暴露。它不会设置 `WEBUI_SECRET_KEY`，因此在把该容器用于快速测试之外的场景前，请先在其 `docker run` 命令行中补上一个。
 - `docker-ollama.sh` —— 拉取并运行官方 Ollama 容器，支持可选的 GPU 透传，通过 `OLLAMA_PORT`（默认 `11434`）对外暴露。
@@ -98,8 +98,6 @@ deploy:
 ---
 
 ## 卸载 {#uninstall}
-
-如果要卸载通过 Docker Compose 运行的 Open WebUI，请按以下步骤操作：
 
 1.  **停止并删除服务：**
     在包含 `docker-compose.yml` 的目录中运行：

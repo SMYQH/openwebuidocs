@@ -22,7 +22,7 @@
    helm install openwebui open-webui/open-webui
    ```
 
-   使用默认值时，该 chart 还会一并部署 Ollama、Pipelines 和一个 Redis 实例，并把 Open WebUI 的数据存放在 2 GiB 的 PVC 上。如果你打算在其他地方连接模型，请加上 `--set ollama.enabled=false --set pipelines.enabled=false`。
+   使用默认值时，该 chart 还会部署 Ollama、Pipelines 和一个 Redis 实例，并将 Open WebUI 的数据存放在 2 GiB 的 PVC 上。如果要连接在其他位置运行的模型，请加上 `--set ollama.enabled=false --set pipelines.enabled=false`。
 
 3. **验证安装：**
 

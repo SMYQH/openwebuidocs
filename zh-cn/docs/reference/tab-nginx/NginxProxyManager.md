@@ -1,7 +1,7 @@
 ### Nginx Proxy Manager {#nginx-proxy-manager}
 
 Nginx Proxy Manager（NPM）可以让你轻松管理反向代理，并使用 Let's Encrypt 的有效 SSL 证书为本地应用（如 Open WebUI）提供保护。
-这种配置可以启用 HTTPS 访问；由于许多移动浏览器的安全要求，这对于使用语音输入等功能很有必要，同时又不会把应用的特定端口直接暴露到互联网。
+这种配置可启用 HTTPS 访问，无需将应用端口直接暴露到互联网。出于安全考虑，许多移动浏览器要求通过 HTTPS 才能使用语音输入功能。
 
 #### 前置条件 {#prerequisites}
 
@@ -50,27 +50,27 @@ docker compose up -d
     - 把该域名指向你的代理所在机器的本地 IP（例如 192.168.0.6）。
     - 如果使用 DuckDNS，请从其控制台获取 API 令牌。
 
-###### 这里有一个简单示例，展示在 [DuckDNS 域名页](https://www.duckdns.org/domains) 中如何操作 {#here-is-a-simple-example-how-its-done-in-httpswwwduckdnsorgdomains}
+###### 这里有一个在 https://www.duckdns.org/domains 上操作的简单示例 {#here-is-a-simple-example-how-its-done-in-httpswwwduckdnsorgdomains}
 
 4. **设置 SSL 证书：**
 
 - 使用 `http://server_ip:81` 访问 Nginx Proxy Manager。例如：``192.168.0.6:81``
 
 - 使用默认凭据登录（`admin@example.com` / `changeme`）。按提示修改它们。
-- 进入 **SSL 证书 → 添加 SSL 证书 → Let's Encrypt**。
-- 请输入您的电子邮件地址以及从 DuckDNS 获得的域名。一个域名带星号，另一个不带。例如：``*.hello.duckdns.org`` 和 ``hello.duckdns.org``。
-- 选择 **使用 DNS 验证**，选择 DuckDNS，然后粘贴你的 API token。例如：
+- 进入 SSL 证书 → 添加 SSL 证书 → Let's Encrypt。
+- 输入你的电子邮件地址和从 DuckDNS 获得的域名。一个域名带星号，另一个不带。例如：``*.hello.duckdns.org`` 和 ``hello.duckdns.org``。
+- 选择使用 DNS 验证，选中 DuckDNS，然后粘贴你的 API 令牌。例如：
 ```bash
 dns_duckdns_token=f4e2a1b9-c78d-e593-b0d7-67f2e1c9a5b8
 ```
-- 同意 Let's Encrypt 的服务条款并保存。变更传播时间**按需**调整（120 秒）。
+- 同意 Let's Encrypt 的服务条款并保存。**如有需要**，调整传播时间（120 秒）。
 
 5. **创建代理主机：**
 
 - 对每个服务（例如 openwebui、nextcloud），进入 Hosts → Proxy Hosts → Add Proxy Host。
 
 - 填写域名（例如 openwebui.hello.duckdns.org）。
-- 将 scheme 设为 HTTP（默认），启用 ``Websockets support``，并指向你的 Docker IP（如果 open-webui 的 docker 与 NGINX manager 运行在同一台电脑上，这里与前面是同一个 IP，例如 ``192.168.0.6``）
+- 将协议设为 HTTP（默认），启用 ``Websockets support``，并指向你的 Docker IP 地址。如果运行 open-webui 的 Docker 和 NGINX Manager 位于同一台电脑上，就使用前面填过的 IP，例如 ``192.168.0.6``。
 - 选择前面生成的 SSL 证书，强制启用 SSL，并开启 HTTP/2。
 
 :::danger 关键：为 WebSocket 连接配置 CORS
@@ -92,13 +92,13 @@ proxy_buffering off;
 proxy_cache off;
 ```
 
-不加这段配置，Nginx 会重新切分 SSE 数据流，破坏 Markdown 格式（表现为可见的 `##`、`**`、文字缺失）。这也会让流式响应明显更快。
+不加这段配置，Nginx 会重新切分 SSE 数据流，破坏 Markdown 格式，导致 `##`、`**` 原样显示或文字缺失。关闭缓冲后，流式响应也会明显加快。
 
 :::
 
 :::tip 为长时间补全放宽超时
 
-长时间的 LLM 补全（复杂任务可能超过 30 分钟）会超出默认的 60 秒超时。在 **Advanced** 标签页 → **Custom Nginx Configuration** 中添加以下指令：
+耗时较长的 LLM 补全可能超过默认的 60 秒超时限制，复杂任务可能持续 30 分钟或更久。在 **Advanced** 标签页 → **Custom Nginx Configuration** 中添加以下指令：
 
 ```nginx
 proxy_read_timeout 1800;

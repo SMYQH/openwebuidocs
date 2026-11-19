@@ -18,7 +18,7 @@ oikb daemon
 | `--log-format` | `text` | `text` 或 `json`。也可通过 `LOG_FORMAT` 设置。 |
 | `--no-server` | 关闭 | 仅运行调度器，不启动 HTTP 服务器（无 API、无 webhook、无指标）。 |
 
-启动时，它会打印已配置的来源、身份验证是否开启以及端点地址。
+启动时，守护进程会输出已配置的数据源、是否启用身份验证，以及各端点的 URL。
 
 ---
 
@@ -115,11 +115,11 @@ curl -X POST http://localhost:8080/sync/wiki \
   -H "Authorization: Bearer your-secret-key"
 ```
 
-对于 Docker/Kubernetes 密钥，请设置 `OIKB_API_KEY_FILE` 为文件路径，而不是将密钥放在环境变量中。（同时设置两者会报错。）
+对于 Docker secrets 与 Kubernetes secrets，请设置 `OIKB_API_KEY_FILE` 为文件路径，而不是将密钥放在环境变量中。（同时设置两者会报错。）
 
 ---
 
-## Webhook {#webhooks}
+## Webhook 通知 {#webhooks}
 
 为条目启用 `webhook: true` 后，守护进程会在来源发生变化的瞬间进行同步，而无需等待下一次定时调度。推送负载通过仓库或空间匹配到正确的条目，因此一个守护进程可以为多个来源提供服务。
 

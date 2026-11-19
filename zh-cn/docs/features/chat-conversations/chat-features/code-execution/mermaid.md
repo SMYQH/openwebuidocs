@@ -16,7 +16,7 @@ Open WebUI 支持在聊天界面中直接渲染美观的 MermaidJS 图表、流�
 - “请使用 Mermaid 为我创建一个简单决策流程的流程图，并解释这个流程图如何工作。”
 - “请使用 Mermaid 可视化一个决策树，用来判断是否适合出门散步。”
 
-请注意，若要让 LLM 的回复被正确渲染，其输出必须以 `mermaid` 开头，后面紧跟 MermaidJS 代码。你可以参考 [MermaidJS 文档](https://mermaid.js.org/intro/) 以确保语法正确，也可以给 LLM 提供更结构化的提示词，引导它生成质量更高的 MermaidJS 语法。
+要渲染图表，请让 LLM 将 MermaidJS 代码放入语言标记为 `mermaid` 的围栏代码块中。代码块不必位于回复开头。你可以参考 [MermaidJS 文档](https://mermaid.js.org/intro/) 检查语法，并提供结构化提示词引导 LLM 生成有效的代码。
 
 ## 在聊天中直接可视化 MermaidJS 代码 {#visualizing-mermaidjs-code-directly-in-the-chat}
 
@@ -43,7 +43,7 @@ graph TD;
   E-->F;
 ```
 
-这会生成类似下面的流程图：
+这会生成一个流程图，其节点和连线如下：
 
 ```markdown
  startAncestor [ start ]

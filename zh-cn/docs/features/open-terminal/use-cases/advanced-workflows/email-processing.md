@@ -3,7 +3,7 @@ sidebar_position: 4
 title: "邮件处理"
 ---
 
-# 📧 处理一批邮件 {#process-a-folder-of-emails}
+# 📧 处理文件夹中的邮件 {#process-a-folder-of-emails}
 
 上传一批 `.eml` 文件，获得一份包含待办事项和截止日期的结构化电子表格。
 
@@ -16,12 +16,12 @@ title: "邮件处理"
 2. 读取每封邮件：头部（发件人、收件人、主题、日期）和正文
 3. 识别待办事项、截止日期、决策和待解答的问题
 4. 创建带结构化列的 CSV
-5. 标记过期项目
+5. 标记已逾期的待办事项
 6. 撰写最关键邮件的摘要
 
 ![以表格形式预览提取出的待办事项](/images/open-terminal-email-actions-table.png)
 
-![摘要输出列出了 5 个最关键的待办事项及其截止时间和来源邮件](/images/open-terminal-email-summary.png)
+![AI 按截止时间排列了 5 个最紧急的待办事项，并指出它们均已逾期](/images/open-terminal-email-summary.png)
 
 ## 技能内容 {#skill-content}
 

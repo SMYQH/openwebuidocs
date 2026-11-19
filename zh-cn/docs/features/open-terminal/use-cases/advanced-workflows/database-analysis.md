@@ -12,20 +12,20 @@ title: "数据库分析"
 
 ## AI 的工作流程 {#what-the-ai-does}
 
-1. 如需安装数据库驱动（`pip install psycopg2-binary` 或 `pymysql`）
+1. 按需安装数据库驱动（`pip install psycopg2-binary` 或 `pymysql`）
 2. 使用你的凭据连接数据库
 3. 探索数据库结构——列出表、列、关系
 4. 编写并运行 SQL 查询回答你的问题
 5. 将结果加载到 pandas 进行分析
-6. 生成图表（收入趋势、爆款产品、地区分布）
+6. 生成图表（收入趋势、畅销产品、按地区细分的数据）
 7. 将所有内容保存为报告
 
 {/* TODO: Screenshot: Chat showing the AI connecting to a PostgreSQL database, listing tables, and then running a query. Results show a formatted table with product names, quantities sold, and revenue. */}
 
 {/* TODO: Screenshot: Charts generated from the database query: a bar chart of top 10 products by revenue, a line chart showing monthly order trends, and a pie chart of sales by region. */}
 
-:::tip 安全凭据
-通过在启动 Open Terminal 时以环境变量传入数据库凭据，或将其存储在容器中的 `.env` 文件中。切勿在对话中直接粘贴密码——它们会被保存到聊天历史记录中。示例：
+:::tip 妥善保管凭据
+启动 Open Terminal 时，通过环境变量传入数据库凭据，或将凭据保存在容器中的 `.env` 文件里。不要将密码直接粘贴到聊天中，否则密码会保存在聊天记录里。示例：
 
 ```bash
 docker run -d --name open-terminal \
@@ -36,7 +36,7 @@ docker run -d --name open-terminal \
   ghcr.io/open-webui/open-terminal
 ```
 
-然后在技能中设置从环境变量读取凭据。
+然后让技能从环境变量读取凭据。
 :::
 
 ## 支持的数据库 {#supported-databases}

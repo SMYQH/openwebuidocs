@@ -3,7 +3,7 @@ title: "Azure AD LDAP"
 ---
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+本教程由社区贡献，Open WebUI 团队不提供支持。它仅演示如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
 本指南说明如何将 Open WebUI 与 Azure AD 域服务（AAD DS）集成，实现安全 LDAP（LDAPS）认证。
@@ -38,7 +38,7 @@ title: "Azure AD LDAP"
 ## 3. 查找安全 LDAP 外部 IP {#3-find-the-secure-ldap-external-ip}
 
 1. 导航至 AAD DS 页面 → **Overview（概述）**。
-2. 在 **Secure LDAP（安全 LDAP）** 下，查找**外部 IP 地址**。
+2. 在 **安全 LDAP** 下，查找**外部 IP 地址**。
 3. 该 IP（例如 `1.222.222.222`）将是 `.env` 文件中的 `LDAP_SERVER_HOST` 值。
 
     ![查找安全 LDAP 外部 IP](/images/tutorials/ldap/azure-ad-ds-secure-ldap-ip.png)
@@ -56,7 +56,7 @@ title: "Azure AD LDAP"
 
 :::info
 
-在生产环境中，我们建议使用 Let's Encrypt 或其他公共 CA。以下自签名流程仅用于测试目的。
+在生产环境中，建议使用 Let’s Encrypt 或其他公共 CA。以下自签名流程仅供测试。
 
 :::
 
@@ -121,9 +121,9 @@ title: "Azure AD LDAP"
     ```
 
 3. **上传到 AAD DS：**
-    1. 导航至 AAD DS 页面 → **Secure LDAP（安全 LDAP）**。
+    1. 导航至 AAD DS 页面 → **安全 LDAP**。
     2. 点击 **Upload certificate（上传证书）** 按钮，选择 `certificate_wildcard.pfx`，并输入密码。
-    3. 将 **Secure LDAP** 切换为 **Enabled（已启用）** 并点击 **Save（保存）**。
+    3. 将 **安全 LDAP** 切换为 **Enabled（已启用）** 并点击 **Save（保存）**。
 
     ![启用安全 LDAP](/images/tutorials/ldap/azure-ad-ds-ldaps-enabled.png)
 

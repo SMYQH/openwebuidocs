@@ -5,21 +5,21 @@ title: "OpenShift"
 
 # OpenShift {#openshift}
 
-Terminals 可以在 OpenShift 上作为受限的每用户终端沙箱运行。
+Terminals 可以在 OpenShift 上运行，为每位用户提供受限的终端沙箱。
 
-OpenShift 受限 SCC 不支持完整的 rootful agent 开发箱模型。使用预构建的终端镜像，让 OpenShift 通过每用户一个 Pod 提供隔离边界。
+OpenShift 的受限 SCC 不支持让智能体以 root 权限运行的完整开发环境。请使用预构建的终端镜像，由 OpenShift 为每位用户分配独立 Pod，实现隔离。
 
 ## 支持的模式 {#supported-model}
 
-- 每个用户和策略一个 Open Terminal Pod。
+- 每个用户与策略的组合对应一个 Open Terminal Pod。
 - 通过 PVC 提供持久化用户文件。
 - 策略选择的镜像、环境变量、CPU、内存、存储和空闲超时。
-- 持久化终端文件的刷新和定时重置。
-- 镜像中已安装的文件浏览器、命令执行、笔记本和工具。
+- 刷新或定时重置持久化的终端文件。
+- 文件浏览、命令执行、笔记本和镜像中预装的工具。
 
 ## 受限 SCC 限制 {#restricted-scc-limits}
 
-以下功能在受限 OpenShift 路径中不可用：
+在 OpenShift 上以受限模式部署时，以下功能不可用：
 
 - 使用 `OPEN_TERMINAL_PACKAGES` 运行时安装 OS 包。
 - 使用 `OPEN_TERMINAL_PIP_PACKAGES` 或 `OPEN_TERMINAL_NPM_PACKAGES` 运行时全局安装。
@@ -33,18 +33,18 @@ OpenShift 受限 SCC 不支持完整的 rootful agent 开发箱模型。使用�
 
 PostgreSQL 不是必需的。Terminals 默认使用 SQLite，并将其存储在 Terminals 数据目录下。
 
-如果你使用默认的 SQLite 数据库，在 `/app/data` 挂载终端服务的持久化存储。仅当你想要外部数据库时才使用 `TERMINALS_DATABASE_URL`。
+如果使用默认的 SQLite 数据库，请把 Terminals 服务的持久化存储挂载到 `/app/data`。仅在使用外部数据库时设置 `TERMINALS_DATABASE_URL`。
 
 ## 部署 {#deployment}
 
-安装 CRD 和操作员：
+安装 CRD 和 Operator：
 
 ```bash
 oc apply -f manifests/terminal-crd.yaml
 oc apply -f manifests/operator-deployment.yaml
 ```
 
-使用操作员后端和受限模式运行 Terminals 服务：
+使用 Operator 后端以受限模式运行 Terminals 服务：
 
 ```yaml
 env:
@@ -72,6 +72,6 @@ env:
 }
 ```
 
-受限模式应用适用于受限 OpenShift 部署的 Kubernetes 安全上下文默认值。当你的集群需要不同的值时，你可以在策略中使用 `pod_security_context` 和 `container_security_context` 覆盖它们。
+受限模式会采用适合 OpenShift 受限部署的 Kubernetes 默认安全上下文。如果集群需要其他值，可在策略中使用 `pod_security_context` 和 `container_security_context` 覆盖默认值。
 
 在 OpenShift 上使用集群网络策略进行出口控制。

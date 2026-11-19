@@ -13,7 +13,7 @@ import Head from '@docusaurus/Head';
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type": "Question", "name": "我可以在 Open WebUI 中使用 Ollama 吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。Open WebUI 拥有原生 Ollama 集成，并在同一机器上运行时会自动检测。无需配置。"}},
+    {"@type": "Question", "name": "我可以在 Open WebUI 中使用 Ollama 吗？", "acceptedAnswer": {"@type": "Answer", "text": "可以。Open WebUI 原生支持 Ollama。默认地址可达时，无需额外配置。"}},
     {"@type": "Question", "name": "Ollama 免费吗？", "acceptedAnswer": {"@type": "Answer", "text": "免费。Ollama 采用 MIT 许可证，免费供个人和商用。"}},
     {"@type": "Question", "name": "Ollama 和 Open WebUI 如何协作？", "acceptedAnswer": {"@type": "Answer", "text": "Ollama 负责运行和管理模型。Open WebUI 可以作为网络界面，还具有知识库、团队功能和可扩展性。大多数人同时使用两者。"}},
     {"@type": "Question", "name": "我需要 Ollama 才能使用 Open WebUI 吗？", "acceptedAnswer": {"@type": "Answer", "text": "不需要。Open WebUI 适用于任何与 OpenAI 兼容的 API，包括 llama.cpp、LM Studio、OpenAI、Anthropic、Google 等。Ollama 是一个热门选择，但不是必需的。"}}
@@ -71,17 +71,17 @@ docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway \
   ghcr.io/open-webui/open-webui:main
 ```
 
-Open WebUI 会在同一机器上运行时自动检测 Ollama。您的所有 Ollama 模型立即出现在模型选择器中，无需配置。
+当 Open WebUI 能访问默认地址上的 Ollama 服务时，Ollama 模型会自动出现在模型选择器中，无需额外配置。如果容器无法访问宿主机上的服务，请检查监听地址和连接设置。
 
 ---
 
-## 何时使用每一个 {#when-to-use-each}
+## 如何选择 {#when-to-use-each}
 
-**使用 Ollama** 如果您想要运行本地模型的最快路径。CLI 和桌面应用本身适合快速交互、脚本编写和开发。
+**使用 Ollama**：如果你想尽快运行本地模型。CLI 和桌面应用适合快速交互、编写脚本和开发。
 
-**添加 Open WebUI** 如果您想要具有知识库、团队功能、持久化对话的网络界面，或者能够连接云提供商与本地模型。
+**添加 Open WebUI**：如果你需要通过浏览器访问，并使用知识库、团队功能和持久化对话，或希望同时接入本地模型和云提供商。
 
-**大多数人两者都使用**。Ollama 处理模型层。Open WebUI 处理平台层。它们自动相互检测并正常工作。
+**大多数人搭配使用。** Ollama 负责运行模型，Open WebUI 提供界面和平台功能，并在连接成功后加载模型列表。
 
 ---
 
@@ -103,7 +103,7 @@ Ollama 与 OpenAI 兼容的 API 意味着它可以与许多工具配合使用。
 ## 常见问题 {#frequently-asked-questions}
 
 **我可以在 Open WebUI 中使用 Ollama 吗？**
-可以。Open WebUI 拥有原生 Ollama 集成，并在同一机器上运行时会自动检测。无需配置。
+可以。Open WebUI 原生支持 Ollama。默认地址可达时，无需额外配置。
 
 **Ollama 免费吗？**
 免费。Ollama 采用 MIT 许可证，免费供个人和商用。

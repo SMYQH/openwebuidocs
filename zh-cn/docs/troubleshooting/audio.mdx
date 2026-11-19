@@ -128,8 +128,8 @@ services:
 如果你只需要基础功能，不想启用任何服务端音频处理：
 
 **在 用户设置 → 音频 中：**
-- **STT 引擎:** `Web API`（使用浏览器内置语音识别；**不会调用后端 STT endpoint**）
-- **TTS 引擎:** `Web API` 或 `Kokoro.js (Browser)`（使用浏览器内置 TTS 或客户端侧 Kokoro；**不会调用后端 TTS endpoint**）
+- **STT 引擎:** `Web API`（使用浏览器内置语音识别；**不会调用后端 STT 端点**）
+- **TTS 引擎：** `Web API` 或 `Kokoro.js (Browser)`（使用浏览器内置的文字转语音功能或在客户端运行 Kokoro；**不会调用后端 TTS 端点**）
 
 :::note
 当管理员把 `AUDIO_TTS_ENGINE` 留空（默认值）时，后端不会提供 TTS 服务，所有 TTS 都由客户端处理。类似地，如果用户在自己的设置中把 STT 设为 “Web API”，则不会使用后端本地 Whisper。
@@ -218,7 +218,7 @@ docker exec open-webui bash -lc "pip show datasets"
 为了避免这类依赖冲突，建议优先使用外部 TTS 服务，例如 [OpenAI Edge TTS](/features/chat-conversations/audio/text-to-speech/openai-edge-tts-integration) 或 [Kokoro](/features/chat-conversations/audio/text-to-speech/Kokoro-FastAPI-integration)，而不是本地 Transformers TTS。
 :::
 
-#### 2. 改用外部 TTS，替代本地 TTS {#2-using-external-tts-instead-of-local}
+#### 2. 改用外部 TTS，替代本地服务 {#2-using-external-tts-instead-of-local}
 
 如果本地 TTS 仍然问题不断，通常改用外部 TTS 服务会更可靠。下面是一个使用 `openai-edge-tts` 的 Docker Compose 示例：
 
@@ -288,7 +288,7 @@ environment:
 ```
 
 #### 3. 切换到标准镜像 {#3-switch-to-the-standard-image}
-如果你的 GPU 非常老，或兼容性问题始终存在，请改用标准（CPU）镜像。对于 Whisper 这类较小模型，CPU 模式在很多场景下性能也足够，同时兼容性更好：
+如果 GPU 太旧，或兼容性问题仍未解决，请改用标准（CPU）镜像。对于 Whisper 这类较小的模型，CPU 模式通常能提供相近的性能，也能避开这些兼容性问题：
 
 ```bash
 # Instead of:
@@ -299,7 +299,7 @@ ghcr.io/open-webui/open-webui:main
 ```
 
 :::info
-CUDA 镜像的主要加速对象是 RAG embedding/reranking 模型和 Whisper STT。对于 Whisper 这类较小模型，CPU 模式往往已经足够，而且不会遇到旧 GPU 的兼容性问题。
+CUDA 镜像主要加速 RAG 嵌入和重排模型，以及 Whisper STT。对于 Whisper 这类较小的模型，CPU 模式通常能提供相近的性能，而且不会遇到上述兼容性问题。
 :::
 
 #### 调整 Whisper 计算类型 {#adjust-whisper-compute-type}

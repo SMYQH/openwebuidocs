@@ -1,14 +1,14 @@
 ---
 sidebar_position: 3
-title: "使用 Helm 的 Kubernetes"
+title: "在 Kubernetes 上使用 Helm 部署"
 ---
 
-# 使用 Helm 的 Kubernetes {#kubernetes-with-helm}
+# 在 Kubernetes 上使用 Helm 部署 {#kubernetes-with-helm}
 
 可在任意 Kubernetes 发行版（EKS、AKS、GKE、OpenShift、Rancher、自建集群）上，使用官方 Open WebUI Helm Chart 进行部署。
 
 :::info 前置条件
-继续之前，请先确认你已经配置好了[共享基础设施要求](/enterprise/deployment#shared-infrastructure-requirements)——包括 PostgreSQL、Redis、向量数据库、共享存储和内容提取服务。
+继续前，请按[共享基础设施要求](/enterprise/deployment#shared-infrastructure-requirements)配置 PostgreSQL、Redis、向量数据库、共享存储和内容提取服务。
 :::
 
 ## 何时选择这种模式 {#when-to-choose-this-pattern}
@@ -62,7 +62,7 @@ helm repo update
 helm install openwebui open-webui/open-webui -f values.yaml
 ```
 
-你的 `values.yaml` 应覆盖默认值，并指向共享基础设施。Chart 已为许多常见设置提供专用配置项——在可用时，应优先使用这些配置项，而不是直接传裸环境变量：
+在 `values.yaml` 中覆盖默认值，使部署连接到共享基础设施。Chart 为许多常见设置提供了专用配置项；如果有专用配置项，请优先使用，不要直接传入环境变量：
 
 ```yaml
 # Example values.yaml overrides (refer to chart documentation for full schema)
@@ -135,7 +135,7 @@ extraEnvVars:
 
 - **Horizontal Pod Autoscaler (HPA)**：基于 CPU 或内存利用率扩缩容。每个 Pod 保持 `UVICORN_WORKERS=1`，由 Kubernetes 管理副本数。
 - **资源请求与限制**：设置合理的 CPU / 内存 request 和 limit，确保调度器正确放置 Pod，并使 HPA 获取准确指标。
-- **Pod Disruption Budget**：配置 PDB，确保在自愿性中断（节点驱逐、集群升级）期间仍有最少数量的 Pod 保持可用。
+- **Pod Disruption Budget**：配置 PDB，确保节点排空、集群升级等主动中断期间仍有规定数量的 Pod 保持可用。
 
 ## 更新流程 {#update-procedure}
 
@@ -151,7 +151,7 @@ extraEnvVars:
 | **密钥** | 凭证应存储在 Kubernetes Secrets 中，并通过 `secretKeyRef` 引用。对于 GitOps 工作流，可集成 External Secrets、Sealed Secrets 等外部密钥方案。 |
 | **数据库** | 生产环境建议使用托管 PostgreSQL 服务（RDS、Cloud SQL、Azure DB）。集群内 PostgreSQL Operator（CloudNativePG、Zalando）虽可行，但会增加运维负担。 |
 | **Redis** | 对于大多数部署，单个 Redis 实例配合 `timeout 1800` 和 `maxclients 10000` 已足够。只有当 Redis 本身也必须高可用时，才需要 Redis Sentinel 或 Cluster。 |
-| **网络** | 尽量让所有服务处于同一可用区。数据库延迟目标应低于 2 ms。并审查网络策略，确保 Pod 能访问 PostgreSQL、Redis 和存储后端。 |
+| **网络** | 将所有服务部署在同一可用区，目标是将数据库延迟控制在 2 ms 以下。审查网络策略，确保 Pod 能访问 PostgreSQL、Redis 和存储后端。 |
 
 完整 Helm 配置指南请参阅 [Kubernetes 部署](/deployment/kubernetes)。多副本问题排查见 [多副本故障排查](/troubleshooting/multi-replica)。
 

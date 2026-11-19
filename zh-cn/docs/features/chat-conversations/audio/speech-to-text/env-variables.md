@@ -7,14 +7,14 @@ title: "环境变量"
 
 :::info
 
-如需查看 Open WebUI 的全部环境变量，请参阅 [Environment Variable Configuration](/reference/env-configuration) 页面。
+如需查看 Open WebUI 的全部环境变量，请参阅[环境变量配置](/reference/env-configuration)页面。
 
 :::
 
 下文汇总了语音转文本（STT）和文本转语音（TTS）相关的环境变量。
 
 :::tip UI 配置
-其中大多数设置也可以在 **设置 → 音频**（管理员区域） 中配置。环境变量会在启动时优先生效，但之后仍可在 UI 中覆盖。
+其中大多数设置也可以在**设置 → 音频**（管理员区域）中配置。环境变量在启动时优先生效，但之后仍可在 UI 中覆盖。
 :::
 
 ## 语音转文本（STT）环境变量 {#speech-to-text-stt-environment-variables}
@@ -32,7 +32,7 @@ title: "环境变量"
 | `WHISPER_MODEL` | Whisper 模型大小 | `base` |
 | `WHISPER_MODEL_DIR` | Whisper 模型文件的存储目录 | `{CACHE_DIR}/whisper/models` |
 | `WHISPER_COMPUTE_TYPE` | 推理使用的计算类型（见下方说明） | `int8` |
-| `WHISPER_LANGUAGE` | ISO 639-1 语言代码（留空 = 自动检测） | empty |
+| `WHISPER_LANGUAGE` | ISO 639-1 语言代码（留空 = 自动检测） | 留空 |
 | `WHISPER_MULTILINGUAL` | 使用多语言 Whisper 模型 | `false` |
 | `WHISPER_MODEL_AUTO_UPDATE` | 自动下载模型更新 | `false` |
 | `WHISPER_VAD_FILTER` | 启用语音活动检测过滤器 | `false` |
@@ -50,37 +50,37 @@ title: "环境变量"
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
-| `AUDIO_STT_ENGINE` | STT 引擎：留空（本地 Whisper）、`openai`、`azure`、`deepgram`、`mistral` | empty |
-| `AUDIO_STT_MODEL` | 外部提供商使用的 STT 模型 | empty |
+| `AUDIO_STT_ENGINE` | STT 引擎：留空（本地 Whisper）、`openai`、`azure`、`deepgram`、`mistral` | 留空 |
+| `AUDIO_STT_MODEL` | 外部提供商使用的 STT 模型 | 留空 |
 | `AUDIO_STT_OPENAI_API_BASE_URL` | OpenAI 兼容 API 基础 URL | `https://api.openai.com/v1` |
-| `AUDIO_STT_OPENAI_API_KEY` | OpenAI API 密钥 | empty |
-| `AUDIO_STT_SUPPORTED_CONTENT_TYPES` | 支持的音频 MIME 类型，逗号分隔 | empty |
+| `AUDIO_STT_OPENAI_API_KEY` | OpenAI API 密钥 | 留空 |
+| `AUDIO_STT_SUPPORTED_CONTENT_TYPES` | 支持的音频 MIME 类型，逗号分隔 | 留空 |
 
-### Azure STT {#azure-stt}
+### Azure 语音转文本 {#azure-stt}
 
 有关设置，请参阅 [Azure AI Speech STT 指南](/features/chat-conversations/audio/speech-to-text/azure-stt-integration)。
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
-| `AUDIO_STT_AZURE_API_KEY` | Azure Cognitive Services API 密钥 | empty |
-| `AUDIO_STT_AZURE_REGION` | Azure 区域 | empty（默认使用 `eastus`） |
-| `AUDIO_STT_AZURE_LOCALES` | 地区列表，逗号分隔且不含空格（例如 `en-US,de-DE`） | empty（默认发送内置的 13 种语言列表） |
-| `AUDIO_STT_AZURE_BASE_URL` | 自定义 Azure 基础 URL（可选） | empty |
-| `AUDIO_STT_AZURE_MAX_SPEAKERS` | 说话人数上限（用于说话人分离） | empty（默认使用 `3`） |
+| `AUDIO_STT_AZURE_API_KEY` | Azure Cognitive Services API 密钥 | 留空 |
+| `AUDIO_STT_AZURE_REGION` | Azure 区域 | 留空（默认使用 `eastus`） |
+| `AUDIO_STT_AZURE_LOCALES` | 语言区域代码列表，以逗号分隔且不含空格（例如 `en-US,de-DE`） | 留空（发送内置的 13 个语言区域代码） |
+| `AUDIO_STT_AZURE_BASE_URL` | 自定义 Azure 基础 URL（可选） | 留空 |
+| `AUDIO_STT_AZURE_MAX_SPEAKERS` | 说话人数上限（用于说话人分离） | 留空（默认使用 `3`） |
 
-### Deepgram STT {#deepgram-stt}
-
-| 变量 | 说明 | 默认值 |
-|----------|-------------|---------|
-| `DEEPGRAM_API_KEY` | Deepgram API 密钥 | empty |
-
-### Mistral STT {#mistral-stt}
+### Deepgram 语音转文本 {#deepgram-stt}
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
-| `AUDIO_STT_MISTRAL_API_KEY` | Mistral API 密钥 | empty |
+| `DEEPGRAM_API_KEY` | Deepgram API 密钥 | 留空 |
+
+### Mistral 语音转文本 {#mistral-stt}
+
+| 变量 | 说明 | 默认值 |
+|----------|-------------|---------|
+| `AUDIO_STT_MISTRAL_API_KEY` | Mistral API 密钥 | 留空 |
 | `AUDIO_STT_MISTRAL_API_BASE_URL` | Mistral API 基础 URL | `https://api.mistral.ai/v1` |
-| `AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS` | 使用 chat completions 端点 | `false` |
+| `AUDIO_STT_MISTRAL_USE_CHAT_COMPLETIONS` | 使用聊天补全端点 | `false` |
 
 ## 文本转语音（TTS）环境变量 {#text-to-speech-tts-environment-variables}
 
@@ -88,39 +88,40 @@ title: "环境变量"
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
-| `AUDIO_TTS_ENGINE` | TTS 引擎：留空（禁用）、`openai`、`openai-realtime`、`mistral`、`elevenlabs`、`azure`、`transformers` | empty |
+| `AUDIO_TTS_ENGINE` | TTS 引擎：留空（禁用）、`openai`、`openai-realtime`、`mistral`、`elevenlabs`、`azure`、`transformers` | 留空 |
 | `AUDIO_TTS_MODEL` | TTS 模型 | `tts-1` |
 | `AUDIO_TTS_VOICE` | 默认语音 | `alloy` |
 | `AUDIO_TTS_SPLIT_ON` | 文本切分方式：`punctuation`、`paragraphs` 或 `none` | `punctuation` |
-| `AUDIO_TTS_API_KEY` | ElevenLabs 或 Azure TTS 使用的 API 密钥 | empty |
+| `AUDIO_TTS_API_KEY` | ElevenLabs 或 Azure TTS 使用的 API 密钥 | 留空 |
 
 ### OpenAI 兼容 TTS {#openai-compatible-tts}
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
 | `AUDIO_TTS_OPENAI_API_BASE_URL` | OpenAI 兼容 TTS API 基础 URL | `https://api.openai.com/v1` |
-| `AUDIO_TTS_OPENAI_API_KEY` | OpenAI TTS API 密钥 | empty |
-| `AUDIO_TTS_OPENAI_PARAMS` | OpenAI TTS 附加 JSON 参数 | empty || `REALTIME_TTS_PROMPT_TEMPLATE` | 当 `AUDIO_TTS_ENGINE` 为 `openai-realtime` 时给模型的指令 | empty（使用内置提示词） |
+| `AUDIO_TTS_OPENAI_API_KEY` | OpenAI TTS API 密钥 | 留空 |
+| `AUDIO_TTS_OPENAI_PARAMS` | OpenAI TTS 附加 JSON 参数 | 留空 |
+| `REALTIME_TTS_PROMPT_TEMPLATE` | 当 `AUDIO_TTS_ENGINE` 为 `openai-realtime` 时给模型的指令 | 留空（使用内置提示词） |
 
-### Mistral TTS {#mistral-tts}
+### Mistral 文本转语音（TTS） {#mistral-tts}
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
-| `AUDIO_TTS_MISTRAL_API_KEY` | Mistral TTS API 密钥 | empty |
+| `AUDIO_TTS_MISTRAL_API_KEY` | Mistral TTS API 密钥 | 留空 |
 | `AUDIO_TTS_MISTRAL_API_BASE_URL` | Mistral API 基础 URL | `https://api.mistral.ai/v1` |
 
 :::info
 当 `AUDIO_TTS_ENGINE=mistral` 且 `AUDIO_TTS_MODEL` 为空时，Open WebUI 会默认使用 `voxtral-mini-tts-2603`。
 :::
 
-### Azure TTS {#azure-tts}
+### Azure 文本转语音（TTS） {#azure-tts}
+
+配置步骤请参阅 [Azure AI Speech TTS 指南](/features/chat-conversations/audio/text-to-speech/azure-tts-integration)。
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
-| `AUDIO_TTS_AZURE_SPEECH_REGION` | Azure Speech 区域 | `eastus` |
-| `AUDIO_TTS_AZURE_SPEECH_BASE_URL` | 自定义 Azure Speech 基础 URL（可选） | empty |
-
-配置步骤请参阅 [Azure AI Speech TTS 指南](/features/chat-conversations/audio/text-to-speech/azure-tts-integration)。
+| `AUDIO_TTS_AZURE_SPEECH_REGION` | Azure Speech 区域 | 留空（语音合成使用 `eastus`；未设置基础 URL 时不加载音色列表） |
+| `AUDIO_TTS_AZURE_SPEECH_BASE_URL` | 自定义 Azure Speech 基础 URL（可选） | 留空 |
 | `AUDIO_TTS_AZURE_SPEECH_OUTPUT_FORMAT` | 音频输出格式 | `audio-24khz-160kbitrate-mono-mp3` |
 
 ## 实时语音通话环境变量 {#realtime-voice-calls-environment-variables}
@@ -132,13 +133,13 @@ title: "环境变量"
 | [`AUDIO_REALTIME_ENABLED`](/reference/env-configuration#audio_realtime_enabled) | 通话模式：`true` 为 **Realtime**，`false` 为 **Standard** | `false` |
 | [`AUDIO_REALTIME_PROVIDER`](/reference/env-configuration#audio_realtime_provider) | 服务商：`openai` 表示 OpenAI 或兼容服务器，`azure` 表示 Azure OpenAI | `openai` |
 | [`AUDIO_REALTIME_AUTH_TYPE`](/reference/env-configuration#audio_realtime_auth_type) | 认证方式：`api_key`，或在使用 Azure 服务商时使用 `microsoft_entra_id` | `api_key` |
-| [`AUDIO_REALTIME_OPENAI_API_BASE_URL`](/reference/env-configuration#audio_realtime_openai_api_base_url) | Realtime API 基础 URL，或 Azure 端点后接 `/openai/v1` | `https://api.openai.com/v1` |
-| [`AUDIO_REALTIME_OPENAI_API_KEY`](/reference/env-configuration#audio_realtime_openai_api_key) | Realtime API 密钥 | empty |
+| [`AUDIO_REALTIME_OPENAI_API_BASE_URL`](/reference/env-configuration#audio_realtime_openai_api_base_url) | Realtime API 基础 URL；使用 Azure 时，在资源地址后追加 `/openai/v1` | `https://api.openai.com/v1` |
+| [`AUDIO_REALTIME_OPENAI_API_KEY`](/reference/env-configuration#audio_realtime_openai_api_key) | Realtime API 密钥 | 留空 |
 | [`AUDIO_REALTIME_MODEL`](/reference/env-configuration#audio_realtime_model) | Realtime 语音模型，或 Azure 上的部署名称 | `gpt-realtime-2.1-mini` |
 | [`AUDIO_REALTIME_VOICE`](/reference/env-configuration#audio_realtime_voice) | 语音模型的默认音色 | `marin` |
 | [`AUDIO_REALTIME_TRANSCRIPTION_MODEL`](/reference/env-configuration#audio_realtime_transcription_model) | 转录用户说话内容的模型 | `gpt-transcribe` |
-| [`AUDIO_REALTIME_INPUT_PARAMS`](/reference/env-configuration#audio_realtime_input_params) | 额外的音频输入设置，JSON 对象形式，例如降噪 | empty |
-| [`REALTIME_CALL_PROMPT_TEMPLATE`](/reference/env-configuration#realtime_call_prompt_template) | 给语音模型的指令 | empty（使用内置提示词） |
+| [`AUDIO_REALTIME_INPUT_PARAMS`](/reference/env-configuration#audio_realtime_input_params) | 额外的音频输入设置，JSON 对象形式，例如降噪 | 留空 |
+| [`REALTIME_CALL_PROMPT_TEMPLATE`](/reference/env-configuration#realtime_call_prompt_template) | 给语音模型的指令 | 留空（使用内置提示词） |
 
 ## 配置音频的提示 {#tips-for-configuring-audio}
 

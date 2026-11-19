@@ -5,7 +5,7 @@ title: "创建文档和文件"
 
 # 创建文档和文件 {#create-documents-and-files}
 
-读取文件只是一半。Open Terminal 同样可以**写入**文件：Word 文档、PDF、幻灯片、图表、脚本。AI 用镜像中已有的常规 Python 库构建该文件，把它保存到你的工作区，并可以直接放进聊天里，还带上一个下载按钮。
+Open Terminal 不仅读取文件，还能**创建** Word 文档、PDF、幻灯片、图表和脚本。AI 使用镜像中已有的常用 Python 库生成文件并保存到工作区，还可以把文件直接显示在聊天中，附上下载按钮。
 
 为此不需要任何配置。没有插件，没有导出服务，也不用从代码块里复制粘贴。
 
@@ -19,7 +19,7 @@ title: "创建文档和文件"
 | **图形** | SVG、PNG 图表、缩放与转换后的图片 |
 | **代码** | Python、shell 脚本、配置文件，以及其他一切基于文本的内容 |
 
-默认镜像内置了 `python-docx`、`python-pptx`、`fpdf`、`openpyxl`、`Pillow` 和 `matplotlib`，已覆盖上述全部内容。缺少的东西可以就地安装。
+默认镜像内置了 `python-docx`、`python-pptx`、`fpdf`、`openpyxl`、`Pillow` 和 `matplotlib`，足以生成上述文件。缺少的库可以按需安装。
 
 ---
 
@@ -27,7 +27,7 @@ title: "创建文档和文件"
 
 > **你：** 把各站点的读数整理成一页 Word 文档，包含一段摘要和一张各站点合计的表格，然后展示给我看。
 
-AI 读取数据，构建出带有标题、摘要段落和一张真正表格的 `.docx`，并在聊天中显示出来。
+AI 读取数据，生成包含标题、摘要段落和原生表格的 `.docx` 文件，并在聊天中显示它。
 
 ![AI 生成一份 Word 文档并在聊天窗口中显示](/images/open-terminal-create-docx.png)
 
@@ -67,7 +67,7 @@ AI 读取数据，构建出带有标题、摘要段落和一张真正表格的 `
 
 > **你：** 给我写一个脚本，用原始 CSV 重新生成这份调研报告，这样下个季度我还能再跑一次。
 
-代码以文件形式回到你的工作区，而不是需要你从聊天里复制出来的代码块，因此拿来就能跑、拿来就能改。
+代码会保存为工作区中的文件，可直接运行或编辑，无需从聊天的代码块中复制。
 
 ![AI 正在将一个 Python 脚本写入工作区](/images/open-terminal-create-python.png)
 
@@ -79,7 +79,7 @@ AI 读取数据，构建出带有标题、摘要段落和一张真正表格的 `
 
 Markdown 会在预览中渲染，因此你可以在粘贴到任何地方之前先读一遍成稿。
 
-![负责将调查结果整理成 Markdown 格式的 AI](/images/open-terminal-create-markdown.png)
+![AI 将调研结论整理成 Markdown 文档](/images/open-terminal-create-markdown.png)
 
 ---
 
@@ -92,7 +92,7 @@ Markdown 会在预览中渲染，因此你可以在粘贴到任何地方之前�
 该文件同时也放在你的工作区里，因此[文件浏览器](../file-browser.md)中也能看到它，与 AI 生成的其他一切并列。在聊天中索取它，只是省得你去找。
 
 :::tip 直接说明你想要的格式
-"as a Word document"、"as a PDF"、"as a deck"、"as an SVG" 用日常说法提出来都行。如果你不说，AI 通常会选 Markdown——用于阅读没问题，但要发出去就不那么有用了。
+可以直接说“做成 Word 文档”“做成 PDF”“做成演示文稿”或“输出为 SVG”。如果不指定格式，AI 通常会选择 Markdown，适合阅读，但转发给他人时未必方便。
 :::
 
 ---

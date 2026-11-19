@@ -5,25 +5,25 @@ title: "SerpApi"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎参与贡献，请参阅贡献指南。
 
 :::
 
 :::tip
 
-若要查看所有与 Web Search 相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
+若要查看所有与网页搜索相关的环境变量（包括并发设置、结果数量等），请参阅 [环境配置文档](/reference/env-configuration#web-search)。
 
 :::
 
 :::tip 故障排查
 
-如果你在 web search 上遇到问题，请查看 [Web Search 故障排查指南](/troubleshooting/web-search)，其中涵盖了代理配置、连接超时、内容为空等常见问题。
+遇到网页搜索问题时，请参阅[网页搜索故障排查指南](/troubleshooting/web-search)，了解如何解决代理配置、连接超时和内容为空等常见问题。
 
 :::
 
 ## SerpApi API {#serpapi-api}
 
-[SerpApi](https://serpapi.com/) 提供快速、易用且完整的 Google 及其他搜索引擎抓取 API。任何当前或未来会返回 `organic_results` 的 SERP engine 都可被支持。默认 web search engine 是 `google`，但也可以改为 `bing`、`baidu`、`google_news`、`google_scholar`、`google_patents` 等。
+[SerpApi](https://serpapi.com/) 提供快速、易用且功能完整的 API，用于抓取 Google 等搜索引擎的结果。现在或将来推出的 SERP 引擎，只要返回 `organic_results`，就可以使用。默认的网页搜索引擎是 `google`，也可以改用 `bing`、`baidu`、`google_news`、`google_scholar`、`google_patents` 等。
 
 ### 设置 {#setup}
 
@@ -39,6 +39,6 @@ title: "SerpApi"
 
 #### 注意 {#note}
 
-你还需要在提示词输入框中启用 `Web search`，才能通过 [SerpApi](https://serpapi.com/) 引擎搜索网页。
+要在聊天中搜索网页，请打开消息输入框中的 **+** 菜单，并开启**网页搜索**。搜索将使用 [SerpApi](https://serpapi.com/) 引擎。
 
 ![启用 Web search](/images/enable_web_search.png)

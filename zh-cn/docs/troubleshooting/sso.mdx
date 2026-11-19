@@ -74,7 +74,7 @@ ENABLE_OAUTH_SIGNUP=true
 ```
 
 **解决方法：**
-- 始终以官方 [环境变量配置文档](/reference/env-configuration/) 为准
+- **始终以官方 [环境变量配置文档](/reference/env-configuration/) 为准**
 - 逐项检查你的部署环境：
   - 确认所有必需环境变量都按文档中的精确名字设置
   - 如果你是自托管，请确认这些变量已出现在 Docker Compose、Kubernetes manifest 或 `.env` 文件中
@@ -87,7 +87,7 @@ ENABLE_OAUTH_SIGNUP=true
 :::
 
 :::tip
-大多数 OAuth 错误（循环、401、无响应）都源于环境变量名称错误、完全缺失，或沿用了旧变量名。
+大多数 OAuth 错误（循环、401 错误、无响应）都源于环境变量名称错误、完全缺失，或沿用了旧变量名。
 :::
 
 :::warning
@@ -138,8 +138,8 @@ OPENID_PROVIDER_URL=https://your-authentik-domain/application/o/your-app-name/.w
 
 **重要：** Open WebUI 中有**两个**与 OAuth 相关的持久化设置：
 
-1. **`ENABLE_PERSISTENT_CONFIG`**（默认 **`true`**）——控制所有设置（包括 OAuth）在写入数据库后，是否优先从数据库加载，而不是从环境变量读取。
-2. **`ENABLE_OAUTH_PERSISTENT_CONFIG`**（默认 **`false`**）——这是针对 OAuth 设置的额外开关。当它为 `false` 时，即使 `ENABLE_PERSISTENT_CONFIG` 为 `true`，所有以 `oauth.` 开头的配置路径也**不会**从数据库加载。
+1. **`ENABLE_PERSISTENT_CONFIG`**（默认 **`true`**）——控制*所有*设置（包括 OAuth）在写入数据库后，是否优先从数据库加载，而不是从环境变量读取。
+2. **`ENABLE_OAUTH_PERSISTENT_CONFIG`**（默认 **`false`**）——这是针对 OAuth 设置的*额外*开关。当它为 `false` 时，即使 `ENABLE_PERSISTENT_CONFIG` 为 `true`，所有以 `oauth.` 开头的 OAuth 设置也**不会**从数据库加载。
 
 默认情况下，因为 `ENABLE_OAUTH_PERSISTENT_CONFIG=false`，OAuth 环境变量**会优先于数据库值**。但如果你之前通过 Admin Panel 配过 OAuth，而后面又把 `ENABLE_OAUTH_PERSISTENT_CONFIG` 设为 `true`，那么数据库里的旧值就会重新接管。
 
@@ -170,10 +170,10 @@ environment:
 
 ### 5. 提供商侧 OAuth 配置错误 {#5-oauth-misconfiguration-on-the-provider-side}
 
-有时问题不在 Open WebUI，而在身份提供商（如 Google、Okta、Auth0、Azure AD）的应用注册与 Open WebUI 配置不一致。
+有时问题出在身份提供商（如 Google、Okta、Auth0、Azure AD）——它的应用注册与你的 WebUI 配置不一致。
 
 **解决方法：**
-- 确认你的应用已在 OAuth 提供商端正确注册，并检查：
+- 确认你的应用已在 OAUTH 提供商端正确注册，并检查：
   - **Redirect URI 与真实部署地址完全一致**
     - OIDC: `https://your-domain/oauth/oidc/callback`
     - Microsoft: `https://your-domain/oauth/microsoft/callback`
@@ -197,13 +197,13 @@ Wrong: https://ai.company.com/callback
 
 ### 6. 服务端缓存问题 {#6-server-side-caching-issues}
 
-如果你在使用 Nginx（或其他反向代理）时启用了服务端缓存，OAuth endpoint 可能会出现随机、间歇性的登录问题，而且通常很难排查。
+如果你在使用 Nginx（或其他反向代理）时启用了服务端缓存，OAuth 端点可能会出现随机、间歇性的登录问题，而且通常很难排查。
 
 **解决方法：**
 - 在 NGINX（或其他代理）配置中：
-  - 确认**不要缓存**以下 endpoint：
+  - 确认**不要缓存**以下端点：
     - `/api`、`/oauth`、`/callback`、`/login`、`/ws`、`/websocket`
-  - 任何关键登录/认证 endpoint 都必须保持未缓存状态
+  - 任何关键登录/认证端点都必须保持未缓存状态
 - 修改后重新加载代理配置
 
 **NGINX 示例：**
@@ -227,7 +227,7 @@ location ~* ^/(api|oauth|callback|login|ws|websocket) {
 ```
 
 :::warning
-永远不要缓存 OAuth 或登录 endpoint。缓存会导致旧 token 被重复返回，或破坏会话，最终引发难以预测的认证错误。
+永远不要缓存 OAuth 或登录端点。缓存会导致旧 token 被重复返回，或破坏会话，最终引发难以预测的认证错误。
 :::
 
 ---
@@ -373,9 +373,7 @@ OAUTH_PROVIDER_NAME=Authentik
 OAUTH_SCOPES=openid email profile
 ```
 
----
-
-#### 在 ID 令牌中添加自有参数的服务商： {#providers-that-add-their-own-parameters-to-the-id-token}
+#### 在 ID 令牌中添加自有参数的提供商： {#providers-that-add-their-own-parameters-to-the-id-token}
 
 **问题：** 登录在回调阶段失败。浏览器显示 `The email or password provided is incorrect`，而日志记录了真正的原因：
 
@@ -383,9 +381,9 @@ OAUTH_SCOPES=openid email profile
 OAuth callback failed: Unsupported {'app_id'} in header
 ```
 
-某些服务商会在 ID 令牌头部添加厂商特有的参数，旧版本会拒绝它们。参数名称因服务商而异。
+某些提供商会在 ID 令牌头部添加厂商特有的参数，旧版本会拒绝它们。参数名称因提供商而异。
 
-**解决方案：** 更新 Open WebUI。无法识别的参数会被忽略，因此服务商一侧无需改动。签名和签名算法仍会照常校验。
+**解决方案：** 更新 Open WebUI。无法识别的参数会被忽略，因此提供商一侧无需改动。签名和签名算法仍会照常校验。
 
 ---
 
@@ -401,7 +399,7 @@ oauth
 
 把账户的身份提供商 subject 迁移到当前字段的升级步骤把该值编码了两次，因此它保存的是 JSON 对象的文本而不是对象本身。只有在升级那一刻仍早于 v0.6.41 的数据库会受影响，而且只影响当时已存储 subject 的账户。
 
-**解决方案：** 更新 Open WebUI。启动时会运行一个修复迁移，重写受影响的行，其他行一律不动。不需要手工操作数据库，不需要重新绑定，也不需要在服务商一侧做任何改动。`OAUTH_MERGE_ACCOUNTS_BY_EMAIL` 无法绕过这个问题，因为回退查找读取的是同一个账户，同样会失败。
+**解决方案：** 更新 Open WebUI。启动时会运行一个修复迁移，重写受影响的行，其他行一律不动。不需要手工操作数据库，不需要重新绑定，也不需要在提供商一侧做任何改动。`OAUTH_MERGE_ACCOUNTS_BY_EMAIL` 无法绕过这个问题，因为回退查找读取的是同一个账户，同样会失败。
 
 ---
 
@@ -419,7 +417,7 @@ oauth
 
 ### 调试 OAuth 流程 {#debugging-oauth-flow}
 
-开启 debug 日志，并按流程逐步跟踪：
+开启 debug 日志，并逐步跟踪 OAuth 流程：
 
 ```bash
 
@@ -452,7 +450,7 @@ ls -la /app/backend/data/
 
 ### 不经过反向代理直接测试 {#test-without-reverse-proxy}
 
-如果你使用了反向代理，请临时绕过它直接测试 OAuth：
+如果你使用了反向代理，请临时绕过它，直接针对 Open WebUI 测试 OAuth：
 
 1. 临时直接暴露 Open WebUI 端口
 2. 把 OAuth 提供商中的 redirect URI 改成这个直连地址
@@ -470,7 +468,7 @@ ls -la /app/backend/data/
 - `OAuth callback error: mismatching_state` → Session/cookie 问题
 - `httpcore.ReadTimeout` → 网络超时问题
 - `Sign-in with your identity provider failed. Please contact your administrator for assistance.` → 登录在回调阶段失败，例如提供商拒绝访问、账户没有邮箱，或邮箱域不被允许。这些情况显示相同的文本，因此应查看后端日志确定真正原因。角色不匹配或禁止注册时会显示禁止访问的文本，邮箱重复时会显示已经注册的错误，其他异常则显示 `Error during OAuth process`
-- `Unsupported {'app_id'} in header` → 提供商在 ID 令牌中添加了厂商特有的参数，而当前版本仍会拒绝它。参见[在 ID 令牌中添加自有参数的服务商](#providers-that-add-their-own-parameters-to-the-id-token)
+- `Unsupported {'app_id'} in header` → 提供商在 ID 令牌中添加了厂商特有的参数，而当前版本仍会拒绝它。参见[在 ID 令牌中添加自有参数的提供商](#providers-that-add-their-own-parameters-to-the-id-token)
 - `1 validation error for UserModel`，发生在 `oauth` 字段 → 旧的升级步骤把身份提供商 subject 存成了文本。参见[长时间未升级后已有账户无法登录](#12-existing-accounts-cannot-sign-in-after-a-long-delayed-upgrade)
 - 回调 URL 返回 `404` → Redirect URI 配置错误
 
@@ -485,7 +483,7 @@ ls -la /app/backend/data/
 | 🚨 缺少 OPENID_PROVIDER_URL | OIDC 必需项，指向提供商的 `.well-known/openid-configuration` |
 | 🔄 持久化配置冲突 | 设 `ENABLE_OAUTH_PERSISTENT_CONFIG=false` 以使用环境变量，或设为 `true` 以使用管理面板；为 `false` 时面板只读 |
 | 🏢 提供商侧配置错误 | 核对应用注册、URI、client ID 与 secret |
-| 🧊 代理缓存干扰 | 把所有 OAuth endpoint 排除在服务端缓存之外 |
+| 🧊 代理缓存干扰 | 把所有 OAuth 端点排除在服务端缓存之外 |
 | 🍪 Cookie 配置问题 | 检查反向代理 cookie 设置与相关 env vars |
 | ⏱️ 超时问题 | 提高 `AIOHTTP_CLIENT_TIMEOUT` 等超时设置 |
 | 🔐 CSRF / session 问题 | 检查 `WEBUI_SECRET_KEY` 与会话配置 |
@@ -495,7 +493,7 @@ ls -la /app/backend/data/
 
 ---
 
-只要同时把 OAuth 提供商和 Open WebUI 环境配置正确，并确保关键登录 endpoint 不被缓存，绝大多数 SSO/OAuth 登录问题都能被消除。
+只要同时把 OAuth 提供商和 Open WebUI 环境配置正确，并确保关键登录端点不被缓存，绝大多数 SSO/OAuth 登录问题都能被消除。
 
 ---
 

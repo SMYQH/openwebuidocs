@@ -40,6 +40,7 @@ Open Terminal 是类计算机的工作区，让 Open WebUI 的智能体循环能
 
 Open WebUI 负责协调这个循环。Open Terminal 则为循环提供了一个真正发生的场所：可供检查的文件、可供运行的代码、可供验证的输出，以及可以交回的成果物。两者合在一起构成完整的框架：模型、上下文、工具、状态、行动、观察和验证。
 
+---
 
 ## 各部分如何组合在一起 {#how-the-harness-fits-together}
 
@@ -90,43 +91,44 @@ Open WebUI 加上 Open Terminal 就是完整的智能体框架：控制层、动
 
 ### 数据分析与报告 {#data-analysis-and-reporting}
 
-上传电子表格、CSV 文件或数据库。AI 读取数据、运行分析脚本并生成图表或报告。
+上传电子表格、CSV 文件、数据库或导出的日志。智能体可以检查文件、编写分析代码、安装库、生成图表，并交付完整报告。
 
 ![AI 分析电子表格数据](/images/open-terminal-ai-csv-analysis.png)
 
 ### 文档搜索与提取 {#document-search-and-extraction}
 
-将 AI 指向包含 PDF、Word 文档或邮件的文件夹。它将读取所有文件并返回结构化结果：摘要、提取的字段或交叉引用。
+为智能体指定一个包含 PDF、Word 文档、电子表格或邮件的文件夹。它可以搜索、提取、转换、总结并交叉引用其中的内容，生成结构化结果。
 
 ![AI 阅读一个合同文件文件夹并总结续约情况](/images/open-terminal-document-search.png)
 
 ### Web 开发与实时预览 {#web-development-with-live-preview}
 
-AI 构建 HTML/CSS/JS 项目，启动预览服务器，并在 Open WebUI 内渲染结果。通过在聊天中描述更改来进行迭代。
+描述你想构建的网站或应用。智能体可以创建文件、安装依赖、启动开发服务器，并在 Open WebUI 内显示预览。在聊天中描述想改的地方，即可继续迭代。
 
 ![聊天界面旁边是 AI 正在提供服务的活动网站的实时预览](/images/open-terminal-live-site-preview.png)
 
 ### 软件开发 {#software-development}
 
-克隆仓库、运行测试套件、调试失败、重构代码以及使用 Git，全部通过自然语言完成。
+智能体可以克隆仓库、检查架构、运行测试套件、排查失败、重构代码及使用 Git。它会运行并验证自己编写的代码。
 
 ### 文件与系统自动化 {#file-and-system-automation}
 
-批量重命名、排序、去重、转换、压缩和组织文件。管理磁盘空间、计划备份、处理日志。
+批量重命名、排序、去重、转换、压缩和组织文件。管理磁盘用量、处理日志、准备导出文件并自动执行重复操作。
 
 ![AI 将 43 张照片重命名并在文件名前加上日期](/images/open-terminal-bulk-rename.png)
 
 ---
 
-## 主要特性 {#what-agents-can-do-with-this-substrate}
+## 智能体可以在此环境中完成的操作 {#what-agents-can-do-with-this-substrate}
 
 | | |
 | :--- | :--- |
-| 🖥️ **代码执行** | 运行真实命令并返回输出 |
-| 📁 **文件浏览器** | 在侧边栏中浏览、上传、下载和编辑文件 |
-| 📄 **文档读取** | PDF、Word、Excel、PowerPoint、RTF、EPUB、邮件 |
-| 🌐 **网站预览** | 在 Open WebUI 内实时预览 Web 项目 |
-| 🔒 **可选隔离** | 在 Docker 容器中运行以实现沙箱隔离，或直接运行在裸机上以获得完全访问权限 |
+| 🖥️ **使用真实的 shell** | 运行命令、脚本、CLI、测试、构建工具和包管理器 |
+| 📁 **管理工作区** | 浏览、上传、下载、编辑、创建、重命名、转换和组织文件 |
+| 📄 **处理文档和数据** | 处理 PDF、Word、Excel、PowerPoint、RTF、EPUB、邮件、文本、代码和数据文件 |
+| 🌐 **运行和预览软件** | 启动本地服务器，在 Open WebUI 中实时预览 |
+| 🔁 **根据反馈迭代** | 读取输出、检查产物、修复错误、重试并验证结果 |
+| 🔒 **选择隔离范围** | 在 Docker 中隔离运行，或在确实需要直接访问宿主机时使用裸机 |
 
 ---
 
@@ -135,7 +137,7 @@ AI 构建 HTML/CSS/JS 项目，启动预览服务器，并在 Open WebUI 内渲�
 **[安装 →](./setup/installation)** · **[连接到 Open WebUI →](./setup/connecting)**
 
 :::info 模型要求
-Open Terminal 需要具备 agent 级工具调用质量的模型，而不仅仅是技术上支持工具调用的模型。驱动终端是一个多步骤循环：调用工具、读取输出、决定下一个命令、重复，通常需要很多轮。小型模型无法维持这种操作。4B 到 9B 的模型在这里不够用，即使它勾选了"支持工具"的框。Frontier 级模型（GPT-5.4、Claude Sonnet 4.6、Gemini 3.1 Pro）能很好地处理这些复杂的多步骤工作流。从 v0.10.0 开始，原生是默认的工具调用模式，因此除非模型已切换到 Legacy 模式，否则开箱即用；如果工具无法触发，请[检查模型的工具调用模式](./setup/connecting#8-enable-native-function-calling)。
+Open Terminal 需要能可靠地自主调用工具的模型。模型需经过许多轮操作：选择动作、查看文件或输出、判断变化、从错误中恢复，然后继续处理。即使小型模型能发出有效的工具调用，也常难以持续完成这个过程。复杂的软件开发、数据处理和自动化任务应使用能力较强的前沿模型。原生工具调用是默认模式。如果工具没有被调用，请[检查模型的工具调用模式](./setup/connecting#8-enable-native-function-calling)。
 :::
 
 ---
@@ -145,16 +147,14 @@ Open Terminal 需要具备 agent 级工具调用质量的模型，而不仅仅�
 - **[代码执行](/features/open-terminal/use-cases/code-execution)**：编写、运行和调试脚本
 - **[软件开发](/features/open-terminal/use-cases/software-development)**：仓库、测试、调试、重构、Git
 - **[文档与数据分析](/features/open-terminal/use-cases/file-analysis)**：电子表格、PDF、Word 文档、邮件
-- **[Web 开发](/features/open-terminal/use-cases/web-development)**：构建和预览网站
+- **[Web 开发](/features/open-terminal/use-cases/web-development)**：构建网站并在浏览器标签页中预览
 - **[系统自动化](/features/open-terminal/use-cases/system-automation)**：文件管理、备份、批量操作
 - **[高级工作流](/features/open-terminal/use-cases/advanced-workflows)**：数据报告、研究、代码审查等技能
-- **[文件浏览器](/features/open-terminal/file-browser)**：上传、预览、编辑文件
-- **[编程智能体](/features/open-terminal/coding-agents)**：在模型选择器中使用 Claude Code、Codex 等 agent
+- **[编程智能体](/features/open-terminal/coding-agents)**：在模型选择器中使用 Claude Code、Codex 等智能体
+- **[文件浏览器](/features/open-terminal/file-browser)**：上传、预览、编辑文件，使用 Git
 
 ---
 
 ## 企业多用户 {#enterprise-multi-user}
 
-需要为团队提供隔离的、每个用户独立的终端容器？**[Terminals](./terminals/)** 为每个用户预配专用的 Open Terminal 实例，并支持自动生命周期管理、资源控制和基于策略的环境。
-
----
+需要为团队中的每位用户提供隔离的智能体工作区？**[Terminals](./terminals/)** 负责为 Open Terminal 编排工作区。它为每个用户和每项策略预配专用的计算环境，并支持自动生命周期管理、资源限制、自定义镜像、持久存储、定期重置，以及由策略控制的运行环境。

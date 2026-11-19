@@ -16,16 +16,489 @@
 | en-us `_category_.json` | 43 |
 | zh-cn `_category_.json` | 43 |
 | File coverage | **100%** (all 398 en-us documents have corresponding zh-cn translations) |
-| Content completeness | **Not certified**. All 43 categories passed review against the current configuration. Older document reviews remain historical evidence; their configuration hashes no longer match. |
-| Verbatim code blocks | No hard code-preservation errors. The HAProxy and Nginx Proxy Manager warnings reflect reviewed upstream fence repairs. |
+| Content completeness | **441/441 pairs passed semantic review** against the current hashes. No pair is pending. |
+| Verbatim code blocks | No hard code-preservation errors. The HAProxy and Nginx Proxy Manager fence repairs were reviewed against upstream. |
 | Upstream inline code spans preserved | No unwaived hard preservation errors. Review signals and exact exceptions remain; this is not a universal preservation certification. |
-| Explicit heading IDs matching upstream | No hard heading-structure failures. One warning records a restored HAProxy heading hidden by upstream fence markup. |
-| Untranslated English prose | Current audit reports heuristic language warnings after literal/terminology exclusions; semantic review is pending. |
-| Production build | 2026-11-18: **passes** with zero broken links, anchors, Markdown links, or duplicate routes. Local sitemap synchronization is skipped without `DOMAIN`, as designed. |
+| Explicit heading IDs matching upstream | No hard heading-structure failures. The reviewed HAProxy repair restored a heading hidden by upstream fence markup. |
+| Untranslated English prose | No unwaived language warnings. The full 441-pair semantic review is complete. Leftover English `endpoint` wording was normalized to the project terminology (`端点`, `API 端点`, `基础 API 端点`), and the `终结点` variant was replaced. |
+| Production build | 2026-11-19: **passes** with zero broken links, anchors, Markdown links, or duplicate routes. Local sitemap synchronization is skipped without `DOMAIN`, as designed. |
+| Checker behaviour tests | 2026-11-19: **176 tests pass** (`python -m unittest discover -s .agents/skills/translation-checker/scripts -p "test_*.py"`). |
+
+Workflow: [semantic review](.agents/skills/translation-semantic-review/SKILL.md) is separate from the [Python checker](.agents/skills/translation-checker/SKILL.md), which now owns the scripts, tests, config, provider helpers, and ignored local artifacts. The move does not change review counts or checker behavior. Edits to a translated file expire the exact exceptions of that file; `scripts/restamp_exceptions.py` re-binds the surviving exceptions to their current fingerprints and reports the findings that need a manual decision.
+
+### 2026-11-19 Policy-link text, endpoint terminology, and exception re-binding
+
+- Restored the upstream text of five policy-link bullets whose only link is removed by the external-link policy: the Discord referral in the Open Responses troubleshooting list, the Nous Research Discord entry in the Hermes Agent learn-more list, the Discord entry in the landing page "Get Involved" list, the Discord and Reddit referral in the troubleshooting community-support list, and the Voice AI & TTS Discord support line. The community-support bullet keeps the upstream wording and still offers the GitHub Discussions link.
+- Normalized the endpoint terminology across the Chinese docs: English `endpoint`/`endpoints` in prose became `端点`, `API 端点` or `REST 端点`, the `终结点` variant became `端点`, and the Azure portal labels (`Keys and Endpoint`, `API Endpoint URL`, `Bing Search V7 Endpoint`) and the quoted Azure error message stay verbatim. Corrected one mistranslation in the Hugging Face SSL section (`改用镜像` -> `切换端点`).
+- Removed one Chinese-only leftover paragraph in the oikb limitations section that upstream emptied, restored the paragraph break in the OpenTelemetry configuration section, and tightened the migration cheat-sheet wording.
+- Added `scripts/restamp_exceptions.py`: it re-binds exact exceptions to their current fingerprints after an edit, keeps the reviewed reason of every finding that still exists, drops exceptions whose finding disappeared, and lists findings that need a manual decision. Added four behavior tests; the suite now runs 176 tests.
+- Strict audit: **0 errors, 0 warnings, 18 notes, and 53 exact exceptions**. Validated **441/441** full reviews. The production build passes with zero broken links, anchors, Markdown links, or duplicate routes.
+
+### 2026-11-19 Astellas, Public Storage, and TRG case studies
+
+- Reviewed three full pairs. Restored the distinction between open weights and open source, clarified the employee-led rollout and PII handling, and corrected who benefited from faster client onboarding.
+- Strict audit: **0 errors, 0 warnings, 18 notes, and 74 exact exceptions**. Validated **331/441** full reviews. No checker rules or exceptions changed in this batch.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-70-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-70-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-71-pending.json`.
+
+### 2026-11-19 Agent gateways, DeepSeek-R1, and Langfuse
+
+- Reviewed three full pairs. Clarified gateway API compatibility, GPU offloading, and Langfuse trace fields. Kept code samples unchanged.
+- Strict audit: **0 errors, 0 warnings, 18 notes, and 74 exact exceptions**. Validated **328/441** full reviews. No checker rules or exceptions changed in this batch.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-69-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-69-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-70-pending.json`.
+
+### 2026-11-19 Community, image generation, and OpenTelemetry
+
+- Reviewed three full pairs. Clarified the data sent by model review links, chat model selection for image generation, and OpenTelemetry metric types and export frequency.
+- Strict audit: **0 errors, 0 warnings, 18 notes, and 74 exact exceptions**. Validated **325/441** full reviews. Refreshed one existing exception for the unchanged local Markdown lint directive.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-68-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-68-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-69-pending.json`.
+
+### 2026-11-19 Backups, offline mode, and S3 storage
+
+- Reviewed three full pairs: backups, offline mode, and S3 storage. Refreshed two existing exact exceptions for the verified local encryption link.
+- Strict audit: **0 errors, 0 warnings, 18 notes, and 74 exact exceptions**. Validated **322/441** full reviews.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-67-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-67-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-68-pending.json`.
+
+### 2026-11-19 Deployment diagrams and database maintenance
+
+- Reviewed three full pairs. Corrected the Linux diagram description, clarified PVC reuse when a terminal Pod is rebuilt, and restored the command summary to its upstream position in the database migration guide.
+- Strict audit: **0 errors, 0 warnings, 18 notes, and 74 exact exceptions**. Validated **319/441** full reviews. No checker rules or exceptions changed in this review batch.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-66-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-66-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-67-pending.json`.
+
+### 2026-11-19 Roles, groups, and permissions
+
+- Reviewed three full pairs. Restored the Access button alongside the menu entry, corrected response rating, and clarified administrator access, session sign-out, and calendar sharing. Aligned permission rows with upstream.
+- Strict audit: **0 errors, 0 warnings, 18 notes, and 74 exact exceptions**. Validated **316/441** full reviews. The prior `TTS` exception no longer applies; the translated label no longer adds the acronym. No checker rules changed.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-65-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-65-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-66-pending.json`.
+
+### 2026-11-19 Development, Continue.dev, and Noerr guides
+
+- Reviewed three full pairs. Clarified the `dev` branch workflow and CORS setup, the Continue.dev base API endpoint, and the Noerr adoption timeline and RAG sources.
+- Strict audit: **0 errors, 0 warnings, 18 notes, and 75 exact exceptions**. Validated **313/441** full reviews. No checker rules or exceptions changed in this review batch.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-64-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-64-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-65-pending.json`.
+
+### 2026-11-19 Open Terminal and security guides
+
+- Reviewed five full pairs. Clarified agent conversation controls, ACP transport and permissions, endpoint validation, scanner classifications, and what first-run admin promotion denies when it fails. Confirmed the Nginx self-signed certificate guide without edits.
+- Strict audit: **0 errors, 0 warnings, 18 notes, and 75 exact exceptions**. Validated **310/441** full reviews. No checker rules or exceptions changed in this review batch.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-63-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-63-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-64-pending.json`.
+
+### 2026-11-19 Authentication, evaluation, and feature guides
+
+- Reviewed ten complete pairs. Corrected who adds users in the MFA flow, restored the OAuth error text and missing arena scoring rules, and clarified external extraction response and retrieval behavior.
+- Rechecked all four Keycloak code blocks against upstream before refreshing the existing exception for the unclosed source fence. No new exceptions or rule changes.
+- The full strict audit found **0 errors, 0 warnings, 18 notes, and 75 matching exact exceptions**. The semantic review remains incomplete. All 169 offline tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-62-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-62-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-62-pending.json`.
+
+### 2026-11-19 Terminal API, database analysis, and roadmap
+
+- Reviewed three complete pairs. Clarified which terminal a stop request affects, how the database analysis skill receives credentials, and roadmap wording. Code samples, identifiers, and anchors are unchanged.
+- The full strict audit found **0 errors, 0 warnings, 18 notes, and 75 matching exact exceptions**. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-61-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-61-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-61-pending.json`.
+
+### 2026-11-19 Authentication, terminals, and integration guides
+
+- Reviewed ten complete pairs. Corrected Samsung's development cycle result, authentication labels, terminal context behavior, API terminology, community support language, and accessible descriptions.
+- Kokoro-FastAPI's source lists CUDA 12.3 in prerequisites and CUDA 12.8 in the GPU setup heading. The translation preserves both values; no runtime compatibility was inferred.
+- The full strict audit found **0 errors, 0 warnings, 18 notes, and 75 matching exact exceptions**. No checker rules or exceptions changed. All 169 offline tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-60-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-60-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-60-pending.json`.
+
+### 2026-11-19 Deployment, chat, and API terminology
+
+- Reviewed ten deployment, chat, notification, tutorial, and administration pairs. Corrected shared key, session affinity, attachment queue, and notification masking descriptions.
+- Documented context-sensitive API terminology and spacing. Rechecked four notification and speech-to-text pairs after wording edits; code, URLs, and anchors are unchanged.
+- The strict audit found **0 warnings, 0 errors, 18 notes, and 75 matching exact exceptions**. It validated 282 passed pairs and left 159 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-59-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-59-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-59-pending.json`.
+
+### 2026-11-19 Speech-to-text guides
+
+- Reviewed the Mistral, OpenAI, and self-hosted speech-to-text guides in full. Restored the verbatim Mistral error and clarified recording, local transcription, and server settings. Model IDs and code examples are unchanged.
+- The strict audit found **0 warnings, 0 errors, 18 notes, and 75 matching exact exceptions**. It validated 272 passed pairs and left 169 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-57-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-57-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-57-pending.json`.
+
+### 2026-11-19 Mission, autocomplete, and file workflow guides
+
+- Reviewed four pairs in full. Restored the Mission example's offline behavior, clarified the autocomplete model fallback and switch labels, and improved Open Terminal's file creation and analysis examples.
+- The strict audit found **0 warnings, 0 errors, 18 notes, and 75 matching exact exceptions**. It validated 269 passed pairs and left 172 pending. All 169 tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-56-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-56-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-56-pending.json`.
+
+### 2026-11-19 Filter, Mistral TTS, and search Action guides
+
+- Reviewed the three guides in full. Fixed the Filter hook and switch descriptions and aligned its retrieval recipe with the instance-attribute warning. All 37 Filter code bodies match upstream.
+- Restored the TTS troubleshooting model ID and the Action setup location. Added a section-level warning for a new inline code identifier replacing a repeated source identifier.
+- The new check also caught stale OneDrive settings. Restored the client IDs, legacy fallback, and startup-only behavior. Renewed five unchanged exact exceptions after verifying the edits did not touch their sections. The environment reference still needs full review.
+- The strict audit found **0 warnings, 0 errors, 18 notes, and 75 matching exact exceptions**. It validated 265 passed pairs and left 176 pending. All 169 tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-55-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-55-final-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-55-final-pending.json`.
+
+### 2026-11-19 Terminal, enterprise, and browser integration guides
+
+- Reviewed nine pairs in full. Clarified per-user OpenShift isolation, terminal secret visibility, the authentication timing mitigation, and the code review workflow.
+- Corrected the browser search query behavior, customer rollout and workflow metrics, Direct Connections credential scope, and enterprise integration and support language. No new exceptions were needed.
+- The full audit found **0 warnings, 0 errors, 18 notes, and 75 matching exact exceptions**. It validated 262 passed pairs and left 179 pending, so the combined audit exited nonzero. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-54-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-54-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-54-pending.json`.
+
+### 2026-11-19 Chat features and integration guides
+
+- Reviewed the integrations index, follow-up prompts, Mermaid rendering, and Podman setup. Clarified the follow-up input behavior and restored the avatar navigation step in the Podman guide.
+- Corrected the Mermaid code-fence instruction against `src/lib/components/chat/Messages/CodeBlock.svelte` at application revision `abcebd7d0dada9119c8d32c18dd981e896151709`. Both examples are unchanged.
+- The full audit found **0 warnings, 0 errors, 18 notes, and 75 matching exact exceptions**. It validated 253 passed pairs and left 188 pending, so the combined audit exited nonzero. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-53-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-53-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-53-pending.json`.
+
+### 2026-11-19 Terminal policies, Tether, and RBAC
+
+- Reviewed the terminal policy fields, Tether client protocol, and RBAC overview. Clarified Docker storage quota limits, the authorization callback's one-time code, and the distinction between a user's role and their permissions.
+- The full audit found **0 warnings, 0 errors, 18 notes, and 75 matching exact exceptions**. It validated 249 passed pairs and left 192 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-52-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-52-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-52-pending.json`.
+
+### 2026-11-19 Alternatives review complete
+
+- Reviewed AnythingLLM, ChatGPT, Claude, Gemini, llama.cpp, and Onyx against the pinned source. Corrected terminology, UI labels, and awkward phrasing while preserving commands and anchors.
+- Updated Onyx's self-hosted SSO and permission tiers using its [access-control documentation](https://docs.onyx.app/security/architecture/access_controls). Distinguished those features from [Onyx Cloud pricing](https://onyx.app/pricing) and retained the July 2026 price as historical context.
+- All 13 comparison pages now have passing semantic reviews. The full audit found **0 warnings, 0 errors, 18 notes, and 75 matching exact exceptions**. It validated 246 passed pairs and left 195 pending, so the combined audit exited nonzero. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-51-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-51-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-51-pending.json`.
+
+### 2026-11-19 Alternatives review
+
+- Reviewed Jan, Msty, LibreChat, Dify, LM Studio, and Ollama, including frontmatter, structured FAQs, tables, and links.
+- Corrected the Dify integration instructions against its [app API documentation](https://docs.dify.ai/en/api-reference/guides/get-started). An OpenAI-compatible adapter is required. Clarified the LM Studio loopback and Ollama default-address assumptions using the pinned provider guides. No code blocks changed.
+- The strict audit found **0 warnings, 0 errors, 18 notes, and 74 matching exact exceptions**. Semantic validation passed 240 pairs and left 201 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-50-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-50-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-50-pending.json`.
+
+### 2026-11-19 Environment reference and semantic review checkpoint
+
+- Added checks for literal setting types and boolean defaults in their own rows. Corrected mismatched types, defaults, and missing UI guidance in the environment reference. The reference still needs a full semantic review.
+- Verified the Firecrawl timeout against application revision `abcebd7d0dada9119c8d32c18dd981e896151709`: the configuration stores a string, the loader parses integer seconds, and the scrape request clamps the converted value to 1000–300000 milliseconds. Retained the duplicate Analytics Sessions link and verified historical notes under exact fingerprints.
+- Reviewed six more complete pairs. Corrected the temporal tool's future-date limitation, localized terminal labels, and fixed wording in the HTTPS index.
+- The strict audit found **0 warnings, 0 errors, 18 notes, and 71 matching exact exceptions**. Semantic validation passed 234 pairs and left 207 pending, so the combined audit exited nonzero. All 168 behavior tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-49-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-49-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-49-final-pending.json`.
+
+### 2026-11-19 Filter behavior and vendor dispositions
+
+- Restored the Filter guide's switch locations and conditions, retrieval wording, and emphasis without changing code examples. The guide still needs full semantic review.
+- Restored the vendor's reach-and-impact caveat, renewed the exact fingerprint for an unchanged evidence quotation, and retained the TTS abbreviation in the permissions table.
+- The strict audit found **4 warnings, 0 errors, 18 notes, and 66 matching exact exceptions**. It validated 228 passed pairs and left 213 pending. The production build passed. All remaining warnings are in the environment reference.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-48-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-48-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-48-pending.json`.
+
+### 2026-11-19 Connection and database troubleshooting
+
+- Restored the General settings step and clarified URL resolution and proxy inheritance. Aligned the database prerequisites and clarified which older Open WebUI versions the fresh-install guidance covers. Both pairs still need full semantic review.
+- The strict audit found **10 warnings, 0 errors, 18 notes, and 65 matching exact exceptions**. It validated 228 passed pairs and left 213 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-46-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-46-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-46-pending.json`.
+
+### 2026-11-19 MCP proxy and audio troubleshooting
+
+- Restored the source of alternate MCP server implementations, the tool schema explanation, and the CPU performance comparison. Kept examples unchanged. Both pairs still need full semantic review.
+- The strict audit found **14 warnings, 0 errors, 18 notes, and 65 matching exact exceptions**. It validated 228 passed pairs and left 213 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-45-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-45-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-45-pending.json`.
+
+### 2026-11-19 Extensibility guide corrections
+
+- Aligned the MCP authentication and connection wording, restored emphasis in the tool migration guide, and distinguished per-replica startup installs from concurrent workers sharing one environment. All three pairs still need full review.
+- The strict audit found **16 warnings, 0 errors, 18 notes, and 65 matching exact exceptions**. It validated 228 passed pairs and left 213 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-44-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-44-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-44-pending.json`.
+
+### 2026-11-19 Open Terminal overview and settings
+
+- Reviewed the full Open Terminal overview. Restored missing workload details, Browser-tab and Git guidance, and multi-user provisioning options. Aligned the section breaks and link order.
+- Restored the OAuth settings' read-only state in the overview table. Clarified Docker data persistence and Kokoro.js GPU fallback. The FAQ, SSO, and Voice Mode pairs remain pending full review.
+- The strict audit found **22 warnings, 0 errors, 18 notes, and 65 matching exact exceptions**. It validated 228 passed pairs and left 213 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-43-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-43-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-43-pending.json`.
+
+### 2026-11-19 Azure Speech, Artifacts, and terminology review
+
+- Reviewed Azure Speech STT and Artifacts in full. Corrected the recording preprocessing conditions and restored the example's Open WebUI version selector. The CSP explanation follows the standard: [multiple active policies are enforced together](https://www.w3.org/TR/CSP3/#multiple-policies). The configuration example is unchanged.
+- Removed a misleading HTML-only banner heading, clarified automatic reconnect wording, and kept the oikb version requirement and explanation. Those three pairs are deterministically clean and still need full review.
+- The strict audit found **27 warnings, 0 errors, 18 notes, and 65 matching exact exceptions**. It validated 227 passed pairs and left 214 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-42-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-42-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-42-pending.json`.
+
+### 2026-11-19 Section-level diagnostics and environment settings
+
+- The checker now reports heading locations and local counts for file-wide terminology and Markdown symbol warnings. An audit before the documentation edits matched all 115 prior findings and fingerprints.
+- Restored channel, follow-up, tag, full-text retrieval, and chat-permission behavior. Fixed the documented types for four permission settings and the default for public note sharing. The environment reference still needs full semantic review.
+- The strict audit found **32 warnings, 0 errors, 18 notes, and 65 matching exact exceptions**. It validated 225 passed pairs and left 216 pending. All 166 behavior tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-41-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-41-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-41-pending.json`.
+
+### 2026-11-19 Azure identity and LDAP reviews
+
+- Reviewed three complete pairs, including one previously passed pair. Clarified the Entra token claim, Helm namespace use, and identity authentication. Removed duplicate bilingual labels without removing any setup step.
+- Recorded one exact exception for the corrected Open WebUI spelling in the Workload Identity prerequisites heading. No code or identifiers changed.
+- The strict audit found **32 warnings, 0 errors, 18 notes, and 65 matching exact exceptions**. It validated 225 passed pairs and left 216 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-40-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-40-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-40-pending.json`.
+
+### 2026-11-19 Vendor dispositions and History Search
+
+- Reviewed four complete pairs. Restored the OpenAI versus Ollama comparison, the vendor disposition formatting, and the file-drop instruction. Removed the unsupported claim that the opening search example used Python.
+- Kept GitHub Discussions as the troubleshooting support channel in place of the policy-excluded links, with two exact exceptions.
+- The strict audit found **36 warnings, 0 errors, 18 notes, and 64 matching exact exceptions**. It validated 223 passed pairs and left 218 pending. All 165 behavior tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-39-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-39-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-39-pending.json`.
+
+### 2026-11-19 Security policy and disposition reviews
+
+- Reviewed both complete pairs. Restored the security policy's separate issue and bug categories, reporting rationale, and confidentiality emphasis. Restored the disposition's disclosure rationale, URL reference in the prose, and section divider. Two exact exceptions record the omitted duplicate disclosure link; its original destination is still linked from the dated disclosure.
+- The strict audit found **43 warnings, 0 errors, 18 notes, and 62 matching exact exceptions**. It validated 219 passed pairs and left 222 pending. All 165 behavior tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-38-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-38-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-38-pending.json`.
+
+### 2026-11-19 Environment reference review
+
+- Restored six missing cross-references and the accompanying MFA, Helm, external extraction, and embedding behavior. Restored emphasis on 24 Oracle field labels. Removed one extra divider before OAuth without removing prose.
+- The strict audit found **54 warnings, 0 errors, 18 notes, and 60 matching exact exceptions**. It validated 217 passed pairs and left 224 pending. All 165 behavior tests and the production build passed.
+- Four findings in the environment reference still need review: emphasis, terminology counts, an extra Analytics cross-reference, and version or numeric claims. The reference has not passed semantic review.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-37-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-37-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-37-pending.json`.
+
+### 2026-11-19 Repeated identifier preservation
+
+- The verifier now credits exact extra code spans toward bare identifier counts without counting a required code span twice. Restored the omitted `WEBUI_URL` mention. The environment reference still needs full review.
+- The strict audit found **56 warnings, 0 errors, 18 notes, and 60 matching exact exceptions**. It validated 217 passed pairs and left 224 pending. All 165 behavior tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-36-final-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-36-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-36-pending.json`.
+
+### 2026-11-19 Hardening, chat, and speech reviews
+
+- Reviewed five complete pairs. Restored the required multi-replica migration sequence, the audit-log model field, the reply-entry conditions, and the recommendation for two-factor sign-in. Clarified terminal isolation, chat input commands, and the distinction between networking and file mounts.
+- Verified all 80 fenced blocks across the six focused pairs. Three exact exceptions cover the Hardening page's rendered anchor, a preserved filename formatted as code, and a Discord referral excluded by site policy.
+- The strict audit found **57 warnings, 0 errors, 18 notes, and 60 matching exact exceptions**. It validated 217 passed pairs and left 224 pending. All 164 behavior tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-35-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-35-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-35-pending.json`.
+
+### 2026-11-19 Plugin, terminal, and deployment reviews
+
+- Reviewed twelve complete pairs. Restored the Podman Quadlet sample to its numbered step, clarified the file-browser root's UI-only scope, and fixed omissions in several workflow examples. Verified all 35 fenced code bodies match upstream.
+- Corrected the Let's Encrypt guide's obsolete IP certificate claim using its official January 15, 2026 announcement. Kept the existing domain-based setup and all code unchanged. Four exact exceptions cover the verified differences in three Nginx guides.
+- Restored the plugin guide's page-serving heading and emphasis on cross-replica coordination and embedded icon data. The four edited plugin pairs pass focused checks and remain pending full review.
+- The strict audit found **66 warnings, 0 errors, 18 notes, and 57 matching exact exceptions**. It verified 212 passed pairs and left 229 pending. All 164 behavior tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-34-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-34-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-34-pending.json`.
+
+### 2026-11-19 OAuth and local cross-references
+
+- Corrected which party issues OAuth tokens, clarified the global trusted-client allowlist, and combined two equivalent links. The OAuth pair passed full review.
+- Kept the Chinese translation Beta notice and the local knowledge-sync and encrypted-storage references. Clarified that the backup cross-reference is about storage encryption, not SQLCipher support. Eight exact exceptions cover these differences and the policy-removed Discord referral on the intro page.
+- The strict audit found **74 warnings, 0 errors, 18 notes, and 53 matching exact exceptions**. It verified 200 passed pairs and left 241 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-31-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-31-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-31-pending.json`.
+
+### 2026-11-19 Search, extensibility, and integration reviews
+
+- Reviewed ten complete pairs across Apache Tika, Terminals, speech environment variables, Tailscale, web search, extensibility, and three CVE notices. Verified all 24 fenced code bodies against upstream.
+- Restored the web search diagnostic and clarified page fetching, workspace scope, and authentication. Fixed the direction of OpenAPI configuration and restored emphasis on access-control claims and search requirements. The agentic search table now identifies traditional RAG as Legacy mode, consistent with that page's Native-default instructions.
+- The inline scanner now jumps to candidate characters rather than walking ordinary prose one character at a time. Its full audit, including every finding fingerprint and review result, exactly matched the pre-change audit. All 164 behavior tests and the production build passed.
+- The strict audit found **86 warnings, 0 errors, 18 notes, and 45 matching exact exceptions**. It verified 199 passed pairs and left 242 pending.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-30-optimized-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-30-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-30-pending.json`.
+
+### 2026-11-19 Provider, terminal, and alternatives reviews
+
+- Corrected the Gemini and LiteLLM configuration labels, clarified Azure credential selection, and aligned the encrypted chat limits and Open Terminal setup. Restored the shared Open WebUI instance label in Tether. All five pairs passed review.
+- Restored the `ee/` license scope in the Onyx comparison row after reviewing the alternatives index. Its focused audit already had no warnings, so only the full review caught this omission.
+- Verified 11 exact exceptions for existing differences: equivalent OpenAI and Firefox links, the legacy Monitoring anchor, three editor directives, and Caddy's security-headers contents entry and product spelling. No checker rule changed.
+- The strict audit found **97 warnings, 0 errors, 19 notes, and 45 matching exact exceptions**. It verified 189 passed pairs and left 252 pending. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-28-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-28-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-28-pending.json`.
+
+### 2026-11-19 Kokoro-FastAPI guide
+
+- Restored the Docker Compose option and the generation-speed claim. Kept all code bodies unchanged. The pinned English guide cites CUDA 12.3 and 12.8 in different sections. The `v0.2.1` GPU Dockerfile uses a CUDA 12.4.1 runtime, which does not establish the minimum host driver. The pair remains pending.
+- The strict audit found **113 warnings, 0 errors, 20 notes, and 33 matching exact exceptions**. It validated 183 passed reviews and left 258 pending.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-25-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-25-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-25-pending.json`.
+
+### 2026-11-19 Kokoro Web guide review
+
+- Restored the API test command to its troubleshooting step without changing either code body. Corrected the guidance about voice mixes and localized the remaining link label.
+- Rechecked the full pair and recorded one exact exception for the four uses of the standard Open WebUI product spelling in place of upstream `OpenWebUI`.
+- The strict audit found **114 warnings, 0 errors, 20 notes, and 33 matching exact exceptions**. It validated 183 passed reviews. The production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-24-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-24-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-24-pending.json`.
+
+### 2026-11-19 Badge accessibility and platform spelling
+
+- Preserved the descriptive GitHub Sponsors badge alt text and the correct capitalization of Windows in the Azure CLI guide. Rechecked both full pairs and recorded two exact exceptions. Their previously passed reviews still match the same source and target bytes.
+- The strict audit found **115 warnings, 0 errors, 20 notes, and 32 matching exact exceptions**. It validated 182 passed reviews and left 259 pending.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-23-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-23-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-23-pending.json`.
+
+### 2026-11-19 Evidence quotation audit
+
+- Verified that all six remaining language warnings came from exact evidence quotations in the BaseFortify and INCIBE reports and the vendor quotation in CVE-2025-15603. Kept the quotations and added six exact exceptions. No language check was disabled, and the three pairs still need full semantic review.
+- The strict audit found **117 warnings, 0 errors, 20 notes, and 30 matching exact exceptions**. The verifier carried forward 182 passed pairs and left 259 pending.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-22-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-22-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-22-pending.json`.
+
+### 2026-11-19 Numeric warnings and semantic review
+
+- Restored the missing Pipe description, list nesting, and section breaks. Replaced inline retry history with the existing settings reference. Aligned the CVE disposition timeline, version wording, and emphasis. Both pairs passed full review.
+- Reviewed the email screenshot and kept the alt text that identifies five overdue items. The exact exception applies only to the added count. The previously passed review still matches the unchanged pair.
+- Restored the RAG cutoff behavior and corrected several environment setting descriptions. Application revision `abcebd7d0dada9119c8d32c18dd981e896151709`, as of the pinned docs snapshot, takes integer seconds at the Firecrawl web loader boundary and converts them to milliseconds for scraping. The reference's remaining discrepancies require full review.
+- The numeric verifier recognizes plural HTTP status codes in a narrow error context without accepting changed codes or treating elapsed seconds as status codes.
+- The full strict audit found **123 warnings, 0 errors, 20 notes, and 24 matching exact exceptions**. All 163 behavior tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-21-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-21-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-21-pending.json`.
+
+### 2026-11-19 HAProxy repair and semantic review
+
+- Verified all eight HAProxy code bodies against a source copy with only its broken fence delimiters repaired. The remaining differences are two explicit links to unchanged upstream URLs. Recorded nine exact exceptions for the existing repair and link markup.
+- Reviewed 14 more complete pairs. Restored the image troubleshooting menu emphasis and Unraid diagnostic grouping. Corrected comment notification direction and clarified terminal refresh and reset behavior.
+- Added `--reuse-review-config` for exception-only changes. The verifier checks the old config digest, reuses only unchanged passed pairs, and reruns the deterministic audit with the current config.
+- The full strict audit found **130 warnings, 0 errors, 20 notes, and 23 matching exact exceptions**. All 162 behavior tests and the production build passed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-20-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-20-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-20-pending.json`.
+
+### 2026-11-19 Chat imports, prompt versions, and migration guidance
+
+- Reviewed the complete chat import and workspace prompt pairs. Restored import behavior for missing or read-only folders and clarified which prompt edits create a version. All nine example code bodies match upstream.
+- Corrected migration startup behavior, restored the row-count thresholds, aligned the idempotency guidance with upstream, and moved the diagnostic example beneath its introduction. Restored emphasis in the skills and Okta guides. These pairs remain pending review.
+- The verifier now recognizes two coordinated deadlines that share an implicit unit. Regression tests cover changed and omitted units, changed values, and unrelated counts.
+- The full strict audit found **141 warnings, 0 errors, 20 notes, and 14 matching exact exceptions**. All 161 behavior tests and the production build passed. No exceptions changed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-19-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-19-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-19-pending.json`.
+
+### 2026-11-19 CVE notices and date verification
+
+- Localized the administrative prose in six CNA rejection notices while preserving advisory IDs and the nested vendor quotation. Kept the original evidence quotes in the BaseFortify and INCIBE reports. Restored omitted RBAC terminology and upstream formatting in the security docs.
+- Reviewed three complete CVE pairs. The date checker now compares two days that share a month and year as two complete dates. Tests cover equivalent formats and changed or missing days.
+- The full strict audit found **149 warnings, 0 errors, 20 notes, and 14 matching exact exceptions**. All 160 behavior tests and the production build passed. No exceptions changed.
+- Audit: `.agents/skills/translation-checker/.reports/goal-semantic-18-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-18-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-18-pending.json`.
+
+### 2026-11-19 HTTPS, Notion, and Firefox guide review
+
+- Reviewed six complete pairs and verified all 38 fenced code bodies match upstream. Restored the Notion connection ID guidance, OAuth recovery steps, and screenshot description. Aligned the proxy guides with upstream and kept the local Firefox link and Nginx lint directive.
+- The verifier now protects bare Windows drive-letter paths as whole literals. Regression tests cover paths containing protected terms and numbers, changed paths, and paths wrapped in backticks.
+- The full strict audit found **170 warnings, 0 errors, 20 notes, and 14 matching exact exceptions**. All 159 behavior tests and the production build passed. No exceptions changed.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-17-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-17-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-17-pending.json`.
+
+### 2026-11-19 License, landing pages, troubleshooting, and Edge TTS review
+
+- Reviewed five complete pairs and verified all 14 fenced code bodies match upstream. Updated the license guide's branding restrictions and restored its table. Restored the Features page's scaling explanation and corrected the Functions description.
+- Retained the homepage translation notice, knowledge-sync guidance, and community support link. Their intentional differences remain visible in the audit.
+- Fixed recognition of duration units in prose rates after a slash. Regression tests cover changed values, changed or omitted units, and protected URL/path literals.
+- The full strict audit found **179 warnings, 0 errors, 20 notes, and 14 matching exact exceptions**. The previous homepage callout exception no longer applies. All 158 behavior tests and the production build passed.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-16-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-16-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-16-pending.json`.
+
+### 2026-11-19 Azure, RAG, migration, and Valkey review
+
+- Reviewed five complete pairs and confirmed 25 fenced code bodies match upstream. Restored RAG links and default-mode tool behavior, aligned migration markup and Azure TTS settings, and synced stale guidance in Valkey and Azure Workload Identity.
+- The Azure Workload Identity terminology warning remains visible because the translation corrects `OpenWebUI` to `Open WebUI`. No exceptions changed.
+- The full strict audit found **189 warnings, 0 errors, 20 notes, and 15 exact exceptions**. All 157 behavior tests and the production build passed.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-15-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-15-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-15-pending.json`.
+
+### 2026-11-19 Advanced Workflows, Caddy, and Docker deployment review
+
+- Reviewed three complete pairs. Restored skill discovery, model attachment, and sharing requirements. Clarified Caddy domain configuration and Docker orchestrator recovery.
+- Kept Caddy's local contents link and its standardized Open WebUI spelling. Kept the editor lint directive on the Docker tab. Their warnings remain visible. No exceptions changed.
+- The full strict audit found **206 warnings, 0 errors, 20 notes, and 15 exact exceptions**. The production build passed.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-14-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-14-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-14-pending.json`.
+
+### 2026-11-19 OpenAPI integration, startup, and monitoring review
+
+- Reviewed five complete pairs. Removed a duplicated CORS passage, restored OpenAPI connection guidance and startup troubleshooting emphasis, and clarified monitoring and context-window terminology.
+- Recognized spelled-out zero in numeric comparisons and tested changed and repeated counts. The Monitoring warning remains visible because its legacy anchor is intentional. Confirmed the anchor renders in the production build.
+- The full strict audit found **207 warnings, 0 errors, 20 notes, and 15 exact exceptions**. All 157 behavior tests and the production build passed. No exceptions changed.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-13-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-13-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-13-pending.json`.
+
+### 2026-11-19 Notes and OpenAPI tool-server overview review
+
+- Reviewed both complete pairs. Restored the chat-based Notes editing workflow, audio controls, page-level tools, and PDF and page export behavior. Clarified the OpenAPI parser's JSON-to-YAML fallback.
+- Both pairs passed strict checks and hash-bound semantic review. The full audit found **216 warnings, 0 errors, 20 notes, and 15 exact exceptions**. No exceptions changed. The production build passed.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-12-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-12-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-12-pending.json`.
+
+### 2026-11-19 Events, Docling, and section overview review
+
+- Reviewed ten complete pairs. Restored the Event Functions settings path and clarified field redaction and onboarding timing. Kept Docling's worker threshold outside the configuration-key code span and distinguished two-letter from three-letter OCR language codes.
+- The verifier compares day labels by ordinal, without treating daily counts or durations as equivalent. The ten pairs passed strict checks with one informational note for a translated interface label.
+- The full strict audit found **222 warnings, 0 errors, 20 notes, and 15 exact exceptions**. All 156 behavior tests and the production build passed.
+- Report: `.agents/skills/translation-checker/.reports/goal-semantic-11-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-11-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-11-pending.json`.
+
+### 2026-11-19 HAProxy rendering review
+
+- Reconstructed the upstream fence boundaries in memory and verified all eight code bodies in order. The built Chinese page renders eight separate code blocks, the restored WebSocket/HTTP/2 heading, and both upstream link destinations.
+- The HAProxy semantic review passed. Its nine unwaived warnings reflect the merged upstream fence and explicit links for two upstream bare URLs. No exceptions changed.
+- The full strict audit remains at **224 warnings, 0 errors, 20 notes, and 15 exact exceptions**. Report: `.agents/skills/translation-checker/.reports/goal-semantic-10-audit.json`. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-10-results.json`. Pending pairs: `.agents/skills/translation-checker/.reports/semantic-review-10-pending.json`.
+
+### 2026-11-19 Image configuration, risk documentation, and Milvus review
+
+- Reviewed four complete pairs. Restored the deployment tradeoff in Accepted Risks, clarified how Open WebUI limits the effects of unpredictable model output, and kept the Milvus monitoring script verbatim.
+- Kept the Azure AI Foundry link labels descriptive. Their destinations match upstream; the Markdown-symbol warning remains visible because upstream uses bare URLs.
+- The full strict audit found **224 warnings, 0 errors, 20 notes, and 15 exact exceptions**. Report: `.agents/skills/translation-checker/.reports/goal-semantic-09-audit.json`.
+- Validated 124 reviews in `.agents/skills/translation-checker/.reports/semantic-review-batch-09-results.json`. The remaining 317 pairs are in `.agents/skills/translation-checker/.reports/semantic-review-09-pending.json`. The production build passed.
+
+### 2026-11-19 Workspace, audio, browser, and deployment guide review
+
+- Reviewed eight complete pairs. Restored file download and deletion behavior, corrected the speech-to-text extension allowlist instructions, and clarified browser fallback, desktop audio, and deployment guidance.
+- The verifier distinguishes explicitly localized calendar spans from durations while still checking both endpoints. The Azure CLI guide's Windows capitalization warning remains visible: upstream uses lowercase for the platform name.
+- The full strict audit found **230 warnings, 0 errors, 20 notes, and 15 exact exceptions**. Report: `.agents/skills/translation-checker/.reports/goal-semantic-08-audit.json`.
+- Validated 120 reviews in `.agents/skills/translation-checker/.reports/semantic-review-batch-08-results.json`. The remaining 321 pairs are in `.agents/skills/translation-checker/.reports/semantic-review-08-pending.json`. All 155 behavior tests and the production build passed.
+
+### 2026-11-19 Image, document, and troubleshooting guide review
+
+- Reviewed nine complete pairs. Restored folder deletion behavior for shared chats, corrected Mistral OCR request and indexing descriptions, and clarified the Intel GPU and custom CA guides.
+- Kept two accurate accessibility additions visible to the audit: the email screenshot shows five urgent items, and the sponsorship badge identifies GitHub Sponsors. Neither warning was exempted.
+- The full strict audit found **239 warnings, 0 errors, 20 notes, and 15 exact exceptions** across 441 counterparts. Report: `.agents/skills/translation-checker/.reports/goal-semantic-07-audit.json`.
+- Validated 112 reviews in `.agents/skills/translation-checker/.reports/semantic-review-batch-07-results.json`. The remaining 329 pairs are in `.agents/skills/translation-checker/.reports/semantic-review-07-pending.json`. The production build passed.
+
+### 2026-11-19 Deployment and connection guide review
+
+- Reviewed the Scaling, Kubernetes, OpenClaw, and OpenAI-Compatible guides in full. Restored troubleshooting links and deployment prerequisites, corrected the OpenClaw verification failure heading, and updated model labels and endpoint descriptions.
+- Fixed a numeric false positive: the checker no longer interprets a capitalized modal `May` as a month after a word that merely ends in a date preposition. Regression tests cover both ordinary headings and real dates.
+- The four guides passed strict checks and hash-bound semantic review. The full strict audit found **247 warnings, 0 errors, 20 notes, and 15 exact exceptions** across 441 counterparts. No exceptions changed. Report: `.agents/skills/translation-checker/.reports/goal-semantic-06-audit.json`.
+- Validated 103 reviews in `.agents/skills/translation-checker/.reports/semantic-review-batch-06-results.json`. The remaining 338 pairs are in `.agents/skills/translation-checker/.reports/semantic-review-06-pending.json`. All 154 behavior tests and the production build passed.
+
+### 2026-11-18 Provider connections and Docker Compose review
+
+- Compared four complete pairs. Restored the OpenAI connection steps and automatic Azure provider selection. Clarified ai& inference hosting, per-model ID entry, and Docker Compose GPU and volume behavior.
+- The four pages passed strict checks and semantic review. The full strict audit found **255 warnings, 0 errors, 20 notes, and 15 exact exceptions** across 441 counterparts. No verifier rules or exceptions changed. Report: `.agents/skills/translation-checker/.reports/goal-semantic-05-audit.json`.
+- Validated 99 current reviews in `.agents/skills/translation-checker/.reports/semantic-review-batch-05-results.json`. The remaining 342 pairs are in `.agents/skills/translation-checker/.reports/semantic-review-05-pending.json`. All 153 behavior tests and the production build passed.
+
+### 2026-11-18 Setup guide review
+
+- Reviewed 20 setup guides and tabs. Restored browser notification and webhook behavior, the model selector's default-model action, and the Anthropic connection settings. Clarified team access checks, context retention, and Python upgrade and data-storage guidance.
+- The focused strict audit passed with **0 errors, 0 warnings, and 5 exact exceptions** for policy-removed referrals in Essentials and Hermes Agent. Removing only those three referral items from a temporary upstream copy eliminated all five findings. No verifier rule changed.
+- The full strict audit found **257 warnings, 0 errors, and 15 exact exceptions** across 441 counterparts. Report: `.agents/skills/translation-checker/.reports/goal-semantic-04-audit.json`.
+- Validated 95 reviewed pairs in `.agents/skills/translation-checker/.reports/semantic-review-batch-04-results.json`. The remaining 346 pairs are in `.agents/skills/translation-checker/.reports/semantic-review-04-pending.json`. All 153 behavior tests passed.
+
+### 2026-11-18 Web search provider review
+
+- Reviewed all 28 provider guides and their category. Restored Brave's web-loader setting and shared HTTP session behavior, Yacy's required username, and chat search controls. Clarified SearXNG certificate mounts and Firecrawl's search timeout budget.
+- The provider audit passed with zero errors, warnings, or exceptions. The full strict audit found **276 warnings, 0 errors, and 10 exact exceptions** across 441 counterparts. No verifier rules or exceptions changed. Report: `.agents/skills/translation-checker/.reports/goal-semantic-03-audit.json`.
+- Validated 75 reviewed pairs in `.agents/skills/translation-checker/.reports/semantic-review-batch-03-results.json`. The 366 remaining pairs are in `.agents/skills/translation-checker/.reports/semantic-review-03-pending.json`. All 153 behavior tests passed.
+
+### 2026-11-18 Provider and proxy guide review
+
+- Strict audit covered **441/441 counterparts with 0 errors, 291 warnings, and 10 exact exceptions**. Strict mode exits 1. The largest remaining groups are terminology (113) and Markdown symbols (83). Report: `.agents/skills/translation-checker/.reports/goal-semantic-02-audit.json`.
+- Completed full review of the Linkup, vLLM, and Nginx Proxy Manager guides. Clarified the single Linkup JSON field and the Nginx timeout. Rechecked all eight Nginx code samples and the orphan CORS callout closer before refreshing four exact fingerprints. The remaining Nginx terminology recount stays visible.
+- Validated 48 reviewed pairs: `.agents/skills/translation-checker/.reports/semantic-review-batch-02-results.json`. The remaining 393 full pairs are in `.agents/skills/translation-checker/.reports/semantic-review-02-pending.json`.
+- **153 behavior tests passed**. The verifier recognizes localized AM/PM clocks, preserves open-duration bounds and units, and compares rendered ordered-list sequences without ignoring changed start numbers.
+
+### 2026-11-18 Semantic review and restored instructions
+
+- Strict audit covered **441/441 counterparts with 0 errors, 311 warnings, and 10 exact exceptions**. Strict mode exits 1. Report: `.agents/skills/translation-checker/.reports/goal-semantic-01-audit.json`.
+- Reviewed all 43 category pairs plus the Getting Started and iTerm2 pages for completeness, accuracy, fluency, and terminology. Preserved the localized category labels, stable audio category routes, and Channels ordering. Corrected the distinction between replicas and workers in Getting Started and clarified iTerm2 configuration.
+- Validated the 45 reviewed pairs against their source, target, and configuration hashes. Results: `.agents/skills/translation-checker/.reports/semantic-review-batch-01-results.json`. The remaining 396 source and target pairs are in `.agents/skills/translation-checker/.reports/semantic-review-pending.json`.
+- Restored memory setting persistence, audit-path behavior, Open Terminal isolation guidance, endpoint timeout concurrency, API passthrough warnings, and descriptive Jupyter image text.
+- All **151 behavior tests** passed. The production build passed with zero broken-link, broken-anchor, or duplicate-route diagnostics.
+
+### 2026-11-18 Section omissions and Markdown repairs
+
+- Strict audit covered **441/441 counterparts with 0 errors, 339 warnings, and 10 exact exceptions**. Strict mode still exits 1. The largest remaining groups are terminology (140) and Markdown symbols (86). Full report: `.agents/skills/translation-checker/.reports/goal-markdown.json`.
+- Restored 24 environment-variable descriptions, file deletion controls, Event Functions model-list events, terminal authentication steps, Ollama model filtering behavior, and Windows troubleshooting coverage. Repaired list nesting and localized accessibility text where the text was descriptive.
+- Protected OS and product names while excluding the common noun in “context windows.” The verifier compares equivalent year durations and pixel scales and keeps section-level terminology omissions and mention-count differences visible as warnings.
+- All **151 behavior tests** passed. The production build passed with zero broken-link, broken-anchor, or duplicate-route diagnostics. Full semantic review remains pending.
+
+### 2026-11-18 Direct translation cleanup and numeric verification
+
+- Strict audit: **441/441 counterparts, 0 errors, 457 warnings across 232 files, 10 exact exceptions**. Report: `.agents/skills/translation-checker/.reports/direct-final-audit.json`. Strict mode still exits 1.
+- Localized remaining English headings, setup labels, and accessibility text in reviewed sections. Removed a stale duplicate benchmark from the RAG guide; the upstream benchmark remains in its original section.
+- The verifier now compares equivalent pixel counts, percentile notation, and open token ranges. It still reports changed values, dropped units, and closed ranges that replace open ones. This pass added no exceptions.
+- **150 behavior tests passed**. The production build passed. Full semantic review remains pending.
+
+### 2026-11-18 Serial translation review and verifier fixes (historical)
+
+- Strict audit at this checkpoint: **441/441 counterparts, 0 errors, 680 warnings, 1 exact exception**. Report: `.agents/skills/translation-checker/.reports/goal-resume.json`.
+- Reviewed translation batches sequentially. Restored the model controls and version history, an omitted Functions guide entry, and calendar alert behavior. Fixed the audio environment-variable table and retained the monitoring guide's legacy anchor.
+- Normalized equivalent acronym plurals, calendar dates, explicit clock notation, and numeric ranges without changing code checks. No translated answers are embedded in the verifier.
+- All **138 behavior tests** and the production build passed. The remaining warnings still require review; semantic completeness is not certified.
+
+### 2026-11-18 Warning and exception cleanup, follow-up
+
+- Strict audit: **441/441 counterparts, 0 errors, 810 warnings, 1 exact exception**. Warnings still cause exit 1. Full report: `.agents/skills/translation-checker/.reports/warning-cleanup-final.json`.
+- Protected advisory IDs and product names. Normalized equivalent numeric notation and list markers without allowing changes to values, code, or parsed block structure.
+- Restored the OpenAI-compatible provider guide's connection verification and model ID details. Localized the community guide's video accessibility labels and fixed nested link indentation.
+- All **131 behavior tests** and the production build passed. This does not certify full semantic coverage.
+
+### 2026-11-18 Warning and exception cleanup
+
+- Strict audit: **441/441 counterparts, 0 errors, 951 warnings, 1 exact exception**. Warnings still cause exit 1. The remaining exception preserves the homepage's intentional translation-status notice. Four prior exceptions were replaced with scoped checks for source punctuation, UI labels, empty-string defaults, and terminology typos.
+- Localized 58 interface settings labels while retaining keys, default values, and anchors. That page has one numeric review warning, down from 44 warnings. The checker now compares equivalent English and Chinese date formats and reports one language finding per metadata value or heading.
+- **127 behavior tests passed**. The environment-reference audit took about 5.2 seconds locally, compared with 7.3 seconds before this pass. Full report: `.agents/skills/translation-checker/.reports/continuation-final-audit.json`.
 
 ### 2026-11-18 Verifier and translation repairs
 
-- Checked all 441 counterparts: **0 unwaived errors, 1,079 warnings, 5 exact exceptions**. Strict mode exits 1. All **120 behavior tests**, the Skill validator, and the production build passed. Local evidence: `test/.reports/optimized-audit.json`, `optimized-category-review.json` and `optimized-build.log` under the same reports directory.
+- Checked all 441 counterparts: **0 unwaived errors, 1,079 warnings, 5 exact exceptions**. Strict mode exits 1. All **120 behavior tests**, the Skill validator, and the production build passed. Local evidence: `.agents/skills/translation-checker/.reports/optimized-audit.json`, `optimized-category-review.json` and `optimized-build.log` under the same reports directory.
 - The checker now compares numeric defaults within the individual setting. It found two stale defaults: `MCP_INITIALIZE_TIMEOUT` is `10` seconds and `CHUNK_SIZE` is `1024`. The latter entry also lacked the instruction to reindex existing documents. Section checks now group prose in a single pass. A local environment-reference audit took 6.8 seconds versus 13.4 seconds before the change.
 - Corrected `PLAYWRIGHT_TIMEOUT` to `10000` milliseconds. The Firecrawl loader accepts positive integer seconds, then clamps the scrape payload to 1000–300000 milliseconds. Verified against `config.py`, `retrieval/web/utils.py`, and `retrieval/web/firecrawl.py` in `open-webui/open-webui@29b4af6b`.
 - Restored Firefox link confirmation and prompt-prefill behavior; confirmed the rendered heading and anchor without a verifier exception. Corrected stale banner descriptions, ecosystem instructions, Langfuse tutorial estimates, and task-management links. A clean build does not certify semantic accuracy.
@@ -35,15 +508,15 @@
 
 - The English submodule remains pinned at `3072f18`. The working tree updates 91 Chinese pages, including restored code and literals, corrected MCP and Open Terminal guidance, comparison metadata and FAQ translations, and Llama.cpp and vLLM connection instructions. DeepL supplied targeted corrections; translation agents ran one at a time.
 - The Firefox heading now renders the literal `browser.ml.chat.prompts.{#}` and keeps the `browsermlchatprompts` anchor. The Chinese HAProxy and Nginx Proxy Manager guides repair malformed upstream fences without changing the commands. Five whitespace-only Nginx code lines intentionally retain upstream bytes.
-- **117 behavior tests passed**. The production build passed. The full strict audit covered **441/441 counterparts: 0 unwaived errors, 1,094 warnings, 6 exact exceptions**. Strict mode still exits 1 because warnings remain. Reports: `test/.reports/review-checkpoint-audit.json` and `test/.reports/review-checkpoint-build.log`.
-- **74/441 pairs passed full semantic review**: 43 categories and 31 documents, including all 13 comparison pages. The ignored `test/.reports/review-progress.json` binds those results to source, target, and configuration hashes. `test/.reports/review-checkpoint-pending.json` contains the remaining 367 pairs. Do not treat the deterministic audit as a semantic pass.
+- **117 behavior tests passed**. The production build passed. The full strict audit covered **441/441 counterparts: 0 unwaived errors, 1,094 warnings, 6 exact exceptions**. Strict mode still exits 1 because warnings remain. Reports: `.agents/skills/translation-checker/.reports/review-checkpoint-audit.json` and `.agents/skills/translation-checker/.reports/review-checkpoint-build.log`.
+- **74/441 pairs passed full semantic review**: 43 categories and 31 documents, including all 13 comparison pages. The ignored `.agents/skills/translation-checker/.reports/review-progress.json` binds those results to source, target, and configuration hashes. `.agents/skills/translation-checker/.reports/review-checkpoint-pending.json` contains the remaining 367 pairs. Do not treat the deterministic audit as a semantic pass.
 - Issues at this checkpoint included missing Firefox confirmation and prefill details and contradictory upstream `FIRECRAWL_TIMEOUT` units. The later verifier and translation repairs above resolved these issues.
 
 ### 2026-11-18 Translation workflow acceptance
 
 - Standardized both providers on offline planning, protected prose extraction, full candidate review, and a strict audit and site build after apply. DeepL resumes saved responses and reuses validated, exact same-page segments. Autonomous mode requires no key. Reviews are bound to the audited file bytes; only passed reviews with matching source, target, and configuration hashes can be reused.
 - The offline DeepL plan for `alternatives/` and `reference/env-configuration.mdx` found **2,052 duplicate segments** across 14 files. No API request was needed for the estimate. No live provider calls or documentation changes were made during acceptance.
-- **114 offline behavior tests passed** on Python 3.14. The Skill validator and production build passed. Full strict audit: **441/441 counterparts, 80 errors, 1,202 warnings, 0 exceptions**. Matching counterparts include 398 pages and 43 category files. The strict audit still fails; no full semantic pass is claimed. The audit is in ignored `test/.reports/acceptance-audit-final.json`.
+- **114 offline behavior tests passed** on Python 3.14. The Skill validator and production build passed. Full strict audit: **441/441 counterparts, 80 errors, 1,202 warnings, 0 exceptions**. Matching counterparts include 398 pages and 43 category files. The strict audit still fails; no full semantic pass is claimed. The audit is in ignored `.agents/skills/translation-checker/.reports/acceptance-audit-final.json`.
 
 ### 2026-11-18 Translation repairs and focused verifier improvements
 
@@ -52,7 +525,7 @@
 - Preservation checks now reject changed code comments/strings, preserve all fence directives except prose titles, protect JSON-LD technical values, and check literal-only lines. Both translation providers receive prose fence titles; filename/path titles remain literal. Source-derived quoted diagnostics inside troubleshooting/error sections stay verbatim. No translations or bilingual answer tables are hard-coded in tests; fixtures use generated CJK characters.
 - Fixed demonstrated parser false positives involving dollar prices, bare-path sentence punctuation, keyword lists, backticked identifiers/product names, indented JSX children, and inline HTML examples. Broken upstream fence boundaries produce visible review signals when code comparison is unreliable; unrelated upstream parse defects never relax code preservation. No fingerprint exceptions were added.
 - Validation: **99 behavior tests passed**. Full audit: **441/441 counterparts, 79 errors, 1195 warnings, 0 exceptions**. The 89 edited documents have **0 errors and 289 heuristic warnings**. The full strict audit still fails; remaining findings need triage and cannot be treated as a semantic certification. Production build passes with zero broken-link, anchor, Markdown-link, or duplicate-route diagnostics.
-- Hash-bound full-pair semantic review passes for **20 edited authentication/enterprise pages**. The other **69 edited pages remain pending full semantic review** after translation agents encountered service-capacity errors. Subsequent retries ran sequentially as requested and also failed; no unfinished review was marked passed. Local audit and review artifacts are under ignored `test/.reports/`. No live DeepL requests were made.
+- Hash-bound full-pair semantic review passes for **20 edited authentication/enterprise pages**. The other **69 edited pages remain pending full semantic review** after translation agents encountered service-capacity errors. Subsequent retries ran sequentially as requested and also failed; no unfinished review was marked passed. Local audit and review artifacts are under ignored `.agents/skills/translation-checker/.reports/`. No live DeepL requests were made.
 - Updated `upstream-sync` and tooling documentation for the preservation rules and user-directed delegation/concurrency limits. The parent performs tooling, integration and verification when translation edits are assigned to sub-agents.
 
 ### 2026-11-17 Alternatives re-translation and verification refinements
@@ -82,7 +555,7 @@
 - Document suffixes are stripped completely when a destination is resolved. The previous code removed two characters instead of the matched suffix, which produced 40 false "missing destination" errors.
 - Fence metadata is compared by language only, so a translated `title="..."` no longer counts as changed fence metadata; an English fence title is reported as a warning. Upstream that writes a fence marker inside a code span is a warning rather than a failure, so a translation may repair the markup.
 - An interface label that upstream marks with a code span (`Settings`, `Admin Panel`, `Image Generation Engine`) may be translated, because the Chinese site shows a Chinese interface; that is a review signal. Identifiers, commands, paths, values and product names stay verbatim inside code spans.
-- `non_compliant_link_patterns` in `test/translation_config.json` lists the community links the project policy removes. A listed link may be absent from the translation, a translation that keeps one is reported as `non-compliant-link`, and a code span that exists only in the removed sentence disappears with it.
+- `non_compliant_link_patterns` in `.agents/skills/translation-checker/translation_config.json` lists the community links the project policy removes. A listed link may be absent from the translation, a translation that keeps one is reported as `non-compliant-link`, and a code span that exists only in the removed sentence disappears with it.
 - Validation: **81 behavior tests passed** on Python 3.14. Strict working-tree audit covered **441/441** files, reporting **182 errors, 1422 warnings, 0 exceptions** (down from 646 errors / 1365 warnings when the tooling landed and 272 errors after the first repair pass). The remaining findings are historical drift outside this pass and need triage, not blanket suppression. The strict audit still returns failure and semantic review remains **required**.
 
 ### 2026-11-17 Translation verification tooling
@@ -90,8 +563,8 @@
 - Added the Python suite under `test/`, including source-derived completeness/preservation checks, quality warnings, full-pair AI review bundles, and validation of hash-bound semantic review results.
 - Translation expectations are never hard-coded. Behavior tests use generated CJK text; only terminology and other literal exclusions are stored verbatim.
 - Added autonomous AI translation tasks requiring no configuration, plus optional DeepL mode requiring only `DEEPL_AUTH_KEY` in root `.env`. Both use protected placeholders and the same guarded apply path. No live translation requests were made.
-- Updated `.codex/skills/upstream-sync/SKILL.md` and fixed `AGENTS.MD` pointers for the user's `.github/` to `.codex/` skill/agent move.
-- Validation: **58 behavior tests passed** on Python 3.14. CI tests Python 3.10 and 3.14. Strict working-tree audit covered **441/441** files (398 documents and 43 categories), reporting **646 errors, 1365 warnings, 0 exceptions**. These include historical differences and possible intentional localization; they require triage, not blanket suppression. Reproduce with `python test/translation_check.py --strict --report test/.reports/full-audit.json`.
+- Updated `.agents/skills/upstream-sync/SKILL.md` and fixed `AGENTS.MD` pointers for the user's `.github/` to `.codex/` skill/agent move.
+- Validation: **58 behavior tests passed** on Python 3.14. CI tests Python 3.10 and 3.14. Strict working-tree audit covered **441/441** files (398 documents and 43 categories), reporting **646 errors, 1365 warnings, 0 exceptions**. These include historical differences and possible intentional localization; they require triage, not blanket suppression. Reproduce with `python .agents/skills/translation-checker/scripts/translation_check.py --strict --report .agents/skills/translation-checker/.reports/full-audit.json`.
 - The strict audit returns failure and semantic review remains **required**. No translation edits were made or included in the tooling task; earlier uncommitted document edits remain separate. All prior audit narrative below describes historical runs, not a new semantic certification.
 
 

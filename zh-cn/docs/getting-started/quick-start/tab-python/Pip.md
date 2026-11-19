@@ -9,7 +9,7 @@ Open WebUI 运行在 [http://localhost:8080](http://localhost:8080)。设置 `DA
 
 **提示找不到命令？** 请激活你安装时所用的环境；`open-webui` 命令位于该环境的 `bin` 目录下（Windows 上为 `Scripts`）。
 
-**需要尚未发布的修复？** PyPI 只提供已发布的版本。你可以在自己的安装旁边运行 Docker 的 `:dev` 镜像（并使用独立的数据卷），或按照[开发 Open WebUI](/getting-started/advanced-topics/development)所述从 `dev` 分支运行。从源码检出或 Git URL 安装会触发构建钩子，需要 Node.js 和 npm 来构建前端；PyPI 的 wheel 不需要。
+**需要尚未发布的修复？** PyPI 只提供已发布的版本。可以保留现有安装，另用独立的数据卷运行 Docker 的 `:dev` 镜像，或按[开发 Open WebUI](/getting-started/advanced-topics/development)中的说明从 `dev` 分支运行。从本地检出的源码或 Git URL 安装时，会触发构建钩子，需要 Node.js 和 npm 来构建前端；使用 PyPI 的 wheel 则不需要。
 
 
 ## 卸载 {#uninstall}

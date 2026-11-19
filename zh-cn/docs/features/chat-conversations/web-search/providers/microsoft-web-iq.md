@@ -23,7 +23,7 @@ title: "Microsoft Web IQ"
 
 ## 概述 {#overview}
 
-**Microsoft Web IQ** 是微软提供的一个网络搜索 API。将其与 Open WebUI 集成，可以让你的语言模型运行实时网络搜索，并根据当前来源进行回答。本指南将 Microsoft Web IQ 配置为网络搜索提供商。
+**Microsoft Web IQ** 是 Microsoft 提供的网络搜索 API。将其集成到 Open WebUI 后，语言模型可以实时搜索网络，并依据最新来源回答。本指南介绍如何把 Microsoft Web IQ 配置为网络搜索提供商。
 
 ## 前提条件 {#prerequisites}
 
@@ -41,7 +41,7 @@ title: "Microsoft Web IQ"
 
 1. 使用管理员账户登录 Open WebUI。
 2. 打开**设置 → 网络搜索**（管理员区域）。
-3. 开启**网络搜索**开关。
+3. 将**网页搜索**开关切换到**开启**状态。
 4. 从**网络搜索引擎**下拉菜单中选择 **microsoft_web_iq**。
 5. 将你的 API 密钥粘贴到 **Microsoft Web IQ API 密钥**字段。
 6. （可选）调整 **API 基础 URL** 和**语言**。

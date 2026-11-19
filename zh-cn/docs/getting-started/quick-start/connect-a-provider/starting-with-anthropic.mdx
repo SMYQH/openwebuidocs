@@ -8,10 +8,10 @@ title: "Anthropic（Claude）"
 
 Open WebUI 原生支持 **Anthropic 的 Claude 模型**，方式是使用其兼容 OpenAI 的端点。只需填入 API 密钥，就可以直接开始聊天——无需中间层、无需 pipe、无需额外配置。
 
-Open WebUI 会自动识别 Anthropic URL（任何包含 `api.anthropic.com` 的 URL），并为它们处理模型发现：原生模型列表使用 `x-api-key` 分页拿取，并被重塑为 OpenAI 列表格式。聊天请求本身则原样发送到 Anthropic 兼容 OpenAI 的 `/v1/chat/completions`，并使用 Bearer 认证。Open WebUI 还暴露了自己的 Anthropic Messages 端点 `/api/v1/messages`，对于连接在 `api.anthropic.com` 的情况，这些请求会在聊天流程之外原生转发到 `/v1/messages`。
+Open WebUI 会识别 Anthropic URL，即任何包含 `api.anthropic.com` 的 URL，并自动获取这些连接的模型。它使用 `x-api-key` 分页请求原生模型列表，并转换为 OpenAI 列表格式。聊天请求使用 Bearer 认证，原样发送到 Anthropic 兼容 OpenAI 的 `/v1/chat/completions`。Open WebUI 还提供自己的 Anthropic Messages 端点 `/api/v1/messages`。当连接指向 `api.anthropic.com` 时，这些请求绕过聊天处理流程，直接转发到 `/v1/messages`。
 
 :::warning Anthropic 兼容性声明
-Anthropic 官方说明其兼容 OpenAI 的 API 主要面向**评估与测试**，而不是生产负载。实际使用中，包括工具调用在内的能力都可以正常工作，但请留意这一官方定位。如果你需要 Claude 原生完整特性（PDF 处理、引用、extended thinking、prompt caching），Anthropic 建议使用其原生 `/v1/messages` API，可通过 [pipe function](/features/extensibility/plugin/functions/pipe) 或 [LiteLLM](https://docs.litellm.ai/) 这类代理接入。
+Anthropic 说明其兼容 OpenAI 的 API 用于**评估与测试**，不用于生产工作负载。实际使用中，包括工具调用在内的功能均可正常工作，但请留意官方的适用范围。如果需要完整的 Claude 原生功能（PDF 处理、引用、扩展思考和提示词缓存），Anthropic 建议使用原生 `/v1/messages` API。可以通过 [Pipe 函数](/features/extensibility/plugin/functions/pipe)或 [LiteLLM](https://docs.litellm.ai/) 等代理接入。
 :::
 
 ---
@@ -20,14 +20,14 @@ Anthropic 官方说明其兼容 OpenAI 的 API 主要面向**评估与测试**�
 
 1. 打开 [console.anthropic.com](https://console.anthropic.com/)。
 2. 创建账户或登录。
-3. 进入 **API 密钥**，生成新的 API 密钥。
+3. 进入 **API 密钥**，生成新密钥。
 
 ---
 
 ## 第 2 步：在 Open WebUI 中添加连接 {#step-2-add-the-connection-in-open-webui}
 
 1. 在浏览器中打开 Open WebUI。
-2. 进入 ⚙️ **管理面板** → **连接** → **OpenAI**。
+2. 在管理员区域打开**设置 > 连接**，找到**管理 OpenAI API 连接**列表。
 3. 点击 ➕ **添加连接**。
 4. 填写以下内容：
 

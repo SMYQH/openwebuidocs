@@ -14,8 +14,8 @@ pip install -U open-webui
 open-webui serve
 ```
 
-:::warning 多个 worker
-迁移会在每个进程启动时运行。如果你的 `UVICORN_WORKERS` 大于 `1`，请先以 `UVICORN_WORKERS=1` 启动新版本，等待迁移完成后再重启。不建议运行多于一个 worker；请改用[副本](/getting-started/advanced-topics/scaling#step-3-run-multiple-instances)进行扩容。
+:::warning 多个工作进程
+每个进程启动时都会运行迁移。如果 `UVICORN_WORKERS` 大于 `1`，请先以 `UVICORN_WORKERS=1` 启动新版本，等迁移完成后再重启。不建议运行多个工作进程；需要扩容时，请改用[副本](/getting-started/advanced-topics/scaling#step-3-run-multiple-instances)。
 :::
 
 有关版本固定、回滚和备份流程，请参见[完整更新指南](/getting-started/updating)。

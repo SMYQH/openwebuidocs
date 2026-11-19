@@ -15,7 +15,7 @@ title: "Langfuse"
 
 ## 如何将 Langfuse 集成到 Open WebUI {#how-to-integrate-langfuse-with-open-webui}
 
-该集成是一个运行在 Open WebUI 内部的[过滤器函数](/features/extensibility/plugin/functions/filter)。它的 `inlet` 在消息发往模型时启动一次 Langfuse 生成（generation），`outlet` 则在回复结束后用回复内容及其 token 计数完成这次生成。
+该集成是一个运行在 Open WebUI 内部的[过滤器函数](/features/extensibility/plugin/functions/filter)。消息发往模型时，`inlet` 会在 Langfuse 中开始一条生成记录（generation）。回复结束后，`outlet` 会填入回复内容和 token 计数，并结束记录。
 
 ## 快速开始 {#quick-start-guide}
 
@@ -157,11 +157,11 @@ class Filter:
    - **所有模型**：打开过滤器的 **⋮** 菜单并开启 **全局**。
    - **指定模型**：前往 **工作区 > 模型**，编辑某个模型，并在 **过滤器** 下添加 Langfuse 过滤器。
 
-过滤器会在第一次被追踪的回复时连接 Langfuse。如果之后修改了 **Host** 或 **Secret Key** 而 **Public Key** 保持不变，请重启 Open WebUI 以使改动生效。
+过滤器会在首次追踪模型回复时连接 Langfuse。如果之后修改了 **Host** 或 **Secret Key** 而 **Public Key** 保持不变，请重启 Open WebUI 以使改动生效。
 
 :::note
 
-大多数兼容 OpenAI 的服务商只有在被要求时才会报告流式回复的 token 计数。请为每个你想获取 token 计数与成本统计的模型开启 **Usage** 能力，参见[能力与绑定](/features/workspace/models#capabilities-and-bindings)。
+大多数兼容 OpenAI 的提供商只在请求明确要求时才会返回流式回复的 token 计数。要获取某个模型的 token 计数和成本，请为该模型开启 **Usage** 能力。参见[能力与绑定](/features/workspace/models#capabilities-and-bindings)。
 
 :::
 
@@ -169,10 +169,10 @@ class Filter:
 
 与任何启用了该过滤器的模型对话，然后在 Langfuse 中打开你的项目：
 
-- 每次对话都是一条名为 **Open WebUI chat** 的追踪，带有 `open-webui` 标签。
-- 该对话中的每次模型回复都是一次名为 **chat-reply** 的生成，发送的消息作为输入，回复作为输出，并记录 token 用量与延迟。
-- 生成的模型为模型 ID。对于工作区模型，它是所基于的基础模型的 ID，这样 Langfuse 才能把它匹配到自己的价目表。用户选择的模型名称则记录在生成的元数据中。
-- 用户是 Open WebUI 用户的邮箱地址，会话是对话 ID，因此 Langfuse 可以按对话和按人员归拢回复。
+- 每个聊天对应一条名为 **Open WebUI chat** 的追踪，带有 `open-webui` 标签。
+- 聊天中的每次模型回复对应一条名为 **chat-reply** 的生成记录。发给模型的消息作为输入，回复作为输出，同时记录 token 用量与延迟。
+- 生成记录的模型字段保存模型 ID。对于工作区模型，该字段保存其基础模型的 ID，以便 Langfuse 匹配价目表。用户选择的模型名称保存在生成记录的元数据中。
+- 用户字段记录 Open WebUI 用户的邮箱地址，会话字段记录聊天 ID。Langfuse 可以据此按聊天和用户归组回复。
 
 只要 [`ENABLE_API_OUTLET_FILTERS`](/reference/env-configuration#enable_api_outlet_filters) 处于开启状态（默认开启），对 Open WebUI API 的直接调用同样会被追踪，每次调用一条追踪。
 

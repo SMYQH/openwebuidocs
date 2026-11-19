@@ -5,7 +5,7 @@ title: "外部文档提取"
 
 # 外部文档提取 {#external-document-extraction}
 
-内置引擎（Tika、Docling、Mistral OCR 等）可以覆盖大多数情况，但有时它们一个都不合适：你有自有的 OCR 工具、已经付费的云端提取 API、重到更适合单独跑在专用 GPU 或大内存机器上（而不是 Open WebUI 服务器上）的提取负载，或者有合规要求，需要在文本到达 Open WebUI 或模型之前先脱敏 PII。为这些场景，**external**（外部）引擎会把文档提取完全交给一个由你自己编写并运行的 HTTP 服务。
+内置引擎（Tika、Docling、Mistral OCR 等）适用于大多数情况，但有些场景需要其他方案。例如，你已有专有 OCR 工具或付费的云端提取 API，希望将重负载转移到配有专用 GPU 或大内存的机器，而不是占用 Open WebUI 服务器，或因合规要求需要在文本到达 Open WebUI 或模型前对 PII 脱敏。**external**（外部）引擎可将文档提取完全交给你自己编写和运行的 HTTP 服务。
 
 因为这个服务由你掌控，它内部发生的事情也由你掌控。这带来了几种可能性，下面会详细说明：
 
@@ -20,7 +20,7 @@ title: "外部文档提取"
 在 **Settings > Documents**（管理员区域） 中把 **Content Extraction Engine** 设为 **External**，然后填写：
 
 - **Document Loader URL**：你的服务的基础 URL。Open WebUI 会在其后追加 `/process`。
-- **API Key**：以 bearer 令牌形式发送。这是必填项。当引擎设为 External 但没有保存密钥时，Open WebUI 会悄悄回退到内置加载器、永远不会调用你的服务，而管理面板也不会就此发出警告。
+- **API Key**：必填。密钥以 Bearer 令牌的形式发送。选择 External 后若未保存密钥，Open WebUI 会退回内置加载器，不会调用你的服务，管理面板也不会提示。
 - **Headers**（可选）：一个 JSON 对象，列出每次请求要额外发送的请求头，参见下方的[模板机制](#the-contract)。如果它不是有效的 JSON 对象，即使当前选中了其他引擎，**Save** 也会提示 `Headers must be a valid JSON object` 并且什么都不保存。请切回 **External** 来修正或清空该字段。
 
 同样的设置也可以通过环境变量提供：[`CONTENT_EXTRACTION_ENGINE=external`](/reference/env-configuration#content_extraction_engine)、[`EXTERNAL_DOCUMENT_LOADER_URL`](/reference/env-configuration#external_document_loader_url)、[`EXTERNAL_DOCUMENT_LOADER_API_KEY`](/reference/env-configuration#external_document_loader_api_key)、[`EXTERNAL_DOCUMENT_LOADER_HEADERS`](/reference/env-configuration#external_document_loader_headers)。
@@ -35,12 +35,12 @@ PUT {EXTERNAL_DOCUMENT_LOADER_URL}/process
 
 - **请求体**：未经修改的原始文件字节。
 - **`Content-Type`**：检测到的文件 MIME 类型。
-- **`Authorization`**：如果配置了 API key，则为 `Bearer {EXTERNAL_DOCUMENT_LOADER_API_KEY}`。
+- **`Authorization`**：如果配置了 API 密钥，则为 `Bearer {EXTERNAL_DOCUMENT_LOADER_API_KEY}`。
 - **`X-Filename`**：已存储的文件名 `<file id>_<original name>`，经过 URL 编码。在自定义请求头中使用 `{{FILE_NAME}}` 占位符，即可单独收到原始名称。
 - 在 **Headers** / [`EXTERNAL_DOCUMENT_LOADER_HEADERS`](/reference/env-configuration#external_document_loader_headers) 中设置的任何请求头，一个带占位符模板的自定义请求头 JSON 对象：`{{FILE_ID}}`、`{{FILE_NAME}}`、`{{FILE_CONTENT_TYPE}}`、`{{USER_ID}}`、`{{USER_NAME}}`、`{{USER_EMAIL}}`、`{{USER_ROLE}}`、`{{USER_GROUPS}}`、`{{USER_GROUP_IDS}}`。
 - 自动转发的用户身份：若设置了 [`FORWARD_USER_INFO_HEADER_JWT_SECRET`](/reference/env-configuration#forward_user_info_header_jwt_secret)，则以签名 JWT 的形式放在 `X-OpenWebUI-User-Jwt` 中；否则使用普通的 `X-OpenWebUI-User-Name`、`X-OpenWebUI-User-Id`、`X-OpenWebUI-User-Email` 和 `X-OpenWebUI-User-Role` 请求头。
 
-你的服务应以 `2xx` 和一个 JSON 请求体回应，可以是单个对象，也可以是对象列表：
+你的服务应返回 `2xx` 状态码及 JSON 响应体。响应体可以是单个对象，也可以是对象列表：
 
 ```json
 {
@@ -49,7 +49,7 @@ PUT {EXTERNAL_DOCUMENT_LOADER_URL}/process
 }
 ```
 
-返回列表会为每个条目生成一个独立的 Document。这正是把一次上传拆分成多个可检索片段的方式——每个条目对应一张表、一页或一张幻灯片，而不是一个巨大的整体。非 2xx 的响应，或没有内容的响应，都会导致提取失败，并向用户显示一个错误。
+如果返回列表，每个条目会生成一个可独立检索的 Document。这样就可以将一次上传拆分成多个片段，例如每张工作表、每页或每张幻灯片各占一个条目，而不是返回一个巨大的整体。非 2xx 响应或不含内容的响应都会导致提取失败，并向用户显示错误。
 
 ## 最小示例 {#minimal-example}
 

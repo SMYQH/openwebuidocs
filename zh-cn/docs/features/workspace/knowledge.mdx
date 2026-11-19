@@ -1,14 +1,14 @@
 ---
 sidebar_position: 4
-title: "知识库"
-sidebar_label: "知识库"
+title: "知识库与文档对话"
+sidebar_label: "知识"
 description: "向知识库上传文档、就其内容提问，并在 Open WebUI 中选择检索与共享方式。"
 ---
 
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# 📚 知识库 {#knowledge}
+# 📚 知识库与文档对话 {#knowledge}
 
 <ThemedImage
   alt="工作区知识库：托盘里的书，其中一本被拉出一半"
@@ -19,13 +19,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
 />
 
-**让您的 AI 访问文档，并找到最相关的内容。**
-
-知识库是您存储 AI 可以搜索、阅读和推理的文件和集合的地方。上传 PDF、电子表格、代码或任何基于文本的文档。围绕项目、团队或主题构建集合。当模型需要答案时，它会从您的知识库中提取，而不是靠猜测。文档内容在哪里被处理，取决于你使用的提取引擎、嵌入模型和模型提供商；参见[对话数据隐私与加密](/security/chat-data-privacy-and-encryption)。
-
-与将全部内容注入每条消息的[笔记](/features/notes)不同，知识库使用检索（RAG）按需找到相关片段。这使其成为注入所有内容会超出上下文窗口的大型文档集的正确选择。
-
----
+使用知识库即可就 Open WebUI 中的 PDF、文档和其他文件提问。上传文件，把知识库附加到模型或对话中，然后提出问题。文档内容在哪里被处理，取决于你的提取引擎、嵌入模型和模型提供商；参见[对话数据隐私与加密](/security/chat-data-privacy-and-encryption)。
 
 ## 提出第一个文档问题 {#ask-your-first-document-question}
 
@@ -65,15 +59,13 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 为什么使用知识库？ {#why-knowledge}
 
----
-
 ### 您的文档变得可由 AI 搜索 {#your-documents-become-searchable-by-ai}
 
 上传一批合同、技术规格或研究论文。AI 按语义而非仅仅关键词搜索它们，并引用答案的来源。
 
 ### 满足不同需求的两种检索模式 {#two-retrieval-modes-for-different-needs}
 
-选择**专注检索**（RAG）让 AI 高效搜索大型文档集，或选择**全文上下文**在精度重要时逐字注入整个文档。
+选择**使用聚焦检索**（RAG）让 AI 高效搜索大型文档集，或选择**使用完整文档**在精度重要时逐字注入整个文档。
 
 ### 通过原生函数调用自主探索 {#autonomous-exploration-with-native-function-calling}
 
@@ -113,7 +105,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 检索模式 {#retrieval-modes}
 
-将文件或知识库附加到模型时，点击已附加项在两种模式之间切换：
+将文件或知识库附加到模型时，点击已附加项在**使用聚焦检索**和**使用完整文档**之间切换：
 
 ![知识库列表](/images/workspace/knowledge-list.png)
 
@@ -137,9 +129,9 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 智能体知识工具 {#agentic-knowledge-tools}
 
-![知识库内的文件，带搜索和排序](/images/workspace/knowledge-detail.png)
-
 启用[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)后，模型使用 **Knowledge Base** 工具类别中的内置工具与您的知识库（下文简称 KB）交互。显示哪些工具取决于是否附加了知识，详见[范围访问](#scoped-access-keeps-things-organized)。
+
+![知识库内的文件，带搜索和排序](/images/workspace/knowledge-detail.png)
 
 | 工具 | 已附加知识 | 未附加任何内容 | 说明 |
 |------|:-----------:|:--------------:|-------------|
@@ -152,7 +144,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | `grep_knowledge_files` | ✅（仅已附加） | ✅（全部） | 在知识库文件中进行精确文本/正则搜索（返回带行号的匹配行；自动检测正则如 `error\|warn`） |
 | `view_file` | 附加了知识库或文件时 | ❌ | 分页读取文件内容（`offset`/`max_chars`）或按行号范围（`start_line`/`end_line`，可选 `line_numbers`）读取 |
 | `view_knowledge_file` | 附加了知识库或文件时 | ✅ | 从任何可访问的知识库读取文件内容 |
-| `display_file` | 附加了知识库或文件时 | ✅ | 在聊天中以inline 方式向用户展示某个文件，可选择展示到某一页或某一张幻灯片 |
+| `display_file` | 附加了知识库或文件时 | ✅ | 在聊天中以内联方式向用户展示某个文件，可选择展示到某一页或某一张幻灯片 |
 | `view_note` | 附加了笔记时 | ❌ | 读取一条笔记 |
 
 模型会被告知附加了什么：你的消息之后会附带一个隐藏的 `list_attached_knowledge` 工具结果，其中以 `<attached_knowledge>` 列表给出模型和文件夹的条目及其 ID，每条消息也会列出附加给它的条目。模型用这些 ID 分页查看某个知识库的文件清单，或把文件名搜索限制在单一知识库内。使用 `query_knowledge_files` 的内容搜索会在一次排序中覆盖所有已附加的知识，并返回其中得分最高的分块，因此来自不同知识库的分块会争夺同一批结果位次。
@@ -253,7 +245,7 @@ find docs/ "*.md" | head -10
 - 模型仍保留 `query_knowledge_files` 用于语义搜索；在字面命令无法找到改写后的概念时使用。
 - 构建于目录模型之上——`kb_exec` 是唯一完整体现 UI 中创建的目录结构的工具。
 
-自主探索在能够智能链接搜索、浏览和综合的前沿模型上效果最佳。较小的模型可能难以处理多步检索。管理员可以在**Settings > Models > Edit > Builtin Tools**（管理员区域）中按模型禁用 **Knowledge Base** 工具类别（对自己的模型则使用 **Workspace > Models**）。
+自主探索在能够智能串联搜索、浏览和综合的前沿模型上效果最佳。较小的模型可能难以处理多步检索。管理员可以在**Settings > Models > Edit > Builtin Tools**（管理员区域）中按模型禁用 **Knowledge Base** 工具类别（对自己的模型则使用 **Workspace > Models**）。
 
 #### 在混合知识库之间引导工具选择 {#guiding-tool-choice-across-mixed-knowledge-bases}
 
@@ -276,7 +268,7 @@ find docs/ "*.md" | head -10
 
 1. **添加系统提示词指令**，告诉模型使用 `list_knowledge` 和 `query_knowledge_files`。
 2. **用[知识库故障排查](/troubleshooting/rag#13-knowledge-base-attached-to-model-not-working)检查模型的工具能力和检索设置**。保持原生模式开启，并使用能可靠调用工具的模型。
-3. **对于小文档，在聊天中以全文上下文模式附加它**，并开启模型的 **Preload files** 能力，这样它的完整文本会被注入。附加到模型或文件夹上的知识在原生函数调用下永远不会被注入。
+3. **对于小文档，在聊天中以使用完整文档模式附加它**，并开启模型的 **Preload files** 能力，这样它的完整文本会被注入。附加到模型或文件夹上的知识在原生函数调用下永远不会被注入。
 :::
 
 ---
@@ -329,29 +321,30 @@ find docs/ "*.md" | head -10
 - **搜索文件内容**：同时匹配文件内部的索引文本。超大文件会按字符上限搜索（[`RAG_FILE_CONTENT_SEARCH_MAX_CHARS`](/reference/env-configuration#rag_file_content_search_max_chars)）。
 - **全部**、**由你创建** 或 **与你共享**：按文件的添加者筛选列表。
 - **名称**、**创建时间** 或 **更新时间**，以及**升序** 或 **降序**：排序方式。默认是**更新时间**，最新的在前。
+
 ### 组织为目录 {#organizing-into-directories}
 
-知识库支持嵌套的**目录**，让大型文档集保持可导航。从**添加内容**菜单（**+ 新建目录**）创建，然后自由重组。
+知识库支持嵌套的**目录**，让大型文档集保持可导航。从**添加内容**菜单（**新建目录**）创建，然后自由重组。
 
 **创建与导航**
 
-- **+ 新建目录** 位于**添加内容**菜单中，与文件上传并列。同一父目录下强制名称唯一——两个同级不能同名，但不同父目录下可以重用名称。
-- 点击目录可进入下一层；视图顶部的**面包屑导航**始终反映当前路径，可一键跳回任意上级。
+- **新建目录** 位于**添加内容**菜单中（搜索框旁边的 **+** 按钮），该菜单还提供**上传文件**、**上传目录**、**同步目录**、**添加网页**、**添加文本内容**和**重置**（会移除知识库中的每个文件）。在新行中输入名称并按 Enter。名称在同一父目录下必须唯一：两个同级目录不能同名，但可以在不同父目录下重用名称。
+- 点击目录可以在树中展开或折叠它。目录行上的三点菜单可以直接向该目录添加内容：**新建文件夹**、**上传文件**、**上传目录**、**添加文本内容**和**添加网页**。
 - 目录可以**重命名**或**移动到其他父目录**，里面的文件不受影响。
 
 **拖放**
 
 你可以通过拖放来移动条目：
 
-- **文件** 可以拖到目录行上、打开目录的空白区域上，或任意面包屑上（包括根面包屑，可将文件送回顶层）。
-- **目录** 可以拖到另一个目录上以嵌套，或拖到面包屑上以向上移动。把目录移入自身或其后代会被服务端阻止。
+- **文件** 可以拖到目录行上，或拖到树顶部的**全部文件**标签上，以把文件送回顶层。
+- **目录** 可以拖到另一个目录上以嵌套，或拖到**全部文件**上以移到顶层。把目录移入自身或其后代会被服务端阻止。
 
 **删除语义**
 
-删除非空目录时会提示如何处理其中的内容：
+删除目录会打开一个标题为**删除目录？**的对话框，其中只有一个复选框**删除该目录内的全部内容**：
 
-- **将文件移到父目录**（默认）—— 目录被移除，但其文件和子目录会上移一层。
-- **删除全部** —— 永久删除该目录及其下所有文件和子目录。
+- 勾选（默认）：目录、其子目录以及其中的每个文件都会从知识库中移除。
+- 不勾选：目录及其子目录会被移除，其中的每个文件（无论在多深的层级）都会移动到被删除目录的父目录（或顶层）。
 
 **对检索和工具的影响**
 
@@ -377,7 +370,7 @@ find docs/ "*.md" | head -10
 - 隐藏文件和文件夹（以 `.` 开头的任何内容）会被跳过。
 - 本地修改过的文件会以新的内容哈希上传；旧的文件条目会从知识库中移除并替换。
 - 本地删除的文件会在清理步骤中从知识库中删除。
-- 该操作对未修改的文件是**非破坏性**的。早期版本中的相同菜单操作曾会清空并重新上传所有内容——自 v0.9.6 起已不再如此。
+- 该操作对未修改的文件是**非破坏性**的。
 
 对于编程使用，相同的工作流通过下方的[API 访问](#api-access)中两个端点暴露。
 
@@ -395,7 +388,7 @@ find docs/ "*.md" | head -10
 
 **文件**
 
-- `POST /api/v1/files/` — 上传文件（注意[文件数量上限](#file-limits)）。在上传元数据中传入 `knowledge_id`（可选 `directory_id`）会让后端**在服务端自动关联并处理该文件到指定知识库**——等价于随后调用 `POST /api/v1/knowledge/{id}/file/add`，但不依赖上传后客户端保持连接。这是推荐的单次调用路径（v0.9.6 引入，修复了上传者中途断开导致文件未关联的问题）。服务端会将上传字节做 SHA-256 哈希存入 `file.meta.file_hash`；客户端可以预先计算并通过元数据传入 `file_hash` 以跳过服务端哈希（增量同步流程会用到）。
+- `POST /api/v1/files/` — 上传文件。在上传元数据中传入 `knowledge_id`（可选 `directory_id`）会让后端**在服务端自动关联并处理该文件到指定知识库**——等价于随后调用 `POST /api/v1/knowledge/{id}/file/add`，但不依赖上传后客户端保持连接。这是推荐的单次调用路径。服务端会将上传字节做 SHA-256 哈希存入 `file.meta.file_hash`；客户端可以预先计算并通过元数据传入 `file_hash` 以跳过服务端哈希（增量同步流程会用到）。
 - `GET /api/v1/files/{id}/process/status` — 检查处理状态。`completed` 表示索引以及任何知识库关联都已完成。
 - `POST /api/v1/files/{id}/rename` — 重命名文件
 - `GET /api/v1/files/{id}/content` — 下载原始文件。对于仅以文本形式存储的文件，返回 404 和 `Original file is unavailable.`。
@@ -414,7 +407,7 @@ find docs/ "*.md" | head -10
 - `POST /api/v1/knowledge/{id}/dirs/{dir_id}/update` — 重命名或重新归属目录（body：`name` 和/或 `parent_id`）
 - `DELETE /api/v1/knowledge/{id}/dirs/{dir_id}/delete?move_files=true` — 删除目录。`move_files=true`（默认）时，目录内文件会上移；`move_files=false` 时，连同目录一起被删除。
 
-**增量目录同步**（v0.9.6 引入）
+**增量目录同步**
 
 - `POST /api/v1/knowledge/{id}/sync/diff` — 提交本地清单（`manifest: [{path, filename, checksum}]`，其中 `checksum` 是文件字节的 SHA-256），返回 `{added, modified, deleted, mkdir, rmdir, unmodified_count}` 描述要上传、替换、删除的内容，以及要创建/移除的目录。只读——不会修改知识库。不到一小时前上传到该知识库、且仍处于待处理或处理中的文件，在其路径、名称和校验和都匹配时会被计为未修改，因此第二次同步不会重复上传它；满一小时后它会再次被提供上传。
 - 在按 diff 操作后（创建 `mkdir` 路径，通过 `POST /api/v1/files/` 上传 `added` + `modified` 文件并附带哈希），调用：
@@ -444,7 +437,7 @@ find docs/ "*.md" | head -10
 
 ### 全文上下文模式的上下文窗口 {#context-window-with-full-context-mode}
 
-“使用整个文档”会注入全文。将大型文档附加到上下文窗口较小的模型，将会挤占对话历史。
+“使用完整文档”会注入全文。将大型文档附加到上下文窗口较小的模型，将会挤占对话历史。
 
 ### API 上传的处理延迟 {#processing-delay-for-api-uploads}
 
@@ -452,4 +445,4 @@ find docs/ "*.md" | head -10
 
 ### 原生函数调用改变行为 {#native-function-calling-changes-behavior}
 
-启用原生函数调用会改变知识库的工作方式。如果你的知识库突然停止产出结果，请检查全局模型默认值中是否设置了 `function_calling: native`。详情请参阅[知识库故障排查](/troubleshooting/rag#13-knowledge-base-attached-to-model-not-working)。
+原生函数调用是默认模式。它不会自动注入已附加的知识库，因此模型必须调用知识工具来检索它们。详情请参阅[知识库故障排查](/troubleshooting/rag#13-knowledge-base-attached-to-model-not-working)。

@@ -5,13 +5,13 @@ title: "Mistral OCR"
 
 :::warning
 
-本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。欢迎贡献更多内容，可查看 contributing 教程。
+本教程来自社区贡献，并非 Open WebUI 官方支持内容。它仅作为演示，说明如何按你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 
 :::
 
 ## Mistral OCR {#mistral-ocr}
 
-本文提供一个逐步指南，说明如何将 Mistral OCR 集成到 Open WebUI 中。Mistral OCR 是一个光学字符识别库，专门用于从多种基于图像的文件格式中提取文本——包括扫描版 PDF、图片和手写文档——并转换为 JSON 或纯文本等结构化数据。它支持多语言文本识别、版面分析与手写内容理解，能够以强大且可定制的方式简化 AI 文档搜索、总结与数据提取流程。
+本指南逐步介绍如何将 Mistral OCR 集成到 Open WebUI 中。Mistral OCR 是一个光学字符识别库，可从扫描版 PDF、图片和手写文档等基于图像的文件中提取文本，并输出为 JSON 或纯文本。Mistral OCR 支持多语言文本识别、版面分析和手写内容识别，并通过功能丰富、可定制的界面简化文档的数字化和处理，供搜索、摘要和数据提取等 AI 应用使用。
 
 ## 前提条件 {#prerequisites}
 
@@ -44,7 +44,7 @@ title: "Mistral OCR"
 
 ### 可选：以 Base64 发送 PDF {#optional-send-pdfs-as-base64}
 
-默认情况下，Open WebUI 会先把 PDF 上传到 Mistral 的文件存储，然后对其运行 OCR。在 **设置 → 文档**（管理员区域） 中开启 **Use Base64**（或设置 [`MISTRAL_OCR_USE_BASE64=true`](/reference/env-configuration#mistral_ocr_use_base64)）后，PDF 会改为以 **base64 data URL** 的形式**内联在单个请求中**发送，从而跳过分步上传。这在代理或隔离网络环境中很有用，也能在上传步骤失败时派上用场；代价是单个请求会更大。
+默认情况下，Open WebUI 会先把 PDF 上传到 Mistral 的文件存储，再对其运行 OCR。在管理员区域的**设置 → 文档**中开启 **Use Base64**（或设置 [`MISTRAL_OCR_USE_BASE64=true`](/reference/env-configuration#mistral_ocr_use_base64)）后，PDF 会**以 Base64 数据 URL 的形式内联**在单个请求中发送，省去单独的上传步骤。这对使用代理、隔离网络或上传失败的情况有帮助，代价是单个请求会变大。
 
 ### 可选：选择 OCR 模型 {#optional-choose-the-ocr-model}
 
@@ -52,7 +52,7 @@ title: "Mistral OCR"
 
 ### 会发送什么，以及失败时会发生什么 {#what-is-sent-and-what-happens-on-failure}
 
-Open WebUI 只把 `.pdf` 上传发送给 Mistral OCR。其他所有文件类型（包括图片）都走内置的加载器。OCR 调用失败并不会导致上传失败：文件会带着一个内容为 `Error during processing: ...` 的分块完成索引，因此当某个文档看起来已经处理过、却没有返回有用内容时，请检查该文件的提取内容。
+Open WebUI 只把上传的 `.pdf` 文件发送给 Mistral OCR。包括图片在内的其他文件类型都通过内置加载器处理。OCR 调用失败不会导致上传失败：文件仍会被索引，但只有一个内容为 `Error during processing: ...` 的分块。如果文档看似已经处理却没有返回有用内容，请检查提取结果。
 
 ## 验证 Mistral OCR {#verifying-mistral-ocr}
 

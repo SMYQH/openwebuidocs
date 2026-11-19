@@ -10,7 +10,7 @@ title: "Tailscale"
 [Tailscale](https://tailscale.com) 会在你的设备之间建立一个基于 WireGuard 的 mesh VPN（即 “tailnet”）。每台设备都会获得一个稳定主机名，例如 `my-server.tail1234.ts.net`，并且 Tailscale 还能自动配置受信任的 HTTPS 证书。你的 Open WebUI 实例可以保持完全私有，只有 tailnet 中的设备才能访问。
 
 :::tip 何时使用 Tailscale
-如果你希望在**不把 Open WebUI 暴露到公网**的前提下，实现跨设备、私密且可认证的访问，Tailscale 是非常理想的选择。它尤其适合个人用户、小团队，或需要在外通过手机、笔记本访问家庭服务器的场景。
+如果你希望跨设备**私密地访问 Open WebUI，并要求身份认证**，而不把它暴露到公网，可以使用 Tailscale。它适合个人用户、小团队，或需要在外通过手机、笔记本访问家庭服务器的场景。
 :::
 
 ---
@@ -78,7 +78,7 @@ tailscale status
 http://my-server.tail1234.ts.net:8080
 ```
 
-此连接已由 WireGuard 端到端加密。如果你还需要浏览器原生 HTTPS 能力（例如语音通话等），请继续阅读下一节。
+此连接已由 WireGuard 端到端加密。如果你需要语音通话等要求 HTTPS 的浏览器功能，请继续阅读下一节。
 
 ---
 
@@ -103,12 +103,12 @@ sudo tailscale serve https / http://localhost:8080
 
 ## 通过 Tailscale 实现认证（SSO） {#authentication-via-tailscale-sso}
 
-[Tailscale Serve](https://tailscale.com/kb/1242/tailscale-serve) 可以充当一个带认证能力的反向代理。当请求经过 `tailscale serve` 时，Tailscale 会自动写入 `Tailscale-User-Login` header，其值为当前已认证用户的邮箱地址。Open WebUI 可以把这个 header 作为单点登录信任来源，因此同一 tailnet 中的用户无需再单独输入 Open WebUI 密码即可登录。
+[Tailscale Serve](https://tailscale.com/kb/1242/tailscale-serve) 可以充当负责认证的反向代理。请求经过 `tailscale serve` 时，Tailscale 会自动在 `Tailscale-User-Login` 请求头中写入已认证用户的邮箱地址。Open WebUI 可以信任此请求头来实现单点登录，因此 tailnet 中的用户无需再输入 Open WebUI 密码即可登录。
 
 ### 工作原理 {#how-it-works}
 
-1. 一个 Tailscale sidecar container 与 Open WebUI 一起运行
-2. Tailscale Serve 把 HTTPS 流量代理到 Open WebUI，并注入身份 headers
+1. Tailscale 边车容器与 Open WebUI 一起运行
+2. Tailscale Serve 将 HTTPS 流量代理到 Open WebUI，并注入标识用户身份的请求头
 3. Open WebUI 读取 `Tailscale-User-Login` 和 `Tailscale-User-Name` 来识别用户
 4. 用户首次访问时会被自动注册并自动登录
 
@@ -135,7 +135,7 @@ sudo tailscale serve https / http://localhost:8080
 }
 ```
 
-然后在 Docker Compose 中增加 Tailscale sidecar：
+然后在 Docker Compose 中增加 Tailscale 边车容器：
 
 ```yaml title="docker-compose.yaml"
 ---
@@ -171,21 +171,21 @@ volumes:
   tailscale: {}
 ```
 
-你还需要在 Tailscale 管理后台创建一个拥有 **device write** 权限的 [OAuth client](https://tailscale.com/kb/1215/oauth-clients)，并把该 key 作为 `TS_AUTHKEY` 传入。
+你还需要在 Tailscale 管理后台创建一个拥有 **device write** 权限的 [OAuth 客户端](https://tailscale.com/kb/1215/oauth-clients)，并通过 `TS_AUTHKEY` 传入密钥。
 
 你的实例之后会通过 `https://open-webui.TAILNET_NAME.ts.net` 访问。
 
 :::warning 使用 ACLs 限制绕过直连
-如果 Tailscale 与 Open WebUI 运行在相同网络上下文中，用户可能绕过 Serve proxy，直接访问 Open WebUI，从而跳过 trusted header 认证。建议使用 [Tailscale ACLs](https://tailscale.com/kb/1018/acls) 将访问限制在 443 端口。
+如果 Tailscale 与 Open WebUI 运行在同一网络环境中，用户可能绕过 Serve 代理直连 Open WebUI，从而跳过受信任请求头认证。请使用 [Tailscale ACLs](https://tailscale.com/kb/1018/acls)，仅允许访问 443 端口。
 :::
 
-若要进一步了解 trusted header 认证，请参阅 [SSO 文档](/features/authentication-access/auth/sso#tailscale-serve)。
+有关受信任请求头认证的详情，请参阅 [SSO 文档](/features/authentication-access/auth/sso#tailscale-serve)。
 
 ---
 
 ## Tailscale Funnel（可选的公网访问） {#tailscale-funnel-optional-public-access}
 
-如果你想在客户端**无需安装 Tailscale** 的情况下对外公开 Open WebUI，可使用 [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) 将 `tailscale serve` 暴露到公网：
+如果你想公开 Open WebUI，又不要求客户端安装 Tailscale，可以通过 [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) 将 `tailscale serve` 端点暴露到公网：
 
 ```bash
 sudo tailscale funnel https / http://localhost:8080
@@ -209,14 +209,14 @@ Funnel 会让你的 Open WebUI 对**整个互联网**开放。启用前，请务
 | 公网访问（Funnel） | `sudo tailscale funnel https / http://localhost:8080` |
 | 手动生成证书 | `sudo tailscale cert my-server.tail1234.ts.net` |
 | 管理后台 | [login.tailscale.com/admin](https://login.tailscale.com/admin) |
-| 设置 CORS origin | `CORS_ALLOW_ORIGIN=https://my-server.tail1234.ts.net` |
-| 受信任邮箱 header | `WEBUI_AUTH_TRUSTED_EMAIL_HEADER=Tailscale-User-Login` |
-| 受信任名称 header | `WEBUI_AUTH_TRUSTED_NAME_HEADER=Tailscale-User-Name` |
+| 设置 CORS 来源 | `CORS_ALLOW_ORIGIN=https://my-server.tail1234.ts.net` |
+| 受信任的邮箱请求头 | `WEBUI_AUTH_TRUSTED_EMAIL_HEADER=Tailscale-User-Login` |
+| 受信任的姓名请求头 | `WEBUI_AUTH_TRUSTED_NAME_HEADER=Tailscale-User-Name` |
 
 ---
 
 ## 相关页面 {#related-pages}
 
-- [HTTPS using Tailscale](/reference/https/tailscale) —— 专注于 HTTPS / TLS 的参考页
-- [SSO (Trusted Header)](/features/authentication-access/auth/sso#tailscale-serve) —— 通用 trusted header 配置
-- [Sharing Open WebUI](/getting-started/sharing) —— 所有共享方式的总览
+- [使用 Tailscale 启用 HTTPS](/reference/https/tailscale)：HTTPS 和 TLS 配置参考
+- [SSO（受信任请求头）](/features/authentication-access/auth/sso#tailscale-serve)：受信任请求头的通用配置
+- [共享 Open WebUI](/getting-started/sharing)：各类共享方式的总览

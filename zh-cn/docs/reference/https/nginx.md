@@ -14,7 +14,7 @@ title: "使用 Nginx 的 HTTPS"
 
 - **自签名证书**：适合开发和内部使用，使用 Docker。
 - **Let's Encrypt**：适合需要受信任 SSL 证书的生产环境，使用 Docker。
-- **Windows + 自签名证书**：面向 Windows 上的开发和内部使用的简化说明，无需 Docker。
+- **Windows + 自签名证书**：适合开发和内部部署，步骤简单，无需 Docker。
 
 :::danger 关键：为 WebSocket 连接配置 CORS
 
@@ -255,7 +255,7 @@ proxy_cache_path /var/cache/nginx/openwebui_images levels=1:2
 
 :::note 创建缓存目录
 
-在 nginx 使用这些目录之前，你必须先创建它们并设置正确的所有权：
+必须先创建这些目录并正确设置所有者，nginx 才能使用它们：
 
 ```bash
 sudo mkdir -p /var/cache/nginx/openwebui /var/cache/nginx/openwebui_images

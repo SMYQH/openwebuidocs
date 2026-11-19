@@ -11,7 +11,7 @@ title: "Okta SSO（OIDC）"
 
 ## 概述 {#overview}
 
-本文档介绍将 Okta OIDC 单点登录（SSO）与 Open WebUI 集成所需的步骤。同时涵盖基于 Okta 群组成员资格管理 Open WebUI 用户群组的**可选**功能，包括**即时（JIT）群组创建**。按照这些步骤操作后，用户可以使用其 Okta 凭据登录 Open WebUI。如果您选择启用群组同步（`ENABLE_OAUTH_GROUP_MANAGEMENT`），用户在登录时将根据其 Okta 群组自动分配到 Open WebUI 中的相关群组。如果同时启用了 JIT 群组创建（`ENABLE_OAUTH_GROUP_CREATION`），Okta 声明中存在但 Open WebUI 中缺失的群组将在登录过程中自动创建。
+本文档介绍将 Okta OIDC 单点登录（SSO）与 Open WebUI 集成所需的步骤。同时涵盖基于 Okta 群组成员资格管理 Open WebUI 用户群组的**可选**功能，包括**即时（JIT）群组创建**。按照这些步骤操作后，用户可以使用其 Okta 凭据登录 Open WebUI。如果您选择启用群组同步（`ENABLE_OAUTH_GROUP_MANAGEMENT`），用户在登录时将根据其 Okta 群组自动分配到 Open WebUI 中的相关群组。如果*同时*启用了 JIT 群组创建（`ENABLE_OAUTH_GROUP_CREATION`），Okta 声明中存在但 Open WebUI 中缺失的群组将在登录过程中自动创建。
 
 ### 前提条件 {#prerequisites}
 

@@ -9,7 +9,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 
 共有三种类型的 Webhook：
 
-1.  **管理员 Webhook：** 当新用户注册时通知管理员的系统级 Webhook。
+1.  **事件 Webhooks：** 由管理员配置的 Webhook，接收事件目录中的各类事件（注册、用户变更、对话、频道、文件、模型、配置、启动与关闭），每条 Webhook 都带有名称、URL、事件过滤器和接收范围。
 2.  **用户 Webhook：** 当对话响应就绪时通知单个用户的个人 Webhook，对于长时间运行的任务特别有用。
 3.  **频道 Webhooks：** 允许外部服务向特定频道发送消息的传入 Webhook。
 
@@ -25,15 +25,18 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 
 您可以通过两种方式配置管理员 Webhook：
 
-#### 方式一：通过管理面板 {#option-1-through-the-admin-panel}
+#### 方式 1：通过管理面板 {#option-1-through-the-admin-panel}
 
 1.  以管理员身份登录。
 2.  导航到 **设置 > 通用**（管理员区域）。
-3.  找到 **"Webhook URL"** 字段。
+3.  滚动到 **Events** > **Webhooks**，点击 **+**。为该 Webhook 设置名称和 URL，选择 **Send events for** 和 **Events**，然后保存。已有条目提供 **Configure** 和 **Delete** 操作。
 4.  输入您的外部服务（例如 Discord、Slack）提供的 Webhook URL。
 5.  点击 **"保存"**。
 
-#### 方式二：通过环境变量 {#option-2-through-environment-variables}
+**Send events for** 决定接收范围。**All users and system events** 会发送所有符合事件过滤条件的事件。**System events only** 只发送与具体用户无关的事件，例如启动与关闭。**Specific users or groups** 只发送所选用户或群组成员参与其中的事件，例如他们拥有的某次自动化运行失败。
+
+#### 方式 2：通过环境变量 {#option-2-through-environment-variables}
+
 `WEBHOOK_URL` 环境变量会在启动时一次性迁移为一个订阅了全部事件的 **Default webhook**。如果你只想接收注册事件，可以把它收窄为 `auth.signup` 或 `user.created`。更多详情请参阅[环境变量配置](https://docs.openwebui.com/reference/env-configuration/#webhook_url)文档。
 
 ### 负载格式 {#payload-format}
@@ -117,19 +120,19 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 
 ### 管理频道 Webhooks {#managing-channel-webhooks}
 
-只有**频道管理员**和**系统管理员**才能为频道创建和管理 Webhook。
+只有频道创建者和**管理员**才能为频道创建和管理 Webhook。
 
 #### 创建 Webhook {#creating-a-webhook}
 
 1.  导航到要添加 Webhook 的频道。
-2.  点击频道菜单（⋮）并选择 **编辑频道**。
+2.  点击频道菜单（**⋮**）并选择 **编辑频道**。
 3.  在频道设置模态框中，找到 **Webhooks** 部分。
 4.  点击 **管理** 打开 Webhooks 模态框。
-5.  点击 **新建 Webhook** 创建新 Webhook。
+5.  点击 **New Webhook**，会立即创建一个名为 "New Webhook" 的可用 Webhook。**Save** 只在之后修改名称和图片时生效。
 6.  配置 Webhook：
     - **名称：** 将显示为消息作者的显示名称
     - **头像图片：** （可选）上传图片以代表此 Webhook
-7.  点击 **保存** 创建 Webhook。
+7.  点击 **Save** 应用名称和图片。
 8.  使用 **复制 URL** 按钮复制生成的 Webhook URL。
 
 #### Webhook URL 格式 {#webhook-url-format}
@@ -147,7 +150,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 3.  根据需要修改**名称**或**头像图片**。
 4.  点击 **保存** 应用更改。
 
-更新名称或图片时，Webhook URL 保持不变。更新后发送的消息将显示新名称/图片，但已有消息保留发送时的 Webhook 身份。
+更新名称或图片时，Webhook URL 保持不变。由该 Webhook 发布的所有消息（包括更早发布的消息）都会显示它当前的名称和图片。
 
 #### 删除 Webhook {#deleting-a-webhook}
 
@@ -219,8 +222,9 @@ print(response.json())
 通过 Webhook 发送的消息具有特殊的身份系统：
 - 消息以 Webhook 的**名称**和**头像图片**显示
 - 用户角色标记为 **"webhook"**，以区别于普通用户
-- 如果 Webhook 被删除，其消息仍然可见，但显示"已删除的 Webhook"，当前 Webhook 名称不再显示
+- 如果 Webhook 被删除，其消息仍然可见，但显示"已删除的 Webhook"并使用默认头像
 - 每条消息在其元数据中存储 Webhook ID，即使 Webhook 后来被修改或删除，也能正确归因
+- 只有 Open WebUI 会写入这类元数据。通过普通请求发送或编辑消息时附带的元数据会被忽略，因此以某个账号发布的消息始终显示该账号
 
 ## 故障排查 {#troubleshooting}
 
