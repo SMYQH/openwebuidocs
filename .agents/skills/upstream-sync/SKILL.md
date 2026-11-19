@@ -12,15 +12,15 @@ Sync updates from the official English documentation submodule `en-us/` (`open-w
 - User requests "sync upstream", "pull en-us updates", or "translate latest docs"
 - Check whether the `en-us` submodule is behind `origin/main`
 - After upstream adds or modifies docs, the Chinese version and `STATUS.md` need updating
-- For verification or tooling only, go directly to [verification](#41-verify-completeness-and-quality-before-committing). Do not fetch, pull, translate, or send provider requests unless separately requested.
+- For verification or tooling only, use [translation-checker](../translation-checker/SKILL.md) or [translation-semantic-review](../translation-semantic-review/SKILL.md). Do not fetch, pull, translate, or send provider requests unless separately requested.
 
 ## Prerequisites
 
 - Workspace root is `openwebuidocs` (contains `en-us/`, `zh-cn/`, `AGENTS.MD`, `STATUS.md`)
 - The translation principles and site differences in the root `AGENTS.MD` have been reviewed
 - On Windows, prefer PowerShell; `git -C` must be available
-- Python 3.10+ with `python -m pip install -r test/requirements.txt`
-- Read [`test/README.md`](../../../test/README.md) for verifier rules, review result schemas, and provider commands
+- Python 3.10+ with `python -m pip install -r .agents/skills/translation-checker/requirements.txt`
+- Read the [checker usage reference](../translation-checker/references/usage.md) for verifier rules, review result schemas, and provider commands
 
 ## Translation Principles (must follow during execution)
 
@@ -30,7 +30,8 @@ Sync updates from the official English documentation submodule `en-us/` (`open-w
 
 Other conventions:
 
-- The Chinese version removes non-compliant external links (Discord, Reddit, X, etc.). The hosts are listed in `non_compliant_link_patterns` in `test/translation_config.json`; the verifier allows the link to be absent and reports `non-compliant-link` when a translation keeps one
+- Distinguish explicit request URIs (`端点`), named interfaces or protocols (`API` or `协议`), a BaseURL (`基础 API 端点`), and the common address of a family of routes (`API 端点`). Keep webhook destinations distinct. Put spaces between adjacent English words and Chinese prose without changing literals. Review in context; never replace `端点` globally.
+- The Chinese version removes non-compliant external links (Discord, Reddit, X, etc.). The hosts are listed in `non_compliant_link_patterns` in `.agents/skills/translation-checker/translation_config.json`; the verifier allows the link to be absent and reports `non-compliant-link` when a translation keeps one
 - An interface label that upstream marks with a code span (`Settings`, `Admin Panel`, `Image Generation Engine`) may be translated, because the Chinese site shows a Chinese interface. Identifiers, commands, paths, values and product names stay verbatim inside code spans
 - Translate prose in code fence `title="..."` values; filename/path titles stay literal
 - Preserve code comments and string values byte for byte. Preserve fence directives other than the title value. JSON-LD prose may be localized, but its types, contexts, URLs and surrounding code stay unchanged
@@ -81,28 +82,28 @@ Briefly report to the user: list of P0–P3 files and the planned handling.
 
 ### 4. Execute Translation & Sync
 
-When the user requests verification/tooling only, do not translate or apply translation tasks. Verification never requires a provider key. Never encode expected Chinese wording, bilingual answer tables, or translated-answer snapshots into `test/`; only terminology and other literal exclusions may be stored verbatim. Behavior fixtures use generated text rather than translations.
+When the user requests verification/tooling only, do not translate or apply translation tasks. Verification never requires a provider key. Never encode expected Chinese wording, bilingual answer tables, or translated-answer snapshots into the checker tooling; only terminology and other literal exclusions may be stored verbatim. Behavior fixtures use generated text rather than translations.
 
 Choose the translation mode from the user's request. Default to **autonomous**; the current AI translates without API configuration. **DeepL** requires only `DEEPL_AUTH_KEY` in root `.env` (see `.env.example`); do not ask for an endpoint or model setting. Never display or commit the key. Do not silently switch providers after a failure.
 
 When the user assigns translation to sub-agents, delegate translation edits directly. The parent handles tooling, integration, and validation; it must not translate on their behalf. Respect the user's concurrency limit; run one translation agent at a time when requested. A provider/capacity failure must be reported, never hidden by certifying unfinished review.
 
 Prepare small, explicit file batches. Paths are relative to `en-us/docs/`.
-Keep task and review artifacts in ignored `test/.reports/`.
+Keep task and review artifacts in ignored `.agents/skills/translation-checker/.reports/`.
 
 ```powershell
 # Autonomous: fill only translation fields in this task JSON, preserving placeholders.
-python test/translation_update.py --files path/to/page.mdx --bundle test/.reports/task.json
+python .agents/skills/translation-checker/scripts/translation_update.py --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json
 
 # DeepL: estimate locally, then send only authorized text.
-python test/translation_update.py --mode deepl --plan --files path/to/page.mdx
-python test/translation_update.py --mode deepl --files path/to/page.mdx --bundle test/.reports/task.json --report test/.reports/candidate.json
+python .agents/skills/translation-checker/scripts/translation_update.py --mode deepl --plan --files path/to/page.mdx
+python .agents/skills/translation-checker/scripts/translation_update.py --mode deepl --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
 
 # Either provider: export full source/current target/candidate for review without writing docs.
-python test/translation_update.py --apply test/.reports/task.json --report test/.reports/candidate.json
+python .agents/skills/translation-checker/scripts/translation_update.py --apply .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
 ```
 
-Use `--resume --bundle` for an interrupted DeepL task. Review rejected replies before a bounded `--resume --retry-rejected`; do not loop on a failed retry. Use `--reuse` with an earlier compatible checkpoint for a new revision. Only exact same-page segments are reusable. See [`test/README.md`](../../../test/README.md#deepl-optional-key-only) for commands and limits.
+Use `--resume --bundle` for an interrupted DeepL task. Review rejected replies before a bounded `--resume --retry-rejected`; do not loop on a failed retry. Use `--reuse` with an earlier compatible checkpoint for a new revision. Only exact same-page segments are reusable. See [DeepL commands and limits](../translation-checker/references/usage.md#deepl-optional-key-only).
 
 Task bundles bind source/target bytes, configuration, and segment identities. Autonomous translations must preserve ordered `⟦Pn⟧` placeholders. Both providers protect terminology, code, identifiers, link destinations, numbers, and Markdown symbols. Automated updates reconstruct documents; compare the complete candidate to upstream and the existing target before applying. Do not overwrite Chinese-only content or local policy edits. Malformed upstream syntax stops generation; report or repair the defect rather than bypassing protection.
 
@@ -120,31 +121,18 @@ For large-scale changes:
 
 #### 4.1 Verify completeness and quality before committing
 
-All translation verification scripts live under root `test/`. Run offline behavior tests after changing them. Audit the requested scope; for existing target files, export review pairs with `--review-bundle`:
-
-```powershell
-python -m unittest discover -s test -p "test_*.py"
-python test/translation_check.py --strict --summary-only --report test/.reports/audit.json
-python test/translation_check.py --files path/to/page.mdx --review-bundle test/.reports/review.json
-```
-
-Fully quoted headings inside upstream troubleshooting/error sections are source-derived literal diagnostics. Preserve those messages, including when translating with either provider; other quoted headings remain prose.
-
-For `setting-default` findings, compare the same setting's default and unit in both languages. If upstream pages disagree, check the application revision corresponding to the docs before changing the translation. Record that revision in `STATUS.md`.
-
-The deterministic audit checks file/category coverage, code/literal preservation, heading structure/anchors, Markdown structure, metadata, terminology, untranslated prose, and omission signals. It compares matched sections even when heading counts differ. A dropped literal fails; an added or re-counted literal, a translated interface label and a repaired upstream fence are review signals. File coverage and matching headings **do not establish semantic completeness**. Do not invent a quality score or claim a semantic pass from static checks. Treat findings as leads, not proof: read the pair before changing a translation, and improve the checker when a finding turns out to be a tool defect.
-
-Read every English/Chinese pair in the candidate report or review bundle in full. Assess omissions/additions, facts, negation, numbers, fluency, terminology, and heading/body alignment. Exclude protected terms, code, and markup from language judgments. Complete `result_format` in a separate result file, including source evidence for every finding. For later installed-document audits, `--reuse-review` can carry forward only completed reviews with matching file and configuration hashes.
+1. Use [translation-checker](../translation-checker/SKILL.md) for the deterministic audit, finding triage, and offline tooling tests. Keep unresolved pre-existing findings separate from newly introduced defects.
+2. Use [translation-semantic-review](../translation-semantic-review/SKILL.md) to read each complete pair and approve the exact candidate. A clean audit does not establish meaning or completeness.
 
 The update CLI requires a passed review of the exact candidate before writing. Use the same result file to verify the installed bytes, then build:
 
 ```powershell
-python test/translation_update.py --apply test/.reports/task.json --review-results test/.reports/review-results.json --write
-python test/translation_check.py --strict --files path/to/page.mdx --review-results test/.reports/review-results.json --report test/.reports/reviewed-audit.json
+python .agents/skills/translation-checker/scripts/translation_update.py --apply .agents/skills/translation-checker/.reports/task.json --review-results .agents/skills/translation-checker/.reports/review-results.json --write
+python .agents/skills/translation-checker/scripts/translation_check.py --strict --files path/to/page.mdx --review-results .agents/skills/translation-checker/.reports/review-results.json --report .agents/skills/translation-checker/.reports/reviewed-audit.json
 npm --prefix zh-cn run build
 ```
 
-Resolve findings within the authorized scope. Intentional localization differences need a specific reason and exact issue fingerprint in `test/translation_config.json`; source/target changes expire that exception. Never blanket-suppress a directory, hard-code a preferred translation, weaken anchor/link checks, or silently call an incomplete review passed. Keep unresolved pre-existing findings separate from newly introduced defects. A production build with zero broken links, anchors, Markdown links, and duplicate routes remains required after translation changes.
+Resolve findings within the authorized scope. After translation changes, require zero broken links, anchors, Markdown links, and duplicate routes in the production build.
 
 ### 5. Commit Translation Changes (excluding metadata files)
 

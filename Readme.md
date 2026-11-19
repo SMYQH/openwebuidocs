@@ -10,11 +10,21 @@
 
 ## 仓库结构
 
-``` Structure
-├── en-us/          # 英文源文档 (git 子模块)
-├── zh-cn/          # 中文翻译文档
-├── STATUS.md       # 翻译进度与版本对照
-└── AGENTS.MD       # AI 辅助开发配置
+```text
+├── .github/workflows/                # 工作流
+├── .agents/skills/                   # 共享技能
+│   ├── upstream-sync/                # 上游同步与翻译更新
+│   ├── translation-checker/          # 基于 Python 的翻译检查
+│   └── translation-semantic-review/  # 全量语义审查
+├── .codex/agents/                    # 文档审查智能体定义
+├── en-us/                            # 英文源文档（Git 子模块）
+├── zh-cn/                            # 中文文档站点
+│   └── docs/                         # 简体中文译文
+├── .env.example                      # DeepL 密钥配置示例（可选）
+├── wrangler.jsonc                    # Cloudflare 部署配置
+├── STATUS.md                         # 项目状态
+├── Readme.md                         # 项目介绍
+└── AGENTS.MD                         # 智能体协作规范
 ```
 
 翻译状态详见 [STATUS.md](./STATUS.md)。

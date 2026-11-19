@@ -84,6 +84,25 @@ class ExtractionTests(Fixture):
         self.assertIn("OpenAIish", masked)
         self.assertNotIn("API_KEY", masked)
 
+    def test_windows_product_name_excludes_common_noun(self):
+        _, spans = mask("Windows and WINDOWS: Context Windows and context windows.", ["Windows"])
+        self.assertEqual([(s.kind, s.value) for s in spans],
+                         [("term", "Windows"), ("term", "WINDOWS")])
+
+    def test_acronym_plural_is_a_single_verbatim_placeholder(self):
+        source = "APIs, APIson, and `APIs`.\n"
+        masked, spans = mask(source, self.terms)
+        self.assertIn("APIson", masked)
+        self.assertEqual([s.value for s in spans], ["APIs", "`APIs`"])
+        self.assertEqual(unmask(masked, spans), source)
+
+    def test_prefixed_release_version_is_protected_as_one_literal(self):
+        version = "v12.3.45-rc.2+build.7"
+        source = f"Upgrade to {version}."
+        masked, spans = mask(source, self.terms)
+        self.assertEqual([(s.kind, s.value) for s in spans], [("version", version)])
+        self.assertEqual(unmask(masked, spans), source)
+
     def test_ordered_list_and_checkbox_markers_are_indivisible(self):
         for source, literal in [("1. Source prose", "1. "), ("- [x] Source prose", "[x]"), ("Source prose[^literal]", "[^literal]"), ("Source [reference][]", "[reference][]")]:
             _, spans = mask(source, self.terms)
@@ -93,6 +112,21 @@ class ExtractionTests(Fixture):
         value = "Run ``literal ` command`` safely."
         _, spans = mask(value, self.terms)
         self.assertIn("``literal ` command``", [s.value for s in spans])
+
+    def test_sparse_inline_candidates_keep_exact_protected_offsets(self):
+        prefix = generated_cjk(48)
+        source = prefix + r" \`escaped ``literal <Tag />`` <Box value={{x: '>'}}> [label](#entry) \{#} {value} </Box>"
+        masked, spans = mask(source, [])
+        self.assertEqual(unmask(masked, spans), source)
+        self.assertTrue(masked.startswith(prefix))
+        self.assertEqual(
+            [(span.kind, span.value) for span in spans if span.kind not in {"symbol", "escape"}],
+            [("inline_code", "``literal <Tag />``"), ("jsx", "<Box value={{x: '>'}}>"),
+             ("destination", "(#entry)"), ("hash_placeholder", r"\{#}"),
+             ("expression", "{value}"), ("jsx", "</Box>")],
+        )
+        for span in spans:
+            self.assertEqual(source[span.start:span.end], span.value)
 
     def test_nested_fence_and_indented_code_preserved(self):
         source = "# Example\n\n````md\n```python\nprint('literal')\n```\n````\n\n    untouched_command()\n\nA source paragraph with enough words.\n"
@@ -169,6 +203,18 @@ class ExtractionTests(Fixture):
         self.assertEqual(doc.error_messages, {})
         self.assertNotIn("Source heading label", self.translate(source, ".md"))
 
+    def test_status_diagnostic_heading_remains_literal(self):
+        message = "499: 'SampleType' failed to resolve 'sample_property'"
+        source = f"## Common Issues\n\n### 2. {message}\n\nExplain the recovery step.\n"
+        target = self.translate(source, ".md")
+        self.assertIn(message, target)
+        self.assertNotIn("untranslated-heading", self.codes(source, target, ".md"))
+        self.assertIn("literal-error-message", self.codes(source, target.replace("SampleType", "ChangedType"), ".md"))
+        overview = source.replace("Common Issues", "Remote Requests")
+        self.assertEqual(Document(overview, ".md", self.terms).error_messages, {})
+        ordinary_heading = source.replace(message, "499: Requests that fail")
+        self.assertEqual(Document(ordinary_heading, ".md", self.terms).error_messages, {})
+
     def test_attributes_translate_without_changing_jsx_code(self):
         source = '<Thing alt="Source description" path="/literal" title="Source title">Visible prose</Thing>\n'
         target = self.translate(source)
@@ -211,6 +257,23 @@ class ExtractionTests(Fixture):
         for source in ["Use $x + y$ here.", "Use $$x + y$$ here."]:
             with self.subTest(source=source):
                 self.assertIn("math", {span.kind for span in mask(source, self.terms)[1]})
+
+    def test_bare_windows_paths_are_protected_before_terminology(self):
+        root = r"C:\OpenAI"
+        file = root + r"\7-day\settings.json"
+        source = f"Inspect {file}. Backup root: {root}.\n"
+        target = f"{generated_cjk(5)} {file} {root}\n"
+        tick = chr(96)
+        spans = mask(source, self.terms)[1]
+        self.assertEqual([(span.kind, span.value) for span in spans], [
+            ("identifier", file), ("identifier", root),
+        ])
+        for good in (target, target.replace(file, f"{tick}{file}{tick}")):
+            findings = self.codes(source, good)
+            self.assertNotIn("literal-term", findings)
+            self.assertNotIn("literal-identifier", findings)
+        self.assertIn("literal-identifier", self.codes(source, target.replace("settings.json", "other.json")))
+        self.assertNotIn("numbers", self.codes(source, target.replace("7-day", "8-day")))
 
     def test_sentence_punctuation_is_not_part_of_bare_paths(self):
         source = "Read /photos. Inspect /archive/data.csv.\n"
@@ -314,6 +377,23 @@ class VerificationTests(Fixture):
                 self.assertIn("setting-default", self.codes(a + b, section("SETTING_A", wrong, label) + b))
         self.assertIn("setting-default", self.codes(a + b, "#### `SETTING_A`\n\n" + b))
 
+    def test_setting_type_is_checked_in_its_own_row(self):
+        label = generated_cjk(3)
+        source = "#### `SETTING_A`\n\n- Type: `bool`\n- Default: `False`\n"
+        local = source.replace("Type", label).replace("Default", generated_cjk(4))
+        self.assertNotIn("setting-type", self.codes(source, local))
+        for wrong in ["`str`", "`str` (formerly `bool`)"]:
+            with self.subTest(wrong=wrong):
+                self.assertIn("setting-type", self.codes(source, local.replace("`bool`", wrong)))
+        self.assertIn("setting-type", self.codes(source, "#### `SETTING_A`\n\n- Default: `False`\n"))
+
+    def test_setting_boolean_default_cannot_be_satisfied_by_body(self):
+        label = generated_cjk(3)
+        source = "#### `SETTING_A`\n\n- Type: `bool`\n- Default: `False`\n- Description: `True` or `False`.\n"
+        local = source.replace("Default: `False`", f"{label}：`false`")
+        self.assertNotIn("setting-default", self.codes(source, local))
+        self.assertIn("setting-default", self.codes(source, local.replace("`false`", "`True`")))
+
     def test_escaped_hash_placeholder_is_literal_not_mdx_code(self):
         source = "## Settings.{#} {#stable-heading}\n\nText {node.value}.\n"
         escaped = source.replace(".{#}", r".\{#}")
@@ -356,6 +436,23 @@ class VerificationTests(Fixture):
         target = self.translate(source).replace("OpenAI", "")
         self.assertIn("literal-term", self.codes(source, target))
 
+    def test_file_wide_term_and_symbol_warnings_locate_section_drift(self):
+        text = generated_cjk(8)
+        source = "## Alpha {#alpha}\n\n**OpenAI**.\n\n## Beta {#beta}\n\nOpenAI.\n"
+        target = f"\n## {text} {{#alpha}}\n\nOpenAI {text} OpenAI.\n\n## {text} {{#beta}}\n\nOpenAI.\n"
+        self.put(self.source, "fixture.mdx", source)
+        self.put(self.target, "fixture.mdx", target)
+        report = verify(self.source, self.target, self.config)
+        warnings = {row["code"]: row for row in report["issues"] if row["severity"] == "warning"}
+        for code, token, counts in (("literal-term", "openai", (1, 2)), ("markdown-symbol", "**", (2, 0))):
+            with self.subTest(code=code):
+                row = warnings[code]
+                self.assertEqual(row["line"], 1)
+                self.assertEqual(row["section_drift"], [{
+                    "anchor": "alpha", "source_line": 1, "target_line": 2, "token": token,
+                    "source_count": counts[0], "target_count": counts[1],
+                }])
+
     def test_literal_only_lines_are_checked_without_surrounding_prose(self):
         for source, target, code in [
             ("`LITERAL_TOKEN`\n", "`CHANGED_TOKEN`\n", "literal-inline-code"),
@@ -375,6 +472,18 @@ class VerificationTests(Fixture):
         self.assertNotIn("literal-term", self.codes(source, target))
         self.assertIn("literal-identifier", self.codes(source, target.replace("LITERAL_KEY", "CHANGED_KEY")))
         self.assertIn("literal-term", self.codes(source, target.replace("OpenAI", "OtherVendor")))
+
+    def test_repeated_bare_identifiers_may_gain_backticks_without_losing_mentions(self):
+        source = "Use SETTING_KEY and `SETTING_KEY`. Check SETTING_KEY. Reuse SETTING_KEY.\n"
+        local = generated_cjk(8)
+        good = f"{local} SETTING_KEY {local} `SETTING_KEY` {local} `SETTING_KEY` {local} `SETTING_KEY`.\n"
+        self.assertNotIn("literal-identifier", self.codes(source, good))
+        self.assertIn("literal-identifier", self.codes(source, good.replace(" `SETTING_KEY`", "", 1)))
+        self.assertIn("literal-identifier", self.codes(source, good.replace(" `SETTING_KEY`", " `echo SETTING_KEY`", 1)))
+        missing = f"{local} `SETTING_KEY`.\n"
+        findings = {i.code: i.severity for i in self.issues(source, missing)}
+        self.assertEqual(findings.get("literal-identifier"), "error")
+        self.assertNotIn("literal-inline-code", findings)
 
     def test_code_structure_must_stay_identical(self):
         source = "```python\n# literal comment\nrun()\n```\n"
@@ -448,6 +557,264 @@ class VerificationTests(Fixture):
         source = "Wait 30 seconds for source service.\n"
         self.assertIn("numbers", self.codes(source, self.translate(source).replace("30", "300")))
 
+    def test_release_versions_compare_all_components(self):
+        for original, equivalent, changed in [
+            ("12.3.45", "v12.3.45", "v12.3.46"),
+            ("v12.3.45-rc.2+build.7", "v12.3.45-rc.2+build.7", "v12.3.45-rc.3+build.7"),
+        ]:
+            with self.subTest(original=original):
+                source = f"Upgrade to {original}.\n"
+                self.assertNotIn("numbers", self.codes(source, f"{generated_cjk(2)}{equivalent}\n"))
+                self.assertIn("numbers", self.codes(source, f"{generated_cjk(2)}{changed}\n"))
+                self.assertIn("literal-inline-code", self.codes(f"`{original}`\n", f"`{changed}`\n"))
+
+    def test_localized_duration_preserves_value_and_unit(self):
+        for original, equivalent in [("37s", "37 \u79d2"), ("37 seconds", "37 \u79d2"),
+                                     ("37-second", "37\u79d2"),
+                                     ("37ms", "37 \u6beb\u79d2"), ("3.5 milliseconds", "3.5 \u6beb\u79d2"),
+                                     ("over 45 years", "45 \u4f59\u5e74")]:
+            with self.subTest(original=original):
+                source = f"Wait {original}.\n"
+                self.assertNotIn("numbers", self.codes(source, f"{generated_cjk(2)} {equivalent}\n"))
+                self.assertIn("numbers", self.codes(source, f"{generated_cjk(2)} 50\u79d2\n"))
+                self.assertIn("literal-inline-code", self.codes(f"`{original}`\n", f"`{equivalent}`\n"))
+        self.assertIn("numbers", self.codes("Wait 37ms.\n", "37\u79d2\n"))
+        self.assertIn("numbers", self.codes("Wait 37ms.\n", "37\n"))
+
+    def test_coordinated_deadlines_inherit_only_omitted_unit(self):
+        source = "Finish within 27 minutes, and each stage within 14.\n"
+        prose = generated_cjk(3)
+        same = f"{prose} 27 \u5206\u949f\uff0c{prose} 14 \u5206\u949f\u3002\n"
+        self.assertNotIn("numbers", self.codes(source, same))
+        self.assertIn("numbers", self.codes(source, same.replace("14", "15")))
+        self.assertIn("numbers", self.codes(source, same.replace("14 \u5206\u949f", "14 \u79d2")))
+        self.assertIn("numbers", self.codes(source, same.replace("14 \u5206\u949f", "14")))
+        explicit_count = source.replace("within 14.", "within 14 steps.")
+        self.assertIn("numbers", self.codes(explicit_count, same))
+
+    def test_dates_compare_values_instead_of_word_order(self):
+        for english, local, changed in [
+            ("May 2044", "2044\u5e745\u6708", "2044\u5e746\u6708"),
+            ("May 9, 2044", "2044 \u5e74 5 \u6708 9 \u65e5", "2044 \u5e74 5 \u6708 8 \u65e5"),
+            ("9th May 2044", "2044\u5e745\u67089\u65e5", "2044\u5e745\u67088\u65e5"),
+            ("May 9th, 2044", "2044\u5e745\u67089\u65e5", "2044\u5e745\u67088\u65e5"),
+        ]:
+            with self.subTest(date=english):
+                source = "Published " + english + ".\n"
+                self.assertNotIn("numbers", self.codes(source, generated_cjk(2) + local + "\n"))
+                self.assertIn("numbers", self.codes(source, generated_cjk(2) + changed + "\n"))
+                self.assertIn("literal-inline-code", self.codes(f"`{english}`\n", f"`{local}`\n"))
+
+    def test_dropped_date_component_is_reported(self):
+        self.assertIn("numbers", self.codes("May 2044\n", "2044\n"))
+        self.assertIn("numbers", self.codes("May 9, 2044\n", "2044\u5e745\u6708\n"))
+        self.assertIn("numbers", self.codes("9th May 2044\n", "2044\u5e745\u6708\n"))
+
+    def test_coordinated_dates_keep_both_days_in_the_shared_month(self):
+        english = "7th and 9th May 2044"
+        prose = generated_cjk(3)
+        for local in ("2044\u5e745\u67087\u65e5\u548c9\u65e5",
+                      "2044 \u5e74 5 \u6708 7 \u3001 9 \u65e5",
+                      "2044\u5e745\u67087\u65e5\u548c2044\u5e745\u67089\u65e5"):
+            with self.subTest(local=local):
+                self.assertNotIn("numbers", self.codes(f"Published {english}.\n", f"{prose}{local}\n"))
+        for local in ("2044\u5e745\u67086\u65e5\u548c9\u65e5",
+                      "2044\u5e746\u67087\u65e5\u548c9\u65e5",
+                      "2044\u5e745\u67089\u65e5"):
+            with self.subTest(local=local):
+                self.assertIn("numbers", self.codes(f"Published {english}.\n", f"{prose}{local}\n"))
+
+    def test_month_prepositions_match_whole_words(self):
+        prose = generated_cjk(8)
+        for text in ("Synchronization May Stall", "The Plugin May Fail", "The Format May Change"):
+            with self.subTest(text=text):
+                self.assertNotIn("numbers", self.codes(f"## {text}\n", f"## {prose}\n"))
+        self.assertNotIn("numbers", self.codes("Available in May.\n", f"{prose} 5\u6708\n"))
+        self.assertIn("numbers", self.codes("Available in May.\n", f"{prose} 6\u6708\n"))
+        self.assertIn("numbers", self.codes("Available in May.\n", f"{prose}\n"))
+
+    def test_explicit_clock_notation_preserves_period_and_minute(self):
+        for original, local, changed in [
+            ("3pm", "\u4e0b\u5348 3 \u70b9", "\u4e0a\u5348 3 \u70b9"),
+            ("9AM", "\u65e9\u4e0a 9 \u70b9", "\u4e0b\u5348 9 \u70b9"),
+            ("12:15 AM", "\u4e0a\u534812\u70b915\u5206", "\u4e0a\u534812\u70b916\u5206"),
+            ("12 PM", "\u4e0b\u5348 12 \u70b9", "\u4e0b\u5348 1 \u70b9"),
+            ("4:35 AM", "\u51cc\u6668 4:35", "\u51cc\u6668 4:36"),
+            ("8:25 PM", "\u665a\u4e0a 8:25", "\u65e9\u4e0a 8:25"),
+        ]:
+            with self.subTest(original=original):
+                self.assertNotIn("numbers", self.codes(f"Starts at {original}.\n", local))
+                self.assertIn("numbers", self.codes(f"Starts at {original}.\n", changed))
+                self.assertIn("literal-inline-code", self.codes(f"`{original}`\n", f"`{local}`\n"))
+        self.assertIn("numbers", self.codes("3pm\n", "3\u70b9\n"))
+
+    def test_localized_numeric_units_keep_values_and_code_distinct(self):
+        prefix = generated_cjk(4)
+        for upstream, localized, changed in [
+            ("5x", "5 \u500d", "50 \u500d"),
+            ("5x", "5\u00d7", "5"),
+            ("30 to 40%", "30-40%", "30-41%"),
+            ("30% to 40%", "30\u81f340%", "31\u81f340%"),
+            ("3.5 to 4.5%", "3.5\u20134.5%", "3.5\u20134.5"),
+            ("10-15", "10\u201315", "10\u201316"),
+            ("30 to 60", "30\u201360", "30\u201361"),
+            ("5,000 to 12,000", "5000-12000", "5000-12200"),
+            ("5,000-12,000", "5000\u81f312000", "5000\u81f312200"),
+        ]:
+            with self.subTest(upstream=upstream, localized=localized):
+                self.assertNotIn("numbers", self.codes(f"Observed {upstream}.\n", f"{prefix} {localized}\n"))
+                self.assertIn("numbers", self.codes(f"Observed {upstream}.\n", f"{prefix} {changed}\n"))
+                self.assertIn("literal-inline-code", self.codes(f"`{upstream}`\n", f"`{localized}`\n"))
+
+    def test_duration_after_slash_keeps_its_value_and_unit(self):
+        source = "Allow 12 items/7-day period.\n"
+        target = f"{generated_cjk(4)} 12, 7\u5929\n"
+        self.assertNotIn("numbers", self.codes(source, target))
+        for changed in (target.replace("7", "8"), target.replace("\u5929", "\u5468"), target.replace("\u5929", "")):
+            self.assertIn("numbers", self.codes(source, changed))
+
+        for literal in ("/var/archive/7-day", "https://example.com/7-day"):
+            original = f"Open {literal}.\n"
+            changed = f"{generated_cjk(4)} {literal.replace('7-day', '8-day')}\n"
+            codes = self.codes(original, changed)
+            self.assertNotIn("numbers", codes)
+            self.assertTrue(any(code.startswith("literal-") for code in codes), codes)
+
+    def test_range_requires_two_bounds_and_an_explicit_separator(self):
+        source = "Choose 10 to 15 items.\n"
+        for value in ("10, 15", "10 -15", "10\u201315.1", "10 to 15%", "10 to 15.0.0"):
+            with self.subTest(value=value):
+                self.assertIn("numbers", self.codes(source, f"{generated_cjk(2)} {value}\n"))
+
+    def test_spelled_out_zero_matches_one_digit_occurrence(self):
+        source = "The counter starts at zero."
+        target = f"{generated_cjk(4)} 0"
+        self.assertNotIn("numbers", self.codes(source, target))
+        self.assertIn("numbers", self.codes(source, target.replace("0", "1")))
+        self.assertIn("numbers", self.codes(source, f"{target}, 0"))
+        self.assertIn("literal-inline-code", self.codes("Use `zero`.", target))
+
+    def test_calendar_year_span_is_not_a_duration(self):
+        start, end = 1983, 1995
+        source = f"~{start}-{end}"
+        target = f"{start}\u81f3{end}\u5e74\u95f4"
+        self.assertNotIn("numbers", self.codes(source, target))
+        self.assertIn("numbers", self.codes(source, target.replace(str(end), str(end + 1))))
+        self.assertIn("numbers", self.codes(f"{start}-{end} years", target))
+        self.assertIn("literal-inline-code", self.codes(f"`{source}`", f"`{target}`"))
+
+    def test_day_ordinals_are_not_durations_or_daily_counts(self):
+        day = 8
+        target = f"\u7b2c {day} \u5929"
+        self.assertNotIn("numbers", self.codes(f"On day {day}.", target))
+        self.assertIn("numbers", self.codes(f"On day {day}.", target.replace("8", "9")))
+        self.assertIn("numbers", self.codes(f"Wait {day} days.", target))
+        self.assertIn("numbers", self.codes(f"Each day {day} items arrive.", target))
+        self.assertIn("literal-inline-code", self.codes(f"`Day {day}`", f"`{target}`"))
+
+    def test_quantity_ranges_preserve_units_endpoints_and_open_bounds(self):
+        tick = chr(96)
+        for original, local, changes in [
+            ("7-12x", "7\u201312 \u500d", ("8\u201312 \u500d", "7\u201313 \u500d", "7\u201312", "7\u201312 \u79d2")),
+            ("8-16ms", "8\u81f316 \u6beb\u79d2", ("8\u81f316 \u79d2", "8 16 \u6beb\u79d2")),
+            ("6-14+ seconds", "6\u201314 \u79d2\u6216\u66f4\u4e45",
+             ("6\u201314 \u79d2", "6\u201315+ \u79d2", "6\u201314+ \u6beb\u79d2")),
+            ("9\u201318x", "9-18 \u500d", ("9-18 \u00d7 2", "9-18+ \u500d")),
+        ]:
+            with self.subTest(original=original):
+                self.assertNotIn("numbers", self.codes(original, local))
+                self.assertIn("literal-inline-code", self.codes(f"{tick}{original}{tick}", f"{tick}{local}{tick}"))
+                for changed in changes:
+                    self.assertIn("numbers", self.codes(original, changed))
+
+    def test_change_in_value_or_version_is_not_an_interval(self):
+        for low, high in [("64", "16"), ("0.6", "0.9")]:
+            with self.subTest(low=low, high=high):
+                self.assertIn("numbers", self.codes(f"Change from {low} to {high}.\n", f"{low}\u2013{high}\n"))
+                self.assertNotIn("numbers", self.codes(f"Change from {low} to {high}.\n", f"{low} {generated_cjk(2)} {high}\n"))
+
+    def test_standalone_open_duration_preserves_bound_and_unit(self):
+        source = "12+ minutes"
+        for equivalent in ("12 \u5206\u949f\u6216\u66f4\u4e45", "12\u5206\u949f\u4ee5\u4e0a"):
+            self.assertNotIn("numbers", self.codes(source, equivalent))
+            self.assertIn("literal-inline-code", self.codes(f"`{source}`", f"`{equivalent}`"))
+        for changed in ("12 \u5206\u949f", "13+ minutes", "12+ seconds", "12"):
+            self.assertIn("numbers", self.codes(source, changed))
+
+    def test_token_ranges_preserve_counts_units_and_open_end(self):
+        source = "Usually 2,500-3,500+ tokens."
+        for value in ("2500-3500\u591a\u4e2a token", "2,500\u81f33,500 \u4e2a token\u6216\u66f4\u591a"):
+            self.assertNotIn("numbers", self.codes(source, value))
+        for value in ("2500-3500 \u4e2a token", "2500-3600+ tokens", "2500-3500+ words"):
+            self.assertIn("numbers", self.codes(source, value))
+
+    def test_multiplication_is_not_a_multiplier_suffix(self):
+        self.assertIn("numbers", self.codes("2x 3\n", "2 \u00d7 3\n"))
+
+    def test_explicit_magnitudes_and_thousands_grouping_compare_exactly(self):
+        for original, local, changed in [
+            ("10 million", "1000 \u4e07", "100 \u4e07"),
+            ("1.25 billion", "12.5 \u4ebf", "12.6 \u4ebf"),
+            ("5,000", "5000", "500"),
+            ("2 million", "2,000,000", "2,000,001"),
+        ]:
+            with self.subTest(original=original):
+                self.assertNotIn("numbers", self.codes(f"Count: {original}.\n", generated_cjk(4) + f" {local}\n"))
+                self.assertIn("numbers", self.codes(f"Count: {original}.\n", generated_cjk(4) + f" {changed}\n"))
+                self.assertIn("literal-inline-code", self.codes(f"`{original}`\n", f"`{local}`\n"))
+
+    def test_image_counts_compare_values_and_require_pixel_units(self):
+        for original, equivalent, wrong in [
+            ("13.5 megapixels", "1350 \u4e07\u50cf\u7d20", "1351 \u4e07\u50cf\u7d20"),
+            ("17 million pixels", "1700 \u4e07\u50cf\u7d20", "1700 \u4e07"),
+            ("7,525 pixels", "7525 \u50cf\u7d20", "7525"),
+            ("2 pixels", "2 \u50cf\u7d20", "2 \u4e07\u50cf\u7d20"),
+        ]:
+            with self.subTest(original=original):
+                self.assertNotIn("numbers", self.codes(original, generated_cjk(2) + equivalent))
+                self.assertIn("numbers", self.codes(original, generated_cjk(2) + wrong))
+                self.assertIn("literal-inline-code", self.codes(f"`{original}`", f"`{equivalent}`"))
+
+    def test_percentile_is_not_a_percentage_or_plain_number(self):
+        source = "At the 91.3rd percentile."
+        local = "\u7b2c 91.3 \u767e\u5206\u4f4d"
+        self.assertNotIn("numbers", self.codes(source, local))
+        for changed in (local.replace("91.3", "90.3"), "91.3%", "91.3"):
+            self.assertIn("numbers", self.codes(source, changed))
+        self.assertIn("literal-inline-code", self.codes("`91.3rd percentile`", f"`{local}`"))
+
+    def test_plural_http_status_is_not_a_duration(self):
+        source = "The client receives empty responses or 502s."
+        target = f"{generated_cjk(8)} 502"
+        self.assertNotIn("numbers", self.codes(source, target))
+        self.assertIn("numbers", self.codes(source, target.replace("502", "503")))
+        self.assertIn("numbers", self.codes("It times out in 502s.", target))
+        self.assertIn("numbers", self.codes("Run requests in batches for 502s.", target))
+
+    def test_advisory_ids_in_titles_are_literals_not_english(self):
+        for advisory in ("CVE-2099-12345", "GHSA-abcd-1234-wxyz"):
+            with self.subTest(advisory=advisory):
+                source = f'---\ntitle: "{advisory}"\n---\n\n# {advisory}\n'
+                self.assertFalse({"untranslated-heading", "untranslated-metadata"} & self.codes(source, source))
+                self.assertIn("literal-identifier", self.codes(source, source.replace(advisory, generated_cjk(4))))
+                self.assertEqual([s.value for s in mask(advisory, self.terms)[1]], [advisory])
+                label = f"# {advisory} disclosure notice\n"
+                self.assertIn("untranslated-heading", self.codes(label, label))
+
+    def test_equivalent_list_marker_padding_and_spelling(self):
+        source = "-   First item\n-   Second item\n\n1.  One item\n2.  Two items\n\n--- \n"
+        target = self.translate(source).replace("-   ", "* ").replace("1.  ", "1) ").replace("2.  ", "2) ").replace("--- \n", "---\n")
+        self.assertFalse({"markdown-marker", "markdown-structure"} & self.codes(source, target))
+        self.assertIn("markdown-marker", self.codes(source, target.replace("1) ", "3) ")))
+        self.assertIn("markdown-structure", self.codes(source, target.replace("* ", "", 1)))
+
+    def test_ordered_list_normalizes_later_numbers_without_changing_start(self):
+        source = "3. First step\n8. Second step\n1. Third step\n"
+        target = self.translate(source).replace("8. ", "4. ").replace("1. ", "5. ")
+        self.assertFalse({"markdown-marker", "markdown-structure"} & self.codes(source, target))
+        self.assertIn("markdown-structure", self.codes(source, target.replace("3. ", "1. ")))
+        self.assertIn("markdown-marker", self.codes(source, "3. " + generated_cjk(5) + "\n"))
+
     def test_exception_expires_when_either_document_changes(self):
         source = "Source prose with enough words to trigger English review.\n"
         self.put(self.source, "a.md", source)
@@ -509,12 +876,35 @@ class VerificationTests(Fixture):
         self.assertTrue(found)
         self.assertEqual(found[0].severity, "warning")
 
+    def test_singular_and_plural_acronyms_preserve_prose_term_not_code_spelling(self):
+        target = generated_cjk(6)
+        self.assertNotIn("literal-term", self.codes("These APIs work.\n", f"{target} API\n"))
+        self.assertIn("literal-term", self.codes("These APIs work.\n", target))
+        self.assertIn("literal-inline-code", self.codes("Use `APIs`.\n", f"{target} `API`\n"))
+
     def test_dropped_literal_is_still_a_failure(self):
         source = "Use `OPENAI_TOKEN` for the source task.\n"
         target = (generated_cjk(9) + '。\n')
         found = [i for i in self.issues(source, target) if i.code == "literal-inline-code"]
         self.assertTrue(found)
         self.assertEqual(found[0].severity, "error")
+
+    def test_inline_code_substitution_detected_even_if_original_id_survives_elsewhere(self):
+        current, stale = "example-engine-2026", "earlier-engine-release"
+        title = generated_cjk(4)
+        prose = generated_cjk(10)
+        source = (f"Use `{current}` in the setup screen.\n\n"
+                  f"## Retry\n\nSelect `{current}` manually when the request fails.\n")
+        target = f"{prose} `{current}`\n\n## {title} {{#retry}}\n\n{prose} `{stale}`\n"
+        code = "literal-inline-code-substitution"
+        found = [i for i in self.issues(source, target) if i.code == code]
+        self.assertEqual(len(found), 1)
+        self.assertEqual(found[0].severity, "warning")
+        self.assertEqual({d.anchor for d in found[0].section_drift}, {"retry"})
+        self.assertEqual({d.token for d in found[0].section_drift}, {f"`{current}`", f"`{stale}`"})
+        self.assertNotIn(code, self.codes(source, target + f"\n{prose} `{current}`\n"))
+        other_section = target.replace(f"`{stale}`", "") + f"\n## {title} {{#elsewhere}}\n\n`{stale}`\n"
+        self.assertNotIn(code, self.codes(source, other_section))
 
     def test_relative_and_absolute_destinations_compare_equal(self):
         source = "See [guide](/guide) for details.\n"
@@ -535,6 +925,17 @@ class VerificationTests(Fixture):
         codes = {i.code for i in self.issues(source, target)}
         self.assertNotIn("literal-url", codes)
 
+    def test_bare_url_can_become_one_link_without_allowing_new_destinations(self):
+        url = "https://example.test/guide"
+        source = f"See {url}.\n"
+        link = f"[{generated_cjk(3)}]({url})"
+        self.assertNotIn("literal-destination", self.codes(source, link))
+        self.assertIn("markdown-symbol", self.codes(source, link))
+        self.assertIn("literal-destination", self.codes(source, link + " " + link))
+        self.assertIn("literal-destination", self.codes(source, source + link))
+        self.assertIn("literal-destination", self.codes(source, link.replace("/guide", "/other")))
+        self.assertIn("literal-url", self.codes(source, link.replace("/guide", "/other")))
+
     def test_document_suffix_is_stripped_completely(self):
         source = "See [policy](/security/security-policy.md) for details.\n"
         target = "See [policy](/security/security-policy) for details.\n"
@@ -544,9 +945,54 @@ class VerificationTests(Fixture):
     def test_interface_label_may_be_translated(self):
         source = "Open the `Settings` panel and check `Admin Panel`.\n"
         target = (generated_cjk(2) + ' `' + generated_cjk(2) + '` ' + generated_cjk(5) + ' `' + generated_cjk(4) + '`。\n')
-        found = [i for i in self.issues(source, target) if i.code == "literal-inline-code"]
+        found = [i for i in self.issues(source, target) if i.code == "ui-label-translated"]
         self.assertTrue(found)
-        self.assertTrue(all(i.severity == "warning" for i in found))
+        self.assertTrue(all(i.severity == "info" for i in found))
+        self.assertNotIn("literal-inline-code", self.codes(source, target))
+
+    def test_compound_labels_are_only_relaxed_in_ui_actions(self):
+        for label in ("Settings > Documents", "Clear Cache/Storage"):
+            with self.subTest(label=label):
+                target = generated_cjk(12) + "\n"
+                ui = f"Click `{label}` in the panel.\n"
+                literal = f"The literal value is `{label}`.\n"
+                for source, severity in [(ui, "info"), (literal, "error"), (ui + literal, "error")]:
+                    findings = [i.severity for i in self.issues(source, target)
+                                if i.code in {"literal-inline-code", "ui-label-translated"}]
+                    self.assertEqual(findings, [severity])
+
+    def test_empty_default_gloss_can_move_but_value_cannot(self):
+        source = '#### `EXAMPLE_KEY`\n\n- Type: `str`\n- Default: `("") empty string`\n'
+        local = self.translate(source).replace('`("") empty string`', '`("")` ' + generated_cjk(4))
+        self.assertFalse({"literal-inline-code", "setting-default"} & self.codes(source, local))
+        changed = local.replace('`("")`', '`("value")`') + '\nAnother value: `("")`.\n'
+        self.assertIn("setting-default", self.codes(source, changed))
+        self.assertIn("literal-inline-code", self.codes('Run `("") empty string`.\n', 'Run `("")`.\n'))
+
+    def test_inline_identifier_period_requires_source_spelling_and_target_count(self):
+        clean = "`sample_engine`"
+        punctuated = "`sample_engine.`"
+        prefix = generated_cjk(4)
+        source = f"Use {clean} for this service. Select {punctuated} Next select the mode.\n"
+        target = f"{prefix} {clean} {prefix} {clean}.\n"
+        self.assertNotIn("literal-inline-code", self.codes(source, target))
+        self.assertIn("literal-inline-code", self.codes(source, f"{prefix} {clean}.\n"))
+        self.assertIn("literal-inline-code", self.codes(f"Select {punctuated}\n", target))
+        self.assertIn("literal-inline-code", self.codes(source, target.replace(clean, "`other_engine`")))
+
+    def test_source_term_alias_does_not_change_inline_code_or_keys(self):
+        self.config["source_term_aliases"] = {"oepnAI": "OpenAI"}
+        prefix = generated_cjk(4)
+        self.assertNotIn("literal-identifier", self.codes("Use oepnAI.\n", f"{prefix} OpenAI.\n"))
+        self.assertIn("literal-identifier", self.codes("Use oepnAI.\n", prefix))
+        self.assertIn("literal-inline-code", self.codes("Use `oepnAI`.\n", f"{prefix} `OpenAI`.\n"))
+        self.assertIn("literal-identifier", self.codes("Use oepnAI_KEY.\n", f"{prefix} OpenAI.\n"))
+
+    def test_english_headings_and_metadata_have_single_language_findings_each(self):
+        prose_text = "Some English words that still need translation"
+        source = f'---\ntitle: "{prose_text}"\n---\n\n## {prose_text}\n'
+        findings = [i.code for i in self.issues(source, source) if i.code.startswith(("untranslated", "unchanged"))]
+        self.assertCountEqual(findings, ["untranslated-heading", "untranslated-metadata"])
 
     def test_identifier_code_span_still_required(self):
         source = "Set `OPENAI_TOKEN` for the source task.\n"
@@ -595,11 +1041,55 @@ class VerificationTests(Fixture):
         found = [i for i in self.issues(source, target) if i.code == "code-changed"]
         self.assertEqual([i.severity for i in found], ["error"])
 
+    def test_fence_repair_requires_a_new_block_with_the_exact_inline_sample(self):
+        source = "Run ```source_command --flag```.\n\n```sh\nold_block\n```\n"
+        target = "```sh\nsource_command --changed\n```\n\n```sh\nold_block\n```\n"
+        for candidate in (target, target.split("\n\n")[1]):
+            found = [i for i in self.issues(source, candidate) if i.code == "literal-inline-code"]
+            self.assertEqual([i.severity for i in found], ["error"])
+        self.assertNotIn("literal-inline-code", self.codes(source, target.replace("--changed", "--flag")))
+        same_block = source.replace("old_block", "source_command --flag")
+        self.assertIn("literal-inline-code", self.codes(same_block, same_block.split("\n\n")[1]))
+
+    def test_backticks_cannot_join_adjacent_list_items(self):
+        source = "- Remove ````alpha` prefix\n- Remove ```` suffix\n"
+        target = f"- {generated_cjk(3)} ````alpha`\n- {generated_cjk(4)} ````\n"
+        self.assertNotIn("literal-inline-code", self.codes(source, target))
+        source = "- `value\n  continued`\n- Another item\n"
+        self.assertIn("literal-inline-code", self.codes(source, source.replace("continued", "changed")))
+
     def test_policy_removed_link_may_be_dropped(self):
         source = "- [Community](https://discord.gg/abcdef) for support.\n"
         target = ('- ' + generated_cjk(7) + '。\n')
         codes = {i.code for i in self.issues(source, target)}
         self.assertNotIn("literal-destination", codes)
+        self.assertNotIn("markdown-symbol", codes)
+
+    def test_policy_contact_row_can_be_removed_without_hiding_other_table_changes(self):
+        header = "| Channel | Link |\n| --- | --- |\n"
+        excluded = "| **Discord** | [discord.gg/test](https://discord.gg/test) |\n"
+        required = "| **Guide** | [Guide](https://example.test/) |\n"
+        localized = f"| **{generated_cjk(3)}** | [{generated_cjk(3)}](https://example.test/) |\n"
+        source = header + excluded + required
+        self.assertFalse({"markdown-structure", "markdown-symbol", "literal-destination"} &
+                         self.codes(source, header + localized))
+        self.assertIn("markdown-structure", self.codes(source, header))
+        self.assertIn("literal-destination", self.codes(source, header))
+        self.assertIn("markdown-symbol", self.codes(source, header + localized.replace("**", "")))
+        for ineligible in (
+            excluded.replace("**Discord**", "**Required setup**"),
+            excluded.replace("[discord.gg/test]", "[Read the setup guide]"),
+            excluded.rstrip() + " required action |\n",
+        ):
+            self.assertIn("markdown-structure", self.codes(header + ineligible + required, header + localized))
+
+    def test_policy_links_do_not_exempt_other_symbol_or_destination_changes(self):
+        link = "[Community](https://discord.gg/abcdef)"
+        ordinary = "[Guide](https://example.test/)"
+        text = generated_cjk(8)
+        self.assertIn("markdown-symbol", self.codes(f"{link} **Example prose** and {ordinary}\n", f"{text} {ordinary}\n"))
+        self.assertIn("literal-destination", self.codes(f"{link} alongside {ordinary}\n", text))
+        self.assertIn("markdown-symbol", self.codes(r"\[Unlinked](https://discord.gg/abcdef)" + "\n", text))
 
     def test_policy_removed_link_still_reported_when_target_keeps_it(self):
         source = "- [Community](https://discord.gg/abcdef) for support.\n"
@@ -688,6 +1178,41 @@ class VerificationTests(Fixture):
         del results["config_sha256"]
         with self.assertRaisesRegex(ValueError, "unbound"):
             verify(self.source, self.target, self.config, review_results=results)
+
+    def test_exception_only_change_reuses_reviews_but_reaudits_current_findings(self):
+        source = "# Source heading\n\nSource body.\n"
+        self.put(self.source, "a.md", source)
+        self.put(self.target, "a.md", self.translate(source))
+        self.put(self.source, "b.md", source)
+        self.put(self.target, "b.md", self.translate(source))
+        self.put(self.source, "c.md", source)
+        self.put(self.target, "c.md", self.translate(source))
+        self.put(self.source, "d.md", source + "Visit https://example.org/guide.\n")
+        self.put(self.target, "d.md", self.translate(source))
+        found = verify(self.source, self.target, self.config, ["d.md"])
+        fingerprint = next(i["fingerprint"] for i in found["issues"] if i["code"] == "literal-url")
+        previous_config = dict(self.config, exceptions=[{"fingerprint": fingerprint, "reason": "Synthetic waiver"}])
+        previous = review_bundle(self.source, self.target, previous_config, [])["result_format"]
+        for row in previous["files"][:2]:
+            row.update(reviewed_all_sections=True, **dict.fromkeys(REVIEW_DIMENSIONS, "pass"))
+        self.put(self.target, "b.md", self.translate(source) + "\n")
+
+        unbound = review_bundle(self.source, self.target, self.config, [], previous=previous)
+        self.assertEqual(unbound["reused_files"], [])
+        current = review_bundle(self.source, self.target, self.config, [],
+                                previous=previous, previous_config=previous_config)
+        self.assertEqual(current["reused_files"], ["a.md"])
+        self.assertEqual([row["path"] for row in current["files"]], ["b.md", "c.md", "d.md"])
+        self.assertNotEqual(current["result_format"]["config_sha256"], previous["config_sha256"])
+        self.assertTrue(any(i["fingerprint"] == fingerprint and not i["suppressed"]
+                            for i in current["deterministic_report"]["issues"]))
+        with self.assertRaisesRegex(ValueError, "does not match"):
+            review_bundle(self.source, self.target, self.config, [],
+                          previous=previous, previous_config=self.config)
+        changed_policy = dict(self.config, terms=self.config["terms"] + ["Sample Product"])
+        with self.assertRaisesRegex(ValueError, "non-exception"):
+            review_bundle(self.source, self.target, changed_policy, [],
+                          previous=previous, previous_config=previous_config)
 
     def test_semantic_review_rejects_stale_missing_duplicate_and_bad_status(self):
         initial = self.review_result()

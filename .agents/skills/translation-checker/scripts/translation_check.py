@@ -20,14 +20,19 @@ def main(argv=None):
     parser.add_argument("--review-bundle", type=Path, help="Export complete source/target pairs for autonomous AI quality review")
     parser.add_argument("--review-results", type=Path, help="Validate completed AI review coverage and source/target hashes")
     parser.add_argument("--reuse-review", type=Path, help="With --review-bundle, reuse passed reviews for unchanged source and target files")
+    parser.add_argument("--reuse-review-config", type=Path,
+                        help="Config matching --reuse-review when only exact exceptions have changed")
     parser.add_argument("--summary-only", action="store_true", help="Do not print individual findings; include them in --report")
     parser.add_argument("--strict", action="store_true", help="Treat heuristic warnings as failures too")
     args = parser.parse_args(argv)
     if args.reuse_review and not args.review_bundle:
         parser.error("--reuse-review requires --review-bundle")
+    if args.reuse_review_config and not args.reuse_review:
+        parser.error("--reuse-review-config requires --reuse-review")
     try:
         check_artifacts((args.report, args.review_bundle),
-                        (args.review_results, args.reuse_review, args.config, DEFAULT_CONFIG, ROOT / ".env", ROOT / ".env.example"),
+                        (args.review_results, args.reuse_review, args.reuse_review_config, args.config,
+                         DEFAULT_CONFIG, ROOT / ".env", ROOT / ".env.example"),
                         (args.source, args.target, ROOT / "en-us", ROOT / "zh-cn", ROOT / ".git"))
         config = load_config(args.config)
         reviews = json.loads(args.review_results.read_bytes()) if args.review_results else None
@@ -35,7 +40,9 @@ def main(argv=None):
             raise ValueError("Not a supported semantic review result")
         if args.review_bundle:
             previous = json.loads(args.reuse_review.read_bytes()) if args.reuse_review else None
-            bundle = review_bundle(args.source, args.target, config, args.files, previous=previous, review_results=reviews)
+            previous_config = load_config(args.reuse_review_config) if args.reuse_review_config else None
+            bundle = review_bundle(args.source, args.target, config, args.files, previous=previous,
+                                   previous_config=previous_config, review_results=reviews)
             report = bundle["deterministic_report"]
         else:
             report = verify(args.source, args.target, config, args.files, review_results=reviews)
@@ -50,7 +57,7 @@ def main(argv=None):
                     print(f"{issue['path']}:{issue['line']}: {issue['severity']} [{issue['code']}] {issue['message']}")
         summary = report["summary"]
         semantic = report["quality"]["semantic_review"]
-        print(f"{summary['matched_files']}/{summary['source_files']} files; {summary['errors']} errors; {summary['warnings']} warnings; {summary['suppressed']} exceptions. Semantic review: {semantic}.")
+        print(f"{summary['matched_files']}/{summary['source_files']} files; {summary['errors']} errors; {summary['warnings']} warnings; {summary.get('notes', 0)} notes; {summary['suppressed']} exceptions. Semantic review: {semantic}.")
         return int(bool(summary["errors"] or args.strict and summary["warnings"] or args.review_results and semantic != "passed"))
     except (OSError, ValueError, TypeError, KeyError) as error:
         print(f"Verification failed: {error}", file=sys.stderr)

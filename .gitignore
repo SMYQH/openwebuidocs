@@ -9,4 +9,4 @@ node_modules/
 __pycache__/
 *.py[cod]
 .venv/
-test/.reports/
+/.agents/skills/translation-checker/.reports/

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from bisect import bisect_right
+from functools import lru_cache
 import hashlib
 import html
 import json
@@ -41,7 +42,16 @@ IDENTIFIER = re.compile(
     r"|(?<![\w/])(?a:(?:/|\./|\.\./)[\w./{}:<>-]+)"
 )
 URL = re.compile(r"(?:https?://|mailto:)[^\s<>\]\)\"']+")
+WINDOWS_PATH = re.compile(r"(?<![A-Za-z0-9_/\\])(?a:[A-Za-z]:\\[\w.@~-]+(?:\\[\w.@~-]+)*\\?)")
 EXPLICIT_ID = re.compile(r"\\?\{#([^}]+)\}\s*$")
+ADVISORY_ID = re.compile(r"(?<![A-Za-z0-9_-])(?:CVE-[0-9]{4}-[0-9]{4,}|GHSA(?:-[a-z0-9]{4}){3})(?![A-Za-z0-9_-])")
+ACRONYM = re.compile(r"[A-Z]{2,}")
+PREFIXED_VERSION = re.compile(r"(?a:(?<![\w.])[vV]\d+(?:\.\d+){1,2}"
+                              r"(?:-[\da-zA-Z]+(?:[.-][\da-zA-Z]+)*)?"
+                              r"(?:\+[\da-zA-Z]+(?:[.-][\da-zA-Z]+)*)?(?!\w|\.\d))")
+STATUS_DIAGNOSTIC = re.compile(r"(?:[0-9]+[.)][ \t]+)?([45][0-9]{2}:[ \t]+"
+                               r"'[A-Za-z_]\w*'[ \t]+[A-Za-z ]+[ \t]+'[A-Za-z_]\w*')")
+INLINE_CANDIDATE = re.compile(r"[<{]|\]\(|\\\{#\}")
 
 
 def digest(text: str | bytes) -> str:
@@ -70,9 +80,18 @@ class Segment:
 
 
 def term_pattern(terms: list[str]) -> re.Pattern:
+    return _term_pattern(tuple(terms))
+
+
+@lru_cache(maxsize=64)
+def _term_pattern(terms: tuple[str, ...]) -> re.Pattern:
     # Chinese has no word spaces. Bound only Latin letters/digits/underscores.
-    choices = "|".join(re.escape(t) for t in sorted(terms, key=len, reverse=True) if t)
-    return re.compile(r"(?<![A-Za-z0-9_])(?:" + (choices or r"(?!)") + r")(?![A-Za-z0-9_])")
+    # A term may appear in another case or with a regular plural suffix; both
+    # spellings denote the same product, protocol or interface name.
+    # Also exclude the common noun in title case, as in "Context Windows".
+    choices = "|".join(r"(?<!context )(?-i:Windows|WINDOWS)" if t == "Windows" else re.escape(t) + "s?"
+                       for t in sorted(terms, key=len, reverse=True) if t)
+    return re.compile(r"(?<![A-Za-z0-9_])(?:" + (choices or r"(?!)") + r")(?![A-Za-z0-9_])", re.I)
 
 
 def balanced_end(text: str, start: int, opening: str, closing: str) -> int | None:
@@ -98,7 +117,7 @@ def balanced_end(text: str, start: int, opening: str, closing: str) -> int | Non
     return None
 
 
-def inline_protected(text: str, terms: list[str]) -> list[Protected]:
+def inline_protected(text: str, terms: list[str], *, block_starts: tuple[int, ...] = ()) -> list[Protected]:
     """Return non-overlapping ranges, preserving exact literal spelling."""
     ranges: list[Protected] = []
     occupied = bytearray(len(text))
@@ -110,10 +129,13 @@ def inline_protected(text: str, terms: list[str]) -> list[Protected]:
 
     # Code spans allow arbitrary backtick run lengths and multiline contents.
     i = 0
-    while i < len(text):
-        if text[i] == "`" and (i == 0 or text[i - 1] != "\\"):
+    while (i := text.find("`", i)) != -1:
+        if i == 0 or text[i - 1] != "\\":
             run = re.match(r"`+", text[i:])[0]
-            remainder = text[i + len(run):]
+            # Backticks in the next Markdown block cannot close this code span.
+            block = bisect_right(block_starts, i)
+            limit = block_starts[block] if block < len(block_starts) else len(text)
+            remainder = text[i + len(run):limit]
             paragraph_end = re.search(r"\n[ \t]*\n", remainder)
             if paragraph_end:
                 remainder = remainder[:paragraph_end.start()]
@@ -135,7 +157,8 @@ def inline_protected(text: str, terms: list[str]) -> list[Protected]:
         for m in re.finditer(pattern, text, re.S):
             add(m.start(), m.end(), kind)
     i = 0
-    while i < len(text):
+    while (candidate := INLINE_CANDIDATE.search(text, i)) is not None:
+        i = candidate.start()
         if occupied[i]:
             i += 1
             continue
@@ -180,20 +203,24 @@ def inline_protected(text: str, terms: list[str]) -> list[Protected]:
         (r"!?\[[^\]\n]*\](\[[^\]\n]*\])", "reference"),
         (r"(?m)^\s{0,3}(\[[^\]\n]+\]:\s*\S+)", "reference"),
         (URL.pattern, "url"),
+        (WINDOWS_PATH.pattern, "identifier"),
         (r"&(?:[A-Za-z][A-Za-z0-9]+|#\d+|#x[0-9a-fA-F]+);", "entity"),
         (r"\\[!\"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~]", "escape"),
         (r"(?m)^(?:[ \t]*>[ \t]*)*[ \t]*(?:#{1,6}(?:\s+|$)|[-+*]\s+|\d+[.)]\s+|:{3,}[a-zA-Z]*|[-=]{3,}\s*$)", "marker"),
         (r"\[[ xX]\](?=\s)|(?m:(?<=\s)#{1,6}\s*$)", "marker"),
+        (ADVISORY_ID.pattern, "identifier"),
+        (term_pattern(terms), "term"),
         (IDENTIFIER.pattern, "identifier"),
-        (term_pattern(terms).pattern, "term"),
+        (PREFIXED_VERSION.pattern, "version"),
         (r"(?a:(?<!\w)\d+(?:[.,:/-]\d+)*(?:%|[a-zA-Z]+)?(?!\w))", "number"),
         (r"(?m)^(?:[ \t]*>[ \t]*)+|!?(?=\[)\[|\*+|_+|~{2,}|[\]|]", "symbol"),
     ]:
         for m in re.finditer(pattern, text):
             start, end = m.span(1) if m.lastindex else m.span()
-            if kind == "identifier" and text[start:end].startswith(("/", "./", "../")):
+            if kind == "identifier" and (pattern == WINDOWS_PATH.pattern
+                                         or text[start:end].startswith(("/", "./", "../"))):
                 # A sentence-ending period is prose, not part of a bare path.
-                while end > start and text[end - 1] == "." and text[end - 2:end] != "/.":
+                while end > start and text[end - 1] == "." and text[end - 2] not in "/\\":
                     end -= 1
             add(start, end, kind)
     return sorted(ranges, key=lambda p: p.start)
@@ -229,8 +256,13 @@ def unmask(text: str, spans: list[Protected], *, move_terms: bool = False) -> st
 
 
 def prose(text: str, terms: list[str]) -> str:
-    masked, _ = mask(text, terms)
-    return PLACEHOLDER.sub(" ", masked)
+    pieces = []
+    start = 0
+    for span in inline_protected(text, terms):
+        pieces.extend((text[start:span.start], " "))
+        start = span.end
+    pieces.append(text[start:])
+    return "".join(pieces)
 
 
 class Document:
@@ -246,8 +278,10 @@ class Document:
         self.metadata = None
         self.headings: list[tuple[int, int, str, str]] = []
         self.error_messages: dict[str, str] = {}
-        self.structure: list[tuple[str, int]] = []
+        self.structure: list[tuple[str, int, int | None]] = []
+        self.ordered_item_rows: set[int] = set()
         self.table_rows: set[int] = set()
+        self.table_data_rows: set[int] = set()
         self.literal_spans: list[Protected] = []
         self.admonitions: list[str] = []
         self.body_start = 0
@@ -351,10 +385,14 @@ class Document:
             self.errors.append((self.line(offsets[begin]), "Unclosed fenced code block"))
         parse_body = "".join("\n" if c == "\n" else " " if blocked[self.body_start + i] else c for i, c in enumerate(body))
         tokens = PARSER.parse(parse_body)
-        body_spans = inline_protected(parse_body, self.terms)
+        block_starts = tuple(sorted({offsets[token.map[0]] for token in tokens
+                                     if token.map and token.type in {"inline", "hr"}}))
+        body_spans = inline_protected(parse_body, self.terms,
+                                      block_starts=tuple(start - self.body_start for start in block_starts))
         jsx_tags = [span for span in body_spans if span.kind == "jsx"]
         jsx_cursor, jsx_stack = 0, []
         void_tags = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
+        in_table_body = False
         for token in tokens:
             if token.type == "code_block" and token.map:
                 start, end = (offsets[n] for n in token.map)
@@ -375,10 +413,18 @@ class Document:
                     continue
                 protect(start, end)
                 self.code.append((self.line(start), token.content))
+            if token.type in {"tbody_open", "tbody_close"}:
+                in_table_body = token.type == "tbody_open"
             if token.type == "tr_open" and token.map:
-                self.table_rows.add(self.line(offsets[token.map[0]]))
+                row = self.line(offsets[token.map[0]])
+                self.table_rows.add(row)
+                if in_table_body:
+                    self.table_data_rows.add(row)
             if token.type in {"bullet_list_open", "ordered_list_open", "list_item_open", "tr_open", "th_open", "td_open", "blockquote_open", "hr"}:
-                self.structure.append((token.type, token.level))
+                start = int(token.attrGet("start") or 1) if token.type == "ordered_list_open" else None
+                self.structure.append((token.type, token.level, start))
+            if token.type == "list_item_open" and token.markup in {".", ")"} and token.map:
+                self.ordered_item_rows.add(self.line(offsets[token.map[0]]))
         opaque_body = list(parse_body)
         for span in body_spans:
             if span.kind in {"inline_code", "comment"}:
@@ -402,7 +448,9 @@ class Document:
             end = cursor
             while end < len(self.text) and not blocked[end]:
                 end += 1
-            for span in inline_protected(self.text[cursor:end], self.terms):
+            local_starts = tuple(start - cursor for start in
+                                 block_starts[bisect_right(block_starts, cursor):bisect_right(block_starts, end)])
+            for span in inline_protected(self.text[cursor:end], self.terms, block_starts=local_starts):
                 if span.kind == "jsx":
                     for attribute in ATTRIBUTE.finditer(span.value):
                         begin = cursor + span.start + attribute.start(2)
@@ -483,10 +531,15 @@ class Document:
             if quoted and any(re.search(r"\b(?:troubleshooting|errors?|exceptions?)\b", parent, re.I)
                               for _, parent in parents):
                 self.error_messages[anchor] = quoted[1] or quoted[2]
+            elif (diagnostic := STATUS_DIAGNOSTIC.fullmatch(title)) and any(
+                    re.search(r"\b(?:troubleshooting|errors?|exceptions?|issues?)\b", parent, re.I)
+                    for _, parent in parents):
+                self.error_messages[anchor] = diagnostic[1]
             parents.append((level, title))
-        self.terms.extend(self.error_messages.values())
-        self.segments = [s for s in self.segments if s.kind != "prose"
-                         or WORDS.search(prose(s.text, self.terms)) or CJK.search(prose(s.text, self.terms))]
+        if self.error_messages:
+            self.terms.extend(self.error_messages.values())
+            self.segments = [s for s in self.segments if s.kind != "prose"
+                             or WORDS.search(clean := prose(s.text, self.terms)) or CJK.search(clean)]
         self.segments.sort(key=lambda s: s.start)
         self.code.sort(key=lambda pair: pair[0])
         for line in admonition_stack:
