@@ -76,7 +76,6 @@ open-webui-docs/                # Root repository
 ├── AGENTS.MD                   # This document
 ├── Readme.md
 ├── .agents/skills/             # Shared skills and Python translation tooling
-├── .codex/agents/              # Documentation agent definitions
 ├── en-us/                      # English upstream (Git submodule → open-webui/docs)
 │   └── docs/                   # English documentation source (translation baseline)
 └── zh-cn/                      # Chinese translation (directly maintained)

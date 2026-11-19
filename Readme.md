@@ -16,7 +16,6 @@
 │   ├── upstream-sync/                # 上游同步与翻译更新
 │   ├── translation-checker/          # 基于 Python 的翻译检查
 │   └── translation-semantic-review/  # 全量语义审查
-├── .codex/agents/                    # 文档审查智能体定义
 ├── en-us/                            # 英文源文档（Git 子模块）
 ├── zh-cn/                            # 中文文档站点
 │   └── docs/                         # 简体中文译文

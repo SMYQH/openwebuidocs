@@ -26,6 +26,13 @@
 
 Workflow: [semantic review](.agents/skills/translation-semantic-review/SKILL.md) is separate from the [Python checker](.agents/skills/translation-checker/SKILL.md), which now owns the scripts, tests, config, provider helpers, and ignored local artifacts. The move does not change review counts or checker behavior. Edits to a translated file expire the exact exceptions of that file; `scripts/restamp_exceptions.py` re-binds the surviving exceptions to their current fingerprints and reports the findings that need a manual decision.
 
+### 2026-11-19 Removal of the legacy documentation agent definitions
+
+- Deleted `.codex/agents/doc-check.agent.md` and `.codex/agents/doc-review.agent.md`. Both files used the VS Code Copilot Chat custom-agent format (`tools:` entries such as `vscode/askQuestions`, `ms-vscode.vscode-websearchforcopilot`, `search/fileSearch`). Copilot discovers those files under `.github/agents/`, and Codex 0.170 declares agent roles through `[agents.<name>]` in `config.toml`; this repository declares none, and the session agent tool exposes no role selector. After the move out of `.github/agents/` nothing loaded them.
+- The review workflow stays in the shared skills: `.agents/skills/translation-semantic-review` for bilingual reading and `.agents/skills/translation-checker` for the deterministic audit. The deleted orchestrator also mandated a question round and sub-agent dispatch for every check, which conflicts with the current no-sub-agent rule and with the deterministic audit.
+- Updated the `AGENTS.MD` repository tree and the `Readme.md` structure section to drop the removed directory. No translated document changed.
+- Verification: **176 behavior tests pass**; the strict audit still reports **441/441 counterparts, 0 errors, 0 warnings, 18 notes, and 53 exact exceptions**.
+
 ### 2026-11-19 Policy-link text, endpoint terminology, and exception re-binding
 
 - Restored the upstream text of five policy-link bullets whose only link is removed by the external-link policy: the Discord referral in the Open Responses troubleshooting list, the Nous Research Discord entry in the Hermes Agent learn-more list, the Discord entry in the landing page "Get Involved" list, the Discord and Reddit referral in the troubleshooting community-support list, and the Voice AI & TTS Discord support line. The community-support bullet keeps the upstream wording and still offers the GitHub Discussions link.
