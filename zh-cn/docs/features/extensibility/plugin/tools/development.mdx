@@ -89,7 +89,7 @@ async def search_docs(self, query: str, limit: int = 5) -> str:
 
 ### 类型注解 {#type-hints}
 
-每个工具的参数都必须提供类型注解。类型也可以是嵌套的，例如 `queries_and_docs: list[tuple[str, int]]`。这些类型注解会用于生成发送给模型的 JSON schema。没有类型注解的参数在 schema 中会被视为字符串类型，因此模型总会发送字符串。`Optional[X]` 会退化为 `X`，默认值为 `None` 的参数会被丢弃。名称以 `__` 开头的参数会连同它们的 `:param` 行一起从 schema 中移除，因此模型永远看不到下面列出的保留参数。
+每个工具的参数都必须提供类型注解。类型也可以是嵌套的，例如 `queries_and_docs: list[tuple[str, int]]`。这些类型注解会用于生成发送给模型的 JSON schema。没有类型注解的参数在 schema 中会被视为字符串类型，因此模型总会发送字符串。`Optional[X]` 会退化为 `X`，若默认值为 `None`，schema 会省略该默认值。名称以 `__` 开头的参数会连同它们的 `:param` 行一起从 schema 中移除，因此模型永远看不到下面列出的保留参数。
 
 ### 返回值 {#return-values}
 
@@ -171,7 +171,7 @@ Legacy Mode **属于旧版且不再支持**——完整策略请参阅 [Tool Cal
 
 事件发射器在两种函数调用模式下的行为不同。函数调用模式由 `function_calling` 参数控制：
 
-- **Native Mode（Agentic Mode）**（`function_calling = "native"`）—— 唯一受支持的模式。它使用模型的结构化工具调用 API。**可用的事件发射器表面有限**——请查看下方矩阵以了解具体支持哪些事件类型。
+- **Native Mode（Agentic Mode）**（`function_calling = "native"`）—— 唯一受支持的模式。它使用模型的结构化工具调用 API。**事件发射器仅支持部分事件类型**——请查看下方矩阵以了解具体支持哪些事件类型。
 - **Legacy Mode**（`function_calling = "legacy"`）—— 旧版、基于 prompt injection 的模式。虽然事件发射器能力完整，但该模式本身不受支持，不应在新部署中选择。
 
 完整的模式策略、模型要求和配置请参阅 [**Tool Calling Modes 指南**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。简单来说：**请使用 Native Mode**；下方矩阵会告诉你哪些事件类型在该模式下可用。
@@ -1125,7 +1125,7 @@ result = await __event_call__({
 :::danger 为 Native 模式编写工具 —— Legacy 模式不再受支持
 Legacy Mode **属于旧版且不再支持**。新工具应编写为在 Native Mode 下工作。下面的模式对比细节仅保留给仍在维护旧版 Legacy-Mode 工具的人，帮助他们了解迁移时需要弥补的差距——这 **不是** 对新项目选择 Legacy Mode 的建议。
 
-如果你的工具设计依赖某个只在 Legacy Mode 中存在的事件类型，请围绕 Native 兼容面重新设计 UX（`status`、`notification`、`citation`、`chat:message:files`、`confirmation`、`chat:message:follow_ups`，再加上从工具方法返回最终内容块）。要求用户为了运行你的工具而切换到旧模式，这种做法今后不可接受。
+如果你的工具设计依赖某个只在 Legacy Mode 中存在的事件类型，请根据原生模式支持的事件和返回值重新设计交互（`status`、`notification`、`citation`、`chat:message:files`、`confirmation`、`chat:message:follow_ups`，再加上从工具方法返回最终内容块）。要求用户为了运行你的工具而切换到旧模式，这种做法今后不可接受。
 :::
 
 **模式对比概览** *（仅供迁移参考；Native 是唯一受支持的目标）*：
@@ -1135,7 +1135,7 @@ Legacy Mode **属于旧版且不再支持**。新工具应编写为在 Native Mo
 | **状态** | ❌ 旧版，已不再支持 | ✅ 新工具必须使用 |
 | **延迟** | 更高 —— 完整的 prompt injection 流水线 | 更低 —— 直接工具调用 API |
 | **KV 缓存** | ❌ 每一轮都会失效 | ✅ 保留 |
-| **事件支持** | 完整的事件类型表面 | 有限的表面（见上方矩阵） |
+| **事件支持** | 支持全部事件类型 | 支持部分事件类型（见上方矩阵） |
 | **流式处理** | 中途内容重写可用 | 中途重写会被 completion 快照覆盖 |
 | **Status / 通知 / 引用** | ✅ | ✅ |
 | **消息内容事件（`message`、`chat:message`、`replace`）** | ✅ | ❌ 会被覆盖 |
@@ -1328,7 +1328,7 @@ await __event_emitter__({
 })
 ```
 
-**模式检测模式：** 参见[在工具中检测当前模式](#detecting-the-mode-in-your-tool)以了解辅助函数和注意事项。
+**模式检测示例：** 参见[在工具中检测当前模式](#detecting-the-mode-in-your-tool)以了解辅助函数和注意事项。
 
 ``` python
 # Native is the default; only an explicit "legacy" opts out.
@@ -1360,7 +1360,7 @@ Tools 和 Actions 可以返回 HTML 内容，并在聊天中直接渲染为可�
 
 当多个工具为同一个包定义了不同版本（例如，Tool A 需要 `pandas==1.5.0`，而 Tool B 需要 `pandas==2.0.0`）时，Open WebUI 会以非确定性顺序安装它们。这可能导致不可预测的行为，并破坏一个或多个工具。
 
-**解决这个问题最稳妥的办法是使用 OpenAPI 工具服务器。**
+**使用 OpenAPI 工具服务器是解决该问题的唯一可靠办法。**
 
 我们强烈建议使用 [OpenAPI tool server](/features/extensibility/plugin/tools/openapi-servers/) 来避免这些依赖冲突。
 
@@ -1378,7 +1378,7 @@ FROM ghcr.io/open-webui/open-webui:main
 RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 ```
 
-运行时安装只适用于**单 worker 开发或家庭实验环境**，也就是你在试验新函数和工具的时候。对于任何服务多个用户的部署，都应该把依赖打包进容器镜像。
+运行时安装只适用于**开发或家庭实验环境**，也就是你在试验新函数和工具的时候。对于任何服务多个用户的部署，都应该把依赖打包进容器镜像。
 
 :::
 

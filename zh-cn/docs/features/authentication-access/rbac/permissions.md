@@ -37,7 +37,7 @@ Open WebUI 中的权限是**累加**的。
 
 权限分为五个主要类别：**工作区**、**共享**、**对话**、**功能**和**设置**。
 
-有些开关只有在整个实例启用对应功能时才会显示，例如**笔记共享**、**API Keys**、**网页搜索**和**直连工具服务器**。被隐藏的开关会保留其取值。管理员不受本页任何权限的限制。
+有些开关只有在整个实例启用对应功能时才会显示，例如**笔记共享**、**API Keys** 和**网页搜索**。隐藏的开关会保留其取值。管理员不受本页任何权限的限制。
 
 ### 1. 工作区权限 {#1-workspace-permissions}
 控制对"工作区"部分的访问，用户在此创建和管理资源。
@@ -143,21 +143,20 @@ Open WebUI 中的权限是**累加**的。
 | **加密频道** | 在私信和私密群组频道中使用[加密对话](/features/channels/encrypted-chats)的能力（[`USER_PERMISSIONS_FEATURES_ENCRYPTED_CHANNELS`](/reference/env-configuration#user_permissions_features_encrypted_channels)）。同时需要**频道**权限。默认关闭。 |
 | **文件夹** | 使用文件夹整理对话的能力。 |
 | **网络搜索** | 使用网络搜索集成的能力。 |
-| **图像生成** | 使用图像生成工具的能力。在同一时间只加载一个图像模型的后端上，该权限还允许切换实例当前启用的图像模型；参见下方说明。 |
+| **图像生成** | 使用图像生成工具。为 AUTOMATIC1111 连接设置 Model IDs 后，此权限也允许用户切换服务器已加载的模型，变更对所有用户生效。见下方说明。 |
+| **视频生成** | 使用[视频生成](/features/chat-conversations/image-generation-and-editing/video-generation)（[`USER_PERMISSIONS_FEATURES_VIDEO_GENERATION`](/reference/env-configuration#user_permissions_features_video_generation)）。默认关闭，管理员始终拥有此权限。视频生成启用时才会显示此开关。 |
 | **代码解释器** | 使用 Python 代码解释器的能力。手动执行代码（代码块上的**运行**按钮）没有单独的权限，它对所有人都遵循 [`ENABLE_CODE_EXECUTION`](/reference/env-configuration#enable_code_execution)。参见[手动代码执行](/features/chat-conversations/chat-features/code-execution/python#manual-code-execution-pyodide)。 |
-| **直连工具服务器** | 在**设置 > 集成**中添加个人工具服务器和 Open Terminal 连接的能力。同时需要 [`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)。 |
 | **记忆** | 访问用于持久化用户上下文的记忆功能。收回该权限会隐藏**个性化**设置标签页、屏蔽记忆 API 端点、不向模型提供记忆工具，并阻止已存储的记忆被注入聊天的系统上下文中。注入检查会在每次聊天请求时于服务端执行，因此仍在请求记忆的客户端也不会得到它。管理员始终不受此限制。 |
-| **自动化** | 非管理员用户访问自动化页面并创建、编辑、运行、暂停或删除自己定时自动化的能力。 |
+| **自动化** | 非管理员用户可访问自动化页面，并创建、编辑、运行、暂停或删除自己的定时自动化。能编辑文件夹的用户也能暂停向该文件夹发布内容的自动化。见[文件夹](/features/chat-conversations/chat-features/automations#folders)。 |
 | **日历** | 访问日历功能，用于创建日历、管理事件和查看共享日历。 |
+| **子智能体** | 使用 `delegate_task` 和 `timer` 工具（[`USER_PERMISSIONS_FEATURES_SUBAGENTS`](/reference/env-configuration#user_permissions_features_subagents)）。启用[子智能体](/features/chat-conversations/chat-features/subagents)后才会显示此开关。 |
 | **用户 Webhooks** | 用户设置其个人 Webhook URL（位于 **设置 > 账户**）以接收通知的能力。默认禁用。 |
 
 :::info 图像生成与当前启用模型
 
-某些图像后端（例如 Automatic1111）只会保留一个已加载的图像模型，并使用当前启用的那个进行生成，因此选择模型等同于切换已加载的模型。
+AUTOMATIC1111 只加载一个 checkpoint，并用它生成图像。如果已为 AUTOMATIC1111 连接设置 **Model IDs**，有权访问该连接的用户选择其他模型时，会切换服务器已加载的 checkpoint，影响该服务器上的所有用户，直到再次切换。将 **Model IDs** 留空即可避免这种情况。
 
-在 Automatic1111 上，该切换仅限管理员。拥有**功能 > 图像生成**权限的非管理员无法更改实例级模型：他们的模型选择会被忽略，图像将使用当前配置的 checkpoint 生成。只有管理员的请求才会改变当前启用的模型，而一旦改变，对所有人都会生效，直到再次更改。
-
-支持在每次请求中指定模型的后端不受影响：用户的选择仅对自己的生成生效。
+其他连接类型接受在每次请求中指定模型，因此用户的选择只影响自己的生成。可以在[图像生成](/features/chat-conversations/image-generation-and-editing#set-up-a-connection)的连接**访问控制**中设置用户可以使用哪些连接。
 
 :::
 

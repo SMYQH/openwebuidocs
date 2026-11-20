@@ -291,7 +291,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`dict`（JSON 对象）
 - 默认值：`{}`（显示所有控件）
-- 描述：向非管理员用户隐藏控件。将某个控件 ID 设为 `false` 即可隐藏它，例如 `{"chat.fork": false, "models.pin": false, "settings.usage": false}`。管理员始终能看到所有控件。隐藏只是把控件从界面上移除，其背后的功能仍然可用。也可在 **设置 > 界面**（管理员区域） 的**可见控件**中配置。
+- 描述：向非管理员用户隐藏控件。将某个控件 ID 设为 `false` 即可隐藏它，例如 `{"chat.fork": false, "models.pin": false, "settings.usage": false}`。管理员始终能看到所有控件。隐藏只是把控件从界面上移除，其背后的功能仍然可用。也可在管理员的 **设置 > 界面 > 可见性** 下选择 **可见控件** 进行配置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `ui.visibility`。
 
 :::info
@@ -305,20 +305,22 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 | 控件 ID | **可见控件**中的标签 | 隐藏的内容 |
 | :--- | :--- | :--- |
-| `model_editor.capabilities.vision` | 视觉 | 模型编辑器**能力**下的**视觉** |
-| `model_editor.capabilities.file_upload` | 文件上传 | 模型编辑器**能力**下的**文件上传** |
-| `model_editor.capabilities.file_context` | 预加载文件 | 模型编辑器**能力**下的**预加载文件** |
-| `model_editor.capabilities.web_search` | 网络搜索 | 模型编辑器**能力**下的**网络搜索** |
-| `model_editor.capabilities.image_generation` | 图像生成 | 模型编辑器**能力**下的**图像生成** |
-| `model_editor.capabilities.code_interpreter` | 代码解释器 | 模型编辑器**能力**下的**代码解释器** |
-| `model_editor.capabilities.terminal` | 终端 | 模型编辑器**能力**下的**终端** |
-| `model_editor.capabilities.usage` | 用量 | 模型编辑器**能力**下的**用量** |
-| `model_editor.capabilities.citations` | 引用 | 模型编辑器**能力**下的**引用** |
-| `model_editor.capabilities.status_updates` | 状态更新 | 模型编辑器**能力**下的**状态更新** |
-| `model_editor.capabilities.memory` | 记忆 | 模型编辑器**能力**下的**记忆** |
-| `model_editor.capabilities.builtin_tools` | 内置工具 | 模型编辑器**能力**下的**内置工具** |
+| `model_editor.capabilities.vision` | 视觉 | 模型编辑器 **Features** 下的 **Vision** |
+| `model_editor.capabilities.file_upload` | 文件上传 | 模型编辑器 **Features** 下的 **File Upload** |
+| `model_editor.capabilities.file_context` | 预加载文件 | 模型编辑器 **Features** 下的 **Preload files** |
+| `model_editor.capabilities.web_search` | 网页搜索 | 模型编辑器 **Features** 下的 **Web Search** |
+| `model_editor.capabilities.image_generation` | 图像生成 | 模型编辑器 **Features** 下的 **Image Generation** |
+| `model_editor.capabilities.video_generation` | 视频生成 | 模型编辑器 **Features** 下的 **Video Generation** |
+| `model_editor.capabilities.code_interpreter` | 代码解释器 | 模型编辑器 **Features** 下的 **Code Interpreter** |
+| `model_editor.capabilities.terminal` | 终端 | 模型编辑器 **Features** 下的 **Terminal** |
+| `model_editor.capabilities.usage` | 用量 | 模型编辑器 **Features** 下的 **Usage** |
+| `model_editor.capabilities.citations` | 引用 | 模型编辑器 **Features** 下的 **Citations** |
+| `model_editor.capabilities.status_updates` | 状态更新 | 模型编辑器 **Features** 下的 **Status Updates** |
+| `model_editor.capabilities.memory` | 记忆 | 模型编辑器 **Features** 下的 **Memory** |
+| `model_editor.capabilities.builtin_tools` | 内置工具 | 模型编辑器 **Features** 下的 **Builtin Tools** |
 | `model_editor.defaults.web_search` | 网络搜索 | 模型编辑器**默认功能**下的**网络搜索** |
 | `model_editor.defaults.image_generation` | 图像生成 | 模型编辑器**默认功能**下的**图像生成** |
+| `model_editor.defaults.video_generation` | 视频生成 | 模型编辑器**默认功能**下的**视频生成** |
 | `model_editor.defaults.code_interpreter` | 代码解释器 | 模型编辑器**默认功能**下的**代码解释器** |
 | `model_editor.tools.time` | 时间与计算 | 模型编辑器**内置工具**下的**时间与计算** |
 | `model_editor.tools.user_input` | 询问用户 | 模型编辑器**内置工具**下的**询问用户** |
@@ -331,25 +333,28 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 | `model_editor.tools.notifications` | 通知 | 模型编辑器**内置工具**下的**通知** |
 | `model_editor.tools.web_search` | 网络搜索 | 模型编辑器**内置工具**下的**网络搜索** |
 | `model_editor.tools.image_generation` | 图像生成 | 模型编辑器**内置工具**下的**图像生成** |
+| `model_editor.tools.video_generation` | 视频生成 | 模型编辑器**内置工具**下的**视频生成** |
 | `model_editor.tools.code_interpreter` | 代码解释器 | 模型编辑器**内置工具**下的**代码解释器** |
 | `model_editor.tools.tasks` | 任务管理 | 模型编辑器**内置工具**下的**任务管理** |
 | `model_editor.tools.automations` | 自动化 | 模型编辑器**内置工具**下的**自动化** |
 | `model_editor.tools.calendar` | 日历 | 模型编辑器**内置工具**下的**日历** |
 | `model_editor.tools.subagents` | 子智能体 | 模型编辑器**内置工具**下的**子智能体** |
+| `model_editor.tools.visualizations` | 可视化 | 模型编辑器**内置工具**下的**可视化** |
 | `model_editor.tools.skills` | 技能 | 模型编辑器**内置工具**下的**技能** |
 | `model_editor.tools.tools` | 工具创建 | 模型编辑器**内置工具**下的**工具创建** |
 | `chat.capture` | 截图 | 聊天输入框 **+** 菜单中的**截图** |
 | `chat.compare` | 对比文本 | **+** 菜单和 `/compare` 命令中的**对比文本** |
 | `chat.attach_webpage` | 附加网页 | **+** 菜单中的**附加网页** |
 | `chat.attach_files` | 附加文件 | **+** 菜单中的**附加文件** |
-| `chat.attach_notes` | 附加笔记 | **+** 菜单中的**附加笔记** |
+| `chat.attach_notes` | 附加笔记 | **+** 菜单中 **Attachments** 下的 **Attach Notes** |
 | `chat.attach_knowledge` | 附加知识库 | **+** 菜单中的**附加知识库** |
-| `chat.reference_chats` | 引用聊天 | **+** 菜单中的**引用聊天** |
+| `chat.reference_chats` | 引用聊天 | **+** 菜单中 **Attachments** 下的 **Reference Chats** |
 | `chat.selected_tools` | 已选工具 | 聊天输入框中的已选工具指示器 |
 | `chat.selected_skills` | 已选技能 | 聊天输入框中的已选技能指示器 |
 | `chat.selected_filters` | 已选过滤器 | 聊天输入框中已启用的过滤器指示器 |
 | `chat.selected_web_search` | 已选网络搜索 | 开启网络搜索时聊天输入框中的**网络搜索**指示器 |
 | `chat.selected_image_generation` | 已选图像生成 | 开启图像生成时聊天输入框中的**图像**指示器 |
+| `chat.selected_video_generation` | 已选视频生成 | 开启视频生成时聊天输入框中的 **Video** 指示器 |
 | `chat.selected_code_interpreter` | 已选代码解释器 | 开启时聊天输入框中的**代码解释器**指示器 |
 | `chat.status` | /status | `/status` 命令 |
 | `chat.model_command` | /model | `/model` 命令 |
@@ -358,7 +363,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 | `chat.merge` | 合并回复 | 多模型回复下的**合并回复** |
 | `chat.code_preview` | 预览 | 代码块上的**预览** |
 | `chat.fork` | 分叉聊天 | 回复下方的**分叉聊天**以及 `/fork` 命令 |
-| `chat.artifacts` | 工件 | 聊天顶栏菜单中的**工件** |
+| `chat.artifacts` | 产物 | 标签栏的 **+** 菜单中的 **Artifacts** 和 **Artifacts** 标签页 |
 | `chat.archive` | 归档 | 聊天菜单中的**归档**、侧边栏中选中聊天时的**归档**，**设置 > 已归档聊天**中的**取消归档聊天**和**取消归档全部**，以及**设置 > 数据控制**中的**归档全部聊天** |
 | `chat.tags` | 标签 | 聊天顶栏菜单中的**标签** |
 | `models.set_default` | 设为默认 | 模型选择器中的**设为默认** |
@@ -378,7 +383,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 | `settings.iframe_sandbox_allow_forms` | iframe 沙箱允许表单 | **设置 > 界面**中的 **iframe 沙箱允许表单** |
 | `settings.iframe_sandbox_allow_downloads` | iframe 沙箱允许下载 | **设置 > 界面**中的 **iframe 沙箱允许下载** |
 
-只有当用户在**设置 > 界面**中开启**显示输入选择**时，`chat.selected_*` 指示器才会显示。
+只有当用户在**设置 > 界面**中开启**显示输入选项**时，`chat.selected_*` 指示器才会显示。
 
 #### `DEFAULT_USER_ROLE` {#default\_user\_role}
 - 类型：`str`
@@ -510,6 +515,13 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 - 默认值：空，即不限制
 - 描述：模型读取之前的聊天时，`view_chat` 工具返回的消息文本字符数上限。会保留最新的若干条消息，并在结果中告知模型内容被截断以及包含多少条消息。必须是正整数，否则 Open WebUI 会在启动时停止。参见[内置系统工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chats.view_max_chars`。可在 **设置 > 常规 > 聊天读取上限**（管理员区域） 中配置。留空表示不限制。
+
+#### `VISUALIZATION_PROMPT_TEMPLATE` {#visualization\_prompt\_template}
+
+- 类型：`str`
+- 默认值：空字符串，回退到内置指令。
+- 描述：模型使用 `render_visualization` 工具时收到的指令，决定何时以及如何绘制。参见[可视化](/features/chat-conversations/chat-features/visualizations)。
+- 持久化：这是一个 `ConfigVar` 变量。保存在配置键 `chat.visualizations.prompt_template` 下。可在 **Settings > Interface > Visualization Prompt**（管理员区域）配置。
 
 #### `ENABLE_AUTOMATIONS` {#enable\_automations}
 
@@ -756,13 +768,13 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 
 - 类型：`str`
 - 默认值：空字符串（不注入 CSP）
-- 描述：设置 Content-Security-Policy，应用于界面中渲染的所有 `srcdoc` iframe，包括 Artifacts、代码和 HTML 预览、文件预览、引用弹窗以及 MCP Apps。设置后，系统会在 iframe 文档顶部插入 `<meta http-equiv="Content-Security-Policy">` 标签，限制由 LLM 生成或用户上传的 HTML 可以加载和执行的内容，包括网络连接、脚本、样式、字体和框架。iframe 的 `sandbox` 属性仍提供基础隔离。对于需要限制渲染后 HTML 发起出站网络请求的部署，此 CSP 提供额外的纵深防御。示例值：`default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'none'`。留空时仅使用沙箱。
+- 描述：设置应用于界面中所有 `srcdoc` iframe 的 Content-Security-Policy，包括产物、代码及 HTML 预览、文件预览、引用弹窗、MCP Apps 和可视化。设置后，系统会在 iframe 文档顶部注入 `<meta http-equiv="Content-Security-Policy">` 标签，限制 LLM 生成或用户上传的 HTML 可加载和执行的内容，包括网络连接、脚本、样式、字体和框架。iframe 上的 `sandbox` 属性仍提供基本隔离。对需要限制渲染后 HTML 发起出站网络请求的部署，此 CSP 提供额外的纵深防护。示例值：`default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'none'`。若只使用沙箱，则留空。
 
 
 #### `THREAD_POOL_SIZE` {#thread\_pool\_size}
 - 类型：`int`
 - 默认值：未设置（适用 AnyIO 的 `40` 上限以及 Python 默认的执行器大小）
-- 描述：设置可以同时在工作线程中运行的**并发**阻塞操作（文件 I/O、同步路由处理器、部分库调用）的最大数量。正值会同时设定 AnyIO 的线程上限和事件循环默认线程池的大小。它是并发上限，而非预先创建的线程数量：线程按需惰性创建并复用，因此空闲时数值再高也不产生开销。
+- 描述：限制工作线程中可**并发**运行的阻塞操作数量，包括文件 I/O、同步路由处理函数及部分库调用。正数同时设置 AnyIO 线程限制及事件循环默认线程池的大小。该值是并发上限，不是预创建的线程数。线程按需创建并复用，因此设置较大的值不会增加空闲开销。知识库上传最多占用一半的线程池，避免聊天附件一直排在知识库上传之后。
 
 :::warning 在任何真实服务器上都应将其设为 2000 或更高，绝不要调低
 默认值 `40` 对生产环境来说远远不够。当同时需要的阻塞操作超过 `THREAD_POOL_SIZE` 时，后续每个请求都要等待空闲槽位，整个应用看起来像是卡住了，而 CPU 和内存却一切正常。`2000` 是大型多用户实例的下限；设得更高也没有问题。
@@ -2029,22 +2041,7 @@ The format for the JSON response is strictly:
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
-### 直连 (OpenAPI/MCPO 工具服务器) {#direct-connections-openapimcpo-tool-servers}
-
-#### `ENABLE_DIRECT_CONNECTIONS` {#enable\_direct\_connections}
-
-- 类型：`bool`
-- 默认值：`False`
-- 描述：启用或禁用直接连接。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-
-#### `ENABLE_DIRECT_INTEGRATIONS` {#enable\_direct\_integrations}
-
-- 类型：`bool`
-- 默认值：`False`
-- 描述：控制用户能否进入**设置**中的个人**集成**标签页，在那里添加自己的工具服务器和 Open Terminal 连接。默认关闭，因此在管理员于**设置 > 集成**（管理员区域）的**用户连接**部分开启之前，该标签页不会显示。开启后，管理员和拥有 `direct_tool_servers` 权限的用户都会看到该标签页，仅有权限并不够。关闭期间，用户和管理员在该标签页中保存的工具服务器与 Open Terminal 连接不会在聊天中被使用，即使请求中仍包含它们，服务器也会忽略。这些配置会保留保存，重新开启后再次生效。分组和默认权限中的**直接工具服务器**开关也仅在开启时显示。
-- 持久化：这是一个 `ConfigVar` 变量。
+### 工具服务器 {#tool-servers}
 
 #### `TOOL_SERVER_CONNECTIONS` {#tool\_server\_connections}
 
@@ -2094,7 +2091,7 @@ The format for the JSON response is strictly:
 
 - 类型：`str`（JSON 数组）
 - 默认值：`[]`
-- 描述：指定终端服务器连接配置的 JSON 数组。每个连接定义连接到 [Open Terminal](/features/open-terminal)实例或[终端编排器](/features/open-terminal/terminals/)所需的参数。与用户级的工具服务器连接不同，这些连接由管理员配置并通过 Open WebUI 代理，因此终端 URL 和 API 密钥不会暴露给浏览器。支持通过 `access_grants` 进行基于用户组的访问控制。
+- 描述：指定终端服务器连接配置的 JSON 数组。每项定义连接到 [Open Terminal](/features/open-terminal) 实例或 [Terminals 编排器](/features/open-terminal/terminals/)所需的参数。这些连接由管理员配置，并通过 Open WebUI 代理，因此终端 URL 和 API 密钥不会暴露给浏览器。可通过 `access_grants` 按群组控制访问权限。
 - 示例（直连 Open Terminal）：
 ```json
 [
@@ -2119,28 +2116,21 @@ The format for the JSON response is strictly:
     "key": "your-api-key",
     "name": "Terminals",
     "auth_type": "bearer",
-    "policy_id": "ai-computer",
     "config": {
       "access_grants": [
         {"principal_type": "user", "principal_id": "*", "permission": "read"}
-      ],
-      "contexts": {
-        "chat": {"context_id": "chat_id"},
-        "automation": false
-      }
+      ]
     }
   }
 ]
 ```
 - 持久化：这是一个 `ConfigVar` 变量。
 
-对于编排器连接，把 `policy_id` 设为某个名称，即可让所有终端请求都经由该命名策略路由。省略它则有意使用编排器通过其向后兼容的无范围路由提供的服务默认配置。
+`config.access_grants` 设置谁可以使用连接。`read` 允许用户使用共享给他的终端，`write` 允许用户在编排器连接上创建和管理终端。参见[创建终端](/features/open-terminal/terminals/orchestration/creating-terminals)。
 
-`config.contexts` 让编排器连接可以按聊天或按自动化分配独立的工作区，或者对两者都不分配，对应的键为 `chat` 和 `automation`。在非编排器连接上该配置会被忽略。可选取值、管理端控件以及容量取舍参见[终端上下文](/features/open-terminal/terminals/orchestration/contexts)。
+选中此终端时，`config.chat_uploads` 决定聊天输入框中的附件传到哪里。没有此键的连接使用 `default`，即上传文件到 Open WebUI，并提取其文本供模型读取。`filesystem` 则将文件写入终端的工作文件夹，不提取文本、不进行检索，也不在 Open WebUI 中存储任何内容。模型收到路径后使用终端自带的工具打开文件。任何其他值均按 `default` 处理。参见[聊天上传](/features/open-terminal/setup/connecting#chat-uploads)。
 
-`config.chat_uploads` 决定在选中该终端时，聊天输入框中附加的文件会传到哪里。默认值 `default` 会把它上传到 Open WebUI 并提取文本供模型阅读。`filesystem` 则会把它写入终端当前的工作目录，不做文本提取、不做检索，Open WebUI 中也不保存任何内容；模型会拿到路径并使用终端自带的工具打开该文件。其它任何取值都会按 `default` 处理。参见[聊天上传](/features/open-terminal/setup/connecting#chat-uploads)。
-
-`auth_type` 接受 `bearer`（把 `key` 作为 bearer 令牌发送）、`session`（发送调用用户自己的 Open WebUI 凭据）、`system_oauth`（发送用户的 OAuth 访问令牌）和 `none`。当编排器以 `TERMINALS_OPEN_WEBUI_URL` 设置运行时，编排器连接请使用 `session`，这样它就能针对发起请求的用户身份校验每个请求。
+`auth_type` 接受 `bearer`（将 `key` 作为 Bearer 令牌发送）、`session`（发送调用用户自己的 Open WebUI 凭据）、`system_oauth`（发送用户的 OAuth 访问令牌）和 `none`。编排器连接必须将 `key` 设为编排器的 `TERMINALS_API_KEY`。
 
 :::tip Helm Chart 自动配置
 在 Kubernetes 上使用 Open WebUI Helm Chart 部署且 `terminals.enabled: true` 时，该变量会被自动设置为指向集群内的编排器服务。详情参见[终端（编排器）指南](/features/open-terminal/terminals/)。
@@ -2156,7 +2146,7 @@ The format for the JSON response is strictly:
 
 - 类型：`str`（JSON 对象）
 - 默认值：`{}`
-- 描述：终端代理在返回响应时注入的自定义 HTTP 响应头。终端代理会从上游响应中剥离一组固定的逐跳头和安全敏感头；该对象中的条目会在剥离之后合并进去，冲突时优先生效。这样管理员就可以在不修改应用代码的前提下，为代理后的终端内容设置部署特定的响应头。无效 JSON 会回退到 `{}`，即不添加任何头。
+- 描述：在终端代理返回的响应中注入自定义 HTTP 响应头。终端代理会从上游响应中移除固定的一组逐跳和安全敏感响应头，然后合并此对象中的条目。响应头名称匹配时不区分大小写，自定义值会替换终端本身发出的同名头。终端返回的重复响应头（例如多个 `Set-Cookie`）会全部转发。发生冲突时以此处的条目为准，因此管理员无需修改应用即可为经代理的终端内容设置特定于部署的响应头。无效 JSON 会回退到 `{}`，不添加任何响应头。
 
   **安全说明。** 默认值 `{}` 意味着代理会在 Open WebUI 的同源下原样转发上游内容（HTML、JS，无论什么）。这是有意为之——很多合法的 open-terminal 用例（开发服务器、内部工具、管理员通过终端跑的 Web UI）都依赖代理响应中的 JavaScript 真正执行。对于互相信任的多用户共用一条终端服务器连接的部署来说，这没有问题。如果同一信任组内的用户还需要互相隔离对方的代理内容（或者你在已记载的[多用户部署等级](/features/open-terminal/advanced/multi-user)之上把终端服务器功能开放给信任程度更低的用户），可以把它设置成一个 sandbox CSP，把代理过来的 JS 锁进一个 opaque origin，但仍然允许它为合法工作流执行：
 
@@ -2699,12 +2689,12 @@ FORWARD_SESSION_INFO_HEADER_MESSAGE_ID=X-Amzn-Bedrock-AgentCore-Runtime-Custom-M
 
 两个用户组占位符需要一次数据库查询，因此只有在某个请求头取值确实包含它们时才会执行；其它请求都会跳过。没有加入任何用户组的用户，或查询失败时，它们会被展开为空字符串，而不会导致请求失败。
 
-OpenAI、Ollama 和直连模型连接、工具服务器（OpenAPI 与 MCP）以及外部文档处理连接都会应用自定义请求头。
+OpenAI 和 Ollama 连接、工具服务器（OpenAPI 和 MCP）以及外部文档处理连接均支持自定义请求头。
 
 #### `ENABLE_WEB_LOADER_SSL_VERIFICATION` {#enable\_web\_loader\_ssl\_verification}
 - 类型：`bool`
 - 默认值：`True`
-- 描述：在网页加载器获取内容时验证 SSL 证书。`fetch_url` 工具首次发出请求以判断 URL 指向网页还是文件时，也会验证证书。设为 `False` 可跳过验证，例如目标站点使用自签名证书时。
+- 描述：网页加载器获取网站时会验证 SSL 证书。`fetch_url` 工具为判断 URL 指向网页还是文件而发送的首次请求也会验证证书。设为 `False` 可跳过验证，例如用于采用自签名证书的网站。开启验证时，Playwright、Tavily 和 Microsoft Web IQ 加载器会使用 [`AIOHTTP_CLIENT_SESSION_SSL`](#aiohttp_client_session_ssl) 设置的证书颁发机构验证每个站点的证书，因此也可使用内部证书颁发机构。站点若在 10 秒内未响应，或证书无效，则会被跳过。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -3891,6 +3881,8 @@ Qdrant 是非核心集成，不由 Open WebUI 核心团队维护。修复由 Ope
 :::
 
 
+Open WebUI 的 Qdrant 客户端兼容 1.19 至 1.21 版本的 Qdrant 服务器。超出此范围的服务器会触发客户端版本警告。
+
 #### `QDRANT_API_KEY` {#qdrant\_api\_key}
 
 - 类型：`str`
@@ -3948,17 +3940,17 @@ Qdrant 是非核心集成，不由 Open WebUI 核心团队维护。修复由 Ope
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：为 Qdrant 集合管理启用多租户模式，通过合并相似的向量数据结构显著降低 RAM 使用和计算开销。建议开启。
+- 描述：为 Qdrant 集合管理启用多租户模式，通过合并相似的向量数据结构显著降低 RAM 使用量和计算开销。建议保持开启。关闭后，每个文件、知识库、用户的记忆和每次网页搜索都会各用一个集合，规模较大的实例很快就会遇到扩展问题。
 
 :::info
 
-这会断开所有先前非多租户模式下创建的 Qdrant 集合。前往 `Settings` > `Documents` > `Reindex Knowledge and Memory Vectors`（管理员区域）迁移现有知识库和记忆。
+这将断开与此前在非多租户模式下创建的所有 Qdrant 集合的连接。前往 `Admin Settings` > `Documents` > `Reindex Knowledge and Memory Vectors`，迁移已有的知识库和记忆。
 
 之前模式下创建的 Qdrant 集合仍会继续占用资源。
 
 目前 UI 中没有仅重置向量数据库的按钮。如果你想迁移知识到多租户模式：
 - 使用原生 Qdrant 客户端移除所有带有 `open_webui-knowledge` 前缀的集合（或者移除带有 `open_webui` 前缀的所有集合，以删除所有与 Open WebUI 相关的集合）
-- 前往 `Settings` > `Documents` > `Reindex Knowledge and Memory Vectors`（管理员区域）迁移现有知识库和记忆
+- 前往 `Admin Settings` > `Documents` > `Reindex Knowledge and Memory Vectors`，迁移已有的知识库和记忆
 
 `Reindex Knowledge and Memory Vectors` 会迁移知识库、其中所含文件的按文件向量以及用户记忆。从未加入知识库的文件和缓存的网页搜索结果会留在旧集合中。
 
@@ -3966,7 +3958,7 @@ Qdrant 是非核心集成，不由 Open WebUI 核心团队维护。修复由 Ope
 
 :::danger
 
-如果你决定将多租户模式作为默认模式，并且不需要迁移旧知识，请前往 `Settings` > `Documents`（管理员区域）重置向量与知识，这会删除所有带有 `open_webui` 前缀的集合以及所有已存储的知识。
+如果决定将多租户模式作为默认模式，并且无需迁移旧知识，请前往 `Admin Settings` > `Documents` 重置向量和知识。这会删除所有以 `open_webui` 为前缀的集合以及已存储的所有知识。
 
 :::
 
@@ -6158,7 +6150,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 - 描述：指定用于检索和处理 Web 内容的加载器。
 - 选项：
   - `safe_web`（默认）——使用内部抓取，具有增强的错误处理。
-  - `playwright`——使用 Playwright 渲染页面，支持 JavaScript。
+  - `playwright`：使用支持 JavaScript 的 Playwright 渲染网页。加载的文本包含定义列表、插图及其说明。
   - `firecrawl`——使用 Firecrawl 服务。
   - `tavily`——使用 Tavily 服务。
   - `exa`——使用 [Exa](/features/chat-conversations/web-search/providers/exa#4-optional-use-exa-to-read-pages) Contents API，并配合 [`EXA_API_KEY`](#exa_api_key)。Exa 会抓取页面并返回其文本和标题。请求会在 [`WEB_LOADER_TIMEOUT`](#web_loader_timeout) 秒后超时，未设置时为 60 秒。密钥被拒绝或出现计费问题会中止加载并报错；Exa 无法读取的页面会被跳过。Exa 返回完整的页面文本，`fetch_url` 工具仍会将其截断到 [`WEB_FETCH_MAX_CONTENT_LENGTH`](#web_fetch_max_content_length)。[`EXA_MAX_CONTENT_LENGTH`](#exa_max_content_length) 仅适用于搜索结果。
@@ -6756,55 +6748,21 @@ Strictly return in JSON format:
 
 ### 图像生成 {#image-creation}
 
-#### `IMAGE_GENERATION_ENGINE` {#image\_generation\_engine}
-
-- 类型：`str`
-- 选项：
-  - `openai`——使用 OpenAI 图片 API（`gpt-image-2`、`gpt-image-1.5`、`gpt-image-1`）进行图片生成。
-  - `comfyui`——使用 ComfyUI 引擎进行图片生成。
-  - `automatic1111`——使用 AUTOMATIC1111 引擎进行图片生成。
-  - `gemini`——使用 Gemini 进行图片生成。
-- 默认值：`openai`
-- 描述：指定用于图片生成的引擎。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-
-#### `IMAGE_GENERATION_MODEL` {#image\_generation\_model}
-
-- 类型：`str`
-- 默认值：``
-- 描述：用于图片生成的默认模型（例如 `gpt-image-2`、`gemini-3.1-flash-image`）。未设置模型时，`openai` 引擎使用 `gpt-image-2`，`gemini` 引擎使用 `imagen-3.0-generate-002`。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-
-#### `IMAGE_SIZE` {#image\_size}
-
-- 类型：`str`
-- 默认值：`512x512`
-- 描述：设置生成图片的默认输出尺寸，格式为 宽x高（例如 `1024x1024`）。设置为 `auto` 让模型自行确定合适的尺寸（仅匹配 `IMAGE_AUTO_SIZE_MODELS_REGEX_PATTERN` 的模型支持）。
-- 持久化：这是一个 `ConfigVar` 变量。
+图像后端在 **Admin Settings > Images** 中配置为图像连接。参见[图像生成和编辑](/features/chat-conversations/image-generation-and-editing#set-up-a-connection)。
 
 
 #### `IMAGE_AUTO_SIZE_MODELS_REGEX_PATTERN` {#image\_auto\_size\_models\_regex\_pattern}
 
 - 类型：`str`
 - 默认值：`^gpt-image`
-- 描述：用于匹配支持 `IMAGE_SIZE = "auto"` 的模型名称的正则表达式。当模型匹配此模式时，`auto` 尺寸选项变为可用，允许模型确定合适的输出尺寸。默认仅匹配以 `gpt-image` 开头的模型（例如 `gpt-image-1`）。
+- 描述：匹配可自行选择输出尺寸的 OpenAI 兼容图像模型的正则表达式。除非请求指定尺寸，否则这些模型会将默认的 `512x512` 替换为 `auto`。
 
 
 #### `IMAGE_URL_RESPONSE_MODELS_REGEX_PATTERN` {#image\_url\_response\_models\_regex\_pattern}
 
 - 类型：`str`
 - 默认值：`^gpt-image`
-- 描述：用于匹配直接返回图片 URL（而非 base64 编码数据）的模型名称的正则表达式。匹配此模式的模型不会在 API 请求中包含 `response_format: b64_json`。默认仅匹配以 `gpt-image` 开头的模型。对于其他模型，Open WebUI 请求 base64 响应并在内部处理转换。
-
-
-#### `IMAGE_STEPS` {#image\_steps}
-
-- 类型：`int`
-- 默认值：`50`
-- 描述：设置图片生成的默认迭代步数。用于 ComfyUI 和 AUTOMATIC1111 引擎。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 描述：匹配直接返回图像 URL 而非 base64 编码数据的 OpenAI 兼容图像模型的正则表达式。向匹配模型发送的请求不包含 `response_format: b64_json`。
 
 ---
 
@@ -6815,335 +6773,64 @@ Strictly return in JSON format:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：禁用后，图片编辑将不被使用，图片将仅通过图片生成引擎创建。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-
-#### `IMAGE_EDIT_ENGINE` {#image\_edit\_engine}
-
-- 类型：`str`
-- 选项：
-  - `openai`——使用 OpenAI 图片 API（`gpt-image-2`、`gpt-image-1.5`、`gpt-image-1`）进行图片编辑。
-  - `gemini`——使用 Gemini 进行图片编辑。
-  - `comfyui`——使用 ComfyUI 引擎进行图片编辑。
-- 默认值：`openai`
-- 描述：配置用于图片编辑操作的引擎，支持使用文本提示词修改现有图片。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-
-#### `IMAGE_EDIT_MODEL` {#image\_edit\_model}
-- 类型：`str`
-- 默认值：``
-- 描述：指定在所选引擎内用于图像编辑操作的模型（例如 `gpt-image-2`、`gemini-3.1-flash-image`）。
+- 描述：启用或禁用图像编辑。禁用后，只能从头生成图像。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `ENABLE_OPENAI_IMAGE_EDIT_NORMALIZATION` {#enable\_openai\_image\_edit\_normalization}
 - 类型：`bool`
 - 默认值：`True`
-- 描述：当 `IMAGE_EDIT_ENGINE=openai` 时，在发送编辑请求之前对输入图片进行归一化处理（重新编码为 OpenAI 图片编辑 API 接受的格式/形状）。仅当你的输入图片已经是兼容格式且希望跳过转换时才禁用。
+- 描述：向 OpenAI 兼容图像连接发送编辑请求前，重新编码带 EXIF 旋转、包含多帧或采用 RGB 和灰度以外颜色模式的 JPEG 和 MPO 输入图像。仅在输入图像已使用兼容格式时禁用。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
-
-#### `IMAGE_EDIT_SIZE` {#image\_edit\_size}
-
-- 类型：`str`
-- 默认值：``
-- 描述：定义编辑后图片的输出尺寸，格式为 宽x高（例如 `1024x1024`）。留空保留原始尺寸。
-- 持久化：这是一个 `ConfigVar` 变量。
 
 ---
 
 
 ### OpenAI DALL-E {#openai-dall-e}
 
-#### 图像生成 {#image-generation-1}
-
-##### `IMAGES_OPENAI_API_BASE_URL` {#images\_openai\_api\_base\_url}
-
-- 类型：`str`
-- 默认值：`${OPENAI_API_BASE_URL}`
-- 描述：设置用于 OpenAI 图像生成的兼容 OpenAI 的基础 URL。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_OPENAI_API_VERSION` {#images\_openai\_api\_version}
-
-- 类型：`str`
-- 默认值：空字符串（`""`）
-- 描述：可选设置。如果提供，在调用图像生成端点时设置 `api-version` 查询参数。Azure OpenAI 部署必需。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_OPENAI_API_KEY` {#images\_openai\_api\_key}
-
-- 类型：`str`
-- 默认值：`${OPENAI_API_KEY}`
-- 描述：设置用于 OpenAI 图像生成的 API 密钥。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_OPENAI_API_PARAMS` {#images\_openai\_api\_params}
-
-- 类型：`str` (JSON)
-- 默认值：`{}`
-- 描述：环境变量名为 `IMAGES_OPENAI_PARAMS`。`IMAGES_OPENAI_API_PARAMS` 是管理配置 API 用于同一设置的键名。OpenAI 图像生成 API 的额外参数，JSON 格式。允许自定义 API 特定设置，例如质量参数（例如 GPT-Image 模型使用 `{"quality": "high"}`）。
-- 示例：`{"quality": "high"}`
-- 持久化：这是一个 `ConfigVar` 变量。
-
-#### 图像编辑 {#image-editing-1}
-
-##### `IMAGES_EDIT_OPENAI_API_BASE_URL` {#images\_edit\_openai\_api\_base\_url}
-
-- 类型：`str`
-- 默认值：`${OPENAI_API_BASE_URL}`
-- 描述：专门为图像编辑操作配置 OpenAI API 基础 URL，允许与图像生成使用不同的端点。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_EDIT_OPENAI_API_VERSION` {#images\_edit\_openai\_api\_version}
-
-- 类型：`str`
-- 默认值：``
-- 描述：指定图像编辑的 OpenAI API 版本，支持使用带版本端点的 Azure OpenAI 部署。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_EDIT_OPENAI_API_KEY` {#images\_edit\_openai\_api\_key}
-
-- 类型：`str`
-- 默认值：`${OPENAI_API_KEY}`
-- 描述：为 OpenAI 图像编辑 API 请求提供认证，支持与图像生成使用不同的密钥。
-- 持久化：这是一个 `ConfigVar` 变量。
+配置为 OpenAI 兼容图像连接。参见 [OpenAI](/features/chat-conversations/image-generation-and-editing/openai)。
 
 ---
 
 ### Gemini {#gemini}
 
-:::tip
-
-有关详细配置指南和示例配置，请参阅 [Gemini 图像生成指南](/features/chat-conversations/image-generation-and-editing/gemini)。
-
-:::
-
-#### 图像生成 {#image-generation-2}
-
-##### `GEMINI_API_BASE_URL` {#gemini\_api\_base\_url}
-
-- 类型：`str`
-- 默认值：空字符串
-- 描述：当 [`IMAGES_GEMINI_API_BASE_URL`](#images_gemini_api_base_url) 和 [`IMAGES_EDIT_GEMINI_API_BASE_URL`](#images_edit_gemini_api_base_url) 未设置时回退使用的 Base URL。除此之外没有别的地方会读取它。
-
-##### `GEMINI_API_KEY` {#gemini\_api\_key}
-
-- 类型：`str`
-- 默认值：空字符串
-- 描述：当 [`IMAGES_GEMINI_API_KEY`](#images_gemini_api_key) 和 [`IMAGES_EDIT_GEMINI_API_KEY`](#images_edit_gemini_api_key) 未设置时回退使用的 API 密钥。除此之外没有别的地方会读取它。
-
-##### `IMAGES_GEMINI_API_BASE_URL` {#images\_gemini\_api\_base\_url}
-
-- 类型：`str`
-- 默认值：`${GEMINI_API_BASE_URL}`
-- 描述：指定 Gemini 图像生成 API 的 URL。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_GEMINI_API_KEY` {#images\_gemini\_api\_key}
-
-- 类型：`str`
-- 默认值：`${GEMINI_API_KEY}`
-- 描述：设置用于图像生成的 Gemini API 密钥。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_GEMINI_ENDPOINT_METHOD` {#images\_gemini\_endpoint\_method}
-
-- 类型：`str`
-- 选项：
-  - `predict`：使用 predict 端点（Imagen 模型的默认值）。
-  - `generateContent`：使用 generateContent 端点（适用于 Gemini 2.5 Flash Image 以及所有更新的 Gemini 图像模型）。
-- 默认值：``
-- 描述：指定用于图像生成的 Gemini API 端点方法，同时支持旧版 Imagen 模型和具备图像生成能力的新版 Gemini 模型。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-#### 图像编辑 {#image-editing-2}
-
-##### `IMAGES_EDIT_GEMINI_API_BASE_URL` {#images\_edit\_gemini\_api\_base\_url}
-
-- 类型：`str`
-- 默认值：`${GEMINI_API_BASE_URL}`
-- 描述：为使用 Gemini 模型的图像编辑操作配置 Gemini API 基础 URL。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_EDIT_GEMINI_API_KEY` {#images\_edit\_gemini\_api\_key}
-
-- 类型：`str`
-- 默认值：`${GEMINI_API_KEY}`
-- 描述：为 Gemini 图像编辑 API 请求提供认证。
-- 持久化：这是一个 `ConfigVar` 变量。
+配置为 Gemini 图像连接。参见 [Gemini 图像生成指南](/features/chat-conversations/image-generation-and-editing/gemini)。
 
 ---
 
 ### ComfyUI {#comfyui}
 
-#### 图像生成 {#image-generation-3}
-
-##### `COMFYUI_BASE_URL` {#comfyui\_base\_url}
-
-- 类型：`str`
-- 默认值：``
-- 描述：指定 ComfyUI 图像生成 API 的 URL（例如 `http://127.0.0.1:8188`）。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `COMFYUI_API_KEY` {#comfyui\_api\_key}
-
-- 类型：`str`
-- 默认值：``
-- 描述：设置用于 ComfyUI 认证的 API 密钥。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `COMFYUI_WORKFLOW` {#comfyui\_workflow}
-
-- 类型：`str` (JSON)
-- 默认值：
-```json
-{
-  "3": {
-    "inputs": {
-      "seed": 0,
-      "steps": 20,
-      "cfg": 8,
-      "sampler_name": "euler",
-      "scheduler": "normal",
-      "denoise": 1,
-      "model": ["4", 0],
-      "positive": ["6", 0],
-      "negative": ["7", 0],
-      "latent_image": ["5", 0]
-    },
-    "class_type": "KSampler",
-    "_meta": {
-      "title": "KSampler"
-    }
-  },
-  "4": {
-    "inputs": {
-      "ckpt_name": "model.safetensors"
-    },
-    "class_type": "CheckpointLoaderSimple",
-    "_meta": {
-      "title": "Load Checkpoint"
-    }
-  },
-  "5": {
-    "inputs": {
-      "width": 512,
-      "height": 512,
-      "batch_size": 1
-    },
-    "class_type": "EmptyLatentImage",
-    "_meta": {
-      "title": "Empty Latent Image"
-    }
-  },
-  "6": {
-    "inputs": {
-      "text": "Prompt",
-      "clip": ["4", 1]
-    },
-    "class_type": "CLIPTextEncode",
-    "_meta": {
-      "title": "CLIP Text Encode (Prompt)"
-    }
-  },
-  "7": {
-    "inputs": {
-      "text": "",
-      "clip": ["4", 1]
-    },
-    "class_type": "CLIPTextEncode",
-    "_meta": {
-      "title": "CLIP Text Encode (Prompt)"
-    }
-  },
-  "8": {
-    "inputs": {
-      "samples": ["3", 0],
-      "vae": ["4", 2]
-    },
-    "class_type": "VAEDecode",
-    "_meta": {
-      "title": "VAE Decode"
-    }
-  },
-  "9": {
-    "inputs": {
-      "filename_prefix": "ComfyUI",
-      "images": ["8", 0]
-    },
-    "class_type": "SaveImage",
-    "_meta": {
-      "title": "Save Image"
-    }
-  }
-}
-```
-
-- 描述：以 JSON 格式定义 ComfyUI 工作流配置。请在 ComfyUI 中使用 "Save (API Format)" 导出，以确保兼容性。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `COMFYUI_WORKFLOW_NODES` {#comfyui\_workflow\_nodes}
-
-- 类型：`list[dict]`
-- 默认值：`[]`
-- 描述：指定用于图像生成的 ComfyUI 工作流节点映射，定义哪些节点负责提示词、模型、尺寸及其他参数。通过管理界面自动配置。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-#### 图像编辑 {#image-editing-3}
-
-##### `IMAGES_EDIT_COMFYUI_BASE_URL` {#images\_edit\_comfyui\_base\_url}
-
-- 类型：`str`
-- 默认值：``
-- 描述：为图像编辑操作配置 ComfyUI 基础 URL，从而支持自托管的 ComfyUI 图像处理工作流。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_EDIT_COMFYUI_API_KEY` {#images\_edit\_comfyui\_api\_key}
-
-- 类型：`str`
-- 默认值：``
-- 描述：当 ComfyUI 实例要求 API 密钥认证时，为 ComfyUI 图像编辑 API 请求提供认证。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_EDIT_COMFYUI_WORKFLOW` {#images\_edit\_comfyui\_workflow}
-
-- 类型：`str` (JSON)
-- 默认值：``
-- 描述：以 JSON 格式定义用于图像编辑操作的 ComfyUI 工作流配置。必须包含图像输入、提示词和输出节点。请在 ComfyUI 中使用 "Save (API Format)" 导出。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-##### `IMAGES_EDIT_COMFYUI_WORKFLOW_NODES` {#images\_edit\_comfyui\_workflow\_nodes}
-
-- 类型：`list[dict]`
-- 默认值：`[]`
-- 描述：指定用于图像编辑的 ComfyUI 工作流节点映射，定义哪些节点负责图像输入、提示词、模型、尺寸及其他参数。通过管理界面自动配置。
-- 持久化：这是一个 `ConfigVar` 变量。
+配置为 ComfyUI 图像连接。参见 [ComfyUI](/features/chat-conversations/image-generation-and-editing/comfyui)。
 
 ---
 
 ### AUTOMATIC1111 {#automatic1111}
 
-#### `AUTOMATIC1111_BASE_URL` {#automatic1111\_base\_url}
+配置为 AUTOMATIC1111 图像连接。参见 [AUTOMATIC1111](/features/chat-conversations/image-generation-and-editing/automatic1111)。
 
-- 类型：`str`
-- 默认值：``
-- 描述：指定 AUTOMATIC1111 的 Stable Diffusion API 的 URL（例如 `http://127.0.0.1:7860`）。
+---
+
+## 视频生成 {#video-generation}
+
+#### `ENABLE_VIDEO_GENERATION` {#enable\_video\_generation}
+
+- 类型：`bool`
+- 默认值：`False`
+- 描述：启用或禁用视频生成。
 - 持久化：这是一个 `ConfigVar` 变量。
 
-#### `AUTOMATIC1111_API_AUTH` {#automatic1111\_api\_auth}
+#### `VIDEO_GENERATION_TIMEOUT` {#video\_generation\_timeout}
 
-- 类型：`str`
-- 默认值：``
-- 描述：如需认证，则设置 AUTOMATIC1111 API 的认证凭据。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 类型：`int`
+- 默认值：`900`
+- 描述：等待视频任务完成的秒数。
+- 持久化：通过环境变量设置，启动时应用（非 `ConfigVar`）。
 
-#### `AUTOMATIC1111_PARAMS` {#automatic1111\_params}
+#### `VIDEO_GENERATION_POLL_INTERVAL` {#video\_generation\_poll\_interval}
 
-- 类型：`str` (JSON)
-- 默认值：`{}`
-- 描述：以 JSON 格式传递给 AUTOMATIC1111 API 请求的额外参数（例如 `{"cfg_scale": 7, "sampler_name": "Euler a", "scheduler": "normal"}`）。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 类型：`float`
+- 默认值：`5`
+- 描述：检查正在运行的视频任务时，两次检查之间等待的秒数。
+- 持久化：通过环境变量设置，启动时应用（非 `ConfigVar`）。
 
 ## OAuth {#oauth}
 
@@ -7400,7 +7087,7 @@ curl -X POST "http://localhost:8080/api/v1/oauth/oidc/token/exchange" \
 
 - 类型：`int`
 - 默认值：`10`
-- 描述：每个用户每个提供商允许的最大并发 OAuth 会话数。当用户登录且该用户/提供商组合的现有会话数达到或超过此限制时，最旧的会话将被清除以为新会话腾出空间。这防止了无限制的会话增长，同时允许多设备使用（例如从桌面和移动设备登录而不会使任一设备的会话失效）。
+- 描述：每个用户在每个提供商处可同时拥有的 OAuth 会话数上限。用户登录时，如果在该提供商处已有的会话数达到或超过此上限，就会按上次登录或令牌刷新时间删除最旧的会话，为新会话腾出空间。退出登录时会删除为该浏览器存储的会话，但如果这是用户在该提供商处唯一的会话，则会保留。这样可以防止会话数量无限增长，同时支持多设备使用，例如同时在电脑和移动设备登录而不让任一会话失效。
 
 
 #### `OAUTH_REFRESH_TOKEN_INCLUDE_SCOPE` {#oauth\_refresh\_token\_include\_scope}
@@ -8256,14 +7943,6 @@ environment:
 
 ### 功能权限 {#feature-permissions}
 
-#### `USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS` {#user\_permissions\_features\_direct\_tool\_servers}
-
-- 类型：`bool`
-- 默认值：`False`
-- 描述：启用或禁用用户访问直接工具服务器的权限。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-
 #### `USER_PERMISSIONS_FEATURES_WEB_SEARCH` {#user\_permissions\_features\_web\_search}
 
 - 类型：`bool`
@@ -8277,6 +7956,13 @@ environment:
 - 类型：`bool`
 - 默认值：`True`
 - 描述：启用或禁用用户使用图片生成功能的权限。
+- 持久化：这是一个 `ConfigVar` 变量。
+
+#### `USER_PERMISSIONS_FEATURES_VIDEO_GENERATION` {#user\_permissions\_features\_video\_generation}
+
+- 类型：`bool`
+- 默认值：`False`
+- 描述：启用或禁用用户使用视频生成功能的权限。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8330,6 +8016,21 @@ environment:
 :::
 
 
+#### `USER_PERMISSIONS_FEATURES_SUBAGENTS` {#user\_permissions\_features\_subagents}
+
+- 类型：`bool`
+- 默认值：`True`
+- 描述：启用或禁用非管理员用户访问子智能体的权限。没有此权限的用户无法使用 `delegate_task` 或 `timer` 工具。
+- 持久化：这是一个 `ConfigVar` 变量。
+
+:::info
+
+此设置对应 RBAC 权限中的 **Features > Sub-agents**。开启 [`ENABLE_SUBAGENTS`](#enable_subagents) 时会显示此开关。管理员用户无需通过此权限检查。
+
+详情见[子智能体](/features/chat-conversations/chat-features/subagents#enable-sub-agents)。
+
+:::
+
 #### `USER_PERMISSIONS_FEATURES_FOLDERS` {#user\_permissions\_features\_folders}
 
 - 类型：`bool`
@@ -8342,7 +8043,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：控制用户是否能看到笔记功能。禁用时，非管理员也不会在聊天输入框的 **+** 菜单中看到**附加笔记**选项。
+- 描述：控制用户能否看到笔记功能。禁用后，非管理员也无法在聊天输入框的 **+** 菜单中看到 **Attachments** 下的 **Attach Notes**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -9759,8 +9460,8 @@ Open WebUI 使用以下环境变量：
 
 - 类型： `bool`
 - 默认值： `True`
-- 描述：Open WebUI 中所有来自其自身代码之外、用于运行代码或工具的总开关。设为 `False` 时，无论 [`ENABLE_TOOLS`](#enable_tools)、[`ENABLE_FUNCTIONS`](#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](#enable_tool_servers) 如何设置，都会同时关闭它们：工作区工具、函数（过滤器、操作、管道）、OpenAPI 与 MCP 工具服务器、Open Terminal 连接以及用户自行添加的直接工具服务器都将停止工作。启动时的插件依赖安装也会被跳过。该值在启动时读取一次，因此修改它需要重启。
-- 仍然可用：[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)（记忆、知识库、网页搜索、子代理等）、代码解释器以及直连模型，因为它们属于 Open WebUI 自身的一部分。
+- 描述：控制是否运行 Open WebUI 自身代码以外的代码或工具。设为 `False` 时，会同时关闭 [`ENABLE_TOOLS`](#enable_tools)、[`ENABLE_FUNCTIONS`](#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](#enable_tool_servers)，不受它们各自取值影响。工作区工具、函数（过滤器、操作和管道）、OpenAPI 和 MCP 工具服务器、Open Terminal 连接、Tether 终端及 Tether 工具服务器均停止运行。启动时也会跳过插件依赖安装。此值只在启动时读取一次，因此修改后需要重启。
+- 仍可使用：[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)（记忆、知识、网页搜索、子智能体等）和代码解释器，因为它们是 Open WebUI 自身的一部分。
 - 注意：它决定插件和工具服务器是否*运行*。关闭后部分管理端点仍可访问，例如删除工具或函数、保存工具服务器列表，因此应将其视为执行开关，并把创建工具与函数的权限限制给你信任的人。
 
 
@@ -9780,7 +9481,7 @@ Open WebUI 使用以下环境变量：
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：开启或关闭所有外部工具连接：管理员配置的 OpenAPI 和 [MCP](/features/extensibility/mcp) 工具服务器、[Open Terminal](/features/open-terminal) 连接（管理员的个人的）以及用户自行添加的直接工具服务器。设为 `False` 后，它们都不会被加载或调用，**设置 > 集成**（管理员区域）中的**工具**和**Open Terminal**部分会变灰，终端选择器会从聊天中移除，且 [`ENABLE_DIRECT_INTEGRATIONS`](#enable_direct_integrations) 视为关闭。当 [`ENABLE_PLUGINS`](#enable_plugins) 为 `False` 时会被强制关闭。该值在启动时读取一次，因此修改它需要重启。
+- 描述：开启或关闭所有外部工具连接，包括管理员配置的 OpenAPI 和 [MCP](/features/extensibility/mcp) 工具服务器、[Open Terminal](/features/open-terminal) 连接，以及用户通过 [Tether](/ecosystem/tether) 添加的终端和工具服务器（OpenAPI 和 MCP）。设为 `False` 时，这些连接均不会加载或调用。**Settings > Integrations**（管理员区域）中的 **Tools** 和 **Terminal** 区域会变灰，聊天中也不再显示终端选择器。[`ENABLE_PLUGINS`](#enable_plugins) 为 `False` 时将强制关闭。此值只在启动时读取一次，因此修改后需要重启。
 
 ### 安装必需的 Python 包 {#install-required-python-packages}
 
@@ -9825,6 +9526,3 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 
 - 类型：`str`
 - 描述： 定义 pip 的自定义包索引行为。可以包括指定额外或替代索引 URL（例如 `--extra-index-url`）、认证凭据或其他参数来管理如何从不同位置检索包。
-
-
-

@@ -49,7 +49,7 @@ docker exec -it open-webui /bin/sh
 
 ## 表概览 {#table-overview}
 
-以下是 Open-WebUI SQLite 数据库中所有表的完整列表。为方便起见，各表按字母顺序排列并编号。
+以下是 Open-WebUI SQLite 数据库中所有表的完整列表。为方便起见，各表均已编号。
 
 | **编号** | **表名**   | **描述**                                              |
 | ------- | ---------------- | ------------------------------------------------------------ |
@@ -130,7 +130,7 @@ docker exec -it open-webui /bin/sh
 - `principal_type` 为 `user` 且 `principal_id` 为 `*` 表示公共访问，即所有已登录用户。它不包含未登录的访客
 - `principal_type` 为 `anyone` 是[开放分享链接](/features/chat-conversations/chat-features/chatshare#open-links-no-sign-in)背后的无需登录授权。它只会以 `anyone` / `*` / `read` 的形式存储，其他组合都会被拒绝，并且仅对 `shared_chat` 资源类型生效。其他所有资源都会将其剥离
 - 同时支持组级别和个人用户级别的访问授权
-- 组级别的授权同样适用于该组各子组的成员。删除一个组会同时删除其授权
+- 群组级授权也适用于该群组的子群组成员。删除群组时，会删除授予该群组的权限。删除用户时，会删除授予该用户的权限
 ## API Key 表 {#api-key-table}
 
 | **列名** | **数据类型** | **约束** | **说明** |
@@ -272,12 +272,15 @@ docker exec -it open-webui /bin/sh
 - `joined_at` 在数据库中是 NOT NULL（迁移 `2f1211949ecc`），而 SQLAlchemy 模型中省略了该标志。以数据库约束为准。
 - 将 App 从频道中移除或卸载该 App，会将 `is_active` 置为 false 并记录 `left_at`；`status` 仍为 `joined`。再次添加该 App 会重新激活同一行。
 - 迁移 `c92da83b017f` 将 `user_id` 改为可空并添加了 `app_id`。检查约束要求每一行两者中恰好有一个非空，且 (`channel_id`, `app_id`) 唯一。
-- 删除用户账户会保留其 `channel_member` 行。成员列表、频道上的成员数，以及为一批人查找已有私信的查询，都会跳过 `user_id` 已无对应账户的行，因此残留行不会被计为成员，也不会把私信推送给它本不该发送给的人。
+- 删除用户账户会保留其 `channel_member` 行。成员列表、频道上的成员数，以及为一批人查找已有私信的查询，都会跳过 `user_id` 已无对应账户的行，因此残留行不会被计为成员，查找同一组参与者的私信时也不会因此另开会话。
+
 ## Channel Webhook 表 {#channel-webhook-table}
+
+用于在无需用户登录的情况下向一个频道发布消息的传入 webhook。由迁移 `90ef40d4714e` 添加。
 
 | **列名** | **数据类型** | **约束** | **说明** |
 | --------------- | ------------- | -------------------------------------------- | ----------------------------------- |
-| id | Text | PRIMARY KEY, UNIQUE | 唯一标识符 |
+| id | Text | PRIMARY KEY, UNIQUE | 唯一标识符（UUID） |
 | channel_id | Text | FOREIGN KEY(channel.id) CASCADE, NOT NULL | webhook 发布到的频道 |
 | user_id | Text | NOT NULL | 创建该 webhook 的用户 |
 | name | Text | NOT NULL | 显示在其消息上的名称 |
@@ -287,12 +290,10 @@ docker exec -it open-webui /bin/sh
 | created_at | BigInteger | NOT NULL | 创建时间戳 |
 | updated_at | BigInteger | NOT NULL | 最后更新时间戳 |
 
-用于在没有登录用户的情况下向某个频道发布消息的传入 webhook。由迁移 `90ef40d4714e` 添加。
-
 关于 channel_webhook 表的注意事项：
 
 - 删除频道会级联删除其 webhook。
-- `token` 是 URL 安全的随机令牌，包含 32 字节熵，使用 `secrets.token_urlsafe(32)` 生成，以明文存储并出现在请求路径中。`POST /api/v1/channels/webhooks/{webhook_id}/{token}` 不接受任何认证，而是用 `id` 与 `token` 这一对值到表中匹配，因此任何持有这对值的人都可以向该频道发布消息。
+- `token` 是 URL 安全的随机令牌，包含 32 字节熵，使用 `secrets.token_urlsafe(32)` 生成，以明文存储并出现在请求路径中。`POST /api/v1/channels/webhooks/{webhook_id}/{token}` 无需单独进行用户身份验证，而是用 `id` 与 `token` 这一对值到表中匹配，因此任何持有这对值的人都可以向该频道发布消息。
 - 每次成功发布的请求都会记录 `last_used_at`。
 - 列出和创建 webhook 要求调用者是实例管理员或该频道的创建者。关于该检查中基于成员身份的 manager 分支为何永远不命中，请参见[频道成员表](#channel-member-table)中的 `role` 说明。
 - webhook 的 `id` 和 `name` 会被复制到所发布消息的 `meta.webhook` 中，界面用它来代替作者账户进行渲染。
@@ -561,7 +562,7 @@ docker exec -it open-webui /bin/sh
 | user_id | Text | nullable | 作者；评论被删除后置空 |
 | resource_type | Text | NOT NULL | 被评论对象的类型：`model`、`knowledge`、`prompt`、`skill`、`tool`、`note` 或 `chat` |
 | resource_id | Text | NOT NULL | 被评论对象的 ID |
-| parent_id | Text | nullable | 主题的顶层评论；顶层评论为空 |
+| parent_id | Text | nullable | 所属线程的顶层评论。对于顶层评论，此字段为空 |
 | reply_to_id | Text | nullable | 此回复所答复的评论 |
 | content | Text | NOT NULL | 评论文本 |
 | target_type | Text | nullable | 评论所指向对象的部分：`note_page` 或 `chat_message` |
@@ -574,7 +575,7 @@ docker exec -it open-webui /bin/sh
 关于 comment 表的注意事项：
 
 - 在 (`resource_type`, `resource_id`, `parent_id`, `created_at`, `id`)、(`parent_id`, `created_at`, `id`) 以及 (`resource_type`, `resource_id`, `target_type`, `target_id`) 上建立索引。
-- 删除评论时会保留其行，以便主题和被引用的回复保持完整：`content` 会被清空，`user_id` 与 `meta` 会被清除，并设置 `deleted_at`。
+- 删除评论时会保留其行，以便线程和被引用的回复保持完整：`content` 会被清空，`user_id` 与 `meta` 会被清除，并设置 `deleted_at`。
 - 删除被评论的对象会同时删除其评论及其反应。
 
 ## Comment Reaction 表 {#comment-reaction-table}
@@ -821,7 +822,7 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 | app_id | Text | nullable | 发布该消息的 App |
 | channel_id | Text | nullable | 关联频道 |
 | reply_to_id | Text | nullable | 该消息在回复中引用的消息 |
-| parent_id | Text | nullable | 会话串的父消息 |
+| parent_id | Text | nullable | 线程回复所属的根消息 |
 | is_pinned | Boolean | NOT NULL, server_default=false | 该消息在其频道中是否被置顶 |
 | pinned_at | BigInteger | nullable | 置顶时间戳（纳秒） |
 | pinned_by | Text | nullable | 置顶该消息的用户 |
@@ -838,7 +839,7 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 - `parent_id` 和 `reply_to_id` 承担不同的职责。`parent_id` 是线程根：频道的消息列表会选出 `parent_id` 为 null 的行，而线程则通过选出 `parent_id` 等于根消息的行来读取。`reply_to_id` 指向回复所引用的那一条消息，该消息会在消息被返回时取出并附加。它不影响消息出现在哪个列表中。
 - `is_pinned`、`pinned_at` 和 `pinned_by` 由 `POST /api/v1/channels/{id}/messages/{message_id}/pin` 一并写入。取消置顶会把 `pinned_at` 和 `pinned_by` 清回 null。`GET /api/v1/channels/{id}/messages/pinned` 负责读取它们。
 - `app_id` 由迁移 `c92da83b017f` 添加。由 App 发布的消息会带上其 `app_id` 且 `user_id` 为 null，并在 `data` 的 `app` 下（`actions` 和 `embeds`）保留其按钮和卡片。
-- `meta` 通过 `webhook` 键保存通过[频道 webhook](#channel-webhook-table)发布消息时的 webhook 身份，正是它让这些消息以 webhook 的名称和图片渲染。模型的回复在其中带有模型 ID 和名称，并在回复完成后带上 `done`。自动化发布的两类消息都带有其 `automation_id`。`meta` 由 Open WebUI 自行写入，在发布或编辑消息的请求中随附的 `meta` 会被忽略。
+- `meta` 通过 `webhook` 键保存通过[频道 webhook](#channel-webhook-table)发布消息时的 webhook 身份，正是它让这些消息以 webhook 的名称和图片渲染。模型的回复在其中带有模型 ID 和名称，并在回复完成后带上 `done`。自动化发布的两条消息都带有其 `automation_id`。`meta` 由 Open WebUI 自行写入，在发布或编辑消息的请求中随附的 `meta` 会被忽略。
 ## Message Reaction 表 {#message-reaction-table}
 
 | **列名** | **数据类型** | **约束** | **说明** |
@@ -938,7 +939,7 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 - 在 (`user_id`, `event_key`) 上有唯一约束，因此同一事件只会通知用户一次。
 - `resource_type` 与 `resource_id` 要么都设置，要么都为空；`object_type` 与 `object_id` 同理。
 - 只有在通知设置开启时才会创建行。
-- 在 (`user_id`, `created_at`, `id`) 上建有索引，对未读行使用相同列另建索引，并在 (`resource_type`, `resource_id`) 和 (`object_type`, `object_id`) 上建有索引。
+- 在 (`user_id`, `created_at`, `id`) 上建有索引，仅对尚未在收件箱中查看的通知行使用相同列另建索引，并在 (`resource_type`, `resource_id`) 和 (`object_type`, `object_id`) 上建有索引。
 
 ## OAuth Session 表 {#oauth-session-table}
 
@@ -947,14 +948,14 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 | id | Text | PRIMARY KEY, UNIQUE | 唯一会话标识符 |
 | user_id | Text | FOREIGN KEY(user.id) CASCADE, NOT NULL | 关联的用户 |
 | provider | Text | NOT NULL | OAuth 提供商（例如：'google'） |
-| token | Text | NOT NULL | OAuth 会话令牌 |
+| token | Text | NOT NULL | 加密的 OAuth 令牌集 |
 | expires_at | BigInteger | NOT NULL | 令牌到期时间戳 |
 | created_at | BigInteger | NOT NULL | 会话创建时间戳 |
 | updated_at | BigInteger | NOT NULL | 会话最后更新时间戳 |
 
 关于 oauth_session 表的注意事项：
 
-- 与 `user` 的关系是一对多。每次登录都会插入新行，因此同一用户、同一提供方可以存在多行。`OAUTH_MAX_SESSIONS_PER_USER`（默认 10）限制用户每个提供方可持有的会话数量；登录时会删除超出上限的最旧行。
+- 与 `user` 的关系为一对多。每次登录都会插入一行，因此同一用户和同一提供商可对应多行。`OAUTH_MAX_SESSIONS_PER_USER`（默认 10）限制每个用户在每个提供商下可保留的会话数。登录时，会按上次登录或令牌刷新时间删除超出上限的最旧记录。
 - 在 `user_id`、`expires_at` 以及 (`user_id`, `provider`) 上有索引（`idx_oauth_session_user_id`、`idx_oauth_session_expires_at`、`idx_oauth_session_user_provider`，均来自迁移 `38d63c18f30f`）。
 - 删除用户会级联删除其会话。
 - `token` 以 JSON 保存提供方的令牌集合（访问令牌、ID 令牌和刷新令牌），写入前用 Fernet 静态加密，读取时解密。密钥来自 `OAUTH_SESSION_TOKEN_ENCRYPTION_KEY`，回退到 `WEBUI_SECRET_KEY`。长度不是 44 个字符的密钥会先用 SHA-256 哈希再进行 base64 编码，以满足 Fernet 要求的长度。
@@ -1071,7 +1072,7 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 | **列名** | **数据类型** | **约束** | **说明** |
 | ----------------- | ------------- | ---------------- | -------------------------- |
 | id | String | PRIMARY KEY | 唯一标识符 |
-| username | String(50) | nullable | 用户的唯一用户名 |
+| username | String(50) | nullable | 用户的用户名 |
 | name | String | NOT NULL | 用户姓名 |
 | email | String | - | 用户邮箱 |
 | role | String | default='pending' | 用户角色 |
@@ -1092,7 +1093,7 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 | info | JSON | nullable | 额外的用户信息 |
 | variables | JSON | nullable | 会被替换进系统提示词的用户变量 |
 | oauth | JSON | nullable | 身份提供方的用户标识，按提供方键控 |
-| scim | JSON | nullable | SCIM 配置数据 |
+| scim | JSON | nullable | SCIM 预配数据 |
 
 关于 user 表的注意事项：
 

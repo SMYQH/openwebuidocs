@@ -241,8 +241,16 @@
   ],
   "exceptions": [
     {
-      "fingerprint": "d64cc20590f8e65a2a4eb9b9d08f2ec791b86d6a1f108167343cbdc24c296246",
-      "reason": "Open Terminal Docker tab: the editor-only MD041 directive permits a tab fragment without a standalone title. It does not change rendered content."
+      "fingerprint": "a0938d208b5e5bfd259b9b9739d7edc386aa4c2a18b96f7b2884c46fdfa03610",
+      "reason": "The added bracket pair labels a link to the Tether integration settings used for personal oikb connections."
+    },
+    {
+      "fingerprint": "f306ce72b1c35c20097a3f99f9b61a2970fbd124f09ba77e08aca46e06d9abf2",
+      "reason": "The extra Tether mention identifies the app that owns the personal Integrations settings. The upstream Tether guide places personal OpenAPI connections there."
+    },
+    {
+      "fingerprint": "750da4fdb1b762f7c0ed1e6880e3881e67566763c773e5a80f2fa37709284ff6",
+      "reason": "The added local link points to the Tether guide's Bring Your Own Models and Tools section, which documents the personal OpenAPI connection path."
     },
     {
       "fingerprint": "2a15086f1f7aa9bb4186ae176ccf59a2c1f7d350bd964f64aba4143d858db476",
@@ -271,10 +279,6 @@
     {
       "fingerprint": "a8115a7bb0f1836875fe2439dc0374168dba34f642e0dd1d5c55e273a5d3495f",
       "reason": "Monitoring: retain the published authentication-setup-for-api-key- fragment next to the API key setup guidance. The anchor is empty, and the built page exposes the ID."
-    },
-    {
-      "fingerprint": "b5a87373b34fe6d591c532afd5e62b34b643a25c9208cb911d730b004bd0b779",
-      "reason": "OpenTelemetry: the local MD060 directive allows the editor's table formatting and does not change rendered content."
     },
     {
       "fingerprint": "b2b83e3d0d4e698a36684286ac8ed018145e2cfe5b4a9396f0824db30e892bc1",
@@ -373,18 +377,6 @@
       "reason": "Nginx Proxy Manager: the single removed Markdown marker is the orphan callout closer after the upstream CORS example."
     },
     {
-      "fingerprint": "4209b36fb496b7d137f57eb0fe61be2c0bdbc7434e7c5b0acd36912ac1b6ee38",
-      "reason": "The Chinese Knowledge and RAG overview adds one link to its own oikb guide. The source table, feature links, and original knowledge-base link are retained."
-    },
-    {
-      "fingerprint": "b9cfbcd479c95bff9e0701ca998d727a1148405f4ef223acb7f553a827a5cc0b",
-      "reason": "The extra Git mention is in the local oikb cross-reference; the pinned upstream Knowledge Base Sync guide lists Git among its supported connectors."
-    },
-    {
-      "fingerprint": "2bfb1694f377258817403905b2dca7de5e33fed94b76a26fdd82f360d98def7d",
-      "reason": "The added local oikb guide explains how to keep knowledge bases synchronized with folders, Git repositories, wikis, and storage buckets."
-    },
-    {
       "fingerprint": "5ee78d53b92d10a33e6d24628671d602b5c9f06a34716c178ae45f1dd1169593",
       "reason": "The Encryption table cell contains one additional local cross-reference to storage encryption guidance. The original advice to encrypt backup data at rest remains."
     },
@@ -445,12 +437,28 @@
       "reason": "The community-support bullet adds the GitHub Discussions link because the upstream Discord and Reddit links are removed under the site's external-link policy."
     },
     {
-      "fingerprint": "e9307bd2d6d3664debb447d1a756e8baa4c015c35fd9aef3c4c21075ea9076c7",
-      "reason": "OpenAI image generation: the two bare Azure AI Foundry URLs become descriptive links to the exact same destinations."
-    },
-    {
       "fingerprint": "883e29b8740240abe11526f84397505bcfdc911556c70551b4379455db654d5f",
       "reason": "The Prerequisites heading uses the product name Open WebUI instead of upstream's OpenWebUI. It retains the original openwebui fragment and introduces no additional product reference."
+    },
+    {
+      "fingerprint": "0178c0404927caf4f8ed2710379b67b735b080ac069fc22a2c8fdbb051a226fb",
+      "reason": "The Chinese Knowledge and RAG overview adds one link to its own oikb guide. The source table, feature links, and original knowledge-base link are retained."
+    },
+    {
+      "fingerprint": "17a6e88af94b285d1cc2b844ae841fac0b1b947c6c909a1b2b05e87cc5371b76",
+      "reason": "The extra Git mention is in the local oikb cross-reference; the pinned upstream Knowledge Base Sync guide lists Git among its supported connectors."
+    },
+    {
+      "fingerprint": "49f3e87203b9fc457060a3ee23f331f648a201607c0db17ca770b26fcdeaf149",
+      "reason": "The added local oikb guide explains how to keep knowledge bases synchronized with folders, Git repositories, wikis, and storage buckets."
+    },
+    {
+      "fingerprint": "4970e3f93060f347d47a5b95cab4004355cbe98e056df12aecda02e0ed6452af",
+      "reason": "Open Terminal Docker tab: the editor-only MD041 directive permits a tab fragment without a standalone title. It does not change rendered content."
+    },
+    {
+      "fingerprint": "6f2ad12794638f4c825cc4f65a9f17a83078578c5d7d37b05a64409fb3230342",
+      "reason": "OpenTelemetry: the local MD060 directive allows the editor's table formatting and does not change rendered content."
     }
   ]
 }

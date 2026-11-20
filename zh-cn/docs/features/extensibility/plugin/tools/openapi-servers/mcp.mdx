@@ -140,7 +140,7 @@ uvx mcpo --port 8000 -- uvx mcp-server-time --local-timezone=America/New_York
 
 基于 mcpo 的 MCP-to-OpenAPI 代理也可部署到生产环境。以下示例展示如何将其打包为容器，并部署到云服务或 VPS。
 
-### 🐳 使用 mcpo Dockerize 你的 Proxy Server {#dockerize-your-proxy-server-using-mcpo}
+### 🐳 使用 mcpo 将代理服务器容器化 {#dockerize-your-proxy-server-using-mcpo}
 
 1. **Dockerfile 示例**
 
@@ -191,7 +191,7 @@ services:
       - your_mcp_server_command
 ```
 
-把 `your_mcp_server_command` 替换为你的 MCP server 命令，并把每个参数都写成独立的 `command` 列表项。然后用下面的命令启动和停止代理：
+把 `your_mcp_server_command` 替换为你的 MCP server 命令，并把每个参数都写成独立的 `command` 列表项。然后用下面的命令启动代理及移除其 Compose 资源：
 
 ```bash
 docker compose up
@@ -215,7 +215,7 @@ docker push yourdockerusername/mcp-proxy-server:latest
 
 ### 它是如何工作的（技术摘要） {#how-it-works-technical-summary}
 
-- **动态发现架构并生成端点：** 启动时，代理会连接 MCP 服务器并查询可用工具。代理会根据 MCP 工具的架构自动构建 FastAPI 端点，生成清晰简洁的 REST 接口。
+- **动态发现工具定义并生成端点：** 启动时，代理会连接 MCP 服务器并查询可用工具。代理会根据 MCP 工具的结构定义自动构建 FastAPI 端点，生成清晰简洁的 REST 接口。
 
 - **OpenAPI 自动文档：** 自动生成的端点会通过 FastAPI 内建的 Swagger UI（`/docs`）文档化，无需额外写文档
 
@@ -232,11 +232,11 @@ docker push yourdockerusername/mcp-proxy-server:latest
 下面是 OpenAPI 代理方式在接入 MCP servers 时表现更优的原因，也是 Open WebUI 积极支持它的原因：
 
 - **用户友好且接口熟悉：** 不需要专用客户端，直接使用你已经熟悉的 HTTP REST 端点
-- **即时集成：** 可立刻与海量现有 REST / OpenAPI 工具、SDK 与服务兼容
+- **即时集成：** 可立刻与数千种现有 REST / OpenAPI 工具、SDK 与服务兼容
 - **强大的自动文档：** 内建 Swagger UI 文档自动生成、自动更新、自动维护
 - **无额外协议负担：** 不必直接处理 MCP 协议细节与 socket 通信问题
 - **成熟的安全性与稳定性：** 继承 HTTPS 传输、标准鉴权方式（JWT、API keys）、成熟异步库与 FastAPI 框架的优势
-- **更面向未来：** MCP proxy 使用的是稳定、标准、社区支持广泛的 REST / OpenAPI 形式
+- **更面向未来：** MCP proxy 使用的是现有的标准 REST / OpenAPI 格式。这些格式稳定、有广泛的社区支持，并持续演进
 
 **总结：** MCP-to-OpenAPI 能把你强大的 MCP AI 工具，以直观、可靠、可扩展的 REST 端点形式广泛开放出来。Open WebUI 明确支持并推荐这种路径。
 

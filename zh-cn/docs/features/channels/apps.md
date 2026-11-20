@@ -37,7 +37,7 @@ App 属于实验性功能。**Settings > Apps**（管理员区域） 会显示 *
 
 App 对提及的回应是一条频道消息。而对按钮点击的回应可以是以下两种之一：
 
-- **私有回复**出现在你点击了按钮的那条 App 消息下方，标注为 **Only visible to you**，并带有一个 **Dismiss** 链接。只有你能看到它们，且只在你关闭它、重新加载页面或切换到其他频道/主题之前可见。只有当它到达时你仍处于该频道或主题中，私有回复才会出现。文件下载也始终只对你可见。
+- **私有回复**出现在你点击了按钮的那条 App 消息下方，标注为 **Only visible to you**，并带有一个 **Dismiss** 链接。只有你能看到它们，且只在你关闭它、重新加载页面或切换到其他频道或线程之前可见。只有当它到达时你仍处于该频道或线程中，私有回复才会出现。文件下载也始终只对你可见。
 - **频道回复**会以 App 的名义作为普通频道消息发布，并带有 **App** 标签。频道中的所有人都能看到它们，并且它们会保留在历史记录中。
 
 按钮点击之后，App 还可以把一个 Markdown 文件作为私有回复发送。它会显示为一个带文件名的 **Download** 按钮，例如 **Download report.md**，点击即可把文件保存到你的设备。
@@ -46,7 +46,7 @@ App 对提及的回应是一条频道消息。而对按钮点击的回应可以�
 
 ### 按钮 {#buttons}
 
-App 发布的频道消息可以带有按钮和卡片。卡片显示标题、文本、字段和一张小图，侧面有一条彩色条。链接按钮会在新标签页中打开网页。其他任何按钮都会把点击发送给该 App，App 可以私下回复、发布一条新消息，或更新该按钮所属的那条消息。
+App 发布的频道消息可以带有按钮和卡片。链接按钮会在新标签页中打开网页。点击其他按钮会向 App 发送事件，App 可以私下回复、发布新消息或更新该按钮所在的消息。
 
 ---
 
@@ -103,7 +103,7 @@ Scope 限定了 App 能做什么。安装 App 时由你选择授予哪些 scope�
 | Scope | 显示为 | 它允许的操作 |
 |-------|----------|----------------|
 | `channels:mentions:read` | Read app mentions in joined channels | 接收提及该 App 的消息 |
-| `channels:messages:read` | Read messages and history in joined channels | 接收提及，以及已加入频道中每一条新增、编辑和删除的消息。读取消息历史与主题 |
+| `channels:messages:read` | Read messages and history in joined channels | 接收提及，以及已加入频道中每一条新增、编辑和删除的消息。读取消息历史与线程 |
 | `channels:messages:write` | Send messages and edit own messages in joined channels | 发布频道消息并编辑该 App 自己的消息 |
 | `channels:read` | Read joined channel details | 列出该 App 被加入的频道，包括名称、类型以及是否为私有 |
 
@@ -125,8 +125,6 @@ Open WebUI 会与每个已启用的 App 保持一条长连接，并自动重连�
 | **Connected** | 已建立经过校验的连接。多个工作进程共享 Redis 时，其中至少有一个已连接。 |
 | **Connecting** | Open WebUI 正在尝试连接该 App，并会持续重试。 |
 | **Disconnected** | 没有建立任何连接。 |
-
-已禁用的 App 会以暗色显示。将鼠标悬停在开关上可看到 **Enabled**、**Disabled** 或 **Uninstalled**。
 
 当某个 App 一直停留在 **Connecting** 或 **Disconnected** 时，把它的开关关掉再打开，然后在弹出的对话框中点击 **Connect**。该对话框会显示连接失败的原因；[故障排查](#troubleshooting)会解释每一条信息。
 

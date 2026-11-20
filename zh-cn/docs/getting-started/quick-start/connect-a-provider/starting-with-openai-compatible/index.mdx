@@ -50,14 +50,14 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 | GitHub Models | 不可用——使用非标准路径 | 手动把模型 ID 加入白名单 |
 | Perplexity | 不可用——没有该端点 | 手动把模型 ID 加入白名单 |
 | MiniMax | 不可用——没有该端点 | 手动把模型 ID 加入白名单 |
-| OpenRouter | 可以——但会返回海量模型 | 强烈建议使用筛选白名单 |
+| OpenRouter | 可以，但会返回数千个模型 | 强烈建议使用筛选白名单 |
 | Vercel AI Gateway | 可以 | 自动发现可用；如果只想使用特定网关模型，建议进行筛选 |
 | Google Gemini | 可以 | 自动发现可用 |
 | DeepSeek | 可以 | 自动发现可用 |
 | Mistral | 可以 | 自动发现可用 |
 | Groq | 可以 | 自动发现可用 |
 
-**如何手动添加模型：** 在连接设置中找到 **Model IDs**，输入模型 ID，点击 **+** 图标后保存。即使连接验证显示错误，这些模型依然会出现在模型选择器中。每个模型 ID 只会加入一次：如果输入的 ID 已经在列表中，会被拒绝并提示 **Model ID is already added**；输入内容前后的空格会先被自动去除。
+**手动添加模型的方法**：在连接设置中找到 **Model IDs**，输入模型 ID 并点击 **+** 图标，然后保存。即使验证连接时报错，这些模型也会出现在模型选择器中。
 
 :::
 
@@ -407,7 +407,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   Open WebUI 可以通过环境变量配置，当然你也可以在管理面板中填写相同信息。
 
-  对所有 `*_OPENAI_API_KEY` 条目，请使用同一个 stdapi.ai key。
+  所有 `*_OPENAI_API_KEY` 项与图像连接均使用同一个 stdapi.ai 密钥。
 
   核心连接（聊天 + 后台任务）：
 
@@ -427,25 +427,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   RAG_EMBEDDING_MODEL=cohere.embed-v4:0
   ```
 
-  图片生成：
-
-  ```bash
-  ENABLE_IMAGE_GENERATION=true
-  IMAGE_GENERATION_ENGINE=openai
-  IMAGES_OPENAI_API_BASE_URL=YOUR_STDAPI_URL/v1
-  IMAGES_OPENAI_API_KEY=YOUR_STDAPI_KEY
-  IMAGE_GENERATION_MODEL=stability.stable-image-core-v1:1
-  ```
-
-  图片编辑：
-
-  ```bash
-  ENABLE_IMAGE_EDIT=true
-  IMAGE_EDIT_ENGINE=openai
-  IMAGES_EDIT_OPENAI_API_BASE_URL=YOUR_STDAPI_URL/v1
-  IMAGES_EDIT_OPENAI_API_KEY=YOUR_STDAPI_KEY
-  IMAGE_EDIT_MODEL=stability.stable-image-control-structure-v1:0
-  ```
+  生成和编辑图像：在 **Settings** > **Images**（管理员区域）添加一个 **OpenAI compatible** [图像连接](/features/chat-conversations/image-generation-and-editing#set-up-a-connection)，URL 填 `YOUR_STDAPI_URL/v1`，并使用你的 stdapi.ai 密钥。在 **Model IDs** 下为生成添加 `stability.stable-image-core-v1:1`，为编辑添加 `stability.stable-image-control-structure-v1:0`。两个模型共用同一连接，因此请在 **Default Models** 下将 **Default Edit Model** 设为 `stability.stable-image-control-structure-v1:0`。
 
   语音转文本（STT）：
 
@@ -696,9 +678,9 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 
 :::info 转发 Cookie
 
-**高级设置 > 转发 Cookie** 决定浏览器请求中的 Cookie 是否会被转发到该服务器。它默认关闭，且只作用于管理员配置的连接；用户自己的直连永远不会转发 Cookie。
+**Advanced > Forward cookies** 决定是否将浏览器请求中的 Cookie 转发给此服务器。默认关闭。
 
-只为你自己掌控、并且通过 Cookie 来认证请求发起者的服务器开启它，通常是你自己网络内、使用同一套登录体系的那类服务器。浏览器为你的 Open WebUI 域名保存的所有内容都会随请求一起过去，包括会话 Cookie，因此第三方端点绝不应该开启它。
+只为你自己掌控、并且通过 Cookie 来认证请求发起者的服务器开启它，通常是你自己网络内、使用同一套登录体系的那类服务器。浏览器为你的 Open WebUI 域名保存的 Cookie 都会随请求转发，包括会话 Cookie，因此第三方端点绝不应该开启它。
 
 **这一点发生了变化：** 使用 **Session** 或 **System OAuth** 认证类型的连接过去会无条件转发 Cookie，现在不会了。如果这类连接在升级后不再能够通过认证，请开启此项。
 
@@ -720,12 +702,12 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 | :--- | :--- |
 | **默认（Default）** | 什么都不改变。该连接会被视为普通的兼容 OpenAI 端点。 |
 | **Azure OpenAI** | 请求会被改写成 Azure 基于部署的 URL 形式，并附带 `api-version` 参数，因此该连接需要填写 **API Version**，并在 **Model IDs** 中列出部署名称。对于形似 Azure 的 URL 会自动开启此项，参见[云端提供商](#cloud-providers)下的 Azure OpenAI 标签页。 |
-| **llama.cpp** | 解锁[模型管理面板](#managing-local-models-from-open-webui)、模型选择器中的绿色 **已加载（Loaded）** 标记与管理员的 **弹出（Eject）** 按钮，以及模型行上的额外模型详情。已存储的推理内容也会以 `reasoning_content` 字段回传给服务器，llama.cpp 会通过聊天模板对其进行处理。参见 [llama.cpp 指南](/getting-started/quick-start/connect-a-provider/starting-with-llama-cpp)与[推理模型](/features/chat-conversations/chat-features/reasoning-models)。 |
+| **llama.cpp** | 启用[模型管理面板](#managing-local-models-from-open-webui)、模型选择器中的绿色 **Loaded** 标记和管理员 **Eject** 按钮，以及模型行中的更多模型详情。已保存的推理也会作为 `reasoning_content` 字段重新发送给服务器，由 llama.cpp 通过聊天模板处理。此选项以请求格式命名，支持该格式的托管服务器也可使用它，例如思考模式要求把推理内容发回给它的 DeepSeek API。参见 [llama.cpp 指南](/getting-started/quick-start/connect-a-provider/starting-with-llama-cpp)和[推理模型](/features/chat-conversations/chat-features/reasoning-models)。 |
 | **LM Studio** | 解锁同样的[模型管理面板](#managing-local-models-from-open-webui)、已加载标记与模型详情，但不支持删除模型，也没有 **弹出（Eject）** 按钮。 |
 | **LiteLLM** | 到达 Open WebUI 自带的 [Anthropic Messages 端点](/reference/api-endpoints#anthropic-messages-api)的请求会被原样转发给 LiteLLM，而不会被转换成聊天补全再转回来。在 Open WebUI 内部发起的聊天不受影响。 |
 
 :::info 下拉框不出现的情况
-**服务商（Provider）** 下拉框只属于 OpenAI 连接。Ollama 连接会被自动识别，而用户在个人设置中添加的 **直连（Direct Connections）** 也不提供该选项。
+**Provider** 下拉菜单只用于 OpenAI 连接。Ollama 连接会被自动识别，[用户在 Tether 中添加的连接](/ecosystem/tether#bring-your-own-models-and-tools)不提供此菜单。
 :::
 
 ---
@@ -734,7 +716,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 
 有两种服务商类型超出了普通聊天补全的范围：在连接上设置 **服务商** 可以告诉 Open WebUI 该服务器使用哪一套管理 API，从而为管理员解锁一个模型管理面板。
 
-从 **设置 > 模型**（管理员区域） 的 **⋯** 菜单中选择 **管理** 打开它。当你同时拥有 Ollama 和一个受管服务商连接时，对话框顶部会有一个选择器在两者之间切换；第二个选择器会按 URL 列出所有受管连接。
+在 **Settings > Models**（管理员区域）中打开 **⋯** 菜单，选择 **Manage**。
 
 | | `llama.cpp` | `LM Studio` |
 | :--- | :---: | :---: |
@@ -750,8 +732,6 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 ### 从模型选择器操作 {#from-the-model-selector}
 
 管理员不必打开管理面板也能拉取模型。在模型选择器的搜索框中输入模型 ref，Open WebUI 会为每个目标给出一行 **下载（Download）**：已连接的 Ollama，以及每一条 `llama.cpp` 和 LM Studio 连接，并分别标注将从哪个提供商下载。使用方向键即可选中这些行，按 **Enter** 开始下载。进行中的行会显示百分比和一个用于取消的 ✕，所有目标最多可同时进行三个下载。
-
-这两种提供商的模型行还会在名称旁显示参数量、量化方式和文件大小，这些信息取自服务器的报告内容。
 
 ### 已加载的模型与弹出 {#loaded-models-and-eject}
 

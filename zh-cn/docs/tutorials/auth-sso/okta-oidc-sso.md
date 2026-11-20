@@ -6,7 +6,7 @@ title: "Okta SSO（OIDC）"
 # 🔗 Okta OIDC SSO 集成 {#okta-oidc-sso-integration}
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+本教程由社区贡献，Open WebUI 团队不为本教程提供支持。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
 ## 概述 {#overview}
@@ -147,9 +147,9 @@ OAUTH_PROVIDER_NAME="Okta"
 
 将 `YOUR_OKTA_CLIENT_ID`、`YOUR_OKTA_CLIENT_SECRET` 和 `YOUR_OKTA_OIDC_DISCOVERY_URL` 替换为 Okta 应用程序配置中的实际值。
 
-要根据 Okta 声明启用群组同步，将 `ENABLE_OAUTH_GROUP_MANAGEMENT="true"` 设置为 `true`，并确保 `OAUTH_GROUP_CLAIM` 与 Okta 中配置的声明名称匹配（默认为 `groups`）。
+要根据 Okta 声明启用群组同步，设置 `ENABLE_OAUTH_GROUP_MANAGEMENT="true"`，并确保 `OAUTH_GROUP_CLAIM` 与 Okta 中配置的声明名称匹配（默认为 `groups`）。
 
-要*同时*启用自动即时（JIT）创建存在于 Okta 但尚未在 Open WebUI 中的群组，将 `ENABLE_OAUTH_GROUP_CREATION="true"` 设置为 `true`。如果您只想管理 Open WebUI 中已存在群组的成员资格，可以将其保留为 `false`。
+要*同时*启用自动即时（JIT）创建存在于 Okta 但尚未在 Open WebUI 中的群组，设置 `ENABLE_OAUTH_GROUP_CREATION="true"`。如果您只想管理 Open WebUI 中已存在群组的成员资格，可以将其保留为 `false`。
 
 :::warning
 
@@ -194,7 +194,7 @@ ENABLE_LOGIN_FORM="false"
 :::danger
 
 重要前提
-将 `ENABLE_LOGIN_FORM="false"` 设置为 `false` **需要**同时将 `ENABLE_OAUTH_SIGNUP="true"` 设置为 `true`。如果在未启用 OAuth 注册的情况下禁用登录表单，**用户（包括管理员）将无法登录。** 在禁用标准登录表单之前，请确保至少配置了一个 OAuth 提供商并启用了 `ENABLE_OAUTH_SIGNUP`。
+设置 `ENABLE_LOGIN_FORM="false"` 时，**必须**同时设置 `ENABLE_OAUTH_SIGNUP="true"`。如果在未启用 OAuth 注册的情况下禁用登录表单，**用户（包括管理员）将无法登录。** 在禁用标准登录表单之前，请确保至少配置了一个 OAuth 提供商并启用了 `ENABLE_OAUTH_SIGNUP`。
 
 :::
 

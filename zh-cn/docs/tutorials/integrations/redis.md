@@ -6,7 +6,7 @@ title: "Redis Websocket 支持"
 # 🔗 Redis Websocket 支持 {#redis-websocket-support}
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+本教程由社区贡献，Open WebUI 团队不为本教程提供支持。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
 ## 概述 {#overview}
@@ -34,7 +34,7 @@ title: "Redis Websocket 支持"
 **问题所在：**
 
 Open WebUI 使用 Redis 进行：
-- 令牌验证/撤销检查（每次认证请求）
+- 令牌验证/撤销检查（每次已通过身份验证的请求）
 - WebSocket 管理（实时更新）
 - 会话存储（如果启用了 `ENABLE_STAR_SESSIONS_MIDDLEWARE`）
 
@@ -175,7 +175,7 @@ networks:
 
 此配置中未包含 `ports` 指令，因为大多数情况下不需要。Redis 服务仍可在 Docker 网络内被 Open WebUI 服务访问。但是，如果需要从 Docker 网络外部访问 Redis 实例（例如用于调试或监控），可以添加 `ports` 指令来暴露 Redis 端口（例如 `6379:6379`）。
 
-上述配置会创建一个名为 `redis` 的 Redis 容器，并挂载一个持久化数据的卷。`healthcheck` 指令确保容器在无法响应 `ping` 命令时重启。`--save 30 1` 命令选项会在至少 1 个键发生更改后 30 秒写入一次 RDB 快照，而 `--appendonly yes` 则提供了秒级持久化。
+上述配置会创建一个名为 `redis` 的 Redis 容器，并挂载一个持久化数据的卷。`healthcheck` 指令确保容器在无法响应 `ping` 命令时重启。`--save 30 1` 命令选项会在至少 1 个键发生更改后 30 秒写入一次 RDB 快照，而 `--appendonly yes` 则启用仅追加日志，提供秒级持久化。
 
 **重要提示：** `--maxclients 10000 --timeout 1800` 标志用于防止连接耗尽，而 `--maxmemory-policy noeviction` 可防止 Redis 静默驱逐 Open WebUI 的会话和令牌撤销键。详情请参阅上方的[关键：Redis 服务器配置](#critical-redis-server-configuration)、[关键：内存驱逐策略](#critical-memory-eviction-policy)和[关键：持久化](#persistence)部分。
 
@@ -206,7 +206,7 @@ redis-cli CONFIG GET client-output-buffer-limit
 client-output-buffer-limit normal 0 0 0 replica 268435456 67108864 60 pubsub 1073741824 268435456 180
 ```
 
-上述配置将 Pub/Sub 硬上限设为 1 GB，软上限设为 256 MB，持续 180 秒。请根据你的 Redis 可用内存与预期的 websocket 负载大小调整这些数值。较高的限制会让 Redis 对临时较慢的订阅者更具容忍度，但同时也会让每个较慢的 Pub/Sub 客户端在被 Redis 断开前缓存更多内存。
+上述配置将 Pub/Sub 硬上限设为 1 GB。软上限为 256 MB，持续超过该值 180 秒才会达到软限制条件。请根据你的 Redis 可用内存与预期的 websocket 负载大小调整这些数值。较高的限制会让 Redis 对临时较慢的订阅者更具容忍度，但同时也会让每个较慢的 Pub/Sub 客户端在被 Redis 断开前缓存更多内存。
 
 默认开启[按房间划分的 Redis 频道](../../getting-started/advanced-topics/scaling.md#per-room-redis-channels)后，Redis 只会把与该实例相连用户的更新发送给它，从而在多实例部署中让这些缓冲区保持更小。房间频道在慢日志中显示为 `PUBLISH socketio#...`。
 

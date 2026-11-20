@@ -325,6 +325,18 @@ environment:
 - **CUDA 模式：** `:cuda` 镜像和其他所有镜像一样默认使用 `int8`，这会在旧 GPU 上报错。请为 GPU 显式设置 `float16`。
 :::
 
+### 通过 pip 安装后本地 Whisper 出错 {#local-whisper-fails-on-a-pip-install}
+
+**症状：** 所有本地转录均失败，并显示 `open() got an unexpected keyword argument 'metadata_errors'`。
+
+**原因：** 音频库 PyAV（`av`）为 19 或更高版本，本地 Whisper 无法使用。Open WebUI 将 `av` 锁定在 14.0.1，Docker 镜像也包含该版本。
+
+**解决方法：** 在运行 Open WebUI 的 Python 环境中安装锁定版本，然后重启：
+
+```bash
+pip install av==14.0.1
+```
+
 ### STT 识别准确率差 {#stt-not-recognizing-speech-correctly}
 
 **提高识别效果的小建议：**

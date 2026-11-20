@@ -27,7 +27,7 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 
 ## 本地和远程 RAG 集成 {#local-and-remote-rag-integration}
 
-要在 RAG 中使用本地文档，请将其添加到**工作区 > 知识库**中的知识库，或在聊天中上传。在聊天中，在查询前输入 `#` 并从消息输入框上方出现的建议框中选择该文档。选择后，`Send a message`（发送消息）上方会出现一个文档图标，表示该文档已附加并可用于检索。
+要在 RAG 中使用本地文档，可在**工作区 > 知识**中将其添加到知识库，或直接上传到聊天。在聊天中查询时，请在查询前输入 `#`，从消息输入框上方的建议列表中选择文档。
 
 ![文档与检索设置](/images/admin/admin-documents.png)
 
@@ -43,11 +43,17 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 
 你可以将知识库指向一个你已维护的**外部向量数据库**，而非在 Open WebUI 内部上传和嵌入文档。Open WebUI 在查询时直接访问该数据库，因此你的文档、嵌入向量和索引保留在你自己的存储中，无需重新导入。
 
-支持的提供商：**Qdrant**、**Milvus** 和 **pgvector**。提供商的 Python 客户端必须存在于你的 Open WebUI 镜像中（例如 `qdrant-client` 或 `pymilvus`）。
+支持的提供商：**兼容 OpenAI**（OpenAI 向量存储、Azure OpenAI v1 和 LiteLLM）、**Qdrant**、**Milvus** 和 **pgvector**。对于 Qdrant、Milvus 和 pgvector，Open WebUI 镜像中必须包含对应提供商的 Python 客户端，例如 `qdrant-client` 或 `pymilvus`。支持的 Qdrant 服务端版本见 [Qdrant 设置](/reference/env-configuration#qdrant)。
+
+### 使用兼容 OpenAI 的向量存储 {#using-openai-compatible-vector-stores}
+
+服务器使用创建存储时的嵌入模型执行搜索。输入**端点**（Azure OpenAI 使用 `/openai/v1` URL）及 **API 密钥 / 令牌**，然后点击**验证连接**加载存储列表。一个知识库可使用一个或多个已加载的存储。
+
+如果无需逐个创建知识库，可在添加连接时开启**将存储列为知识库**，以提供该端点下的存储。**存储 ID** 中指定的存储（留空表示全部）会作为只读知识库实时显示在**工作区 > 知识**中。访问权限在连接上设置，对其所有存储生效。关闭此开关时，只有**测试查询**成功返回文档后，才能创建知识库。
 
 ### 添加外部知识源 {#adding-an-external-knowledge-source}
 
-在 **Settings > Integrations > External Knowledge Sources**（管理员区域）中进行配置：
+下列步骤适用于 Qdrant、Milvus 和 pgvector。在**设置 > 集成 > 外部知识源**（管理员区域）配置：
 
 1. **创建连接**到你的向量数据库：
    - **提供商**（Qdrant / Milvus / pgvector）
@@ -71,14 +77,14 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
    嵌套字段支持点号路径（例如 `payload.text`）。
 3. **测试查询**，使用样本问题。Open WebUI 会针对该源执行实时检索并显示结果。成功测试后才能创建或保存该源。
 
-创建后，外部源会像其他知识库一样出现在**工作区 > 知识库**中，并可附加到模型或对话。在查询时，Open WebUI 使用其配置的 RAG 嵌入模型对用户的问题进行嵌入，通过向量搜索外部数据库，并将最匹配的结果注入提示词。Open WebUI 中不会存储文档的副本。
+创建后，外部来源会像其他知识库一样出现在**工作区 > 知识**中，可附加到模型或聊天。对于 Qdrant、Milvus 和 pgvector，聊天时 Open WebUI 使用配置的 RAG 嵌入模型将用户查询转为向量，在外部数据库中执行向量搜索，并把最匹配的结果放入提示词。Open WebUI 不保存文档副本。
 
 启用[检索查询生成](/reference/env-configuration#enable_retrieval_query_generation)后，所有生成的查询会同时运行。它们的结果按排名合并（先取每个查询的第一条结果，再取每个查询的第二条，以此类推），重复项会被丢弃，列表会被裁剪到结果数量。
 
-在答案下方的来源列表中，每条结果都按其标题列出。当某条结果的**来源字段**保存的是网页地址时，点击其标题或引用中的**内容**链接会打开该页面；否则标题只是纯文本。
+回答下方的来源按标题列出各项结果。对于 Qdrant、Milvus 和 pgvector，如果结果的**来源字段**包含网址，点击标题或引用中的**内容**链接即可打开该页面。否则标题显示为纯文本。
 
 :::info 嵌入模型必须匹配
-由于 Open WebUI 对查询进行嵌入并通过向量搜索你的数据库，因此外部数据库中存储的向量必须来自 Open WebUI 使用的**同一个嵌入模型**（模型和维度均需匹配）。不匹配的嵌入会产生不理想或无意义的结果。
+对于 Qdrant、Milvus 和 pgvector，Open WebUI 会将查询转为向量，并在数据库中执行向量搜索。因此，外部数据库存储的向量必须由 Open WebUI 所用的**同一个嵌入模型**生成，模型和维度都必须一致。嵌入不匹配时，结果质量很差或毫无意义。
 :::
 
 ## 用于 RAG 的网络搜索 {#web-search-for-rag}
@@ -89,7 +95,7 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 **修复方法：** 导航至 **Settings > Models**（管理员区域）中（您的 Ollama 模型的）铅笔图标（**Edit**），打开 **Advanced Params** 并**将上下文长度增加到 8192+（或最好超过 16000）个 token**。此设置特别适用于 Ollama 模型。对于 OpenAI 和其他集成模型，请确保您使用的是具有足够内置上下文长度的模型（例如，拥有 1M token 上下文窗口的 GPT-5.6）。
 :::
 
-对于网页内容的集成，在聊天中以 `#` 开头开始查询，并紧跟目标 URL。点击聊天框上方出现的方框中的格式化 URL。选择后，`Send a message` 上方会出现一个文档图标，表示检索成功。如果可以，Open WebUI 将从该 URL 获取并解析信息。指向文件的链接（例如 PDF）会通过文档提取来读取。如果无法读取该 URL，该尝试会失败并给出提示，指出无法读取的链接，参见[附加链接或 YouTube 视频失败](/troubleshooting/rag#14-attaching-a-link-or-a-youtube-video-fails)。
+要引用网页内容，在聊天中先输入 `#`，再输入目标 URL，点击聊天输入框上方显示的格式化 URL。Open WebUI 会尝试获取并解析该 URL 的内容。PDF 等文件链接通过文档提取来读取。如果无法读取该 URL，提示会指出失败的链接。参见[附加链接或 YouTube 视频失败](/troubleshooting/rag#14-attaching-a-link-or-a-youtube-video-fails)。
 
 :::tip
 

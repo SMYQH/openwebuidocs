@@ -98,6 +98,8 @@ Slim 会在启动时检查这些设置，并对不支持的配置报错。默认
 
 #### 自行构建 {#building-it-yourself}
 
+标准版和 slim 版镜像使用带哈希校验的 `backend/requirements.lock` 和 `backend/requirements-slim.lock` 安装 Python 软件包，PyTorch 及其配套软件包除外。自定义镜像如果修改了 `backend/requirements.txt` 或 `backend/requirements-slim.txt`，必须运行 `backend/update-locks.sh`（需要 [uv](https://docs.astral.sh/uv/)）重新生成锁文件，否则修改不会生效。
+
 `USE_SLIM=true` 不能与 `USE_CUDA=true` 或 `USE_OLLAMA=true` 组合使用。构建会直接报错终止，而不是产出一个其 GPU 支持或内置模型服务器无物可跑的镜像。
 
 #### 离线与隔离网络环境 {#offline-and-air-gapped}
@@ -178,7 +180,7 @@ docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -e WEBUI
 ```
 
 :::warning
-切换到单用户模式后，不能再无缝切回多账户模式。
+完成此更改后，无法在单用户模式与多账户模式之间切换。
 :::
 
 ---

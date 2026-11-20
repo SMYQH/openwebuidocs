@@ -114,7 +114,7 @@ SQLite 使用自己的连接池配置，参见[受限容器中的 SQLite 内存�
 
 知识库搜索不会占住发起它的那个 worker，因此在搜索进行期间，其他人的回复仍会继续流式返回，而且多个集合会被同时搜索，而不是一个接一个。因此一个慢的向量数据库只会拖慢正在搜索的那次对话，而不是该 worker 上的每个用户。它仍然要承受多个副本同时访问的压力，下面的选项正是在这方面做取舍。
 
-- **ChromaDB（默认）**：**不适合**多副本部署。默认 ChromaDB 把数据保存在本地 SQLite 文件中，而同一时间只能有一个进程写入；多个副本同时写入会直接把它们搞坏。完整的崩溃过程与解决方案请见[扩缩容与高可用故障排查指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
+- **ChromaDB（默认）**：**无法安全用于**多副本部署。默认 ChromaDB 把数据保存在本地 SQLite 文件中，而同一时间只能有一个进程写入；多个副本同时写入会导致工作进程崩溃。完整的崩溃过程与解决方案请见[扩缩容与高可用故障排查指南](/troubleshooting/multi-replica#6-worker-crashes-during-document-upload-chromadb--multi-worker)。
 - **推荐方案：**
   - **Milvus** 或 **Qdrant**：以服务器方式运行时，在规模与性能上表现最好。服务器部署对多副本访问是安全的，因为每个副本都通过网络与它通信。
   - **Milvus Lite**：适用于知识库规模较小且基本不再增长的小型单实例部署，此时它比本地 ChromaDB 占用更少的磁盘和内存。如果你要批量上传文档或持续添加文件，则不要使用它：Open WebUI 在每次上传前都会执行重复检查，而在 Milvus Lite 上每次都要扫描整个集合，因此你存得越多，导入就越慢。相关实测数据参见[把 ChromaDB 换成 Milvus Lite](#4-swap-chromadb-for-milvus-lite-small-deployments)。规模再大一些就该用 Milvus 服务器；Milvus Lite 是嵌入式数据库，因此它与本地 ChromaDB 一样受多进程写入限制。增加副本前，请把 `MILVUS_URI` 指向 Milvus 服务器。
@@ -126,7 +126,7 @@ SQLite 使用自己的连接池配置，参见[受限容器中的 SQLite 内存�
 
 ### 内容提取引擎 {#content-extraction-engine}
 :::danger 默认内容提取器会造成内存泄漏
-**默认内容提取引擎**依赖 Python 库（包括 **pypdf**），而这些库在文档导入过程中已知存在**持续性内存泄漏**。在生产环境中，如果经常上传文档，Open WebUI 的内存占用会不断增长，最终导致进程被杀死或容器重启。
+**默认内容提取引擎**依赖 Python 库（包括 **pypdf**），而这些库在文档导入过程中已知存在**持续性内存泄漏**。在生产环境中，如果经常上传文档，Open WebUI 的内存占用会不断增长，直到进程被终止或容器重启为止。
 
 这是生产环境中**无法解释的内存增长的首要原因（#1）**。
 :::

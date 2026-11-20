@@ -52,6 +52,43 @@ flowchart LR
 
 所选的端点决定了推理发生的位置。选择云端模型会把提示词和附带上下文发送到该提供商；比较模型时，提示词会分别发送到每个选中的端点。本地推理并不会让单独配置的云端工具、文档提取或嵌入服务变成本地执行。对于敏感内容，请参阅[聊天数据隐私与加密](/security/chat-data-privacy-and-encryption)来选择合适的提供商。
 
+## 选择合适的连接设置 {#choose-the-right-connection-settings}
+
+大多数提供商只需要 URL 和 API 密钥。有些还需要在连接对话框中选择一项设置，让 Open WebUI 识别连接另一端的服务。在 **Admin Settings > Connections** 中，通过 **Manage Ollama API Connections** 添加 Ollama 服务器，其他服务则通过 **Manage OpenAI API Connections** 添加。根据下表配置相应的提供商。
+
+![已填写 URL 和 API 密钥的添加连接对话框](/images/getting-started/quick-start/connection-dialog.png)
+
+| 要连接的服务 | 添加位置 | 要更改的设置 |
+|---|---|---|
+| **Ollama** | Ollama 连接 | 只需 URL。Open WebUI 会自动识别 Ollama。参见 [Ollama 入门](/getting-started/quick-start/connect-a-provider/starting-with-ollama)。 |
+| **OpenAI、Anthropic、Gemini、Mistral、Groq、OpenRouter、xAI、vLLM 及其他使用 OpenAI 格式的服务器** | OpenAI 连接 | URL 和 API 密钥。将 **Provider** 保持为 **Default**。 |
+| **DeepSeek（托管 API）** | OpenAI 连接 | 填写 URL 和 API 密钥，再选择 **Advanced > Provider > llama.cpp**。DeepSeek 的思考模式要求在每轮工具调用时把之前的推理发回服务器，llama.cpp 选项会发送这些内容。 |
+| **Azure OpenAI** | OpenAI 连接 | 选择 **Provider > Azure OpenAI**，设置 **API Version**，并在 **Model IDs** 下填入部署名称。Open WebUI 识别到 Azure 格式的 URL 时也会自动切换到 Azure 模式。 |
+| **llama.cpp 服务器** | OpenAI 连接 | 选择 **Provider > llama.cpp**，即可在 Open WebUI 中管理模型。参见 [llama.cpp 入门](/getting-started/quick-start/connect-a-provider/starting-with-llama-cpp)。 |
+| **LM Studio** | OpenAI 连接 | 选择 **Provider > LM Studio**，即可在 Open WebUI 中管理模型。 |
+| **LiteLLM 代理** | OpenAI 连接 | 选择 **Provider > LiteLLM**，即可把发往 Open WebUI 自身 Anthropic Messages 端点的请求直接转给 LiteLLM。 |
+| **提供 Responses API 的提供商** | OpenAI 连接 | 选择 **API Type > Responses**。参见 [Open Responses](/getting-started/quick-start/connect-a-provider/starting-with-open-responses)。 |
+
+**Provider** 设置指定 Open WebUI 发送请求时使用的格式。llama.cpp 选项因 llama.cpp 首先引入该格式而得名。支持该格式的任何服务器都可以使用此选项，包括 DeepSeek 的托管 API。**Default** 发送标准 OpenAI 格式，任何兼容 OpenAI 的服务器都能接受。[Provider 设置](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#the-provider-setting)列出各选项启用的功能。[如何发回推理](/features/chat-conversations/chat-features/reasoning-models#how-reasoning-is-sent-back)说明了各提供商接收推理内容时使用的字段。
+
+要修改此设置，请打开 **Admin Settings > Connections**，点击连接旁的齿轮图标（新建时点击 **+**），展开 **Advanced**，在 **Provider** 中选择相应选项。保存对话框和连接列表。此下拉菜单只在 OpenAI 连接中出现。
+
+![连接的 Advanced 区域，其中 Provider 设为 llama.cpp](/images/getting-started/quick-start/connection-provider-setting.png)
+
+对话框中的其他设置：
+
+| 设置 | 用途 |
+|---|---|
+| **Connection Type** | 将连接标为 **Local** 或 **External**。模型选择器用此标签进行 Local 和 External 筛选。 |
+| **Auth** | **Bearer** 发送你的 API 密钥。**None** 调用服务器时不发送密钥。**Session**、**OAuth** 和 **Entra ID** 转发已登录用户的凭据或 Azure 身份。 |
+| **API Type** | 默认使用 **Chat Completions**。选择 **Responses** 可将连接切换到 Responses API。 |
+| **Forward cookies** | 将发往 Open WebUI 的请求中的 Cookie 转发给此服务器。 |
+| **Headers** | JSON 格式的额外请求头。 |
+| **Prefix ID** | 为此连接的每个模型 ID 添加前缀，区分两个连接提供的同名模型。 |
+| **Model IDs** | 要显示的模型列表。留空时显示服务器上报的所有模型。 |
+
+---
+
 ## 云端提供商 {#cloud-providers}
 
 需要账户和 API 密钥的托管 API。无需自备硬件。

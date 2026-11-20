@@ -49,8 +49,16 @@ ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 2. **查看 [发布说明](https://github.com/open-webui/open-webui/releases)**，确认是否有破坏性变更。
 3. 更新后**清理浏览器缓存**（`Ctrl+F5` / `Cmd+Shift+R`），避免旧前端资源残留。
 
-:::info 个人集成标签页
-个人工具服务器受 **Settings > Integrations**（管理员区域）的 **User Connections** 分区中 **Direct Integrations** 开关控制（或 [`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)），该开关默认关闭。开关关闭时，用户设置中的 **Integrations** 标签页对所有人隐藏，包括管理员，不管 `direct_tool_servers` 权限如何设置。
+:::info 早期版本中的编程智能体聊天
+在本次更新之前开始的编程智能体聊天中，发送第一条新消息时会开启新的智能体会话。智能体会以文本形式收到此前的聊天内容。
+:::
+
+:::info Tether 取代 Direct Connections
+用户设置中的 Direct Connections、个人工具服务器和个人终端已移除。在 Tether 应用中添加的连接会将 URL 和密钥保存在你的电脑上。参见[自带模型与工具](/ecosystem/tether#bring-your-own-models-and-tools)。共享连接由管理员在 **Settings > Admin** 下添加。
+:::
+
+:::info 图像设置迁移到图像连接
+引擎、模型、API URL、密钥、ComfyUI 工作流及 AUTOMATIC1111 的图像环境变量（如 `IMAGE_GENERATION_ENGINE`、`IMAGES_OPENAI_API_*`、`COMFYUI_*` 和 `IMAGE_EDIT_*` 等）仅在首次启动时读取。此次启动会将现有图像生成和编辑设置及这些变量迁移成名为 OpenAI、Gemini、ComfyUI 或 AUTOMATIC1111 的图像连接。独立的编辑后端会带有 ` (edit)` 后缀，迁移后的连接向所有用户开放。此后不再读取这些变量。若设置 `ENABLE_PERSISTENT_CONFIG=false`，则每次启动都会重新迁移。在 **Settings > Images**（管理员区域）管理连接。参见[图像生成和编辑](/features/chat-conversations/image-generation-and-editing)。`ENABLE_IMAGE_GENERATION`、`ENABLE_IMAGE_EDIT` 和 `ENABLE_IMAGE_PROMPT_GENERATION` 仍然有效。
 :::
 
 :::info v0.12.1 为 SCIM 用户添加登录记录
@@ -295,7 +303,7 @@ docker run --rm -v open-webui:/data -v $(pwd):/backup \
   alpine tar czf /backup/openwebui-$(date +%Y%m%d).tar.gz /data
 ```
 
-建议在**每次更新前**以及固定周期（按你使用 Open WebUI 的频率决定每天还是每周）进行备份。
+请在**每次更新前**备份，并根据 Open WebUI 的使用频率，每天或每周定期备份。
 
 ### 恢复 {#restore}
 

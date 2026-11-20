@@ -25,7 +25,7 @@ Event 函数是 Open WebUI **0.10.0** 中引入的新插件原语。
 **函数在你的服务器上执行任意 Python 代码**，而 Event 函数会自动响应系统活动运行，而不仅仅是在用户操作时。函数创建仅限于管理员。仅从可信来源安装并在导入前审查代码。请参阅[插件安全警告](/features/extensibility/plugin/)。
 :::
 
-**Event 函数**是第四种函数原语，与 [Pipe](./pipe)、[Filter](./filter) 和 [Action](./action) 并列。前者处理单个聊天请求，而 Event 函数运行自定义 Python 代码**响应 Open WebUI 中发生的系统事件**：用户注册、聊天被删除、模型被创建、服务器启动、配置更改等等。
+**Event 函数**是第四种函数原语，与 [Pipe](./pipe)、[Filter](./filter) 和 [Action](./action) 并列。Pipe、Filter 和 Action 处理单个聊天请求，而 Event 函数运行自定义 Python 代码**响应 Open WebUI 中发生的系统事件**：用户注册、聊天被删除、模型被创建、服务器启动、配置更改等等。
 
 这将 Open WebUI 从一个你可以配置的应用转变为一个你可以编程的平台：生命周期自动化、审计日志、注册门控、资源预配、告警以及与外部系统的集成，全部以单个函数的形式表达。
 
@@ -108,7 +108,7 @@ Open WebUI 发出 **170+ 事件**，涵盖每个子系统。每个名称以 `<ar
 | **配置** | `config.updated`、`config.models.updated`、`config.connections.updated`、`config.webhook.updated` |
 | **其他** | `channel.*`、`calendar.*`、`automation.*`、`memory.*`、`note.*`、`image.*`、`audio.*`、`terminal.*`、`feedback.*`、`notification.*` |
 
-其中一些事件还会驱动面向用户的[通知](/features/chat-conversations/chat-features/notifications#events)，该页面列出了用户可以订阅目标的全部事件。
+其中一些事件还会驱动面向用户的[通知](/features/chat-conversations/chat-features/notifications#events)，该页面列出了用户可为通知目标选择订阅的事件。
 
 后端事件目录提供完整列表。在管理面板的**设置 → 常规 → 事件**中配置 webhook 时也能看到该列表。
 
@@ -155,7 +155,7 @@ async def event(self, event: dict, __event_name__: str = None, __id__: str = Non
         ...
 ```
 
-事件的 `data` 会连同该函数的 `type` 和 `name` 一起携带。
+事件的 `data` 包含该函数的 `type` 和 `name`。
 
 函数即使在那一刻还并不活跃，也会收到属于它**自己**的 `function.enable_started`——这是非活跃函数唯一会收到事件的情况。其余情况仍然遵循“只有活跃的事件函数才会收到派发”这一惯例。
 
@@ -257,26 +257,26 @@ Event 函数在它所响应的活动**之后**运行（用户已创建、消息�
 
 ### 访问控制和注册门控 {#access-control-and-signup-gating}
 
-因为事件触发时账户已经存在，门控意味着*持有或移除*它，而不是拒绝请求。
+触发事件时账户已创建，因此要限制访问，可以*暂缓启用或移除*该账户。
 
-- **邮箱域名策略。** 允许受信任的域名，将其他域名保持为 `pending`，拒绝一次性或临时域名。
-- **突发防御。** 在注册激增期间自动持有新账户（机器人防御）。
+- **邮箱域名策略。** 允许来自受信任域名的账户，将来自其他域名的账户设为 `pending`，并拒绝使用一次性或临时域名的账户。
+- **突发防御。** 在注册量激增时自动暂缓启用新账户（机器人防御）。
 - **审批队列。** 将"用户 X 请求访问 [批准] / [拒绝]"发布到 Slack 或 Discord，从手机上批准。
 
 ### 生命周期和日常维护 {#lifecycle-and-housekeeping}
 
 在 `system.startup.completed` 上注册周期性后台任务（参见[生成后台任务](/features/extensibility/plugin/development/under-the-hood#patterns)），让它按计划运行。
 
-- **自清理聊天。** 归档或删除超过时限的聊天。使用 `chat.created` 作为节流心跳，而不是 cron 盒子。
+- **自清理聊天。** 归档或删除超过时限的聊天。使用 `chat.created` 作为受频率限制的周期触发器，无需单独运行 cron 任务。
 - **孤立知识垃圾回收。** 定期清理不再被任何模型引用的知识文件。
 - **离职级联。** 在 `user.deleted` 时，撤销 API 密钥、清除共享资源、禁用自动化。干净地清理。
 
 ### 合规和审计 {#compliance-and-audit}
 
 - **事件驱动的告警。** 在高信号事件上发出多接收方告警（频道 + 邮件 + SIEM）。旗舰场景：当有人成为**管理员**时发出告警。`user.role_updated` 无论角色是通过何种方式设置的都会触发，而事件的 `source` 会标明来源路径：管理面板对应 `api`，目录同步对应 `scim`，映射角色的身份提供商登录对应 `oauth`，受信任的角色请求头对应 `trusted_header`。角色变更绝不会隐藏在 `user.updated` 之中。`config.*` 变更同理。
-- **不可变审计接收器。** 将每个事件发送到仅追加存储或 SIEM。免费获得防篡改审计日志。
+- **不可变审计接收器。** 将每个事件发送到仅追加存储或 SIEM。无需额外成本即可记录能检测篡改的审计日志。
 - **内容标记。** 扫描 `message.created` 中的密钥和 PII 并进行标记。（要在线阻断，请使用 [Filter](./filter)。）
-- **访问重新认证。** 定期要求资源所有者重新批准谁能访问他们的资源。自动化访问审查。
+- **访问权限复核。** 定期要求资源所有者重新批准谁能访问他们的资源。自动化访问审查。
 
 ### 实例即代码和集群运维 {#instance-as-code-and-fleet-ops}
 
@@ -305,6 +305,6 @@ Event 函数在它所响应的活动**之后**运行（用户已创建、消息�
 - **Event 函数**（本页）在进程内运行 **Python**。当你需要真正的逻辑时使用它们：分支、调用内部服务、注册端点、转换数据。
 - **Event webhook**（在管理面板的**设置 → 常规 → 事件**中配置）按事件模式、用户或组筛选事件，并以 **JSON 格式发送到外部 HTTP 端点**，或以可读消息发送到 Slack、Discord 等聊天平台。适合无需编写代码即可通知外部系统的场景。
 
-:::info 0.10.0 中的重大变更
+:::info 0.10.0 中的破坏性变更
 按事件配置的 webhook 系统将取代单一的全局通知 webhook。现有配置会自动迁移到管理面板的**设置 → 常规 → 事件**。过去每次操作（包括刷新页面）都可能发出通知，现在可以明确选择触发事件和发送目标。
 :::

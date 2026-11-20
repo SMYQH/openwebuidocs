@@ -26,7 +26,7 @@ Syntegon 基于 Open WebUI 构建了 Syntia（Syntegon Intelligence Assistance�
 - **部署方式**：欧盟境内的 AWS Fargate 上的 Amazon EKS，配备 Kubernetes 自动扩缩容；数据仅驻留在欧盟境内
 - **模型**：横跨 Azure OpenAI 与 AWS Bedrock 的 8 个以上模型，包括 OpenAI GPT 与 Anthropic Claude；默认使用 GPT-5-mini
 - **集成**：SharePoint、Confluence、Jira 与 Web 搜索
-- **关键成果**：500 多个活跃 RAG 智能体；Syntia 是 Syntegon 唯一在其数据治理与劳资委员会（Works Council）框架下获得批准的 AI 平台
+- **关键成果**：500 多个活跃 RAG 智能体；Syntia 是 Syntegon 唯一在其数据治理与职工委员会（Works Council）框架下获得批准的 AI 平台
 
 ## 关于 Syntegon {#about-syntegon}
 
@@ -50,7 +50,7 @@ Syntegon 不可让步的要求包括：
 - 部署在 Syntegon 自主掌控的云基础设施上（AWS，欧盟区域）
 - 与 Microsoft Entra ID 的 SSO，以及通过 IAM 实现的基于角色的访问
 - 通过统一网关（LiteLLM）支持多个 LLM 提供方（Azure OpenAI 与 AWS Bedrock）
-- 一条符合当地法规的、包含劳资委员会与数据保护官（DPO）审批的流程
+- 一条符合当地法规的、包含职工委员会与数据保护官（DPO）审批的流程
 - 一套每位员工都必须完成的结构化 AI 素养培训计划，涵盖 AI 的战略价值以及负责任使用的边界
 
 ## 解决方案：部署在 AWS 上的 Syntia {#the-solution-syntia-on-aws}
@@ -102,7 +102,7 @@ Syntegon 通过以下方式推动采用：
 - **培训与文档**：提供专门的 Syntia 培训材料与在线学习模块，并以 Confluence 和 SharePoint 作为 Syntia 文档的唯一事实来源，涵盖架构、配置、安全与推广指南。
 - **AI Hub & Spoke 研讨会**：由一个中心枢纽团队负责共享的 AI 基础设施、治理、经批准的工具和可复用组件，各部门则作为辐条把这一基础应用到自己的问题上。
 - **产品委员会会议**：用于收集反馈、确定功能优先级并同步进展。由 AI Innovation Hub 统筹这些会议、场景创意以及跨部门的路线图治理。
-- **支持与社区**：办公时间（office hours）、各职能团队的赋能活动，以及专门的 AI Hub 社群。
+- **支持与社区**：定期答疑时段（office hours）、各职能团队的赋能活动，以及专门的 AI Hub 社群。
 
 Syntia 的使用范围涵盖工程与研发、运营与制造、项目管理、销售、市场与客户体验、财务与人力资源，以及数字化转型。它通过 Azure Speech 多语言神经模型支持德语、英语等多种语言。LiteLLM 虚拟 API key 让工程团队可以在 Syntia 的模型基础设施上构建自己的 AI 应用。
 
@@ -114,7 +114,7 @@ Syntia 的使用范围涵盖工程与研发、运营与制造、项目管理、�
 
 Syntegon 报告了以下成果：
 
-- **安全与合规**：Syntia 是 Syntegon 唯一在其数据治理与劳资委员会框架下获得批准的 AI 平台。它具备两层内容过滤（Azure AI Content Safety 与 AWS Bedrock Guardrails）、通过 OpenTelemetry 与 Grafana 实现的完整审计轨迹，以及满足其备份与恢复 SLA 的每日快照。
+- **安全与合规**：Syntia 是 Syntegon 唯一在其数据治理与职工委员会框架下获得批准的 AI 平台。它具备两层内容过滤（Azure AI Content Safety 与 AWS Bedrock Guardrails）、通过 OpenTelemetry 与 Grafana 实现的完整审计轨迹，以及满足其备份与恢复 SLA 的每日快照。
 - **企业知识**：500 多个活跃 RAG 智能体基于 Syntegon 产品文档、SharePoint 与 Confluence 给出具备上下文的答案。
 - **生态集成**：Syntia 是 Syntegon 唯一在一个界面中原生集成 SharePoint、Confluence、Jira、Web 搜索、图像生成与文档 RAG 的企业 AI 平台，从而免去了使用多个彼此割裂的工具。
 - **模型广度与成本效率**：单一界面中提供横跨 Azure 与 AWS Bedrock 的 8 个以上模型，日常任务走 GPT-5-mini，高端模型则留给复杂工作。

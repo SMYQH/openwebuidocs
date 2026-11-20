@@ -70,11 +70,11 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 用户选择的技能（$ 提及） {#user-selected-skills--mention}
 
-在对话输入框中输入 `$`，或使用 `/` 菜单，然后选择一个技能。借助[技能工具](#skill-tools)，技能会在模型回答前加载，每个对话加载一次。若没有这些工具，其指令会随每条消息进入系统提示词。只有 `$` 提及的消息会以技能名称作为正文发送。
+在对话输入框中输入 `$`，或使用 `/` 菜单，然后选择一个技能。借助[技能工具](#skill-tools)，技能会在模型回答前加载，每个对话加载一次。若没有这些工具，其指令会随每条消息进入系统提示词。如果消息仅包含一个 `$` 技能提及，发送时会以技能名称作为消息正文。
 
 ### 每对话技能 {#per-chat-skills}
 
-**+** 菜单 > **技能** 可为当前对话启用技能。徽标会显示已启用的数量。选中的技能与通过 `$` 提及的技能一样加载。
+通过 **+** 菜单中的 **Skills** 可为当前聊天启用技能。列表分为 **Workspace** 和以所选终端服务器命名的分组，参见[来自终端服务器的技能](#skills-from-a-terminal-server)。徽标显示启用的技能数。所选技能与通过 `$` 提及的技能采用相同的加载方式。
 
 ### 绑定到模型的技能 {#model-attached-skills}
 
@@ -99,7 +99,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | `view_skill` | 加载某个技能的 `SKILL.md` 及其文件列表，上限为读取限制。 |
 | `read_skill_file` | 从给定偏移量读取技能的一个文件，单次调用不超过读取限制。对二进制文件会返回文件大小以及指向技能编辑器的链接。 |
 | `grep_skill_files` | 在技能的文本文件中搜索单词、短语或正则表达式并返回摘录，默认 10 条，最多 30 条。 |
-| `update_skill_files` | 将文件改动保存为该技能的新版本，用户可继续编辑。若期间有人保存过该技能，则会因冲突而被拒绝。 |
+| `update_skill_files` | 将文件改动保存为该技能的新版本，前提是用户有权编辑该技能。若期间有人保存过该技能，则会因冲突而被拒绝。 |
 | `create_skill` | 根据 `SKILL.md` 文本和可选的文本文件在工作区中创建一个新的私有技能。向管理员以及拥有 **技能访问** 权限的用户提供。 |
 
 读取技能的工具会检查用户对该技能的访问权限。对非活跃技能拥有写入权限的用户，模型仍可加载并读取它。
@@ -119,16 +119,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 已连接的[Open Terminal](/features/open-terminal)服务器可以携带自己的技能，保存在工作区中它们所描述的文件旁边。Open WebUI 会从服务器读取这些技能，并在 `$` 选择器中与你的工作区技能并列提供，ID 形如 `terminal:<url-encoded name>`。它们与其他技能表现一致：`$` 提及会注入内容，否则它们会出现在同一份清单中并通过 `view_skill` 加载。被注入的内容包含技能所在目录及其附带文件，因此模型知道应从工作区的何处读取。`read_skill_file` 可分页浏览终端技能的 `SKILL.md`，`grep_skill_files` 可在其中搜索；其其他文件保留在终端上，模型使用终端自带的文件工具打开它们。技能编辑器、版本历史和 `update_skill_files` 仅适用于工作区技能。
 
-编写自己的终端服务器意味着需要响应两个端点：
-
-| 端点 | 返回内容 |
-| :--- | :--- |
-| `GET /skills` | 一个 JSON 数组，每个技能一项，包含 `id`（带 `terminal:` 前缀，名称经过 URL 编码）、`name`、`description` 和 `location`（或 `path`）。 |
-| `GET /skills/read?name=<name>` | 一个技能：`name`、`description`、`content`（Markdown 指令）、`location`（或 `path`）以及 `resources`（该技能附带文件的路径数组）。 |
-
-Open Terminal 从 v0.13.0 起提供这两个端点。
-
-管理员配置的终端由 Open WebUI 服务器调用，携带连接的认证信息、`Accept: application/json`、`X-User-Id`、`X-Session-Id`（对话 ID）和 `X-Terminal-Context-Id`，与其它终端调用使用相同的身份头，因此按用户或按对话划分技能范围的服务器能获得所需信息。不会跟随重定向。用户在自身设置中添加的终端则由该用户的浏览器调用，携带 bearer 密钥和 `X-Session-Id`。它只需能被浏览器访问即可，因此位于用户本机的终端（例如 `http://127.0.0.1:8000`）在 Open WebUI 部署于别处时也能正常工作。
+对于管理员配置的终端，Open WebUI 服务器使用该连接的身份验证信息调用终端，并携带 `Accept: application/json`、`X-User-Id`、`X-Session-Id`（聊天 ID），对于编排终端还会携带 [`X-Terminal-*` 请求头](/features/open-terminal/terminals/orchestration/api-troubleshooting#headers-sent-to-the-terminals-server)。这些身份请求头与其他终端调用相同，让按用户或聊天划分技能的服务器可以识别请求。调用不会跟随重定向。对于用户在 [Tether 应用](/ecosystem/tether#bring-your-own-models-and-tools)中添加的终端，请求经 Tether 从用户的电脑发出。当 Tether 保持连接时，这台电脑上的终端可与部署在其他地方的 Open WebUI 一起使用。
 
 ---
 
@@ -151,7 +142,7 @@ Open Terminal 从 v0.13.0 起提供这两个端点。
 
 ### 配套文件 {#supporting-files}
 
-一个技能就是一个小文件夹：根目录下是 `SKILL.md`，再加上指令中引用的任何文件，例如 `scripts/` 中的脚本、`references/` 中的详细文档、`templates/` 中的可复用输出以及 `assets/` 中的图片或其他资源。编辑器中的文件面板会以树形列出它们。其 **...** 菜单提供 **新建文件**、**新建文件夹**、**上传** 和 **上传文件夹**。条目可以重命名、删除或拖入其他文件夹，打开的文件还有一个 **下载** 按钮。文本文件还提供 **复制**，用于复制其内容；当你有权编辑该技能时，还会提供 **对比版本**：它会在文件旁打开一个空的 **建议版本** 面板。把修改后的版本粘贴进去并点击 **对比** 即可标记改动，然后用箭头逐条浏览。**应用到草稿** 会把右侧面板的内容写入文件；如果某项改动你不想要，可以用 **原文 →**，它会把该改动的原文复制到右侧面板。对于替换文本的改动，**两者都保留** 会把原文加上建议文本一起放入右侧面板。之后保存技能即可。Markdown 文件提供 **预览**，图片和 PDF 会就地打开，其他二进制文件则提供下载。
+技能是一个小型文件夹，根目录有 `SKILL.md`，以及指令引用的文件，例如 `scripts/` 下的脚本、`references/` 下的详细文档、`templates/` 下可复用的输出模板以及 `assets/` 下的图片或其他资源。编辑器的文件面板以树状结构列出这些内容。**...** 菜单提供 **New File**、**New Folder**、**Upload** 和 **Upload Folder**。条目可重命名、删除或拖到其他文件夹。打开的文件提供 **Download** 按钮。文本文件还提供用于复制内容的 **Copy**。如果有权编辑该技能，还可以使用 **Compare revision**：它会在文件旁打开空白的 **Proposed revision** 窗格。将修改版本粘贴到那里，点击 **Compare** 标出更改，再使用箭头逐项查看。点击 **Apply to draft** 将右侧窗格内容填入文件，随后保存技能。Markdown 文件可 **Preview**，图片和 PDF 可直接打开，其他二进制文件可下载。
 
 | 限制 | 数值 |
 | :--- | :--- |

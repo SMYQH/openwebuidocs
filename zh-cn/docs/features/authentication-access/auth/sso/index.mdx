@@ -74,11 +74,7 @@ Open WebUI 支持通过 OAuth 和 OpenID Connect（OIDC）进行提供方登录�
 
 ### 管理面板中的只读 OAuth 设置 {#read-only-oauth-settings-in-the-admin-panel}
 
-`ENABLE_OAUTH_PERSISTENT_CONFIG` 决定 OAuth 设置存放在哪里，管理面板会随之变化。默认值为 `false` 时，每次启动都会从环境变量读取它们，因此 **Settings > Authentication**（管理员区域） 中的 **OAuth / OIDC** 区域显示为只读：
-
-- 所有取值仍然可见，但整个区域会被置灰，其中每个字段和开关都不可操作，包括 **OAuth / OIDC** 主开关。
-- 区域上方有一条说明，指出这些设置来自环境变量，并给出 `ENABLE_OAUTH_PERSISTENT_CONFIG`。
-- 保存 Authentication 页面不会改动 OAuth 设置。该页面的其他区域（例如 LDAP）照常保存。
+`ENABLE_OAUTH_PERSISTENT_CONFIG` 决定 OAuth 设置存放在哪里，管理面板会随之变化。默认值为 `false` 时，每次启动都会从环境变量读取设置，因此 **Settings > Authentication**（管理员区域）中的 **OAuth / OIDC** 部分为只读。保存 Authentication 页面不会改动 OAuth 设置，LDAP 等其他部分照常保存。
 
 将 `ENABLE_OAUTH_PERSISTENT_CONFIG=true` 可让该区域可编辑，并让保存的取值持久保存在数据库中。对提供商连接设置的修改（例如提供商 URL、client ID 与 secret、重定向 URI 和 scopes）会在所有 Open WebUI 实例重启后生效。若希望继续以环境变量为准，请保持为 `false`，改为修改环境变量后再重启。
 
@@ -92,7 +88,7 @@ Open WebUI 支持通过 OAuth 和 OpenID Connect（OIDC）进行提供方登录�
 
 1. **服务端存储：** 不再将大型 `access_token` 和 `id_token` 值存储在浏览器 cookie 中，整个 token 负载现在被加密并安全存储在 Open WebUI 数据库的新 `oauth_session` 表中。
 2. **安全会话 Cookie：** 用户浏览器收到一个小型、安全的 `httponly` cookie，名为 `oauth_session_id`。此 cookie 充当不透明标识符，本身不包含任何敏感信息。
-3. **多设备支持：** 每个用户每个提供商支持多个并发会话。从第二台设备（例如手机）登录**不会**使第一台设备的会话失效。为防止会话无限增长，可配置限制（`OAUTH_MAX_SESSIONS_PER_USER`，默认：10），超过时删除最旧的会话。
+3. **多设备支持：** 每个用户在每个提供商处可以同时拥有多个会话。在第二台设备（例如手机）上登录**不会**使第一台设备上的会话失效。为避免会话无限增长，可以设置上限（`OAUTH_MAX_SESSIONS_PER_USER`，默认：10）。超出上限时，会按最近一次登录或刷新令牌的时间移除最旧的会话。登出会移除为当前浏览器保存的会话，但如果这是该用户在该提供商处唯一的会话，则予以保留。
 4. **自动刷新：** 当下游服务（如工具或 OpenAI 兼容端点）需要 token 时，后端使用 `oauth_session_id` 检索 token。如果 token 已过期或即将过期，系统会在转发前自动使用存储的 `refresh_token` 从提供商获取新 token。这确保服务始终收到有效 token，防止静默失败。当多个请求同时命中一个即将过期的 token 时，它只会被刷新一次：配置了 Redis 时，按会话的锁会覆盖所有 worker 与副本；没有 Redis 时，锁只覆盖单个进程。这使得会话可以配合会轮换 refresh token 的提供商工作——这类提供商会拒绝第二次刷新。
 5. **简洁的 Token 访问：** 此架构为内部工具和其他服务提供了一种干净可靠的方式来访问用户 token，无需脆弱的 cookie 解析。
 

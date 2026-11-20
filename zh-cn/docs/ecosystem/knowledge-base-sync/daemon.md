@@ -93,10 +93,10 @@ interval: "0 */6 * * *"     # cron: every 6 hours
 |---|:---:|---|
 | `GET /` | 公开 | 状态仪表板（一个轮询 `/health` 的小页面）。 |
 | `GET /health` | 公开 | 每个来源的同步状态：上次运行时间、持续时间、文件数、错误。 |
-| `GET /health/ready` | 公开 | Docker/Kubernetes 的就绪探针。 |
+| `GET /health/ready` | 公开 | Docker/Kubernetes 的存活探针。 |
 | `GET /metrics` | 公开 | Prometheus 指标。 |
-| `GET /history` | 🔒 | 同步历史记录，可通过 `kb_id` 和 `errors_only` 进行过滤。 |
-| `POST /sync/{name-or-kb-id}` | 🔒 | 触发立即同步。添加 `?dry_run=true` 仅预览。 |
+| `GET /history` | 需要认证 | 同步历史记录，可通过 `kb_id` 和 `errors_only` 进行过滤。 |
+| `POST /sync/{name-or-kb-id}` | 需要认证 | 触发立即同步。添加 `?dry_run=true` 仅预览。 |
 | `POST /webhooks/github` · `/gitlab` · `/slack` · `/confluence` | 签名 | 推送时实时同步（参见 [Webhook](#webhooks)）。 |
 
 触发的同步在后台运行并立即返回；轮询 `/health` 以了解进度。`dry_run=true` 触发器同步运行并返回新增/修改/删除的计数。
@@ -222,8 +222,8 @@ oikb history --clear --days 7   # prune entries older than 7 days
 
 连接方法：
 
-1. **首先确保安全。** 设置 `OIKB_API_KEY`，使 `/sync` 和 `/history` 不对任何能访问守护进程的人开放。
-2. 将守护进程的 URL（例如 `http://oikb:8080`）添加为工具服务器：**设置 → 集成**（管理员区域）用于实例范围连接，或**设置 → 集成**用于个人连接。提供相同的 `OIKB_API_KEY` 作为连接的 API 密钥。
+1. **首先确保安全。** 设置 `OIKB_API_KEY`，使 `/sync` 和 `/history` 仅允许通过身份验证的请求访问。
+2. 将守护进程的 URL（例如 `http://oikb:8080`）添加为工具服务器。在**设置 > 集成**（管理员区域）添加实例级连接，或在 [Tether](/ecosystem/tether#bring-your-own-models-and-tools) 的**设置 > 集成**添加个人连接。使用相同的 `OIKB_API_KEY` 作为连接的 API 密钥。
 
 这是一个标准的 OpenAPI 工具服务器连接，与 [OpenAPI / MCP 工具服务器](/features/extensibility/mcp)页面描述的机制相同；oikb 恰好是另一端的服务。
 

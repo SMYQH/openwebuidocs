@@ -49,7 +49,7 @@ Filter 位于用户和模型之间，在三个阶段拦截数据：
 - **`stream()`**：实时拦截来自模型的**流式块**（审查内容、替换术语、追踪令牌使用）。
 - **`outlet()`**：在生成**之后**处理完整响应（记录到可观测性平台、格式化引用、追加免责声明、缓存响应）。
 
-Filters 支持强大的横切关注点，如实时翻译、内容审核、提示注入检测、A/B 测试、合规日志记录和 PII 删除，所有这些都不需要修改底层模型。
+Filters 支持强大的横切关注点，如实时翻译、内容审核、提示注入检测、A/B 测试、合规日志记录和 PII 脱敏，所有这些都不需要修改底层模型。
 
 Filters 可以全局应用（到所有模型）或附加到特定模型。可切换的过滤器让用户按对话启用/禁用它们。
 
@@ -179,7 +179,7 @@ Functions 从 **Admin Panel > Functions** 管理。当 [`ENABLE_FUNCTIONS`](/ref
 
 ### 版本历史 {#version-history}
 
-Functions 保留一份版本历史，其工作方式与 Tools 的版本历史相同：位于 **Back**、**Compare to current**、**Set as Production** 和 **Delete** 旁边的版本选择器。详情参见[版本历史](/features/extensibility/plugin/tools#version-history)。对 Functions 而言：
+Functions 保留一份版本历史，其工作方式与 Tools 的版本历史相同：版本选择器位于 **Back** 旁边，可使用 **Compare to current**、**Set as Production** 和 **Delete** 三项操作。详情参见[版本历史](/features/extensibility/plugin/tools#version-history)。对 Functions 而言：
 
 - 只有管理员可以打开和切换版本。
 - **Production** 是正在运行的版本。
@@ -203,7 +203,7 @@ Functions 保留一份版本历史，其工作方式与 Tools 的版本历史相
 
 ### 可切换的 Filters {#toggleable-filters}
 
-通过在 `__init__` 中设置 `self.toggle = True`，可以使 Filters 用户可切换。可切换时，用户在对话输入区域看到开/关开关，可以按对话启用或禁用过滤器。没有 `self.toggle` 的 Filters 在激活时始终开启。
+在 `__init__` 中设置 `self.toggle = True` 后，用户可以自行开启或关闭过滤器。可切换时，用户在对话输入区域看到开/关开关，可以按对话启用或禁用过滤器。没有 `self.toggle` 的 Filters 在激活时始终开启。
 
 ---
 

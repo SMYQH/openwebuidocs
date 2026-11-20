@@ -15,7 +15,7 @@ Action functions 允许你编写自定义按钮，并将其展示在消息工具
 Action functions 应始终定义为 `async`。后端正在逐步迁移到完全异步执行模型，同步函数在未来版本中可能阻塞执行或带来兼容性问题。
 :::
 
-Actions 是由管理员管理的函数，用于为聊天界面增加自定义交互能力。当某个模型启用了 actions 后，这些 action 会以可点击按钮的形式显示在消息上方。
+Actions 是由管理员管理的函数，用于为聊天界面增加自定义交互能力。当某个模型启用了 actions 后，这些 action 会以可点击按钮的形式显示在消息下方的工具栏中，位于复制和重新生成按钮旁。
 
 下方的 [函数结构](#function-structure) 小节给出了最小脚手架示例。若要查看社区构建的真实 Action 示例，可前往 [openwebui.com](https://openwebui.com/)。
 
@@ -185,7 +185,7 @@ class Valves(BaseModel):
 
 ### 长时间运行的操作 {#long-running-actions}
 
-action 在按钮点击发出的 HTTP 请求内同步执行。没有任务系统钩子，因此请通过 `__event_emitter__` 上报进度，并将工作量控制在客户端愿意等待的范围内：
+action 作为点击按钮发出的 HTTP 请求的一部分执行。没有任务系统钩子，因此请通过 `__event_emitter__` 上报进度，并将工作量控制在客户端愿意等待的范围内：
 
 ``` python
 async def action(self, body: dict, __event_emitter__=None):
@@ -233,8 +233,8 @@ async def action(self, body: dict, __user__=None):
 **不要**在 `icon_url` 中直接嵌入 base64 编码图片。每个 action 的图标数据都包含在 `/api/models` API 响应中。每次加载页面时，响应都会把图标数据发送到前端，覆盖**每个启用了该 action 的模型**。
 
 **影响示例：** 如果你给某个 action 使用了一个 500 KB 的 base64 图标，并且该 action 被 20 个模型启用，那么这个 API 响应就会额外膨胀 **20 × 500 KB = 约 10 MB**。如果再有 3 个类似 action，就会变成 **约 30 MB 的无谓载荷**。这会：
-- **显著拖慢前端加载速度**
-- **增加后端内存占用与网络带宽开销**
+- **显著拖慢所有用户的前端加载速度**
+- **增加每次请求的后端内存占用与网络带宽开销**
 - **整体降低用户体验**，特别是在较慢网络环境下
 
 正确做法是：把图标托管为静态资源（例如你的 Web 服务器、CDN 或公开 URL），然后用 URL 引用它。这样可以把 API 负载维持在最小水平。

@@ -149,4 +149,5 @@ docker run -d --name open-webui \
 **需要认证？**
 
 - 为受认证保护的收集器设置 `OTEL_BASIC_AUTH_USERNAME` 和 `OTEL_BASIC_AUTH_PASSWORD`
+- 如果后端需要其他请求头，例如 API 密钥，请将标准 OpenTelemetry 变量 `OTEL_EXPORTER_OTLP_HEADERS` 设为以逗号分隔的 `key=value` 对，例如 `x-api-key=your-key,x-team-id=your-team`。设置基本身份验证变量时，此变量会被忽略。
 - 如果使用 SSL/TLS，请相应调整或移除 `OTEL_EXPORTER_OTLP_INSECURE`

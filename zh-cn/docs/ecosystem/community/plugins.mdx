@@ -43,7 +43,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | 给模型**实时网络搜索**或实时数据 | [工具](/features/extensibility/plugin/tools) | `web search`、`weather`、`search` |
 | **添加模型提供商**（Anthropic、Gemini、路由器、本地引擎） | [Pipe](/features/extensibility/plugin/functions/pipe) | `pipe`、提供商名称 |
 | **跟踪或限制每个用户的成本/使用量** | [Filter](/features/extensibility/plugin/functions/filter) | `cost`、`usage`、`budget`、`rate limit` |
-| **编辑 PII** 或审核消息内容 | [Filter](/features/extensibility/plugin/functions/filter) | `pii`、`redact`、`moderation` |
+| **遮盖个人身份信息（PII）** 或审核消息内容 | [Filter](/features/extensibility/plugin/functions/filter) | `pii`、`redact`、`moderation` |
 | **总结或压缩**长对话 | [Filter](/features/extensibility/plugin/functions/filter) | `context`、`memory`、`compaction` |
 | 在消息上添加**按钮**（导出、重新运行、翻译） | [Action](/features/extensibility/plugin/functions/action) | `action`、任务名称 |
 | **响应系统事件**（审计日志、注册门控、资源预配） | [Event](/features/extensibility/plugin/functions/event) | `event`、`webhook`、`audit` |
@@ -91,7 +91,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 | 插件 | 功能说明 |
 | :--- | :--- |
-| **[Markdown Normalizer](https://openwebui.com/posts/markdown_normalizer_baaa8732)** | 在 LLM 输出渲染前修复格式错误的 Markdown：未闭合或混乱的代码块、`\[...\]` 风格的 LaTeX、损坏的 Mermaid 图表（自动引用标签）、表格、标题、思维 / `<details>` 标签和残留的 XML 伪影。每个修复都可以独立开关，带有完整的回滚保证和多语言状态消息。 |
+| **[Markdown Normalizer](https://openwebui.com/posts/markdown_normalizer_baaa8732)** | 在 LLM 输出渲染前修复格式错误的 Markdown：未闭合或混乱的代码块、`\[...\]` 风格的 LaTeX、损坏的 Mermaid 图表（自动为标签加引号）、表格、标题、思维 / `<details>` 标签和残留的 XML 伪影。每个修复都可以独立开关，出错时会完整回滚，并提供多语言状态消息。 |
 | **[Mermaid Doctor](https://openwebui.com/posts/mermaid_doctor_heals_broken_mermaid_diagrams_gener_310d7852)** | 确定性地修复来自小型或幻觉模型的损坏 Mermaid 图表，在令牌流到达时直接重写无效语法（无需第二次 LLM 调用，零令牌开销）。涵盖流程图、ER 图、甘特图、思维导图和饼图，并可注入少量示例来引导模型并去除幻觉样式。 |
 | **[Thinking Toggle](https://openwebui.com/posts/thinking_toggle_one_click_reasoning_control_for_ll_bb3f66ad)** | 为 **llama.cpp** 模型提供一键推理控制：从聊天面板切换思维开关，选择深度预算（512 令牌到无限制）、13 种推理风格预设、11 种呈现预设和 4 种采样预设。每次请求注入 `enable_thinking` 和推理预算；需要 `llama-server` 以 `--reasoning off` 启动。 |
 | **[Token Usage Display](https://openwebui.com/posts/token_usage_display_a94ea72f)** | 在每条回复下方附加输入/输出/总令牌数、推理和缓存提示令牌、生成时间和每秒令牌数。读取 API 报告的使用量（Ollama、OpenAI、Anthropic、Gemini）并回退到 `tiktoken` 估算；每个指标都可以单独开关。 |
@@ -104,7 +104,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | 插件 | 功能说明 |
 | :--- | :--- |
 | **[Theme Designer Pro](https://github.com/silentoplayz/theme-designer-pro-presets/tree/main/event-function)** | 实例级主题设计器，作为**独立管理页面**运行（无聊天，无 iframe 沙盒），将 CSS 和状态持久化存储在服务器端的 `DATA_DIR/theme/` 下，并通过 SSE 实时推送给每个连接的用户。包括 OKLCH 颜色引擎、草稿/发布预览模式、自定义 CSS 自动作用域和登录页面主题设置。 |
-| **[User Disclaimer](https://github.com/mhupfauer/open-webui-user-disclaimer)** | 让每个用户在使用实例之前先接受一份免责声明（可接受使用政策、保密提示、保留警告），页面由插件自行提供。该控制在 **角色** 层面执行而不是在浏览器中，因此 REST API 也在覆盖范围内：未接受的用户会被停在 `pending` 状态，接受后再恢复其角色。提高 `version` 阀门的值会让所有人重新提示。安装后需要重启服务。 |
+| **[User Disclaimer](https://github.com/mhupfauer/open-webui-user-disclaimer)** | 让每个用户在使用实例之前先接受一份免责声明（可接受使用政策、保密提示、保留警告），页面由插件自行提供。该控制在 **角色** 层面执行而不是在浏览器中，因此 REST API 也在覆盖范围内：未接受的用户会被停在 `pending` 状态，接受后再恢复其角色。提高 `version` 阀门的值会重新提示所有用户。安装后需要重启服务。 |
 
 ## 导入前的初学者安全检查清单 {#before-you-import-a-beginner-safety-checklist}
 

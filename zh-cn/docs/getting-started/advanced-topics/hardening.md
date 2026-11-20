@@ -141,7 +141,7 @@ JWT_EXPIRES_IN=24h
 
 设置 `JWT_EXPIRES_IN=-1` 会完全关闭令牌过期。如果这样设置，Open WebUI 会记录一条警告。
 
-[Tether](/ecosystem/tether) 等原生应用改用可续期会话，这类会话在闲置 [`SESSION_EXPIRES_IN`](/reference/env-configuration#session_expires_in) 后结束（默认 `90d`）。退出应用、通过 [Session API](/reference/tether-client-protocol#session-api) 删除会话，以及下文提到的每种全账户登出，都会立即吊销此类会话，无论是否使用 Redis。
+[Tether](/ecosystem/tether) 等原生应用改用可续期会话，这类会话在闲置 [`SESSION_EXPIRES_IN`](/reference/env-configuration#session_expires_in) 后结束（默认 `90d`）。在应用中登出、通过 [Session API](/reference/tether-client-protocol#session-api) 删除会话，以及下文提到的每种全账户登出，都会立即吊销此类会话，无论是否使用 Redis。
 
 ### Token 撤销 {#token-revocation}
 
@@ -457,15 +457,9 @@ ENABLE_COMMUNITY_SHARING=true
 
 # Allow admins to bulk export all user chats from the database (default: true)
 ENABLE_ADMIN_EXPORT=true
-
-# Allow users to connect directly to model providers with their own API keys,
-# bypassing the server-side proxy (default: false)
-ENABLE_DIRECT_CONNECTIONS=false
 ```
 
 `ENABLE_COMMUNITY_SHARING` 控制是否显示把聊天、模型、提示词、工具、Functions、Skills 和使用统计发送到 Open WebUI 社区的选项，以及发现社区内容的链接。设为 `false` 即可让一切都留在你自己的实例上。聊天分享链接是另一个独立功能：新建的链接默认保持私密，直到其所有者选择谁可以查看，参见[聊天分享](/features/chat-conversations/chat-features/chatshare)。
-
-`ENABLE_DIRECT_CONNECTIONS` 开启后，允许用户在浏览器中配置自己的 API 密钥和模型端点。这些连接由后端发起，因此用户的 API 密钥会被发送到 Open WebUI 服务器。该功能默认关闭。
 
 ### Workspace 权限 {#workspace-permissions}
 
@@ -607,7 +601,7 @@ PROFILE_IMAGE_ALLOWED_MIME_TYPES=image/png,image/jpeg
 
 ### Iframe 内容安全策略 {#iframe-content-security-policy}
 
-Open WebUI 会在 `srcdoc` iframe 中渲染 LLM 生成的和用户上传的 HTML，用于 Artifacts、代码/HTML 预览、文件预览和引用弹窗。这些 iframe 上的 `sandbox` 属性提供了基线隔离。对于希望限制渲染 HTML 能执行的操作（特别是外发网络请求）的部署，可以设置一个注入到每个 iframe 文档中的 CSP：
+Open WebUI 在 `srcdoc` iframe 内渲染 LLM 生成的和用户上传的 HTML，用于产物、代码及 HTML 预览、文件预览、引用弹窗和可视化。iframe 的 `sandbox` 属性提供基本隔离。如果部署需要更严格地限制渲染后的 HTML 可执行的操作，特别是出站网络请求，可设置注入每个 iframe 文档的 CSP：
 
 ```bash
 IFRAME_CSP=default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'none'
@@ -641,7 +635,7 @@ Tools 和 Functions 会在你的服务器上执行任意 Python 代码，权限�
 由于 Tools 和 Functions 会执行服务端代码，因此任何拥有创建或导入权限的用户，实际上都等同于拥有 Open WebUI 进程级别的权限。这是扩展机制的天然属性。默认情况下，只有管理员可以创建和导入 Tools / Functions。下面这些设置用于控制相关权限。
 
 ### 完全禁用此功能 {#disabling-the-feature-entirely}
-如果你的部署根本不使用 Tools 或 Functions，那就把这一整面移除：
+如果部署完全不使用工具或函数，可以彻底禁用这些功能：
 
 ```bash
 # Master switch: Tools, Functions, tool servers and Open Terminal
@@ -653,7 +647,7 @@ ENABLE_FUNCTIONS=false
 ENABLE_TOOL_SERVERS=false
 ```
 
-这比[安全模式](#safe-mode)更强。安全模式会停用所有 Functions，但保留该功能本身；`ENABLE_PLUGINS=false` 则会隐藏工作区的 **Tools** 页面和管理员的 **Functions** 页面，并阻止 Tools、Functions、OpenAPI 与 MCP 工具服务器、Open Terminal 连接以及用户的直连工具服务器加载或运行。[`ENABLE_TOOLS`](/reference/env-configuration#enable_tools)、[`ENABLE_FUNCTIONS`](/reference/env-configuration#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](/reference/env-configuration#enable_tool_servers) 各自关闭其中一部分。这四个开关都需要重启。
+这比[安全模式](#safe-mode)的限制更严格。安全模式会停用所有函数，但保留该功能。`ENABLE_PLUGINS=false` 会隐藏工作区的 **Tools** 页面和管理区的 **Functions** 页面，并阻止工具、函数、OpenAPI 和 MCP 工具服务器、Open Terminal 连接、Tether 终端及 Tether 工具服务器加载或运行。[`ENABLE_TOOLS`](/reference/env-configuration#enable_tools)、[`ENABLE_FUNCTIONS`](/reference/env-configuration#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](/reference/env-configuration#enable_tool_servers) 则各自关闭其中一部分。更改这四项中的任何一项都需要重启。
 
 ### 代码执行 {#code-execution}
 Open WebUI 默认启用两项代码执行功能：
@@ -709,6 +703,10 @@ USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS=false
 
 ### 基础镜像 {#base-image}
 默认的 Dockerfile 使用 `python:3.12-slim-trixie`（Debian 13 上的 Python 3.12）。如果你的组织要求使用加固过的或已批准的基础镜像，可以修改 Dockerfile 中的 `FROM` 行来替换它。这在要求最小化、经过漏洞扫描基础镜像的企业环境中很常见。
+
+### 锁定依赖版本 {#pinned-dependencies}
+
+标准版和 slim 版镜像从带哈希校验的锁文件安装 Python 软件包，因此构建时会安装锁定的确切版本。自定义镜像请参见[自行构建](/getting-started/quick-start#building-it-yourself)。
 
 ### 非 root 运行 {#non-root-execution}
 
@@ -810,7 +808,6 @@ docker pull ghcr.io/open-webui/open-webui:main
 | [不使用时禁用 Tools 与 Functions](#disabling-the-feature-entirely) | 已启用 | `ENABLE_PLUGINS=false` |
 | [禁用自动 pip 安装](#dependency-installation) | 已启用 | `ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false` |
 | [检查社区共享](#data-sharing-and-export) | `true` | 有敏感数据时关闭 |
-| [检查 direct connections](#data-sharing-and-export) | `false` | 非必要不要开启 |
 | [使用 PostgreSQL](#postgresql) | SQLite | PostgreSQL |
 | [确认外发 TLS 校验](#outbound-tls) | 已启用 | 保持开启 |
 | [启用离线模式](#offline-mode) | 关闭 | 隔离网络环境设为 `OFFLINE_MODE=true` |
@@ -843,7 +840,7 @@ docker pull ghcr.io/open-webui/open-webui:main
 
 7. **将 Tool 和 Function 的创建权限严格限制给管理员，导入前审查所有代码。** 默认只有管理员可以创建、导入和管理 Tools / Functions。不要给不可信用户开放工作区权限。把第三方 Tool 看作与你基础设施上运行的其他代码一样进行审查。未经查看源码，不要导入任何 Tool。[详情](#tools-functions-and-pipelines)
 
-8. **如果不需要，就关闭自动依赖安装和代码执行。** 设置 `ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false`，阻止 Tool 在运行时拉取任意包。如果部署不需要在聊天中执行代码，请彻底关闭代码执行（`ENABLE_CODE_EXECUTION=false`、`ENABLE_CODE_INTERPRETER=false`）。如果需要，请使用在容器中隔离的 **Open Terminal**，避免依赖旧版 `pyodide` 或 `jupyter` 引擎。对外提供 `jupyter` 引擎前，务必先保护 Jupyter 实例。保持 direct connections 与 direct tool servers 关闭。[详情](#dependency-installation)
+8. **禁用依赖自动安装，并在不需要时禁用代码执行。** 设置 `ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false`，防止工具在运行时安装任意软件包。如果部署不需要在聊天中执行代码，请完全禁用该功能（`ENABLE_CODE_EXECUTION=false`、`ENABLE_CODE_INTERPRETER=false`）。如有需要，请使用 **Open Terminal** 在容器内隔离执行，避免使用旧版 `pyodide` 和 `jupyter` 引擎。切勿在未保护 Jupyter 实例的情况下开放 `jupyter` 引擎。[详情](#dependency-installation)
 
 ### 数据保护 {#data-protection}
 

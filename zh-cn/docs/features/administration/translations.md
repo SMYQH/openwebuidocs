@@ -60,22 +60,22 @@ Open WebUI 按用户界面的语言依次选择：
 
 Tool 和 Function 带有 [valves](/features/extensibility/plugin/development/valves)，也就是由管理员或用户填写的设置项。这些标签同样可以翻译，其中用户 valve 最为关键，因为普通用户在聊天的 **Model controls > Controls** 下看到的就是它们。
 
-在工具或函数编辑器中选择一种语言，代码编辑器就会被替换成一张翻译表，列出该插件暴露的每一个标签（管理员 valve 与用户 valve 都有）。每一行显示键、原文以及一个填写译文的输入框，并带有一个箭头按钮用于把该行清回原文。
+在工具或函数编辑器中选择一种语言，代码编辑器就会切换成翻译表，列出插件公开的所有标签，包括管理员 valve 和用户 valve。
 
 ![工具编辑器中的 valve 翻译表，含键、原文和德语译文](/images/features/translations/tool-valve-translations.png)
 
-键的命名遵循其所属 valve 的形状：
+键的命名格式取决于其所属的 valve：
 
 | 键 | 标注的内容 |
 | :--- | :--- |
 | `valves.<field>.title` | 管理员 valve 的标签 |
 | `valves.<field>.description` | 它的帮助文本 |
 | `valves.<field>.enum.<value>` | 下拉 valve 的一个选项 |
-| `user_valves.<field>.` | 用户 valve 的同样三种形状 |
+| `user_valves.<field>.` | 用户 valve 使用相同的三种命名格式 |
 | `actions.<action_id>.name` | Function 暴露的某个动作的标签 |
 | `actions.<action_id>.description` | 该动作的提示文字 |
 
-动作键不会自动列出。用 **+** 按钮自行添加即可。
+动作键不会自动列出。点击 **+**，输入动作标签或工具提示的自定义键即可添加。
 
 只有标签会改变。valve 名称、存储的值和默认值都不受影响，因此翻译后的插件与未翻译的插件行为完全一致。
 

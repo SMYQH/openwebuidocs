@@ -7,64 +7,47 @@ title: "OpenAI"
 本教程由社区贡献，不在 Open WebUI 团队的支持范围内。它仅演示如何按实际需求自定义 Open WebUI。欢迎贡献，详情请参阅贡献教程。
 :::
 
-Open WebUI 也支持通过 **OpenAI API** 进行图像生成。该方案可在各个 GPT-Image 模型（`gpt-image-1`、`gpt-image-1.5` 和 `gpt-image-2`）之间选择。`gpt-image-2` 是默认模型。
+Open WebUI 支持通过 **OpenAI API** 生成和编辑图像，也支持 Azure OpenAI、LiteLLM 等提供兼容 OpenAI 的图像 API 的服务器。它们都使用**兼容 OpenAI** 的连接类型。
 
 ### 初始设置 {#initial-setup}
 1. 从 OpenAI 获取 [API 密钥](https://platform.openai.com/api-keys)。
 
 ### 配置 Open WebUI {#configuring-open-webui}
 
-1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
-2. 将 `图像生成引擎` 设置为 `Default (Open AI)`
-3. 输入你的 OpenAI API key
-4. 选择你要使用的模型。**GPT-Image** 模型支持 `auto`、`1024x1024`、`1536x1024` 或 `1024x1536` 图像。
-
-![Open WebUI 图像设置页面截图，已选中 Open AI，并高亮显示 API key、模型和图像尺寸字段。](/images/image-generation-and-editing/openai-settings.png)
+1. 在 Open WebUI 中前往**设置** > **图像**（管理员区域），添加连接。
+2. 将**连接类型**设为**兼容 OpenAI**，将 **URL** 设为 `https://api.openai.com/v1`，并输入 API 密钥。
+3. 将 **Model IDs** 留空可使用 `gpt-image-2`，也可添加要提供的模型，例如 `gpt-image-1.5`。
+4. 可选：打开**高级**并设置**图像尺寸**。GPT-Image 模型接受 `auto`、`1024x1024`、`1536x1024` 或 `1024x1536`。
+5. 设置**访问控制**并点击**保存**。未授予访问权限时，只有管理员能使用该连接。
 
 ### Azure OpenAI {#azure-openai}
 
-也可以通过 Azure OpenAI 生成图像。配置方法如下：
+Azure OpenAI 使用相同的连接类型。添加连接后，配置以下项目：
 
-1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
-2. 将 `Image Generation Engine` 设置为 `Default (Open AI)`（Azure OpenAI 使用与 OpenAI 相同的语法）
-3. 将 `API Base URL` 改为 `https://<instance-id>.cognitiveservices.azure.com/openai/deployments/<model>/`。其中实例 ID 和模型 ID 可在 Azure AI Foundry 设置中找到
-4. 将 API 版本设置为你在 Azure AI Foundry 设置中看到的值
-5. 输入你的 Azure OpenAI API key
-
-![Open WebUI 图像设置页面截图，已选中 Open AI，并高亮显示 API Base URL、API version 和 API key 字段，用于 Azure OpenAI 配置。](/images/image-generation-and-editing/azure-openai-settings.png)
+1. 将 **URL** 设为 `https://<instance-id>.cognitiveservices.azure.com/openai/deployments/<model>/`。从 Azure AI Foundry 设置中获取实例和模型名称。
+2. 填入 Azure AI Foundry 中的 API 密钥。
+3. 将 **Model IDs** 设为已部署的模型名称。
+4. 在**高级**下，将 **API 版本**设为 Azure AI Foundry 中显示的值。
 
 :::tip Azure GPT-Image-1.5 配置
-若要在 Azure OpenAI 中成功使用 **gpt-image-1.5**，请使用以下设置：
-
-- **Model**：`gpt-image-1.5`
+在 Azure OpenAI 中使用 **gpt-image-1.5** 时，采用以下设置：
+- **Model IDs**：`gpt-image-1.5`
 - **Image Size**：`1024x1024`
 - **API Version**：`2025-04-01-preview`
-- **API Endpoint URL**：`https://<your-resource-name>.openai.azure.com/openai/deployments/<your-deployment-name>/`（请确保末尾保留 `/`）
-
-如果你遇到 `[ERROR: azure-openai error: Unknown parameter: 'response_format'.]` 报错，请再次确认 API Version 是否为 `2025-04-01-preview` 或更高版本。
+- **URL**：`https://<your-resource-name>.openai.azure.com/openai/deployments/<your-deployment-name>/`
 :::
 
 :::tip
-另一种 `API Base URL` 写法是：`https://<endpoint name>.openai.azure.com/openai/deployments/<model name>/` —— 其中端点名称可在 [Azure AI Foundry 概览](https://ai.azure.com/resource/overview) 中找到，model name 可在 [Azure AI Foundry 部署](https://ai.azure.com/resource/deployments) 中找到。
-你也可以直接复制部署详情页中的 Target URI，但记得删除模型名称后面的多余字符串。
-例如，如果你的 Target URI 是 `https://test.openai.azure.com/openai/deployments/gpt-image-1/images/generations?api-version=2025-04-01-preview`，那么 Open WebUI 中应填写的 `API Base URL` 为 `https://test.openai.azure.com/openai/deployments/gpt-image-1/`。
+也可以从部署页面复制目标 URI，并删除模型名称之后的内容。例如，目标 URI `https://test.openai.azure.com/openai/deployments/gpt-image-1/images/generations?api-version=2025-04-01-preview` 对应的 URL 为 `https://test.openai.azure.com/openai/deployments/gpt-image-1/`。
 :::
 
 ### 使用 OpenAI 端点的 LiteLLM 代理 {#litellm-proxy-with-openai-endpoints}
 
-Open WebUI 支持通过使用 OpenAI 端点的 LiteLLM 代理生成图像。配置方法如下：
-
-1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
-2. 将 `图像生成引擎` 设置为 `Default (Open AI)`
-3. 将 `API Base URL` 改为 `https://<your-litellm-url>:<port>/v1`
-4. 输入你的 LiteLLM API key
-5. API version 可留空
-6. 输入 LiteLLM 配置中显示的图像模型名称
-7. 将图像尺寸设置为该模型支持的尺寸之一
+1. 添加**兼容 OpenAI** 的连接。
+2. 将 **URL** 设为 `https://<your-litellm-url>:<port>/v1`，并输入 LiteLLM API 密钥。
+3. 将 **Model IDs** 留空，连接会自动列出 LiteLLM 服务器的图像模型。仅在只提供部分模型时添加模型 ID。
+4. 将 **API 版本**留空。
 
 :::tip
-
-若要查看 LiteLLM 连接信息，请前往 **Settings** > **Connections**（管理员区域）。
-连接信息列在 OpenAI API 连接条目下。
-
+可以在**设置** > **连接**（管理员区域）的 OpenAI API 连接中找到 LiteLLM 连接信息。
 :::

@@ -136,7 +136,18 @@ Office 渲染需要默认镜像。`slim`、`alpine` 和 `openshift` 镜像刻意
 
 ## 运行 Terminals {#running-terminals}
 
-[Terminals](/features/open-terminal/terminals) 会依据一份策略为每个用户置备一个容器，因此运维人员应在策略上更新镜像，而不是手工更新。在那里修改镜像后，再按照[应用变更](/features/open-terminal/terminals/orchestration/applying-changes)中的说明刷新受影响的终端。
+[Terminals](/features/open-terminal/terminals) 自行启动实例，因此用户可以直接在终端设置中更新镜像。在终端菜单中打开该终端，修改 **Advanced** 下的 **Image** 并保存。终端下次启动实例时会使用新镜像。参见[创建终端](/features/open-terminal/terminals/orchestration/creating-terminals)。
+
+### 升级 Terminals {#upgrading-terminals}
+
+Open WebUI 需要 Terminals 0.4.0 或更高版本。Terminals 0.4.0 及更高版本需要 Open WebUI 0.13.4 或更高版本。Terminals 0.3.x 及更早版本无法自动升级，因为数据库架构、存储路径及保存的终端选择均有变化，新版本不接受已有数据的旧版数据库。请备份两个数据库和所有终端文件，使用新的空数据库全新安装 Terminals，将现有策略重新创建为模板，把各工作区文件复制到新的存储位置，并在 Open WebUI 中选中新的终端。步骤见 [Terminals 更新日志](https://github.com/open-webui/terminals/blob/main/CHANGELOG.md#moving-to-040-manually)。在 Kubernetes 上，还需更新 operator 和 Terminal CRD。从设置中移除 `TERMINALS_OPEN_WEBUI_URL` 和 `TERMINALS_TOKEN_CACHE_TTL`，因为连接改用 `TERMINALS_API_KEY` 进行身份验证。从 Terminals 0.4.0 开始，可照常替换镜像。
+
+连接不再包含策略。连接表单已移除策略 ID、镜像、CPU、内存、存储、空闲超时、环境变量、生命周期和终端上下文。拥有连接 **Write** 权限的用户可以创建终端，并在各终端中配置这些设置。升级后：
+
+- 创建所需的终端并共享。
+- 对曾使用旧连接的每个模型、文件夹、自动化和聊天，重新选择一个新终端。
+- 重新打开旧聊天并重新选择终端。参见[聊天](/features/open-terminal/terminals/orchestration/creating-terminals#chats)。
+- 如果固定项目、默认模型或自动化使用了模型名称含点号的编程智能体，请重新选择。参见[模型 ID](/features/open-terminal/coding-agents#model-ids)。
 
 ---
 

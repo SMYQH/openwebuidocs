@@ -37,7 +37,7 @@ if __name__ == "__main__":
     app.run()
 ```
 
-把它保存为 `app.py`。该 App 从 `API_KEY` 读取自己的 API key，从 `APP_PRIVATE_KEY_FILE` 指定的文件读取私钥；oix 的 README 中有一个脚本可一次性把两者写入 `.env`。用 `. ./.env && python app.py` 启动该 App。它在 `8000` 端口的 `/events` 路径上监听。请把它放在启用了 WebSocket 升级的 HTTPS 之后，其 App URL 例如 `https://hello.example.com/events`。用该 URL 和 API key [安装它](/features/channels/apps#install-an-app)，把它添加到一个频道，然后发送 `hello`。
+把它保存为 `app.py`。该 App 从 `API_KEY` 读取自己的 API key，从 `APP_PRIVATE_KEY_FILE` 指定的文件读取私钥；oix 的 README 中有一个脚本可一次性把两者写入 `.env`。用 `. ./.env && python app.py` 启动该 App。它在 `8000` 端口的 `/events` 路径上监听。请通过支持 WebSocket 升级的 HTTPS 提供该服务，其 App URL 例如 `https://hello.example.com/events`。用该 URL 和 API key [安装它](/features/channels/apps#install-an-app)，把它添加到一个频道，然后发送 `hello`。
 
 若要对着本地的 Open WebUI 测试，请同时遵循 oix 的[本地开发](https://github.com/open-webui/oix#local-development)步骤与[私有与纯 HTTP 的 App 服务器](/features/channels/apps#private-and-plain-http-app-servers)。
 
@@ -67,7 +67,7 @@ Open WebUI 会携带 API key 发送 `GET <App URL>`。请在 10 秒内以 HTTP 2
 
 | 字段 | 规则 |
 |-------|-------|
-| `id` | 必填，1 到 100 个字符。用于标识该 App，已安装的 App 必须保持不变。 |
+| `id` | 必填，1 到 100 个字符。用于标识该 App，App 安装后此 ID 必须保持不变。 |
 | `name` | 必填，1 到 100 个字符。 |
 | `description` | 可选，最多 2,000 个字符。 |
 | `profile_image_url` | 可选。一个不超过 2,048 个字符且不含凭据的 `http(s)` URL，或一个 base64 的 `data:image/png`、`jpeg`、`gif` 或 `webp` URL。总计最多 192 KiB。用户浏览器会直接加载它。 |
@@ -136,7 +136,7 @@ Open WebUI 发出 `app:event` 并等待确认。每个事件都携带 `type`、`
 }
 ```
 
-- `channel.mention`：有用户提及了该 App。`data.text` 是原始消息，其中的提及形如 `<@A:<app_id>|<name>>`。若提及是在某个主题中发出的，`data.parent_id` 即该主题的根节点。需要 `channels:mentions:read` 或 `channels:messages:read`。请在 **10 秒**内以 `{"status": 200, "data": {"received": true}}` 精确确认。这只确认已投递。之后再用 `create_message` 操作发布回答，该操作需要 `channels:messages:write`；把 `data.message_id` 作为 `reply_to_id`、`data.parent_id` 作为 `parent_id`，即可在原处回复该提及。
+- `channel.mention`：有用户提及了该 App。`data.text` 是原始消息，其中的提及形如 `<@A:<app_id>|<name>>`。如果用户在线程中提及 App，`data.parent_id` 就是该线程的根消息。需要 `channels:mentions:read` 或 `channels:messages:read`。请在 **10 秒**内以 `{"status": 200, "data": {"received": true}}` 精确确认。这只确认已投递。之后再用 `create_message` 操作发布回答，该操作需要 `channels:messages:write`；把 `data.message_id` 作为 `reply_to_id`、`data.parent_id` 作为 `parent_id`，即可在原处回复该提及。
 - `channel.action`：有用户点击了某个按钮。`data` 包含 `message_id`、`etag`、`parent_id`、`action_id` 以及该按钮的 `context`；`source` 包含该消息的 `id` 和 `updated_at`。请在 **3 秒**内以[回复](#replying-to-interactions)作答。
 
 **消息事件**会发送给拥有 `channels:messages:read` 的 App，涵盖它们所加入频道中的每一条消息（包括该 App 自己发的消息）：`channel.message.created`、`channel.message.updated` 和 `channel.message.deleted`。请在 10 秒内以 2xx 的 `status` 确认。
@@ -157,7 +157,7 @@ Open WebUI 发出 `app:event` 并等待确认。每个事件都携带 `type`、`
 }
 ```
 
-`author.type` 取值为 `user`、`model`、`webhook` 或 `app`。`model` 与 `webhook` 沿用消息上存储的标签，且只有 Open WebUI 会设置它：通过频道 webhook 发布的消息为 `webhook`，模型的回复为 `model`。随发布或编辑消息的请求一同发送的标签会被忽略。`model` 消息的正文仍可由触发该提及的成员和管理员编辑，`webhook` 消息的正文则可由创建该 webhook 的账户编辑。对于模型的回复，只有在回复完成后才会发送 `channel.message.updated`。消息删除事件只携带 `id`、`channel_id`、`parent_id`、`author` 和 `updated_at`。消息事件属于尽力而为：每个事件只发送一次，失败的事件或在该 App 断开期间发生的事件都会被丢弃。
+`author.type` 取值为 `user`、`model`、`webhook` 或 `app`。`model` 与 `webhook` 沿用消息上存储的标签，且只有 Open WebUI 会设置它：通过频道 webhook 发布的消息为 `webhook`，模型的回复为 `model`。随发布或编辑消息的请求一同发送的标签会被忽略。`model` 消息的正文仍可由通过提及模型触发这条回复的成员和管理员编辑，`webhook` 消息的正文则可由创建该 webhook 的账户编辑。对于模型的回复，只有在回复完成后才会发送 `channel.message.updated`。消息删除事件只携带 `id`、`channel_id`、`parent_id`、`author` 和 `updated_at`。消息事件属于尽力而为：每个事件只发送一次，失败的事件或在该 App 断开期间发生的事件都会被丢弃。
 
 对拥有 `channels:messages:read` 的 App 而言，一次提及会到达两次：一次是 `channel.mention`，另一次是 `channel.message.created`。请在两个处理器中的任意一个中作答。
 
@@ -187,7 +187,7 @@ Open WebUI 发出 `app:event` 并等待确认。每个事件都携带 `type`、`
 | `title` | 私有回复的可选标题，最多 200 个字符。 |
 | `actions` | 最多 30 个按钮。每个按钮都有一个 `label`（最多 200 个字符），以及以下二者之一：要么是 `action_id`（最多 100 个字符）加可选的 `context` 对象（会在 `channel.action` 中回传），要么是一个 `url`：不超过 2,048 个字符、不含凭据的 `http(s)` 链接，在新标签页中打开。只允许出现在 `visibility` 为 `channel` 的 `message` 或 `update` 上。 |
 | `embeds` | 最多 10 张卡片，用于 `message` 或 `update`。每张卡片可含 `title`（最多 256 个字符）、`description`（Markdown，最多 4,096）、`url`（链接标题）、`color`（从 `0` 到 `0xFFFFFF` 的整数，用作强调条颜色）、`author`（`{"name": ...}`，最多 256）、`footer`（`{"text": ...}`，最多 2,048）、`thumbnail`（`{"url": ...}`）以及最多 25 个 `fields`（`name` 最多 256，`value` 为 Markdown，最多 1,024，`inline` 可选）。一条消息中的所有卡片合计最多容纳 6,000 个字符的文本。URL 为不含凭据的 `http(s)`，最多 2,048 个字符。缩略图由用户浏览器直接加载。 |
-| `parent_id`、`reply_to_id` | 把频道回复发布到某个主题中，或作为对某条消息的回复。没有 `parent_id` 的频道回复会出现在频道顶部。 |
+| `parent_id`、`reply_to_id` | 将回复发到线程，或设为对某条消息的回复。未指定 `parent_id` 的频道回复会发到频道的主时间线。 |
 | `filename` | 用于 `download`：字母、数字、`_`、`.` 和 `-`，以 `.md` 结尾。默认 `report.md`。 |
 
 - `visibility` 为 `channel` 的 `message` 会发布一条频道消息，需要 `channels:messages:write`。

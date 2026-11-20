@@ -22,7 +22,7 @@ title: "Chatterbox TTS —— 声音克隆"
 - 零样本声音克隆 —— 只需约 10 秒语音样本
 - [表现优于 ElevenLabs](https://podonos.com/resembleai/chatterbox)
 - 输出带水印，便于负责任地使用声音克隆
-- 0.5B Llama backbone
+- 0.5B Llama 主干模型
 - 自定义 Voice Library 管理
 - 支持流式输出，生成更快
 - 具备高级内存管理与自动清理
@@ -197,7 +197,7 @@ cd frontend && npm install && npm run build
 - **仅 API**：通过 `http://localhost:4123` 访问（直接 API 访问）
 - **带前端**：Web UI 位于 `http://localhost:4321`，API 请求通过反向代理转发
 
-因此，当使用 `--profile frontend` 运行时，Web 界面位于 `http://localhost:4321`，而 API 则在代理后端运行。
+前端使用反向代理转发请求。因此，使用 `--profile frontend` 运行时，可通过 `http://localhost:4321` 访问 Web 界面，API 请求则经由反向代理转发。
 
 </details>
 

@@ -143,7 +143,7 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 | 资源 | 工具 | 分类 |
 |---|---|---|
 | 聊天附带的文件 | `list_chat_files`、`query_chat_files`、`grep_chat_files`、`view_file`、`display_file` | **Files** |
-| 知识库，包括聊天所在文件夹的知识 | `query_knowledge_files`、`search_knowledge_files`、`grep_knowledge_files`、`view_knowledge_file`、`display_file`，以及在模型未附加知识时用于发现的工具 | **Knowledge Base** |
+| 知识库，包括聊天所在文件夹的知识 | `query_knowledge_files`、`search_knowledge_files`、`grep_knowledge_files`、`view_knowledge_file`、`display_file`，以及在没有附加任何知识时用于发现的工具 | **Knowledge Base** |
 | 笔记 | `search_notes`、`view_note` | **Notes** |
 | 用户的聊天 | `search_chats`、`view_chat` | **Chat History** |
 
@@ -195,7 +195,7 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 
 ## 汇总检查清单 {#summary-checklist}
 
-在 **Settings > Models**（管理员区域） 中针对模型，点击铅笔图标（**Edit**），然后进入 **Capabilities** 与 **Builtin Tools**：
+在**设置 > 模型**（管理员区域）中点击模型的铅笔图标（**编辑**），再进入**功能**和**内置工具**：
 
 - [ ] 静态系统提示（不每轮重新生成）
 - [ ] 开启 **File Upload**，关闭 **Preload files**，不做自动内容注入（这也会禁用 "Using Entire Document"），**并且**正是它负责注入文件工具

@@ -11,16 +11,21 @@ title: "图像生成"
     - 检查 **设置** > **图像**（管理员区域）中的**图像**设置，确认“图像生成”已切换为**开启**。
     - 确认消息输入框的 **+** 菜单中 **图像** 开关已打开。在任何函数调用模式下，不开启它就不会发生任何与图像相关的行为。
     - 确认模型在 **工作区** > **模型** > **编辑**中具备**图像生成**能力，并且你的角色拥有**图像生成**功能权限。
-    - 核对**API 密钥**和**Base URL**（适用于 OpenAI、ComfyUI、Automatic1111）是否正确。
+    - 在 **Settings** > **Images**（管理员区域）打开连接，检查其 **URL** 和密钥，然后点击 URL 旁的验证图标。
+    - 确认连接已启用，开启了 **Generate** 能力，并且 **Access Control** 包含该用户。未列入连接访问名单的非管理员用户看不到其模型。
     - 确认所选模型在后端服务中可用并已加载（例如查看 ComfyUI 或 Automatic1111 控制台是否有活动日志）。
     - **Azure OpenAI**：如果你看到 `[ERROR: azure-openai error: Unknown parameter: 'response_format'.]`，请确认使用的是 `2025-04-01-preview` 或更高版本的 API 版本。
 
-- **图像设置无法保存**（在 **设置** > **图像**（管理员区域）保存时出现诸如 `OpenAI API Key is required.` 的错误）：
-    - 只有在相应功能开启时才需要填写密钥和 URL。请填写该字段，或关闭该功能，然后重新保存。
-    - **附加参数**中的无效 JSON 会以 `Invalid JSON format for Parameters` 拒绝。请修正或清空它，然后重新保存。
+- **无法保存连接**（保存时显示 `URL is required` 等错误）：
+    - 填写 **URL**，然后重新保存。
+    - 如果 **Additional Parameters** 或 **Headers** 中的 JSON 无效，系统会显示 `Invalid JSON format for Parameters` 或 `Headers must be a valid JSON object` 并拒绝保存。修正或清空相应字段后，重新保存。
 
-- **引擎设置缺失**（**设置** > **图像**（管理员区域）只显示**图像生成**开关）：
-    - **创建图像**和**编辑图像**两个分区（包含引擎及其密钥、**图像提示词生成**和**图像编辑**）只在**图像生成**开启时显示。它们已保存的值在隐藏期间会被保留。
+- **连接未显示**（**Settings** > **Images**（管理员区域）只显示 **Image Generation** 和 **Image Edit** 开关）：
+    - **Image Generation** 或 **Image Edit** 开启时，会显示 **Manage Image Connections** 和 **Default Models**。
+
+- **只提供一个图像模型，或使用了错误的模型**：
+    - **Model IDs** 留空时，连接会提供 OpenAI 兼容服务器明确标记为图像模型的所有模型（LiteLLM 会添加此标记）。其他后端只提供一个默认模型：OpenAI 的 `gpt-image-2`、AUTOMATIC1111 中已加载的检查点、ComfyUI 工作流指定的模型，或 Gemini 的 `imagen-3.0-generate-002`。请添加你希望提供的模型 ID。
+    - **Default Models** 设置聊天未指定模型时使用的默认模型。用户可从 **+** 菜单的 **Image** 项选择模型。
 
 - **图片位置显示"图像不可用"**（原本图片的位置显示成带照片图标的小虚线框）：
     - 浏览器无法从消息中记录的地址加载该图片。这涵盖聊天中的任何图片，无论是上传的还是生成的。
@@ -30,7 +35,7 @@ title: "图像生成"
 
 ### ComfyUI 问题 {#comfyui-issues}
 
-- **Workflow 不兼容 / JSON 错误**（上传 workflow 后出现 `Invalid workflow` 或 JSON 解析错误）：
+- **工作流不兼容／JSON 错误**（上传工作流后显示 `Invalid JSON format for ComfyUI Workflow.`）：
     - **必须使用 API 格式**：Open WebUI 要求 workflow 采用 **API 格式**。
     - 在 ComfyUI 中：
         1. 点击"设置"（齿轮图标）。
@@ -43,11 +48,11 @@ title: "图像生成"
 
 - **图像编辑 / 图像变体失败**（从文本生成正常，但编辑或图生图悄无声息地失败）：
     - 如果你使用图像编辑或 Image+Image 生成，你的自定义 workflow **必须**包含配置为接受输入图像的节点（通常是经过有效替换或链接的 `LoadImage` 节点）。
-    - 检查 Open WebUI 设置中默认的"图像编辑"workflow，了解所需的节点结构以确保兼容。
+    - 确认已为连接上传 **Edit Workflow**，其中映射了 **Image** 和 **Prompt** 节点，并在 **Capabilities** 下开启了 **Edit**。
 
 - **当 ComfyUI 位于私有/内网地址时生成或编辑失败**（例如 `10.x`、`192.168.x`、`172.16–31.x` 或 `localhost`），且往往只在 workflow 运行之后才出现：
-    - Open WebUI 对出站请求应用 SSRF 防护，只信任与管理员配置的 `COMFYUI_BASE_URL` 同源（协议、主机和端口完全匹配）的图片 URL。
-    - 确保 `COMFYUI_BASE_URL`（以及图像编辑用的 `IMAGES_EDIT_COMFYUI_BASE_URL`，它默认为空，且是编辑路径唯一信任的源）被设为 ComfyUI 提供图片的**准确**源（协议、主机和端口都要匹配）。如果 ComfyUI 返回的图片 URL 与 `COMFYUI_BASE_URL` 的主机/端口不同，这些请求同样会经过 SSRF 校验，并可能被拦截。在较旧的版本上，请升级而不是关闭 SSRF 防护。
+    - Open WebUI 会对出站请求应用 SSRF 防护，只信任与连接的 **URL** 同源的图像 URL，即协议、主机和端口必须完全匹配。
+    - 将连接的 **URL** 设为 ComfyUI 提供图像的**确切**来源。如果 ComfyUI 返回的图像 URL 使用不同主机或端口，这些请求仍会经过 SSRF 校验，可能会被阻止。
 
 ### Automatic1111 问题 {#automatic1111-issues}
 
@@ -56,38 +61,18 @@ title: "图像生成"
 
 - **Docker 连通性**（Open WebUI 无法访问 `localhost` 上的 Automatic1111）：
     - 如果 Open WebUI 运行在 Docker 中而 Automatic1111 在你的宿主机上：
-        - 将 Base URL 设为 `http://host.docker.internal:7860`。
+        - 将连接的 **URL** 设为 `http://host.docker.internal:7860`。
         - 确认 `host.docker.internal` 可以解析（在 Docker run 命令中加入 `--add-host=host.docker.internal:host-gateway` 即可）。
 
 ### 环境变量与配置 {#environment-variables--configuration}
 
-如需高级配置，可以设置以下环境变量。
+在 **Settings** > **Images**（管理员区域）管理图像连接。
 
 #### 通用图像生成 {#general-image-generation}
+
 - `ENABLE_IMAGE_GENERATION`：设为 `true` 以启用图像生成。
-- `IMAGE_GENERATION_ENGINE`：使用的引擎（例如 `openai`、`comfyui`、`automatic1111`、`gemini`）。
-- `IMAGE_GENERATION_MODEL`：用于生成的模型 ID。
-- `IMAGE_SIZE`：默认图像尺寸（例如 `512x512`）。
+- `ENABLE_IMAGE_EDIT`：设为 `true` 以启用图像编辑。这两个变量均见[环境配置指南](/reference/env-configuration)。
 
 #### 各引擎专属设置 {#engine-specifics}
 
-**OpenAI / 兼容接口**
-- `IMAGES_OPENAI_API_BASE_URL`：OpenAI 兼容图像生成 API 的 Base URL。
-- `IMAGES_OPENAI_API_KEY`：图像生成服务的 API 密钥。
-
-**ComfyUI**
-- `COMFYUI_BASE_URL`：你的 ComfyUI 实例的 Base URL。
-- `COMFYUI_API_KEY`：API 密钥（如果启用了认证）。
-- `COMFYUI_WORKFLOW`：自定义 workflow JSON（必须是 API 格式）。
-
-**Automatic1111**
-- `AUTOMATIC1111_BASE_URL`：你的 Automatic1111 实例的 Base URL。
-- `AUTOMATIC1111_API_AUTH`：认证凭据（username:password）。
-
-**Gemini**
-- `IMAGES_GEMINI_API_KEY`：Gemini 的 API 密钥。
-- [查看 Gemini 配置指南](/features/chat-conversations/image-generation-and-editing/gemini)
-
-:::tip
-有关完整的环境变量列表和详细配置选项，请参阅[环境变量配置指南](/reference/env-configuration)。
-:::
+各引擎分别对应一种连接类型，参见[图像生成和编辑](/features/chat-conversations/image-generation-and-editing#set-up-a-connection)。

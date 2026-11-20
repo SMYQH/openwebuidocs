@@ -101,30 +101,30 @@ title: "语音模式"
 
 ## 故障排查 {#troubleshooting}
 
-- **“访问媒体设备时权限被拒绝”**：浏览器阻止了麦克风。浏览器只允许在 HTTPS 或 `localhost` 下访问麦克风，因此从其他设备通过 IP 地址打开 Open WebUI 通常会引发该问题。参见[麦克风访问问题](/troubleshooting/audio#microphone-access-issues)。
-- **“请选择一个模型进行通话”**：选中了多个模型。移除其余模型后重试。
-- **“使用 Web STT 引擎时不支持通话功能”**：在管理员的语音转文字引擎设为 **Web API** 的情况下使用了通话链接或桌面应用的通话快捷键。此时**语音模式**按钮会被隐藏。管理员需要在 **设置 > 音频**（管理员区域） 中选择一个服务端引擎。
+- **"Permission denied when accessing media devices"**：浏览器阻止了麦克风。浏览器只允许在 HTTPS 或 `localhost` 下访问麦克风，因此从其他设备通过 IP 地址打开 Open WebUI 通常会引发该问题。参见[麦克风访问问题](/troubleshooting/audio#microphone-access-issues)。
+- **"Select only one model to call"**：选中了多个模型。移除其余模型后重试。
+- **"Call feature is not supported when using Web STT engine"**：在管理员的语音转文字引擎设为 **Web API** 的情况下使用了通话链接或桌面应用的通话快捷键。此时**语音模式**按钮会被隐藏。管理员需要在 **设置 > 音频**（管理员区域） 中选择一个服务端引擎。
 - **一直聆听却从不发送**：语音模式在约两秒静音后发送，因此持续的环境噪音会让它一直录音。嘈杂时先静音，或者换个安静的地方。
 - **模型没有声音**：参见[文字转语音 (TTS) 问题](/troubleshooting/audio#text-to-speech-tts-issues)。
 
 实时通话会显示各自的提示信息：
 
-- **“请配置实时模型、声音和转写模型”**：**设置 > 音频 > 语音通话**（管理员区域） 中的**语音模型**、**声音**或**输入转写模型**为空。
-- **“请配置实时 API 密钥”**：在使用密钥登录的同时 **API 密钥** 为空。
-- **“实时服务提供方 URL 无效”**：**API 基础 URL**（Azure 下为 **Azure OpenAI API 基础 URL**）需要以 `http://` 或 `https://` 开头，且不含查询字符串、用户名或密码。
-- **“实时服务提供方拒绝了认证。请检查凭据和访问权限。”**：服务提供方返回了 401 或 403。API 密钥不正确，或者在使用 Microsoft Entra ID 时服务器的身份没有该 Azure OpenAI 资源的访问权限。
-- **“未找到实时端点。请检查 API 基础 URL 和部署名称。”**：服务提供方返回了 404。基础 URL 的路径有误，或者在使用 Azure OpenAI 时该资源上不存在同名部署。
-- **“无法获取用于实时通话的 Microsoft Entra ID 令牌”**：Open WebUI 服务器没有可用于登录 Azure 的凭据。参见[使用 Azure OpenAI](#using-azure-openai)。
-- **“Microsoft Entra ID 需要 Azure OpenAI 实时服务提供方”**：[`AUDIO_REALTIME_AUTH_TYPE`](/reference/env-configuration#audio_realtime_auth_type) 为 `microsoft_entra_id`，而 [`AUDIO_REALTIME_PROVIDER`](/reference/env-configuration#audio_realtime_provider) 为 `openai`。
-- **“不支持的实时服务提供方或认证方式”**：[`AUDIO_REALTIME_PROVIDER`](/reference/env-configuration#audio_realtime_provider) 或 [`AUDIO_REALTIME_AUTH_TYPE`](/reference/env-configuration#audio_realtime_auth_type) 的取值不在列出的选项之内。这些值必须是小写。
-- **“语音连接失败”**出现在开始之后：浏览器无法向 Open WebUI 打开通话连接，最常见的原因是反向代理在 `/api/` 上丢弃了 WebSocket 升级请求（参见[要求与服务提供方](#requirements-and-providers)），或者服务提供方无法访问，或以除上述之外的错误拒绝了连接。
-- **“语音连接超时”**：服务提供方没有及时响应，例如 Open WebUI 服务器无法访问它。
-- **“服务提供方拒绝了语音配置。请检查模型、声音和转写模型。”**：服务提供方接受了密钥，但拒绝了**语音模型**、**声音**或**输入转写模型**。
-- **“请选择一个由服务器配置的聊天模型。”**：请选择一个由服务器提供的模型。来自用户自有直连连接的模型需要使用标准模式。
-- **“通话权限被拒绝”**或**“聊天模型访问被拒绝”**：该用户缺少**允许通话**权限，或无权访问所选模型。
-- **“通话会话已过期。请开始新的通话。”**：通话已达到一小时上限。
-- **“某段语音无法转写，请重试。”**：服务提供方无法转写你所说内容的一部分。该消息以错误通知形式显示，通话会继续，请再说一次。转写失败的片段也会从语音模型的对话中移除。
-- **“此浏览器无法使用 24 kHz AudioWorklet 音频。请使用标准通话模式。”**：浏览器缺少实时通话所需的 24 kHz 音频处理能力。请改用支持 AudioWorklet 的浏览器，或让管理员切换到标准模式。
+- **"Configure the Realtime model, voice, and transcription model"**：**设置 > 音频 > 语音通话**（管理员区域） 中的**语音模型**、**声音**或**输入转写模型**为空。
+- **"Configure the Realtime API key"**：在使用密钥登录的同时 **API 密钥** 为空。
+- **"Invalid Realtime provider URL"**：**API 基础 URL**（Azure 下为 **Azure OpenAI API 基础 URL**）需要以 `http://` 或 `https://` 开头，且不含查询字符串、用户名或密码。
+- **"Realtime provider authentication rejected. Check the credentials and access."**：服务提供方返回了 401 或 403。API 密钥不正确，或者在使用 Microsoft Entra ID 时服务器的身份没有该 Azure OpenAI 资源的访问权限。
+- **"Realtime endpoint not found. Check the API base URL and deployment name."**：服务提供方返回了 404。基础 URL 的路径有误，或者在使用 Azure OpenAI 时该资源上不存在同名部署。
+- **"Unable to obtain a Microsoft Entra ID token for Realtime calls"**：Open WebUI 服务器没有可用于登录 Azure 的凭据。参见[使用 Azure OpenAI](#using-azure-openai)。
+- **"Microsoft Entra ID requires the Azure OpenAI Realtime provider"**：[`AUDIO_REALTIME_AUTH_TYPE`](/reference/env-configuration#audio_realtime_auth_type) 为 `microsoft_entra_id`，而 [`AUDIO_REALTIME_PROVIDER`](/reference/env-configuration#audio_realtime_provider) 为 `openai`。
+- **"Unsupported Realtime provider or authentication method"**：[`AUDIO_REALTIME_PROVIDER`](/reference/env-configuration#audio_realtime_provider) 或 [`AUDIO_REALTIME_AUTH_TYPE`](/reference/env-configuration#audio_realtime_auth_type) 的取值不在列出的选项之内。这些值必须是小写。
+- **"Voice connection failed"**出现在开始之后：浏览器无法向 Open WebUI 打开通话连接，最常见的原因是反向代理在 `/api/` 上丢弃了 WebSocket 升级请求（参见[要求与服务提供方](#requirements-and-providers)），或者服务提供方无法访问，或以除上述之外的错误拒绝了连接。
+- **"Voice connection timed out"**：服务提供方没有及时响应，例如 Open WebUI 服务器无法访问它。
+- **"Provider rejected voice configuration. Check model, voice, and transcription model."**：服务提供方接受了密钥，但拒绝了**语音模型**、**声音**或**输入转写模型**。
+- **"Select one chat model or agent."** 或 **"Bridge requires a server-configured chat model"**：请选择一个由服务器提供的模型或智能体。通话使用实例自身的模型。
+- **"Call permission denied"**或**"Chat model access denied"**：该用户缺少**允许通话**权限，或无权访问所选模型。
+- **"Call session expired. Start a new call."**：通话已达到一小时上限。
+- **"A voice segment could not be transcribed. Please try again."**：服务提供方无法转写你所说内容的一部分。该消息以错误通知形式显示，通话会继续，请再说一次。转写失败的片段也会从语音模型的对话中移除。
+- **"This browser cannot use 24 kHz AudioWorklet audio. Use Standard call mode."**：浏览器缺少实时通话所需的 24 kHz 音频处理能力。请改用支持 AudioWorklet 的浏览器，或让管理员切换到标准模式。
 
 ## 实时通话 {#realtime-calls}
 
@@ -160,8 +160,8 @@ title: "语音模式"
 5. 将**声音**和**输入转写模型**设为该部署所支持的取值。
 6. 选择**认证方式**：
    - **API 密钥**：粘贴该资源的某个密钥。Open WebUI 会通过 `api-key` 请求头发送它。
-   - **Microsoft Entra ID**：无需填写密钥。Open WebUI 服务器使用 `DefaultAzureCredential` 登录 Azure，每次调用都使用服务器自身的身份，无论由谁发起。请在资源上为该身份授予 `Cognitive Services OpenAI User` 角色，并确保运行 Open WebUI 的位置可获取相应凭据。系统分配的托管标识无需更多配置；用户分配的托管标识需要在 Open WebUI 容器上将其客户端 ID 设置到 `AZURE_CLIENT_ID`，并设置 `AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential` 以只尝试托管标识。服务主体则需要 `AZURE_TENANT_ID`、`AZURE_CLIENT_ID` 和 `AZURE_CLIENT_SECRET`。使用 Azure CLI 执行 `az login` 同样可行，但 Docker 镜像中没有 Azure CLI，因此需要额外包含它的镜像或脱离 Docker 安装。[使用 EntraID 的 Azure OpenAI](/tutorials/integrations/llm-providers/azure-openai)教程介绍了在 AKS 上通过 Azure CLI 登录与工作负载身份的方式。
-7. 点击 **保存**并开始一次通话。密钥错误或角色缺失会提示**“实时服务提供方拒绝了认证。请检查凭据和访问权限。”**，URL 或部署名称错误会提示**“未找到实时端点。请检查 API 基础 URL 和部署名称。”**
+   - **Microsoft Entra ID**：无需填写密钥。Open WebUI 服务器使用 `DefaultAzureCredential` 登录 Azure，每次调用都使用服务器自身的身份，无论由谁发起。请在资源上为该身份授予 `Cognitive Services OpenAI User` 角色，并确保运行 Open WebUI 的位置可获取相应凭据。系统分配的托管标识无需更多配置；用户分配的托管标识需要在 Open WebUI 容器上将其客户端 ID 设置到 `AZURE_CLIENT_ID`。设置 `AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential`，可让凭据链仅尝试托管标识。服务主体则需要 `AZURE_TENANT_ID`、`AZURE_CLIENT_ID` 和 `AZURE_CLIENT_SECRET`。使用 Azure CLI 执行 `az login` 同样可行，但 Docker 镜像中没有 Azure CLI，因此需要额外包含它的镜像或脱离 Docker 安装。[使用 EntraID 的 Azure OpenAI](/tutorials/integrations/llm-providers/azure-openai)教程介绍了在 AKS 上通过 Azure CLI 登录与工作负载身份的方式。
+7. 点击 **保存**并开始一次通话。密钥错误或角色缺失会提示**"Realtime provider authentication rejected. Check the credentials and access."**，URL 或部署名称错误会提示**"Realtime endpoint not found. Check the API base URL and deployment name."**
 
 #### 输入参数 {#input-parameters}
 
@@ -171,7 +171,7 @@ title: "语音模式"
 {"noise_reduction": {"type": "near_field"}}
 ```
 
-笔记本或房间麦克风请使用 `far_field`。在这里设置之前，服务提供方的降噪一直处于关闭状态。浏览器自身的噪声抑制始终开启。Open WebUI 会把该对象合并进会话的音频输入设置，你设置的某个键会替换 Open WebUI 对应键的取值。`format`、`transcription` 和 `turn_detection` 由 Open WebUI 自行设置，调用依赖这些值，因此请不要填写它们。保存的内容若不是 JSON 对象，会提示 **Parameters 的 JSON 格式无效**。
+笔记本或房间麦克风请使用 `far_field`。在这里设置之前，服务提供方的降噪一直处于关闭状态。浏览器自身的噪声抑制始终开启。Open WebUI 会把该对象合并进会话的音频输入设置，你设置的某个键会替换 Open WebUI 对应键的取值。`format`、`transcription` 和 `turn_detection` 由 Open WebUI 自行设置，调用依赖这些值，因此请不要填写它们。保存的内容若不是 JSON 对象，会提示 **Invalid JSON format for Parameters**。
 
 实时模式开启时，在 **工作区 > 模型** 中编辑模型还会显示 [**实时语音**](/features/workspace/models#voice-avatar)字段。在那里填写的声音用于该模型的通话，未填写声音的模型则使用管理员的**声音**。**设置 > 音频** 中的个人音色选择对标准通话和朗读功能生效。
 
@@ -227,9 +227,9 @@ Open WebUI 会保留通话的文本转写。音频本身只是流式传输并播
 
 ### 实时通话期间 {#during-a-realtime-call}
 
-通话界面以一个动画语音球为中心，或者在模型拥有[语音头像](#voice-avatars)时以模型角色为中心。其下方的状态会显示**正在连接……**、**正在聆听**、**正在说话**或**麦克风已关闭**。连接中断时会显示**通话已断开**并出现**重试**按钮。**静音**和**结束通话**位于语音球下方。
+通话界面以动态语音球或模型的[语音头像](#voice-avatars)为中心。连接中断时，界面会显示 **Call disconnected** 和 **Retry** 按钮。**Mute** 和 **End call** 按钮位于语音球下方。
 
-- **插话。** 当你开始说话时，助手的回复会暂停，并在你的话转写完成后继续。当声音没有产生转写结果时（例如风声或环境噪音），回复会从暂停处继续，而该段声音会从语音模型的对话中移除。在语音球朗读时点击它可以立即停止回复。
+- **插话。** 当你开始说话时，助手会暂停回复。如果你的话成功转写，该回复就会停止。当声音没有产生转写结果时（例如风声或环境噪音），回复会从暂停处继续，而该段声音会从语音模型的对话中移除。在语音球朗读时点击它可以立即停止回复。
 - **静音。** 点击麦克风按钮，或在键盘上按 **M**。
 - **停止。** 当聊天模型仍在生成答案时，聊天中常规的**停止**按钮会取消该请求。工具已经完成的操作会保留。
 - **提出新的问题。** 在上一个请求仍在运行时发起新请求，会停止上一个请求并开始新的请求。
@@ -245,7 +245,7 @@ Open WebUI 会保留通话的文本转写。音频本身只是流式传输并播
 
 - **Open WebUI 服务器可访问的 Realtime API。** Open WebUI 会向 `<API Base URL>/realtime?model=<Voice Model>` 打开一个 WebSocket。使用 **OpenAI / 兼容** 时，密钥以 bearer token 形式发送，因此任何兼容 OpenAI Realtime API 的服务器都可以使用，本地语音到语音引擎同样适用。对于不校验密钥的本地服务器，填写任意占位值即可。Azure OpenAI 有自己的**服务提供方**设置，参见[使用 Azure OpenAI](#using-azure-openai)。基础 URL 必须以 `http://` 或 `https://` 开头，且不含查询字符串、用户名或密码，因此需要额外查询参数的端点无法使用。开启 [`ENABLE_FORWARD_USER_INFO_HEADERS`](/reference/env-configuration#enable_forward_user_info_headers) 后，WebSocket 还会携带调用者的用户信息请求头，或在设置了 [`FORWARD_USER_INFO_HEADER_JWT_SECRET`](/reference/env-configuration#forward_user_info_header_jwt_secret) 时携带已签名的用户 JWT，使服务提供方前面的网关能够识别通话中的用户。
 - **语音模型上的函数调用。** 服务器和语音模型都必须支持函数调用：问题通过 `generate_chat_completion` 触达聊天模型，[语音头像](#voice-avatars)手势通过 `play_animation` 播放。
-- **一个由服务器配置的聊天模型。** 请恰好选择一个你有权限访问的模型。如果使用来自直连连接的模型，通话会以**请选择一个由服务器配置的聊天模型。**结束。
+- **一个由服务器配置的聊天模型。** 恰好选择一个你有权访问的模型。通话使用实例自身的模型。
 - **麦克风访问。** 与标准模式一样，浏览器只允许在 HTTPS 或 `localhost` 下使用麦克风。浏览器还需要支持 24 kHz 音频处理；若不支持，通话会以提示使用标准通话模式的消息结束。
 - **反向代理对 WebSocket 的支持。** 通话通过 `/api/` 下的 WebSocket 运行，因此位于 Open WebUI 前面的反向代理必须在该路径上传递 WebSocket 升级请求。[Nginx 指南](/reference/https/nginx)中的配置已经满足这一点。参见 [WebSocket 故障排查](/troubleshooting/connection-error#websocket-troubleshooting)。
 - **费用。** 每次通话都会在实时服务提供方上使用语音模型和转写模型，并且每个被回答的问题都会使用聊天模型。

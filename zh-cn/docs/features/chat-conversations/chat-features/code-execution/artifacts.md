@@ -26,17 +26,17 @@ Open WebUI 中的 Artifacts 是一项受 Claude.AI Artifacts 启发的创新功�
 
 ## 如何在 Open WebUI 中使用 Artifacts？ {#how-do-i-use-artifacts-in-open-webui}
 
-当 Open WebUI 创建 Artifact 后，你会在主聊天右侧看到一个专门的 Artifacts 窗口。你可以这样与它交互：
+Open WebUI 创建 Artifact 后，其内容会显示在主聊天右侧的 Artifacts 窗口。你可以随时通过[标签栏](/features/chat-conversations/chat-features/#tabs-side-panel)的 **+** 菜单选择 **Artifacts**，重新打开该窗口。你可以执行以下操作：
 
 - **编辑与迭代**：直接在聊天中要求 LLM 修改或迭代该内容，更新结果会立即显示在 Artifact 窗口中。你可通过 Artifact 左下角的版本选择器切换不同版本。每次编辑都会生成一个新版本，方便追踪变化
 - **自动更新**：Open WebUI 可能会根据你的后续消息更新现有 Artifact，窗口会显示最新内容
-- **操作按钮**：在 Artifact 右下角可以使用更多操作，例如复制内容或全屏打开 Artifact
+- **操作按钮**：可复制内容、全屏打开 Artifact，或使用其他操作。
 
 ## 使用 CSP 保护 Artifact 预览 {#securing-artifact-previews-with-a-csp}
 
 Artifact 预览渲染在经过沙箱限制的 `srcdoc` iframe 中。若想更严格地控制这段生成的 HTML 能做什么（对外网络请求、脚本、样式），可以通过 [`IFRAME_CSP`](/reference/env-configuration#iframe_csp) 环境变量为预览注入一条专门的内容安全策略，它与主应用使用的 `CONTENT_SECURITY_POLICY` 相互独立。
 
-该变量默认为空（iframe 的 `sandbox` 已提供基础隔离），并且作用于界面中**每一个** `srcdoc` iframe：Artifacts、代码 / HTML 预览、文件预览以及引用弹窗。设置后，Open WebUI 会在 iframe 文档开头插入 `<meta http-equiv="Content-Security-Policy">` 标签。按照 CSP 规范，此策略与生成的 HTML 中其他生效的 CSP 一并执行；其他策略不能放宽此策略的限制。可以从以下配置开始：
+该变量默认为空（iframe 的 `sandbox` 已提供基础隔离），并且作用于界面中**每一个** `srcdoc` iframe：Artifacts、代码 / HTML 预览、文件预览、引用弹窗、MCP Apps 和可视化。设置后，Open WebUI 会在 iframe 文档开头插入 `<meta http-equiv="Content-Security-Policy">` 标签。按照 CSP 规范，此策略与生成的 HTML 中其他生效的 CSP 一并执行，其他策略不能放宽此策略的限制。可以从以下配置开始：
 
 ```bash
 IFRAME_CSP=default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'none'

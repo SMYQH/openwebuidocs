@@ -18,22 +18,21 @@ Open WebUI 支持通过 **AUTOMATIC1111** [API](https://github.com/AUTOMATIC1111
 /webui.sh --api --listen
 ```
 
-3. 如果使用预设的环境变量以 Docker 方式安装 WebUI，请使用以下命令：
-
-```docker
-docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -e AUTOMATIC1111_BASE_URL=http://host.docker.internal:7860/ -e ENABLE_IMAGE_GENERATION=True -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
-```
-
 ### 配置 Open WebUI 连接 AUTOMATIC1111 {#setting-up-open-webui-with-automatic1111}
 
-1. 在 Open WebUI 中前往 **Settings** > **Images**（管理员区域）
-2. 将 `图像生成引擎` 设置为 `Automatic1111`
-3. 在 `Base URL` 字段中，输入可访问 AUTOMATIC1111 API 的地址：
-
-![已配置为 AUTOMATIC1111 的 Open WebUI 图像设置页面截图。](/images/image-generation-and-editing/automatic1111-settings.png)
+1. 在 Open WebUI 中前往**设置** > **图像**（管理员区域），开启**图像生成**并添加连接。
+2. 将**连接类型**设为 **AUTOMATIC1111**。
+3. 在 **URL** 中填入可访问 AUTOMATIC1111 API 的地址：
 
 ```txt
 http://<your_automatic1111_address>:7860/
 ```
 
-如果你的 Open WebUI Docker 与 AUTOMATIC1111 运行在同一台主机上，请使用 `http://host.docker.internal:7860/`。
+如果 Open WebUI 在 Docker 中运行，且 AUTOMATIC1111 在同一台宿主机上运行，请使用 `http://host.docker.internal:7860/`。
+
+4. 如果 AUTOMATIC1111 需要身份验证，请选择 **Basic** 验证类型并输入 `username:password`。
+5. 将 **Model IDs** 留空可使用已加载的 checkpoint，也可添加 checkpoint 名称供选择。选择其他已列出的模型会切换服务器已加载的 checkpoint，影响该服务器上的所有用户。
+6. 可选：打开**高级**，添加 `{"cfg_scale": 7, "sampler_name": "Euler a"}` 等额外参数。
+7. 设置**访问控制**并点击**保存**。未授予访问权限时，只有管理员能使用该连接。
+
+AUTOMATIC1111 连接支持图像生成。如需编辑，请添加 ComfyUI 或兼容 OpenAI 的连接。

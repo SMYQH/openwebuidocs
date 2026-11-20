@@ -193,31 +193,31 @@ Open WebUI 遵循 OpenAI Chat Completions schema，不会为偏离该 schema 的
 
 ## 前端连接与后端连接（localhost 混淆） {#frontend-vs-backend-connections-localhost-confusion}
 
-Open WebUI 中有些功能提供**两种配置方式**：一种是**用户/直连**（由浏览器发起），另一种是**管理员/全局**（由后端发起）。它们处在完全不同的网络层级，所以同一个 URL 可能在一种方式下能用，在另一种方式下却失败。
+Open WebUI 的一些功能提供**两种连接配置方式**：**管理员／全局**连接（由 Open WebUI 后端发起）和 [Tether](/ecosystem/tether#bring-your-own-models-and-tools) 连接（由用户自己的电脑发起）。两者的网络环境完全不同，因此同一个 URL 在一种方式下可能可用，在另一种方式下却会失败。
 
 ### 核心规则 {#the-core-rule}
 
 | 请求来源 | `localhost` 的含义 | 谁在使用 |
 | :--- | :--- | :--- |
-| **浏览器（客户端）** | 运行浏览器的那台机器 | 用户工具服务器、用户配置的终端、直连 |
 | **后端（服务端）** | 运行 Open WebUI 的机器/容器 | 全局工具服务器、管理员配置的终端、Ollama 连接 |
+| **Tether（你的电脑）** | 运行 Tether 应用的电脑 | 在 Tether 中添加的连接 |
 
 ### 为什么同一个 URL 可能一边可用、一边失败 {#why-the-same-url-can-work-and-fail}
 
-将 `https://myserver.com/api` 这样的 URL 添加为**用户/直连**连接时，浏览器会解析 `myserver.com` 并直接建立连接。将同一 URL 添加为**管理员/全局**连接时，由 Open WebUI 后端解析主机名。在 Docker 容器内，主机名可能解析到 `127.0.0.1`，完全绕过反向代理。
+在 Tether 中添加 `https://myserver.com/api` 这样的 URL 时，你的电脑会解析 `myserver.com` 并直接连接。如果将同一 URL 添加为**管理员／全局**连接，则由 Open WebUI 后端解析此主机名。在 Docker 容器内，该主机名可能解析为 `127.0.0.1`，完全绕过反向代理。
 
 **常见症状：**
-- 用户侧连接正常，但管理员配置的连接报 502 Bad Gateway
+- Tether 连接正常，但管理员配置的连接报 502 Bad Gateway
 - 后端日志中出现 `Connect call failed ('127.0.0.1', ...)`
 - 全局工具服务器连接超时
 
 **修复方式：** 对于后端/管理员连接，请使用**后端实际可达的内部 URL**：
-- Docker service 名称（例如 `http://open-terminal:8000`）
+- Docker 服务名称（例如 `http://open-terminal:8000`）
 - `host.docker.internal`（从 Docker 内部访问宿主机）
 - 内网 IP（例如 `http://192.168.1.50:8000`）
 
 :::tip
-这适用于 Open WebUI 中**所有由后端代理的连接**，不仅仅是 Open Terminal。包括[工具服务器连接](/features/extensibility/plugin/tools/openapi-servers/open-webui#main-difference-where-are-requests-made-from)、[Open Terminal管理员连接](/features/open-terminal#enterprise-multi-user) 以及 Ollama/OpenAI API 端点都遵循同样的规律。
+这适用于 Open WebUI 中**所有经后端代理的连接**，包括 Open Terminal。[工具服务器连接](/features/extensibility/plugin/tools/openapi-servers/open-webui#1-tool-servers-added-by-an-admin)、[Open Terminal 管理员连接](/features/open-terminal#enterprise-multi-user)和 Ollama/OpenAI API 端点均遵循同样的规律。
 :::
 
 ## "Open WebUI backend required" / 纯前端错误 {#open-webui-backend-required--front-end-only-error}

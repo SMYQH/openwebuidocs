@@ -48,7 +48,7 @@ Open WebUI 允许管理员在新建聊天界面展示自定义横幅。横幅仅
   - `warning`（黄色）
   - `error`（红色）
 - **标题：** 横幅的主标题。
-- **内容：** 主要消息。会渲染 Markdown 并允许内联 HTML，两者都会经过净化器处理。解析前每个换行都会变为换行符，因此跨行的 Markdown 块（列表、表格、引用块）无法成形；这些内容请改用其 HTML 形式。
+- **内容：** 主要消息。会渲染 Markdown 并允许内联 HTML，两者都会经过净化器处理。解析前，每个换行符都会转换成渲染时的换行，因此跨行的 Markdown 块（列表、表格、引用块）无法成形；这些内容请改用其 HTML 形式。
 - **记住关闭状态：** 启用后，用户关闭过的横幅将保持关闭；禁用后，横幅会在下次页面加载时再次显示。
 
 **横幅** 标题旁的地球图标选择器会按语言分别保存内容，因此每位用户看到的都是其界面语言对应的横幅。参见 [Translations](/features/administration/translations#banners)。
@@ -61,7 +61,7 @@ Open WebUI 允许管理员在新建聊天界面展示自定义横幅。横幅仅
 - 在不同设备或浏览器上，已关闭的横幅可能重新出现
 - 关闭状态与横幅 `id` 绑定（若 `id` 变更，横幅将被视为新横幅）
 
-如果需要横幅对所有人持续可见，请设置 `dismissible: false`。
+如果要让所有人每次加载页面时都重新看到横幅，请设置 `dismissible: false`。
 
 ---
 
@@ -274,7 +274,7 @@ services:
 
 **建议：**
 - 始终用 `</a>` 关闭锚标签。
-- 使用 `target="_blank"`（含下划线）。
+- 净化器会移除 `target="_blank"`，因此该属性不起作用。链接会在同一个标签页中打开。
 - 如果 URL 包含查询参数，在 `href` 属性中将 `&` 转义为 `&amp;`：
   ```html
   <a href="https://example.com/page?x=1&amp;y=2" target="_blank">Example</a>
@@ -335,7 +335,7 @@ Service updates: <a href="https://example.com/status" target="_blank"><u>Status 
 </span>
 ```
 
-### 模式：可折叠详情（保持横幅简短） {#pattern-styled-notice-block}
+### 模式：带样式的通知块 {#pattern-styled-notice-block}
 
 当整条消息应作为一个公告区域呈现时，使用全宽样式块。粘贴到横幅内容字段时，请保持该 HTML 紧凑，特别是当其中还包含 `<br>` 标签时。
 
@@ -351,7 +351,7 @@ Service updates: <a href="https://example.com/status" target="_blank"><u>Status 
 - 用于最重要元数据的紧凑日期/时间徽章。
 - `flex-wrap` 使标题行在窄屏下也能正确显示。
 
-### 模式：样式化通知块 {#pattern-collapsible-details-keep-banners-short}
+### 模式：可折叠详情（保持横幅简短） {#pattern-collapsible-details-keep-banners-short}
 
 ```html
 <b>Planned update</b><br>

@@ -32,7 +32,7 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
 :::
 
 :::danger 关键警告
-手动迁移操作失误会直接损坏数据库。**开始前务必创建并验证备份。**
+手动迁移操作失误可能损坏数据库。**开始前务必创建并验证备份。**
 :::
 
 ## 前置检查清单 {#prerequisites-checklist}
@@ -311,7 +311,7 @@ INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
 INFO  [alembic.runtime.migration] Running upgrade abc123 -> def456, add_new_column
 ```
 
-:::note “将假定为非事务性 DDL”
+:::note 日志提示："Will assume non-transactional DDL"
 对 SQLite 而言，这是一条**正常的提示信息**，不是错误。SQLite 不支持 schema 变更的回滚，因此迁移只能在没有事务保护的情况下执行。
 
 如果这条消息后进程似乎"卡住"，请等 2-3 分钟——某些迁移本就需要时间，尤其是：
@@ -414,11 +414,11 @@ INFO:     [db] Database initialization complete
 INFO:     [main] Open WebUI starting on http://0.0.0.0:8080
 ```
 
-**启动后建议做 smoke test：**
+**启动后进行冒烟测试：**
 - 能打开登录页
 - 能用原账号正常登录
 - 能查看聊天历史
-- 浏览器控制台没有新的 JavaScript 错误
+- 浏览器控制台没有 JavaScript 错误
 
 ## 故障排查 {#troubleshooting}
 
@@ -465,7 +465,7 @@ RuntimeError: Cannot add unique normalized user email index because duplicate em
 someone@example.com (x2). Merge or remove the duplicate users and rerun migrations.
 ```
 
-**原因：** Open WebUI 现在通过 `user` 表上小写 `email` 列的唯一索引，强制要求每个邮箱地址只能对应一个账户，比较时不区分大小写。旧版本没有这一约束，因此实例中可能同时存在 `Someone@Example.com` 和 `someone@example.com` 两个独立账户，通常是多种登录方式混用导致的。迁移不会替你挑选保留哪一个，而是直接拒绝执行，并列出所有涉及的地址。
+**原因：** Open WebUI 现在对 `user` 表中的 `email` 值转为小写后创建唯一索引，确保每个邮箱地址只对应一个账户，比较时不区分大小写。旧版本没有这一约束，因此实例中可能同时存在 `Someone@Example.com` 和 `someone@example.com` 两个独立账户，通常是多种登录方式混用导致的。迁移不会替你挑选保留哪一个，而是直接拒绝执行，并列出所有涉及的地址。
 
 **解决方法：** 为上面列出的每个地址决定保留哪一个账户，然后把需要保留的内容迁移到该账户上，再删除其余账户。
 
@@ -490,7 +490,7 @@ someone@example.com (x2). Merge or remove the duplicate users and rerun migratio
 
 4. 重新执行升级。
 
-不能只是把已清空的重复账户留在那里：该索引覆盖所有 `email` 不为空的行，因此在每个地址只剩一个账户之前，迁移会一直失败。
+不能只是把已清空的重复账户留在那里：该索引覆盖所有 `email` 不为 NULL 的行，因此在每个地址只剩一个账户之前，迁移会一直失败。
 
 ### "Table Already Exists" 错误 {#table-already-exists-errors}
 
@@ -912,7 +912,7 @@ UNIQUE constraint failed: alembic_version.version_num
   <li>之前某次迁移只完成了一部分，留下了重复列</li>
   <li>数据库被手工改过</li>
   <li>迁移在执行中途被打断</li>
-  <li>跨多个大版本升级（跳过了中间迁移）</li>
+  <li>跨多个版本升级（跳过了中间迁移）</li>
 </ul>
 
 **诊断：**
@@ -1180,7 +1180,7 @@ scp /tmp/webui.db production-server:/app/backend/data/webui.db
 ### 从失败迁移中恢复 {#recovery-from-failed-migration}
 
 :::danger SQLite 没有回滚
-SQLite 迁移是**非事务性的**。一旦迁移执行到一半失败，数据库就会停留在部分迁移状态。最安全的恢复方式就是从备份还原。
+SQLite 迁移是**非事务性的**。一旦迁移执行到一半失败，数据库就会停留在部分迁移状态。唯一安全的恢复方式是从备份还原。
 :::
 
 **部分迁移的症状：**

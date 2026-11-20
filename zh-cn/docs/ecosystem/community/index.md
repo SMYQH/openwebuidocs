@@ -63,7 +63,7 @@ openwebui.com 上的评测能让你在花时间配置某个模型之前，先了
 
 [排行榜](https://openwebui.com/leaderboard)按人们实际发送给各模型的消息数量对模型进行排名。同步你的使用情况会把你依赖的模型计入其中，你的 openwebui.com 主页随后会显示你最常用的模型，以及你全年消息的分布热力图。
 
-1. 在 openwebui.com 上登录，打开 **Leaderboard** 并点击 **Sync Stats**。你主页上的同步按钮以及侧边栏底部你名字上方的同步按钮作用相同。
+1. 在 openwebui.com 上登录，打开 **Leaderboard** 并点击 **Sync Stats**。
 2. 在 **Sync Open WebUI Stats** 中输入你的 Open WebUI URL 并点击 **Sync**。你的实例需要 Open WebUI v0.7.0 或更高版本。
 3. 你的实例会在新标签页中打开，并弹出 **Sync Usage Stats** 对话框，列出哪些内容会共享、哪些不会。**Download as JSON** 可以把数据保存下来，便于你先阅读一遍。
 4. 点击 **Sync**。

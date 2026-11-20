@@ -56,11 +56,11 @@ title: "URL 参数"
 
 ### 5. **工具选择** {#5-tool-selection}
 
-- **说明**：`tools` 或 `tool-ids` 参数用于指定在聊天中启用哪些[tools](/features/extensibility/plugin/tools)
+- **说明**：`tools` 或 `tool-ids` 参数用于指定在聊天中启用哪些[工具](/features/extensibility/plugin/tools)
 - **如何设置**：以逗号分隔的工具 ID 列表作为该参数值
 - **示例**：`/?tools=tool1,tool2` 或 `/?tool-ids=tool1,tool2`
 - **行为**：系统会匹配并激活这些工具，以供当前会话使用
-- **注意**：该值必须是 Open WebUI 内部使用的 ID，它不一定与你在 **+** 菜单中看到的名称一致。工作区工具使用其原始 ID，例如 `/?tools=my_workspace_tool`。工具服务器连接会在连接上设置的 ID 前加一个前缀：MCP 连接用 `server:mcp:<server-id>`，OpenAPI 连接用 `server:<server-id>`，例如 `/?tool-ids=server:mcp:my_mcp_server`。未设置 ID 的 OpenAPI 连接使用它在连接列表中的位置，从 `0` 开始。没有匹配到任何内容的 ID 不会被激活。tools 列表接口会返回准确的 ID，参见[通过 API 使用 Open WebUI 工具（含 MCP）](/reference/api-endpoints#using-open-webui-tools-including-mcp-from-the-api)。
+- **注意**：该值必须是 Open WebUI 内部使用的 ID，它不一定与你在 **+** 菜单中看到的名称一致。工作区工具使用其原始 ID，例如 `/?tools=my_workspace_tool`。工具服务器连接会在连接上设置的 ID 前加一个前缀：MCP 连接用 `server:mcp:<server-id>`，OpenAPI 连接用 `server:<server-id>`，例如 `/?tool-ids=server:mcp:my_mcp_server`。未设置 ID 的 OpenAPI 连接使用它在连接列表中的位置，从 `0` 开始。ID 没有匹配项时，不会激活工具。工具列表端点会返回准确的 ID，参见[通过 API 使用 Open WebUI 工具（含 MCP）](/reference/api-endpoints#using-open-webui-tools-including-mcp-from-the-api)。
 
 ### 6. **通话叠层** {#6-call-overlay}
 
@@ -81,10 +81,10 @@ title: "URL 参数"
 - **说明**：`temporary-chat` 参数会把聊天标记为临时会话。这可能会限制保存聊天历史或应用持久化设置等能力
 - **如何设置**：将该参数设为 `true` 以开启临时聊天会话
 - **示例**：`/?temporary-chat=true`
-- **行为**：启动一个一次性聊天会话，不保存历史，也不会应用高级持久配置
+- **行为**：启动一个一次性聊天会话，不保存历史，也不会应用高级配置
   - **注意**：临时聊天在重新连接后会接上仍在进行中的回复。
   - **注意**：出于隐私考虑，临时聊天中的文档处理仅在前端进行。需要后端解析的复杂文件（例如 DOCX）可能无法完整支持。
-  - **注意**：临时聊天以按会话分配的 ID 存在，不保存聊天记录，因此运行过程中产生的内容（消息、生成的图片、状态更新、标题或标签）都不会写入数据库。需要已保存聊天的功能——例如[任务列表](/features/chat-conversations/chat-features/task-management)、[按聊天划分的终端](/features/open-terminal/terminals/orchestration/contexts)、[子智能体](/features/chat-conversations/chat-features/subagents)、[定时器](/features/chat-conversations/chat-features/timers) 和分叉——在其中都不可用。临时聊天在回复下方不显示 **Fork chat** 操作，`/` 菜单中也没有 `/fork`，手动输入 `/fork` 会得到 **No chat to fork** 的回答。[频道](/features/channels)中的聊天同理，[询问用户工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode) 在频道中也不可用。
+  - **注意**：临时聊天采用会话专属 ID，没有已保存的聊天记录。运行产生的消息、图像、状态更新、标题或标签都不会写入数据库。需要已保存聊天的功能在此不可用，包括[任务列表](/features/chat-conversations/chat-features/task-management)、[每个聊天使用独立实例的终端](/features/open-terminal/terminals/orchestration/creating-terminals#machine-scope)、[子智能体](/features/chat-conversations/chat-features/subagents)、[定时器](/features/chat-conversations/chat-features/timers)和分叉。临时聊天的回复下没有**分叉聊天**操作，`/` 菜单中也没有 `/fork`。手动输入 `/fork` 会提示 **No chat to fork**。[频道](/features/channels)中的聊天也遵循这些限制，且频道中也无法使用[询问用户工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
   - **注意**：在临时聊天中，来自[询问用户工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)的问题，或等待 [**Ask for approval**](/features/extensibility/plugin/tools#tool-approval) 的工具调用，会以对话框形式出现在打开的浏览器标签页中。大约两分钟内无人回答、离开该聊天，或标签页失去连接，都视为拒绝。在已保存的聊天中，刷新或连接中断并不是终局：如果你在 60 秒内、且在超时之前重新打开该聊天，问题会再次发出。必须是该标签页中打开的那个临时聊天，否则请求会立即被取消。
   - **注意**：上面列出的不可用功能是完整的。列表之外的任何功能或工具在临时聊天中的表现与普通聊天完全一致——包括会自行存储或发送数据的工具、记忆、便签和网络搜索等。如果你不希望临时聊天使用某个工具，请在模型上禁用它。
 

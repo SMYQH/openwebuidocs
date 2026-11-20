@@ -23,10 +23,10 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 提出第一个文档问题 {#ask-your-first-document-question}
 
-先准备好三样东西：一个正在运行的 Open WebUI 实例、一个已连接的模型，以及创建知识库和上传文件的权限。要使用专注检索，请选择支持[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)的模型，并启用 **Builtin Tools** 和 **Knowledge Base** 工具类别。原生是默认模式；模型必须调用自己的工具来检索已附加的知识。
+先准备好三样东西：一个正在运行的 Open WebUI 实例、一个已连接的模型，以及创建知识库和上传文件的权限。要使用聚焦检索，请选择支持[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)的模型，并启用 **Builtin Tools** 和 **Knowledge Base** 工具类别。原生是默认模式；模型必须调用自己的工具来检索已附加的知识。
 
 1. 点击**Workspace > Knowledge**，然后点击**Create**。为知识库起一个名称并填写描述。
-2. 上传一个小的纯文本 PDF 或文本文件。在提问之前等待处理完成。
+2. 上传一份体积较小、文字可选中的 PDF，或一份小型文本文件。在提问之前等待处理完成。
 3. 把知识库附加到该聊天，或附加到某个模型并用该模型开始对话。[附加知识与笔记](#attaching-knowledge-and-notes)说明了可以附加的位置。
 4. 提出一个答案就在文件里的问题，例如："使用附加的手册查找办公时间。引用相关段落。"
 5. 将回答和任何来源引用与原始文档比对。如果模型找不到内容，请参阅[知识库故障排查](/troubleshooting/rag#13-knowledge-base-attached-to-model-not-working)。
@@ -43,15 +43,15 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 附加知识与笔记 {#attaching-knowledge-and-notes}
 
-知识库、笔记和单个文件可以附加到聊天、附加到[文件夹](/features/chat-conversations/chat-features/conversation-organization#attached-knowledge)（对该文件夹中的每个聊天都生效），或附加到[模型](/features/workspace/models)。有些选择器把知识库标为 **Collections**（单个条目上标为 **Collection**）；这个标签指的就是知识库。
+可以将知识库、笔记和单个文件附加到聊天、[文件夹](/features/chat-conversations/chat-features/conversation-organization#attached-knowledge)（适用于其中的所有聊天）或[模型](/features/workspace/models)。
 
 **在聊天中：**
 
-- 在消息输入框中键入 `#`。列表会提供 **Folders**、**Collections**（知识库）和 **Files**（知识库中的单个文件），并接受网页或 YouTube URL。
-- 或点击 **+**（**More**）并打开 **Add Context**。**Attach Knowledge** 列出你的知识库，其中的 **Show Files** 可以从某个知识库中挑选单个文件。**Attach Notes** 列出你的笔记。同一个菜单还有 **Attach Webpage**、**Attach Files**（你之前上传的文件）和 **Reference Chats**。
+- 在消息输入框输入 `#`。列表会提供 **Folders**、**Knowledge**（知识库）和 **Files**（知识库中的单个文件），也可输入网页或 YouTube URL。
+- 或点击 **+**（**More**），打开 **Attachments**。**Attach Knowledge** 列出知识库，可用 **Show Files** 从中选择单个文件。**Attach Notes** 列出你的笔记。同一菜单还提供 **Attach Webpage**、**Attach Files**（以前上传的文件）和 **Reference Chats**。
 - 或把笔记、文件夹或聊天从侧边栏拖入消息输入框。
 
-**在模型或文件夹上：** 打开 **Knowledge** 字段，在模型编辑器中（**Workspace > Models**，或 **Settings > Models > Edit**（管理员区域）），或在文件夹的 **Edit** 对话框的 **Advanced** 下。其搜索会列出 **Notes**、**Collections**（知识库）和 **Files**（知识库中的单个文件），而 **Upload Files** 可以直接从你的电脑上添加文件。
+**在模型或文件夹中：**在模型编辑器（**Workspace > Models** 或管理员区域的 **Settings > Models > Edit**）中打开 **Knowledge** 字段，或在文件夹的 **Edit** 对话框下的 **Advanced** 中打开此字段。搜索列表会显示 **Notes**、**Knowledge**（知识库）和 **Files**（知识库中的单个文件）。**Upload Files** 可直接从电脑添加文件。
 
 **Workspace > Knowledge** 只列出知识库。笔记在[笔记](/features/notes)中。
 
@@ -111,9 +111,9 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 在打开的预览中，知识库的名称会在工作区中打开它，文件或链接名称会打开对应的文件或页面。两者都在新标签页中打开。
 
-### 🔍 专注检索（默认） {#focused-retrieval-default}
+### 🔍 聚焦检索（默认） {#focused-retrieval-default}
 
-使用 RAG 根据用户查询找到并注入最相关的片段。当启用混合搜索（`ENABLE_RAG_HYBRID_SEARCH`）时，检索结合了 BM25 关键词搜索和向量搜索，以及用于准确性的重排序。
+使用 RAG 根据用户查询找到并注入最相关的片段。当启用混合搜索（`ENABLE_RAG_HYBRID_SEARCH`）时，检索结合了 BM25 关键词搜索和向量搜索，并通过重排序提高准确性。
 
 最适合只有特定部分相关的大型文档集。
 
@@ -196,7 +196,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 `kb_exec` 遵循同样的[范围划分](#scoped-access-keeps-things-organized)。什么都没附加时，`ls` 列出用户能读取的知识库。附加了知识时，`ls` 只列出已附加的知识库，随后在 **Attached Files** 下列出已附加的单个文件。笔记永远不会出现在 `kb_exec` 中：附加的笔记用 `view_note` 读取，或通过 `query_knowledge_files` 找到；当只附加了笔记时，`ls` 会回答 `No knowledge bases found.`
 
-该功能**默认关闭**且仍处于实验阶段，但为了获得增强的智能体 RAG 体验，我们建议为运行原生函数调用的强模型启用它（`ENABLE_KB_EXEC=True`）。它面向的是那些已经“用 Shell 思考”的前沿模型：相比编排一系列专用工具的扇出，它们往往更可靠地串联 `ls`、`grep` 和 `cat`。它只在使用原生函数调用时生效；对于设为 Legacy 的模型，它不会产生任何效果。
+该功能**默认关闭**且仍处于实验阶段，但为了获得增强的智能体 RAG 体验，我们建议为具备原生函数调用能力的强大模型启用它（`ENABLE_KB_EXEC=True`）。它面向的是那些已经“用 Shell 思考”的前沿模型：相比协调多种专用工具，它们通常更擅长依次使用 `ls`、`grep` 和 `cat`。它只在使用原生函数调用时生效；对于设为 Legacy 的模型，它不会产生任何效果。
 
 **支持的命令**
 
@@ -228,7 +228,7 @@ find docs/ "*.md" | head -10
 文件可以用三种方式寻址——选择最明确的那种：
 
 - **路径** —— `docs/api/auth.md`（相对于知识库根目录；可穿透目录树解析）
-- **文件名** —— `auth.md`（当多个目录或知识库中存在同名文件时，会以“模糊的文件名”提示报错）
+- **文件名** —— `auth.md`（当多个目录或知识库中存在同名文件时，同一文件名会匹配多项，并显示 "ambiguous filename" 提示）
 - **文件 ID** —— `ls`、`find` 或 `grep` 返回的 UUID
 
 **排序**
@@ -251,7 +251,7 @@ find docs/ "*.md" | head -10
 
 启用 `kb_exec` 后，模型需要在两个互补的工具间选择。最简单的做法是写一段简短的**系统提示词**，按知识库指明应优先使用哪个工具：
 
-- **散文与 PDF** 适合用 `query_knowledge_files`（语义搜索）。它按意义匹配，对改写后的问题和文档处理得很好，且不依赖干净的文本提取。
+- **连续文本与 PDF** 适合用 `query_knowledge_files`（语义搜索）。它按意义匹配，即使提问与原文措辞不同，或提取的文本不够规整，也能有效匹配。
 - **文本文件、代码、配置和日志** 适合用 `kb_exec`（`ls`、`tree`、`grep`、`cat`、按行号读取）。模型可以遍历目录树并拉取确切行，在字面标识符、错误字符串和结构方面胜过语义搜索。
 
 一个按知识库明确这一划分的提示词能引导模型做出正确选择，同时仍允许它对每次调用做判断：
@@ -264,7 +264,7 @@ find docs/ "*.md" | head -10
 
 :::warning 原生函数调用时知识库不会自动注入
 
-启用原生函数调用时，附加的知识库**不会自动注入**。模型必须调用知识工具来搜索和检索。如果您的模型未使用附加的知识库：
+启用原生函数调用时，附加到模型或文件夹的知识**不会自动注入**。模型必须调用知识工具来搜索和检索。如果模型没有使用已附加的知识：
 
 1. **添加系统提示词指令**，告诉模型使用 `list_knowledge` 和 `query_knowledge_files`。
 2. **用[知识库故障排查](/troubleshooting/rag#13-knowledge-base-attached-to-model-not-working)检查模型的工具能力和检索设置**。保持原生模式开启，并使用能可靠调用工具的模型。
@@ -281,7 +281,7 @@ find docs/ "*.md" | head -10
 
 要更改谁可以查看或编辑某个知识库，请打开其所在行的三点菜单并选择**访问**。这会直接打开访问设置，无需先进入知识库，而且每次改动都会立即保存。管理员在每个知识库上都能看到该菜单；其他用户只在可以编辑的知识库上看到它，并且需要[**知识库共享**](/features/authentication-access/rbac/permissions#2-sharing-permissions)权限。知识库内部的**访问**按钮遵循同样的规则。在拥有写入权限的情况下保存知识库名称或描述不会改变它的共享设置，包括你本人无权设置的**公开**选项。[资源访问](/features/authentication-access/rbac/groups#resource-access-rbac)解释了可见性与访问授权。
 
-### 文件数量上限 {#file-limits}
+### 文件限制 {#file-limits}
 
 管理员在 **Settings > Documents**（管理员区域）中设置全局上限：**知识库批量上传上限**（每次上传的文件数）、**知识库文件大小上限**（每个文件的 MB 数）和**知识库文件数量上限**（每个知识库的文件总数）。留空表示不限制。相同的值也可以通过 [`KNOWLEDGE_MAX_UPLOAD_COUNT`](/reference/env-configuration#knowledge_max_upload_count)、[`KNOWLEDGE_MAX_FILE_SIZE`](/reference/env-configuration#knowledge_max_file_size) 和 [`KNOWLEDGE_MAX_FILE_COUNT`](/reference/env-configuration#knowledge_max_file_count) 设置。
 
@@ -291,7 +291,7 @@ find docs/ "*.md" | head -10
 
 ### 浏览与预览文件 {#browsing-and-previewing-files}
 
-打开知识库后，文件以树形结构显示在左侧，右侧是预览面板。点击文件即可在预览中打开；在小屏幕上，预览会滑入覆盖列表。拖动分隔线可以调整文件列表的宽度。
+打开知识库后，左侧以树状结构显示文件，右侧显示预览窗格。点击文件可在窗格中预览。在小屏幕上，预览窗格会滑入并覆盖列表。
 
 预览有两种视图，通过其上方的按钮切换：
 
@@ -316,7 +316,7 @@ find docs/ "*.md" | head -10
 
 **搜索、筛选与排序**
 
-文件树上方的**搜索集合**输入框按文件名搜索整个知识库，文件夹内的结果会在名称旁显示文件夹路径。其旁边的筛选按钮提供：
+文件树上方的 **Search Files** 搜索框会按文件名搜索整个知识库。位于文件夹中的结果会在文件名旁显示文件夹路径。旁边的筛选按钮提供以下选项：
 
 - **搜索文件内容**：同时匹配文件内部的索引文本。超大文件会按字符上限搜索（[`RAG_FILE_CONTENT_SEARCH_MAX_CHARS`](/reference/env-configuration#rag_file_content_search_max_chars)）。
 - **全部**、**由你创建** 或 **与你共享**：按文件的添加者筛选列表。
@@ -397,7 +397,7 @@ find docs/ "*.md" | head -10
 - `POST /api/v1/files/{id}/data/content/update` — 替换已索引的文本（body：`content`），并在包含该文件的每个知识库中重新处理。空的 `content` 会以 `400` 拒绝。
 - `POST /api/v1/knowledge/{id}/file/add` — 向知识库添加文件。提取文本已存在于该知识库中的文件会被拒绝，并提示 `Duplicate content detected. Please provide unique content to proceed.`
 - `POST /api/v1/knowledge/{id}/files/batch/add` — 一次添加多个文件。重复检查同样适用：重复的文件会被报告为失败，其余文件仍会被添加。
-- `POST /api/v1/knowledge/{id}/files/validate` — 在发送上传之前，按[文件数量上限](#file-limits)检查一次上传（body：`count`，可选的 `file_size`（字节）和 `removed_file_ids`）。返回 `{"status": true}`，或返回该上传本会遇到的同一个错误。
+- `POST /api/v1/knowledge/{id}/files/validate` — 在发送上传之前，按[文件限制](#file-limits)检查一次上传（body：`count`，可选的 `file_size`（字节）和 `removed_file_ids`）。返回 `{"status": true}`，或返回该上传本会遇到的同一个错误。
 - `GET /api/v1/knowledge/{id}/files` — 列出知识库中的文件，按 `page` 分页。添加或更新文件的调用只在 `files` 中返回那些文件；而删除文件、重命名知识库或更改其访问权限时返回空的 `files` 列表，因此请从这里读取完整列表。
 - `POST /api/v1/knowledge/{id}/file/move` — 在同一知识库内移动文件到其他目录（body：`file_id`、`directory_id`——`null` 表示移到知识库根目录）
 

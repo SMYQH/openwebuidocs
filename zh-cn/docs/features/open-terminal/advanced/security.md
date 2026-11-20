@@ -70,17 +70,11 @@ docker logs open-terminal
 
 ---
 
-## 使用管理员连接（而非用户连接） {#use-admin-connections-not-user-connections}
+## 使用管理员连接 {#use-admin-connections}
 
-连接到 Open WebUI 时，优先使用**管理员配置**方式：
+以管理员身份添加 Open Terminal 连接。API 密钥保留在服务器上，请求经 Open WebUI 后端发送，你可控制哪些用户能够访问。
 
-| | 管理员配置 | 用户配置 |
-| :--- | :--- | :--- |
-| API Key 可见性 | 保存在服务端，不对用户暴露 | 存储在用户浏览器中 |
-| 请求经过 | Open WebUI 后端 | 直接从浏览器发出 |
-| 终端网络访问来源 | 仅 Open WebUI 服务器 | 每位用户的计算机 |
-
-管理员配置的连接可防止 API Key 进入用户浏览器，并让你控制谁有访问权限。
+用户在 Tether 中添加的终端通过该用户自己的电脑访问，见[使用自己的模型和工具](/ecosystem/tether#bring-your-own-models-and-tools)。
 
 ![管理设置中的 Open Terminal 连接，API Key 已掩码显示](/images/open-terminal-connection-masked-key.png)
 

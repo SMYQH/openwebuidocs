@@ -9,7 +9,7 @@ title: "Jupyter Notebook"
 # Jupyter Notebook 集成 {#jupyter-notebook-integration}
 
 :::warning
-本教程由社区贡献，不受 Open WebUI 团队官方维护或审核。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
+本教程由社区贡献，Open WebUI 团队不为本教程提供支持。它仅作为演示，说明如何根据你的具体场景自定义 Open WebUI。想参与贡献？请查看贡献教程。
 :::
 
 从 v0.5.11 开始，Open-WebUI 发布了一个名为 `Jupyter Notebook Support in Code Interpreter` 的新功能。该功能允许您将 Open-WebUI 与 Jupyter 集成。此后的几个版本中已对该功能进行了多次改进，请仔细查阅版本发布说明。
@@ -108,7 +108,7 @@ Open-WebUI 和 Jupyter 都运行后，我们需要在 Settings -> Code Execution
 
 首先，让我们确认 Jupyter 目录中的内容。如下图所示，我们只有一个空的 `work` 文件夹。
 
-![代码执行配置](/images/tutorials/jupyter/jupyter-empty.png)
+![已打开启动器的空白 Jupyter 工作区](/images/tutorials/jupyter/jupyter-empty.png)
 
 ### 创建 CSV {#create-a-csv}
 
@@ -154,9 +154,9 @@ Prompt: Write python code to read and write json files and save it to my noteboo
 
 ## 关于工作流的说明 {#note-about-workflow}
 
-在测试此功能时，我注意到有几次 Open-WebUI 不会自动将在 Open-WebUI 中生成的代码或输出保存到我的 Jupyter 实例。为了强制输出我创建的文件/项目，我通常采用以下两步工作流：首先创建所需的代码产物，然后要求它将其保存到我的 Jupyter 实例。
+在测试此功能时，我注意到有几次 Open-WebUI 不会自动将在 Open-WebUI 中生成的代码或输出保存到我的 Jupyter 实例。为了强制输出我创建的文件/项目，我通常采用以下两步工作流：首先创建所需的代码产物，然后要求它将其保存到我的 Jupyter 实例。这是预期行为：每次执行都会启动新内核，并在执行结束后删除该内核。因此，变量和内存中的对象不会在两次执行之间保留，只有写入磁盘的文件会保留。
 
-![代码执行配置](/images/tutorials/jupyter/jupyter-workflow.png)
+![聊天概览，展示创建和保存笔记本时使用的提示词及模型回复](/images/tutorials/jupyter/jupyter-workflow.png)
 
 ## 您是如何使用此功能的？ {#how-are-you-using-this-feature}
 

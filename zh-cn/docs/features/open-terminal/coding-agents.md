@@ -9,6 +9,8 @@ title: "编程智能体"
 
 出现哪些智能体与模型取决于你选择的 Open Terminal。终端报告为不可用的智能体不会被列出。
 
+可以把完整的编程任务交给智能体。描述功能或缺陷后，它会编辑项目文件并在终端中运行命令。你可在聊天中查看进度、回答问题并批准工具请求。像选择其他模型一样，从模型选择器中选择 Claude Code、Codex 或其他列出的智能体。需要对项目进行实际修改时使用智能体，只需要回答时使用普通模型。
+
 有关安装、登录和连接步骤，请先阅读[连接智能体](/getting-started/quick-start/connect-an-agent#quick-start-with-open-terminal)。
 
 ## 支持的智能体 {#supported-agents}
@@ -52,19 +54,29 @@ export OPEN_TERMINAL_ACP_AGENTS='{"kiro":{"name":"Kiro","command":"kiro-cli acp"
 在聊天中选中一个终端，然后打开模型选择器。每个智能体模型的名称形如 `<agent>/<model>`。
 
 - **每个会话只能使用一个智能体。** 一个聊天中只添加一个智能体模型。在多模型聊天中，智能体不能与其他模型组合使用。
-- **只能发送新消息。** 要继续智能体会话，请发送新消息。智能体聊天不支持重新生成回复、继续生成回复、编辑后重发消息，或从较早的消息创建分支。需要执行这些操作时，请改为新建聊天。
+- **重新生成、编辑和分叉。** 可重新生成回复、编辑较早的消息，以及分叉或克隆聊天。Codex 和 Claude Code 会从所选位置继续自己的会话。Claude Code 需要新版 [Open Terminal](/features/open-terminal/setup/updating)，Codex 需要终端上安装新版 Codex CLI。其他智能体会根据当前聊天记录重新开始。智能体已修改的文件会留在终端中。
 - **缺失的智能体。** 当终端或其智能体模型不可用时，该智能体会从可选项中移除，并改用默认模型。
 - **仅限已保存的聊天。** 智能体会话需要一个已保存的聊天，因此它们在临时聊天中不可用。
+
+## 查看执行步骤 {#reading-the-steps}
+
+智能体的步骤和普通模型的终端工具调用会显示为易读的卡片，例如命令及其输出，或每个改动文件的差异。
+
+## 模型 ID {#model-ids}
+
+智能体的模型 ID 只含字母、数字、连字符和下划线。模型名称含有句点等其他字符时，这些字符会替换成连字符并加上短后缀。置顶项、默认模型和[自动化](/features/chat-conversations/chat-features/automations#running-a-coding-agent)都使用该 ID。
 
 ## 选项 {#options}
 
 如果智能体为所选模型提供了这些选项，**Reasoning effort** 与 **Service tier** 就会出现在消息输入框的模型控制菜单中。你的选择会保存到设置中。
 
+在聊天控件或模型高级参数中手动设置**推理强度**后，该参数也会传给智能体。名为 `reasoningEffort` 或 `reasoning_effort` 的自定义参数也按同样方式读取。Claude Code 将其用作 effort 级别，Pi 用作 thinking 级别，Codex 用作当轮的推理强度。其他智能体会使用其为该模型提供的思考级别。如果智能体不支持该模型的所选级别，回复会失败并提示 **Agent does not support the selected reasoning effort for this model**。请选择其他级别或清除该参数。
+
 ## 与智能体协作 {#working-with-an-agent}
 
 - **附件。** 你附加的文件会被上传到终端，智能体也会获知它们的路径。
 - **工作区。** 新会话从终端当前的工作目录开始。已有的智能体会话会保留它自己的工作区，即使你在[文件浏览器](./file-browser.md)中浏览到其他文件夹也是如此。
-- **工具请求。** 当智能体想运行某个工具时，请求会出现在聊天中，并遵循[工具权限模式](/features/extensibility/plugin/tools#tool-approval)。
+- **工具请求。** 智能体请求运行工具时，聊天中会显示该请求，并遵循[工具权限模式](/features/extensibility/plugin/tools#tool-approval)。启用 [`ENABLE_TOOL_PERMISSIONS`](/reference/env-configuration#enable_tool_permissions) 和 [`ENABLE_TOOL_PERMISSIONS_AUTO`](/reference/env-configuration#enable_tool_permissions_auto) 后可使用 **Auto**。在此模式下，Codex 使用自己的审核机制，只转交需要升级审核的请求。支持此功能的 Claude Code 和 Grok 版本也采用同样方式。升级请求仍须经过 Open WebUI 的批准检查。其他 ACP 智能体在 **Auto** 下仍会请求批准，除非管理员在[自动权限](/features/extensibility/plugin/tools#auto)下设置了 **Engine**。
 - **提问。** 当智能体向你提问时，问题会出现在聊天中，智能体会等待你的回答。无论设置的是哪种权限模式，问题始终会显示。
 - **语音。** 选中了终端时，智能体可以在[实时语音通话](/features/chat-conversations/chat-features/voice-mode#realtime-calls)中工作。
 - **聊天标题。** 新聊天的标题取自你第一条消息的前 50 个字符。当设置了[任务模型](/features/administration/task-models)且开启了自动标题生成时，生成的标题会取代它。

@@ -24,10 +24,10 @@ keywords:
 
 对于企业团队而言，困难很少在于单个复选框。而是围绕整个 AI 工作流的一系列运营边界：提示词、文件、知识库、模型调用、工具、日志、备份、用户生命周期和管理员访问权限。
 
-Open WebUI 通过为组织提供一个可在其自身基础设施内运行的自托管 AI 工作区和控制层来支持主权 AI 部署。它不是一个主权云提供商。它是团队用来在其自己的身份、部署和治理控制下展示经批准的模型、知识、工具和工作流的应用层。
+Open WebUI 通过为组织提供一个可在其自身基础设施内运行的自托管 AI 工作区和控制层来支持主权 AI 部署。它不是一个主权云提供商。它是团队用来在其自己的身份、部署和治理控制下提供经批准的模型、知识、工具和工作流的应用层。
 
 :::info 产品概述
-有关 Open WebUI 如何处理主权 AI 的产品级概述，请参见 [**openwebui.com 上的 Sovereig AI**](https://openwebui.com/sovereign-ai)。
+有关 Open WebUI 如何处理主权 AI 的产品级概述，请参见 [**openwebui.com 上的 Sovereign AI**](https://openwebui.com/sovereign-ai)。
 :::
 
 ## 主权 AI 的实践含义 {#what-sovereign-ai-means-in-practice}
@@ -68,7 +68,7 @@ Open WebUI 本身并不能使环境具备主权。它为平台和安全团队提
 | 数据驻留 | 哪个区域、租户、存储账户、数据库、向量数据库、日志接收端和备份系统可以保存 AI 数据？ | [企业安全](/enterprise/security)、[聊天数据隐私与加密](/security/chat-data-privacy-and-encryption) |
 | 模型提供商暴露 | 哪些提示词和检索到的上下文可以发送给托管提供商，哪些必须保留在私有或本地推理中？ | [集成](/enterprise/integration)、[工作区模型](/features/workspace/models) |
 | 身份和生命周期 | 用户将通过 SSO、OIDC、LDAP 还是本地账户进行身份验证？如何配置和移除群组？ | [身份验证与访问](/features/authentication-access)、[SSO](/features/authentication-access/auth/sso)、[SCIM](/features/authentication-access/auth/scim) |
-| 权限 | 哪些群组可以使用文件上传、知识库、工具、网络搜索、API 密钥、直接连接和特定模型？ | [RBAC](/features/authentication-access/rbac)、[RBAC 权限](/features/authentication-access/rbac/permissions) |
+| 权限 | 哪些群组可以使用文件上传、知识库、工具、网页搜索、API 密钥或特定模型？ | [RBAC](/features/authentication-access/rbac)、[RBAC 权限](/features/authentication-access/rbac/permissions) |
 | 知识和文件 | 哪些数据类别可以被上传、索引、保留、共享或删除？ | [知识库](/features/workspace/knowledge)、[聊天数据隐私与加密](/security/chat-data-privacy-and-encryption) |
 | 工具和代码执行 | 谁被信任可以创建工具、函数或执行工作流？需要什么样的沙箱模型？ | [企业安全](/enterprise/security#code-execution--sandboxing)、[加固 Open WebUI](/getting-started/advanced-topics/hardening) |
 | 日志和审计 | 日志应仅包含元数据，还是请求和响应正文也应进入日志平台？ | [聊天数据隐私与加密](/security/chat-data-privacy-and-encryption)、[审计日志级别](/reference/env-configuration#audit_log_level) |

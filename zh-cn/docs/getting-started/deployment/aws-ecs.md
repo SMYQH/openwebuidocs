@@ -150,7 +150,7 @@ aws ecs describe-services --cluster CLUSTER --services openwebui \
 3. 使用新镜像注册一个新的迁移任务修订版本。运行一个独立迁移任务，必须以退出码 `0` 结束才能继续。
 4. 使用同一镜像注册应用任务修订版本，并关闭迁移。在期望任务数保持为零的状态下更新服务，然后恢复期望任务数并验证服务，再恢复流量与自动扩缩容。
 
-ECS 回滚只更换镜像，不会回退数据库结构。不要在涉及结构变更时启用回滚到不兼容的旧应用版本；必要时恢复兼容的数据库/存储备份。参见[备份与恢复](/getting-started/updating#backup--restore)。
+ECS 回滚只更换镜像，不会回退数据库结构。如果涉及结构变更，请勿启用自动回滚到不兼容的旧应用版本；必要时恢复兼容的数据库/存储备份。参见[备份与恢复](/getting-started/updating#backup--restore)。
 
 ## 故障排查与移除 {#troubleshooting-and-removal}
 

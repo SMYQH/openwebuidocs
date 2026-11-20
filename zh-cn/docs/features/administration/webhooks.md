@@ -59,7 +59,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 }
 ```
 
-## 2. 用户 Webhook：对话响应通知 {#2-user-webhook-notification-targets}
+## 2. 用户 Webhook：通知目标 {#2-user-webhook-notification-targets}
 此 Webhook 允许单个用户在关心的事情发生时收到通知，例如模型完成一次长时间响应、收到频道消息，或日历提醒触发。当你已离开 Open WebUI 标签页时，它尤其有用。
 
 每位用户在 **设置 > 通知** 中配置一个或多个**通知目标**，并为每个目标选择它接收哪些事件，以及只在离开时触发还是始终触发。模型也可以通过 `notify` 工具自行发送通知。
@@ -99,7 +99,7 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 :::
 
 ## 3. 频道 Webhooks：外部消息集成 {#3-channel-webhooks-external-message-integration}
-频道 Webhooks 让外部服务、自动化工具或脚本直接向 Open WebUI 频道发布消息，例如来自监控系统、CI/CD 流水线、通知服务或任何自定义自动化工具。一个 webhook 会把消息发布到某一个频道。如果某个服务还需要响应 `@mentions` 或发布按钮，请把它构建为 [App](/features/channels/apps)。
+频道 Webhooks 让外部服务、自动化工具或脚本直接向 Open WebUI 频道发布消息，例如来自监控系统、CI/CD 流水线、通知服务或任何自定义自动化工具。一个 webhook 会把消息发布到某一个频道。如果某个服务还需要响应 `@mentions` 或发布带按钮的消息，请把它构建为 [App](/features/channels/apps)。
 
 ### 使用场景 {#use-cases}
 
@@ -125,10 +125,10 @@ Open WebUI 提供三种不同的 Webhook 集成，帮助您随时了解实例内
 #### 创建 Webhook {#creating-a-webhook}
 
 1.  导航到要添加 Webhook 的频道。
-2.  点击频道菜单（**⋮**）并选择 **编辑频道**。
+2.  在侧边栏中打开频道菜单（**⋮**）并选择 **编辑频道**。
 3.  在频道设置模态框中，找到 **Webhooks** 部分。
 4.  点击 **管理** 打开 Webhooks 模态框。
-5.  点击 **New Webhook**，会立即创建一个名为 "New Webhook" 的可用 Webhook。**Save** 只在之后修改名称和图片时生效。
+5.  点击 **New Webhook**，会立即创建一个名为 "New Webhook" 的可用 Webhook。**Save** 只保存之后对名称和图片的修改。
 6.  配置 Webhook：
     - **名称：** 将显示为消息作者的显示名称
     - **头像图片：** （可选）上传图片以代表此 Webhook

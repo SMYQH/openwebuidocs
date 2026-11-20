@@ -133,13 +133,13 @@ Open WebUI 让知识被发现、创建与共享，而频道则让这一切真正
 
 ### 私信 {#direct-messages}
 
-私信是你和你选定的人之间的对话，每一组参与者对应一个私信。你可以在频道中某人的资料卡片上点击 **Message** 按钮开始，也可以从侧边栏 **Channels** 部分的 **(+)** 开始，并把 **Channel Type** 设为 **Direct Message**。给你发过消息的人再次发消息时，会重新打开你与他已有的那段对话及其历史，而不是在旁边再加一个。私信不必设置名称；未设置时，它会列在其他参与者的名字之下。
+私信是你和你选定的人之间的对话，每一组参与者对应一个私信。你可以在频道中某人的资料卡片上点击 **Message** 按钮开始，也可以从侧边栏 **Channels** 部分的 **(+)** 开始，并把 **Channel Type** 设为 **Direct Message**。再次给你以前联系过的人发消息时，会重新打开你与他已有的那段对话及其历史，而不是在旁边再加一个。私信不必设置名称；未设置时，它会列在其他参与者的名字之下。
 
 成员身份是按仍然存在的账户计算的。当某个人的账户被删除后，他们不再计入这段对话：他们会从成员列表和标题栏人物图标旁的成员计数中消失，而剩下的参与者再次互相发消息时，仍会回到同一段对话中。群组频道的成员计数方式相同。已经为同一组人创建的两个对话不会被合并，因此如果产生了重复项，它会连同其中发出的消息一起，与原对话并列留在侧边栏中。
 
 ### 加密聊天 {#encrypted-chats}
 
-在私信或私有群组频道中，拥有 **Encrypted Channels** 权限的成员可以从对话的 **...** 菜单中用 **Encrypted Chat** 开始一段临时的[加密聊天](/features/channels/encrypted-chats)。消息在浏览器中端到端加密，绝不存储在服务器上。管理员在 **Settings > General**（管理员区域）（**Encrypted channels**）中开启该功能并授予相应权限——默认关闭。
+在私信或私有群组频道中，拥有 **Encrypted Channels** 权限的成员可以从对话的 **...** 菜单中用 **Encrypted Chat** 开始一段临时的[加密聊天](/features/channels/encrypted-chats)。消息在浏览器中端到端加密，绝不存储在服务器上。管理员在 **Settings > General**（管理员区域）（**Encrypted channels**）中开启该功能，并授予默认关闭的相应权限。
 
 ---
 
@@ -165,15 +165,15 @@ Open WebUI 让知识被发现、创建与共享，而频道则让这一切真正
 
 ## 开始使用 {#getting-started}
 
-:::info Beta 功能
-频道目前仍处于 Beta 阶段，必须由管理员启用。
+:::info
+使用频道前，必须由管理员启用。
 :::
 
 1. 前往 **Settings > General**（管理员区域）
-2. 打开 **频道（Beta）** 开关并保存
+2. 打开 **频道** 开关并保存
 3. 侧边栏会出现频道入口，点击 **(+)** 创建你的第一个频道
 
-创建标准频道默认仅限管理员。拥有 **Channels** 权限（[`USER_PERMISSIONS_FEATURES_CHANNELS`](/reference/env-configuration#user_permissions_features_channels)）的人可以创建群组频道和私信。频道支持细粒度权限控制，包括只读、可写，以及通过环境变量或群组权限启用/禁用具体功能。
+只有管理员可以创建标准频道。拥有 **Channels** 权限（[`USER_PERMISSIONS_FEATURES_CHANNELS`](/reference/env-configuration#user_permissions_features_channels)）的人可以创建群组频道和私信。频道支持细粒度权限控制，包括只读、可写，以及通过环境变量或群组权限启用/禁用具体功能。
 
 标准频道的 **Access** 决定谁能读写它：指定的用户、群组或实例中的所有用户。只有频道创建者或管理员可以修改它，而且只有管理员才能把它开放给所有用户。与用户或群组共享需遵循[共享权限](/features/authentication-access/rbac/permissions#2-sharing-permissions)。群组频道和私信没有 **Access** 设置，其成员自行决定谁可以读取。
 
@@ -191,7 +191,7 @@ Open WebUI 让知识被发现、创建与共享，而频道则让这一切真正
 
 ### 项目策略（`#product-launch`） {#project-strategy-product-launch}
 
-在二十多条人类头脑风暴消息之后，再让 `@gpt-5.6` 阅读上方对话并产出带负责人和截止日期的优先级行动计划。AI 会把全部讨论综合成结构化交付物。
+参与者发出 20 条消息展开头脑风暴后，让 `@gpt-5.6` 阅读上方对话，并制定按优先级排序、列明负责人和截止日期的行动计划。AI 会把全部讨论整理成结构化的成果。
 
 ### 创意协作（`#story-mode`） {#creative-collaboration-story-mode}
 

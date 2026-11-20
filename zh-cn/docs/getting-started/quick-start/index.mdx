@@ -186,7 +186,7 @@ Open WebUI 本身不带任何模型。请前往你的头像 > **设置 > 连接*
 各提供商的指南：[Ollama](/getting-started/quick-start/connect-a-provider/starting-with-ollama) · [OpenAI](/getting-started/quick-start/connect-a-provider/starting-with-openai) · [Anthropic](/getting-started/quick-start/connect-a-provider/starting-with-anthropic) · [兼容 OpenAI 的 API 与本地服务器](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible) · [全部提供商](/getting-started/quick-start/connect-a-provider)
 
 :::tip 模型列表为空？
-当 Open WebUI 运行在 Docker 中时，宿主机上的 Ollama 必须监听 `0.0.0.0`：[无法连接到 Ollama 服务器](/troubleshooting/connection-error#connection-to-ollama-server)。对于 API 提供商，请检查 URL 和 key；有些提供商不发布模型列表，需要在连接的 **Model ID** 下填入模型 ID：[兼容 OpenAI 的提供商](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)。
+当 Open WebUI 运行在 Docker 中时，宿主机上的 Ollama 必须监听 `0.0.0.0`：[无法连接到 Ollama 服务器](/troubleshooting/connection-error#connection-to-ollama-server)。对于 API 提供商，请检查 URL 和 key；有些提供商不发布模型列表，需要在连接的 **Model IDs** 下填入模型 ID：[兼容 OpenAI 的提供商](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible)。
 :::
 
 ## 发送你的第一条消息 {#send-your-first-message}
@@ -215,9 +215,9 @@ Open WebUI 本身不带任何模型。请前往你的头像 > **设置 > 连接*
 
 **让它持续运行**
 
-- **更新：** 使用第 1 步的命令拉取新镜像并重建容器，保持同一个 `WEBUI_SECRET_KEY`；你的数据在数据卷中。[更新](/getting-started/updating)
+- **更新：** 先拉取新镜像，再用第 1 步的命令重新创建容器，保持同一个 `WEBUI_SECRET_KEY`；你的数据在数据卷中。[更新](/getting-started/updating)
 - **每次更新前备份数据卷：**[备份与恢复](/getting-started/updating#backup--restore)
-- **与他人共享**你的网络或团队中的其他人：[共享 Open WebUI](/getting-started/sharing)。在暴露到你的机器之外之前，请先阅读[加固指南](/getting-started/advanced-topics/hardening)。
+- **共享此实例**，供同一网络或团队中的其他人使用：[共享 Open WebUI](/getting-started/sharing)。在暴露到你的机器之外之前，请先阅读[加固指南](/getting-started/advanced-topics/hardening)。
 - **作为应用安装**到你的手机或桌面：[将 Open WebUI 作为应用](/getting-started/open-webui-as-app)
 - **外发请求：** 标准安装会自行发起这些请求。对 GitHub 的版本检查，可通过 `ENABLE_VERSION_UPDATE_CHECK=false` 关闭。对默认 OpenAI 连接的模型列表请求，删除该连接或设置 `ENABLE_OPENAI_API=false` 即可消除。每次启动时对 Hugging Face 上本地嵌入模型的更新检查，可通过 `RAG_EMBEDDING_MODEL_AUTO_UPDATE=false` 关闭。
 

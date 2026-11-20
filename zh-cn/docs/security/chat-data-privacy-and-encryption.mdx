@@ -15,8 +15,8 @@ Open WebUI 的标准体验旨在提供自托管控制、可审计性、历史记
 
 | 关注领域 | 最佳可用措施 |
 | :--- | :--- |
-| 减少管理员对员工聊天的产品访问 | 设置 `ENABLE_ADMIN_CHAT_ACCESS=false` |
-| 控制管理员产品导出 | 设置 `ENABLE_ADMIN_EXPORT=false` |
+| 在界面中向管理员隐藏用户聊天 | 设置 `ENABLE_ADMIN_CHAT_ACCESS=false` |
+| 控制管理员通过产品界面导出内容 | 设置 `ENABLE_ADMIN_EXPORT=false` |
 | 限定管理员工作区列表/选择器可见性 | 设置 `BYPASS_ADMIN_ACCESS_CONTROL=false` |
 | 生产数据库存储暴露 | 使用 PostgreSQL，配合加密卷、提供商加密、TDE（如可用）、TLS 和加密备份 |
 | 仅 SQLite 部署 | 将数据目录放在加密文件系统上（LUKS、BitLocker、FileVault） |
@@ -43,7 +43,7 @@ DATABASE_URL=postgresql://user:password@db-host:5432/openwebui
 
 对于仅部署 SQLite 的情况，请将数据目录放置在加密文件系统上（Linux 上的 LUKS、Windows 上的 BitLocker、macOS 上的 FileVault）。不支持 SQLCipher。
 
-### 限制管理员聊天和导出表面 {#limit-admin-chat-and-export-surfaces}
+### 限制管理员访问聊天和导出内容的途径 {#limit-admin-chat-and-export-surfaces}
 
 ```bash
 ENABLE_ADMIN_CHAT_ACCESS=false
@@ -66,7 +66,7 @@ DEFAULT_USER_ROLE=pending
 
 ### 在不需要历史记录时使用临时聊天 {#use-temporary-chat-where-history-is-not-needed}
 
-临时聊天减少保存的聊天历史。强制临时聊天可以要求用户默认使用此行为，而不是让其可选。
+临时聊天可以减少保存的聊天记录。启用强制临时聊天后，用户必须使用此模式。
 
 要使临时聊天默认可用：
 
@@ -99,7 +99,6 @@ USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true
 USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS=false
 USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ACCESS=false
 USER_PERMISSIONS_CHAT_FILE_UPLOAD=false
-ENABLE_DIRECT_CONNECTIONS=false
 ENABLE_COMMUNITY_SHARING=false
 ENABLE_API_KEYS=false
 ```
@@ -144,7 +143,7 @@ LOG_FORMAT=json
 - 数据库文件被复制。
 - 卷快照放错位置。
 - 备份泄露（当备份单独加密时）。
-- 某些基础设施泄露（保持在活跃应用密钥之外）。
+- 部分未波及运行中应用密钥的基础设施入侵。
 
 将这些路径保留在您的运营信任边界内：
 

@@ -201,7 +201,7 @@ services:
 
 ## 隐藏控件 {#hiding-controls}
 
-**设置 > 界面**（管理员区域） 中的 **可见控件** 可以对除管理员之外的所有人隐藏单个控件。隐藏只是把控件从界面上移除：它的取值和背后的功能依然生效，因此要阻止人们使用某项功能，请使用[权限](/features/authentication-access/rbac/permissions)。隐藏 **归档** 也会一并隐藏取消归档和 **归档所有对话记录**。如果某个区域或菜单项下的控件全被隐藏，它也会随之消失，例如聊天输入菜单中的 **添加上下文** 或模型编辑器中的 **能力** 区域。同一个列表也可以通过 [`UI_VISIBILITY`](/reference/env-configuration#ui_visibility) 设置。
+**设置 > 界面**（管理员区域）中的**可见控件**可以对除管理员之外的所有人隐藏单个控件。隐藏只是把控件从界面上移除，其值和背后的功能依然生效。要限制某项功能的使用，请设置[权限](/features/authentication-access/rbac/permissions)。隐藏**归档**也会一并隐藏取消归档和**归档所有对话记录**。如果某个区域或菜单项下的控件全部隐藏，该区域或菜单项也会消失，例如聊天输入菜单中的**附件**或模型编辑器中的**功能**区域。同一个列表也可以通过 [`UI_VISIBILITY`](/reference/env-configuration#ui_visibility) 设置。
 
 ---
 

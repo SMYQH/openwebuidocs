@@ -27,11 +27,11 @@ Open WebUI 0.9.0 对内部结构进行了大规模重构：后端数据层已从
 如果你的插件会访问 Open WebUI 的数据库或模型——**或者会调用任何最终会访问它们的辅助函数**——你就需要更新代码。由于 `open_webui.utils.*` 中大量工具函数以及各种 router helper 最终都会读写模型，“异步影响范围”远比表面看到的 `Users.` / `Chats.` 调用要更广。具体来说：
 
 1. **所有模型方法现在都是 coroutine。** 任何类似 `Users.get_user_by_id(...)`、`Chats.get_chat_by_id(...)`、`Files.get_file_by_id(...)`、`Models.get_model_by_id(...)`、`Functions.get_function_by_id(...)`、`Tools.get_tool_by_id(...)`、`Knowledges.get_knowledge_by_id(...)` 的调用，现在都返回 awaitable。若不加 `await`，你拿到的将是 coroutine object，而不是实际数据
-2. **任何依赖模型调用的下游 helper 也都变成异步。** 你从 `open_webui.utils.*`、`open_webui.retrieval.*`、router helper、权限校验等模块里导入的函数，只要它们直接或间接访问了数据库，现在几乎都已升级为 `async def`。你之前不带 `await` 调用的同步 helper，现在几乎一定需要加上 `await`。请重新检查插件里所有 `open_webui.*` import
+2. **任何依赖模型调用的下游辅助函数也都变成异步。** 从 `open_webui.utils.*`、`open_webui.retrieval.*`、路由辅助函数或权限校验等模块导入的函数，只要直接或间接访问数据库，就已改成 `async def`。以前不带 `await` 调用的同步辅助函数，现在很可能需要加上 `await`。请重新检查插件中从 `open_webui.*` 导入的所有内容。
 3. **数据库 session 现在是 `AsyncSession`。** 请使用 `get_async_db_context`（或不共享 session 的 `get_async_db`）替代旧的 `get_db_context`。同步 helper（如 `get_db`、`SessionLocal`）仍存在，但仅供启动阶段代码使用——如果在请求处理器或插件中调用，会阻塞事件循环并与异步连接池竞争。所有原始查询也需要改写为 SQLAlchemy 2.0 的异步风格
 4. **任何等待上述调用的插件 helper，本身也必须是 `async def`。** 一旦调用链中某个函数变成 coroutine，它的所有调用者都必须逐级异步化，直到插件入口
 
-插件入口本身（`pipe`、`inlet`、`outlet`、`stream`、`action` 以及 Tool 方法）在 0.5+ 中已经是异步的，因此通常无需改动签名，只需更新函数体。
+插件入口本身（`pipe`、`inlet`、`outlet`、`stream`、`action` 以及 Tool 方法）在 0.5+ 中已经是异步的，因此无需改动签名，只需更新函数体。
 
 ---
 
@@ -184,7 +184,7 @@ class Tools:
 
 ### 🧵 5. FastAPI 依赖与 session 类型 {#5-fastapi-dependencies-and-session-types}
 
-如果你的插件暴露了自己的 FastAPI route（少数高级 Tool 会这么做），并且声明了数据库 session 依赖，那么你还需要同时更新依赖函数与类型标注。
+如果你的插件暴露了自己的 FastAPI route（少数高级 Tool 会通过导入路由器来实现），并且声明了数据库 session 依赖，那么你还需要同时更新依赖函数与类型标注。
 
 #### 之前（0.8.x） {#before-08x-2}
 ```python
@@ -242,12 +242,12 @@ result = await anyio.to_thread.run_sync(legacy_client.fetch, url)
 ## 🌟 回顾 {#recap}
 
 - 给**每一个**模型方法调用加上 `await`——它们现在都返回 coroutine
-- 对所有基于数据库的 `open_webui.*` helper 也一样处理（包括大量 `utils`、retrieval、权限控制、router helper）。如果它过去是同步的，又会碰数据，那么现在基本已经异步化
+- 对所有基于数据库的 `open_webui.*` helper 也一样处理（包括大量 `utils`、retrieval、权限控制、router helper）。如果它过去是同步的，又会碰数据，那么现在已改为异步
 - 任何等待这些 helper 的函数，本身也必须是 `async def`——异步会沿着你的整个调用链向上传播
 - 用 `get_async_db_context` 替换 `get_db_context`（若不需要共享 session，则可用 `get_async_db`），并把原始查询改成 SQLAlchemy 2.0 的异步写法（`select(...)` + `await db.execute(...)`）
 - Session 类型现在是 `AsyncSession`，不是 `Session`。对于 FastAPI routes，请依赖 `get_async_session` 而不是 `get_session`
 - 把同步 helper（`SessionLocal`、`get_db`、`get_session`）视为仅供启动阶段使用的内部实现，不要在插件代码或事件循环中使用它们
-- 插件入口签名通常不需要变——真正要改的是函数体内部代码。Event emitters（`__event_emitter__`、`__event_call__`）的使用方式完全不变
+- 插件入口签名不需要变——真正要改的是函数体内部代码。Event emitters（`__event_emitter__`、`__event_call__`）的使用方式完全不变
 - 不要阻塞事件循环；若无法避免同步调用，就用 `anyio.to_thread.run_sync` 包起来
 - 运维人员：Open WebUI 会自行把数据库 URL 改写到异步驱动上——SQLite 用 `aiosqlite`，Postgres 用 `psycopg` v3。0.9.0 不支持 SQLCipher 加密的 SQLite
 

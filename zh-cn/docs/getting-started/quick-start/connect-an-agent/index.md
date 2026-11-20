@@ -66,7 +66,7 @@ docker exec -it open-terminal bash
 - **一个普通模型**，需具备足够强的原生工具调用能力。Open WebUI 会给它终端工具来执行命令、处理文件。如果工具缺失，请检查该模型的[Terminal 能力与绑定](/features/workspace/models#capabilities-and-bindings)。
 - **一个 Agent 模型**，命名为 `<agent>/<model>`。Open WebUI 会发现所选终端中可用的 Agent 和模型。只有能成功上报自身模型的 Agent 才会出现。
 
-Agent 会话一次只支持一个 Agent，并且要求是已保存的聊天。可以继续发新消息；不支持重新生成、编辑并重发之前的消息，也不支持分支。完整的聊天行为参见[编码智能体](/features/open-terminal/coding-agents)。
+智能体对话一次只支持一个智能体，而且需要已保存的聊天。重新生成、编辑和创建分支的具体行为见[编程智能体](/features/open-terminal/coding-agents)。
 
 ### 5. 试一个任务 {#5-try-a-task}
 

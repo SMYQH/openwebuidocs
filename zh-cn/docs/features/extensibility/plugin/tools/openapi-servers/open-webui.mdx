@@ -43,63 +43,24 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ## 第 2 步：在 Open WebUI 中连接工具服务器 {#step-2-connect-tool-server-in-open-webui}
 
-接下来，把正在运行的工具服务器连接到 Open WebUI：
+接下来，将正在运行的工具服务器连接到 Open WebUI。工具服务器有两种注册方式：
 
-1. 在浏览器中打开 Open WebUI
-2. 打开 **设置 → 集成**
-3. 在 **工具** 分区点击加号，添加一个新的工具服务器
-4. 输入 OpenAPI 工具服务器的 URL（例如 `http://localhost:8000`）
-5. 点击 “保存”
+#### 1. 管理员添加的工具服务器 {#1-tool-servers-added-by-an-admin}
+
+管理员添加供部署中的全部或指定用户使用的共享工具服务器：
+
+1. 打开**设置 > 集成**（管理员区域），进入**工具**部分。
+2. 点击加号按钮添加工具服务器。
+3. 输入你的 OpenAPI 工具服务器的 URL，例如 `http://localhost:8000`。
+4. 点击**保存**。
 
 ![设置页面](/images/openapi-servers/open-webui/settings.png)
 
-### 🧑‍💻 用户级工具服务器 vs. 🛠️ 全局工具服务器 {#user-tool-servers-vs-global-tool-servers}
+请求由 Open WebUI 后端发送，因此后端必须能够访问该 URL。`localhost` 指后端服务器。如果后端在 Docker 中运行，容器中的 `localhost` 无法访问宿主机，请使用 `host.docker.internal` 或宿主机的实际 IP。只公开可供多人安全使用的端点。
 
-在 Open WebUI 中，有两种注册工具服务器的方式：
+#### 2. 在 Tether 中添加的工具服务器 {#2-tool-servers-added-in-tether}
 
-#### 1. 用户级工具服务器（通过普通设置添加） {#1-user-tool-servers-added-via-regular-settings}
-
-- 仅对注册该工具服务器的用户可见
-- 连接由用户浏览器直接发起（client-side）
-- 非常适合个人工作流，或测试自定义 / 本地工具
-- 只有在管理员在 **设置 > 集成**（管理员区域） 的 **用户连接** 分区中开启了 **直连集成**（[`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)，默认关闭）时，设置中的集成标签页才会显示。开启后管理员会立即看到它。其他人还需要 **直连工具服务器** 权限（也是默认关闭）。在 **直连集成** 关闭期间，在这里保存的工具服务器不会在聊天中被使用；开启后会重新生效
-- **Auth** 决定你的浏览器向服务器发送什么，既适用于对话框中的连接检查，也适用于保存后的连接：**Bearer** 发送密钥，**Session** 发送你的 Open WebUI 令牌，**None** 不发送任何内容
-
-#### 2. 全局工具服务器（通过管理员设置添加） {#2-global-tool-servers-added-via-admin-settings}
-
-管理员可以把共享工具服务器配置给整个部署中的所有用户或部分用户：
-
-- 前往 **设置 → 集成**（管理员区域）的 **工具** 分区
-- 按和普通用户设置相同的方式添加工具服务器 URL
-- 这些工具的行为与 Open WebUI 自带工具类似
-
-#### 核心区别：请求是从哪里发出的？ {#main-difference-where-are-requests-made-from}
-
-**用户级工具服务器** 和 **全局工具服务器** 的主要区别，在于 API 连接与请求的实际发起位置：
-
-- **用户级工具服务器**
-  - 请求由**你的浏览器直接发出**
-  - 这意味着你可以安全地连接 localhost URL（如 `http://localhost:8000`）——甚至暴露你自己的本地文件系统或开发环境端点，而不会把它们暴露给外网或其他用户
-  - 你的连接是隔离的，只有你的浏览器可以访问该工具服务器
-
-- **全局工具服务器**
-  - 请求由 **Open WebUI 后端 / 服务器** 发出，而不是浏览器
-  - 后端必须能访问你指定的工具服务器 URL，因此这里的 `localhost` 指后端服务器本身，*不是*你的个人电脑
-  - 适合需要在整个部署中共享的工具，但要注意：由于是后端发请求，所以它不能通过这种方式访问你个人电脑上的本地资源（例如你自己的文件系统）
-  - 因此在安全上要格外注意：只暴露那些适合被多个用户访问的远程 / 全局端点
-
-**总结表：**
-
-| 工具服务器类型   | 请求来源        | 是否可用 Localhost | 典型场景 |
-| ------------------ | -------------------- | ------------------ | ---------------------------------------- |
-| 用户级工具服务器   | 用户浏览器（Client-side） | 可以（仅你可用） | 个人工具、本地开发 / 测试 |
-| 全局工具服务器 | Open WebUI 后端（Server-side） | 不可以（除非它本身就跑在后端机器上） | 团队共享工具、企业集成 |
-
-:::tip
-
-用户级工具服务器更适合个人或实验性工具，特别是运行在你自己机器上的工具；全局工具服务器则更适合生产环境或共享部署，让所有人都能访问同一组工具。
-
-:::
+用户在 Tether 应用中添加自己的 OpenAPI 工具服务器。服务器仅对添加者可见，从该用户的电脑经 Tether 访问，并显示在 **+** 菜单的**工具**列表中的**你的设备**下。参见[使用自己的模型和工具](/ecosystem/tether#bring-your-own-models-and-tools)。
 
 ### 👉 可选：结合 mcpo 使用配置文件 {#optional-using-a-config-file-with-mcpo}
 
@@ -107,7 +68,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 🧩 每个工具都会挂载到一个独立路径下！
 
-例如，如果你通过 mcpo 同时运行 memory 和 time 两个工具，它们会分别出现在不同 route 上：
+例如，如果你通过 mcpo 同时运行 memory 和 time 两个工具，它们会分别通过不同路由提供：
 
 - `http://localhost:8000/time`
 - `http://localhost:8000/memory`
@@ -115,7 +76,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 这意味着：
 
 - 在 Open WebUI 中连接工具时，必须填写该工具的完整路径，不要只填写根 URL（`http://localhost:8000`）。
-- 在 Open WebUI 设置中，用各自的子路径 URL 分别添加每个工具。
+- 在**设置 > 集成**（管理员区域）中，使用各工具对应的子路径 URL 逐一添加。
 
 ![MCPO 配置工具设置](/images/openapi-servers/open-webui/mcpo-config-tools.png)
 
@@ -134,9 +95,9 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 :::info 转发 Cookie
 
-**高级设置 > 转发 Cookie** 决定浏览器请求中的 Cookie 是否会被转发到该服务器。它默认关闭，且只作用于管理员配置的连接；用户自己的直连永远不会转发 Cookie。
+**高级 > 转发 Cookie**决定是否将浏览器请求中的 Cookie 发给该服务器。此项默认关闭。
 
-只为你自己掌控、并且通过 Cookie 来认证请求发起者的服务器开启它，通常是你自己网络内、使用同一套登录体系的那类服务器。浏览器为你的 Open WebUI 域名保存的所有内容都会随请求一起过去，包括会话 Cookie，因此第三方端点绝不应该开启它。
+只为你自己掌控、并且通过 Cookie 来认证请求发起者的服务器开启它，通常是你自己网络内、使用同一套登录体系的那类服务器。浏览器为你的 Open WebUI 域名保存的 Cookie 都会随请求发出，包括会话 Cookie，因此第三方端点绝不应该开启此项。
 
 **这一点发生了变化：** 使用 **Session** 或 **System OAuth** 认证类型的连接过去会无条件转发 Cookie，现在不会了。如果这类连接在升级后不再能够通过认证，请开启此项。
 
@@ -154,6 +115,8 @@ uvicorn main:app --host 0.0.0.0 --reload
 - 展开 MCP 服务器，实时加载工具名称和说明
 - 检查各个服务器是否已连接，或是否显示 **需要认证**，并通过 **重新连接** 再次登录
 
+通过**系统 OAuth** 转发用户 SSO 令牌的工具服务器，会在该 SSO 会话失效后，在 **+ > 工具**中显示需要登录。选择该服务器会跳转到登录页面。
+
 要断开 MCP 服务器的 OAuth，请在消息输入框的 **+ > 工具** 中，点击该工具旁的 **断开 OAuth**。
 
 🔍 下图是工具信息弹窗展开后的样子：
@@ -162,7 +125,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ### 🛠️ 全局工具服务器的显示方式不同——而且默认隐藏！ {#global-tool-servers-look-different-and-are-hidden-by-default}
 
-如果你连接的是全局工具服务器（也就是管理员配置的工具），它不会像用户级工具服务器一样自动出现在输入区域。
+如果你连接了全局工具服务器（即由管理员配置的服务器），它不会自动出现在输入区域。
 
 相反：
 
@@ -177,7 +140,6 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 - 在你从 **+** 菜单启用之前，它们不会显示在工具指示器弹窗中
 - 每个全局工具都必须单独打开，才能在当前聊天中生效
-- 一旦启用，它们的使用方式就和用户级工具一样
 - 管理员可通过基于角色的权限控制来限制全局工具访问
 
 这非常适合团队场景或共享环境：例如文档检索、memory 或 web lookup 这类常用工具，可以集中提供给多个用户使用。
@@ -232,31 +194,14 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 **再检查端口号。** 默认端口取决于 server 实现。例如 uvicorn 默认是 `8000`，而 Open Terminal 默认是 `8888`。请确认你填入的 URL 中端口与实际监听端口一致。
 
-### 明明 server 在运行，但依然连接失败 {#connection-fails-even-though-the-server-is-running}
+### 服务器正在运行，但连接失败 {#connection-fails-even-though-the-server-is-running}
 
-**理解 “localhost” 指向的是哪台机器。** 这是最常见的问题，而且会随工具服务器类型不同而变化：
-
-- **用户级工具服务器**：请求来自**你的浏览器**。`localhost` 指*运行浏览器的那台机器*。在本地开发时通常可用，但有下文所述的限制。
-- **全局工具服务器**：请求来自 **Open WebUI 后端**。`localhost` 指*后端服务器*，不是你的电脑。如果后端在 Docker 中运行，容器里的 `localhost` 不会指向宿主机。此时应改用 `host.docker.internal` 或宿主机的实际 IP。
-
-:::warning 用户级工具服务器：浏览器所在地址也很重要
-
-即使是用户级工具服务器，只有当你在浏览器中通过 `http://localhost:...` 访问 Open WebUI 时，`localhost` 才通常会正常工作。
-
-如果你通过其他 IP 地址访问 Open WebUI，例如从另一台局域网设备打开 `http://10.0.0.5:3000`，或者使用 `npm run dev` 输出的网络 URL，浏览器就*不在工具服务器所在的本机*。它会访问运行浏览器的设备上的 `localhost`，而不是承载工具服务器的机器。
-
-**解决办法：** 把 `localhost` 换成实际运行工具服务器那台机器的 IP（例如 `http://10.0.0.5:8000`），并确保工具服务器绑定在 `0.0.0.0` 上，而不是仅绑定到 `127.0.0.1`。
-
-:::
-
-### 浏览器控制台出现 CORS 错误 {#cors-errors-in-the-browser-console}
-
-如果你看到了 CORS 报错，说明工具服务器需要允许来自 Open WebUI origin 的请求。你可以查看 [FAQ 中关于 CORS 的条目](/features/extensibility/plugin/tools/openapi-servers/faq)，其中提供了 FastAPI 示例。
+**确认“localhost”指哪台机器。** 这是最常见的连接问题。请求由后端发送，因此 `localhost` 和 `host.docker.internal` 遵循[管理员所添加服务器的规则](#1-tool-servers-added-by-an-admin)。如果工具服务器位于另一台机器上，请确保它绑定到 `0.0.0.0`。
 
 ### 通用建议 {#general-tips}
 
 - 🔒 如果你使用远程服务器，请检查防火墙与 HTTPS 配置
 - 📝 如果你希望服务器在重启后仍保持运行，建议用 Docker 或系统服务来部署
-- 🔍 不确定时，直接在用于访问 Open WebUI 的同一浏览器中打开工具服务器 URL（例如 `http://localhost:8000/docs`）——如果能打开，说明浏览器能访问该服务器
+- 无法判断时，请从发送请求的机器（Open WebUI 后端宿主机）上尝试打开工具服务器 URL，例如 `http://localhost:8000/docs`。
 
 需要帮助？请访问 👉 [Discussions 页面](https://github.com/open-webui/openapi-servers/discussions) 或 [提交 issue](https://github.com/open-webui/openapi-servers/issues)。

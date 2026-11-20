@@ -64,7 +64,7 @@ curl -s -H "Authorization: Bearer $OWUI_KEY" $OWUI_URL/api/models | jq '.data[].
 curl -s -H "Authorization: Bearer $OWUI_KEY" $OWUI_URL/api/v1/tools/ | jq '.[] | {id, name}'
 
 # Terminal servers you have access to (use .id as terminal_id)
-curl -s -H "Authorization: Bearer $OWUI_KEY" $OWUI_URL/api/v1/terminals/ | jq '.[] | {id, name, contexts}'
+curl -s -H "Authorization: Bearer $OWUI_KEY" $OWUI_URL/api/v1/terminals/ | jq '.[] | {id, name, template_id, scope}'
 ```
 
 MCP 服务器以 `server:mcp:<server-id>` 形式的工具 ID 来寻址。参见[在 API 中使用 Open WebUI 工具（含 MCP）](/reference/api-endpoints#using-open-webui-tools-including-mcp-from-the-api)。
@@ -75,23 +75,17 @@ MCP 服务器以 `server:mcp:<server-id>` 形式的工具 ID 来寻址。参见[
 你可以通过 `GET /api/v1/models/model?id=<model-id>` 读取模型配置的终端并使用 `meta.terminalId`，或者直接从 `/api/v1/terminals/` 中挑选，后者已经只列出你的用户被允许使用的终端。
 :::
 
-### 终端上下文 {#terminal-contexts}
+### 终端实例范围 {#terminal-scope}
 
-由编排器（orchestrator）承载的终端（`server_type: orchestrator` 的连接，或任何带 `policy_id` 的连接）可以由管理员按上下文限定范围。该范围会出现在 `/api/v1/terminals/` 的 `contexts` 字段中，并决定你的请求能否使用该终端：
+Terminals 服务器上的终端具有 `scope` 字段，值为 `null`、`user`、`chat` 或 `model`。该值决定请求需要携带哪些信息才能使用终端：
 
-| `contexts.chat` | 对 API 调用方的含义 |
+| `scope` | 请求所需信息 |
 | :--- | :--- |
-| 缺失或 `{}` | 共享终端。可用于任何请求，包括没有聊天的请求。 |
-| `{"context_id": "chat_id"}` | 按聊天限定范围。请求**必须**携带已保存的 `chat_id`，并且每个聊天在服务端都有各自的运行时上下文。 |
-| `false` | 在聊天中完全不可用。请求它会失败。 |
+| `null` 或 `user` | 无需额外信息 |
+| `chat` | 已保存的 `chat_id`。每个聊天都有自己的实例 |
+| `model` | 你有权访问的模型 |
 
-由自动化发起的请求通过 `contexts.automation` 以同样方式限定范围，只是以 `automation_id` 为键。
-
-非编排器承载的连接没有 `contexts` 条目，始终可用。
-
-实际做法：在选择终端之前先读 `contexts.chat`。如果它是 `false`，就换一个。如果它是 `{"context_id": "chat_id"}`，你必须使用[路径 A](#path-a-full-agentic-loop)并配合真实保存的聊天，因为[路径 B](#path-b-one-request-answer-in-the-body)从不创建聊天。
-
-[终端上下文](/features/open-terminal/terminals/orchestration/contexts)介绍了管理员一侧的内容：该设置在哪里，以及每种模式对终端背后的工作区有什么影响。
+选择终端前先读取 `scope`。对于 `chat` 终端，必须使用[路径 A](#path-a-full-agentic-loop)及实际保存的聊天，因为[路径 B](#path-b-one-request-answer-in-the-body)不会创建聊天。各范围的行为见[创建终端](/features/open-terminal/terminals/orchestration/creating-terminals#machine-scope)。
 
 ---
 
@@ -159,11 +153,11 @@ curl -s -X POST $OWUI_URL/api/chat/completions \
 | 字段 | 存在的原因 |
 | :--- | :--- |
 | `stream: true` | 必需。原生工具循环只存在于流式路径上。 |
-| `chat_id` + `id` | 必需。缺少两者时，服务端完全不会执行任何工具。 |
+| `chat_id` + `id` | 两者均为必需。缺少任一项，服务端都不会执行工具。 |
 | `session_id` | **内置工具的开关。** 任意非空字符串都可以。缺少它时，内置工具不会提供给模型。它还会让请求变为异步（你得到 `task_ids`，而不是阻塞等待）。 |
 | `features` | 开启四组可切换的内置工具：`web_search`、`code_interpreter`、`image_generation`、`memory`。其他内置工具（知识库、文件、笔记、频道、日历、自动化、聊天、时间、任务、子智能体）不需要开关，只要其全局设置、你的权限和模型类别允许，就会被提供。 |
 | `tool_ids` | 工作区工具和 MCP 服务器。可选。 |
-| `terminal_id` | Open Terminal 服务器。可选，且与 `session_id` 相互独立。按聊天限定范围的编排器终端还要求 `chat_id` 是已保存的聊天，而路径 A 已经满足这一点。 |
+| `terminal_id` | Open Terminal 服务器。可选，独立于 `session_id`。若终端的 `scope` 为 `chat`，还要求 `chat_id` 对应已保存的聊天，路径 A 已满足此条件。 |
 | `background_tasks` | 关闭标题、标签和后续问题生成，除非你想要这些额外的模型调用。 |
 
 :::danger 不要发送你自己的 `tools` 数组
@@ -234,7 +228,7 @@ curl -s -X POST $OWUI_URL/api/chat/completions \
 
 - **只有一轮工具调用。** 模型无法查看结果后再决定调用别的工具。
 - **没有内置工具。** 没有网络搜索，没有代码解释器，没有知识库浏览，也没有终端驱动的智能体工作。
-- **没有按聊天限定范围的终端。** 这种模式的请求不携带 `chat_id`，因此配置了 `contexts.chat.context_id = "chat_id"` 的编排器终端无法使用。共享终端可以正常使用。
+- **无法使用范围为聊天的终端。** 此模式下的请求不携带 `chat_id`，因此无法使用将 `scope` 设为 `chat` 的终端。其他终端可正常使用。
 - 旧版模式**不受支持**，并且依赖一个能稳定输出 JSON 的任务模型。参见[工具调用模式](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
 
 ---
@@ -443,8 +437,7 @@ if __name__ == "__main__":
 | `execute_code` 返回 “WebSocket connection required” | 代码解释器引擎是 `pyodide`，它在浏览器中运行 | 在 **设置 > 代码执行**（管理员区域） 中把引擎切换为 **Jupyter**，或从 `features` 中去掉 `code_interpreter` |
 | 文件工具（`view_file`、`grep_chat_files` 等）缺失 | 它们需要请求体中有 `files`、有 `session_id`、开启模型的**文件上传**能力，并且**预加载文件**为关闭。API 请求会把预加载文件视为开启，除非模型将其保存为关闭 | 参见[提示词缓存与上下文优化](/features/chat-conversations/prompt-caching) |
 | `503 Terminal unavailable` | 终端服务器不可达、已被禁用，或你的用户没有访问授权 | 确认该 ID 出现在该密钥的 `GET /api/v1/terminals/` 结果中 |
-| `503`，聊天中终端不可用 | 该终端的 `contexts.chat` 为 `false`，说明管理员已把它从聊天中移除 | 换一个 `contexts.chat` 不为 `false` 的终端 |
-| `503`，终端需要已保存的聊天上下文 | 该终端按 `contexts.chat.context_id = "chat_id"` 限定范围，而请求没有已保存的 `chat_id` | 使用路径 A 并配合已保存的聊天，或换一个共享终端 |
+| `409`，`This terminal requires a saved chat` | 终端的 `scope` 为 `chat`，而请求没有已保存的 `chat_id` | 使用路径 A 和已保存的聊天，或选择其他终端 |
 | MCP 工具连接失败 | 该 OAuth 受保护的 MCP 服务器尚未被 API 密钥所属用户授权 | 以该用户身份在浏览器中完成一次 OAuth 流程 |
 | 聊天已创建但在界面中始终为空 | 消息树损坏 | `currentId` 使用驼峰命名（camelCase），每条消息都需要 `parentId` 和 `childrenIds`。参见[后端可控的 API 流程](/reference/api-flow) |
 

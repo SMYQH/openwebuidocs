@@ -19,8 +19,42 @@ import DocCardList from '@theme/DocCardList';
   style={{ width: '100%', margin: '0.25rem 0 1.75rem' }}
 />
 
-![图片生成设置](/images/admin/admin-images.png)
+无需离开聊天，即可根据提示词使用本地或托管的图像模型生成和编辑图像。管理员为每个图像后端设置一个连接，用户可从各连接提供的模型中选择。视频相关内容见[生成视频](/features/chat-conversations/image-generation-and-editing/video-generation)。
 
-在聊天中直接通过提示词生成和编辑图片，使用本地或托管的图片模型。
+## 设置连接 {#set-up-a-connection}
+
+1. 打开**管理面板** > **设置** > **图像**，开启**图像生成**、**图像编辑**或两者。
+2. 在**管理图像连接**下，点击 **+**（添加连接）。
+3. 选择**连接类型**，填写**名称**和 **URL**。如后端需要密钥，也请填写。点击 URL 旁的验证图标检查服务器。
+4. 在**功能**下保留**生成**、**编辑**或两者。只能开启后端支持的功能。AUTOMATIC1111 仅支持生成，ComfyUI 则需要上传相应工作流。
+5. 在**访问控制**中指定可以使用该连接的用户，然后点击**保存**。
+
+| 连接类型 | 适用后端 | 支持编辑 |
+|---|---|---|
+| 兼容 OpenAI | [OpenAI](/features/chat-conversations/image-generation-and-editing/openai)、Azure OpenAI、LiteLLM、[Lumenfall](/features/chat-conversations/image-generation-and-editing/lumenfall)、[Image Router](/features/chat-conversations/image-generation-and-editing/image-router)及其他提供 OpenAI 风格图像 API 的服务器 | 支持 |
+| Gemini | [Imagen 和 Gemini 图像模型](/features/chat-conversations/image-generation-and-editing/gemini) | 支持 |
+| ComfyUI | [自定义 ComfyUI 工作流](/features/chat-conversations/image-generation-and-editing/comfyui) | 支持，需要编辑工作流 |
+| AUTOMATIC1111 | [本地 Stable Diffusion 服务器](/features/chat-conversations/image-generation-and-editing/automatic1111) | 不支持 |
+
+同时支持生成和编辑的服务器只需一个连接。兼容 OpenAI 的连接支持模型连接的所有身份验证选项，也允许自定义**请求头**。
+
+:::warning 访问控制决定谁可以使用连接
+新连接在共享前仅管理员可用。通过**访问控制**指定可使用其模型的用户和用户组，或公开给所有人。没有访问权限的用户看不到这些模型。
+:::
+
+## 模型 {#models}
+
+**Model IDs** 列出连接提供的模型。留空时，连接会提供默认模型：
+
+- 兼容 OpenAI：LiteLLM 服务器列出的所有图像模型，其他服务器使用 `gpt-image-2`。
+- Gemini：`imagen-3.0-generate-002`。
+- ComfyUI：工作流中设置的模型。
+- AUTOMATIC1111：当前已加载的 checkpoint。
+
+服务器提供多个模型时，可添加多个模型 ID，例如同时添加 `gpt-image-1.5` 和 `gpt-image-2`。如果为 AUTOMATIC1111 连接设置了 Model IDs，选择尚未加载的模型会切换当前 checkpoint，影响该服务器上的所有用户。
+
+可在**默认模型**中选择**默认生成模型**和**默认编辑模型**。聊天和模型都未指定时，会使用这两项设置。也可以在**工作区** > **模型** > **编辑**中为模型设置自己的**默认图像模型**。
+
+**高级**包含取决于后端的可选设置。各引擎文档会列出所需设置。
 
 <DocCardList />

@@ -440,7 +440,7 @@ INFO:     Child process [pid] died
    - 前往 **Settings > Models**（管理员区域），打开 **Model Defaults**
    - 展开 **Model Parameters**，确认 **Function Calling** 是否被设为 `native`
    - 没有显式设置自身值的模型会继承这一设置。请让生效值保持为 `native`，并确认所选模型支持工具调用
-   - 同时检查 **Model Capabilities** 部分：**Preload files** 控制文件处理，而 **Builtin Tools** 及其 **Knowledge Base** 类别控制原生知识工具的访问权限
+   - 同时检查模型编辑器中的 **Features**。**Preload files** 控制文件处理，**Builtin Tools** 及其 **Knowledge Base** 类别控制原生知识工具的访问权限
 
 :::info 检查生效的模型设置
 **Settings > Models > Edit > Advanced Params**（管理员区域）（自己的模型则用 **Workspace > Models**）中的单模型设置，在显式设置时会覆盖全局默认值。没有自己 `function_calling` 值的模型会继承全局设置。当模型行为与预期不符时，这两处都要检查。

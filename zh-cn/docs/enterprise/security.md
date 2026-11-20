@@ -100,9 +100,9 @@ Open WebUI 的已发布制品是从 [open-webui/open-webui](https://github.com/o
 
 Open WebUI 中的服务器端代码执行受到明确的管理员操作控制，不会暴露给任意用户：
 
-* **服务器端执行引擎（例如 Jupyter）是选择性加入的**，由管理员配置。默认情况下它们未连接到服务器运行时。
+* **服务器端执行引擎（例如 Jupyter）需要主动启用**，由管理员配置。默认情况下它们未连接到服务器运行环境。
 * **创作服务器端工具和函数被视为等同于授予服务器代码执行权限。** 它受 `workspace.tools` 权限限制，默认对非管理员禁用，并被记录为等同于向该用户授予对服务器的 shell 访问权限。
-* **对于生产代码和 shell 执行，请使用 Terminals 编排器。** 与其暴露共享服务器运行时，[Terminals 编排器](/features/open-terminal/terminals) 在按会话、容器隔离的环境中运行执行，并具有可配置的[安全上下文和资源策略](/features/open-terminal/terminals/orchestration/policies)。这是企业部署的推荐模型；其他引擎的通用隔离指南请参见我们的[加固文档](/getting-started/advanced-topics/hardening)。
+* **生产环境中的代码和 shell 执行应使用 Terminals 编排器。** [Terminals 编排器](/features/open-terminal/terminals) 在设有资源限制的容器隔离实例中运行代码，因此无需暴露共享的服务器运行环境。企业部署推荐采用此模式。其他引擎的通用隔离指南见[加固文档](/getting-started/advanced-topics/hardening)。
 
 完整的模型请参见[工具和函数安全模型](/features/extensibility/plugin/tools)。
 

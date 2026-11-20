@@ -44,13 +44,11 @@ Open WebUI 以无状态的 `2026-07-28` 协议修订版连接服务器，同时�
 
 ## 🔒 MCP 服务器仅限管理员添加 {#mcp-servers-are-admin-only}
 
-MCP 服务器只能由 **管理员**在 **设置 > 集成**（管理员区域）中添加。根据设计，普通用户无法自行注册。
+只有**管理员**能在**设置 > 集成**（管理员区域）中向实例添加 MCP 服务器。根据设计，普通用户无法在实例上注册这类服务器。
 
-这**不是**与 OpenAPI 相同的限制。当管理员开启**直接集成**（[`ENABLE_DIRECT_INTEGRATIONS`](/reference/env-configuration#enable_direct_integrations)，默认关闭）并授予**直接工具服务器**权限（按用户或用户组，同样默认关闭）后，用户可以在**设置 → 集成**下添加自己的 **OpenAPI** 工具服务器，但那条路径是 OpenAPI 专属的：连接类型被锁定，不提供 MCP 选项。
+MCP 服务器的能力远超 OpenAPI 服务器，后者通过无状态 HTTP URL 提供一组固定的已声明端点。前者有状态，支持采样、信息征询和持久会话，还可以经 stdio 传输执行任意宿主机命令。它在 Open WebUI 的信任边界内以连接用户的完整权限运行。恶意或遭入侵的 MCP 服务器可能在该用户的权限范围内执行代码、读取或外泄数据，因此此能力仅限管理员。Open WebUI 自身只支持 Streamable HTTP，但协议本身具有高权限，所以只有管理员能添加 MCP 服务器。
 
-这其中的差别在于能力。用户提供的 OpenAPI 服务器是一个无状态的 HTTP URL，暴露一组固定的已声明端点。而 MCP 服务器强大得多：它有状态、能力强（支持 sampling、elicitation、持久会话以及通过 stdio 传输的任意主机命令执行），并运行在 Open WebUI 的信任边界内，拥有连接用户的完整权限范围。实际上，一个恶意的或被攻陷的 MCP 服务器可能会以该用户的访问权限执行代码、读取或外泄数据，因此该能力被限定为管理员才可使用。Open WebUI 自带的 MCP 支持仅限 Streamable HTTP，但由于协议本身拥有较高权限，仍只允许管理员添加此类服务器。
-
-若想在不让用户拥有服务器配置权限的前提下，让用户使用由 MCP 支持的能力，可以由管理员添加一次服务器，然后通过**访问控制**将其限定给指定用户或用户组。
+如果用户需要使用 MCP 功能但不应获得服务器配置权限，管理员可添加一次服务器，并在**访问控制**中指定对应的用户或群组。用户也可在 [Tether](/ecosystem/tether#bring-your-own-models-and-tools) 应用中为自己添加 MCP 服务器。
 
 ## 🧭 何时使用 MCP vs OpenAPI {#when-to-use-mcp-vs-openapi}
 
@@ -273,11 +271,11 @@ Open WebUI 中的原生 MCP 支持**仅限 Streamable HTTP**。这一设计选�
 
 浏览器在严格的**沙盒化和事件驱动的 HTTP 约束**下运行，使得跨用户和会话安全维护长期的 stdio 或 SSE 连接非常困难。
 
-如果你需要桥接其他 MCP 传输，请查看 [**mcpo**](https://github.com/open-webui/mcpo)——这是一个将 **stdio 或基于 SSE 的 MCP 服务器转换为 OpenAPI 兼容端点**的开源代理。它实际上让你可以在 Open WebUI 中运行传统 MCP 工具，而无需修改其传输层。
+使用 Tether 的用户可在自己的电脑上以本地命令运行 stdio MCP 服务器，见 [Tether](/ecosystem/tether#bring-your-own-models-and-tools)。要为整个实例桥接其他 MCP 传输方式，可使用 [**mcpo**](https://github.com/open-webui/mcpo)。这个开源代理将**基于 stdio 或 SSE 的 MCP 服务器转换成兼容 OpenAPI 的端点**。无需更改传输层，即可在 Open WebUI 中使用传统 MCP 工具。
 
-**MCP 在这里被认为是稳定的吗？**
+**这里对 MCP 的支持稳定吗？**
 
-已支持且持续改进中。更广泛的生态系统仍在演进；预期偶尔会有破坏性变更。
+已经支持，并在持续改进。相关生态仍在发展，偶尔可能出现破坏性变更。
 
 **可以同时混合使用 OpenAPI 和 MCP 工具吗？**
 
@@ -285,4 +283,4 @@ Open WebUI 中的原生 MCP 支持**仅限 Streamable HTTP**。这一设计选�
 
 **用户能否添加自己的 MCP 服务器？**
 
-不能。添加 MCP 服务器仅限管理员（**设置 > 集成**（管理员区域））。拥有**直接工具服务器**权限的用户可以添加自己的 **OpenAPI** 工具服务器，但不能添加 MCP。详细原因请参见 [MCP 服务器仅限管理员](#mcp-servers-are-admin-only)。
+普通用户只能通过 Tether 应用为自己添加，见[使用自己的模型和工具](/ecosystem/tether#bring-your-own-models-and-tools)。只有管理员可以向实例添加 MCP 服务器（**设置 > 集成**，管理员区域）。原因见[仅管理员可添加 MCP 服务器](#mcp-servers-are-admin-only)。

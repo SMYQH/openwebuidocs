@@ -5,7 +5,7 @@ title: "推理与 Thinking 模型"
 
 # 推理与 Thinking 模型 {#reasoning--thinking-models}
 
-Open WebUI 对具备 “thinking” 或 “reasoning” 行为的模型（如 DeepSeek R1、OpenAI o1 等）提供一等支持。这类模型通常会在给出最终答案之前，先生成内部思维链。
+Open WebUI 原生支持具备思考（thinking）或推理（reasoning）能力的模型，如 DeepSeek R1 和 OpenAI o1。这类模型通常会在给出最终答案之前，先生成内部思维链。
 
 ## Thinking 标签的工作方式 {#how-thinking-tags-work}
 
@@ -92,6 +92,8 @@ Open WebUI 提供多项内置设置，用于配置推理模型行为。你可以
 
 - 常见值：`low`、`medium`、`high`
 - 某些提供商也接受数值型参数
+
+Open Terminal 中的[编程智能体](/features/open-terminal/coding-agents#options)也会收到此设置。
 
 :::info
 Reasoning Effort 仅适用于支持该参数的特定提供商模型。在原生 Ollama 连接上不会透传该参数——上面提到的 `think` 设置已经覆盖了同样的需求。如果把 Ollama 作为 OpenAI 连接接入，则 Ollama 的 OpenAI 兼容端点确实接受 `reasoning_effort`。
@@ -209,7 +211,7 @@ ollama --version
 #### 第 3 步：在 Open WebUI 中验证 {#step-3-verify-in-open-webui}
 1. 前往 Open WebUI，并使用 reasoning model 新建一个聊天
 2. 提出一个需要推理的问题（例如数学题或逻辑题）
-3. 现在回复应该会把 thinking 内容显示为可折叠区块
+3. 现在回复应该会把 thinking 内容显示在答案上方的可折叠区块中
 
 如果模型把推理直接以 `<think>...</think>` 文本形式写在回复里，而不是使用 Ollama 的 thinking 字段，请检查上面的 **Reasoning Tags** 设置；对于其他标签对，请使用 **Custom**。
 

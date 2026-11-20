@@ -28,7 +28,7 @@ Azure 容器应用让你无需运维 Kubernetes 即可运行本应用。本指�
 
 ## 2. 配置凭据与环境变量 {#2-configure-credentials-and-environment-values}
 
-在 Key Vault 中存储下列凭据。使用由托管标识支持的容器应用机密引用来获取它们。该标识还需要相应的镜像拉取权限。参见[容器应用机密与 Key Vault 引用](https://learn.microsoft.com/en-us/azure/container-apps/manage-secrets)。
+在 Key Vault 中存储下列凭据。使用容器应用机密引用获取这些凭据，并为其托管标识授予读取 Key Vault 机密的权限。该标识还需要相应的镜像拉取权限。参见[容器应用机密与 Key Vault 引用](https://learn.microsoft.com/en-us/azure/container-apps/manage-secrets)。
 
 | 环境变量 | 密钥值 |
 | :--- | :--- |

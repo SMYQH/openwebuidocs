@@ -31,11 +31,11 @@ API 变化频繁，为它编写文档意义不大。要查找最新的接口和�
 |-------------|-------------------------|
 | 主应用 | `/docs` |
 
-## 主要 API 接口 {#notable-api-endpoints}
+## 主要 API 端点 {#notable-api-endpoints}
 
 ### 📜 获取所有模型 {#retrieve-all-models}
 
-- **接口**：`GET /api/models`
+- **端点**：`GET /api/models`
 - **说明**：获取通过 Open WebUI 创建或添加的所有模型。
 - **示例**：
 
@@ -45,21 +45,21 @@ API 变化频繁，为它编写文档意义不大。要查找最新的接口和�
 
 ### 程序化模型管理（导出 / 导入 / 同步） {#programmatic-model-management-export--import--sync}
 
-自定义模型本质上是纯 JSON，因此你可以以声明式方式（在 Git 中、通过脚本或从 AI Agent）管理它们，而无需 UI。这些接口位于 `/api/v1/models` 下：
+自定义模型本质上是纯 JSON，因此你可以以声明式方式（在 Git 中、通过脚本或从 AI Agent）管理它们，而无需 UI。这些端点位于 `/api/v1/models` 下：
 
-| 接口 | 说明 |
+| 端点 | 说明 |
 | :--- | :--- |
 | `GET /api/v1/models/all` | **（管理员）** 在一个不分页的列表中返回每一条已保存的模型记录，包括当前没有任何连接提供的模型。管理页面的模型列表即由此支撑。 |
 | `GET /api/v1/models/export` | 将**所有**自定义模型导出为 JSON 数组，或仅导出你用重复的 `ids` 查询参数指定的模型（`?ids=a&ids=b`）。请求一个你没有写入权限的模型会返回 `403`，而不是被悄悄略过。 |
-| `POST /api/v1/models/import` | 批量**更新插入**：创建新模型并更新现有模型（按 `id` 匹配）。仅增加，从不删除。 |
-| `POST /api/v1/models/sync` | **（管理员）** 声明式**调谐**：使实例与你发送的列表完全匹配，会创建、更新并**删除**不在载荷中的任何模型。 |
+| `POST /api/v1/models/import` | 批量**新增或更新**：创建新模型并更新现有模型（按 `id` 匹配），不会删除任何模型。 |
+| `POST /api/v1/models/sync` | **（管理员）** 声明式**同步**：按请求中的列表创建或更新模型，并**删除**未列出的模型，使实例与列表完全一致。 |
 | `POST /api/v1/models/create` | 创建单个模型。 |
 | `POST /api/v1/models/model/update` | 更新单个模型。 |
 | `POST /api/v1/models/model/delete` | 删除单个模型。 |
 
 **认证：** 需要管理员 [API Key](/features/authentication-access/api-keys)（或对于 `import`，具有 `workspace.models_import` 权限的用户）。`sync` 仅限管理员。`import` 和 `sync` 都接受形如 `{"models": [ ... ]}` 的请求体，其中数组正是 `export` 返回的内容。
 
-**背景图片以数据形式随行。** 模型的背景会以文件形式存储在实例上，因此 `export` 会读取该文件并以 `background_image_data`（一个 `data:image/...;base64,...` URI）的形式放入记录中，同时把 `meta.background_image_url` 留空。`import` 则反向处理：解码该 data URI，在目标实例上重新上传为文件，并把新的文件 URL 写回 `meta`。这使导出的模型可以在实例之间移植。编写脚本时有两个值得注意的结果：导出一个背景文件已丢失的模型会使整个请求以 `400` 失败；超出限制（5 MiB、25 百万像素、PNG/JPEG/WebP/GIF）的图片会在导入时被拒绝。
+**背景图片以数据形式随行。** 模型的背景会以文件形式存储在实例上，因此 `export` 会读取该文件并以 `background_image_data`（一个 `data:image/...;base64,...` URI）的形式放入记录中，同时将 `meta.background_image_url` 设为 `null`。`import` 则反向处理：解码该 data URI，在目标实例上重新上传为文件，并把新的文件 URL 写回 `meta`。这使导出的模型可以在实例之间移植。编写脚本时有两个值得注意的结果：导出一个背景文件已丢失的模型会使整个请求以 `400` 失败；超出限制（5 MiB、2500 万像素、PNG/JPEG/WebP/GIF）的图片会在导入时被拒绝。
 
 **语音头像以引用的形式随行。** [语音头像](/features/chat-conversations/chat-features/voice-mode#voice-avatars) 及其动画始终以文件形式保存在源实例上，导出时只会带上它们的文件 ID。导入或同步一个头像或动画文件在目标实例上缺失或不可访问的模型时，请求会失败并返回 `403`（`Avatar or animation file is not accessible. Upload it again.`）。请先在目标实例上上传头像。
 
@@ -78,12 +78,12 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
   http://localhost:3000/api/v1/models/sync
 ```
 
-这样就得到了可重现、受版本控制的模型定义。使用 `/import` 替代 `/sync` 进行仅增加且从不删除现有模型的更新。在部署、CI 或容器启动时运行同步步骤，以自动加载你的模型。
+这样就得到了可重现、受版本控制的模型定义。使用 `/import` 替代 `/sync` 进行更新，可创建或更新模型，且不会删除现有模型。在部署、CI 或容器启动时运行同步步骤，以自动加载你的模型。
 
 ### 聊天补全 {#chat-completions}
 
-- **接口**：`POST /api/chat/completions`
-- **说明**：作为兼容 OpenAI API 的聊天补全接口，为 Open WebUI 上的模型提供服务，包括 Ollama 模型、OpenAI 模型以及 Open WebUI Function 模型。位于 Responses API 连接上的模型同样会以 Chat Completions 格式作答（无论是否流式）；当回复被截断时，`finish_reason` 会被设为 `length` 或 `content_filter`。
+- **端点**：`POST /api/chat/completions`
+- **说明**：作为兼容 OpenAI API 的聊天补全端点，为 Open WebUI 上的模型提供服务，包括 Ollama 模型、OpenAI 模型以及 Open WebUI Function 模型。位于 Responses API 连接上的模型同样会以 Chat Completions 格式作答（无论是否流式）；当回复被截断时，`finish_reason` 会被设为 `length` 或 `content_filter`。
 
 :::warning 读取使用了工具的回复中的 `usage`
 
@@ -91,7 +91,7 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
 
 :::
 
-**请求中的参数会被保留。** 工作区模型自带自己的高级参数，管理员也可以在**设置 > 模型**（管理员区域）的**模型默认值**下设置实例级的参数。两者都只会补全你的请求中未指定的部分，因此 `temperature`、`max_tokens`、`top_p`、`seed`、`stop`、`reasoning_effort`、`response_format`、`logit_bias` 以及 Ollama 模型的 `options` 对象都会保留你传入的值。对于 Ollama 模型，`max_tokens` 会以 `num_predict` 的形式传给 Ollama。某个参数未传入时，仍按之前的做法使用模型已保存的值。唯一的例外是**流式聊天响应**，它依然由你的请求中携带的 `stream` 决定回复是否流式返回。下文的 [Anthropic 消息 API](#anthropic-messages-api) 也经由该端点运行，因此在那里同样成立，SDK 的 `max_tokens` 会完整地传到提供方。
+**请求中的参数会被保留。** 工作区模型自带自己的高级参数，管理员也可以在**设置 > 模型**（管理员区域）的**模型默认值**下设置实例级的参数。两者都只会补全你的请求中未指定的部分，因此 `temperature`、`max_tokens`、`top_p`、`seed`、`stop`、`reasoning_effort`、`response_format`、`logit_bias` 以及 Ollama 模型的 `options` 对象都会保留你传入的值。对于 Ollama 模型，`max_tokens` 会以 `num_predict` 的形式传给 Ollama。某个参数未传入时，仍按之前的做法使用模型已保存的值。唯一的例外是**流式聊天响应**，无论请求中的 `stream` 值是什么，该模型设置仍会决定回复是否流式返回。下文的 [Anthropic 消息 API](#anthropic-messages-api) 也经由该端点运行，因此在那里同样成立，SDK 的 `max_tokens` 会完整地传到提供方。
 
 **模型控制项。** 带有[模型控制项](/features/workspace/models#model-controls)的模型，也会把每个控制项的默认选项应用到 API 请求上，这些参数同样只补全请求中未指定的部分。若要选择其他选项，请在 `params.model_controls` 下按模型 ID 发送控制项 ID 和选项 ID。`GET /api/models` 会在 `info.params.model_controls` 下列出模型的各个控制项，其中包含每个控制项的 ID、标签、默认值，以及其各选项的 ID 和标签：
 
@@ -111,10 +111,10 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
 
 #### 通过 API 使用 Open WebUI 工具（包括 MCP） {#using-open-webui-tools-including-mcp-from-the-api}
 
-`/api/chat/completions` 接口可以在请求体中传入 Open WebUI 工具 ID 时，服务端执行这些工具——包括已在 Open WebUI 中配置并启用的原生 Python 工具、OpenAPI 工具服务器和 MCP 工具服务器。
+`/api/chat/completions` 端点可以在请求体中传入 Open WebUI 工具 ID 时，服务端执行这些工具——包括已在 Open WebUI 中配置并启用的原生 Python 工具、OpenAPI 工具服务器和 MCP 工具服务器。
 
 1. 先在 Open WebUI 中配置好工具服务器。MCP 相关内容参见 [Model Context Protocol (MCP)](/features/extensibility/mcp)。
-2. 从工具列表接口获取工具 ID，或在聊天中启用该工具时通过浏览器网络请求获取。MCP 工具服务器的 ID 形如 `server:mcp:<server-id>`。
+2. 从工具列表端点获取工具 ID，或在聊天中启用该工具时通过浏览器网络请求获取。MCP 工具服务器的 ID 形如 `server:mcp:<server-id>`。
 3. 调用 `/api/chat/completions` 时，在 `tool_ids` 中传入该 ID：
 
 ```bash
@@ -183,19 +183,19 @@ Open WebUI 会在解析工具之前检查调用者对每个所选工具服务器
 
 ### 🔮 Anthropic 消息 API {#anthropic-messages-api}
 
-Open WebUI 提供兼容 Anthropic 消息 API 的接口。这允许为 Anthropic API 构建的工具、SDK 和应用程序直接与 Open WebUI 配合工作——通过所有已配置的模型、过滤器和流水线路由请求。
+Open WebUI 提供兼容 Anthropic 消息 API 的端点。这允许为 Anthropic API 构建的工具、SDK 和应用程序直接与 Open WebUI 配合工作——通过所有已配置的模型、过滤器和流水线路由请求。
 
-在内部，该接口将 Anthropic 请求格式转换为 OpenAI 聊天补全格式，通过现有的聊天补全流水线路由，并将响应转换回 Anthropic 格式。支持流式和非流式请求。
+在内部，该端点将 Anthropic 请求格式转换为 OpenAI 聊天补全格式，通过现有的聊天补全流水线路由，并将响应转换回 Anthropic 格式。支持流式和非流式请求。
 
 :::info 原生 Anthropic 连接会跳过转换
 
-当目标连接本身使用的就是 Anthropic 消息 API 时，请求会被原样转发，而不会先转换成 OpenAI 格式再转回来。转换过程中不会丢失任何内容，因此提供方专属字段可以完整往返，无需 `passthrough_params`。
+当目标连接本身使用的就是 Anthropic 消息 API 时，请求会被原样转发，而不会先转换成 OpenAI 格式再转回来。直接转发保留了提供方专属字段，因此这些字段可以完整往返，无需 `passthrough_params`。
 
-当连接的 base URL 是 Anthropic 的，或当连接设置中 **高级** 选项下的**提供方**设为 **LiteLLM** 时，会适用这一规则，因为 LiteLLM 自己也提供了一条兼容 Anthropic 的路由。被转发的请求会直接发往提供方，因此不会在其上运行过滤器、工具和知识库。其他所有连接都保持上面描述的转换行为，下拉框中的其余选项请参见[提供方设置](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#the-provider-setting)。
+当连接的基础 URL 指向 Anthropic，或连接设置中 **高级** 选项下的**提供方**设为 **LiteLLM** 时，会适用这一规则，因为 LiteLLM 也提供兼容 Anthropic 的路由。请求会直接发给提供方，不会使用过滤器、工具或知识库。其他连接仍按上文所述转换请求。下拉框中的其余选项见[提供方设置](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#the-provider-setting)。
 
 :::
 
-- **接口**：`POST /api/message`，`POST /api/v1/messages`
+- **端点**：`POST /api/message`，`POST /api/v1/messages`
 - **认证**：支持 `Authorization: Bearer YOUR_API_KEY` 和 Anthropic 的 `x-api-key: YOUR_API_KEY` 头
 - **扩展思考**：底层模型的推理输出会以 Anthropic `thinking` 内容块的形式返回，流式和非流式响应均如此。
 - **推理强度**：`reasoning_effort` 以及 `output_config.effort` 会被映射到底层模型的推理强度设置。
@@ -260,7 +260,7 @@ Open WebUI 提供兼容 Anthropic 消息 API 的接口。这允许为 Anthropic 
   ```
 
   :::warning
-  `base_url` 必须是 `http://localhost:3000/api`（而非 `/api/v1`）。Anthropic SDK 会自动将 `/v1/messages` 附加到 base URL 后面。
+  `base_url` 必须是 `http://localhost:3000/api`（而非 `/api/v1`）。Anthropic SDK 会自动在该 URL 后追加 `/v1/messages`。
   :::
 
 - **Claude Code 配置**：
@@ -290,9 +290,9 @@ Open WebUI 提供兼容 Anthropic 消息 API 的接口。这允许为 Anthropic 
   这会将所有 Claude Code 请求通过 Open WebUI 的认证和访问控制层路由，让你可以使用任何已配置的模型（包括通过 Ollama 或 vLLM 的本地模型）与 Claude Code 的界面配合使用。
 
 :::info
-Open WebUI 中配置的所有模型都可以通过此接口访问——包括 Ollama 模型、OpenAI 模型和任何自定义 Function 模型。`model` 字段应使用模型在 Open WebUI 中显示的模型 ID。过滤器（inlet/stream）应用于这些请求，与兼容 OpenAI 的接口相同。
+Open WebUI 中配置的所有模型都可以通过此端点访问——包括 Ollama 模型、OpenAI 模型和任何自定义 Function 模型。`model` 字段应使用模型在 Open WebUI 中显示的模型 ID。过滤器（inlet/stream）应用于这些请求，与兼容 OpenAI 的端点相同。
 
-**工具使用：** Anthropic 消息接口支持工具使用（`tools` 和 `tool_choice` 参数）。来自上游模型的工具调用会被转换为流式和非流式响应中的 Anthropic 格式 `tool_use` 内容块。
+**工具使用：** Anthropic 消息端点支持工具使用（`tools` 和 `tool_choice` 参数）。来自上游模型的工具调用会被转换为流式和非流式响应中的 Anthropic 格式 `tool_use` 内容块。
 
 **用量上报：** 响应会携带上游模型上报的用量信息：流式时位于收尾的 `message_delta` 中，非流式时位于 `usage` 中。当提供方发送这些字段时，提示词缓存计数器（`cache_creation_input_tokens`、`cache_read_input_tokens`）、`output_tokens_details`、`server_tool_use` 和 `service_tier` 都会被透传，因此追踪缓存命中或推理 token 的客户端看到的是真实数值，而不是在转换中丢失。以 OpenAI 风格上报缓存 token 的提供方，其 `prompt_tokens_details.cached_tokens` 会被映射为 `cache_read_input_tokens`；而 `input_tokens` 会按照 Anthropic 客户端的预期上报：即未被缓存的提示词 token，缓存创建与缓存读取单独计数，而不是重复计算一次。在流式请求中，只有在确实已知时才会上报 `input_tokens`，因此从不报告该字段的提供方会把它整体省略，而不是显示一个凭空捏造的零值。
 
@@ -301,7 +301,7 @@ Open WebUI 中配置的所有模型都可以通过此接口访问——包括 Ol
 
 #### Token 计数 {#counting-tokens}
 
-Messages API 的配套接口，用于报告某个请求会消耗多少输入 token，而不会真正执行该请求。它与 Anthropic 自带的 token 计数端点保持一致，因此那些会预先估算请求以便做预算或上下文适配的 SDK 无需改动即可使用。
+Messages API 的配套端点，用于报告某个请求会消耗多少输入 token，而不会真正执行该请求。它与 Anthropic 自带的 token 计数端点保持一致，因此那些会预先估算请求以便做预算或上下文适配的 SDK 无需改动即可使用。
 
 - **端点**：`POST /api/v1/messages/count_tokens`、`POST /api/message/count_tokens`
 - **认证**：与 Messages API 相同
@@ -369,11 +369,11 @@ Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** �
 **实用建议**：如果你是纯 API 消费者（Continue.dev、Claude Code、自定义脚本等），并且需要通过 HTTP 拿回 `outlet()` 的输出，请在补全之后调用 `/api/chat/completed`。内联执行仍然会运行你的 outlet 过滤器及其副作用，只是不会把过滤后的负载交给你。
 :::
 
-#### 旧版/API 支持接口：`/api/chat/completed` {#legacy--supported-for-api-endpoint-apichatcompleted}
+#### 旧版端点（支持 API）：`/api/chat/completed` {#legacy--supported-for-api-endpoint-apichatcompleted}
 
-`POST /api/chat/completed` 是为直接 API 集成可靠运行 `outlet()` 的接口。它被标记为已弃用，但如上所述，内联执行目前不会向纯 API 调用者返回过滤后的响应体——因此在实践中，`/api/chat/completed` 仍是当今大多数 API 集成的正确选择。
+`POST /api/chat/completed` 是为直接 API 集成可靠运行 `outlet()` 的端点。它被标记为已弃用，但如上所述，内联执行目前不会向纯 API 调用者返回过滤后的响应体——因此在实践中，`/api/chat/completed` 仍是当今大多数 API 集成的正确选择。
 
-- **接口**：`POST /api/chat/completed`
+- **端点**：`POST /api/chat/completed`
 - **说明**：对已完成的聊天载荷无条件运行 `outlet()` 过滤器（以及流水线 outlet 过滤器）。返回过滤后的载荷。
 
 - **Curl 示例**：
@@ -509,7 +509,7 @@ curl -X POST http://localhost:3000/ollama/v1/embeddings \
 
 要在 RAG 响应中使用外部数据，首先需要上传文件。上传文件的内容会自动提取并存储到向量数据库中。
 
-- **接口**：`POST /api/v1/files/`
+- **端点**：`POST /api/v1/files/`
 - **查询参数**：
   - `process`（布尔型，默认：`true`）：是否提取内容并计算嵌入向量
   - `process_in_background`（布尔型，默认：`true`）：是否异步处理
@@ -537,7 +537,7 @@ curl -X POST http://localhost:3000/ollama/v1/embeddings \
 
 :::warning 异步处理与竞争条件
 
-默认情况下，文件上传为**异步处理**。上传接口会立即返回文件 ID，内容提取和嵌入向量计算在后台继续进行。
+默认情况下，文件上传为**异步处理**。上传端点会立即返回文件 ID，内容提取和嵌入向量计算在后台继续进行。
 
 如果在处理完成之前尝试将文件添加到知识库，你会收到 `400` 错误：
 
@@ -551,9 +551,9 @@ The content provided is empty. Please ensure that there is text or data present 
 
 #### 检查文件处理状态 {#checking-file-processing-status}
 
-将文件添加到知识库之前，请通过状态接口验证处理已完成。
+将文件添加到知识库之前，请通过状态端点验证处理已完成。
 
-- **接口**：`GET /api/v1/files/{id}/process/status`
+- **端点**：`GET /api/v1/files/{id}/process/status`
 - **查询参数**：
   - `stream`（布尔型，默认：`false`）：如果为 `true`，则返回服务器发送事件（SSE）流
 
@@ -634,10 +634,10 @@ The content provided is empty. Please ensure that there is text or data present 
 上传完成后，你可以将文件分组到知识库集合中，或在聊天中单独引用。
 
 :::important
-**将文件添加到知识库之前，必须等待文件处理完成。** 仍在处理中的文件内容为空，会导致 `400` 错误。使用上方的状态接口验证文件状态为 `completed`。
+**将文件添加到知识库之前，必须等待文件处理完成。** 仍在处理中的文件内容为空，会导致 `400` 错误。使用上方的状态端点验证文件状态为 `completed`。
 :::
 
-- **接口**：`POST /api/v1/knowledge/{id}/file/add`
+- **端点**：`POST /api/v1/knowledge/{id}/file/add`
 - **Curl 示例**：
 
   ```bash
@@ -663,14 +663,14 @@ The content provided is empty. Please ensure that there is text or data present 
       return response.json()
   ```
 
-如果某个文件的提取文本已经存在于知识库中，该请求会以 `400` 被拒绝，错误详情为 `400: Duplicate content detected. Please provide unique content to proceed.`。同样的检查也会在 `POST /api/v1/knowledge/{id}/files/batch/add` 上执行，该端点接受一组 `{"file_id": ...}` 对象：此时重复的文件会在响应的 warnings 中被报告为失败文件，而该批次中的其它文件仍会被添加。这两个调用都受知识库[文件数量上限](/features/workspace/knowledge#file-limits)的约束。
+如果某个文件的提取文本已经存在于知识库中，该请求会以 `400` 被拒绝，错误详情为 `400: Duplicate content detected. Please provide unique content to proceed.`。同样的检查也会在 `POST /api/v1/knowledge/{id}/files/batch/add` 上执行，该端点接受一组 `{"file_id": ...}` 对象：此时重复的文件会在响应的 warnings 中被报告为失败文件，而该批次中的其它文件仍会被添加。这两个调用都受知识库[文件限制](/features/workspace/knowledge#file-limits)的约束。
 
 
 #### 将网页 URL 处理入知识库集合 {#processing-web-urls-into-knowledge-collections}
 
-使用此接口获取网页、提取内容，并将生成的块存入知识库集合中。
+使用此端点获取网页并提取内容，然后将切分得到的片段存入向量集合。
 
-- **接口**：`POST /api/v1/retrieval/process/web`
+- **端点**：`POST /api/v1/retrieval/process/web`
 - **查询参数**：
   - `process`（布尔型，默认：`true`）：如果为 `false`，仅获取并返回提取的内容而不保存向量
   - `overwrite`（布尔型，默认：`true`）：是否在保存新块之前替换目标集合中现有的向量，即清空给定集合并用给定 URL 的内容替换它
@@ -722,7 +722,7 @@ The content provided is empty. Please ensure that there is text or data present 
   ```
 
 :::tip
-如果启用了 `ENV=dev`，此接口的 schema（包括 `overwrite` 等查询参数）也可在 Swagger 的 `/docs` 中查看。
+如果启用了 `ENV=dev`，此端点的 schema（包括 `overwrite` 等查询参数）也可在 Swagger 的 `/docs` 中查看。
 :::
 
 #### 完整工作流程示例 {#complete-workflow-example}
@@ -808,7 +808,7 @@ result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id
 
 当你希望聊天模型的响应聚焦在特定文件的内容上时，此方法非常适用。
 
-- **接口**：`POST /api/chat/completions`
+- **端点**：`POST /api/chat/completions`
 - **Curl 示例**：
 
   ```bash
@@ -850,7 +850,7 @@ result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id
 
 当查询可能需要更广泛的上下文或多个文档时，利用知识库集合来增强响应。
 
-- **接口**：`POST /api/chat/completions`
+- **端点**：`POST /api/chat/completions`
 - **Curl 示例**：
 
   ```bash

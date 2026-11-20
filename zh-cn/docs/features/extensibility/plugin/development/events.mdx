@@ -7,7 +7,7 @@ title: "事件"
 
 Open WebUI 的插件架构不仅仅是处理输入和产生输出——**它还涉及与 UI 和用户的实时交互式通信**。为了使你的 Tools、Functions 和 Pipes 更具动态性，Open WebUI 通过 `__event_emitter__` 和 `__event_call__` 辅助函数提供了内置事件系统。
 
-本指南解释了**什么是事件**、**如何从代码中触发事件**以及**可以使用的完整事件类型目录**（包括远不止 `"input"` 的更多内容）。
+本指南解释了**什么是事件**、**如何从代码中触发事件**并列出**完整的可用事件类型**，其中除了 `"input"` 还有许多其他事件。
 
 ---
 
@@ -298,7 +298,7 @@ await __event_emitter__(
 
 | 模式 | 行为 | 典型用法 |
 | :--- | :--- | :--- |
-| `replace` 省略 / `False` | 将每次载荷中的条目追加到 `message.embeds` | 一次性 tools / actions，在结束时发送单个 embed |
+| `replace` 省略 / `False` | 将每次载荷中的条目合并到 `message.embeds`，最新一批排在最前面 | 一次性 tools / actions，在结束时发送单个 embed |
 | `replace: True` | 用载荷中的数组替换消息的 `embeds` 数组 | 需要持续刷新单个 widget 的长时运行 pipes（进度条、实时仪表盘、轮询状态卡） |
 
 添加 `replace` 标志是为了避免用户重新加载时看到过时的 embeds 叠加在对话中——只有最新版本会被持久化。
@@ -368,7 +368,7 @@ await __event_emitter__(
 #### 注意事项 {#notes}
 
 - **持久化需使用短名称。** 发送 `"embeds"`（或 `"chat:message:embeds"`），但请注意只有短名称 `"embeds"` 才会持久化到数据库——参见下方的[持久化表格](#which-event-types-are-persisted-to-the-database)。`replace` 标志对未持久化的别名无效。
-- **沙箱与尺寸。** 每个 embed 都在沙箱化的 iframe 中渲染，默认启用 `allow-scripts`、`allow-popups` 和 `allow-downloads`。同源和表单提交由用户切换。自动调整大小、高度报告以及 Chart.js / Alpine 自动注入等详情，参见 [Rich UI 嵌入 → 沙箱与安全性](/features/extensibility/plugin/development/rich-ui#sandbox-and-security)。
+- **沙箱与尺寸。** 每个嵌入都在沙箱化的 iframe 中渲染，并启用 `allow-scripts` 和 `allow-downloads`。附在助手消息上的嵌入还会启用 `allow-popups`，且始终允许提交表单。同源访问由用户设置控制。自动调整大小、高度报告以及 Chart.js / Alpine 自动注入等详情，参见 [Rich UI 嵌入 → 沙箱与安全性](/features/extensibility/plugin/development/rich-ui#sandbox-and-security)。
 - **外部工具。** 外部工具调用者可以将同样的 `embeds` 载荷（包括 `replace: true`）发送至 `/api/v1/chats/{chatId}/messages/{messageId}/event`——参见下方的[外部工具](#external-tools-openapi--mcp)。
 
 ---
@@ -563,10 +563,6 @@ result = await __event_call__(
 )
 ```
 
-:::tip
-这里使用的是与用户 valve 密码字段相同的 `SensitiveInput` 组件，会提供一个熟悉的“眼睛”图标切换来显示/隐藏值。
-:::
-
 ---
 
 #### 选择输入 {#select-input}
@@ -698,7 +694,7 @@ result = await __event_call__(
 | **运行位置** | 主页面上下文（无沙箱） | 沙箱化 iframe |
 | **持久性** | 短暂 —— 刷新/跳转后消失 | 持久 —— 保存到聊天历史中 |
 | **页面访问权限** | 完全访问（DOM、cookie、localStorage） | 默认与父页面隔离 |
-| **表单** | 始终可用（无沙箱） | 需要启用 `allowForms` 设置 |
+| **表单** | 始终可用（无沙箱） | 助手消息上的嵌入始终可提交表单，其他嵌入取决于 `allowForms` 设置 |
 | **适用场景** | 临时交互、副作用、下载、DOM 操作 | 持久的可视化内容、仪表盘、图表 |
 
 临时交互（确认、定制对话框、触发下载、读取页面状态）请使用 `execute`；想在对话中长期保留的可视化内容，则使用 Rich UI 嵌入。
@@ -1015,7 +1011,7 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 | `execute`（通过 `__event_call__`） | 使用 `sio.call()`，等待客户端响应，超时后返回一个错误字典 |
 | `execute`（通过 `__event_emitter__`） | 只发出不等待——**不会报错**，但如果没有浏览器连接，JS 可能不会运行 |
 
-`confirmation` 和 `input` 本质上都需要通过 `__event_call__` 建立活跃的浏览器连接。如果标签页被关闭，会话就没了，因此这次调用会立即返回 `{"error": "Client session disconnected."}`。在已保存的聊天中，如果对话框打开期间连接中断，调用会等待最多 60 秒，等用户重新打开该聊天，然后再次显示对话框。如果标签页只是处于不活跃状态，调用会等待 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout)。该变量默认未设置，因此会无限等待；把它设为秒数，一旦超时，调用会返回 `{"error": "Event call timed out. The browser tab may be inactive or closed."}`。两种情况都不会抛出异常，所以请检查返回值而不要依赖 `try`/`except`；另外要注意，超时并不会断开浏览器会话：作答较慢的用户仍然可以被再次提示。
+`confirmation` 和 `input` 通过 `__event_call__` 调用，需要浏览器已处于连接状态。如果标签页被关闭，会话就没了，因此这次调用会立即返回 `{"error": "Client session disconnected."}`。在已保存的聊天中，如果对话框打开期间连接中断，调用会等待最多 60 秒，等用户重新打开该聊天，然后再次显示对话框。如果标签页只是处于不活跃状态，调用会等待 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout)。该变量默认未设置，因此会无限等待；把它设为秒数，一旦超时，调用会返回 `{"error": "Event call timed out. The browser tab may be inactive or closed."}`。两种情况都不会抛出异常，所以请检查返回值而不要依赖 `try`/`except`；另外要注意，超时并不会断开浏览器会话：作答较慢的用户仍然可以被再次提示。
 
 `execute` 更灵活：当它通过 `__event_emitter__` 使用时，它会在不等待响应的情况下发出，所以关闭标签页时不会报错（不过如果没有浏览器在监听，JS 也不会执行）。因此，在你不需要返回值的 `execute` 调用里，`__event_emitter__` 更安全——尤其是在 iOS PWA 的文件下载场景中，双向通道可能会报 `"TypeError: Load failed"`。
 

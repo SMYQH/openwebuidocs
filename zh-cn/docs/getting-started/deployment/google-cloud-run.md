@@ -107,7 +107,7 @@ gcloud run jobs execute openwebui-migrate --region REGION --wait
 | 启动探针 | HTTP `/ready`，端口 `8080`，周期 10 秒，超时 5 秒，失败阈值 `24`。 |
 | 存活探针 | HTTP `/health`，端口 `8080`，使用合适的间隔与失败阈值。 |
 
-启动耗时需控制在 Cloud Run [支持的探针预算](https://docs.cloud.google.com/run/docs/configuring/healthchecks)之内。卸载式嵌入与独立的迁移作业可以减少启动工作量。探针成功并不能验证模型提供方或存储桶权限。
+启动耗时需控制在 Cloud Run [支持的探针预算](https://docs.cloud.google.com/run/docs/configuring/healthchecks)之内。在独立服务中计算嵌入向量，并用单独的作业执行迁移，可以减少启动时的工作量。探针成功并不能验证模型提供方或存储桶权限。
 
 按实例计费与最小实例可以支撑活跃请求之外的工作，但实例仍可能被终止。它们不能让进程内的后台任务持久执行。参见 [Cloud Run 计费设置](https://docs.cloud.google.com/run/docs/configuring/billing-settings)。
 
@@ -147,7 +147,7 @@ gcloud run services logs read openwebui --region REGION --limit=50
 4. 把迁移作业更新到新镜像，并运行一次执行直至成功完成。
 5. 使用新镜像重建服务，关闭迁移，并恢复已保存的网络、密钥、扩缩容、IAM 与入口设置。仅在验证服务之后再恢复域名路由。
 
-例如，在删除服务与 IAM 配置**之前**先导出：
+例如，在删除 Cloud Run 服务**之前**先导出服务配置和 IAM 配置：
 
 ```bash
 gcloud run services describe openwebui --region REGION \
@@ -169,6 +169,6 @@ gcloud run services get-iam-policy openwebui --region REGION \
 | Redis 无法连接 | VPC 出口、防火墙/DNS、认证/TLS，以及 Redis 集群模式。 |
 | 文件消失或上传失败 | `STORAGE_PROVIDER=gcs`、存储桶名称、服务账号权限，以及外部向量存储。 |
 | 长会话后 WebSocket 断开 | 请求超时与客户端重连。 |
-| 后台任务暂停或消失 | CPU 分配、最小实例数与进程终止；对于必须在实例重启后继续的工作，请使用持久化的作业基础设施。 |
+| 后台任务暂停或消失 | CPU 分配、最小实例数与进程终止；对于必须在实例终止后继续执行的工作，请使用持久化的作业基础设施。 |
 
 删除 Cloud Run 服务或作业不会删除单独创建的 Cloud SQL、Redis、Cloud Storage 或 Secret Manager 资源。请仅依据你的备份与保留策略删除这些资源。

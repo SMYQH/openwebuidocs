@@ -79,7 +79,7 @@ Open WebUI 自带一组针对高频操作的键盘快捷键，其中大多数都
 
 ## 固定快捷键 {#fixed-shortcuts}
 
-以下八个是内置的，无法重新绑定。**Settings > Keyboard** 中会列出它们供参考。
+这些是内置快捷键，无法重新绑定。**Settings > Keyboard** 列出前八个供参考。
 
 | 操作 | 按键 | 生效条件 |
 |---|---|---|
@@ -91,6 +91,9 @@ Open WebUI 自带一组针对高频操作的键盘快捷键，其中大多数都
 | 停止生成 | `Escape` | 聊天输入框获得焦点且正在生成回复时 |
 | 编辑上一条消息 | `ArrowUp` | 聊天输入框获得焦点时 |
 | 切换静音 | `M` | 语音模式下 |
+| 搜索当前文件夹 | `/` | [文件夹页面](./conversation-organization.md#the-folder-page)显示其中的聊天，且没有输入框获得焦点 |
+| 筛选文件夹中的聊天 | `f` | 同上 |
+| 在文件夹中新建聊天 | `c` | 同上，且你有权在文件夹中添加聊天 |
 
 **Allow Tool Call** 与 **Deny Tool Call** 作用于正在等待批准的回复，这只会在启用 [Tool Permissions](/features/extensibility/plugin/tools#tool-approval) 且聊天设置为"先询问"时发生。它们作用于最近一个仍在等待的调用，因此有多个待处理项时，你会一次按键处理一个。在其他任何时刻它们都不起作用，按键会直接传递出去。
 

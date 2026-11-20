@@ -32,9 +32,9 @@ Code Interpreter 是一种模型能力，可让 LLM 在对话过程中自主编�
 ### 启用 Code Interpreter {#enabling-code-interpreter}
 
 **按模型配置（管理员）：**
-1. 前往 **Admin Panel → Models**
+1. 前往 **设置 > 模型**（管理员区域）
 2. 选择你要配置的模型
-3. 在 **Capabilities** 下启用 **Code Interpreter**
+3. 在 **Features** 下启用 **Code Interpreter**
 4. 保存更改
 
 **全局配置（Admin Panel）：**
@@ -43,7 +43,7 @@ Code Interpreter 是一种模型能力，可让 LLM 在对话过程中自主编�
 - 全局启用 / 禁用 code interpreter
 - 选择引擎：**Pyodide（旧版）** 或 **Jupyter（旧版）**（如需完整的 Python 与 shell 访问权限，请改用 [Open Terminal](/features/open-terminal)）
 - 配置 Jupyter 连接设置
-- 设置被禁用模块
+- 编辑代码解释器的提示词模板
 
 **全局配置（环境变量）：**
 
@@ -70,7 +70,7 @@ Code Interpreter 是一种模型能力，可让 LLM 在对话过程中自主编�
 
 **使用要求：**
 1. 必须在全局启用 `ENABLE_CODE_INTERPRETER`
-2. 模型必须启用 `code_interpreter` capability
+2. 必须在模型的**功能**下启用代码解释器
 3. 模型必须使用 **Native** 原生函数调用模式（默认即为 Native；只有在模型高级参数中被切换为 **Legacy** 时才需要留意）
 
 有关 builtin tools 和 native mode 的详细说明，请参阅 [工具开发指南](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。

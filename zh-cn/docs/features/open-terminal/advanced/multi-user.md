@@ -7,10 +7,10 @@ title: "多用户配置"
 
 当你团队中的多人需要通过 Open WebUI 访问终端时，你有两种选择。
 
-| | 单容器 | 每用户独立容器 |
+| | 单容器 | Terminals |
 | :--- | :--- | :--- |
-| **方式** | 一个容器，容器内独立账户 | 每个用户拥有自己的容器 |
-| **隔离** | 在同一个共享容器内划分独立的工作区 | 每个用户拥有一个独立的容器，其中包含其专属的文件、进程和资源。在 Docker 后端，这些容器共享一个网络 |
+| **工作方式** | 单个容器中使用独立账户 | 每个用户、聊天或模型可以获得独立实例 |
+| **隔离** | 在共享容器中使用独立工作区 | 每个用户、聊天或模型拥有独立实例及自己的文件、进程和资源。Docker 后端的容器共享一个网络 |
 | **配置** | 一个额外设置 | 额外的编排服务 |
 | **适用场景** | 成员之间彼此完全信任的小型团队 | 生产环境、较大团队、不受信任的用户 |
 | **包含于** | Open Terminal（免费） | [Terminals](https://github.com/open-webui/terminals)（企业版） |
@@ -96,15 +96,15 @@ flowchart LR
 
 ## 方式 2：使用 Terminals 实现每用户独立容器 {#option-2-per-user-containers-with-terminals}
 
-对于较大规模部署或需要真正隔离的场景，[**Terminals**](../terminals/) 为每个用户提供完全独立于其他人的容器。
+对于较大的部署或需要真正隔离的环境，[**Terminals**](../terminals/) 可为每位用户提供独立实例，其文件、进程和资源与其他用户隔离。
 
-- **完全隔离** — 每个用户的容器独立运行，拥有各自的文件、进程和资源
-- **按需分配** — 容器在用户启动会话时创建，空闲时自动清理
-- **资源控制** — 可按用户或按环境设置 CPU、内存和存储限制
-- **多环境支持** — 为不同团队提供不同配置（如数据科学、开发等）
-- **Kubernetes 支持** — 支持 Docker、Kubernetes 和 k3s
-- **按范围限定的工作区** — 通过 [终端上下文](/features/open-terminal/terminals/orchestration/contexts)，可以让每个已保存的聊天或每个自动化拥有自己的工作区，而不是每个用户共用一个
-- **Docker 后端上的单一网络** — 所有工作区都位于同一个 Docker 网络中，以便编排器可以按名称访问每个工作区，这也使工作区能够访问其他用户工作区已打开的端口。文件和进程仍然相互隔离。对于互不信任的用户，请使用 Kubernetes 后端并添加 NetworkPolicy
+- **完整的实例隔离**：按用户分配独立实例时，每个实例拥有自己的文件、进程和资源
+- **按需预配**：用户启动会话时创建实例，空闲后清理
+- **资源控制**：在服务器上限内为各终端设定 CPU、内存和存储限制
+- **多种环境**：拥有写入权限的用户可为不同团队（如数据科学、开发）创建不同配置的终端，再与用户和群组共享
+- **后端**：Docker、Kubernetes 或 Kubernetes Operator
+- **实例范围**：终端可为每位用户、已保存的聊天或模型运行一个实例，见[创建终端](/features/open-terminal/terminals/orchestration/creating-terminals#machine-scope)
+- **Docker 后端网络**：设置 `TERMINALS_DOCKER_NETWORK` 后，各实例共享该 Docker 网络。编排器可按名称访问实例，一个实例也可访问另一个用户的实例所开放的端口。未设置时，编排器通过 Docker 宿主机上发布的端口访问实例。终端的**网络**设置可选择管理员在 `TERMINALS_NETWORK_PROFILES` 中定义的网络配置，从而将该终端放到另一个 Docker 网络。文件和进程依然分开。用户之间互不信任时，请使用 Kubernetes 后端并添加 NetworkPolicy
 
 ```mermaid
 flowchart LR
@@ -122,9 +122,10 @@ flowchart LR
     style CC fill:#27ae60,color:#fff
 ```
 
-提供两种部署后端：
+有三种部署后端：
 
 - **[Docker 后端](../terminals/#deployment)** — 运行在单个 Docker 宿主机上。适合中小型团队或没有 Kubernetes 的环境。
+- **Kubernetes**：编排器自行创建 Pod、卷和服务，无需 Operator 或 CRD。请设置 `TERMINALS_BACKEND=kubernetes`。
 - **[Kubernetes Operator](../terminals/#deployment)** — 使用基于 CRD 的 Operator 进行生产级部署，通过 Helm chart 与 Open WebUI 一起部署。
 
 :::info 需要企业许可证

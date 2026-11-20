@@ -25,6 +25,7 @@ services:
           "url": "http://terminals:3000",
           "key": "${TERMINALS_API_KEY}",
           "auth_type": "bearer",
+          "server_type": "orchestrator",
           "config": {
             "access_grants": [{
               "principal_type": "user",
@@ -46,22 +47,24 @@ services:
       - TERMINALS_BACKEND=docker
       - TERMINALS_API_KEY=${TERMINALS_API_KEY}
       - TERMINALS_IMAGE=ghcr.io/open-webui/open-terminal:latest
-      - TERMINALS_NETWORK=open-webui-network
+      - TERMINALS_DOCKER_NETWORK=open-webui-network
+      - TERMINALS_DOCKER_HOST_DATA_DIR=${PWD}/data/terminals
       - TERMINALS_IDLE_TIMEOUT_MINUTES=30
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - terminals-data:/app/data
+      - ./data:/app/data
     networks:
       - webui
 
 volumes:
   open-webui:
-  terminals-data:
 
 networks:
   webui:
     name: open-webui-network
 ```
+
+Terminals 将数据库和各实例的文件保存在 Compose 文件旁的 `data` 目录中。`TERMINALS_DOCKER_HOST_DATA_DIR` 告知 Docker 该目录在主机上的位置，使实例容器挂载编排器所管理的同一批文件。
 
 在 Compose 文件旁边的 `.env` 文件中设置共享 API 密钥：
 
@@ -75,7 +78,7 @@ TERMINALS_API_KEY=change-me-to-a-strong-random-value
 docker compose up -d
 ```
 
-可以通过 `http://localhost:3000` 访问 Open WebUI。用户启用终端时，编排器会自动为其创建个人容器。
+通过 `http://localhost:3000` 可访问 Open WebUI。上面的连接会为所有用户授予 **Read** 权限，他们可使用共享给自己的终端。请在连接的 **Access** 设置中，为负责创建终端的用户授予 **Write** 权限。参见[创建终端](/features/open-terminal/terminals/orchestration/creating-terminals)。用户打开终端时，编排器会自动置备实例。
 
 :::warning Docker 套接字访问
 编排器需要访问 Docker 套接字 (`/var/run/docker.sock`) 来管理容器。在生产环境中，请使用 Docker 套接字代理，如 [Tecnativa/docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy)，以限制其可以进行的 API 调用。
@@ -83,40 +86,16 @@ docker compose up -d
 
 ---
 
-<details>
-<summary>配置参考</summary>
-
-| 变量 | 默认值 | 描述 |
-| :--- | :--- | :--- |
-| `TERMINALS_BACKEND` | `docker` | 后端类型。在此部署模式下设置为 `docker`。 |
-| `TERMINALS_API_KEY` | (空) | 用于认证来自 Open WebUI 请求的共享密钥。必须提供。 |
-| `TERMINALS_IMAGE` | `ghcr.io/open-webui/open-terminal:latest` | 用户终端的默认容器镜像。 |
-| `TERMINALS_PORT` | `3000` | 编排器监听的端口。 |
-| `TERMINALS_HOST` | `0.0.0.0` | 编排器绑定的地址。 |
-| `TERMINALS_NETWORK` | (空) | 用户容器的 Docker 网络。设置后，容器通过名称进行通信。 |
-| `TERMINALS_DOCKER_HOST` | `127.0.0.1` | 发布容器端口的地址。仅在没有 `TERMINALS_NETWORK` 时相关。 |
-| `TERMINALS_DATA_DIR` | `data/terminals` | 存储每个用户工作区数据的宿主机目录。 |
-| `TERMINALS_IDLE_TIMEOUT_MINUTES` | `0` (禁用) | 容器停止前的非活动分钟数。对于典型使用，请设置为 `30`。 |
-| `TERMINALS_MAX_CPU` | (空) | 用户容器的 CPU 限制（例如 `2`）。 |
-| `TERMINALS_MAX_MEMORY` | (空) | 用户容器的内存限制（例如 `4Gi`）。 |
-| `TERMINALS_OPEN_WEBUI_URL` | (空) | 如果设置，则针对此 Open WebUI 实例验证传入的 JWT，而不是使用 `TERMINALS_API_KEY`。管理员 API 仍需要该密钥。 |
-| `TERMINALS_ENABLE_UI` | `true` | 在 `/` 提供内置的最小化管理 UI。仅 API 部署时设为 `false`。 |
-| `TERMINALS_LOG_LEVEL` | `INFO` | 服务器和操作员日志级别（DEBUG、INFO、WARNING、ERROR、CRITICAL）。 |
-
-</details>
+此部署的编排器设置包括 `TERMINALS_DOCKER_NETWORK`、`TERMINALS_DOCKER_DATA_DIR` 和 `TERMINALS_IDLE_TIMEOUT_MINUTES`，详见[编排器环境变量](/features/open-terminal/terminals/orchestration#orchestrator-environment-variables)。
 
 ---
 
 <details>
 <summary>容器生命周期详情</summary>
 
-**命名。** 容器命名为 `terminals-<user-hash>`（其中 `<user-hash>` 是用户 ID 的 SHA-256 的前 12 个十六进制字符，用于生成 DNS 安全的名称），非默认策略下为 `terminals-<user-hash>-<policy>`。可使用 `docker ps --filter "label=app.kubernetes.io/managed-by=terminals"` 轻松过滤。编排器还会以用户 id `system` 预配一个容器，Open WebUI 用它来读取策略的工具列表和系统提示词，因此看到一行不熟悉的用户是预期之内的。
+**筛选。** 可用 `docker ps --filter "label=app.kubernetes.io/managed-by=terminals"` 筛选容器。
 
-**健康检查。** 创建容器后，编排器会轮询其 `/health` 端点，直到返回 HTTP 200（最多 15 秒）。只有这样它才开始代理流量。
-
-**协调（Reconciliation）。** 如果编排器重新启动，它会通过标签重新发现现有的正在运行的容器，并从容器配置中恢复它们的 API 密钥。这可以防止创建重复的容器。
-
-**冲突处理。** 如果同名的容器已经存在（例如，来自之前失败的清理），编排器会强制删除旧容器并最多重试 3 次。
+**启动。** 创建容器后，编排器会等待容器响应，最长 15 秒，再开始代理流量。如果容器未能及时就绪，会记录一条警告。
 
 </details>
 

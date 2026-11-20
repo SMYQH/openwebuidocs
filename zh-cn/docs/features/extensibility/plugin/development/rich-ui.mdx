@@ -269,7 +269,7 @@ iframe 与父窗口之间的通信不止于高度上报。还可以使用以下�
 
 ### 负载请求 {#payload-requests}
 
-iframe 可以向父页面请求数据负载。加载完成后把动态数据传入嵌入内容时，这很有用：
+iframe 加载完成后，可以向父页面请求数据负载：
 
 ```html
 <script>
@@ -292,7 +292,7 @@ iframe 可以向父页面请求数据负载。加载完成后把动态数据传�
 :::info 负载来自哪里
 并没有一个独立的"设置 payload"调用。payload 就是父组件在实例化 iframe 时已经配置好的内容——目前只有一条路径会真正配置它：
 
-- ✅ **在 chat-controls 嵌入面板中通过引用打开的嵌入** —— 当用户点击某个带有 embed URL 的引用徽章时，侧边面板会打开，并把**完整的引用/source 对象**（也就是你通过 `__event_emitter__` 发出的 `source` / `citation` 事件中传入的那个 dict）作为 payload 暴露出来。要设置它，就发出一个 [`source` 事件](./events.mdx#source-or-citation-and-code-execution)，把你想让 iframe 获取的内容放在 `data` 里。iframe 再通过上面的 postMessage 发起请求，父页面就会把那个引用对象原样返回。
+- ✅ **通过引用在预览标签页中打开的嵌入** —— 当用户点击某个带有 embed URL 的引用徽章时，侧边面板会打开预览标签页，并把**完整的引用/source 对象**（也就是你通过 `__event_emitter__` 发出的 `source` / `citation` 事件中传入的那个 dict）作为 payload 暴露出来。要设置它，就发出一个 [`source` 事件](./events.mdx#source-or-citation-and-code-execution)，把你想让 iframe 获取的内容放在 `data` 里。iframe 再通过上面的 postMessage 发起请求，父页面就会把那个引用对象原样返回。
 - ❌ **内联工具调用嵌入**（由 Tool 方法返回 `HTMLResponse` 或 `(HTMLResponse, context)` 产生）—— 这条路径父页面不会配置 payload，因此 payload 请求会返回 `{ type: 'payload', requestId: ..., payload: null }`。请改用[工具参数注入](#tool-args-injection-tools-only)（需要 `allowSameOrigin`）把数据传入工具调用嵌入。
 - ❌ **`__event_emitter__({"type": "embeds", ...})` 与 Action 嵌入** —— 这两条路径也不会配置 payload；返回值为 `null`。
 
@@ -323,10 +323,10 @@ iframe 可以向父页面请求数据负载。加载完成后把动态数据传�
 
 :::note `window.args` 在哪些场景下会被设置，哪些场景下不会
 - ✅ **Tool 方法返回 `HTMLResponse` 或 `(HTMLResponse, context)` 元组**：在 "View Result from..." 工具调用指示器处内联渲染。满足上述 `allowSameOrigin` 要求时，会注入 `window.args`。
-- ❌ **`__event_emitter__({"type": "embeds", "data": {"embeds": [...]}})`** —— 通过 chat-controls 嵌入面板渲染，这个路径根本不会绑定 `args`。无论 sandbox 怎么设置，`window.args` 都会是 undefined。这是设计如此：embeds-event 路径没有挂载工具调用，也就没有 args 可注入。
+- ❌ **`__event_emitter__({"type": "embeds", "data": {"embeds": [...]}})`** —— 在消息上方渲染，这个路径根本不会绑定 `args`。无论 sandbox 怎么设置，`window.args` 都会是 undefined。这是设计如此：embeds-event 路径没有挂载工具调用，也就没有 args 可注入。
 - ❌ **Action 嵌入** —— 由用户而不是模型触发，所以也没有模型提供的 args 可注入。
 
-如果需要在以上 ❌ 路径渲染的嵌入里传入动态数据，请改用上方的[负载请求](#payload-requests)模式。
+如果需要通过父页面向 iframe 传入动态数据，请使用上方[负载请求](#payload-requests)所述的引用预览方式。事件嵌入和 Action 嵌入的负载均为 `null`。
 :::
 
 ### 自动注入的库 {#auto-injected-libraries}
@@ -555,41 +555,3 @@ async def create_dashboard():
 ```
 
 嵌入内容会自动继承响应式设计，并与聊天界面无缝集成，让用户在使用你的工具时获得近乎原生的体验。
-
-## CORS 与直连工具 {#cors-and-direct-tools}
-
-直连外部工具是直接在浏览器中运行的工具。此时，工具由用户浏览器中的 JavaScript 调用。
-由于我们依赖 Content-Disposition 标头，在远程工具服务器上使用 CORS 时，Open WebUI 会因为 Access-Control-Expose-Headers 的限制而读不到该标头，从而无法从 fetch 结果中读取某些标头。
-为避免这种情况，你必须把 Access-Control-Expose-Headers 设为 Content-Disposition。下面是一个使用 Node.js 的工具示例：
-
-
-```javascript
-const app = express();
-const cors = require('cors');
-
-app.use(cors())
-
-app.get('/tools/dashboard', (req,res) => {
-    let html = `
-        <div style="padding: 20px;">
-            <h2>System Dashboard</h2>
-            <canvas id="myChart" width="400" height="200"></canvas>
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <script>
-                const ctx = document.getElementById('myChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'line',
-                    data: { /* your chart data */ }
-                });
-            </script>
-        </div>
-    `
-    res.set({
-        'Content-Disposition': 'inline'
-        ,'Access-Control-Expose-Headers':'Content-Disposition'
-    })
-    res.send(html)
-})
-```
-
-关于该标头的更多信息：https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Expose-Headers
