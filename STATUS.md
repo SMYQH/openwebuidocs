@@ -3,28 +3,43 @@
 ## en-us Source Version
 
 - **Repo**: `en-us` (submodule)
-- **Git commit**: `3072f18c3dce6b0078f8edd2447367263560f0f7`
+- **Git commit**: `f53eb3305197b54a2f5eb708cf9e6a65ae76a901`
 - **Branch**: `main`
-- **Snapshot date**: 2026-11-17
+- **Snapshot date**: 2026-11-18
 
 ## Translation Progress Overview
 
 | Metric | Value |
 | --- | --- |
-| en-us source files (.md/.mdx) | 398 |
-| zh-cn files (.md/.mdx) | 398 |
+| en-us source files (.md/.mdx) | 396 |
+| zh-cn files (.md/.mdx) | 396 |
 | en-us `_category_.json` | 43 |
 | zh-cn `_category_.json` | 43 |
-| File coverage | **100%** (all 398 en-us documents have corresponding zh-cn translations) |
-| Content completeness | **441/441 pairs passed semantic review** against the current hashes. No pair is pending. |
+| File coverage | **100%** (all 396 en-us documents have corresponding zh-cn translations) |
+| Semantic review | **439/439 pairs passed** against the current source and translation. This includes 396 documents and 43 category records. |
 | Verbatim code blocks | No hard code-preservation errors. The HAProxy and Nginx Proxy Manager fence repairs were reviewed against upstream. |
 | Upstream inline code spans preserved | No unwaived hard preservation errors. Review signals and exact exceptions remain; this is not a universal preservation certification. |
 | Explicit heading IDs matching upstream | No hard heading-structure failures. The reviewed HAProxy repair restored a heading hidden by upstream fence markup. |
-| Untranslated English prose | No unwaived language warnings. The full 441-pair semantic review is complete. Leftover English `endpoint` wording was normalized to the project terminology (`端点`, `API 端点`, `基础 API 端点`), and the `终结点` variant was replaced. |
-| Production build | 2026-11-19: **passes** with zero broken links, anchors, Markdown links, or duplicate routes. Local sitemap synchronization is skipped without `DOMAIN`, as designed. |
-| Checker behaviour tests | 2026-11-19: **176 tests pass** (`python -m unittest discover -s .agents/skills/translation-checker/scripts -p "test_*.py"`). |
+| Untranslated English prose | No unwaived language warnings. Leftover English `endpoint` wording was normalized to the project terminology (`端点`, `API 端点`, `基础 API 端点`), and the `终结点` variant was replaced. |
+| Production build | **Passed on 2026-11-20** with zero broken links, anchors, Markdown links, or duplicate routes. The build generated 374 routed documentation pages. Local sitemap synchronization skips runs without `DOMAIN`. |
+| Checker behaviour tests | 2026-11-20: **180 tests pass** (`python -m unittest discover -s .agents/skills/translation-checker/scripts -p "test_*.py"`). |
 
 Workflow: [semantic review](.agents/skills/translation-semantic-review/SKILL.md) is separate from the [Python checker](.agents/skills/translation-checker/SKILL.md), which now owns the scripts, tests, config, provider helpers, and ignored local artifacts. The move does not change review counts or checker behavior. Edits to a translated file expire the exact exceptions of that file; `scripts/restamp_exceptions.py` re-binds the surviving exceptions to their current fingerprints and reports the findings that need a manual decision.
+
+### 2026-11-20 Sync through `f53eb330`
+
+- Fixed 176 findings across 57 pages from the review below. The API reference now preserves the streaming setting's precedence over the request's `stream` field. The multi-replica guide restores the shared database condition.
+- Translated 96 modified upstream documents and added the visualization, video generation, and terminal creation guides. Removed Direct Connections and four superseded terminal orchestration pages. Copied the two connection screenshots.
+- The terminal guide specifies **Filesystem** uploads and **Automatic** shell tools for Tether terminals. The oikb daemon guide directs personal OpenAPI connections to **Tether Settings > Integrations**, as documented in [Tether's integration guide](en-us/docs/ecosystem/tether.md#bring-your-own-models-and-tools).
+- The Rich UI guide describes dynamic payloads through citation previews and the `null` payload for event and Action embeds. It records that assistant-message embeds always allow form submission.
+- The strict audit reported **0 errors, 0 warnings, 15 notes, and 55 exact exceptions**. All **439 pairs passed semantic review**. This includes 131 completed readings and 308 reused passes for unchanged pairs. See the [local audit](.agents/skills/translation-checker/.reports/sync-f53-reviewed-audit.json).
+
+### 2026-11-20 DeepL CLI and translation review
+
+- Added `translate`, `usage`, and resumable `review` commands to the [translation-checker skill](.agents/skills/translation-checker/references/usage.md#deepl-cli). The existing translation update workflow shares the same DeepL client.
+- DeepL reported **999,999 of 1,000,000 characters used** on November 20. The offline plan found zero pending texts within the remaining character. The [local checkpoint](.agents/skills/translation-checker/.reports/deepl-translation-review.json) holds 3,721 unique replies covering 3,880 of 6,097 eligible sections. The remaining 2,202 texts need 544,925 characters.
+- Completed the read-only bilingual review of all **441 pairs** against `3072f18c`. **384 passed. 57 had 176 open findings.** This review superseded the November 19 semantic pass for that revision. The API reference reversed streaming precedence, and the multi-replica guide dropped the shared database condition. See the [finding summary](.agents/skills/translation-checker/.reports/deepl-findings.md) and [full results](.agents/skills/translation-checker/.reports/offline-review-results.json).
+- The [strict audit](.agents/skills/translation-checker/.reports/offline-review-verified.json) reports **0 preservation errors, 0 warnings, 18 notes, and 53 exact exceptions**. It accepted all 441 review records and returned exit status `1` for the open findings. The [57 pairs with findings](.agents/skills/translation-checker/.reports/offline-review-unpassed.json) are available for reviewing corrections.
 
 ### 2026-11-19 Removal of the legacy documentation agent definitions
 
@@ -39,7 +54,7 @@ Workflow: [semantic review](.agents/skills/translation-semantic-review/SKILL.md)
 - Normalized the endpoint terminology across the Chinese docs: English `endpoint`/`endpoints` in prose became `端点`, `API 端点` or `REST 端点`, the `终结点` variant became `端点`, and the Azure portal labels (`Keys and Endpoint`, `API Endpoint URL`, `Bing Search V7 Endpoint`) and the quoted Azure error message stay verbatim. Corrected one mistranslation in the Hugging Face SSL section (`改用镜像` -> `切换端点`).
 - Removed one Chinese-only leftover paragraph in the oikb limitations section that upstream emptied, restored the paragraph break in the OpenTelemetry configuration section, and tightened the migration cheat-sheet wording.
 - Added `scripts/restamp_exceptions.py`: it re-binds exact exceptions to their current fingerprints after an edit, keeps the reviewed reason of every finding that still exists, drops exceptions whose finding disappeared, and lists findings that need a manual decision. Added four behavior tests; the suite now runs 176 tests.
-- Strict audit: **0 errors, 0 warnings, 18 notes, and 53 exact exceptions**. Validated **441/441** full reviews. The production build passes with zero broken links, anchors, Markdown links, or duplicate routes.
+- Strict audit: **0 errors, 0 warnings, 18 notes, and 53 exact exceptions**. The checker accepted **441/441** submitted review results at that checkpoint. The November 20 reread supersedes that semantic result. The production build passed with zero broken links, anchors, Markdown links, or duplicate routes.
 
 ### 2026-11-19 Astellas, Public Storage, and TRG case studies
 

@@ -2,7 +2,7 @@
 
 > AGENTS.MD (this document) is time-sensitive. Agent assistants **must** update this document synchronously as the project evolves. See Section 8.
 > Do not blindly trust this document; content may be out of date.
-> Current document snapshot `Git Commit Hash`: `cd9118f`, `Commit` timestamp: `2026-11-19T21:11:17+08:00`
+> Current document snapshot `Git Commit Hash`: `a7d62b3`, `Commit` timestamp: `2026-11-20T12:25:42+08:00`
 
 ---
 
@@ -33,6 +33,8 @@ The root repository contains a Git submodule and a directly maintained subdirect
 Built on Docusaurus. Documentation formats are primarily MDX, with some `.md` files. The repository root provides a `wrangler.jsonc` configuration that deploys the Chinese site's `zh-cn/build/` static output to Cloudflare Workers.
 
 **CI/CD**: `.github/workflows/deploy.yml` builds `zh-cn/` and deploys via Wrangler on push to `main` (or manual dispatch). Required GitHub Actions secrets: `DOMAIN` (site URL for Docusaurus `url`/`baseUrl`; hostname is also checked against account zones for automatic Custom Domain binding), `TOKEN` (Cloudflare API Token → `CLOUDFLARE_API_TOKEN`; needs Workers deploy + `Zone:Zone:Read`), `ID` (Cloudflare Account ID → `CLOUDFLARE_ACCOUNT_ID`).
+
+**DeepL CLI**: The [checker skill](.agents/skills/translation-checker/references/usage.md#deepl-cli) documents plain-text translation, quota lookup, and resumable back-translation of installed Chinese prose. Use back-translations as evidence for bilingual review. Verify differences against both original documents. If quota cannot cover any pending text, keep the checkpoint and continue reading the pairs offline.
 
 **Sitemap generation**: The Chinese site intentionally disables Docusaurus's built-in sitemap output. During `postbuild`, `zh-cn/scripts/sync-sitemap.mjs` downloads `https://docs.openwebui.com/sitemap.xml`, rewrites the upstream origin to the origin parsed from `DOMAIN` (defaulting to HTTPS when the scheme is omitted), and writes `zh-cn/build/sitemap.xml`. Deployment builds must pass `DOMAIN`; local or pull-request builds without `DOMAIN` skip synchronization. Download, validation, or write failures must fail the deployment build rather than publish a missing/stale sitemap.
 
