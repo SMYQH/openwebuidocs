@@ -249,6 +249,50 @@ name takes precedence. The key suffix selects Free or Pro automatically.
 `.env` is ignored by Git and never executed as shell code. Autonomous
 verification/translation does not load the key.
 
+#### DeepL CLI
+
+From the repository root, use the CLI for a quick translation, a quota check,
+or evidence about the installed Chinese docs:
+
+```powershell
+$deepl = '.agents/skills/translation-checker/scripts/deepl_cli.py'
+$report = '.agents/skills/translation-checker/.reports/deepl-review.json'
+python $deepl translate --from EN --to ZH-HANS 'Changes take effect after restart.'
+'重启后生效。' | python $deepl translate --to EN-US
+python $deepl usage
+python $deepl review --plan
+python $deepl review --report $report
+```
+
+`translate` defaults to `ZH-HANS` and detects the input language when `--from`
+is omitted. Pass a text argument or pipe UTF-8 text. `review` defaults to all
+installed pairs. Scope it with `--files path/to/page.mdx` or a directory prefix.
+The offline plan counts unique pending texts and their Unicode characters.
+The live command checks the available quota before sending requests.
+
+```powershell
+python $deepl review --partial --max-characters 10000 --report $report
+python $deepl review --resume --plan --report $report
+python $deepl review --resume --partial --max-characters 10000 --report $report
+```
+
+To check which pending texts fit within the remaining quota, run the resume plan
+with `--partial` and set `--max-characters` to the available count from `usage`.
+This plan sends no text to DeepL. If it reports zero texts within budget, keep
+the checkpoint and continue the bilingual review with the original documents.
+
+Use a new report path for a new scope. Resume with the same scope and report.
+Each saved batch is reused for the same input snapshot. `--partial` rotates
+through files and fills the available budget with whole texts. A section with
+pending texts has `backtranslation: null`. Completed sections show the English
+source, Chinese prose, back-translation, original line numbers, and word
+overlap. Use differences as leads, then verify them in the original pair.
+The report omits code blocks and link destinations. Inline literal references
+can accompany prose for context. Reading a report does not approve an unread
+pair. See the [semantic review skill](../../translation-semantic-review/SKILL.md).
+
+#### Generate translation candidates
+
 ```sh
 python .agents/skills/translation-checker/scripts/translation_update.py --mode deepl --plan --files path/to/page.mdx
 python .agents/skills/translation-checker/scripts/translation_update.py --mode deepl --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json

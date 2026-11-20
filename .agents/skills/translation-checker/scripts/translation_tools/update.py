@@ -8,17 +8,26 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import re
 import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from dataclasses import asdict
+from pathlib import Path
 
 from .artifacts import atomic_write
-from .document import CJK, Document, PLACEHOLDER, digest, mask, prose, WORDS
-from .verify import ROOT, SUFFIXES, audit_text, compare, files, review_template, selected, validate_review_snapshot
+from .document import CJK, PLACEHOLDER, WORDS, Document, digest, mask, prose
+from .verify import (
+    ROOT,
+    SUFFIXES,
+    audit_text,
+    compare,
+    files,
+    review_template,
+    selected,
+    validate_review_snapshot,
+)
 
 
 def read_bytes(path: Path) -> bytes | None:
@@ -92,7 +101,7 @@ def task_documents(bundle: dict, source_root: Path, target_root: Path, config: d
         doc = Document(text_bytes(raw), src.suffix, config["terms"])
         if doc.errors or len(entry["segments"]) != len(doc.segments):
             raise ValueError(f"{path}: source parse or segment count changed")
-        for index, (segment, original) in enumerate(zip(entry["segments"], doc.segments)):
+        for index, (segment, original) in enumerate(zip(entry["segments"], doc.segments, strict=True)):
             if segment["id"] != index or segment["source"] != mask(original.text, doc.terms)[0]:
                 raise ValueError(f"{path}: segment {index} identity changed")
         yield entry, doc, src, dst_path, raw, dst
@@ -102,7 +111,7 @@ def validate_task(bundle: dict, source_root: Path, target_root: Path, config: di
     documents = {}
     for entry, doc, *_ in task_documents(bundle, source_root, target_root, config):
         documents[entry["path"]] = doc
-        for segment, original in zip(entry["segments"], doc.segments):
+        for segment, original in zip(entry["segments"], doc.segments, strict=True):
             if segment["translation"] is not None:
                 try:
                     doc.render_segment(original, segment["translation"], move_terms=bundle.get("provider") == "deepl")
@@ -132,7 +141,7 @@ def reuse_completed(bundle: dict, previous: dict, documents: dict[str, Document]
         doc = Document(entry["source"], documents[path].suffix, config["terms"])
         if doc.errors or len(doc.segments) != len(entry["segments"]):
             raise ValueError(f"{path}: incompatible extraction in reuse checkpoint")
-        for index, (original, segment) in enumerate(zip(doc.segments, entry["segments"])):
+        for index, (original, segment) in enumerate(zip(doc.segments, entry["segments"], strict=True)):
             if segment["id"] != index or mask(original.text, doc.terms)[0] != segment["source"]:
                 raise ValueError(f"{path}: segment {index} identity mismatch in reuse checkpoint")
             value = segment["translation"]
@@ -146,7 +155,7 @@ def reuse_completed(bundle: dict, previous: dict, documents: dict[str, Document]
     for entry in bundle["files"]:
         path = entry["path"]
         doc = documents[path]
-        for segment, original in zip(entry["segments"], doc.segments):
+        for segment, original in zip(entry["segments"], doc.segments, strict=True):
             matches = memory.get((path, original.kind, original.text, segment["source"]), set())
             if len(matches) == 1 and segment["translation"] is None:
                 value, = matches
@@ -200,10 +209,10 @@ def apply_bundle(bundle: dict, source_root: Path, target_root: Path, config: dic
     for entry, doc, src_path, dst_path, src_raw, dst_raw in task_documents(bundle, source_root, target_root, config):
         path = entry["path"]
         values = []
-        for index, (segment, original) in enumerate(zip(entry["segments"], doc.segments)):
+        for index, (segment, original) in enumerate(zip(entry["segments"], doc.segments, strict=True)):
             value = segment["translation"]
             if not isinstance(value, str):
-                raise ValueError(f"{path}: segment {index} has no translation")
+                raise TypeError(f"{path}: segment {index} has no translation")
             # A copied English answer must not silently complete an AI task.
             clean = prose(original.text, doc.terms)
             if len(WORDS.findall(clean)) >= 3 and value == segment["source"]:
@@ -298,26 +307,58 @@ class DeepL:
         return "https://api-free.deepl.com/v2/translate" if (self.key or "").endswith(":fx") else "https://api.deepl.com/v2/translate"
 
     def request(self, texts: list[str], *, context: str | None = None) -> list[str]:
-        params = {"text": texts, "source_lang": "EN", "target_lang": "ZH-HANS", "preserve_formatting": True}
-        if context is None:
+        return self._translate(texts, target_lang="ZH-HANS", source_lang="EN", context=context, xml=context is None)
+
+    def translate(self, texts: list[str], *, target_lang: str, source_lang: str | None = None,
+                  context: str | None = None) -> list[str]:
+        results = self._translate(texts, target_lang=target_lang, source_lang=source_lang, context=context, xml=False)
+        if not all(text.strip() for text in results):
+            raise ValueError("DeepL returned an empty translation")
+        return results
+
+    def _translate(self, texts: list[str], *, target_lang: str, source_lang: str | None,
+                   context: str | None, xml: bool) -> list[str]:
+        params = {"text": texts, "target_lang": target_lang, "preserve_formatting": True}
+        if source_lang is not None:
+            params["source_lang"] = source_lang
+        if context is not None:
+            params["context"] = context
+        if xml:
             params.update(tag_handling="xml", tag_handling_version="v2", ignore_tags=["keep"],
                           outline_detection=False, non_splitting_tags=["keep"])
-        else:
-            params["context"] = context
         payload = json.dumps(params, ensure_ascii=False).encode("utf-8")
         if not texts or len(texts) > 50 or len(payload) > 120_000:
             raise ValueError("DeepL request exceeds safe batch limits")
+        result = self._api_request("translate", payload)
+        translations = result.get("translations")
+        if (not isinstance(translations, list) or len(translations) != len(texts)
+                or not all(isinstance(v, dict) and isinstance(v.get("text"), str) for v in translations)):
+            raise ValueError("DeepL returned an invalid translation count or payload")
+        return [v["text"] for v in translations]
+
+    def usage(self) -> dict[str, int]:
+        result = self._api_request("usage")
+        fields = ("character_count", "character_limit", "api_key_character_count", "api_key_character_limit")
+        usage = {field: result[field] for field in fields if type(result.get(field)) is int and result[field] >= 0}
+        if not {"character_count", "character_limit"} <= usage.keys():
+            raise ValueError("DeepL returned invalid usage counters")
+        return usage
+
+    def _api_request(self, operation: str, payload: bytes | None = None) -> dict:
         if self.key is None:
             self.key = load_deepl_key()
+        url = self.endpoint.rsplit("/", 1)[0] + "/" + operation
+        headers = {"Authorization": "DeepL-Auth-Key " + self.key}
+        if payload is not None:
+            headers["Content-Type"] = "application/json"
         for attempt in range(3):
-            request = urllib.request.Request(self.endpoint, data=payload, headers={"Authorization": "DeepL-Auth-Key " + self.key, "Content-Type": "application/json"}, method="POST")
+            request = urllib.request.Request(url, data=payload, headers=headers)
             try:
                 with self.opener.open(request, timeout=45) as response:
                     result = json.loads(response.read())
-                translations = result.get("translations", [])
-                if len(translations) != len(texts) or not all(isinstance(v.get("text"), str) for v in translations):
-                    raise ValueError("DeepL returned an invalid translation count or payload")
-                return [v["text"] for v in translations]
+                if isinstance(result, dict):
+                    return result
+                raise ValueError("DeepL returned malformed JSON")
             except urllib.error.HTTPError as error:
                 error.close()
                 if error.code in {429, 500, 502, 503, 504} and attempt < 2:
@@ -327,7 +368,7 @@ class DeepL:
                 raise ValueError(f"DeepL request failed (HTTP {error.code})") from None
             except (urllib.error.URLError, TimeoutError, OSError):
                 raise ValueError("DeepL connection failed") from None
-            except (json.JSONDecodeError, AttributeError, TypeError):
+            except (json.JSONDecodeError, UnicodeDecodeError):
                 raise ValueError("DeepL returned malformed JSON") from None
         raise ValueError("DeepL retry limit reached")
 
@@ -385,14 +426,14 @@ class DeepL:
         # Restore whitespace at Markdown boundaries. Use the masked source so
         # whitespace already inside a list-marker token is not added twice.
         _, spans = mask(segment.text, doc.terms)
-        for token, span in zip(PLACEHOLDER.finditer(original), spans):
+        for token, span in zip(PLACEHOLDER.finditer(original), spans, strict=True):
             if span.kind not in {"marker", "symbol", "destination"}:
                 continue
             marker = re.escape(token[0])
             left = re.search(r"[ \t]*$", original[:token.start()])[0]
             right = re.match(r"[ \t]*", original[token.end():])[0]
-            value = re.sub(rf"[ \t]*(?={marker})", lambda _: left, value, count=1)
-            value = re.sub(rf"(?<={marker})[ \t]*", lambda _: right, value, count=1)
+            value = re.sub(rf"[ \t]*(?={marker})", left, value, count=1)
+            value = re.sub(rf"(?<={marker})[ \t]*", right, value, count=1)
         doc.render_segment(segment, value, move_terms=True)
         return value
 
@@ -412,7 +453,7 @@ class DeepL:
         parts, slots = cls.retry_parts(original)
         if not isinstance(fragments, list) or len(fragments) != len(slots):
             raise ValueError("DeepL returned an invalid prose fragment count")
-        for i, value in zip(slots, fragments):
+        for i, value in zip(slots, fragments, strict=True):
             if (not isinstance(value, str) or not (WORDS.search(value) or CJK.search(value))
                     or "⟦" in value or "⟧" in value):
                 raise ValueError("DeepL returned an invalid prose fragment")
@@ -457,7 +498,7 @@ class DeepL:
                 raise ValueError(f"{path}: batch starting at segment {segment['id']}: {error}") from None
             # Save paid responses before parsing them. A malformed response must
             # remain inspectable without paying for the same request again.
-            for (group, _), result in zip(batch, results):
+            for (group, _), result in zip(batch, results, strict=True):
                 for _, segment in group:
                     segment["deepl_response"] = result
                     segment["deepl_tag_version"] = "v2"

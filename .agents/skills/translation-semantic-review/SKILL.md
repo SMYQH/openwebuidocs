@@ -5,13 +5,15 @@ description: Review complete English and Simplified Chinese Open WebUI documenta
 
 # Translation Semantic Review
 
-Start at the repository root. Use the current `en-us/docs/` source and `zh-cn/docs/` target, including category JSON. Read the translation conventions in [AGENTS.MD](../../../AGENTS.MD). Review is offline and read-only unless the user also requests fixes. A clear checker report, matching headings, or full file coverage does not establish semantic quality.
+Start at the repository root. Use the current `en-us/docs/` source and `zh-cn/docs/` target, including category JSON. Read the translation conventions in [AGENTS.MD](../../../AGENTS.MD). Review is read-only unless the user also requests fixes. The default review is offline. A clear checker report, matching headings, or full file coverage does not establish semantic quality.
 
 ## 1. Capture the Exact Pair
 
 - **Installed docs:** Export a full review bundle using the [translation checker skill](../translation-checker/SKILL.md#review-artifacts). Use explicit file or directory scope; omit `--files` for the entire corpus. Keep bundles and results under `.agents/skills/translation-checker/.reports/`.
 - **Translation candidate:** Review the report from `python .agents/skills/translation-checker/scripts/translation_update.py --apply .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json` without `--write`. Resolve blocking checker findings before approval. Compare the complete source with the candidate. Also diff the candidate against the installed target to catch lost Chinese-only content and policy changes. A review of the installed file does not approve different candidate bytes.
 - Use `files` as the reading queue and `result_format` as the result template. Keep the approved entries in the template for paths listed in `reused_files`. Split large scopes into manageable batches without dropping unchecked sections or changing review criteria.
+
+When the user requests DeepL, use the checker's [DeepL CLI](../translation-checker/references/usage.md#deepl-cli) to collect English back-translations of installed Chinese prose. Compare suspected drift against both originals. Check source-only and target-only sections and parse issues directly. If quota runs out, continue reading the original pairs. Report incomplete DeepL evidence and any unread pairs separately from confirmed findings.
 
 ## 2. Read Both Versions in Full
 

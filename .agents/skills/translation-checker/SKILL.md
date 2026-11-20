@@ -1,11 +1,17 @@
 ---
 name: translation-checker
-description: Run and troubleshoot the repository's Python translation checker. Use for coverage and preservation audits, strict checks, JSON diagnostics, exact exceptions, review-bundle commands, and offline checker tests.
+description: Run the repository's translation checker and DeepL CLI. Use for preservation audits, review artifacts, exact exceptions, offline tests, and requested DeepL translations or bilingual review evidence.
 ---
 
 # Python Translation Checker
 
 Run from the repository root. Use Python 3.10+ and install `.agents/skills/translation-checker/requirements.txt` if needed. The checker is read-only for docs and needs no provider key. Save reports to ignored `.agents/skills/translation-checker/.reports/`. See [usage](references/usage.md) for individual rules and [semantic review](../translation-semantic-review/SKILL.md) for bilingual judgment.
+
+## Use DeepL
+
+When the user requests DeepL, run `python .agents/skills/translation-checker/scripts/deepl_cli.py` with `translate`, `usage`, or `review`. Use the existing `DEEPL_AUTH_KEY` from the environment or root `.env`. For a corpus review, start with `review --plan` and `usage` and follow the [CLI examples](references/usage.md#deepl-cli). Review artifacts contain evidence for the bilingual reviewer. They carry no semantic approval.
+
+If the remaining quota cannot cover any pending text, keep the checkpoint and continue with the [full bilingual review](../translation-semantic-review/SKILL.md). Use saved replies as evidence and compare uncovered passages directly against the source.
 
 ## Run an Audit
 
