@@ -19,7 +19,8 @@ Sync updates from the official English documentation submodule `en-us/` (`open-w
 - Workspace root is `openwebuidocs` (contains `en-us/`, `zh-cn/`, `AGENTS.MD`, `STATUS.md`)
 - The translation principles and site differences in the root `AGENTS.MD` have been reviewed
 - On Windows, prefer PowerShell; `git -C` must be available
-- Python 3.10+ with `python -m pip install -r .agents/skills/translation-checker/requirements.txt`
+- Follow the checker's [first-run setup](../translation-checker/references/usage.md#first-run-setup) for the pinned submodule and locked Python dependencies.
+- For a production build on a new machine, install the Node.js version in `zh-cn/.node-version` and run `npm --prefix zh-cn ci`.
 - Read the [checker usage reference](../translation-checker/references/usage.md) for verifier rules, review result schemas, and provider commands
 
 ## Translation Principles (must follow during execution)
@@ -84,7 +85,7 @@ Briefly report to the user: list of P0–P3 files and the planned handling.
 
 When the user requests verification/tooling only, do not translate or apply translation tasks. Verification never requires a provider key. Never encode expected Chinese wording, bilingual answer tables, or translated-answer snapshots into the checker tooling; only terminology and other literal exclusions may be stored verbatim. Behavior fixtures use generated text rather than translations.
 
-Choose the translation mode from the user's request. Default to **autonomous**; the current AI translates without API configuration. **DeepL** requires only `DEEPL_AUTH_KEY` in root `.env` (see `.env.example`); do not ask for an endpoint or model setting. Never display or commit the key. Do not silently switch providers after a failure.
+Choose the translation mode from the user's request. Default to **autonomous**; the current AI translates without API configuration. For **DeepL**, set `DEEPL_AUTH_KEY` in the environment or root `.env` (see `.env.example`). Never display or commit the key. Do not silently switch providers after a failure.
 
 When the user assigns translation to sub-agents, delegate translation edits directly. The parent handles tooling, integration, and validation; it must not translate on their behalf. Respect the user's concurrency limit; run one translation agent at a time when requested. A provider/capacity failure must be reported, never hidden by certifying unfinished review.
 
@@ -93,14 +94,14 @@ Keep task and review artifacts in ignored `.agents/skills/translation-checker/.r
 
 ```powershell
 # Autonomous: fill only translation fields in this task JSON, preserving placeholders.
-python .agents/skills/translation-checker/scripts/translation_update.py --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json
+uv run --locked translation-update --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json
 
 # DeepL: estimate locally, then send only authorized text.
-python .agents/skills/translation-checker/scripts/translation_update.py --mode deepl --plan --files path/to/page.mdx
-python .agents/skills/translation-checker/scripts/translation_update.py --mode deepl --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
+uv run --locked translation-update --mode deepl --plan --files path/to/page.mdx
+uv run --locked translation-update --mode deepl --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
 
 # Either provider: export full source/current target/candidate for review without writing docs.
-python .agents/skills/translation-checker/scripts/translation_update.py --apply .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
+uv run --locked translation-update --apply .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
 ```
 
 Use `--resume --bundle` for an interrupted DeepL task. Review rejected replies before a bounded `--resume --retry-rejected`; do not loop on a failed retry. Use `--reuse` with an earlier compatible checkpoint for a new revision. Only exact same-page segments are reusable. See [DeepL commands and limits](../translation-checker/references/usage.md#deepl-optional-key-only).
@@ -127,8 +128,8 @@ For large-scale changes:
 The update CLI requires a passed review of the exact candidate before writing. Use the same result file to verify the installed bytes, then build:
 
 ```powershell
-python .agents/skills/translation-checker/scripts/translation_update.py --apply .agents/skills/translation-checker/.reports/task.json --review-results .agents/skills/translation-checker/.reports/review-results.json --write
-python .agents/skills/translation-checker/scripts/translation_check.py --strict --files path/to/page.mdx --review-results .agents/skills/translation-checker/.reports/review-results.json --report .agents/skills/translation-checker/.reports/reviewed-audit.json
+uv run --locked translation-update --apply .agents/skills/translation-checker/.reports/task.json --review-results .agents/skills/translation-checker/.reports/review-results.json --write
+uv run --locked translation-check --strict --files path/to/page.mdx --review-results .agents/skills/translation-checker/.reports/review-results.json --report .agents/skills/translation-checker/.reports/reviewed-audit.json
 npm --prefix zh-cn run build
 ```
 
@@ -223,7 +224,7 @@ Only execute `git push` when the user explicitly requests it. If the user does n
 | Situation | Handling |
 | --------- | -------- |
 | No new upstream commits | Stop for detection only; still perform explicitly requested verification/backlog work |
-| DeepL key absent | Explain that only `DEEPL_AUTH_KEY` in `.env` is needed; autonomous mode needs no key |
+| DeepL key absent | Set `DEEPL_AUTH_KEY` in the environment or root `.env` for live DeepL calls. Offline plans and autonomous mode need no key. |
 | Config/CI changes only (all P4) | Still update submodule pointer; may have no translation commit, or commit only `en-us` pointer + STATUS |
 | zh-cn intentionally retains local differences | Follow `AGENTS.MD` section 3; do not overwrite with en-us |
 | Conflicting or uncertain product terminology | Keep the en-us term; confirm with user before changing |

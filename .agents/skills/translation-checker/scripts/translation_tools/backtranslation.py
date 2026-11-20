@@ -12,7 +12,7 @@ from typing import Any
 from .artifacts import save_bundle
 from .document import CJK, JSON_LD, WORDS, Document, digest, inline_protected
 from .update import DeepL
-from .verify import audit_text, files, selected
+from .verify import audit_text, files, require_docs_directory, selected
 
 SectionKey = tuple[str, str, int]
 Section = tuple[int, str]
@@ -96,8 +96,8 @@ def split_text(text: str):
 
 
 def prepare(source_root: Path, target_root: Path, config: dict, patterns: list[str]) -> dict:
-    if not source_root.is_dir() or not target_root.is_dir():
-        raise ValueError("Source and target documentation directories must exist")
+    require_docs_directory(source_root)
+    require_docs_directory(target_root)
     source, target = files(source_root), files(target_root)
     pairs = []
     for path in sorted(source.keys() | target.keys()):

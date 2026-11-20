@@ -42,6 +42,17 @@ class DeepLCliTests(Fixture):
         self.assertNotIn("source_lang", payload)
         self.assertNotIn("tag_handling", payload)
 
+    def test_translate_utf8_file_preserves_line_endings_and_strips_bom(self):
+        source = generated_cjk(7) + "\r\n" + generated_cjk(8)
+        path = self.put(self.root, "source text.txt", "\ufeff" + source)
+        self.opener.open.return_value = Response({"translations": [{"text": "English output"}]})
+
+        output, _ = self.invoke("translate", "--to", "EN-US", "--input-file", str(path))
+
+        self.assertEqual(output.strip(), "English output")
+        payload = json.loads(self.opener.open.call_args.args[0].data)
+        self.assertEqual(payload["text"], [source])
+
     def test_usage_returns_only_quota_counters(self):
         counters = {"character_count": 4, "character_limit": 20}
         self.opener.open.return_value = Response(dict(counters, unrelated="synthetic-response-data"))
@@ -52,9 +63,11 @@ class DeepLCliTests(Fixture):
         self.assertEqual(request.full_url, "https://api-free.deepl.com/v2/usage")
 
     def test_review_plan_makes_no_requests_or_writes(self):
-        self.put(self.source, "a.md", "Source prose.\n")
-        self.put(self.target, "a.md", generated_cjk(6))
-        output, _ = self.review("--plan")
+        self.put(self.source, "guide/a.md", "Source prose.\n")
+        self.put(self.target, "guide/a.md", generated_cjk(6))
+        self.put(self.source, "b.md", "Outside the selected directory.\n")
+        self.put(self.target, "b.md", generated_cjk(7))
+        output, _ = self.review("--plan", "--files", r".\guide\a.md")
         self.assertIn("1 pending texts (6 characters)", output)
         self.opener.open.assert_not_called()
         self.assertFalse(self.report.exists())

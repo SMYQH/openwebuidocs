@@ -60,6 +60,14 @@ def load_config(path: Path = DEFAULT_CONFIG) -> dict:
     return config
 
 
+def require_docs_directory(root: Path) -> None:
+    if root.is_dir():
+        return
+    if root.resolve() == (ROOT / "en-us/docs").resolve():
+        raise ValueError("English source docs are missing. Run `git submodule update --init -- en-us` from the repository root")
+    raise ValueError(f"Documentation directory does not exist: {root}")
+
+
 def files(root: Path) -> dict[str, Path]:
     result = {}
     for path in sorted(root.rglob("*")):
@@ -71,7 +79,13 @@ def files(root: Path) -> dict[str, Path]:
 
 
 def selected(path: str, patterns: list[str]) -> bool:
-    return not patterns or any(fnmatchcase(path, p) or path.startswith(p.rstrip("/") + "/") for p in patterns)
+    if not patterns:
+        return True
+    for pattern in patterns:
+        pattern = pattern.replace("\\", "/").removeprefix("./")
+        if fnmatchcase(path, pattern) or path.startswith(pattern.rstrip("/") + "/"):
+            return True
+    return False
 
 
 @dataclass
@@ -1348,8 +1362,8 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
 
 def verify(source_root: Path, target_root: Path, config: dict, patterns: list[str] | None = None,
            *, review_entries: list[dict] | None = None, review_results: dict | None = None) -> dict:
-    if not source_root.is_dir() or not target_root.is_dir():
-        raise ValueError("Source and target documentation directories must exist")
+    require_docs_directory(source_root)
+    require_docs_directory(target_root)
     src, dst = files(source_root), files(target_root)
     paths = sorted(p for p in src.keys() | dst.keys() if selected(p, patterns or []))
     if not paths:

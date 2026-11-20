@@ -20,6 +20,8 @@
 ├── zh-cn/                            # 中文文档站点
 │   └── docs/                         # 简体中文译文
 ├── .env.example                      # DeepL 密钥配置示例（可选）
+├── pyproject.toml                    # Python 工具和 CLI 入口
+├── uv.lock                           # Python 依赖锁文件
 ├── wrangler.jsonc                    # Cloudflare 部署配置
 ├── STATUS.md                         # 项目状态
 ├── Readme.md                         # 项目介绍
@@ -27,6 +29,23 @@
 ```
 
 翻译状态详见 [STATUS.md](./STATUS.md)。
+
+## 翻译工具上手
+
+先安装 Git 和 [uv](https://docs.astral.sh/uv/getting-started/installation/)。以下命令可在 Windows PowerShell、macOS 或 Linux 中运行。
+
+```sh
+git clone https://github.com/SMYQH/openwebuidocs.git
+cd openwebuidocs
+git submodule update --init -- en-us
+uv sync --locked
+uv run --locked --offline translation-check --strict --summary-only
+uv run --locked --offline deepl-cli review --plan --files alternatives
+```
+
+首次运行需要联网下载固定版本的英文子模块和 Python 依赖。`uv sync --locked` 会创建仓库根目录下的 `.venv`。直接用 `uv run` 运行工具即可。离线审查和用量估算无需 DeepL 密钥。若要查询 DeepL 配额或调用翻译 API，请在根目录的 `.env` 中设置 `DEEPL_AUTH_KEY`，或使用同名环境变量。
+
+安装步骤和 DeepL 命令详见[翻译工具使用指南](.agents/skills/translation-checker/references/usage.md#first-run-setup)。
 
 ## 部署方式
 

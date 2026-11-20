@@ -24,6 +24,7 @@ from .verify import (
     audit_text,
     compare,
     files,
+    require_docs_directory,
     review_template,
     selected,
     validate_review_snapshot,
@@ -52,6 +53,7 @@ def contained(root: Path, relative: str) -> Path:
 
 
 def prepare(source_root: Path, target_root: Path, config: dict, patterns: list[str]) -> dict:
+    require_docs_directory(source_root)
     if source_root.resolve() == target_root.resolve():
         raise ValueError("Source and target must be different directories")
     entries = []
@@ -78,6 +80,7 @@ def prepare(source_root: Path, target_root: Path, config: dict, patterns: list[s
 
 def task_documents(bundle: dict, source_root: Path, target_root: Path, config: dict):
     """Load the real input bytes and verify task identities before requests or writes."""
+    require_docs_directory(source_root)
     if source_root.resolve() == target_root.resolve():
         raise ValueError("Source and target must be different directories")
     if not isinstance(bundle, dict) or bundle.get("schema_version") != 1 or bundle.get("purpose") != "translation-update":
@@ -288,7 +291,7 @@ def load_deepl_key(env_file: Path = ROOT / ".env") -> str:
                 value = match[1]
                 key = value[1:-1] if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'" else value.split(" #", 1)[0].strip()
     if not key or key == "your-key" or any(c.isspace() for c in key):
-        raise ValueError("Set DEEPL_AUTH_KEY in ./.env for DeepL mode")
+        raise ValueError("Set DEEPL_AUTH_KEY in the environment or in the repository's .env (see .env.example)")
     return key
 
 

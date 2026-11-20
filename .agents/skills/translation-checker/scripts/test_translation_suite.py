@@ -844,6 +844,13 @@ class VerificationTests(Fixture):
             self.assertEqual(check_main(args), 0)
             self.assertEqual(check_main(args + ["--strict"]), 1)
 
+    def test_missing_pinned_source_explains_submodule_setup(self):
+        missing_source = self.root / "en-us/docs"
+        error = io.StringIO()
+        with patch("translation_tools.verify.ROOT", self.root), redirect_stderr(error):
+            self.assertEqual(check_main(["--source", str(missing_source), "--target", str(self.target)]), 2)
+        self.assertIn("git submodule update --init -- en-us", error.getvalue())
+
     def test_imports_scripts_and_fence_metadata_are_literal(self):
         for source, target, code in [
             ("import Source from 'module';\n", "import Changed from 'module';\n", "opaque-code-changed"),

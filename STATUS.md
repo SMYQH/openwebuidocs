@@ -22,9 +22,14 @@
 | Explicit heading IDs matching upstream | No hard heading-structure failures. The reviewed HAProxy repair restored a heading hidden by upstream fence markup. |
 | Untranslated English prose | No unwaived language warnings. Leftover English `endpoint` wording was normalized to the project terminology (`端点`, `API 端点`, `基础 API 端点`), and the `终结点` variant was replaced. |
 | Production build | **Passed on 2026-11-20** with zero broken links, anchors, Markdown links, or duplicate routes. The build generated 374 routed documentation pages. Local sitemap synchronization skips runs without `DOMAIN`. |
-| Checker behaviour tests | 2026-11-20: **180 tests pass** (`python -m unittest discover -s .agents/skills/translation-checker/scripts -p "test_*.py"`). |
+| Checker behaviour tests | **182 tests passed on 2026-11-20** in a fresh Windows checkout with a uv-managed Python 3.14 environment. |
 
 Workflow: [semantic review](.agents/skills/translation-semantic-review/SKILL.md) is separate from the [Python checker](.agents/skills/translation-checker/SKILL.md), which now owns the scripts, tests, config, provider helpers, and ignored local artifacts. The move does not change review counts or checker behavior. Edits to a translated file expire the exact exceptions of that file; `scripts/restamp_exceptions.py` re-binds the surviving exceptions to their current fingerprints and reports the findings that need a manual decision.
+
+### 2026-11-20 Translation tool setup
+
+- The [setup guide](.agents/skills/translation-checker/references/usage.md#first-run-setup) uses repo-relative commands. `uv sync --locked` creates `.venv` and installs the four CLI entry points. `--files` accepts either slash style, and DeepL `translate --input-file` reads UTF-8 text.
+- Verified a fresh Windows clone in a path with spaces, starting with an empty uv cache and no `.env`. The strict audit passed **439/439 pairs** with **0 errors, 0 warnings, 15 notes, and 55 exact exceptions**. Both DeepL plan commands ran offline, and all **182 behavior tests passed**.
 
 ### 2026-11-20 Sync through `f53eb330`
 
@@ -1054,12 +1059,14 @@ Issues found after comparing against en-us snapshot `d2871160` have been resolve
 
 ## Verification Method
 
-```bash
-# Check en-us submodule version
-git submodule status
+Run from the repository root after installing Git and uv. Check the pinned
+submodule revision, verify counterpart coverage and preservation, and run the
+behavior tests.
 
-# Verify all files exist (should have no MISSING_IN_ZH entries)
-cd /www/openwebuidocs
-diff <(cd en-us/docs && find . -name '*.md' -o -name '*.mdx' | sort) \
-     <(cd zh-cn/docs && find . -name '*.md' -o -name '*.mdx' | sort)
+```sh
+git submodule update --init -- en-us
+git submodule status
+uv sync --locked
+uv run --locked --offline translation-check --strict --summary-only
+uv run --locked --offline python -m unittest discover -s .agents/skills/translation-checker/scripts -p "test_*.py"
 ```

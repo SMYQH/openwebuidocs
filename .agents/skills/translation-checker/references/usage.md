@@ -4,13 +4,27 @@ Use the [checker skill](../SKILL.md) for audit commands and finding triage.
 Use the [semantic review skill](../../translation-semantic-review/SKILL.md)
 for the full bilingual review procedure and approval criteria.
 
-Python 3.10 or later. Run commands from the repository root:
+## First-run setup
+
+Clone the repository with Git and open a terminal at its root. The checkout
+includes the skills under `.agents/skills/`. Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
+and open a new terminal if the installer changed `PATH`. Run these commands
+from PowerShell, macOS, or Linux.
 
 ```sh
-python -m pip install -r .agents/skills/translation-checker/requirements.txt
-python -m unittest discover -s .agents/skills/translation-checker/scripts -p "test_*.py"
-python .agents/skills/translation-checker/scripts/translation_check.py --strict --summary-only --report .agents/skills/translation-checker/.reports/audit.json
+git submodule update --init -- en-us
+uv sync --locked
+uv run --locked --offline deepl-cli --help
+uv run --locked --offline translation-check --strict --summary-only --report .agents/skills/translation-checker/.reports/audit.json
+uv run --locked --offline deepl-cli review --plan --files alternatives
+uv run --locked --offline python -m unittest discover -s .agents/skills/translation-checker/scripts -p "test_*.py"
 ```
+
+Git checks out the pinned English revision. `uv sync --locked` downloads the
+locked packages into `.venv` and can install Python 3.10 or later if needed.
+`uv run` uses `.venv` without shell activation. Recreate `.venv` by running
+`uv sync --locked` in each checkout. The offline checks and `review --plan`
+need no DeepL key.
 
 All verification and translation-update Python code lives under
 `.agents/skills/translation-checker/scripts/`. Reports and task bundles belong in
@@ -130,10 +144,11 @@ changed block count, make the code comparison unreliable. A standalone source
 code span moved to a new fenced block must retain its exact body. An unrelated
 upstream admonition defect never relaxes code preservation.
 
-Use `--files` for paths, directory prefixes, or globs relative to `docs/`:
+Use `--files` for paths, directory prefixes, or globs relative to `en-us/docs/`.
+Forward slashes and Windows backslashes both work.
 
 ```sh
-python .agents/skills/translation-checker/scripts/translation_check.py --files alternatives reference/https/haproxy.md --report .agents/skills/translation-checker/.reports/selected.json
+uv run --locked translation-check --files alternatives reference/https/haproxy.md --report .agents/skills/translation-checker/.reports/selected.json
 ```
 
 Exit codes: `0` means selected deterministic checks passed; `1` means findings
@@ -161,7 +176,7 @@ Static checks cannot prove accuracy, fluency, correct negation, or that a Chines
 body belongs under the right heading. Export full pairs of installed documents:
 
 ```sh
-python .agents/skills/translation-checker/scripts/translation_check.py --files alternatives --review-bundle .agents/skills/translation-checker/.reports/review.json
+uv run --locked translation-check --files alternatives --review-bundle .agents/skills/translation-checker/.reports/review.json
 ```
 
 The agent reads every pair and section in full. It reviews completeness,
@@ -172,7 +187,7 @@ with `line`, `source_evidence`, and `message`. Status values are `pass`, `fail`,
 or `needs-review`. Never mark an unread file passed.
 
 ```sh
-python .agents/skills/translation-checker/scripts/translation_check.py --strict --files alternatives --review-results .agents/skills/translation-checker/.reports/review-results.json --report .agents/skills/translation-checker/.reports/reviewed-audit.json
+uv run --locked translation-check --strict --files alternatives --review-results .agents/skills/translation-checker/.reports/review-results.json --report .agents/skills/translation-checker/.reports/reviewed-audit.json
 ```
 
 Results require every selected source file exactly once, valid statuses, and
@@ -203,10 +218,10 @@ through this option.
 An exact exception is bound to a fingerprint that mixes the file path, the upstream and target hashes, the finding line, the rule and the finding text. Every edit to a translated file therefore expires the exceptions of that file, even when the reviewed difference is unchanged. Do not delete and retype the reason by hand; re-bind it:
 
 ```powershell
-python .agents/skills/translation-checker/scripts/translation_check.py --strict --report .agents/skills/translation-checker/.reports/audit-before.json
+uv run --locked translation-check --strict --report .agents/skills/translation-checker/.reports/audit-before.json
 # edit the translated file
-python .agents/skills/translation-checker/scripts/translation_check.py --strict --report .agents/skills/translation-checker/.reports/audit-after.json
-python .agents/skills/translation-checker/scripts/restamp_exceptions.py --baseline .agents/skills/translation-checker/.reports/audit-before.json --current .agents/skills/translation-checker/.reports/audit-after.json
+uv run --locked translation-check --strict --report .agents/skills/translation-checker/.reports/audit-after.json
+uv run --locked restamp-exceptions --baseline .agents/skills/translation-checker/.reports/audit-before.json --current .agents/skills/translation-checker/.reports/audit-after.json
 ```
 
 The tool reuses the reason of a finding that still exists with the same path, rule and message, drops the exception of a finding that disappeared, and lists findings without a baseline counterpart as `REVIEW` lines. A reviewed difference whose wording changed still needs a manual decision: read the finding, confirm the difference is still intended, and add the exception with its new fingerprint and a specific reason.
@@ -225,7 +240,7 @@ Only prepare/apply translations when the user requests translation work.
 ### Autonomous AI (default, no key)
 
 ```sh
-python .agents/skills/translation-checker/scripts/translation_update.py --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json
+uv run --locked translation-update --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json
 ```
 
 The assigned AI translates `source` prose segments and fills only their
@@ -238,42 +253,45 @@ model key, or additional provider configuration is needed.
 
 ### DeepL (optional key only)
 
-Copy `.env.example` to `.env` and set:
+For live requests, copy `.env.example` to `.env` at the repository root
+(`Copy-Item .env.example .env` in PowerShell or `cp .env.example .env` in a
+POSIX shell). Save the file as UTF-8 and set `DEEPL_AUTH_KEY` to your DeepL API
+key:
 
 ```dotenv
 DEEPL_AUTH_KEY=your-key
 ```
 
-Replace the placeholder with a real key. An environment variable of the same
-name takes precedence. The key suffix selects Free or Pro automatically.
-`.env` is ignored by Git and never executed as shell code. Autonomous
-verification/translation does not load the key.
+The environment variable `DEEPL_AUTH_KEY` takes precedence over the file.
+The key suffix selects Free or Pro automatically. Git ignores `.env`.
+Keep the key in one of these locations. Offline verification and autonomous
+translation run without a key.
 
 #### DeepL CLI
 
-From the repository root, use the CLI for a quick translation, a quota check,
-or evidence about the installed Chinese docs:
+From the repository root, run the offline plan before a corpus review. Use
+`usage` to check the account's character count and limit before translating.
 
-```powershell
-$deepl = '.agents/skills/translation-checker/scripts/deepl_cli.py'
-$report = '.agents/skills/translation-checker/.reports/deepl-review.json'
-python $deepl translate --from EN --to ZH-HANS 'Changes take effect after restart.'
-'重启后生效。' | python $deepl translate --to EN-US
-python $deepl usage
-python $deepl review --plan
-python $deepl review --report $report
+```sh
+uv run --locked deepl-cli review --plan
+uv run --locked deepl-cli usage
+uv run --locked deepl-cli translate --from EN --to ZH-HANS 'Changes take effect after restart.'
+uv run --locked deepl-cli translate --to EN-US --input-file 'source text.txt'
+uv run --locked deepl-cli review --report .agents/skills/translation-checker/.reports/deepl-review.json
 ```
 
 `translate` defaults to `ZH-HANS` and detects the input language when `--from`
-is omitted. Pass a text argument or pipe UTF-8 text. `review` defaults to all
-installed pairs. Scope it with `--files path/to/page.mdx` or a directory prefix.
+is omitted. Pass a text argument, a UTF-8 file, or UTF-8 stdin. Use
+`--input-file` for non-ASCII text when the shell sends pipes in a different
+encoding. `review` defaults to all installed pairs. Scope it with
+`--files alternatives/claude.mdx` or a directory prefix.
 The offline plan counts unique pending texts and their Unicode characters.
 The live command checks the available quota before sending requests.
 
-```powershell
-python $deepl review --partial --max-characters 10000 --report $report
-python $deepl review --resume --plan --report $report
-python $deepl review --resume --partial --max-characters 10000 --report $report
+```sh
+uv run --locked deepl-cli review --partial --max-characters 10000 --report .agents/skills/translation-checker/.reports/deepl-review.json
+uv run --locked deepl-cli review --resume --plan --report .agents/skills/translation-checker/.reports/deepl-review.json
+uv run --locked deepl-cli review --resume --partial --max-characters 10000 --report .agents/skills/translation-checker/.reports/deepl-review.json
 ```
 
 To check which pending texts fit within the remaining quota, run the resume plan
@@ -294,8 +312,8 @@ pair. See the [semantic review skill](../../translation-semantic-review/SKILL.md
 #### Generate translation candidates
 
 ```sh
-python .agents/skills/translation-checker/scripts/translation_update.py --mode deepl --plan --files path/to/page.mdx
-python .agents/skills/translation-checker/scripts/translation_update.py --mode deepl --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
+uv run --locked translation-update --mode deepl --plan --files path/to/page.mdx
+uv run --locked translation-update --mode deepl --files path/to/page.mdx --bundle .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
 ```
 
 The plan reports distinct unrequested texts and their prose character count,
@@ -307,8 +325,8 @@ verifier configuration are reused. This is local reuse, not a paid DeepL
 translation memory. Reuse does not replace full candidate review.
 
 ```sh
-python .agents/skills/translation-checker/scripts/translation_update.py --mode deepl --resume --plan --bundle .agents/skills/translation-checker/.reports/task.json
-python .agents/skills/translation-checker/scripts/translation_update.py --mode deepl --resume --bundle .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
+uv run --locked translation-update --mode deepl --resume --plan --bundle .agents/skills/translation-checker/.reports/task.json
+uv run --locked translation-update --mode deepl --resume --bundle .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
 ```
 
 Responses are saved atomically before decoding. Resume uses cached responses
@@ -329,7 +347,7 @@ bounded. No live API requests run in behavior tests.
 ### Shared review and apply
 
 ```sh
-python .agents/skills/translation-checker/scripts/translation_update.py --apply .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
+uv run --locked translation-update --apply .agents/skills/translation-checker/.reports/task.json --report .agents/skills/translation-checker/.reports/candidate.json
 ```
 
 The report includes full source, current target, candidate, and file/line
@@ -340,8 +358,8 @@ configuration. Review warnings; fix false positives in tooling when confirmed.
 Do not mark unresolved omissions, meaning changes, or lost local content passed.
 
 ```sh
-python .agents/skills/translation-checker/scripts/translation_update.py --apply .agents/skills/translation-checker/.reports/task.json --review-results .agents/skills/translation-checker/.reports/candidate-review.json --write
-python .agents/skills/translation-checker/scripts/translation_check.py --strict --files path/to/page.mdx --review-results .agents/skills/translation-checker/.reports/candidate-review.json --report .agents/skills/translation-checker/.reports/reviewed-audit.json
+uv run --locked translation-update --apply .agents/skills/translation-checker/.reports/task.json --review-results .agents/skills/translation-checker/.reports/candidate-review.json --write
+uv run --locked translation-check --strict --files path/to/page.mdx --review-results .agents/skills/translation-checker/.reports/candidate-review.json --report .agents/skills/translation-checker/.reports/reviewed-audit.json
 npm --prefix zh-cn run build
 ```
 

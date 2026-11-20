@@ -68,7 +68,8 @@ def restamp(baseline: dict, current: dict, config: dict) -> tuple[list[dict], li
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(prog="restamp-exceptions", description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--baseline", required=True, type=Path, help="audit report taken before the edits")
     parser.add_argument("--current", required=True, type=Path, help="audit report taken after the edits")
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)

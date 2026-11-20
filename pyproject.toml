@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools==82.0.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openwebuidocs-translation-tools"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["markdown-it-py>=3.0,<5", "PyYAML>=6.0,<7"]
+
+[project.scripts]
+deepl-cli = "deepl_cli:cli"
+translation-check = "translation_check:main"
+translation-update = "translation_update:main"
+restamp-exceptions = "restamp_exceptions:main"
+
+[tool.setuptools]
+package-dir = {"" = ".agents/skills/translation-checker/scripts"}
+packages = ["translation_tools"]
+py-modules = ["deepl_cli", "restamp_exceptions", "translation_check", "translation_update"]

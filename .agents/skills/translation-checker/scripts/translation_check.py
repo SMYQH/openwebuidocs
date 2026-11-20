@@ -11,7 +11,7 @@ from translation_tools.verify import DEFAULT_CONFIG, ROOT, load_config, review_b
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog="translation-check", description=__doc__)
     parser.add_argument("--source", type=Path, default=ROOT / "en-us/docs")
     parser.add_argument("--target", type=Path, default=ROOT / "zh-cn/docs")
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)

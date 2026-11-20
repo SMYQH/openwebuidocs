@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import sys
 from pathlib import Path
@@ -53,10 +54,12 @@ def review(args: argparse.Namespace, client: DeepL) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog="deepl-cli", description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    translate = commands.add_parser("translate", help="Translate text or UTF-8 stdin")
-    translate.add_argument("text", nargs="?", help="Text to translate, or - for stdin")
+    translate = commands.add_parser("translate", help="Translate text from an argument, file, or stdin")
+    input_source = translate.add_mutually_exclusive_group()
+    input_source.add_argument("text", nargs="?", help="Text to translate, or - for UTF-8 stdin")
+    input_source.add_argument("--input-file", type=Path, help="Read text from a UTF-8 file")
     translate.add_argument("--from", dest="source_lang", type=str.upper, help="Source language (default: detect)")
     translate.add_argument("--to", dest="target_lang", type=str.upper, default="ZH-HANS",
                            help="Target language (default: ZH-HANS)")
@@ -84,9 +87,11 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(client.usage(), indent=2))
         else:
             text = args.text
-            if text is None or text == "-":
+            if args.input_file is not None:
+                text = args.input_file.read_bytes().decode("utf-8-sig")
+            elif text is None or text == "-":
                 if sys.stdin.isatty() and text is None:
-                    parser.error("provide text or pipe UTF-8 input")
+                    translate.error("provide text, use --input-file, or pipe UTF-8 input")
                 text = sys.stdin.buffer.read().decode("utf-8-sig")
             if not text.strip():
                 raise ValueError("Provide nonempty text to translate")
@@ -97,6 +102,11 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def cli() -> int:
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8")
+    return main()
+
+
 if __name__ == "__main__":
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.exit(main())
+    sys.exit(cli())
