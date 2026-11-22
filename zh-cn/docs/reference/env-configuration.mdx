@@ -49,10 +49,10 @@ OAuth 设置是一个例外：只要 [`ENABLE_OAUTH_PERSISTENT_CONFIG`](#enable_
 
 
 #### 选项 3：手动数据库更新（最后的手段 / 锁定恢复） {#option-3-manual-database-update-last-resort--lock-out-recovery}
-如果你被锁定或无法访问 UI，你可以通过 Docker 手动更新 SQLite 数据库：
+如果你被锁定或无法访问 UI，你可以通过 Docker 手动更新 SQLite 数据库。该镜像没有 `sqlite3` 命令，因此这里使用 Python 内置的 SQLite shell：
 
 ```bash
-docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET value = json('true') WHERE key = 'ui.enable_signup';"
+docker exec -it open-webui python3 -m sqlite3 /app/backend/data/webui.db "UPDATE config SET value = json('true') WHERE key = 'ui.enable_signup';"
 ```
 *(每个设置都是独立的一行，存放在一个与环境变量名不同的内部键下。可用 `SELECT key FROM config;` 列出这些键，然后把 `ui.enable_signup` 和 `true` 替换为所需的设置和值。)*
 
@@ -66,6 +66,23 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 :::danger
 **警告：** 删除卷将删除所有用户数据，包括聊天和账户。
 :::
+
+
+### \`.env\` 文件会被 pip、uv 和 Conda 安装忽略 {#env-file-ignored-by-pip-uv-and-conda-installs}
+
+通过 pip、uv 或 Conda 安装的 Open WebUI 不会读取你启动 `open-webui serve` 时所在目录中的 `.env` 文件。它只加载环境 `site-packages` 所在目录中的 `.env`：Linux 和 macOS 上使用 Python 3.12 时为 `<env>/lib/python3.12/`，Windows 上为 `<env>\Lib\`（[Python 安装布局](https://docs.python.org/3/library/sysconfig.html#installation-paths)）。启动日志不会说明它读取了哪个 `.env` 文件。要打印准确路径，请在已激活的环境中运行：
+
+```bash
+python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).resolve().parents[2] / '.env')"
+```
+
+用以下方式之一设置变量：
+
+- 在 shell 中导出，或在启动 Open WebUI 的服务单元中设置。
+- 在命令行上设置：Linux 和 macOS 上为 `DATA_DIR=~/.open-webui open-webui serve`，PowerShell 中为 `$env:DATA_DIR="C:\open-webui\data"; open-webui serve`。
+- 把 `.env` 文件放到打印出的路径上。已经在 shell 中设置的变量优先于文件中的同名变量。使用 `uvx` 时，环境位于 uv 缓存目录中，而 `uv cache clean` 会清除该目录，因此请改用 shell。
+
+`open-webui serve` 会先读取 `WEBUI_SECRET_KEY`，然后才加载 `.env` 文件，因此仅在文件中设置的密钥不会被使用。请在 shell 中设置，或者让该命令把它自己的 `.webui_secret_key` 文件保留在你启动命令时所在的目录中。
 
 
 ## 应用程序/后端 {#appbackend}
@@ -162,7 +179,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`str`
 - 默认值：`Admin`
-- 描述：自动创建管理员账号的显示名称。
+- 描述：自动创建管理员账号的显示名称。当为无头模式创建管理员而配置了 `WEBUI_ADMIN_EMAIL` 和 `WEBUI_ADMIN_PASSWORD` 时使用。
 
 
 #### `ENABLE_LOGIN_FORM` {#enable\_login\_form}
@@ -232,7 +249,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`str`
 - 默认值：空字符串（`''`）
-- 描述：为尚未自行置顶任何模型的用户预置默认置顶模型的 ID 列表，以逗号分隔。这会为新账户在侧边栏中准备一组现成的模型快捷方式。它只在首次为用户自身的置顶列表做种子填充；之后用户的置顶优先。在界面中，该列表按模型在**设置 > 模型**（管理员区域）下的**设为置顶模型**进行管理，参见[已选与保留的模型](/features/workspace/models#selected-and-pinned-models-admin)。
+- 描述：为从未置顶、取消置顶或重新排列过模型的用户预置默认置顶模型的 ID 列表，以逗号分隔。这会为新账户在侧边栏中准备一组现成的模型快捷方式。这类用户会跟随列表的变化。用户第一次置顶、取消置顶或重新排列模型时，当前的列表会保存为其自己的列表，之后再修改此设置也不会再影响到他们。在界面中，该列表按模型在**设置 > 模型**（管理员区域）下的**设为置顶模型**进行管理，参见[已选与保留的模型](/features/workspace/models#selected-and-pinned-models-admin)。
 - 示例：`gpt-5.6-sol,claude-opus-5,muse-glimmer:30b-q4_K_M`
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -415,7 +432,8 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`str`
 - 默认值：空字符串（`''`）
-- 描述：为待审核用户的提示层设置自定义标题。仅在关闭 [`ENABLE_MFA`](#enable_mfa) 时显示。开启 MFA 时，待审核用户将停留在登录页，并看到提示 “Your account is awaiting administrator approval.”
+- 描述：为待审核用户的提示层设置自定义标题。仅在关闭 [`ENABLE_MFA`](#enable_mfa) 时显示。开启 MFA 时，待审核用户将停留在登录页，并看到提示 “Your account is awaiting administrator approval.” 留空时，提示层显示 “Account Activation Pending” 和 “Contact Admin for WebUI Access”。
+- 对应字段：**设置 > 认证**（管理员区域）**待审核账户**区块中的**待审核用户提示层标题**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -423,7 +441,8 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`str`
 - 默认值：空字符串（`''`）
-- 描述：为待审核用户的提示层设置自定义文本。仅在关闭 [`ENABLE_MFA`](#enable_mfa) 时显示。开启 MFA 时，待审核用户将停留在登录页，并看到提示 “Your account is awaiting administrator approval.”
+- 描述：为待审核用户的提示层设置自定义文本。仅在关闭 [`ENABLE_MFA`](#enable_mfa) 时显示。开启 MFA 时，待审核用户将停留在登录页，并看到提示 “Your account is awaiting administrator approval.” 该文本按 Markdown 渲染并保留换行。
+- 对应字段：**设置 > 认证**（管理员区域）**待审核账户**区块中的**待审核用户提示层内容**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -454,7 +473,7 @@ docker exec -it open-webui sqlite3 /app/backend/data/webui.db "UPDATE config SET
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用[应用](/features/channels/apps)：以外部服务的身份作为成员加入频道、响应提及并发布带按钮的消息。在管理设置中新增**应用**标签页，管理员可在其中安装和连接应用。应用只在频道中起作用，因此还必须开启 [`ENABLE_CHANNELS`](#enable_channels)。关闭它会断开所有应用连接。实验性功能。也可在**设置 > 常规**（管理员区域）（**应用**）中设置。
+- 描述：启用[应用](/features/channels/apps)：以外部服务的身份作为成员加入频道、响应提及并发布带按钮的消息。在**设置 > 集成**（管理员区域）中新增**应用**区块，管理员可在其中安装和连接应用。应用只在频道中起作用，因此还必须开启 [`ENABLE_CHANNELS`](#enable_channels)。关闭它会断开所有应用连接。实验性功能。也可在**设置 > 常规**（管理员区域）（**应用**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `APP_ALLOWED_PRIVATE_ORIGINS` {#app\_allowed\_private\_origins}
@@ -720,6 +739,11 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 - 默认值：`True`
 - 描述：控制是否显示管理面板的 **Analytics** 选项卡，以及是否挂载分析 API 路由。设为 `False` 时，选项卡会隐藏，对应端点也不会注册。关闭此功能不会停止底层数据收集，管理员仍可直接查询数据库中的数据。此开关只控制产品内的访问入口，参见上文有关管理界面开关的说明。重启后生效。
 
+#### `TZ` {#tz}
+
+- 类型：`str`
+- 默认值：未设置（服务器的系统时区）
+- 描述：设置 Open WebUI 用来将管理员 **Analytics** 选项卡中的用量图表切分为区间（包括**每日**区间）的时区。图表中的一天从 Open WebUI 服务器时区的午夜到午夜，而不是查看者的浏览器时区，也不是数据库服务器的时区。将它设为 IANA 时区名称，例如 `America/New_York`，即可把日边界调整到你自己的日期。在 PostgreSQL 上，每日汇总会按该时区在数据库中计算。当 `TZ` 未设置时，Open WebUI 使用 `/etc/localtime` 指向的时区；当系统既没有 UTC 偏移也没有夏令时时使用 UTC。如果以这种方式找到的时区不是有效的 IANA 时区名称，每日汇总会改由 Open WebUI 按服务器本地时间计算。相同的服务器本地时间会填充未携带浏览器变量的请求中的 `{{CURRENT_DATE}}`、`{{CURRENT_TIME}}`、`{{CURRENT_DATETIME}}` 和 `{{CURRENT_WEEKDAY}}`：API 调用、自动化和定时器。从 Web 界面发送的聊天改用浏览器时间。如果这些值出来是 UTC，请在 Open WebUI 服务器或容器的环境中设置 `TZ`。
 
 #### `BYPASS_ADMIN_ACCESS_CONTROL` {#bypass\_admin\_access\_control}
 
@@ -807,8 +831,8 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：控制活跃用户数量对所有用户可见，还是仅管理员可见。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 描述：控制活跃用户数量对所有用户可见，还是仅管理员可见。设为 `False` 时，只有管理员可以看到当前活跃用户数量，从而降低后端负载，并解决大型部署中的隐私问题。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `ENABLE_USER_STATUS` {#enable\_user\_status}
@@ -823,13 +847,14 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用 UI 中的彩蛋功能，例如特殊主题（如 “Her” 主题）。
+- 描述：启用或禁用 UI 中的彩蛋功能，例如特殊主题（如 “Her” 主题）。设为 `False` 可向用户隐藏这些可选的趣味功能。
 
 
 #### `ADMIN_EMAIL` {#admin\_email}
 
 - 类型：`str`
-- 描述：`SHOW_ADMIN_DETAILS` 显示的管理员邮箱。
+- 描述：设置 `SHOW_ADMIN_DETAILS` 在待审核账户提示层上显示的管理员邮箱，显示在使用该邮箱的账户名称旁。留空时，提示层显示实例上创建的第一个用户的名称和邮箱。
+- 对应字段：**设置 > 认证**（管理员区域）**待审核账户**区块中的**管理员联系邮箱**，在**管理员详情**开启时显示。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -879,6 +904,17 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 - 类型：`str`
 - 默认值：每次启动时生成的随机 UUID
 - 描述：标识后端进程。Open WebUI 发出的每个事件封包都会带上 `instance_id`，因此多副本部署可以看出某个事件由哪个副本产生。显式设置它可以让该值在重启后保持稳定。
+
+#### `HOST` {#host}
+
+- 类型：`str`
+- 默认值：`0.0.0.0`
+- 描述：设置 Open WebUI 监听的地址。`0.0.0.0` 接受来自所有网络接口的连接。`127.0.0.1` 只接受来自同一台机器的连接，例如当该机器上的反向代理为 Open WebUI 转发流量时。由 Docker 镜像和 Windows 启动脚本在启动时读取。`open-webui serve` 和 `open-webui dev` 命令会忽略它；请改用 `--host`，例如 `open-webui serve --host 127.0.0.1`。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
+
+:::warning
+在 Docker 中，`HOST=127.0.0.1` 会让 Open WebUI 只接受来自容器内部的连接，因此发布的端口将不再响应。若要把它保留在主机的环回地址上，请不要设置 `HOST`，而是把端口发布为 `-p 127.0.0.1:3000:8080`。
+:::
 
 #### `PORT` {#port}
 
@@ -957,7 +993,7 @@ open-webui serve --port 9999
 
 - 类型：`int`
 - 默认值：`1`
-- 描述：设置流式响应每批发送给客户端的 token 数量下限，适用于整个系统。管理员可以由此避免分块过小导致的 CPU 高负载，维持系统整体的性能和稳定性。实际使用的分块大小取此全局变量、模型高级参数和当前聊天设置三者中的最大值。默认值为 1，即全局不设批量下限。
+- 描述：设置流式文本更新在发送给客户端之前至少要合并成多少批的系统级下限。这让管理员可以避免过小的批次，因为它们可能造成较高的 CPU 负载。模型的**流式增量块大小**会取代单聊天的值，最终取此变量与该值中的较大者。默认值为 1，即全局不设批量下限。参见[回复成批到达或只在结束时到达](/troubleshooting/performance#replies-arrive-in-bursts-or-only-when-finished)。
 
 
 #### `CHAT_STREAM_RESPONSE_CHUNK_MAX_BUFFER_SIZE` {#chat\_stream\_response\_chunk\_max\_buffer\_size}
@@ -1071,7 +1107,7 @@ WEBUI_BANNERS="[{\"id\": \"1\", \"type\": \"warning\", \"title\": \"Your message
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：控制是否为本地模型使用 CUDA 加速。设为 `true` 时会尝试检测并使用可用的 NVIDIA GPU。
+- 描述：控制是否为本地模型使用 CUDA 加速。设为 `true` 时会尝试检测并使用可用的 NVIDIA GPU。代码读取环境变量 `USE_CUDA_DOCKER` 来设置该内部布尔变量。
 
 
 #### `DEVICE_TYPE` {#device\_type}
@@ -1121,7 +1157,7 @@ WEBUI_BANNERS="[{\"id\": \"1\", \"type\": \"warning\", \"title\": \"Your message
 - 类型：`str`
 - 默认值：Empty string (' '), since `None` is set as default.
 - 描述：指定要使用的 SSL assert fingerprint。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `ENABLE_COMPRESSION_MIDDLEWARE` {#enable\_compression\_middleware}
@@ -1329,7 +1365,7 @@ c-ares 会读取 `/etc/resolv.conf` 和 hosts 文件，但不读取其它名称�
 
 - 类型：`int`
 - 默认值：`300`
-- 描述：共享 AIOHTTP 池的 DNS 缓存 TTL（秒）。
+- 描述：共享 AIOHTTP 池的 DNS 缓存 TTL（秒）。负值或无效值会回退到 `300`。基础设施稳定时可增大此值；上游主机频繁更换 IP 时可减小此值。
 
 :::info
 Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发 HTTP 流量，以便复用 TCP/TLS 连接、共享 DNS 缓存并限制并发。上面这三个变量用于调优该连接池；在常规部署中通常无需设置。
@@ -1340,7 +1376,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：控制同步 `requests` 的 SSL/TLS 验证。
+- 描述：控制同步 `requests` 的 SSL/TLS 验证（例如 Tika、External Reranker）。设为 `False` 可对自签名证书跳过证书验证。
 
 
 ### 目录 {#directories}
@@ -1348,8 +1384,8 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 #### `DATA_DIR` {#data\_dir}
 
 - 类型：`str`
-- 默认值：`./data`
-- 描述：指定数据存储的基础目录，包括上传、缓存、向量数据库等。
+- 默认值：源码树中的 `backend/data`，在 Docker 镜像中为 `/app/backend/data`。对于通过 `open-webui serve` 启动的 pip、uv 和 Conda 安装，则为环境 `site-packages` 中的 `open_webui/data`。
+- 描述：指定数据存储的基础目录，包括上传、缓存、向量数据库等。对于 pip、uv 和 Conda 安装，请把它设置到 Python 环境之外的文件夹，因为默认文件夹在删除或重建环境时会被一并删除。当 `open-webui serve` 在未设置 `DATA_DIR` 的情况下启动，并在 `site-packages` 中直接找到 `data` 文件夹时，它会把该文件夹复制到 `open_webui/data`，在 `site-packages/open_webui_data.zip` 中保存一份副本，然后删除原文件夹。
 
 
 #### `FRONTEND_BUILD_DIR` {#frontend\_build\_dir}
@@ -1362,8 +1398,8 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 #### `STATIC_DIR` {#static\_dir}
 
 - 类型：`str`
-- 默认值：`./static`
-- 描述：指定静态文件目录，例如 favicon。
+- 默认值：`backend/open_webui/static`（在 Docker 镜像中为 `/app/backend/open_webui/static`）
+- 描述：指定 Open WebUI 提供内置静态资源的目录。每次启动时，Open WebUI 都会删除该目录顶层的文件，把内置资源重新复制进去，并覆盖 `favicon.png`、`splash.png` 和 `loader.js`，因此放在那里或替换掉的文件无法保留到重启之后。Logo 和 favicon 受 [Open WebUI 许可证](/license) 约束。
 
 
 ### 日志 {#logging}
@@ -1399,7 +1435,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：控制审计日志是否写入文件。
+- 描述：控制审计日志是否写入文件。启用后，日志会写入 `AUDIT_LOGS_FILE_PATH` 指定的位置。
 
 
 #### `AUDIT_LOGS_FILE_PATH` {#audit\_logs\_file\_path}
@@ -1421,7 +1457,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`str`
 - 默认值：`uvicorn.access`
-- 描述：要纳入审计日志的 logger 名称列表，以逗号分隔。
+- 描述：要由 Open WebUI 接管的 Python logger 名称列表，以逗号分隔。尽管名字如此，它与审计日志毫无关系：Open WebUI 会用自身的处理器替换每个具名 logger 的处理器，把该 logger 的级别设为 [`GLOBAL_LOG_LEVEL`](#global_log_level)，并按 Open WebUI 的日志格式把它的日志行写入 stdout（参见 [`LOG_FORMAT`](#log_format)）。审计条目只来自审计中间件，因此这些日志行永远不会写入 `AUDIT_LOGS_FILE_PATH` 指向的文件。默认值覆盖 Uvicorn 的访问日志。名称不会被去除空白，因此逗号后不要加空格。空值表示不指定任何 Uvicorn logger，此时 Open WebUI 会保持 Uvicorn 自行配置的 `uvicorn.access` 不变。
 
 
 #### `AUDIT_LOG_LEVEL` {#audit\_log\_level}
@@ -1643,7 +1679,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`str`
 - 默认值：空字符串（使用内置的批准策略）
-- 描述：描述哪些工具调用需要批准的批准策略。两种引擎都会使用它。也可在 **设置 > 界面**（管理员区域）（**批准策略**）中设置。
+- 描述：描述 **Auto** 中哪些工具调用需要批准的批准策略。两种引擎都会使用它。空值或仅含空白字符的值使用内置策略。自定义值会完整取代内置策略。内置文本以及各引擎的使用方式见 [Auto](/features/extensibility/plugin/tools#auto)。也可在 **设置 > 界面**（管理员区域）（**批准策略提示词**，开启 **Auto 权限** 后显示）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_permissions.auto.prompt`。
 
 #### `TOOL_PERMISSIONS_AUTO_DECISIONS_API_BASE_URL` {#tool\_permissions\_auto\_decisions\_api\_base\_url}
@@ -1865,7 +1901,7 @@ JSON format: { "follow_ups": ["Suggested next message 1", "Suggested next messag
 #### `TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE` {#tools\_function\_calling\_prompt\_template}
 
 - 类型：`str`
-- 描述：调用工具时使用的提示词模板。
+- 描述：[旧版模式](/features/extensibility/plugin/tools#how-legacy-mode-picks-tools)在每次回复前发送给任务模型、用于挑选工具的系统提示词。原生模式不使用它。`{{TOOLS}}` 会被替换为该聊天工具定义的 JSON 列表，不会填充其他占位符。回复必须包含一个 JSON 对象，其中带有 `tool_calls` 数组，数组元素形如 `{"name": ..., "parameters": {...}}`。也可在 **设置 > 界面**（管理员区域）（**工具函数调用提示词**，位于**生成**之下）中设置。
 - 默认值：`DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE` 环境变量的值。
 
 `DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE`:
@@ -2375,6 +2411,8 @@ JSON format: { "tags": ["tag1", "tag2", "tag3"] }
 
 - 类型：`str`
 - 描述：在启用 API Key 端点限制时，指定允许访问的 API 端点逗号分隔列表。
+- 对应字段：**设置 > 认证**（管理员区域）**用户访问**区块中的**允许的端点**，在**API Key 端点限制**开启时显示。
+- 匹配规则：每个条目允许该确切路径及其下的所有路径，因此 `/api/v1/chats` 也会允许 `/api/v1/chats/list`。不支持通配符。使用 API key 对其他任何路径发起的请求都会被拒绝，返回 `403` 和 `You do not have permission to access this resource. Please contact your administrator for assistance.`。该限制同样适用于管理员 key。开启限制且该列表为空时，所有 API key 请求都会被拒绝。
 - 示例：`/api/v1/messages,/api/v1/channels,/api/v1/chat/completions`
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -3103,7 +3141,7 @@ CORS_ALLOW_ORIGIN: "https://yourdomain.com;http://yourdomain.com;https://yourhos
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：切换 Sentence-Transformer 模型的自动更新。
+- 描述：切换 Sentence-Transformer 模型的自动更新。在 `True` 时，每次使用**默认（SentenceTransformers）**嵌入引擎启动，都会联系 Hugging Face 检查 [`RAG_EMBEDDING_MODEL`](#rag_embedding_model) 并下载缺失的文件，即使已有缓存副本也是如此，而且服务器在完成之前不会接受连接。Hugging Face 缓慢或被封锁时，启动看起来像是卡住了，参见[启动与 Docker 故障](/troubleshooting/startup#startup-stops-after-the-banner-while-hugging-face-is-slow-or-blocked)。设为 `False` 时，Open WebUI 会加载缓存副本而不联系 Hugging Face；尚未缓存的模型仍会按名称从 Hugging Face 加载。当 [`OFFLINE_MODE`](#offline_mode) 为 `True` 时强制为 `False`。
 
 
 #### `RAG_RERANKING_MODEL_AUTO_UPDATE` {#rag\_reranking\_model\_auto\_update}
@@ -3183,7 +3221,7 @@ pip install open-webui[all]
 #### `CHROMA_HTTP_HOST` {#chroma\_http\_host}
 
 - 类型：`str`
-- 描述：指定远程 ChromaDB 服务器的主机名。未设置时使用本地 ChromaDB 实例。**多 worker 或多副本部署必须设置此变量**。它会将 ChromaDB 从使用 SQLite 的嵌入式 `PersistentClient` 切换为连接独立 ChromaDB 服务器、可安全用于派生进程的 `HttpClient`。
+- 描述：指定远程 ChromaDB 服务器的主机名。未设置时使用本地 ChromaDB 实例。**多 worker 或多副本部署必须设置此变量**：它会将 ChromaDB 从使用 SQLite 的嵌入式 `PersistentClient` 切换为连接独立 ChromaDB 服务器、可安全用于派生进程的 `HttpClient`。请让该服务器与内置的 `chromadb` 客户端保持相同版本，每个 Open WebUI 版本都会在 `pyproject.toml` 中锁定该版本。切换后如果上传失败并报出来自 Chroma 客户端的错误，请先比较这两个版本。
 
 
 #### `CHROMA_HTTP_PORT` {#chroma\_http\_port}
@@ -3228,7 +3266,7 @@ pip install open-webui[all]
 - 类型：`str`
 - 默认值：空字符串（`''`），因为默认值设为 `None`
 - 描述：指定 Elasticsearch API key。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `ELASTICSEARCH_CA_CERTS` {#elasticsearch\_ca\_certs}
@@ -3236,7 +3274,7 @@ pip install open-webui[all]
 - 类型：`str`
 - 默认值：空字符串（`''`），因为默认值设为 `None`
 - 描述：指定 Elasticsearch 的 CA 证书路径。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `ELASTICSEARCH_CLOUD_ID` {#elasticsearch\_cloud\_id}
@@ -3244,7 +3282,7 @@ pip install open-webui[all]
 - 类型：`str`
 - 默认值：空字符串（`''`），因为默认值设为 `None`
 - 描述：指定 Elasticsearch 的 cloud ID。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `ELASTICSEARCH_INDEX_PREFIX` {#elasticsearch\_index\_prefix}
@@ -3252,7 +3290,7 @@ pip install open-webui[all]
 - 类型：`str`
 - 默认值：`open_webui_collections`
 - 描述：指定 Elasticsearch 索引的前缀。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `ELASTICSEARCH_PASSWORD` {#elasticsearch\_password}
@@ -3260,7 +3298,7 @@ pip install open-webui[all]
 - 类型：`str`
 - 默认值：空字符串（`''`），因为默认值设为 `None`
 - 描述：指定 Elasticsearch 的密码。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `ELASTICSEARCH_URL` {#elasticsearch\_url}
@@ -3268,7 +3306,7 @@ pip install open-webui[all]
 - 类型：`str`
 - 默认值：`https://localhost:9200`
 - 描述：指定 Elasticsearch 实例的 URL。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `ELASTICSEARCH_USERNAME` {#elasticsearch\_username}
@@ -3352,7 +3390,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 - 默认值：`HNSW`
 - 选项：`AUTOINDEX`、`FLAT`、`IVF_FLAT`、`HNSW`、`DISKANN`
 - 描述：指定在 Milvus 中创建新集合时使用的索引类型。对于 Milvus standalone，通常推荐 `AUTOINDEX`。`HNSW` 可能提供更好的性能，但需要集群化的 Milvus 部署，不适合 standalone 部署。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `MILVUS_METRIC_TYPE` {#milvus\_metric\_type}
@@ -3361,7 +3399,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 - 默认值：`COSINE`
 - 选项：`COSINE`、`IP`、`L2`
 - 描述：指定 Milvus 中向量相似度搜索所使用的指标类型。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `MILVUS_HNSW_M` {#milvus\_hnsw\_m}
@@ -3369,7 +3407,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 - 类型：`int`
 - 默认值：`16`
 - 描述：指定 Milvus 中 HNSW 索引类型的 `M` 参数。这会影响在构建过程中为每个新元素创建的双向链接数量。仅当 `MILVUS_INDEX_TYPE` 为 `HNSW` 时适用。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `MILVUS_HNSW_EFCONSTRUCTION` {#milvus\_hnsw\_efconstruction}
@@ -3377,7 +3415,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 - 类型：`int`
 - 默认值：`100`
 - 描述：指定 Milvus 中 HNSW 索引类型的 `efConstruction` 参数。这会影响索引构建期间最近邻动态列表的大小。仅当 `MILVUS_INDEX_TYPE` 为 `HNSW` 时适用。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `MILVUS_IVF_FLAT_NLIST` {#milvus\_ivf\_flat\_nlist}
@@ -3385,7 +3423,7 @@ Open WebUI 在存储文件前会将其内容哈希与集合比对，而 Milvus L
 - 类型：`int`
 - 默认值：`128`
 - 描述：指定 Milvus 中 IVF_FLAT 索引类型的 `nlist` 参数，也就是聚类单元的数量。仅当 `MILVUS_INDEX_TYPE` 为 `IVF_FLAT` 时适用。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `MILVUS_DISKANN_MAX_DEGREE` {#milvus\_diskann\_max\_degree}
@@ -3633,14 +3671,14 @@ MariaDB Vector 需要使用**官方 MariaDB 连接器**（`mariadb+mariadbconnec
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用 OpenSearch 的 SSL。
+- 描述：启用或禁用 OpenSearch 的 SSL。为 `True` 时，即使 `OPENSEARCH_URI` 以 `http://` 开头，Open WebUI 也使用 HTTPS 连接。若 OpenSearch 服务器提供的是纯 HTTP，请设为 `False`。以 `https://` 开头的 URI 无论如何都使用 HTTPS。
 
 
 #### `OPENSEARCH_URI` {#opensearch\_uri}
 
 - 类型：`str`
 - 默认值：`https://localhost:9200`
-- 描述：设置 OpenSearch 的 URI。
+- 描述：设置 OpenSearch 的 URI。仅把 URI 写成 `http://` 并不会关闭 HTTPS。请同时设置 `OPENSEARCH_SSL=False`。
 
 
 #### `OPENSEARCH_USERNAME` {#opensearch\_username}
@@ -3714,7 +3752,7 @@ pip install open-webui[all]
 - 类型：`int`
 - 默认值：`16`
 - 描述：HNSW 索引参数，用于控制索引构建期间每层最大双向连接数。值越大召回率越高，但索引大小和构建时间也会增加。仅当 `PGVECTOR_INDEX_METHOD` 设为 `hnsw` 时适用。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `PGVECTOR_HNSW_EF_CONSTRUCTION` {#pgvector\_hnsw\_ef\_construction}
@@ -3722,7 +3760,7 @@ pip install open-webui[all]
 - 类型：`int`
 - 默认值：`64`
 - 描述：HNSW 索引参数，用于控制索引构建期间动态候选列表的大小。值越大索引质量越高，但构建时间也会增加。仅当 `PGVECTOR_INDEX_METHOD` 设为 `hnsw` 时适用。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 #### `PGVECTOR_IVFFLAT_LISTS` {#pgvector\_ivfflat\_lists}
@@ -4254,7 +4292,7 @@ pip install --upgrade "valkey-glide-sync>=2.5.2"
 
 - 类型：`int`
 - 默认值：`200`
-- 描述：构建 HNSW 索引时搜索的候选数量。更大的值带来更高质量的索引，但索引构建更慢。
+- 描述：构建 HNSW 索引时搜索的候选数量。更大的值带来更高质量的索引，但索引构建更慢。仅在 `VALKEY_INDEX_TYPE=HNSW` 时使用。
 
 
 #### `VALKEY_HNSW_EF_RUNTIME` {#valkey\_hnsw\_ef\_runtime}
@@ -4458,7 +4496,7 @@ DOCLING_PARAMS="{\"do_ocr\": true, \"ocr_engine\": \"tesseract\", \"ocr_lang\": 
 
 - 类型：`str`
 - 默认值：空字符串
-- 描述：Datalab Marker 服务的 API 密钥。当 [`CONTENT_EXTRACTION_ENGINE`](#content_extraction_engine) 为 `datalab_marker` 时为必填项。
+- 描述：Datalab Marker 服务的 API 密钥。当 [`CONTENT_EXTRACTION_ENGINE`](#content_extraction_engine) 为 `datalab_marker` 时为必填项。只有在设置了密钥时 Marker 才会运行。没有密钥时，即使选择了 `datalab_marker`，文件仍由默认加载器读取。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `DATALAB_MARKER_API_BASE_URL` {#datalab\_marker\_api\_base\_url}
@@ -4483,14 +4521,14 @@ Open WebUI 会向 `/marker` 端点发起请求，而 Datalab 的 API 参考文�
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：发送 `use_llm`，要求 Marker 运行一次 LLM 处理，以更高的成本和延迟换取表格、表单和数学公式上更高的准确率。
+- 描述：发送 `use_llm`，要求 Marker 运行一次 LLM 处理，以更高的成本和延迟换取表格、表单和数学公式上更高的准确率。也可在**设置 > 文档**（管理员区域）中通过**使用 LLM** 设置。每个分块都会把该设置记录在其 `processed_with_llm` 元数据字段中。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `DATALAB_MARKER_SKIP_CACHE` {#datalab\_marker\_skip\_cache}
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：发送 `skip_cache`，让 Datalab 重新执行转换，而不是对之前见过的文件返回缓存结果。
+- 描述：发送 `skip_cache`，让 Datalab 重新执行转换，而不是对之前见过的文件返回缓存结果。也可在**设置 > 文档**（管理员区域）中通过**跳过缓存** 设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `DATALAB_MARKER_FORCE_OCR` {#datalab\_marker\_force\_ocr}
@@ -4511,28 +4549,28 @@ Open WebUI 会向 `/marker` 端点发起请求，而 Datalab 的 API 参考文�
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：发送 `strip_existing_ocr`，丢弃文档已有的 OCR 文本层并重新对其执行 OCR。
+- 描述：发送 `strip_existing_ocr`，丢弃文档已有的 OCR 文本层并重新对其执行 OCR。也可在**设置 > 文档**（管理员区域）中通过**剥离已有 OCR** 设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION` {#datalab\_marker\_disable\_image\_extraction}
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：发送 `disable_image_extraction`，跳过从文档中提取图片。
+- 描述：发送 `disable_image_extraction`，跳过从文档中提取图片。也可在**设置 > 文档**（管理员区域）中通过**禁用图片提取** 设置。Open WebUI 从不保存 Marker 返回的图片：它只把图片的数量和名称保存在每个分块的 `image_count` 和 `images` 元数据字段中。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `DATALAB_MARKER_FORMAT_LINES` {#datalab\_marker\_format\_lines}
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：发送 `format_lines`，通过一次 OCR 处理重新排版行内容，以改善行内公式和文本格式。
+- 描述：发送 `format_lines`，通过一次 OCR 处理重新排版行内容，以改善行内公式和文本格式。也可在**设置 > 文档**（管理员区域）中通过**格式化行** 设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `DATALAB_MARKER_OUTPUT_FORMAT` {#datalab\_marker\_output\_format}
 
 - 类型：`str`
 - 默认值：`markdown`
-- 描述：向 Marker 请求的输出格式。Datalab 接受 `markdown`、`html`、`json` 和 `chunks`。Open WebUI 会摄取返回的文本，因此除非有充分理由，否则请保持 `markdown`。
+- 描述：向 Marker 请求的输出格式。Open WebUI 接受 `markdown`、`html` 和 `json`；任何其他取值（包括 `chunks`）都会让上传失败并报 `Unsupported output format: <value>`。Open WebUI 会摄取返回的文本，因此除非有充分理由，否则请保持 `markdown`。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `MINERU_API_MODE` {#mineru\_api\_mode}
@@ -4560,7 +4598,10 @@ Open WebUI 会向 `/marker` 端点发起请求，而 Datalab 的 API 参考文�
 
 - 类型：`str`
 - 默认值：`300`
-- 描述：设置文档处理期间 MinerU API 请求的超时时间（秒）。
+- 描述：设置文档处理期间 MinerU API 请求的超时时间（秒）。也可在**设置 > 文档**（管理员区域）中通过 **API 超时** 设置。它覆盖的范围取决于 [`MINERU_API_MODE`](#mineru_api_mode)：
+  - `local` 搭配 MinerU 3.x 服务器：整个解析请求。解析过慢会失败并报 `MinerU Local API request timed out`。
+  - `local` 搭配 MinerU 4.x 服务器：等待解析任务的总时长，以及每次上传文件或查询任务状态的请求。任务过慢会失败并报 `MinerU processing timed out after <seconds> seconds`。
+  - `cloud`：仅文件上传。之后 Open WebUI 最多查询批次状态 300 次，每次间隔两秒；如果文件仍未完成，则报 `MinerU processing timed out after 10 minutes` 失败。该限制是固定的，调高 `MINERU_API_TIMEOUT` 不会延长它。对于触发该限制的大 PDF，请把它拆分成更小的 PDF 文件，或改用 `local` 模式并设置更高的超时时间。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4641,7 +4682,7 @@ PaddleOCR-vl 只接收 `pdf`、`png`、`jpg`、`jpeg`、`bmp`、`tiff` 和 `webp
 
 - 类型：`str`
 - 默认值：`sentence-transformers/all-MiniLM-L6-v2`
-- 描述：设置用于嵌入的模型。本地使用时，采用 Sentence-Transformer 模型。
+- 描述：设置用于嵌入的模型。本地使用时，采用 Sentence-Transformer 模型。也可在**设置 > 文档**（管理员区域）中通过**嵌入模型** 设置。使用默认（SentenceTransformers）引擎时，该字段旁的下载图标（**更新嵌入模型**）会立即应用嵌入设置，无需点击**保存**：它会卸载旧模型、加载新模型（当 [`RAG_EMBEDDING_MODEL_AUTO_UPDATE`](#rag_embedding_model_auto_update) 开启时会从 Hugging Face 下载），并保存模型名称。**保存**执行同样的步骤。如果模型加载失败，名称仍会被保存，服务器日志会显示 `Error loading SentenceTransformer`；之后上传会失败并报 `No embedding model is loaded. Set RAG_EMBEDDING_MODEL to a valid SentenceTransformer model name, or configure an external RAG_EMBEDDING_ENGINE (ollama, openai, azure_openai).`。两个步骤都不会改动已有向量：请随后运行**重新索引知识与记忆向量**，让已存储的文档用新模型嵌入。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4677,7 +4718,7 @@ PaddleOCR-vl 只接收 `pdf`、`png`、`jpg`、`jpeg`、`bmp`、`tiff` 和 `webp
 
 - 类型：`float`
 - 默认值：`0.0`
-- 描述：设置重排序时的相关性阈值。仅保留得分达到或超过该值的分块。`0` 表示不设阈值。如果重排序器返回的原始分数不局限于 0 到 1，则可使用负值。
+- 描述：设置重排序时的相关性阈值。仅保留得分达到或超过该值的分块。`0` 表示不设阈值。如果重排序器返回的原始分数不局限于 0 到 1，则可使用负值。大于 `0` 的值还会按向量相似度分数过滤[上下文记忆](/features/chat-conversations/memory#1-manual-management-settings)，即使没有重排序器、甚至在混合搜索关闭时也是如此，因此为重排序器分数调优的值可能会让这些记忆无法进入模型。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4740,7 +4781,7 @@ PaddleOCR-vl 只接收 `pdf`、`png`、`jpg`、`jpeg`、`bmp`、`tiff` 和 `webp
 
 - 类型：`float`
 - 默认值：`0.5`
-- 描述：设置混合搜索中关键词搜索（BM25）的权重。1 表示仅使用关键词搜索，0 表示仅使用向量搜索。
+- 描述：设置混合搜索中关键词搜索（BM25）的权重。1 表示仅使用关键词搜索，0 表示仅使用向量搜索。也可在**设置 > 文档**（管理员区域）中通过 **BM25 权重** 设置，该滑块从**语义**（0）到**词法**（1）。只有开启**混合搜索**（[`ENABLE_RAG_HYBRID_SEARCH`](#enable_rag_hybrid_search)）时才会读取它，否则该字段会隐藏。介于两者之间的值会同时执行两种搜索，并按 `BM25 Weight` 和 `1 - BM25 Weight` 混合结果。无论权重如何，合并后的结果都会再经过重排序步骤。在字段旁选择**默认**只会隐藏滑块，不会重置已保存的权重；把滑块设为 `0.5` 即可回到默认值。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4842,7 +4883,7 @@ Provide a clear and direct response to the user's query, including inline citati
 #### `RAG_TOKENIZER_MODEL` {#rag\_tokenizer\_model}
 - 类型：`str`
 - 默认值：`(empty)`
-- 描述：当 `RAG_TEXT_SPLITTER=token_transformers` 时，选择一个 HuggingFace transformers 分词器（按模型 ID，例如 `bert-base-uncased`）来度量用于分块的 token 长度，而不是默认的 Tiktoken 编码器。留空则使用 Tiktoken。分词器会被下载并缓存（遵循 `SENTENCE_TRANSFORMERS_HOME` / `HF_HUB_CACHE`）；可用它让分块边界与嵌入模型自身的分词器保持一致。
+- 描述：当 `RAG_TEXT_SPLITTER=token_transformers` 时，选择一个 HuggingFace transformers 分词器（按模型 ID，例如 `bert-base-uncased`）来度量用于分块的 token 长度，而不是默认的 Tiktoken 编码器。也可在**设置 > 文档**（管理员区域）中通过**分词器模型** 设置，当**文本分割器**为 **Token（Transformers）** 时显示。不含 `/` 且不是本地路径的名称会加上 `sentence-transformers/` 前缀。留空时，Open WebUI 使用已加载的本地嵌入模型的分词器，这只在使用默认（SentenceTransformers）嵌入引擎时存在；使用 Ollama、OpenAI 或 Azure OpenAI 嵌入时，空值会让处理失败并报 `Tokenizer model required for Token (Transformers) text splitter`，且管理面板要求填写该字段。分词器只在 [`RAG_EMBEDDING_MODEL_AUTO_UPDATE`](#rag_embedding_model_auto_update) 开启时才会被下载并缓存（遵循 `SENTENCE_TRANSFORMERS_HOME` / `HF_HUB_CACHE`）；否则它必须已经在缓存中。可用它让分块边界与嵌入模型自身的分词器保持一致。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `ENABLE_MARKDOWN_HEADER_TEXT_SPLITTER` {#enable\_markdown\_header\_text\_splitter}
@@ -4898,7 +4939,7 @@ Provide a clear and direct response to the user's query, including inline citati
   - `page` - 每页生成一个文档（默认）。
   - `single` - 将所有页面合并为一个文档，以便更好地跨页边界切分。
 - 默认值：`page`
-- 描述：控制使用**默认内容提取引擎**（PyPDFLoader）时 PDF 的加载和分割方式。页面模式为每页创建一个文档，而单页模式将所有页面合并为一个文档，当内容跨页时可以提高分块质量。此设置在使用外部内容提取引擎（如 Tika、Docling、Document Intelligence、MinerU 或 Mistral OCR）时不生效，因为这些引擎有自己的文档处理逻辑。
+- 描述：控制使用**默认内容提取引擎**（PyPDFLoader）时 PDF 的加载和分割方式。页面模式为每页创建一个文档，而单页模式将所有页面合并为一个文档，当内容跨页时可以提高分块质量。此设置在使用外部内容提取引擎（如 Tika、Docling、Document Intelligence、MinerU 或 Mistral OCR）时不生效，因为这些引擎有自己的文档处理逻辑。也可在**设置 > 文档**（管理员区域）中通过 **PDF 加载器模式** 设置，只有使用默认引擎时才显示。在 `page` 模式下，文本分割器会逐页处理，因此不会有分块跨越分页，每个分块也保留自己的页码：引用会显示 `(page N)`，其链接会打开 PDF 的对应页面。在 `single` 模式下，页面会被拼接成一段文本，分块可以跨越分页，且分块不携带页码，因此引用两者都不会显示。该模式在文件被提取时生效；已有的知识文件只有在执行**重新索引知识与记忆向量**后才会改变。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4954,7 +4995,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`int`
 - 默认值：`None`
-- 描述：设置客户端压缩上传图片时的最大宽度，单位为像素。未设置时，不应用由后端配置的宽度限制。
+- 描述：设置客户端压缩上传图片时的最大宽度，单位为像素。未设置时，不应用由后端配置的宽度限制。也可在**设置 > 文档**（管理员区域）中通过**图片压缩宽度** 设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4962,12 +5003,13 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`int`
 - 默认值：`None`
-- 描述：设置上传图片文件在客户端压缩时使用的最大高度（像素）。未设置时不应用后端配置的高度上限。
+- 描述：设置上传图片文件在客户端压缩时使用的最大高度（像素）。未设置时不应用后端配置的高度上限。也可在**设置 > 文档**（管理员区域）中通过**图片压缩高度** 设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::note
 
 这些值通过应用配置暴露，并由前端的聊天上传流程在处理图片文件时使用。压缩在客户端进行，并保持宽高比。非图片文件的上传不受影响。
+同样的限制也适用于在频道和笔记中添加的图片。图片只会被缩小，绝不会放大。这些限制是每位用户自身**图片压缩**设置的上限：用户可以选择更小的尺寸，但不能选择更大的尺寸；只设置这些限制时，即使用户关闭了压缩，每张图片也会受它们约束。
 
 :::
 
@@ -4993,7 +5035,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`int`
 - 默认值：`1`
-- 描述：控制使用外部嵌入提供商（Ollama、OpenAI 或 Azure OpenAI）时，单次 API 请求中嵌入的文本块数量。较高的值（20-100+；最大 16000，不推荐）通过发送更少但更大的 API 请求来加快文档处理速度。某些外部 API 不支持批处理或每个请求发送超过 1 个块，这种情况下必须保持为 `1`。默认为 1（如果 API 不支持批处理/每个请求超过 1 个块时最安全的选项）。此设置仅适用于外部嵌入引擎，不影响默认的 SentenceTransformers 引擎。
+- 描述：控制使用外部嵌入提供商（Ollama、OpenAI 或 Azure OpenAI）时，单次 API 请求中嵌入的文本块数量。较高的值（20-100+；最大 16000，不推荐）通过发送更少但更大的 API 请求来加快文档处理速度。某些外部 API 不支持批处理或每个请求发送超过 1 个块，这种情况下必须保持为 `1`。默认为 1（如果 API 不支持批处理/每个请求超过 1 个块时最安全的选项）。使用默认的 SentenceTransformers 引擎时，该值会作为批量大小传给本地模型，因此默认的 `1` 会一次嵌入一个分块，使大文件上传变慢；内存允许时可调高。也可在**设置 > 文档**（管理员区域）中通过**嵌入批量大小** 设置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::info
@@ -5014,7 +5056,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`bool`
 - 默认值：`true`
-- 描述：异步（并行）运行嵌入任务以获得最大性能。仅适用于 Ollama、OpenAI 和 Azure OpenAI，不影响 Sentence Transformer 方案。
+- 描述：异步（并行）运行嵌入任务以获得最大性能。仅适用于 Ollama、OpenAI 和 Azure OpenAI，不影响 Sentence Transformer 方案。也可在**设置 > 文档**（管理员区域）中通过**异步嵌入处理** 设置，只有这三种引擎才会显示。开启时，某文档处理步骤的所有批次（最多 [`RAG_EMBEDDING_BUFFER_SIZE`](#rag_embedding_buffer_size) 个分块，按**嵌入批量大小**切分）会同时发送；使用默认批量大小 `1` 时，就是每个分块一个请求，最多一次 1,000 个。关闭时，各批次依次发送。无论哪种方式，嵌入结果都按原始分块顺序存储，因此搜索结果不变。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::tip
@@ -5037,7 +5079,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`int`
 - 默认值：`0`
-- 描述：限制启用异步嵌入时的并发嵌入 API 请求数。使用 asyncio 信号量来节流并行请求。设置为 `0` 表示无限制并发（默认行为），或设置为正整数以限制同时请求数。适用于遵守外部嵌入 API 的速率限制或减少本地嵌入服务器的负载。
+- 描述：限制启用异步嵌入时的并发嵌入 API 请求数。使用 asyncio 信号量来节流并行请求。设置为 `0` 表示无限制并发（默认行为），或设置为正整数以限制同时请求数。适用于遵守外部嵌入 API 的速率限制或减少本地嵌入服务器的负载。也可在**设置 > 文档**（管理员区域）中通过**嵌入并发请求数** 设置。该上限按正在嵌入的文档计数，而不是跨整个服务器计数：同时处理两个文档时，每个文档都可以各自发出这么多请求。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::tip
@@ -5168,7 +5210,7 @@ Provide a clear and direct response to the user's query, including inline citati
 #### `RAG_RERANKING_MODEL` {#rag\_reranking\_model}
 
 - 类型：`str`
-- 描述：设置用于对结果进行重排序的模型。在本地加载时，该模型以 Sentence-Transformer CrossEncoder 的形式加载，只有一个例外：`jinaai/jina-colbert-v2` 会以 ColBERT 模型加载，并且它的优先级高于 `RAG_RERANKING_ENGINE`，因此即使引擎设为 `external`，它也会在本地运行。
+- 描述：设置用于对结果进行重排序的模型。在本地加载时，该模型以 Sentence-Transformer CrossEncoder 的形式加载，只有一个例外：`jinaai/jina-colbert-v2` 会以 ColBERT 模型加载，并且它的优先级高于 `RAG_RERANKING_ENGINE`，因此即使引擎设为 `external`，它也会在本地运行。对本地引擎，请使用 Hugging Face 模型 ID（如 `BAAI/bge-reranker-v2-m3`）或本地路径；Ollama 模型标签无法加载。如果保存设置时模型加载失败，Open WebUI 会记录 `Error loading reranking model:` 并关闭混合搜索。使用 `external` 引擎时，该值会作为 `model` 发送到重排请求中。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5176,7 +5218,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`int`
 - 默认值：`32`
-- 描述：控制本地重排序时单批次评分的查询-文档对数量。较高的值使用更多内存，但在具有足够 VRAM 的 GPU 上可能更快。这适用于本地 ColBERT/CrossEncoder 重排序模型的 `predict()` 调用。
+- 描述：控制本地重排序时单批次评分的查询-文档对数量。较高的值使用更多内存，但在具有足够 VRAM 的 GPU 上可能更快。这适用于本地 ColBERT/CrossEncoder 重排序模型的 `predict()` 调用。也可在**设置 > 文档**（管理员区域）中通过**重排序批量大小** 设置。它在使用 `external` 重排序引擎时无效，因为后者会用一个请求把某个查询的所有结果都发送给重排序器。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5211,7 +5253,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`str`
 - 默认值：Empty string (' ')
-- 描述：设置外部重排序 API 的**完整 URL**。
+- 描述：设置外部重排序 API 的**完整 URL**。Open WebUI 会发送一个 `POST` 请求，JSON 请求体包含 `model`、`query`、`documents` 和 `top_n`，并带上来自 [`RAG_EXTERNAL_RERANKER_API_KEY`](#rag_external_reranker_api_key) 的 `Bearer` 令牌。响应必须包含 `results`，其中每项都有 `index` 和 `relevance_score`。响应格式不符或请求失败时，日志会显示 `Error in external reranking:` 或 `No results found in external reranking response`，结果会在未经重排序的情况下返回。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::warning
@@ -5235,7 +5277,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用检索查询生成。
+- 描述：启用或禁用检索查询生成。也可在**设置 > 界面**（管理员区域）中通过**检索查询生成** 设置。开启时，任务模型会根据对话为附加文件和知识库编写搜索查询，因此同一个问题在不同次运行中可能检索到不同来源。关闭时，最后一条用户消息会按原样作为查询。参见[同一个问题每次检索到不同来源](/troubleshooting/rag#19-the-same-question-retrieves-different-sources-each-time)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5305,7 +5347,7 @@ Strictly return in JSON format:
 
 - 类型：`str`
 - 默认值：`prebuilt-layout`
-- 描述：指定文档智能服务使用的模型。
+- 描述：指定文档智能服务使用的模型。也可在**设置 > 文档**（管理员区域）中通过**文档智能模型** 设置。该值会作为模型 ID 发送给 Azure 用于每次分析，Open WebUI 会请求 Markdown 输出。只有 PDF、DOCX、PPT 和 PPTX 文件会交给文档智能服务；其他文件使用内置加载器。每个文件成为一个文档，因此引用不携带页码。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5358,10 +5400,10 @@ Strictly return in JSON format:
 #### `ENABLE_RAG_LOCAL_WEB_FETCH` {#enable\_rag\_local\_web\_fetch}
 - 类型：`bool`
 - 默认值：`False`
-- 描述：[`ENABLE_LOCAL_WEB_FETCH`](#enable_local_web_fetch) 的已弃用别名，在新名称未设置时仍然生效。控制出站抓取是否可以访问解析为私有/本地网络 IP 地址的 URL。它最初是 RAG Web 抓取的防护，但现在同一个 SSRF 门禁也覆盖了其他由调用方影响的抓取场景，包括用户和自动化的 **webhook**、检索、远程图片加载、OAuth 头像抓取以及技能的[**从 URL 导入**](/features/workspace/skills#importing-from-a-url)。
+- 描述：[`ENABLE_LOCAL_WEB_FETCH`](#enable_local_web_fetch) 的已弃用别名，在新名称未设置时仍然生效。控制出站抓取是否可以访问解析为非全局可路由地址（如私有地址、环回地址和链路本地地址）的 URL。它最初是 RAG Web 抓取的防护，但现在同一个 SSRF 门禁也覆盖了其他由调用方影响的抓取场景，包括用户和自动化的 **webhook**、检索、远程图片加载、OAuth 头像抓取以及技能的[**从 URL 导入**](/features/workspace/skills#importing-from-a-url)。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
-禁用时（默认），Open WebUI 会阻止对解析到私有 IP 地址的 URL 发起网页抓取请求，包括：
+禁用时（默认），Open WebUI 会阻止对解析到任何非全局可路由地址的 URL 发起网页抓取请求，并记录 `Blocked non-global address:`。这包括 Tailscale 使用的共享地址段 `100.64.0.0/10`，以及：
 
 - IPv4 私有网段（`10.x.x.x`、`172.16.x.x`-`172.31.x.x`、`192.168.x.x`、`127.x.x.x`）
 - IPv6 私有网段
@@ -5402,7 +5444,7 @@ Strictly return in JSON format:
 
 - 类型：`str`
 - 描述：设置 Google Drive 集成的 API 密钥。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 ### OneDrive {#onedrive}
@@ -5699,7 +5741,7 @@ Example:
 #### `BRAVE_SEARCH_API_KEY` {#brave\_search\_api\_key}
 
 - 类型：`str`
-- 描述：设置 Brave Search API 的 API 密钥。
+- 描述：设置 Brave Search API 的 API 密钥。`brave` 和 `brave_llm_context` 引擎都会使用它。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::info
@@ -5948,7 +5990,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`str`
 - 默认值：`basic`
-- 描述：指定 Tavily 搜索结果的提取深度。
+- 描述：指定 Tavily 搜索结果的提取深度。当 **Web 加载器引擎**为 `tavily` 时，可在**设置 > Web 搜索**（管理员区域）的 **Tavily 提取深度** 下设置。可接受的值以及它记录的错误见[Tavily 作为 Web 加载器](/features/chat-conversations/web-search/providers/tavily#optional-configurations)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5998,14 +6040,14 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 #### `EXTERNAL_WEB_LOADER_URL` {#external\_web\_loader\_url}
 - 类型：`str`
 - 默认值：Empty string (' ')
-- 描述：指定用于抓取和处理网页的外部 Web 内容加载器服务 URL。
+- 描述：指定用于抓取和处理网页的外部 Web 内容加载器服务 URL。当 **Web 加载器引擎**为 `external` 时，可在**设置 > Web 搜索**（管理员区域）的 **外部 Web 加载器 URL** 下设置。该服务必须使用的请求和响应格式见[Playwright 与外部加载器设置](/features/chat-conversations/web-search#playwright-and-external-loader-settings)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `EXTERNAL_WEB_LOADER_API_KEY` {#external\_web\_loader\_api\_key}
 - 类型：`str`
 - 默认值：Empty string (' ')
-- 描述：设置用于外部 Web 加载器服务认证的 API 密钥。
+- 描述：设置用于外部 Web 加载器服务认证的 API 密钥。可在**设置 > Web 搜索**（管理员区域）的 **外部 Web 加载器 API 密钥** 下设置。它的发送方式见[Playwright 与外部加载器设置](/features/chat-conversations/web-search#playwright-and-external-loader-settings)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -6171,7 +6213,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`str`
 - 默认值：`None`
-- 描述：指定远程 Playwright 浏览器实例的 WebSocket URI。设置后，Open WebUI 将使用此远程浏览器，而非在本地安装浏览器依赖。这在容器化环境中特别有用，可保持 Open WebUI 容器轻量化并将浏览器分离管理。示例：`ws://playwright:3000`
+- 描述：指定远程 Playwright 浏览器实例的 WebSocket URI。设置后，Open WebUI 将使用此远程浏览器，而非在本地安装浏览器依赖。这在容器化环境中特别有用，可保持 Open WebUI 容器轻量化并将浏览器分离管理。示例：`ws://playwright:3000`。当 **Web 加载器引擎**为 `playwright` 时，可在**设置 > Web 搜索**（管理员区域）的 **Playwright WebSocket URL** 下设置。容器何时会自行安装 Chromium 见[Playwright 与外部加载器设置](/features/chat-conversations/web-search#playwright-and-external-loader-settings)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::tip
@@ -6204,15 +6246,15 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`int`
 - 默认值：`None`
-- 描述：指定 Firecrawl 请求的超时时间，单位为毫秒。未设置时使用 Firecrawl 的默认超时时间。
-- 持久化：这是一个 `ConfigVar` 变量。可在**设置 > Web 搜索 > Firecrawl 超时**（管理员区域）中配置。
+- 描述：Firecrawl 请求的超时时间，单位为秒。Open WebUI 会以毫秒为单位把它发送给 Firecrawl，取值保持在 1 和 300 秒之间，并且自己会多等待 10 秒。如果未设置或不是正数，则不会发送超时时间，Open WebUI 会等待 70 秒。重试次数见 [Firecrawl 页面](/features/chat-conversations/web-search/providers/firecrawl)。
+- 持久化：这是一个 `ConfigVar` 变量。可在**设置 > Web 搜索 > Firecrawl 超时（秒）**（管理员区域）中配置。
 
 
 #### `PLAYWRIGHT_TIMEOUT` {#playwright\_timeout}
 
 - 类型：`int`
 - 默认值：`10000`（毫秒）
-- 描述：指定 Playwright 请求的超时时间。
+- 描述：指定 Playwright 请求的超时时间。当 **Web 加载器引擎**为 `playwright` 时，可在**设置 > Web 搜索**（管理员区域）的 **Playwright 超时（毫秒）** 下设置。它限制什么以及超时会报什么错，见[Playwright 与外部加载器设置](/features/chat-conversations/web-search#playwright-and-external-loader-settings)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -6690,7 +6732,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 - 类型：`str`
 - 默认值：`https://api.elevenlabs.io`
 - 描述：配置自定义 ElevenLabs API 端点，支持欧盟数据驻留 API 要求和其他区域部署。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
 ## 图像生成 {#image-generation}
@@ -6859,7 +6901,7 @@ Strictly return in JSON format:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用后，未认证的访客访问 `/auth` 会被直接重定向到 OAuth 提供方的登录页，跳过"使用 SSO 继续"界面。它只在明确仅支持 SSO 的部署中生效：恰好配置了一个 OAuth 提供方、[`ENABLE_LOGIN_FORM`](#enable_login_form) 设为 `False`，且没有 LDAP 或可信请求头认证。在引导安装期间、登录失败之后以及已有会话时不会重定向。访问 `/auth?form=true` 仍可到达本地登录表单（这是留给管理员的应急通道）。
+- 描述：在**设置 > 认证**（管理员区域）的 **OAuth / OIDC** 区块中以**自动重定向**显示。启用后，未认证的访客访问 `/auth` 会被直接重定向到 OAuth 提供方的登录页，跳过“使用 SSO 继续”界面。它只在明确仅支持 SSO 的部署中生效：恰好配置了一个 OAuth 提供方、[`ENABLE_LOGIN_FORM`](#enable_login_form) 设为 `False`，且没有 LDAP 或可信请求头认证。在引导安装期间、登录失败之后以及已有会话时不会重定向。访问 `/auth?form=true` 仍可到达本地登录表单（这是留给管理员的应急通道）。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::danger
@@ -6895,6 +6937,9 @@ Strictly return in JSON format:
 - 类型：`str`
 - 默认值：`None`
 - 描述：覆盖从 OAuth/OIDC 提供商用户信息响应中识别用户唯一 ID（`sub`）的默认声明。默认情况下，Open WebUI 尝试从提供商配置中推断此项。此变量允许你显式指定使用哪个声明。例如，如果你的身份提供商使用 'employee_id' 作为唯一标识符，你应将此变量设置为 'employee_id'。
+- 对应字段：**设置 > 认证**（管理员区域）**OAuth / OIDC** 区块中的**Sub 声明**。
+- 默认声明：`sub`，GitHub 为 `id`，飞书为 `user_id`。如果配置的声明在用户数据中缺失，登录会失败并提示 `Sign-in with your identity provider failed. Please contact your administrator for assistance.`，服务器日志记录 `OAuth callback failed, sub is missing`。
+- 在已有用户的实例上修改它：账户按提供方和该值查找，因此已有用户不再匹配到自己的账户。开启 [`OAUTH_MERGE_ACCOUNTS_BY_EMAIL`](#oauth_merge_accounts_by_email) 时，它们会按邮箱重新关联，并保存新的值。否则登录会失败，提示 `Uh-oh! This email is already registered. Sign in with your existing account or choose another email to start anew.`，前提是 [`ENABLE_OAUTH_SIGNUP`](#enable_oauth_signup) 已开启。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -6903,6 +6948,9 @@ Strictly return in JSON format:
 - 类型：`bool`
 - 默认值：`False`
 - 描述：启用后，将 OAuth 帐户与使用相同电子邮件地址的现有帐户合并。这被认为是不安全的，因为并非所有 OAuth 提供商都会验证电子邮件地址，可能导致潜在的帐户接管。
+- 对应开关：**设置 > 认证**（管理员区域）**OAuth / OIDC** 区块中的**按邮箱合并账户**。
+- 它允许什么：当还没有账户关联到该提供方和 `sub` 时，登录会挂到邮箱相同的任何账户上，包括本地邮箱密码账户或管理员账户。Open WebUI 不检查提供方是否验证过该地址，因此任何能在提供方设置该邮箱的人都会以该账户登录。只为会验证邮箱地址的提供方开启它。
+- 关闭它时，若提供方登录所用的邮箱属于一个尚未与它关联的已有账户，且 [`ENABLE_OAUTH_SIGNUP`](#enable_oauth_signup) 已开启，登录会失败并提示 `Uh-oh! This email is already registered. Sign in with your existing account or choose another email to start anew.`。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -6915,6 +6963,8 @@ Strictly return in JSON format:
 - 类型：`bool`
 - 默认值：`False`
 - 描述：启用后，在登录时使用 OAuth 提供的头像更新本地用户头像。
+- 对应开关：**设置 > 认证**（管理员区域）**OAuth / OIDC** 区块中的**更新头像**。
+- 每次登录只要头像不同就会被替换，包括用户在自身设置中设定的头像。如果提供方没有发送头像，或 Open WebUI 无法下载它，头像会重置为默认图标。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::info
@@ -6928,14 +6978,16 @@ Strictly return in JSON format:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用后，在每次 OAuth 登录时，若 [`OAUTH_USERNAME_CLAIM`](#oauth_username_claim) 的取值与本地用户名不同，则用前者替换本地用户名。
+- 描述：启用后，在每次 OAuth 登录时，若 [`OAUTH_USERNAME_CLAIM`](#oauth_username_claim) 的取值与本地用户名不同，则用前者替换本地用户名。用户在自身设置中改过的名称，会在其下次登录时被覆盖。声明为空或缺失时，名称保持不变。
+- 对应开关：**设置 > 认证**（管理员区域）**OAuth / OIDC** 区块中的**更新名称**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `OAUTH_UPDATE_EMAIL_ON_LOGIN` {#oauth\_update\_email\_on\_login}
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用后，在每次 OAuth 登录时，若 [`OAUTH_EMAIL_CLAIM`](#oauth_email_claim) 的取值与本地邮箱不同，则用前者替换本地邮箱。若新地址已被另一个账户使用，则跳过更新并记录一条错误。
+- 描述：启用后，在每次 OAuth 登录时，若 [`OAUTH_EMAIL_CLAIM`](#oauth_email_claim) 的取值与本地邮箱不同，则用前者替换本地邮箱。若新地址已被另一个账户使用，则跳过更新并记录一条错误。在 Open WebUI 中改过的邮箱，会在用户下次登录时被覆盖。
+- 对应开关：**设置 > 认证**（管理员区域）**OAuth / OIDC** 区块中的**更新邮箱**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `ENABLE_OAUTH_EMAIL_FALLBACK` {#enable\_oauth\_email\_fallback}
@@ -7427,6 +7479,10 @@ GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com
 - 类型：`str`
 - 默认值：`name`
 - 描述：设置 OpenID 的用户名声明。
+- 对应字段：**设置 > 认证**（管理员区域）**OAuth / OIDC** 区块中的**用户名声明**。
+- 从哪里读取：当 ID 令牌同时携带该声明和 [`OAUTH_EMAIL_CLAIM`](#oauth_email_claim) 声明时，从 ID 令牌读取。否则 Open WebUI 会获取 userinfo 响应并在其中读取该声明，userinfo 响应缺少的键则由 ID 令牌的声明补齐。该值是一个顶层声明名称；带点的名称不会被当作嵌套路径读取。
+- 声明缺失或为空时：新账户以其邮箱地址作为名称，服务器日志记录 `Username claim is missing, using email as name`。
+- 已有账户会保留自己的名称。开启 [`OAUTH_UPDATE_NAME_ON_LOGIN`](#oauth_update_name_on_login) 后，每次登录都会用该声明替换名称。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7452,11 +7508,11 @@ GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com
 :::
 
 
-#### `OAUTH_GROUP_CLAIM` {#oauth\_group\_claim}
+#### `OAUTH_GROUPS_CLAIM` {#oauth\_groups\_claim}
 
 - 类型：`str`
 - 默认值：`groups`
-- 描述：指定 OAuth 认证所使用的组 claim。`OAUTH_GROUPS_CLAIM` 也会被读取，并且两者都设置时以后者为准。管理界面中的字段和持久化键仍使用单数形式。
+- 描述：指定 OAuth 认证所使用的组 claim。这是当前的名称。旧的 `OAUTH_GROUP_CLAIM` 在 `OAUTH_GROUPS_CLAIM` 未设置时仍作为回退被读取，两者都设置时以 `OAUTH_GROUPS_CLAIM` 为准。管理配置 API 的字段仍保留单数名称 `OAUTH_GROUP_CLAIM`，数据库也仍以键 `oauth.group_claim` 保存该值。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7481,6 +7537,7 @@ GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com
 - 类型：`bool`
 - 默认值：`False`
 - 描述：启用后，OAuth claims 中在 Open WebUI 里尚不存在的群组会被自动创建。与 [`OAUTH_BLOCKED_GROUPS`](#oauth_blocked_groups) 匹配的群组永远不会被创建。
+- 对应开关：**设置 > 认证**（管理员区域）**OAuth / OIDC** 区块中的**自动创建群组**，在开启**群组映射**（[`ENABLE_OAUTH_GROUP_MANAGEMENT`](#enable_oauth_group_management)）时显示。关闭群组映射时它不起作用。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7501,6 +7558,7 @@ GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com
 - 类型：`str`
 - 默认值：`[]`
 - 描述：JSON 数组，列出[群组管理](/features/authentication-access/auth/sso#oauth-group-management)不会去动的 OAuth 群组名称。登录时，匹配的群组永远不会被创建（配合 `ENABLE_OAUTH_GROUP_CREATION`），用户也永远不会被加入或移出该群组（配合 `ENABLE_OAUTH_GROUP_MANAGEMENT`）。每个条目可以精确匹配，也可以是 shell 风格的通配符（`*`、`?`）或正则表达式。若要按角色拒绝登录，请使用 [`OAUTH_ALLOWED_ROLES`](#oauth_allowed_roles)。
+- 对应字段：**设置 > 认证**（管理员区域）**OAuth / OIDC** 区块中的**受限群组**，在开启**群组映射**时显示。该字段接受以逗号分隔的名称或一个 JSON 数组；包含逗号的模式请使用 JSON 数组。尽管该字段的说明写着“Provider groups blocked from signing in.”，它实际上不阻止任何人登录：处于受限群组中的用户仍能登录，已存在的会话也不受影响。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7516,7 +7574,9 @@ GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com
 
 - 类型：`str`
 - 默认值：`user,admin`
-- 描述：设置允许访问平台的用户角色。
+- 描述：设置允许访问平台的用户角色。列表中的 `*` 值是通配符，匹配任意角色，因此任何带角色声明的用户都被允许。
+- 对应字段：**设置 > 认证**（管理员区域）**OAuth / OIDC** 区块中的**允许的角色**，在开启**角色映射**（[`ENABLE_OAUTH_ROLE_MANAGEMENT`](#enable_oauth_role_management)）时显示。
+- 与 [`OAUTH_ADMIN_ROLES`](#oauth_admin_roles) 的配合方式：每次登录都会检查角色。该列表中的提供方角色会得到 Open WebUI 角色 `user`；管理员列表中的提供方角色会得到 `admin`，两者同时匹配时以管理员为准。提供方角色两个列表都不匹配的用户会被拒绝，提示 `You do not have permission to access this resource. Please contact your administrator for assistance.`。提供方没有发送角色的用户会保留当前角色，新用户则得到 [`DEFAULT_USER_ROLE`](#default_user_role)。实例上的唯一账户始终是 `admin`。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7524,7 +7584,8 @@ GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com
 
 - 类型：`str`
 - 默认值：`admin`
-- 描述：设置被视为管理员的角色。
+- 描述：设置被视为管理员的角色。匹配到的角色使用户可以以 `admin` 登录，即使它不在 [`OAUTH_ALLOWED_ROLES`](#oauth_allowed_roles) 中。角色会在提供方发送角色的每次登录中被检查，因此手动在 Open WebUI 中被提升为 `admin` 的用户，或者其提供方角色失去管理员角色的用户，在角色只匹配允许列表时会在那次登录中变成 `user`。
+- 对应字段：**设置 > 认证**（管理员区域）**OAuth / OIDC** 区块中的**管理员角色**，在开启**角色映射**时显示。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7638,7 +7699,8 @@ environment:
 #### `LDAP_ATTRIBUTE_FOR_MAIL` {#ldap\_attribute\_for\_mail}
 
 - 类型：`str`
-- 描述：设置 LDAP 认证中用作电子邮件的属性。
+- 描述：设置 LDAP 认证中用作电子邮件的属性。该 LDAP 用户会登录到拥有该邮箱的 Open WebUI 账户（如果存在），无论该账户是如何创建的。
+- 对应字段：**设置 > 认证**（管理员区域）**LDAP** 区块中的**邮件属性**。该区块为空时无法保存。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7652,14 +7714,16 @@ environment:
 #### `LDAP_ATTRIBUTE_FOR_USERNAME` {#ldap\_attribute\_for\_username}
 
 - 类型：`str`
-- 描述：设置 LDAP 认证中用作用户名的属性。
+- 描述：设置 LDAP 认证中用作用户名的属性。Open WebUI 会查找该属性值等于登录页上输入的名称的条目，比较时不区分大小写。新账户的显示名称取自条目的 `cn` 属性，而不是这个属性。
+- 对应字段：**设置 > 认证**（管理员区域）**LDAP** 区块中的**用户名属性**。该区块为空时无法保存。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `LDAP_APP_DN` {#ldap\_app\_dn}
 
 - 类型：`str`
-- 描述：设置 LDAP 应用程序的可分辨名称。
+- 描述：设置 LDAP 应用程序的可分辨名称。Open WebUI 会以此账户绑定，以便在检查用户密码之前搜索该用户。留空则匿名绑定。绑定失败会终止登录并提示 `Application account bind failed`。
+- 对应字段：**设置 > 认证**（管理员区域）**LDAP** 区块中的**应用程序 DN**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7667,13 +7731,15 @@ environment:
 
 - 类型：`str`
 - 描述：设置 LDAP 应用程序的密码。
+- 对应字段：**设置 > 认证**（管理员区域）**LDAP** 区块中的**应用程序 DN 密码**。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
 #### `LDAP_SEARCH_BASE` {#ldap\_search\_base}
 
 - 类型：`str`
-- 描述：设置 LDAP 认证的搜索基准。
+- 描述：设置 LDAP 认证的搜索基准。该基准之外的用户会得到 `User not found in the LDAP server`。
+- 对应字段：**设置 > 认证**（管理员区域）**LDAP** 区块中的**搜索基准**。该区块为空时无法保存。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7681,7 +7747,8 @@ environment:
 
 - 类型：`str`
 - 默认值：`None`
-- 描述：设置 LDAP 用户搜索的附加过滤条件。此过滤器**追加**到自动生成的用户名过滤器之后。Open WebUI 使用 `LDAP_ATTRIBUTE_FOR_USERNAME` 自动构建用户名字段，因此你**不应**包含 `%(user)s` 或 `%s` 等用户占位符——这些不受支持。使用此项添加附加条件，例如组成员限制（如 `(memberOf=cn=allowed-users,ou=groups,dc=example,dc=com)`）。这是 `LDAP_SEARCH_FILTERS` 的替代方案。
+- 描述：设置 LDAP 用户搜索的附加过滤条件。此过滤器**追加**到自动生成的用户名过滤器之后。Open WebUI 使用 `LDAP_ATTRIBUTE_FOR_USERNAME` 自动构建用户名字段，因此你**不应**包含 `%(user)s` 或 `%s` 等用户占位符——这些不受支持。使用此项添加附加条件，例如组成员限制（如 `(memberOf=cn=allowed-users,ou=groups,dc=example,dc=com)`）。这是 `LDAP_SEARCH_FILTERS` 的替代方案，两者都设置时优先读取本项。
+- 对应字段：**设置 > 认证**（管理员区域）**LDAP** 区块中的**搜索过滤器**。留空时，只按 [`LDAP_ATTRIBUTE_FOR_USERNAME`](#ldap_attribute_for_username) 匹配用户。该字段的占位符 `(&(objectClass=inetOrgPerson)(uid=%s))` 不是可用值：Open WebUI 不会替换 `%s`，因此照抄它还会要求存在值为 `%s` 的 `uid`，登录会失败并提示 `User not found in the LDAP server`。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7703,14 +7770,17 @@ environment:
 #### `LDAP_CA_CERT_FILE` {#ldap\_ca\_cert\_file}
 
 - 类型：`str`
-- 描述：设置 LDAP CA 证书文件的路径。
+- 描述：设置 LDAP CA 证书文件的路径。该路径在 Open WebUI 容器内部读取。如果它指向的文件在该处不存在，LDAP 登录会失败并提示 `Failed to configure TLS for LDAP connection.`。参见 [LDAP 故障排查](/features/authentication-access/auth/ldap#failed-to-configure-tls)。
+- 对应字段：**设置 > 认证**（管理员区域）**LDAP** 区块中的**证书路径**。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
 #### `LDAP_VALIDATE_CERT` {#ldap\_validate\_cert}
 
 - 类型：`bool`
-- 描述：设置是否验证 LDAP CA 证书。
+- 默认值：`True`
+- 描述：设置是否验证 LDAP CA 证书。为 `False` 时，Open WebUI 接受 LDAP 服务器提供的任何证书。
+- 对应开关：**设置 > 认证**（管理员区域）**LDAP** 区块中的**验证证书**，在开启 **TLS**（[`LDAP_USE_TLS`](#ldap_use_tls)）时显示。关闭 TLS 时它不起作用。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -7734,7 +7804,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：如果 LDAP 中的群组在 Open WebUI 中不存在，将自动创建。也可以在管理员区域的**设置 > 身份验证**下的 LDAP 部分配置。
+- 描述：如果 LDAP 中的群组在 Open WebUI 中不存在，将自动创建。也可在**设置 > 认证**（管理员区域）的 LDAP 区块中通过**自动创建群组** 设置，在开启**群组映射**（[`ENABLE_LDAP_GROUP_MANAGEMENT`](#enable_ldap_group_management)）时显示。关闭群组映射时它不起作用。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -8677,7 +8747,7 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 
 - 类型：`str`
 - 默认值：`sqlite:///${DATA_DIR}/webui.db`
-- 描述：指定完整的数据库连接 URL，遵循 SQLAlchemy 的 URL 方案。如果显式设置，此变量优先于单独的数据库连接参数。
+- 描述：指定完整的数据库连接 URL，遵循 SQLAlchemy 的 URL 方案。当 `DATABASE_TYPE`、`DATABASE_HOST`、`DATABASE_PORT`、`DATABASE_NAME` 以及 `DATABASE_USER` 或 `DATABASE_PASSWORD` 中的至少一个全部设置时，Open WebUI 会用它们拼出 URL 并忽略 `DATABASE_URL`。SQLite 默认值仅在该变量完全没有设置时才适用。空值，或从其他项目遗留在 shell 中的 `DATABASE_URL`，都会取代它；空值会让启动失败并报 `sqlalchemy.exc.ArgumentError: Could not parse SQLAlchemy URL from given URL string`。请取消设置该变量，或给它一个完整的 URL。
 
 :::info
 
@@ -8782,7 +8852,7 @@ DATABASE_URL=postgresql://user:password@host:5432/openwebui
 
 :::info
 
-当未显式设置 `DATABASE_URL` 时，Open WebUI 会尝试使用 `DATABASE_TYPE`、`DATABASE_USER`、`DATABASE_PASSWORD`、`DATABASE_HOST`、`DATABASE_PORT` 和 `DATABASE_NAME` 的组合来构造它。要触发这种自动构造，**所有**这些单独参数都必须提供。如果缺少其中任何一个，则会改用默认的 `DATABASE_URL`（SQLite 文件）或任何显式设置的 `DATABASE_URL`。
+当 `DATABASE_TYPE`、`DATABASE_HOST`、`DATABASE_PORT`、`DATABASE_NAME` 以及 `DATABASE_USER` 或 `DATABASE_PASSWORD` 中的至少一个都设置时，Open WebUI 会用 `DATABASE_TYPE`、`DATABASE_USER`、`DATABASE_PASSWORD`、`DATABASE_HOST`、`DATABASE_PORT` 和 `DATABASE_NAME` 构建数据库 URL。构建出的 URL 会取代 `DATABASE_URL`，即使你显式设置过它。如果其中任何一个缺失，则改用显式设置的 `DATABASE_URL` 或默认的 SQLite 文件。
 
 :::
 

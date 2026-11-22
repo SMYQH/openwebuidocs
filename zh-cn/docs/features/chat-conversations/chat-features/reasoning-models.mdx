@@ -93,11 +93,24 @@ Open WebUI 提供多项内置设置，用于配置推理模型行为。你可以
 - 常见值：`low`、`medium`、`high`
 - 某些提供商也接受数值型参数
 
-Open Terminal 中的[编程智能体](/features/open-terminal/coding-agents#options)也会收到此设置。
+Open Terminal 中的[智能体](/features/open-terminal/agents#options)也会收到此设置。
 
 :::info
 Reasoning Effort 仅适用于支持该参数的特定提供商模型。在原生 Ollama 连接上不会透传该参数——上面提到的 `think` 设置已经覆盖了同样的需求。如果把 Ollama 作为 OpenAI 连接接入，则 Ollama 的 OpenAI 兼容端点确实接受 `reasoning_effort`。
 :::
+
+### 在 vLLM 和 llama.cpp 上关闭 Thinking {#turning-thinking-off-on-vllm-and-llamacpp}
+
+由 vLLM 或 llama.cpp 的 `llama-server` 提供的模型，通常通过聊天模板来开关 thinking，模板会从请求中读取 `chat_template_kwargs`。Open WebUI 没有对应设置，所以可以在 OpenAI 连接上把它作为自定义参数发送：
+
+1. 进入 **Workspace → Models**，编辑该模型。
+2. 展开 **Advanced Params**。
+3. 在底部点击 **Add Custom Parameter**，并填写：
+   - **Name**：`chat_template_kwargs`
+   - **Value**：`{"enable_thinking": false}`
+4. 保存模型。
+
+**Add Custom Parameter** 按钮仅对管理员显示。Open WebUI 会把该值按 JSON 解析，并把它加到请求体的顶层。模板读取的键取决于模型：Qwen3 用的是 `enable_thinking`，而其他一些模型读取 `thinking`。请查阅模型卡片或 [vLLM 推理输出页面](https://docs.vllm.ai/en/latest/features/reasoning_outputs.html)，并在 [llama.cpp 服务器 README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)中查看 `chat_template_kwargs`。如果想对每个请求都关闭 thinking，vLLM 还接受在启动时传入 `--default-chat-template-kwargs`。
 
 ---
 
@@ -268,6 +281,35 @@ ollama run your-model:tag "Explain step by step: What is 15 + 27?"
 **解决方案：** 检查你的模型是否通过以下方式输出推理内容：
 - 结构化 delta 字段（`reasoning_content`、`reasoning`、`thinking`）
 - Open WebUI 能识别的基于文本的标签（并确保已启用 reasoning tag detection）
+
+### DeepSeek：`reasoning_content` 必须回传 {#deepseek-reasoning_content-must-be-passed-back}
+
+**症状：** 处于思考模式的 DeepSeek 模型会报下面的错误，即使在聊天的第一条消息上也可能发生：
+
+```
+The `reasoning_content` in the thinking mode must be passed back to the API.
+```
+
+**原因：** 该错误来自 DeepSeek，它要求把之前的推理内容随请求一起回传。当连接的 **Provider** 保持 **Default** 时，Open WebUI 不会把推理内容放进它发送的历史记录（参见[推理内容是如何被重新发回的](#how-reasoning-is-sent-back)）。可用的技能、附加的知识和召回的记忆都会以工具调用的形式进入模型的历史记录，因此即使你从未调用过工具，用到其中任何一项的聊天也含有工具调用轮次。
+
+**修复：**
+
+1. 在 **Settings → Connections → OpenAI**（管理员区域）中编辑 DeepSeek 连接，打开 **Advanced**，把 **Provider** 设为 **llama.cpp**。这样 Open WebUI 会把已保存的推理内容以 `reasoning_content` 回传，而没有推理内容的工具调用轮次则会带上空的 `reasoning_content`。
+2. 如果错误仍然出现，例如通过其他服务访问的 DeepSeek 模型，请为该模型关闭 thinking：在 **Advanced Params** 中把 **Reasoning Effort** 切换为 **Custom** 并填入 `none`。Open WebUI 会把它作为 `reasoning_effort: "none"` 转发。
+
+在 **API Type** 设为 **Responses** 的连接上，同样的要求表现为 ``The `reasoning_text` in the thinking mode must be passed back to the API.``。请把 **API Type** 切换为 **Chat Completions**、**Provider** 切换为 **llama.cpp**，或者把 **Reasoning Effort** 设为 `none`。
+
+### 在其他模型下生成的加密推理内容 {#encrypted-reasoning-produced-under-a-different-model}
+
+**症状：** 通过 OpenRouter 或其他返回 `reasoning_details` 的服务访问的推理模型会报下面的错误：
+
+```
+Your request contains encrypted reasoning or compaction content that was produced under a different model.
+```
+
+**原因：** 无论 **Provider** 设置为什么，Open WebUI 都会在后续轮次回传 `reasoning_details`。它会把这些内容从由另一个模型写出的回复中移除，并通过 Open WebUI 模型 ID 区分模型。一个模型 ID 如果现在指向了不同的上游模型（例如基础模型被改动过的工作区模型），仍然会收到早前那些回复的推理详情。
+
+**修复：** 开始一个新聊天，或者用写出早前回复的那个上游模型继续当前聊天。修改 **Provider** 不会改变这一点。
 
 ### Anthropic 扩展思考与工具调用不兼容 {#anthropic-extended-thinking-not-working-with-tool-calls}
 

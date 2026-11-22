@@ -42,7 +42,7 @@ Open WebUI 支持通过 OAuth 和 OpenID Connect（OIDC）进行提供方登录�
 | `ENABLE_OAUTH` | `true` | 提供方登录的总开关。设为 `false` 可在保留客户端 ID、密钥和端点配置的同时关闭 SSO。它同时是**设置 > 身份验证**（管理员区域）中的一个开关，与 LDAP 的那个相邻。 |
 | `ENABLE_OAUTH_SIGNUP` | `false` | 允许在 OAuth 登录时创建账户（与 `ENABLE_SIGNUP` 独立）。 |
 | `OAUTH_AUTO_REDIRECT` | `false` | 将 `/auth` 上未认证的用户直接重定向到提供商登录页，跳过"Continue with SSO"界面。要求仅一个提供商、`ENABLE_LOGIN_FORM=false` 且无 LDAP；可通过访问 `/auth?form=true` 显示本地登录表单。 |
-| `OAUTH_MERGE_ACCOUNTS_BY_EMAIL` | `false` | 基于匹配邮箱合并 OAuth 登录（注意：如果提供商不验证邮箱，可能不安全）。 |
+| `OAUTH_MERGE_ACCOUNTS_BY_EMAIL` | `false` | 基于匹配邮箱合并 OAuth 登录（注意：如果提供商不验证邮箱，可能不安全）。管理面板中的 **按邮箱合并账户**：它会把该次登录关联到拥有相同邮箱的任何账户，包括本地账户和管理员账户，并且 Open WebUI 不会检查提供商是否验证过该地址。 |
 | `OAUTH_UPDATE_PICTURE_ON_LOGIN` | `false` | 每次登录时从 OAuth 提供商更新用户头像。 |
 | `OAUTH_PICTURE_CLAIM` | `picture` | claim 中包含头像的字段。设置为空字符串以禁用图片更新（用户获得默认图标）。提供方以压缩格式返回的头像同样会回退到默认图标。 |
 | `ENABLE_PROFILE_IMAGE_URL_FORWARDING` | `true` | 不影响 SSO 头像：OAuth 流程会下载 IdP 头像并以 `data:` URI（或 `/user.png`）形式存储，因此不会有 IdP URL 写入 `profile_image_url`。该变量管辖的是用户自行设置的 URL。为 `true` 时，后端会从 `/api/v1/users/{id}/profile/image` 发起 `302` 重定向，跳转至 IdP 写入 `profile_image_url` 的外部 URL。每个浏览器随后会直接从该来源加载头像——这会泄漏客户端 IP、User-Agent 和 Referer 请求头。设为 `false` 以抑制重定向；IdP 提供的 URL 仍会被存储，但 Open WebUI 改为提供内置默认头像。**建议：** 除非 IdP 以 `data:` URI 形式返回头像（Open WebUI 会在本地持久化且不受影响），或者你接受这种泄漏以换取展示 IdP 托管的头像，否则请禁用。完整语义请参阅 [`ENABLE_PROFILE_IMAGE_URL_FORWARDING`](/reference/env-configuration#enable_profile_image_url_forwarding)。 |
@@ -93,6 +93,14 @@ Open WebUI 支持通过 OAuth 和 OpenID Connect（OIDC）进行提供方登录�
 5. **简洁的 Token 访问：** 此架构为内部工具和其他服务提供了一种干净可靠的方式来访问用户 token，无需脆弱的 cookie 解析。
 
 **当提供商没有说明 token 何时过期时：** 大多数提供商会返回 `expires_in` 或 `expires_at`，Open WebUI 采信它所拿到的那个。如果两者都没有，接下来会发生什么取决于响应中是否包含 refresh token。如果有，则假定该 token 有效期为一小时，并按此进行刷新，同时记录一条警告。如果没有，就没有任何可用于刷新的东西，臆造一个很短的过期时间只会无谓地终止会话；因此该 token 会被视为永不过期，会话得以保留。这正是那些签发长期有效 token 且不提供 refresh token 的提供商不再在一小时后踢掉用户的原因。
+
+**登出后仍会保留什么：** 登出时会保留某个提供商最后保存的会话，因为不带 `oauth_session_id` cookie 的请求仍会使用它。自动化和 API key 调用正属于这类请求：Open WebUI 会选取该用户最近更新的已保存会话（跳过 MCP 工具服务器会话），并在需要时刷新它。因此在该用户登出之后，认证方式设为 **OAuth** 的连接和工具服务器，以及读取用户 OAuth token 的工具或函数，在自动化或 API key 代表该用户操作时，仍会收到该用户的提供商 token。修改密码和 **退出所有设备** 都不会清除已保存的 OAuth 会话。
+
+要彻底删除已保存的会话：
+
+- 用户可以调用 `DELETE /api/v1/auths/oauth/sessions/{provider}`，其中 `{provider}` 是提供商名称（`google`、`microsoft`、`github`、`oidc` 或 `feishu`）。这会删除该用户在该提供商下的全部已保存会话。已连接的 MCP 工具服务器旁的 **断开 OAuth** 按钮调用的也是同一个端点，但只针对该服务器。
+- 管理员可以用 `GET /api/v1/users/{user_id}/oauth/sessions` 列出某个用户已保存的会话。没有任何端点允许管理员删除其他用户的会话。[OIDC 反向通道注销](#oidc-back-channel-logout)会在提供商发送注销令牌时删除全部会话。
+- 在提供商处撤销用户的 refresh token 后，Open WebUI 下次需要新 token 时，已保存的会话即告结束：刷新失败，会话被删除。在此之前，仍会发送已保存的 access token，直到它距过期不到五分钟。刷新过程中出现网络错误或超时，则保留该会话。
 
 此系统默认启用，但可以使用上述环境变量进行微调。
 
@@ -267,9 +275,9 @@ Microsoft Entra ID 中无需额外配置。`offline_access` scope 对于具有�
 要使用此功能，将 `ENABLE_OAUTH_ROLE_MANAGEMENT` 设置为 `true`。
 您可以配置以下环境变量来匹配 OAuth 提供商返回的角色：
 
-1. `OAUTH_ROLES_CLAIM` - 包含角色的 claim。默认为 `roles`。也可以是嵌套的，例如 `user.roles`。
-1. `OAUTH_ALLOWED_ROLES` - 允许登录的角色列表（逗号分隔，获得 open webui `user` 角色）。使用 `*` 作为通配符可允许任意角色。
-1. `OAUTH_ADMIN_ROLES` - 允许以管理员身份登录的角色列表（逗号分隔，获得 open webui `admin` 角色）。
+1. `OAUTH_ROLES_CLAIM` - 包含角色的 claim。默认为 `roles`。也可以是嵌套的，例如 `user.roles`。该 claim 可以是列表，也可以是字符串。如果你的提供商不发送 `roles` claim，请指定承载待映射值的 claim 名称，例如 `groups`。
+1. `OAUTH_ALLOWED_ROLES`（管理面板中的 **允许的角色**）- 允许登录的角色列表（逗号分隔，获得 open webui `user` 角色）。使用 `*` 作为通配符可允许任意角色。
+1. `OAUTH_ADMIN_ROLES`（管理面板中的 **管理员角色**）- 允许以管理员身份登录的角色列表（逗号分隔，获得 open webui `admin` 角色）。该列表中的角色即使不在 `OAUTH_ALLOWED_ROLES` 中也允许用户登录；当用户同时匹配两个列表时，`admin` 优先。角色与两个列表都不匹配的用户会被拒绝。提供商未发送角色的用户保留其当前角色，新账户则获得 **默认用户角色**（默认为 `pending`）。参见[首次 SSO 登录处于待定或被拒绝](/troubleshooting/sso#13-first-sso-sign-in-is-pending-or-refused)。
 1. `OAUTH_ROLES_SEPARATOR` - 允许为 `OAUTH_*_ROLES` 变量指定替代分隔符。如果 claim 是字符串且包含分隔符，也会按该分隔符拆分。
 
 :::info
@@ -288,7 +296,7 @@ Microsoft Entra ID 中无需额外配置。`offline_access` scope 对于具有�
 您可以配置以下环境变量：
 
 1. `OAUTH_GROUP_CLAIM` - ID token 或 userinfo 响应中包含用户组成员资格的 claim。默认为 `groups`，因此只有当你的提供方使用其他名称时才需要设置。也可以是嵌套的，例如 `user.memberOf`。`OAUTH_GROUPS_CLAIM` 是当前的名称，会被优先读取。
-1. `ENABLE_OAUTH_GROUP_CREATION` - 如果为 `true`（且 `ENABLE_OAUTH_GROUP_MANAGEMENT` 也为 `true`），Open WebUI 将执行**即时（JIT）用户组创建**。这意味着在 OAuth 登录时，如果用户的 OAuth claims 中存在但系统中尚不存在的用户组，将自动创建。默认为 `false`。如果为 `false`，只管理*现有* Open WebUI 用户组的成员资格。
+1. `ENABLE_OAUTH_GROUP_CREATION`（管理面板中的 **自动创建用户组**）- 如果为 `true`（且 `ENABLE_OAUTH_GROUP_MANAGEMENT` 也为 `true`），Open WebUI 将执行**即时（JIT）用户组创建**。这意味着在 OAuth 登录时，如果用户的 OAuth claims 中存在但系统中尚不存在的用户组，将自动创建。默认为 `false`。如果为 `false`，只管理*现有* Open WebUI 用户组的成员资格。
 1. `OAUTH_GROUP_DEFAULT_SHARE` - 控制通过 JIT 用户组创建创建的用户组的默认共享权限。默认为 `true`（与任何人共享）。设置为 `members` 以仅限组成员共享，或设置为 `false` 完全禁用共享。仅在启用 `ENABLE_OAUTH_GROUP_CREATION` 时适用。
 
 :::warning
@@ -317,6 +325,18 @@ Microsoft Entra ID 中无需额外配置。`offline_access` scope 对于具有�
 如果用户在 OAuth 提供商中的用户组发生更改，他们需要退出 Open WebUI 并重新登录，更改才能生效。
 
 :::
+
+#### OAuth 用户组同步会改变什么 {#what-oauth-group-sync-changes}
+
+启用 **Group Mapping**（`ENABLE_OAUTH_GROUP_MANAGEMENT`）后，同步会在每次通过提供商登录时运行（新账户和已有账户都会），也会在每次[令牌交换](#oauth-token-exchange-for-external-applications)时运行。它会把 **Group Claim**（`OAUTH_GROUP_CLAIM`）中的名称与 Open WebUI 的用户组名称进行比较。以单个字符串发送的 claim 会按 [`OAUTH_GROUPS_SEPARATOR`](/reference/env-configuration#oauth_groups_separator)（默认 `;`）拆分。
+
+当 claim 中列出了至少一个用户组时：
+
+- 管理员手动把用户加入的用户组会在该用户下次登录时被移除，除非该组名称出现在 claim 中或与 **已阻止的用户组** 匹配。
+- 为新用户设置的 **默认用户组** 同样会被移除。新用户在首次登录时就会离开该组，除非该组名称出现在 claim 中或与 **已阻止的用户组** 匹配。
+- 启用 **自动创建用户组**（`ENABLE_OAUTH_GROUP_CREATION`）时，claim 中没有同名 Open WebUI 用户组的条目会以默认用户权限创建，并带上说明 `Group '<name>' created automatically via OAuth.`，随后把该用户加入其中。关闭时，这些 claim 条目会被跳过。
+
+**已阻止的用户组**（`OAUTH_BLOCKED_GROUPS`）并不会阻止登录，尽管它在管理面板中的说明写着“禁止登录的提供商用户组”。名称与某个条目匹配的用户组会被同步跳过：它永远不会被创建，用户也永远不会被加入其中或从中移出。在管理面板中填写逗号分隔的列表。每个条目都可以按精确匹配、shell 风格通配符（`*`、`?`）或正则表达式匹配。若要保留管理员手动管理的用户组，请把它的名称加入 **已阻止的用户组**。
 
 ## 受信任请求头 {#trusted-header}
 

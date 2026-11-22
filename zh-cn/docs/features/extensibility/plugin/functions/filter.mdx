@@ -544,6 +544,12 @@ class WebSearchFilter:
 - 该轮后续的每一次调用（例如工具结果返回之后）都重复执行 request() 与 stream()
 - 执行 outlet() Filter（在最终响应之后执行一次）
 
+:::note 后台任务调用会跳过 Filter 函数
+过滤器只在聊天请求中运行。Open WebUI 的后台调用，例如在 [task model](/features/administration/task-models) 上进行的标题、标签、后续提示、查询、自动补全、表情和图像提示词生成，以及上下文压缩、记忆复核和 **Legacy** 工具选择，都不会运行任何 Filter 函数的 `inlet()`、`request()`、`stream()` 或 `outlet()`，全局过滤器也不例外。过滤器无法读取或修改这些提示词及其回复。
+
+若要介入任务调用，请把 [Pipe](/features/extensibility/plugin/functions/pipe) 设为 task model。它从 `__task__` 读取任务名称。另一个选择是 Pipelines 过滤器：标题、标签、后续提示、查询、自动补全、表情和图像提示词调用会为 task model 运行 Pipelines 的 inlet 过滤器，但不会运行 outlet 过滤器。上下文压缩、记忆复核和 **Legacy** 工具选择两者都不会运行。
+:::
+
 ---
 
 ### 📡 Filter 在 API 请求中的行为 {#filter-behavior-with-api-requests}

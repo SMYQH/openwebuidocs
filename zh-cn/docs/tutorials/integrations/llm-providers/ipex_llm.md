@@ -35,16 +35,16 @@ title: "Intel GPU (IPEX-LLM)"
 
 ## 配置 Open WebUI {#configure-open-webui}
 
-通过菜单中的 **Settings -> Connections** 访问 Ollama 设置。默认情况下，**Ollama Base URL** 预设为 `http://localhost:11434`，如下图所示。要验证 Ollama 服务连接状态，点击文本框旁边的**刷新按钮**。如果 WebUI 无法与 Ollama 服务器建立连接，您将看到错误消息 `WebUI could not connect to Ollama`。
+通过 **Admin Panel > Settings > Connections** 访问 Ollama 设置。默认情况下，**Ollama API** 连接 URL 为 `http://localhost:11434`（在标准 Docker 镜像中为 `http://host.docker.internal:11434`），如下图所示。要验证 Ollama 服务连接状态，点击 Ollama 连接上的 **Configure**（齿轮图标），然后点击 URL 旁边的 **Verify Connection**。如果 WebUI 无法与 Ollama 服务器建立连接，您将看到一条错误消息。
 
 ![Open WebUI Ollama 设置失败](https://llm-assets.readthedocs.io/en/latest/_images/open_webui_settings_0.png)
 
-如果连接成功，您将看到提示 `Service Connection Verified`，如下图所示。
+如果连接成功，您将看到提示 `Server connection verified`，如下图所示。
 
 ![Open WebUI Ollama 设置成功](https://llm-assets.readthedocs.io/en/latest/_images/open_webui_settings.png)
 
 :::tip
 
-如果您想使用托管在不同 URL 的 Ollama 服务器，只需将 **Ollama Base URL** 更新为新 URL，然后按**刷新**按钮重新确认与 Ollama 的连接。
+如果您想使用托管在不同 URL 的 Ollama 服务器，请点击 Ollama 连接上的 **Configure**，修改 **URL**，点击 **Verify Connection**，然后点击 **Save**。
 
 :::

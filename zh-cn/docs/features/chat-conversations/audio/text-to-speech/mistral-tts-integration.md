@@ -67,8 +67,8 @@ services:
 | `AUDIO_TTS_ENGINE` | 设置为 `mistral` | empty（仅使用浏览器侧 TTS） |
 | `AUDIO_TTS_MISTRAL_API_KEY` | 你的 Mistral API 密钥 | empty |
 | `AUDIO_TTS_MISTRAL_API_BASE_URL` | Mistral API 基础 URL | `https://api.mistral.ai/v1` |
-| `AUDIO_TTS_MODEL` | TTS 模型 | `voxtral-mini-tts-2603`（内置回退值） |
-| `AUDIO_TTS_VOICE` | 语音 ID | empty |
+| `AUDIO_TTS_MODEL` | TTS 模型 | `tts-1`（与 OpenAI 引擎共用，因此请设置 Mistral 模型；只有该值为空时才使用 `voxtral-mini-tts-2603`） |
+| `AUDIO_TTS_VOICE` | 语音 ID | `alloy`（请设置 Mistral 语音 ID，否则请求会以 `alloy` 发出） |
 
 ## 选择语音 {#choosing-voices}
 

@@ -27,8 +27,10 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | `WebSocket connection failed: 403` 或聊天卡住 | [连接错误 → WebSocket](./connection-error#websocket-troubleshooting) |
 | 助手回复随机为空，开启工具后更明显 | [连接错误 → 调用工具时回复为空](./connection-error#blank-replies-when-the-model-uses-a-tool) |
 | Open WebUI 无法连接 Ollama | [连接错误 → Ollama](./connection-error#connection-to-ollama-server) |
+| `registry.ollama.ai/library/<model> does not support tools` | [连接错误 → Ollama 工具错误](./connection-error#ollama-does-not-support-tools) |
 | 模型列表加载极慢 / `/api/models` 返回 `500` | [连接错误 → 模型列表加载](./connection-error#model-list-loading-issues-slow-ui--unreachable-endpoints) |
 | 间歇性出现 "Model not found"、模型列表自行清空、`ClientConnectorDNSError` | [连接错误 → 间歇性名称解析失败](./connection-error#intermittent-name-lookup-failures-often-reported-as-model-not-found) |
+| 非管理员用户使用工作区模型时提示 `Model not found`，而管理员正常 | [模型 → 基础模型访问权限](/features/workspace/models#the-rule-a-custom-model-always-requires-access-to-its-base-model) |
 | `[SSL: CERTIFICATE_VERIFY_FAILED]` | [连接错误 → SSL](./connection-error#ssl-certificate-issues-with-internal-tools) |
 | 多副本场景下登录循环、401 Unauthorized、跨副本 token 错误 | [扩缩容与高可用 → 登录循环](./multi-replica#1-login-loops--401-unauthorized-errors) |
 | `database is locked`、跨实例时数据丢失 | [扩缩容与高可用 → 数据库](./multi-replica#4-database-corruption--locked-errors) |

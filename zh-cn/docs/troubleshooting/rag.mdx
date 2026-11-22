@@ -104,7 +104,7 @@ RAG 性能很大程度上取决于你的模型配置。默认值较为保守以�
 
 ### 2. 只用了文档中的一小部分内容 {#2-only-a-small-part-of-the-document-is-being-used}
 
-Open WebUI 在设计上默认与上下文窗口有限的模型配合使用。例如，Ollama 会根据可用显存为模型选取默认上下文长度，在显存低于 24 GiB 的 GPU 上这个值是 4096 token（见 [Ollama 的上下文长度文档](https://docs.ollama.com/context-length)），远低于大多数模型本身支持的长度。正因如此，Open WebUI 会积极裁剪检索到的内容，以便把它塞进假定可用的空间里。
+Open WebUI 在设计上默认与上下文窗口有限的模型配合使用。例如，Ollama 会根据可用显存为模型选取默认上下文长度，在显存低于 24 GiB 的 GPU 上这个值是 4096 token（见 [Ollama 的上下文长度文档](https://docs.ollama.com/context-length)），远低于大多数模型本身支持的长度。Open WebUI 不会测量模型的上下文，也不会裁剪检索到的内容去适应它。它会注入检索到的 Top K 个片段（默认 10 个），因此只有文档的这些部分会到达模型，而较小的上下文窗口甚至可能把这些也截断。
 
 **解决方法：**
 
@@ -196,7 +196,7 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
     *   **Office 与 EPUB 文档**还会额外按其实际内容检查，因为这些格式本质上是压缩包。解压后远大于自身体积的文件会被拒绝，并提示解压后体积过大，即便文件本身很小。真实文档很少触发这一限制；触发的要么是文件损坏，要么是刻意构造以耗尽打开它的程序的内存。
     *   **最大文件数量：** 由 `RAG_FILE_MAX_COUNT` 控制（默认不限），可在 **Settings > Documents > Files > Max Upload Count**（管理员区域） 中配置
     *   **允许的文件扩展名：** 由 `RAG_ALLOWED_FILE_EXTENSIONS` 控制（默认全部允许），可在 **Settings > Documents > Files > Allowed File Extensions**（管理员区域） 中配置
-*   **文件夹上传：** 受 `FOLDER_MAX_FILE_COUNT` [environment variable](/reference/env-configuration/#folder_max_file_count) 限制（默认 100），限制的是与文件夹直接关联的文件数
+*   **文件夹上传：** 受 `FOLDER_MAX_FILE_COUNT` [environment variable](/reference/env-configuration/#folder_max_file_count) 限制（默认不限制，只有浏览器会强制执行），限制的是与文件夹直接关联的文件数
 *   **知识库上传：**
     *   **文件大小限制：** 受 `RAG_FILE_MAX_SIZE` 和知识库的[文件大小限制](/features/workspace/knowledge#file-limits)约束
     *   **RAG 行为：** 上传到 Knowledge Base 的所有文件都会自动建立索引。不过与聊天上传类似，Knowledge Base 也可以在聊天中使用 **Using Entire Document**（点击聊天中的附件），它会把完整文档内容直接交给模型，而不使用向量检索。
@@ -243,6 +243,8 @@ Open WebUI 提供了多种上传限制，用于保证系统稳定与防止滥用
 | 🐌 追问越来越慢 | 启用 `RAG_SYSTEM_CONTEXT=True` 修复 KV Cache 失效 |
 | 📄 API 返回 “empty content” | 等文件处理完成后再加入知识库 |
 | 💥 嵌入时 CUDA OOM | 降低 batch size、隔离 GPU、或重启容器 |
+| 🐢 大批量上传嵌入很慢 | 提高 **Embedding Batch Size**、改用外部嵌入引擎，或跳过嵌入 |
+| 🔀 混合搜索没有变化 | 设置 `GLOBAL_LOG_LEVEL=DEBUG`，检查 reranker 模型和端点 |
 | 📷 PDF 图片无法提取 | 使用 Tika/Docling、启用 OCR、或更新 pypdf |
 | 💀 上传时 worker 瞬时死亡 | 在多副本或多 worker 的部署下，不要继续使用默认 ChromaDB（SQLite） |
 | 💀 上传时 worker 超时死亡 | 更新 Open WebUI，或提高 `--timeout-worker-healthcheck` |
@@ -321,7 +323,7 @@ CUDA out of memory. Tried to allocate X MiB. GPU has a total capacity of Y GiB o
 1. **把嵌入任务隔离到另一张 GPU**（如果有）：
    使用 `CUDA_VISIBLE_DEVICES`，把 embedding 固定到与聊天模型不同的 GPU。
 2. **降低 Embedding Batch Size**：
-   调低 `RAG_EMBEDDING_BATCH_SIZE`（例如从 32 改到 8 或 4），减少峰值显存占用。
+   如果你提高了 `RAG_EMBEDDING_BATCH_SIZE`（默认值是 1；32 是 `RAG_RERANKING_BATCH_SIZE` 的默认值），请再调低它以减少峰值显存占用。
 3. **启用 expandable segments**：
    ```
    PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
@@ -340,7 +342,7 @@ CUDA out of memory. Tried to allocate X MiB. GPU has a total capacity of Y GiB o
 当你使用**远程/外部嵌入提供商**（OpenAI、Azure OpenAI 等），并启用了 [`ENABLE_ASYNC_EMBEDDING`](/reference/env-configuration#enable_async_embedding) 时，在批量导入文档期间可能会在日志里看到 HTTP 429 “Too Many Requests”：
 
 ```
-Error generating embeddings: 429 Rate limit reached
+aiohttp.client_exceptions.ClientResponseError: 429, message='Too Many Requests', url='https://api.openai.com/v1/embeddings'
 ```
 
 **问题根源：** 启用异步嵌入后，Open WebUI 会并发发送 embedding 请求。如果一次性导入很多文档或特别大的文档，很容易超过提供商 API 的限流，尤其是在免费层或较低套餐下。
@@ -354,7 +356,7 @@ Error generating embeddings: 429 Rate limit reached
    environment:
      RAG_EMBEDDING_CONCURRENT_REQUESTS: 5
    ```
-   也可以在 **Settings > Documents > Embedding Concurrent Requests**（管理员区域） 中设置。默认 `0` 表示不限制并发。
+   也可以在 **Settings > Documents > Embedding Concurrent Requests**（管理员区域） 中设置，该字段会为 Ollama、OpenAI 和 Azure OpenAI 嵌入引擎显示。默认 `0` 表示不限制并发。
 2. **降低 batch size**：
    调低 [`RAG_EMBEDDING_BATCH_SIZE`](/reference/env-configuration#rag_embedding_batch_size)，减少单次 API 调用发送的文本量。
 3. **关闭异步嵌入**：
@@ -366,6 +368,10 @@ Error generating embeddings: 429 Rate limit reached
 
 **问题根源：** 默认的 "pypdf" 内容提取器对某些 PDF 格式支持有限，尤其是以图片为主的内容。
 
+默认提取器只读取每一页的文字层。**PDF Extract Images (OCR)** 默认关闭，因此扫描件页面不会产生任何文字。如果每一页都是空的，上传会失败并提示 `The content provided is empty. Please ensure that there is text or data present before proceeding.`。只要有一页含文字，上传就会成功，而扫描件页面会在没有任何错误的情况下从搜索结果中消失。
+
+开启 **PDF Extract Images (OCR)** 后，默认提取器无法解码的图片会被跳过，服务端日志会显示 `Skipping unreadable PDF image`，后接图片名称和错误信息。文件的其余部分仍会继续处理。对于遇到这种情况的扫描版 PDF，请改用自带 OCR 的内容提取引擎。
+
 ✅ **解决方法：**
 
 1. **改用其他内容提取引擎**：
@@ -375,7 +381,7 @@ Error generating embeddings: 429 Rate limit reached
    - 在 **Settings > Documents**（管理员区域） 中确认 **PDF Extract Images (OCR)** 已开启
    - OCR 每次上传会占用一个处理器线程。如果你的服务器核心很多且处于空闲状态，可以提高 [`RAPIDOCR_PARAMS`](/reference/env-configuration#rapidocr_params) 中的 `intra_op_num_threads`，让单次上传的 OCR 更快完成
 3. **更新 pypdf**（如果使用默认引擎）：
-   新版本 pypdf（6.0.0+）对各类 PDF 格式处理更好
+   新版本 pypdf（6.0.0+）对各类 PDF 格式处理更好。每个 Open WebUI 版本都会锁定自己的 pypdf 版本，因此更新 pypdf 就意味着要更新 Open WebUI
 4. **检查 PDF 是否损坏**：
    上传前先确认该 PDF 能在常规 PDF 阅读器中正常打开
 
@@ -475,9 +481,11 @@ Open WebUI 使用 **agentic RAG**：由模型决定何时以及如何搜索知�
 
 附加某个网页或 YouTube 视频时返回了错误提示。消息会指出失败的具体环节：链接无法读取会指明是哪个链接，YouTube 字幕被拒绝会给出原因，而提到知识库的消息则表示内容已经读取成功，只是保存失败。
 
-`[ERROR: Could not read content from <url>]` 表示什么都没有附加成功。常见原因有：站点拦截了请求，或只有在 JavaScript 执行后才提供内容——这可以由 [`WEB_LOADER_ENGINE=playwright`](../reference/env-configuration.mdx#web_loader_engine) 处理；Open WebUI 没有被告知要使用的代理，参见 [`WEB_SEARCH_TRUST_ENV`](../reference/env-configuration.mdx#web_search_trust_env)；以及地址被有意拒绝——私有地址、回环地址、云元数据端点以及任何匹配 [`WEB_FETCH_FILTER_LIST`](../reference/env-configuration.mdx#web_fetch_filter_list) 的地址都从不会被请求。
+`[ERROR: Could not read content from <url>]` 表示什么都没有附加成功。常见原因有：站点拦截了请求，或只有在 JavaScript 执行后才提供内容——这可以由 [`WEB_LOADER_ENGINE=playwright`](../reference/env-configuration.mdx#web_loader_engine) 处理；Open WebUI 没有被告知要使用的代理，参见 [`WEB_SEARCH_TRUST_ENV`](../reference/env-configuration.mdx#web_search_trust_env)；以及地址被有意拒绝。云元数据端点以及任何匹配 [`WEB_FETCH_FILTER_LIST`](../reference/env-configuration.mdx#web_fetch_filter_list) 的地址都从不会被请求，日志中会显示 `Blocked by filter list:`。私有地址、回环地址、链路本地地址以及其他不可全局路由的地址默认都会被拒绝，日志中会显示 `Blocked non-global address:` 并附上该地址。
 
-YouTube 附加项就是视频的字幕，因此没有可用字幕的视频根本无法附加。当消息显示 YouTube 阻止了来自你服务器地址的请求时（在云服务商网段中很常见），请通过 [`YOUTUBE_LOADER_PROXY_URL`](../reference/env-configuration.mdx#youtube_loader_proxy_url) 转发。当字幕存在但不是所请求的语言时，把你的语言加入 [`YOUTUBE_LOADER_LANGUAGE`](../reference/env-configuration.mdx#youtube_loader_language)。上传者关闭的字幕、年龄限制以及不可观看的视频则无法绕过。
+要附加你自己网络中的页面，例如内网 wiki 或同一宿主机上的服务，请设置 [`ENABLE_LOCAL_WEB_FETCH=True`](../reference/env-configuration.mdx#enable_local_web_fetch)（旧名称 `ENABLE_RAG_LOCAL_WEB_FETCH` 仍然有效）并重启。此后每个能发起对话的用户都可以让服务器请求内部地址，因此只在你信任所有这些用户时才开启它。过滤列表及其中的元数据端点无论如何都会被拦截。
+
+YouTube 附加项就是视频的字幕，因此没有可用字幕的视频根本无法附加。当消息显示 YouTube 阻止了来自你服务器地址的请求时（在云服务商网段中很常见），请通过 [`YOUTUBE_LOADER_PROXY_URL`](../reference/env-configuration.mdx#youtube_loader_proxy_url) 转发。当字幕存在但不是所请求的语言时，把你的语言加入 [`YOUTUBE_LOADER_LANGUAGE`](../reference/env-configuration.mdx#youtube_loader_language)。此时消息会显示 `No transcript found for the YouTube video <id> in these languages: <list>.`。请在 **Settings > Web Search**（管理员区域）的 **Youtube Language** 中设置该列表，格式为用逗号分隔的语言代码，例如 `de,fr`。环境变量中不要留空格，因为只有管理员字段会去掉它们。Open WebUI 会按顺序尝试这些语言，缺少 `en` 时会在末尾补上，因此 `de,fr` 会依次尝试德语、法语、英语。对每种语言，它会优先使用手动创建的字幕而不是自动生成的字幕。上传者关闭的字幕、年龄限制以及不可观看的视频则无法绕过。
 
 ### 15. 附加单个文件时没有返回来源 {#15-attaching-a-single-file-returns-no-sources}
 
@@ -489,6 +497,63 @@ YouTube 附加项就是视频的字幕，因此没有可用字幕的视频根本
 
 1. 在 **Settings > Documents > Reindex Knowledge and Memory Vectors**（管理员区域）执行**重新索引**。这会重建每个知识库、其中每个文件的单文件索引，以及每位用户的记忆。它会重新提取并重新嵌入全部内容，因此请预留足够时间；如果使用的是付费嵌入模型，还要考虑相应费用。
 2. 如果文件不属于任何知识库，请**重新上传**，因为重新索引只覆盖知识库。
+
+### 16. 附加图片中的文字没有被读取 {#16-text-in-an-attached-image-is-not-read}
+
+聊天中附加的图片会作为图片发送给模型。它从不经过内容提取引擎，因此无论 **Settings > Documents**（管理员区域） 中设置的是哪个引擎，都不会对它运行 OCR。只有视觉模型才能读取它。
+
+- 如果所有选中的模型都关闭了 **Vision** 能力，Open WebUI 会以 `Selected model(s) do not support image inputs` 拒绝该图片。
+- 没有设置任何能力的模型会被视为具备视觉能力，因此图片会被发送。无法接收图片的模型服务器随后会返回它自己的错误，例如 `Multimodal data provided, but model does not support multimodal requests.`。该文本来自模型服务器，而不是 Open WebUI。
+
+**解决方案：**
+
+1. 对带图片的聊天**使用视觉模型**，并在 **Settings > Models > Edit**（管理员区域） 中为无法接收图片的模型关闭 **Vision**，这样用户看到的是 Open WebUI 的提示，而不是模型服务器的错误。
+2. **用 OCR 提取文字**，把图片上传到知识库。这要求 **Settings > Documents**（管理员区域） 中的 **Content Extraction Engine** 设为 **Default** 以外的引擎，并且 **Supported Media MIME Types** 列出该图片类型，例如 `image/*`。**External** 引擎在该字段从未设置过时也接受图片。否则上传时会提示 `File type image/png is not supported for processing`，并带上图片自身的类型。
+
+### 17. 大批量上传耗时很久才能嵌入 {#17-large-uploads-take-a-long-time-to-embed}
+
+在 **Default (SentenceTransformers)** 嵌入引擎上，一个大型 CSV 或 XLSX 文件，或者一次上传的许多 PDF，会长时间停留在处理中。文件可被检索之前，每个片段都必须完成嵌入。
+
+**问题根源：** **Settings > Documents**（管理员区域） 中的 **Embedding Batch Size**，由 [`RAG_EMBEDDING_BATCH_SIZE`](/reference/env-configuration#rag_embedding_batch_size) 设置，默认值为 `1`。本地引擎会把它作为模型的 batch size 传给模型，因此一次只嵌入一个片段。
+
+**解决方案：**
+
+1. **提高 Embedding Batch Size**，例如提高到 `32`。批次越大，占用的内存越多。如果随后看到 CUDA 显存不足错误，请再调低它（见[第 10 节](#10-cuda-out-of-memory-during-embedding)）。
+2. **使用外部嵌入引擎**：把 **Embedding Model Engine** 设为 **Ollama**、**OpenAI** 或 **Azure OpenAI**（[`RAG_EMBEDDING_ENGINE`](/reference/env-configuration#rag_embedding_engine)）。同一个 batch size 随后决定一次请求中放入多少片段，因此只有当提供商接受每次请求多个输入时才提高它。使用 **Ollama** 时，每次上传和每次搜索也会通过 `/api/embed` 向嵌入模型发送文本。如果同一个 Ollama 同时运行聊天模型，而两者无法同时装入内存，回复会在长时间停顿后才开始，因为 Ollama 又要重新加载模型。请选择足够小的嵌入模型，以便它能与聊天模型一起保持加载，并用 `ollama ps` 确认两者都在列表中，或者把 [`RAG_OLLAMA_BASE_URL`](/reference/env-configuration#rag_ollama_base_url) 指向另一个专门用于嵌入的 Ollama（参见[任务模型参数](/features/administration/task-models#task-model-parameters)）。
+3. **跳过嵌入**：开启 **Bypass Embedding and Retrieval**（[`BYPASS_EMBEDDING_AND_RETRIEVAL`](/reference/env-configuration#bypass_embedding_and_retrieval)）。上传内容会以抽取出的文本形式存储，不带嵌入向量，完整文本会发给模型，因此每个文档都必须能放进它的上下文窗口。
+
+### 18. 混合搜索或 reranker 没有可见效果 {#18-hybrid-search-or-the-reranker-has-no-visible-effect}
+
+开启 **Hybrid Search** 后，答案看起来与普通向量搜索完全一样，聊天中也没有任何错误。
+
+**问题根源：** 混合搜索会自动回退到向量搜索。
+
+- 如果混合搜索的查询报错，Open WebUI 会改用向量搜索，并且只在 `DEBUG` 级别记录 `Hybrid search failed, falling back to vector search:`。
+- 混合查询失败的知识库会从结果中被丢弃，其他知识库仍会继续检索。日志会在 `ERROR` 级别显示 `query_collection_with_hybrid_search: <n> collection(s) had failing queries:`，后接集合名称。
+- 如果外部 reranker 请求失败，或其响应中没有 `results`，日志会显示 `Error in external reranking:` 或 `No results found in external reranking response`，然后是 `No valid scores found, check your reranking function. Returning original documents.`。这些文档会在不做 rerank 的情况下继续传递。
+- 如果保存设置时无法加载本地 reranking 模型，日志会显示 `Error loading reranking model:`，Open WebUI 会再次关闭 **Hybrid Search**。
+
+**解决方案：**
+
+1. **阅读 debug 日志**：设置 [`GLOBAL_LOG_LEVEL=DEBUG`](/reference/env-configuration#global_log_level)，重启，就文档提一个问题，然后在日志中查找上述几行。
+2. **检查 reranking 模型**：当 **Reranking Engine** 设为 **Default (SentenceTransformers)** 时，**Reranking Model** 必须是 Hugging Face 模型 ID，例如 `BAAI/bge-reranker-v2-m3`，或指向它的本地路径。Open WebUI 会把它作为 SentenceTransformers CrossEncoder 加载，因此 Ollama 模型标签在那里不起作用。
+3. **检查外部 reranker**：当 **Reranking Engine** 设为 **External** 时，**API Base URL** 必须是完整的 rerank 端点。Open WebUI 会发送带有 `model`、`query`、`documents` 和 `top_n` 的 JSON，并从响应中读取 `results[].index` 和 `results[].relevance_score`。聊天补全端点或嵌入端点不会以这种结构回应。
+4. **关闭 Hybrid Search** 以隔离问题。如果检索有改善或有变化，问题出在混合搜索或 reranker 的配置上，而不在嵌入上。
+
+### 19. 同一个问题每次检索到的来源都不同 {#19-the-same-question-retrieves-different-sources-each-time}
+
+就同样的文件问同样的问题，每次返回的来源或答案都不一样。
+
+**问题根源：** 开启 **Retrieval Query Generation**（默认）后，Open WebUI 不会用你的消息去检索。任务模型会阅读对话并写出搜索查询，而这些查询在多次运行之间可能变化。生成回复期间，对话会把它们显示在 **Querying** 下方的标签中。
+
+- 如果任务模型的回复中没有 JSON 对象，整段回复会被当作一个查询。
+- 如果查询生成失败，或 **Retrieval Query Generation** 处于关闭状态，Open WebUI 会用你最后一条消息原文去检索。
+
+**解决方案：**
+
+1. **比较查询**：打开每条回复的状态历史，检查 **Querying** 下方的标签。
+2. 在 **Settings > Interface**（管理员区域）的 **Generation** 部分关闭 **Retrieval Query Generation**，或设置 [`ENABLE_RETRIEVAL_QUERY_GENERATION=False`](/reference/env-configuration#enable_retrieval_query_generation)。此后检索会原样使用你的最后一条消息，因此同一条消息每次都以相同方式检索。更早的消息不会被使用，所以像 “那第二个呢？” 这样的追问只会用这些词去检索。
+3. **更换任务模型**：如果你保留查询生成，请在同一页面的 **Tasks** 部分中 **Task Model** 下选择新的任务模型。查询来自该模型，而不是聊天模型。
 
 ---
 

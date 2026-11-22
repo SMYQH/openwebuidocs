@@ -86,6 +86,8 @@ class Pipe:
 | `open_webui.apps.openai`          | `open_webui.routers.openai`       |
 | `open_webui.apps.audio`           | `open_webui.routers.audio`        |
 | `open_webui.apps.retrieval`       | `open_webui.routers.retrieval`    |
+| `open_webui.apps.images`          | `open_webui.routers.images`       |
+| `open_webui.apps.socket`          | `open_webui.socket`               |
 | `open_webui.apps.webui`           | `open_webui.main`                 |
 
 ### 📜 一个特别重要的例子 {#an-important-example}
@@ -188,7 +190,7 @@ from open_webui.utils.chat import generate_chat_completion
 
 ```python
 from pydantic import BaseModel
-from open_webui.apps.ollama import generate_chat_completion
+from open_webui.apps.ollama.main import GenerateChatCompletionForm, generate_chat_completion
 
 class User(BaseModel):
     id: str
@@ -201,10 +203,10 @@ class Pipe:
         pass
 
     async def pipe(self, body: dict, __user__: dict) -> str:
-        # Calls OpenAI endpoint
+        # Calls the Ollama endpoint
         user = User(**__user__)
         body["model"] = "qwen3.6:27b"
-        return await ollama.generate_chat_completion(body, user)
+        return await generate_chat_completion(GenerateChatCompletionForm(**body), user=user)
 ```
 
 #### 之后（0.5）{#after-05}

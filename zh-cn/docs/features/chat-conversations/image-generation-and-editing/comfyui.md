@@ -37,7 +37,7 @@ Open WebUI 通常在 Docker 中运行，因此容器需要通过 `host.docker.in
 
 1. 在 Open WebUI 中前往**设置** > **图像**（管理员区域），开启**图像生成**。
 2. 添加连接，将**连接类型**设为 **ComfyUI**。
-3. 在 **URL** 中输入运行中的 ComfyUI 实例的地址（例如 `http://host.docker.internal:8188/`），然后点击旁边的验证图标。连接成功时会显示提示。
+3. 在 **URL** 中输入运行中的 ComfyUI 实例的地址（例如 `http://host.docker.internal:8188/`），然后点击旁边的验证图标。连接成功时会显示提示。Open WebUI 还会连接该地址的 `/ws` 建立 WebSocket，因此 ComfyUI 前方的任何代理都必须放行 WebSocket 升级。
 4. 如果 ComfyUI 实例需要 API 密钥，请在密钥字段输入。
 5. **从 ComfyUI 导出工作流。** 点击 ComfyUI 界面左上角的 ComfyUI 标志，选择 **Settings**。找到并开启 **"Dev Mode"**，其说明为 **"Enable dev mode options (API save, etc.)"**。
 
@@ -77,7 +77,7 @@ Open WebUI 通常在 Docker 中运行，因此容器需要通过 `host.docker.in
     部分工作流（例如使用任一 Flux 模型的工作流）需要为同一项填写多个节点 ID。用逗号分隔，例如 `1` 或 `1, 2`。
     :::
 
-8. 将 **Model IDs** 留空可使用工作流中设定的模型，也可添加模型名称供选择。**高级**下的**图像尺寸**和**步数**是可选默认值。
+8. 将 **Model IDs** 留空可使用工作流中设定的模型，也可添加模型名称供选择。建议的名称来自上一次验证：来自被映射为 Model 的节点（它的第一个名称中含 `_name` 的输入，例如 `ckpt_name` 或 `unet_name`）；若没有映射 Model 节点，则来自 CheckpointLoaderSimple 的检查点，因此在映射节点后需要重新验证。**高级**下的**图像尺寸**和**步数**是可选默认值。不设置图像尺寸时，ComfyUI 收到的是 512x512。已映射的 Seed 节点每次请求都会得到新的随机种子。
 9. 设置**访问控制**并点击**保存**。未授予访问权限时，只有管理员能使用该连接。
 
 ![使用 ComfyUI 在聊天中生成图片的截图。](/images/image-generation-and-editing/comfyui-create-image-in-chat.png)
@@ -101,6 +101,8 @@ Open WebUI 同样支持通过 ComfyUI 进行图像编辑，从而修改已有图
     | Model | `unet_name` | No | Diffusion 模型名 |
     | Width | `width` | No | 输出图像宽度 |
     | Height | `height` | No | 输出图像高度 |
+
+    若要编辑多张输入图像，请在 Image 行中为每张图像填写一个 LoadImage 节点 ID，并用逗号分隔。每张图像会按顺序送入对应的节点 ID，超出 ID 数量的图像会被丢弃。
 
     **高级**下的**编辑图像尺寸**用于设置输出尺寸。
 

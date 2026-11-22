@@ -43,6 +43,8 @@ API 变化频繁，为它编写文档意义不大。要查找最新的接口和�
   curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3000/api/models
   ```
 
+**隐藏模型仍会被列出。** 在 **管理面板 > 设置 > 模型** 或 **工作区 > 模型** 中用 **隐藏** 隐藏模型，只是把 `info.meta.hidden` 设为 `true`。聊天模型选择器会把这类模型排除在外，但 `GET /api/models` 仍会把它返回给所有有权限的调用方，`/api/chat/completions` 也仍会响应对它的请求。若要让某个模型远离 API 用户，请改为取消这些用户对它的访问权限。需要跳过隐藏模型的脚本，可以丢弃 `info.meta.hidden` 为 `true` 的条目。
+
 ### 程序化模型管理（导出 / 导入 / 同步） {#programmatic-model-management-export--import--sync}
 
 自定义模型本质上是纯 JSON，因此你可以以声明式方式（在 Git 中、通过脚本或从 AI Agent）管理它们，而无需 UI。这些端点位于 `/api/v1/models` 下：
@@ -84,6 +86,23 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
 
 - **端点**：`POST /api/chat/completions`
 - **说明**：作为兼容 OpenAI API 的聊天补全端点，为 Open WebUI 上的模型提供服务，包括 Ollama 模型、OpenAI 模型以及 Open WebUI Function 模型。位于 Responses API 连接上的模型同样会以 Chat Completions 格式作答（无论是否流式）；当回复被截断时，`finish_reason` 会被设为 `length` 或 `content_filter`。
+
+**该端点适用于工作区模型。** 只有 `/api/chat/completions`（及其别名 `/api/v1/chat/completions`）会应用工作区模型的设置。在普通 API 调用中，它会应用基础模型、系统提示词、参数和过滤器，但不会应用该模型的工具、知识库或默认功能——这些需要额外的字段，如下表所列。`/openai` 下的代理路由跳过的更多：
+
+| 路由 | 工作区模型的处理方式 |
+| :--- | :--- |
+| `POST /api/chat/completions` | 应用基础模型、系统提示词、参数和过滤器。工具、知识库和默认功能只在请求明确要求时才应用。 |
+| `POST /openai/chat/completions` | 替换为基础模型，并应用该工作区模型的系统提示词和参数。知识库、工具和过滤器都不运行。 |
+| `POST /openai/responses` | 什么都不应用。你发送的 `model` 会原样转发给提供方，而任何连接都不提供的工作区模型 ID 会落到第一个 OpenAI 连接上，通常会被拒绝。 |
+
+要使用 `/openai/responses`，请发送提供方自己的模型 ID。在这两条 `/openai` 路由上，非管理员请求一个没有已保存模型记录的模型，会得到 `403` 和 `Model not found`，除非 [`BYPASS_MODEL_ACCESS_CONTROL`](/reference/env-configuration#bypass_model_access_control) 已开启。
+
+**普通 API 调用会遗漏什么。** Web 界面在构建请求时会自行填充模型的一部分设置，因此 API 调用方必须自己发送它们：
+
+- **工具。** 在模型编辑器中 **工具** 下选择的工具由 Web 界面加入请求，而不是由服务端加入。请在 `tool_ids` 中发送它们的 ID。`GET /api/v1/models/model?id=<model-id>` 会在 `meta.toolIds` 下列出它们。
+- **默认功能。** 在 **默认功能** 下选择的功能只会由 Web 界面开启。请自行在 `features` 中发送它们。
+- **知识库与网络搜索。** 除非请求发送了 `params.function_calling`，或该模型的 **函数调用** 参数（或 **模型默认值** 下的那一项）设为 `legacy`，否则函数调用以原生模式运行。在原生模式下，内置工具（包括知识库搜索和网络搜索）只会提供给带 `session_id` 的请求。没有 `session_id` 时，该模型的 **知识库** 不会被搜索，`features.web_search` 和 `features.image_generation` 也不起作用。发送 `"params": {"function_calling": "legacy"}`，Open WebUI 就会在模型作答前搜索该模型的知识库，并按 `features` 的要求执行网络搜索或图像生成。若要在原生模式下使用内置工具，请参阅[服务端工具调用（API）](/reference/server-side-tool-calling)。无论采用哪种方式，你在 `files` 中列出的文件和知识库都会被搜索，除非该模型关闭了 **预加载文件**（见[在聊天补全中使用知识库集合](#using-a-knowledge-collection-in-chat-completions)）。
+- **过滤器。** 全局过滤器和附加到该模型的过滤器都会运行。带开关的过滤器只有在 `filter_ids` 中包含它的 ID 时才运行，而标记为 **在新聊天中默认启用** 的过滤器只由 Web 界面发送。`filter_ids` 无法添加既非全局、又未附加到该模型的过滤器。
 
 :::warning 读取使用了工具的回复中的 `usage`
 
@@ -328,6 +347,22 @@ curl -X POST http://localhost:3000/api/v1/messages/count_tokens \
 Messages API 此前在流式响应的 `message_start` 块中总是报告 `input_tokens: 0`。现在输入 token 会被预先计数，并在流式和非流式响应中一并报告。若计数失败，请求仍然会成功，因此客户端应将该值视为尽力而为的结果，而非绝对保证。
 :::
 
+### 图像生成与编辑 {#image-generation-and-editing}
+
+- **端点**：`POST /api/v1/images/generations`（请求体：`prompt`、可选的 `model`、`size`、`n`、`steps`、`negative_prompt`）和 `POST /api/v1/images/edit`（请求体：`image`，可以是一个或多个 base64 编码的图片或 URL，以及 `prompt`、可选的 `model`、`size`、`n`、`negative_prompt`、`background`）。
+- **列出图像模型**：`GET /api/v1/images/models` 返回你可以使用的图像模型。每个条目的 `id` 形如 `<connection-id>:<model-id>`，另有不带前缀的 `model` ID，以及表示其能力的 `image_generation` 和 `image_edit` 标志。
+
+你发送的 `model` 必须是这些图像模型之一，以它的 `id` 或不带前缀的 `model` ID 给出，并且必须能胜任该任务：编辑需要设置了 `image_edit` 的模型。这些路由不会回退到其他模型。你无权使用的模型，或任何连接都不提供的模型，会返回 `400` 和 `Image model "<model>" was not found`。无法胜任该任务的模型会返回 `400` 和 `Image model "<model>" cannot be used for image generation` 或 `Image model "<model>" cannot be used for image edit`。省略 `model` 时，管理员为该任务设置的默认图像模型会运行，否则会使用第一个你可用的模型。若完全没有可用的模型，请求会失败并返回 `400` 和 `[ERROR: No image model is available]`（编辑场景为 `[ERROR: No image model that can edit images is available]`）。
+
+管理员关闭了图像生成或图像编辑，或者没有图像生成权限的非管理员发起请求，都会返回 `403` 和 `You do not have permission to access this resource. Please contact your administrator for assistance.`
+
+```bash
+curl -X POST http://localhost:3000/api/v1/images/generations \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "gpt-image-2", "prompt": "A lighthouse at dusk"}'
+```
+
 ### `POST /api/v1/users/user/settings/update` 是补丁而非替换 {#post-apiv1usersusersettingsupdate-patches-it-does-not-replace}
 
 该请求中的 `ui` 对象会按字段逐一应用。你略去的字段会保留当前值，而以 `null` 发送的字段会被清空，从而使该项回退到实例默认值。因此，发送局部对象是修改单个设置的常规做法。
@@ -500,6 +535,29 @@ curl -X POST http://localhost:3000/ollama/v1/embeddings \
 ```
 
 可以用 `/ollama/v1/embeddings/{url_idx}` 指定某个具体后端。如果 Ollama 集成被禁用，该端点会返回 `503`。
+
+#### 聊天补全、补全、消息与模型（兼容 OpenAI） {#chat-completions-completions-messages-and-models-openai-compatible}
+
+Open WebUI 还代理 Ollama 的其他 `/v1` 路由。每一个都接受一个 `/{url_idx}` 后缀来指定某个 Ollama 连接，例如 `/ollama/v1/chat/completions/0`。在 `POST` 路由上，非管理员需要对其点名的工作区模型有读权限，并且连接的 **前缀 ID** 会在请求发往 Ollama 之前从模型 ID 中去掉。
+
+| 路由 | Open WebUI 应用的内容 |
+| :--- | :--- |
+| `POST /ollama/v1/chat/completions` | 把工作区模型 ID 替换为其基础模型，并应用该工作区模型的系统提示词和参数。知识库、工具和过滤器都不运行。 |
+| `POST /ollama/v1/completions` | 替换为基础模型，并应用该工作区模型的参数。不添加系统提示词。 |
+| `POST /ollama/v1/messages` | 采用 Anthropic Messages 格式。替换为基础模型，其余请求原样转发。Ollama 集成被禁用时返回 `503`。 |
+| `GET /ollama/v1/models` | 以 OpenAI 格式列出所有已启用的 Ollama 连接上的模型。角色为 `user` 的用户只能看到有已保存模型记录且自己可读的那些模型，除非 [`BYPASS_MODEL_ACCESS_CONTROL`](/reference/env-configuration#bypass_model_access_control) 已开启。带 `/{url_idx}` 时列出该连接的模型，且仅限管理员。其他用户会收到 `401`。 |
+
+```bash
+curl -X POST http://localhost:3000/ollama/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "qwen3.6:27b",
+  "messages": [{"role": "user", "content": "Why is the sky blue?"}]
+}'
+```
+
+过滤器、工具和知识库请改用 [`/api/chat/completions`](#chat-completions)。
 
 ### 🧩 检索增强生成（RAG） {#retrieval-augmented-generation-rag}
 
@@ -887,6 +945,15 @@ result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id
       response = requests.post(url, headers=headers, json=payload)
       return response.json()
   ```
+
+##### 读取响应中的引用 {#reading-the-citations-in-the-response}
+
+当检索找到内容时，响应会带上检索到的来源，以便你展示引用。这适用于未发送 `session_id` 和 `chat_id` 的普通 API 请求。
+
+- **非流式**（`"stream": false`）：JSON 响应在 `choices` 旁边还有一个顶层 `sources` 键。
+- **流式**（`"stream": true`）：第一个事件是 `data: {"sources": [...]}`，在模型的首个分块之前发送。它没有 `choices` 键，因此从每个事件读取 `choices[0].delta.content` 的客户端必须跳过它。
+
+`sources` 中的每个条目都包含 `source`（文件或集合的来源）、`document`（检索到的文本块）、`metadata`（每个文本块一个对象），以及在向量数据库返回时包含的 `distances`。没有检索到任何内容时，该键会被省略。
 
 借助 Open WebUI API，这些方法可以利用上传的文件和整理好的知识库中的外部知识，增强聊天应用的能力。无论是单独使用文件还是将其纳入知识库，你都可以根据具体需要自定义集成方式。
 

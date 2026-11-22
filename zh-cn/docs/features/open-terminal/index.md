@@ -150,7 +150,7 @@ Open Terminal 需要能可靠地自主调用工具的模型。模型需经过许
 - **[Web 开发](/features/open-terminal/use-cases/web-development)**：构建网站并在浏览器标签页中预览
 - **[系统自动化](/features/open-terminal/use-cases/system-automation)**：文件管理、备份、批量操作
 - **[高级工作流](/features/open-terminal/use-cases/advanced-workflows)**：数据报告、研究、代码审查等技能
-- **[编程智能体](/features/open-terminal/coding-agents)**：在模型选择器中使用 Claude Code、Codex 或 Goose 等智能体
+- **[智能体](/features/open-terminal/agents)**：在模型选择器中使用 Claude Code、Codex 或 Goose 等智能体
 - **[文件浏览器](/features/open-terminal/file-browser)**：上传、预览、编辑文件，使用 Git
 
 ---

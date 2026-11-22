@@ -72,9 +72,9 @@ docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui ghc
 要添加一种新语言：
 
 1. 在 `src/lib/i18n/locales` 下创建一个使用相应语言代码命名的新目录
-2. 将 `en-US` 翻译文件复制到新目录中
+2. 将 `en-US/translation.json`（每个语言环境仅包含这一个文件）复制到新目录中
 3. 翻译每个 JSON 文件中的字符串值，同时保留对象结构不变
-4. 在 `src/lib/i18n/locales/languages.json` 中注册该语言
+4. 在 `src/lib/i18n/locales/languages.json` 中注册该语言，然后运行 `npm run i18n:parse`，该命令会根据源字符串重新生成每个已注册语言环境的 `translation.json`，格式化它并检查它
 
 在 `en-US` 中，许多值是空的，因为键本身就是英文文本。对于这类条目，请翻译键，并把译文作为值写入。
 

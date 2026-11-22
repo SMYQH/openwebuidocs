@@ -38,7 +38,7 @@ helm repo update
 
 **预期结果：** 节点处于就绪状态，且 `openwebui` 命名空间已存在。如果命名空间已存在，请直接复用。
 
-本指南固定使用 **chart 18.0.0** 与 **application v0.13.0**。Chart 版本与应用版本彼此独立。修改版本之前，请查阅[已发布的 chart](https://github.com/open-webui/helm-charts/tree/open-webui-17.5.0/charts/open-webui)与[镜像参考](/getting-started/quick-start#image-variants)。
+本指南固定使用 **chart 18.0.0** 与 **application v0.13.0**。Chart 版本与应用版本彼此独立。修改版本之前，请查阅[已发布的 chart](https://github.com/open-webui/helm-charts/tree/open-webui-18.0.0/charts/open-webui)与[镜像参考](/getting-started/quick-start#image-variants)。
 
 ## 2. 配置应用 {#2-configure-the-application}
 
@@ -339,7 +339,9 @@ kubectl -n openwebui get pods,ingress
 
 这会在所有副本上禁用迁移、应用期望的副本数，并启用 ingress。预期会短暂重启。请把 DNS 指向你的 ingress controller，然后打开你的 HTTPS 主机名。
 
-请为你的 controller 配置 WebSocket、无缓冲的流式响应、合适的请求/空闲超时，以及你所需的上传大小。参见[连接故障排查](/troubleshooting/connection-error)。
+请为你的 controller 配置 WebSocket、无缓冲的流式响应、合适的请求/空闲超时，以及你所需的上传大小。Socket.IO 在 `/ws/socket.io/` 下提供服务，因此基于路径的 ingress 必须转发该前缀并带上 upgrade 头。参见[连接故障排查](/troubleshooting/connection-error)。
+
+在设置 **Max Upload Size**（`RAG_FILE_MAX_SIZE`）或知识库文件大小上限之前，Open WebUI 本身没有上传大小限制，它自己的 `413` 提示信息是 `Oops! The file you're trying to upload is too large.`。知识库上传时的其他 `413` 来自 ingress controller 或它前面的其他代理，例如服务网格或 CDN。请按[关键配置说明](/reference/https#key-configuration-notes)中的描述提高它的 body size 上限。在 NGINX Ingress Controller 上，这对应 [`nginx.ingress.kubernetes.io/proxy-body-size`](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#custom-max-body-size) 注解，或在 ConfigMap 中为所有 Ingress 规则设置 `proxy-body-size`。
 
 会话亲和性在启用 WebSocket 时是可选的，但在设置 [`ENABLE_WEBSOCKET_SUPPORT=false`](/reference/env-configuration#enable_websocket_support) 时是必需的；参见[会话亲和性](/troubleshooting/multi-replica#session-affinity-sticky-sessions)。亲和性不能替代 Redis。在 NGINX Ingress Controller 上，请把以下注解添加到 Ingress 资源中：
 
@@ -486,7 +488,7 @@ spec:
       app.kubernetes.io/name: open-webui
 ```
 
-使用 `kubectl -n openwebui apply -f scaling.yaml` 应用。这些阈值只是示例，并不代表用户容量保证。请按最大副本数预留数据库连接，并避免 GitOps 与 HPA 对 `spec.replicas` 的修改相互冲突。Helm 升级也可能重置副本数。
+使用 `kubectl -n openwebui apply -f scaling.yaml` 应用。这些阈值只是示例，并不代表用户容量保证。请按最大副本数预留数据库连接，并避免 GitOps 与 HPA 对 `spec.replicas` 的修改相互冲突。每个工作进程都有一个同步数据库引擎和一个异步数据库引擎，每个都可以打开 `DATABASE_POOL_SIZE` + `DATABASE_POOL_MAX_OVERFLOW` 个连接（未设置 `DATABASE_POOL_SIZE` 时为 SQLAlchemy 默认的 5 + 10）。使用 `VECTOR_DB=pgvector` 时，PGVector 会打开自己的连接池，大小为 `PGVECTOR_POOL_SIZE` + `PGVECTOR_POOL_MAX_OVERFLOW`（未设置时同样是 5 + 10），即使它使用的是 `DATABASE_URL`。Helm 升级也可能重置副本数。
 
 在更新之前，请使用 `kubectl -n openwebui delete hpa openwebui` 删除该 HPA，并暂停任何会重新创建它的控制器。只有在验证恢复后的部署之后，才重新应用它。PDB 会限制诸如节点排空这类自愿驱逐；它不会阻止 Deployment 缩容，也不会阻止上文所述的维护停机。
 

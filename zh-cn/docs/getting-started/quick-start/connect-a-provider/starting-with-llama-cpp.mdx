@@ -104,8 +104,8 @@ http://127.0.0.1:10000
 4. 填写以下内容：
    - **URL**：`http://127.0.0.1:10000/v1`
      （如果 WebUI 运行在 Docker 中，请使用 `http://host.docker.internal:10000/v1`。**注意末尾一定要有 `/v1`！**）
-   - **Auth**：无需密钥的服务器选 **None**。选择 **Bearer** 且密钥留空时，Open WebUI 会发送一个空的 bearer token，而一些服务器会拒绝这种请求
-   - **Provider**：展开 **Advanced**，从 **Provider** 下拉列表中选择 `llama.cpp`。这样就能在模型选择器中看到加载状态指示，管理员也能使用 **Eject** 按钮及[在 Open WebUI 中管理本地模型](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#managing-local-models-from-open-webui)中介绍的管理面板。详见下方[卸载已加载的模型](#unloading-loaded-models)。如果不需要这些功能，请保留 `Default`。
+   - **Auth**：无需密钥的服务器选 **None**。选择 **Bearer** 且密钥留空时，Open WebUI 不会发送 `Authorization` 请求头，与 **None** 相同
+   - **Provider**：展开 **Advanced**，从 **Provider** 下拉列表中选择 `llama.cpp`。这样就能在模型选择器中看到加载状态指示，管理员也能使用 **Eject** 按钮及[在 Open WebUI 中管理本地模型](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#managing-local-models-from-open-webui)中介绍的管理面板。详见下方[卸载已加载的模型](#unloading-loaded-models)。设置之后，**Continue Response** 还会发送用于继续上一次回复的 llama.cpp 字段，参见[服务商设置](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#the-provider-setting)。如果不需要这些功能，请保留 `Default`。
 
 💡 保存后，Open WebUI 就会开始把你的本地 Llama.cpp 服务器作为后端使用！
 

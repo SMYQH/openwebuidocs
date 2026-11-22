@@ -37,8 +37,8 @@ title: "Firecrawl"
    - **托管版**：在 [firecrawl.dev](https://firecrawl.dev) 注册并从仪表板复制密钥。
    - **自托管版**：使用你自己 Firecrawl 实例的密钥。
 2. 在 Open WebUI 中，打开 **设置 > 网络搜索**（管理员区域）。
-3. 开启**启用网络搜索**开关。
-4. 从**网络搜索引擎**下拉菜单中选择 **Firecrawl**（引擎值为 `firecrawl`）。
+3. 开启**网络搜索**开关。
+4. 从**网络搜索引擎**下拉菜单中选择 `firecrawl`。
 5. 将你的密钥粘贴到 **Firecrawl API 密钥**字段。
 6. （仅自托管）将 **Firecrawl API 基础 URL** 设置为你的实例地址，例如 `https://firecrawl.example.com`。Open WebUI 会自行追加 `/v2/search` 和 `/v2/scrape`，因此除非版本路径就是 `/v2`，否则不要包含版本路径。默认为 `https://api.firecrawl.dev`。
 7. 保存。
@@ -64,6 +64,7 @@ title: "Firecrawl"
 - **无效的 API 密钥**：确认密钥复制时没有多余空格，并且与端点匹配（托管密钥用于 `api.firecrawl.dev`，实例密钥用于自托管）。
 - **无结果**：确保网络搜索开关（`+`）已开启，并且实例可以访问 Firecrawl 端点。
 - **超时**：`FIRECRAWL_TIMEOUT` 仅适用于网页加载器。搜索的总时限按请求获取的结果数计算，每条计 3 秒。如果搜索超时，请降低**搜索结果数量**。
+- **Firecrawl 超时（秒）**：该字段随搜索引擎设置一起显示，但它设置的是 `FIRECRAWL_TIMEOUT`，因此只有当**网页加载引擎**为 `firecrawl` 时才生效。请填入整数秒数。留空或填入非数字时不会向 Firecrawl 发送超时。Open WebUI 的抓取等待时间比该值多 10 秒，留空时为 70 秒。返回 HTTP 429、500、502、503 或 504、超时或无法连接的抓取会重试两次。之后该页面会被跳过，并记录为 `Error extracting content from <url> with Firecrawl: <error>`，其他页面仍会加载。
 - **自托管连接错误**：验证从 Open WebUI 容器或主机能否访问 `FIRECRAWL_API_BASE_URL`。
 
 ## 更多资源 {#additional-resources}

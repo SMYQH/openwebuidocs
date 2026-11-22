@@ -1,13 +1,21 @@
 ---
-sidebar_position: 1
-title: "Hermes Agent"
+sidebar_position: 10
+sidebar_label: "Hermes Agent"
+title: "使用 Open Terminal 或网关连接 Hermes Agent"
+description: "通过 ACP 在 Open Terminal 工作区中运行 Hermes Agent，或用其兼容 OpenAI 的 API 把已有的 Hermes 网关接入 Open WebUI。"
 ---
 
-# Hermes Agent {#hermes-agent}
+# 在 Open WebUI 中使用 Hermes Agent {#use-hermes-agent-in-open-webui}
 
-:::tip 通过 Open Terminal 使用 Hermes
-如果你希望 Hermes 在你选定的终端工作区中运行，并在聊天中进行智能体交互，请使用 [Open Terminal 快速开始](/getting-started/quick-start/connect-an-agent#quick-start-with-open-terminal)。在那里安装并配置 Hermes；Open Terminal 通过 `hermes acp` 连接。下文指南介绍的是另一条独立的网关 API 接入路径。
-:::
+如果你希望 Hermes 在聊天中选定的项目文件夹里工作，请通过 **Open Terminal** 使用它。如果你已经在运行带自己工作区的 Hermes 网关，可以[连接网关 API](#connect-the-hermes-gateway)。
+
+## 通过 Open Terminal 运行 Hermes {#run-hermes-through-open-terminal}
+
+1. 以运行终端的用户身份安装 Hermes。在该环境中运行 `hermes model` 配置模型提供商，然后启动 `hermes` 并发送一条测试提示。[Hermes Agent 快速开始](https://hermes-agent.nousresearch.com/docs/getting-started/quickstart)
+2. 按 [Open Terminal 快速开始](/getting-started/quick-start/connect-an-agent#quick-start-with-open-terminal)连接工作区。在一个新的已保存聊天中，选择 **Terminal**，并用 **Choose working directory** 选定你的项目。
+3. 选择以 `hermes/` 开头的模型。Open Terminal 会为你启动 `hermes acp`。让它读取项目中的一个文件，并把它的回复与 **Files** 中的文件对照。
+
+## 连接 Hermes 网关 {#connect-the-hermes-gateway}
 
 **把 Open WebUI 作为 Nous Research 自主 AI Agent 的聊天前端。**
 
@@ -23,7 +31,7 @@ title: "Hermes Agent"
 
 ---
 
-## 第 1 步：安装 Hermes Agent {#step-1-install-hermes-agent}
+### 第 1 步：安装 Hermes Agent {#step-1-install-hermes-agent}
 
 如果你还没有安装 Hermes Agent，请先按照[官方快速开始](https://hermes-agent.nousresearch.com/docs/getting-started/quickstart)完成安装。安装后先验证：
 
@@ -33,7 +41,7 @@ hermes --version
 
 ---
 
-## 第 2 步：启用 API 服务 {#step-2-enable-the-api-server}
+### 第 2 步：启用 API 服务 {#step-2-enable-the-api-server}
 
 把以下内容加入 Hermes Agent 的环境变量文件：
 
@@ -55,7 +63,7 @@ API_SERVER_KEY=your-secret-key
 
 ---
 
-## 第 3 步：启动 Gateway {#step-3-start-the-gateway}
+### 第 3 步：启动 Gateway {#step-3-start-the-gateway}
 
 ```bash
 hermes gateway
@@ -73,7 +81,7 @@ hermes gateway
 
 ---
 
-## 第 4 步：在 Open WebUI 中添加连接 {#step-4-add-the-connection-in-open-webui}
+### 第 4 步：在 Open WebUI 中添加连接 {#step-4-add-the-connection-in-open-webui}
 
 1. 在浏览器中打开 Open WebUI。
 2. 进入 **Settings > Connections**（管理员区域），找到 **Manage OpenAI API Connections** 列表。
@@ -97,7 +105,7 @@ http://host.docker.internal:8642/v1
 
 ---
 
-## 第 5 步：开始聊天！ {#step-5-start-chatting}
+### 第 5 步：开始聊天！ {#step-5-start-chatting}
 
 现在，`hermes-agent` 模型应已出现在模型下拉列表中。选中它即可开始聊天。通过 Open WebUI 界面，你可以使用智能体的全部工具，包括终端、文件操作、网页搜索、记忆和技能。
 

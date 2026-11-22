@@ -1,6 +1,6 @@
 ---
 title: "Open Terminal 与 Terminals"
-description: "在 Open WebUI 中构建应用、产出报告并运行编码智能体。Open Terminal 为你的 AI 提供一台计算机；Terminals 为每个人或项目提供独立工作区。"
+description: "在 Open WebUI 中构建应用、产出报告并运行智能体。Open Terminal 为你的 AI 提供一台计算机；Terminals 为每个人或项目提供独立工作区。"
 sidebar_position: 2
 ---
 
@@ -46,7 +46,7 @@ sidebar_position: 2
 
 ## 自动重复执行任务 {#make-useful-work-repeatable}
 
-在个人或共享工作区里写一个报表脚本，然后为 Open WebUI 的[自动化任务](/features/chat-conversations/chat-features/automations)指定该终端和工作目录。定时发送提示词，让模型或受支持的编码智能体用新数据运行脚本并汇总结果。同一工作区既可供交互式使用，也可用于定期任务。
+在个人或共享工作区里写一个报表脚本，然后为 Open WebUI 的[自动化任务](/features/chat-conversations/chat-features/automations)指定该终端和工作目录。定时发送提示词，让模型或受支持的智能体用新数据运行脚本并汇总结果。同一工作区既可供交互式使用，也可用于定期任务。
 
 Terminals 可以停止空闲的环境，同时保留其持久化文件，然后按需重新启动。为每个模板设置 CPU 和内存上限。工作区可以为下一个任务保持可用，而不必让它的容器整天运行。
 

@@ -14,6 +14,7 @@ title: "连接错误"
 如果你看到以下现象，很可能就是这一类问题：
 - 聊天中返回空响应，例如 `"{}"`
 - 出现类似 `"Unexpected token 'd', "data: {"id"... is not valid JSON"` 的错误
+- 出现类似 `Unexpected token '<', "<!DOCTYPE "... is not valid JSON` 的错误，参见 [`Unexpected token '<'`](#unexpected-token--doctype--is-not-valid-json)
 - 流式输出时 Markdown 显示混乱（例如可见的 `##`、`**`、格式断裂）——参见 [流式响应损坏](#garbled-markdown--streaming-response-corruption)
 - 浏览器控制台出现 WebSocket 连接失败
 - CLI 日志中出现 WebSocket 连接失败
@@ -84,6 +85,17 @@ WEBSOCKET_REDIS_URL=redis://redis:6379/1
    - **Nginx 修复方式**：确认 location 块中使用了 `proxy_http_version 1.1;`（Open WebUI 的许多示例默认采用此设置）。
 
 多实例部署中，请如上文所示设置 `WEBSOCKET_MANAGER=redis`。关于 Redis 配置细节，请参阅 [Redis WebSocket Support](/tutorials/integrations/redis)。完整的多实例扩缩容实践请参阅 [Scaling Open WebUI](/getting-started/advanced-topics/scaling)。如果你在多副本场景中遇到特定的 WebSocket 403 错误，请参见 [扩缩容与高可用故障排查](/troubleshooting/multi-replica#2-websocket-403-errors--connection-failures)。
+
+### 在一个浏览器中可用、另一个浏览器中不可用 {#works-in-one-browser-but-not-another}
+
+在默认的 `ENABLE_WEBSOCKET_SUPPORT=true` 下，浏览器只能通过 `/ws/socket.io` 上的 WebSocket 连接 Open WebUI，没有 HTTP 长轮询回退。Open WebUI 通过该连接把聊天回复和状态更新发送到浏览器。屏蔽 WebSocket 的浏览器可能在聊天时失败，而同一服务器上的其他浏览器却能正常工作。每次失败的尝试都会在该浏览器的控制台记录 `connect_error`。
+
+在修改服务器或代理之前：
+
+1. 在故障浏览器的隐私窗口中打开 Open WebUI。
+2. 在另一个浏览器中打开它。
+3. 如果其中一个能正常聊天，说明服务器没问题。请在故障浏览器中，为你的 Open WebUI 地址关闭隐私防护、广告或追踪拦截器以及严格追踪保护。然后清除该地址的站点数据并重新登录。
+4. 如果所有浏览器都无法聊天，请按上文的 WebSocket 检查步骤排查。
 
 ### 测试你的配置 {#testing-your-configuration}
 
@@ -237,6 +249,27 @@ Open WebUI 的一些功能提供**两种连接配置方式**：**管理员／全
 
 这是部署和网络条件问题，而非 Open WebUI 的错误。
 
+## `Unexpected token '<', "<!DOCTYPE "... is not valid JSON` {#unexpected-token--doctype--is-not-valid-json}
+
+**症状：** 错误提示条或浏览器控制台显示 `SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON`。当失败的请求是模型列表时，控制台的那一行以 `Failed to load models:` 开头。
+
+**实际含义：** 浏览器向某个 Open WebUI API 路径请求 JSON，却拿回了一个 HTML 页面。这个错误不是来自模型或服务商。有两处会返回 HTML：
+
+1. **Open WebUI 自身。** 对任何没有对应路由的路径，Open WebUI 会用自己的网页 `index.html` 和状态码 `200` 回应 `GET` 请求。添加或剥离路径前缀的反向代理会把 API 调用送到并不存在的路径，于是它们返回的是那个网页。这通常是把 Open WebUI 放在子路径下的结果，而子路径[不受支持](/faq#q-can-i-serve-open-webui-under-a-subpath-such-as-examplecomopenwebui)。
+2. **Open WebUI 前面的某个组件。** 请求根本没有到达它，而是由代理、登录网关或同一域名下的其他站点用自己的页面作答，例如请求过大或耗时过长时返回的错误页。
+
+要区分两者，请打开 **DevTools > Network**，选中失败的请求并查看其响应。Open WebUI 自己的页面标题是 `Open WebUI`。其他任何页面都会标出作出应答的代理或站点。然后按 [HTTPS 与反向代理](/reference/https) 中的说明，让 Open WebUI 从自己主机名的根路径提供服务，并把每个路径原样转发给它。
+
+## 重新加载后长聊天中的编辑与评分丢失 {#edits-and-ratings-lost-after-reload-in-long-chats}
+
+**症状：** 在长聊天中，编辑过的消息、评分或用**另存为副本**创建的副本在屏幕上可见，但重新加载页面后就消失了。没有出现错误。同一个聊天中的新消息和回复仍能保存，较短的聊天也能保留所有改动。
+
+**实际含义：** Open WebUI 前面的反向代理因为请求超过了它的请求体大小上限而拒绝保存。用**保存**、**另存为副本**、评分和**合并回复**保存编辑时，都会把整个聊天一次性 `POST` 到 `/api/v1/chats/{id}`：每个分支中的每条消息，加上屏幕上那个分支的消息。该请求会随着聊天增长而变大。新消息不走这条路径，因为 Open WebUI 在回复开始时就把每一轮存到服务器上，所以聊天超过上限后它们仍能保存。
+
+要确认这一点，请打开 **DevTools > Network**，重新做一次该改动，并选中发往 `/api/v1/chats/<id>` 的 `POST` 请求。状态码 `413` 表示代理拒绝了它。
+
+要修复，请提高代理的请求体大小上限。在 nginx 中这是 [`client_max_body_size`](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size)，默认值为 `1m`；`0` 表示关闭该检查。参见[请求头和请求体大小限制](/reference/https/nginx#header-and-body-size-limits)，其他代理参见[关键配置注意事项](/reference/https#key-configuration-notes)。重新加载后，被代理拒绝过的改动就丢失了，因此请重新做一遍。
+
 ## 连接 Ollama 服务器 {#connection-to-ollama-server}
 
 ### 让 Open WebUI 访问 Ollama {#accessing-ollama-from-open-webui}
@@ -249,6 +282,28 @@ Open WebUI 的一些功能提供**两种连接配置方式**：**管理员／全
 
 重启后再打开 WebUI 验证连通性。更详细说明见 [Ollama 文档](https://github.com/ollama/ollama/blob/main/docs/faq.mdx#setting-environment-variables-on-linux)。
 
+**确认变更是否生效。** Ollama 默认绑定 `127.0.0.1` 的 `11434` 端口（[Ollama FAQ](https://github.com/ollama/ollama/blob/main/docs/faq.mdx#how-can-i-expose-ollama-on-my-network)）。在运行 Ollama 的机器上，查看 `11434` 端口监听在哪个地址上。在 Linux 上：
+
+```bash
+ss -tlnp | grep 11434
+```
+
+在 Windows 上：
+
+```powershell
+netstat -an | findstr 11434
+```
+
+输出中的 `127.0.0.1:11434` 表示 Ollama 仍只监听环回地址，新的 `OLLAMA_HOST` 没有生效。`0.0.0.0:11434`、`*:11434` 或 `[::]:11434` 表示它监听所有接口。如果设置没有生效，请把你的步骤与 [Ollama FAQ](https://github.com/ollama/ollama/blob/main/docs/faq.mdx#how-do-i-configure-ollama-server) 对照：
+
+- **使用 systemd 的 Linux：** 运行 `systemctl edit ollama.service`，在 `[Service]` 下另起一行写入 `Environment="OLLAMA_HOST=0.0.0.0:11434"`。然后运行 `systemctl daemon-reload` 和 `systemctl restart ollama`。缺少 `[Service]` 行、跳过 `daemon-reload` 或跳过重启，是地址仍停留在 `127.0.0.1` 的常见原因。
+- **Windows：** 从任务栏退出 Ollama，在用户环境变量中设置 `OLLAMA_HOST`，然后从开始菜单重新启动 Ollama。
+- **macOS 应用：** 运行 `launchctl setenv OLLAMA_HOST "0.0.0.0:11434"`，然后重启 Ollama 应用。
+
+:::warning 不要把 11434 端口暴露到你的网络
+Open WebUI 是从其后端调用 Ollama，绝不从浏览器调用，因此用户的浏览器不需要访问 `11434` 端口。Ollama 的本地 API 不需要认证（[Ollama API 文档](https://github.com/ollama/ollama/blob/main/docs/api/authentication.mdx)），因此在 `OLLAMA_HOST=0.0.0.0` 时，任何能在 `11434` 端口访问该主机的设备都能使用它。请在主机防火墙上对除 Open WebUI 主机之外的所有来源屏蔽 `11434` 端口，或者让 Ollama 与 Open WebUI 位于同一个 Docker 网络中且不发布其端口。仓库中的 [`docker-compose.yaml`](https://github.com/open-webui/open-webui/blob/main/docker-compose.yaml) 采用了后一种做法：`ollama` 服务没有 `ports` 条目，Open WebUI 通过 `OLLAMA_BASE_URL=http://ollama:11434` 访问它。
+:::
+
 ### Docker 中的连接错误 {#docker-connection-error}
 
 如果 Docker 中的 Open WebUI 无法连接宿主机上的 Ollama：
@@ -260,6 +315,60 @@ Open WebUI 的一些功能提供**两种连接配置方式**：**管理员／全
 docker run -d --network=host -v open-webui:/app/backend/data -e OLLAMA_BASE_URL=http://127.0.0.1:11434 --name open-webui --restart always ghcr.io/open-webui/open-webui:main
 ```
 运行后，WebUI 应可通过 `http://localhost:8080` 访问。
+
+使用 `--network=host` 时：
+
+- Docker 会忽略 `-p` 和 `--publish`，并打印 `WARNING: Published ports are discarded when using host network mode.`（[Docker 文档](https://docs.docker.com/engine/network/drivers/host/)）。Open WebUI 监听 `PORT` 中的端口，默认为 `8080`。加上 `-e PORT=3000` 可以改到别的端口。
+- 在 Docker Desktop 上，主机网络仅从 4.34 版本开始可用，并且需要先开启 **Settings > Resources > Network > Enable host networking**。否则容器会共用 Docker Desktop 的 Linux 虚拟机网络，你的浏览器无法连接，如[网络示意图](/reference/network-diagrams)所示。请改用 `-p 3000:8080` 发布端口，并使用 `OLLAMA_BASE_URL=http://host.docker.internal:11434`。
+- 其他机器会直接访问主机上的该端口访问 Open WebUI，因此主机防火墙必须放行。
+
+### 模型缺失或与 `ollama list` 不一致 {#models-missing-or-different-from-ollama-list}
+
+Open WebUI 只列出**管理面板 > 设置 > 连接**中的 Ollama URL 所返回的模型。它会向每个启用的 URL 请求 `/api/tags` 并合并结果。没有响应的 URL 不会增加任何模型，并记录 `Connection error:`。当列表与 `ollama list` 不一致时，通常是 Open WebUI 与你的终端连到了不同的 Ollama 服务器或不同的模型存储：
+
+- **两套 Ollama 安装**，例如原生安装加一个 Ollama 容器，或一个在 WSL 中、另一个在 Windows 上。它们各自拥有自己的模型。请在 URL 指向的那套安装中运行 `ollama list`，例如对名为 `ollama` 的容器运行 `docker exec ollama ollama list`。
+- **Docker 卷被改名或缺失。** Ollama 把模型保存在挂载到 `/root/.ollama` 的卷中。以不同卷名启动的容器会以空的模型列表开始。
+- **内置的 `:ollama` 镜像没有带 `-v ollama:/root/.ollama` 运行。** 拉取到其中的模型在容器重建后就会消失。
+
+要发现那个过时的第二台服务器，请打开**设置 > 关于**。**Ollama 版本**显示所有启用的 Ollama 连接所报告的最低版本。比你安装的版本更旧，说明已配置的某个 URL 指向了另一台 Ollama 服务器。
+
+### `does not support tools` {#ollama-does-not-support-tools}
+
+如果每个使用 Ollama 模型的聊天都因 `registry.ollama.ai/library/<model> does not support tools` 而失败，说明 Ollama 拒绝了请求中的工具定义。在默认的原生模式下开启**函数调用**，并且默认开启模型的**内置工具**能力时，Open WebUI 会把它自己的内置工具加入聊天界面发出的每个请求。即使你没有在聊天中启用任何工具，请求里也会带上工具。
+
+**解决方案：**
+
+1. **把模型设为旧版模式。** 在**设置 > 模型**（管理员区域）中该模型的**高级参数**里，把**函数调用**设为**旧版**。旧版模式下不会发送内置工具。
+2. **在模型上关闭内置工具。** 在模型编辑器中禁用**内置工具**能力。为某个聊天启用的工作区工具或 MCP 工具在原生模式下仍会被发送，并导致同样的错误。
+3. **如果需要内置工具，请使用支持工具调用的模型。**
+
+### 聊天失败但验证连接正常 {#ollama-model-fails-to-load}
+
+**症状：** **验证连接**显示**服务器连接已验证**，Ollama 模型也出现在模型列表中，但与某个模型的聊天却以错误结束。
+
+**原因：** 两项检查都不运行模型。**验证连接**只请求 `/api/version`，模型列表来自 `/api/tags`。只有发往 `/api/chat` 的聊天请求才会让 Ollama 运行模型。当 Ollama 返回错误时，Open WebUI 会在聊天消息中显示 Ollama 自己的错误文本，并将其记录为 `Error processing chat payload: <text>`。当 Ollama 的错误没有消息时，聊天中显示 `Open WebUI: Server Connection Error`。
+
+**修复：**
+
+1. 在运行 Ollama 的机器上，用终端运行同一个模型：`ollama run <model>`。对于名为 `ollama` 的 Ollama 容器，运行 `docker exec -it ollama ollama run <model>`。如果在那里同样失败，问题出在 Ollama 本身，而不是连接。
+2. 查看 Ollama 的服务器日志以了解原因。[Ollama 的故障排查页面](https://github.com/ollama/ollama/blob/main/docs/troubleshooting.mdx) 列出了各系统上日志的位置，例如使用 systemd 的 Linux 上的 `journalctl -u ollama`，以及容器的 `docker logs <container-name>`。
+3. 如果错误提到内存，说明模型放不进可用的 RAM 或 VRAM。请改用更小的模型或它更小的变体。`ollama ps` 会显示已加载的模型以及每个模型运行在 GPU 还是 CPU 上（[Ollama FAQ](https://github.com/ollama/ollama/blob/main/docs/faq.mdx#how-can-i-tell-if-my-model-was-loaded-onto-the-gpu)）。
+
+## 验证连接 URL 时出现 `Network Problem` {#network-problem-when-you-verify-a-connection-url}
+
+**症状：** **管理面板 > 设置 > 连接**中某个连接的**验证连接**显示 `Ollama: Network Problem` 或 `OpenAI: Network Problem`，该 URL 下的模型也没有出现。
+
+**原因：** Open WebUI 不检查 URL 的格式。它会去掉一个结尾斜杠，然后追加固定路径。验证时，对 Ollama 连接请求 `<url>/api/version`，对 OpenAI 连接请求 `<url>/models`。聊天请求则发往 Ollama 的 `<url>/api/chat` 和 OpenAI 的 `<url>/chat/completions`。Azure 和 Anthropic 的 URL 遵循各自的规则。Ollama 检查的任何失败都会显示 `Ollama: Network Problem`。OpenAI 检查失败会显示 `OpenAI: Network Problem`，或者在提供方返回 JSON 错误时显示 `OpenAI:` 后接提供方的消息。
+
+| 你填写的 | Open WebUI 为验证而请求的地址 | 请改为填写 |
+| :--- | :--- | :--- |
+| `192.168.1.5:11434` | 什么都没有：请求在发出前就失败了，因为该 URL 没有 `http://` | `http://192.168.1.5:11434` |
+| `http://192.168.1.5` | 端口 `80`，这是 `http://` 的默认端口 | `http://192.168.1.5:11434` |
+| `http://localhost:11434/api` | `http://localhost:11434/api/api/version` | `http://localhost:11434` |
+| `https://api.openai.com/v1/chat/completions` | `https://api.openai.com/v1/chat/completions/models` | `https://api.openai.com/v1` |
+| `https://api.openai.com` | `https://api.openai.com/models` | `https://api.openai.com/v1` |
+
+Ollama 的 URL 形式是 `http://host:port`，端口之后不能再有内容。OpenAI 兼容的 URL 是位于 `/models` 和 `/chat/completions` 之前的基础 URL。对大多数提供方来说，它以 `/v1` 结尾，正如 **URL** 字段给出的建议值。
 
 ## 间歇性名称查找失败（常被报告为“未找到模型”） {#intermittent-name-lookup-failures-often-reported-as-model-not-found}
 
@@ -396,7 +505,7 @@ docker run -d -p 3000:8080 -e HF_ENDPOINT=https://hf-mirror.com/ --add-host=host
 
 ## 🔐 内部工具的 SSL 证书问题 {#ssl-certificate-issues-with-internal-tools}
 
-如果你正在使用带自签名证书的外部工具，例如 Tika、用于嵌入的 Ollama、或外部 reranker，可能会遇到 SSL 校验错误。
+如果 Tika、Ollama（用于嵌入）、外部 reranker、模型连接或工具服务器使用自签名证书或来自私有 CA 的证书，你可能会遇到 SSL 校验错误。
 
 ### 常见症状 {#common-symptoms-5}
 
@@ -422,6 +531,22 @@ docker run -d -p 3000:8080 -e HF_ENDPOINT=https://hf-mirror.com/ --add-host=host
 :::warning
 关闭 SSL 校验会降低安全性。只有在你信任所处网络及目标服务（例如在安全的内网环境中运行）时才应这样做。
 :::
+
+### 改为信任私有 CA 或自签名 CA {#trust-a-private-or-self-signed-ca-instead}
+
+模型连接和工具服务器可以验证来自你自己的 CA 的证书，因此校验可以保持开启。给 Open WebUI 提供容器内 CA bundle 文件（PEM）的路径：
+
+| 变量 | 覆盖的连接 | 取值 |
+| :--- | :--- | :--- |
+| [`AIOHTTP_CLIENT_SSL_CERT_FILE`](/reference/env-configuration#aiohttp_client_ssl_cert_file) | 下表中自身变量为 `true` 的所有连接 | CA bundle 文件的路径。默认未设置 |
+| [`AIOHTTP_CLIENT_SESSION_SSL`](/reference/env-configuration#aiohttp_client_session_ssl) | Ollama 和 OpenAI 连接（模型列表、连接检查和聊天）、Ollama 嵌入、语音转文字和文字转语音、图像生成，以及 MCP 工具服务器的 OAuth 2.1 发现、注册和令牌刷新请求 | `true`（默认）、`false`，或 CA bundle 文件的路径 |
+| [`AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL`](/reference/env-configuration#aiohttp_client_session_tool_server_ssl) | OpenAPI 工具服务器（加载规范和调用工具）以及 MCP 工具服务器流量 | `true`（默认）、`false`，或 CA bundle 文件的路径 |
+
+`true` 和 `false` 不区分大小写。其他任何取值都会被当作文件路径读取，并且该路径在对应变量的连接中优先于 `AIOHTTP_CLIENT_SSL_CERT_FILE`。要一次覆盖全部，请只设置 `AIOHTTP_CLIENT_SSL_CERT_FILE`，另外两个保持 `true`。
+
+对于使用它的连接，bundle 会取代默认的信任库：它们只信任该文件中的 CA（[Python `ssl.create_default_context`](https://docs.python.org/3/library/ssl.html#ssl.create_default_context)）。如果同样的连接还要访问公共端点，例如 `api.openai.com`，请把你的 CA 和公共根证书放进同一个文件，例如复制容器的 `/etc/ssl/certs/ca-certificates.crt` 并在末尾追加你的 CA。
+
+如果该文件不存在，Open WebUI 会记录 `SSL CA bundle path does not exist: '<path>', ignoring` 并回退到 `AIOHTTP_CLIENT_SSL_CERT_FILE`；当它也未设置时，回退到默认信任库，因此 `CERTIFICATE_VERIFY_FAILED` 错误会继续出现。这些变量只在启动时读取一次，因此修改后请重启 Open WebUI。
 
 对于使用 TLS 的 Milvus，请将 [`MILVUS_SERVER_PEM_PATH`](/reference/env-configuration#milvus_server_pem_path) 指向 CA 或服务器证书。校验仍保持开启。
 

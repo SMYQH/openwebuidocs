@@ -18,8 +18,7 @@ AI 运行的每条命令都会显示为独立的标签页，并以命令本身�
 | 圆点 | 含义 |
 | :--- | :--- |
 | 绿色 | 仍在运行 |
-| 红色 | 已结束，退出码非零 |
-| 灰色 | 正常结束，或终端已不再知道它的存在 |
+| 灰色 | 已结束，无论退出码是什么，或终端已不再知道它的存在 |
 
 把鼠标悬停在标签上会用文字说明同样的信息，包括退出码。选中某个标签即可实时查看该命令的输出。输出量超过面板保留上限的命令，其开头会有一行说明早先的输出已被省略。
 
@@ -27,7 +26,7 @@ AI 运行的每条命令都会显示为独立的标签页，并以命令本身�
 
 ## Shell 标签页的命名 {#naming-of-shell-tabs}
 
-**New Terminal** 标签页采用当前运行的程序设置的标题。因此，标签会反映其中运行的编辑器、开发服务器或编程智能体，空闲的 Shell 则显示自己的标题。名称旁的图标表示当前运行的程序。Claude Code、Codex、Python、Node.js、npm、git、Docker 等常用程序有专用图标，其他程序使用通用终端图标。在类 Unix 系统上，图标会随 Open Terminal 上报的前台程序变化。请保持 Open Terminal 为最新版本，参见[更新](/features/open-terminal/setup/updating)。
+**New Terminal** 标签页采用当前运行的程序设置的标题。因此，标签会反映其中运行的编辑器、开发服务器或智能体，空闲的 Shell 则显示自己的标题。名称旁的图标表示当前运行的程序。Claude Code、Codex、Python、Node.js、npm、git、Docker 等常用程序有专用图标，其他程序使用通用终端图标。在类 Unix 系统上，图标会随 Open Terminal 上报的前台程序变化。请保持 Open Terminal 为最新版本，参见[更新](/features/open-terminal/setup/updating)。
 
 ---
 

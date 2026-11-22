@@ -9,6 +9,8 @@ title: "任务模型"
 
 默认情况下，这些后台任务使用用户当前对话的模型。昂贵的旗舰模型会带来额外开支，速度慢的本地模型则会让整个界面变迟缓。对管理员来说，最值得做的调整是让后台任务使用一个小而快的模型。
 
+后台调用不会运行[过滤器函数](/features/extensibility/plugin/functions/filter#filter-execution-flow)，因此记录、脱敏或改写聊天消息的过滤器永远看不到这些调用。
+
 以下设置位于 **Settings > Interface**（管理员区域）。
 
 ---
@@ -22,7 +24,24 @@ title: "任务模型"
 | **Local Task Model** | [`TASK_MODEL`](/reference/env-configuration#task_model) | 类型标为 **Local** 的连接（Ollama 以及你标记为本地的一切） |
 | **External Task Model** | [`TASK_MODEL_EXTERNAL`](/reference/env-configuration#task_model_external) | 所有类型不是 **Local** 的聊天模型，包括 pipe 与 function 模型，以及没有连接类型的模型 |
 
-两者都默认为 **Current Model**，即后台工作运行在聊天自身的模型上。如果你指定的模型不可用，后台工作会回退到聊天的模型，而不是直接失败。
+两者都默认为 **Current Model**，即后台工作运行在聊天自身的模型上。如果你指定的模型已不在 Open WebUI 的模型列表中，后台工作会回退到聊天的模型。
+
+:::warning 用户需要能读取任务模型
+该回退只覆盖模型缺失的情况。如果任务模型存在，但某个用户没有读取权限，它仍会被用于该用户的聊天，随后每次后台请求都会在访问检查时失败并返回 `Model not found`。管理员会跳过这项检查，因此这套配置在管理员测试时正常，只有 **User** 角色的账户才会失败。对这些用户来说：
+
+- 新聊天会以其第一条消息完整命名。
+- 标签和后续建议不会出现。
+- 知识检索和 Web 搜索会逐字使用用户的消息作为搜索查询。
+- **Legacy** 工具调用不会选中任何工具。
+
+服务端日志会对用户无权读取的任务模型显示 `reason=model_read_denied`，对没有在 **Settings > Models**（管理员区域）中保存条目的模型显示 `reason=model_unregistered`。要修复它，可以在 **Settings > Models**（管理员区域）中通过任务模型的省略号（**...**）菜单选择 **Make Public**，也可以像[工作区模型的基座模型](/features/workspace/models#the-rule-a-custom-model-always-requires-access-to-its-base-model)那样，在其 **Access** 设置中给相关用户组授予读取权限。你也可以把选择器改回 **Current Model**。
+:::
+
+### 智能体聊天 {#agent-chats}
+
+使用 Open Terminal 的[智能体模型](/features/open-terminal/agents)的聊天无法在该智能体上运行后台工作。聊天标题和自动补全改用 **External Task Model**；当外部模型为 **Current Model**、不可用或本身也是智能体时，则改用 **Local Task Model**。此处连接类型不起作用。
+
+当两个选择器都没有指定一个可用且不是智能体的模型时，智能体聊天会以第一条消息的前 50 个字符命名，自动补全也不会给出任何内容。无论使用什么任务模型，智能体聊天都不会获得标签和后续建议。
 
 :::tip 该选什么
 要小、要快，并且**不要用推理模型**。推理模型在给出三个词的标题之前会花上几秒思考，而那些思考 token 也要付费。
@@ -55,6 +74,12 @@ title: "任务模型"
 
 后台请求还会收到任务模型在其模型编辑器中设置的逐模型参数，键冲突时以 `TASK_MODEL_PARAMS` 为准。在 Ollama 连接上，`keep_alive`、`format` 和 `think` 是例外：在任务模型编辑器中设置的值会覆盖 `TASK_MODEL_PARAMS` 中的同名键。用户的按聊天和按账户[聊天参数](/features/chat-conversations/chat-features/chat-params)永远不会传到这里，全局的[模型默认值](/features/workspace/models#global-model-defaults-admin)同样不会。
 
+在 Ollama 上，这一点表现为 `num_ctx`。在聊天的 **Controls** 或用户的 **General** 设置中设置的 **num_ctx (Ollama)** 值只会随聊天请求发出。对同一模型发起的标题、标签或查询请求会使用模型编辑器中的 `num_ctx`，或者不带该值，因此两个请求向 Ollama 请求的上下文长度不同。用户会看到下一条回复在长时间停顿之后才开始，而 [`ollama ps`](https://docs.ollama.com/context-length) 显示的模型 **CONTEXT** 值在后台任务之后可能与聊天回复之后不同。如果单独的任务模型无法与聊天模型一起装入内存，也会产生类似效果，因为 Ollama 会卸载空闲模型以腾出空间（[Ollama FAQ](https://docs.ollama.com/faq#how-does-ollama-handle-concurrent-requests)）。当 **Embedding Model Engine** 为 **Ollama** 时，该 Ollama 上的嵌入模型同理。要避免这些重新加载：
+
+- 在模型编辑器中设置 `num_ctx`，而不是按聊天或按账户设置，这样聊天请求和后台请求发送的值相同。
+- 或者在 **Task Model Parameters** 中设置同样的 `num_ctx`，前提是所有任务模型都在 Ollama 上。其他连接会把 `num_ctx` 作为顶层请求字段接收。
+- 或者选择一个小到能与聊天模型同时保持加载的任务模型，并用 `ollama ps` 确认两个模型都在列表中。
+
 ---
 
 ## 单独关闭某项任务 {#turning-individual-tasks-off}
@@ -85,5 +110,11 @@ title: "任务模型"
 ## 修改提示词 {#changing-the-prompts}
 
 大多数任务的提示词位于 **Generation** 下，默认留空，即使用内置提示词。知识检索与 Web 搜索共用 **Query Generation Prompt**。**Image Prompt Generation Prompt** 位于 Generation 下，但对应开关在 Images 标签页中。**Context Compaction Prompt** 位于 **Chat** 下。[环境变量配置参考的 Tasks 章节](/reference/env-configuration#tasks)列出了每个内置提示词的完整文本及其支持的占位符。
+
+保存在这些字段中的提示词会原样发送，只有字段为空时才会使用内置提示词。升级 Open WebUI 不会改动已保存的提示词，因此保存了自己文本的实例，或通过对应环境变量（例如 `TITLE_GENERATION_PROMPT_TEMPLATE`）设置提示词的实例，在内置提示词改变之后仍会继续发送该文本。
+
+在标题上，这会表现为聊天名称不对。Open WebUI 会从任务模型回复中的 JSON 对象（例如 `{ "title": "Stock Trends" }`）读取标题。当回复中没有这样的对象时，聊天会以第一条消息完整命名。如果 **Title Generation Prompt** 中存有文本，而标题却变成了完整的第一条消息，请清空该字段并点击 **Save** 以回到内置提示词，或者改写你的提示词，让它要求返回该 JSON 对象。
+
+查询的处理方式与此相同。Open WebUI 会从任务模型回复中的 JSON 对象（例如 `{ "queries": ["stock trends 2026"] }`）读取查询。当回复中没有这样的对象时，整段回复会逐字成为唯一的搜索查询，并在聊天中以 **Searching** 或 **Querying** 的形式这样显示。这会发生在要求纯文本的已保存 **Query Generation Prompt** 上，也会发生在回复中带着思考文本的推理型任务模型上。请清空 **Query Generation Prompt** 字段并点击 **Save**，或者改写提示词让它返回 `{"queries": [...]}`，或者改用非推理型任务模型。
 
 这里值得了解[提示词修饰符](/features/workspace/prompts)，因为任务提示词常常需要应对粘贴进来的文档和长长的代码块。

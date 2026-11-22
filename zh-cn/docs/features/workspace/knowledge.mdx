@@ -48,7 +48,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 **在聊天中：**
 
 - 在消息输入框输入 `#`。列表会提供 **Folders**、**Knowledge**（知识库）和 **Files**（知识库中的单个文件），也可输入网页或 YouTube URL。
-- 或点击 **+**（**More**），打开 **Attachments**。**Attach Knowledge** 列出知识库，可用 **Show Files** 从中选择单个文件。**Attach Notes** 列出你的笔记。同一菜单还提供 **Attach Webpage**、**Attach Files**（以前上传的文件）和 **Reference Chats**。
+- 或点击 **+**（**More**），打开 **Attachments**。**Attach Knowledge** 列出知识库，可用 **Show Files** 从中选择单个文件。**Attach Notes** 列出你的笔记。同一菜单还提供 **Attach Webpage**、**Attach Files**（以前上传的文件）和 **Reference Chats**。除非 [`ENABLE_LOCAL_WEB_FETCH`](/reference/env-configuration#enable_local_web_fetch) 已开启，**Attach Webpage** 会拒绝私有地址和回环地址；参见[附加链接失败](/troubleshooting/rag#14-attaching-a-link-or-a-youtube-video-fails)。
 - 或把笔记、文件夹或聊天从侧边栏拖入消息输入框。
 
 **在模型或文件夹中：**在模型编辑器（**Workspace > Models** 或管理员区域的 **Settings > Models > Edit**）中打开 **Knowledge** 字段，或在文件夹的 **Edit** 对话框下的 **Advanced** 中打开此字段。搜索列表会显示 **Notes**、**Knowledge**（知识库）和 **Files**（知识库中的单个文件）。**Upload Files** 可直接从电脑添加文件。
@@ -371,6 +371,8 @@ find docs/ "*.md" | head -10
 - 本地修改过的文件会以新的内容哈希上传；旧的文件条目会从知识库中移除并替换。
 - 本地删除的文件会在清理步骤中从知识库中删除。
 - 该操作对未修改的文件是**非破坏性**的。
+- 知识库中仍标记为 **Processing** 的文件，例如 Open WebUI 在它处理完成前重启，只要其路径、名称和内容未变，在最初上传后一小时内不会再次上传。在这一小时内，同步会在 `Sync complete` 消息中把它计入**未修改**。一小时后，下一次同步会重新上传它。
+- **Processing** 状态的文件没有条目菜单，因此无法从知识库视图中移除它。若想在一小时结束前重试，先用 `GET /api/v1/knowledge/{id}/files/pending` 找到它的 ID，再用 `DELETE /api/v1/files/{file_id}` 删除它，然后重新同步。
 
 对于编程使用，相同的工作流通过下方的[API 访问](#api-access)中两个端点暴露。
 

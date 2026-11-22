@@ -2,20 +2,18 @@
 title: "双 OAuth 配置"
 sidebar_label: 双 OAuth 配置
 sidebar_position: 30
-description: 了解如何使用非官方社区变通方案，在 Open WebUI 中同时配置 Microsoft 和 Google 两个 OAuth 提供商。
+description: 了解如何在 Open WebUI 中同时配置 Microsoft 和 Google 两个 OAuth 提供商。
 ---
 
 # 🔐 双 OAuth 配置（Microsoft 与 Google） {#dual-oauth-configuration-microsoft--google}
 
-:::caution 非官方变通方案
-此配置是社区贡献的变通方案，**Open WebUI 团队不提供官方支持**。虽然在当前版本中可用，但行为可能在未来版本中发生变化。本教程面向高级用户，仅作演示用途。
+:::info 内置提供商
+Google、Microsoft、GitHub 和飞书是彼此独立注册的内置提供商，与通用 OIDC 提供商（`OPENID_PROVIDER_URL`）无关。只有通用 OIDC 这个位置是单一的，因此 Microsoft 和 Google 可以同时启用，无需任何变通方案。
 :::
 
 ## 概述 {#overview}
 
-虽然 Open WebUI 官方仅通过 `OPENID_PROVIDER_URL` 变量一次支持一个 **OpenID Connect (OIDC)** 提供商，但可以同时支持 **Microsoft** 和 **Google**。
-
-技巧是将一个提供商（例如 Microsoft）配置为主 OIDC 提供商，将另一个（例如 Google）配置为标准 OAuth 提供商，利用 Open WebUI 对特定提供商的内置支持。
+Open WebUI 把 Google、Microsoft、GitHub 和飞书注册为彼此独立的内置提供商，同时还有一个通用 OIDC 提供商，因此 **Microsoft** 和 **Google** 可以同时启用。
 
 ## 前提条件 {#prerequisites}
 
@@ -25,7 +23,7 @@ description: 了解如何使用非官方社区变通方案，在 Open WebUI 中�
 
 ## 配置逻辑 {#configuration-logic}
 
-Open WebUI 通过 `OPENID_PROVIDER_URL` 运行通用 OIDC 流程，同时为 Google 和 Microsoft 提供内置模块。将 `OPENID_PROVIDER_URL` 用于 Microsoft，并通过内置模块的环境变量配置 Google 客户端凭据，即可同时处理两种登录流程。
+每个内置提供商都由各自的 `*_CLIENT_ID` 和 `*_CLIENT_SECRET` 注册（Microsoft 还需要 `MICROSOFT_CLIENT_TENANT_ID`）。`OPENID_PROVIDER_URL` 只注册通用 OIDC 提供商（配合 `OAUTH_CLIENT_ID` 和 `OAUTH_CLIENT_SECRET`，或用于 PKCE 的 `OAUTH_CODE_CHALLENGE_METHOD`）；除此之外，它只是那些没有自己发现 URL 的提供商的退出登录回退方案。
 
 ## 环境变量 {#environment-variables}
 
@@ -36,12 +34,13 @@ Open WebUI 通过 `OPENID_PROVIDER_URL` 运行通用 OIDC 流程，同时为 Goo
 ENABLE_OAUTH_SIGNUP=true
 OAUTH_MERGE_ACCOUNTS_BY_EMAIL=true
 
-# 1. Microsoft as the primary OIDC provider
-# This uses the generic OIDC flow via the OPENID_PROVIDER_URL
+# 1. Microsoft (built-in provider)
+# Registered as the built-in Microsoft provider from the first three variables
 MICROSOFT_CLIENT_ID=your_microsoft_client_id
 MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret
 MICROSOFT_CLIENT_TENANT_ID=your_tenant_id
 MICROSOFT_REDIRECT_URI=https://your-webui.com/oauth/microsoft/callback
+# Optional: not used to register Microsoft; a sign-out fallback that also silences the startup logout warning
 OPENID_PROVIDER_URL=https://login.microsoftonline.com/your_tenant_id/v2.0/.well-known/openid-configuration
 
 # Optional: Custom scope for Microsoft OAuth (required if using custom API scopes)
@@ -59,13 +58,13 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 ## 工作原理 {#why-this-works}
 
-1.  **Microsoft** 走通用 OIDC 流程，因为 `OPENID_PROVIDER_URL` 指向 Microsoft 的发现文档端点。
-2.  **Google** 走内置的 Google OAuth 流程。系统检测到 `GOOGLE_CLIENT_ID` 后会使用该模块；全局 `OPENID_PROVIDER_URL` 已用于 Microsoft，内置 Google 模块不依赖它。
+1.  **Microsoft** 由 `MICROSOFT_CLIENT_ID`、`MICROSOFT_CLIENT_SECRET` 和 `MICROSOFT_CLIENT_TENANT_ID` 注册为内置 Microsoft 提供商，并使用自己的租户发现 URL。这里 `OPENID_PROVIDER_URL` 不会注册任何东西，因为通用 OIDC 提供商还需要 `OAUTH_CLIENT_ID`。
+2.  **Google** 只要设置了 `GOOGLE_CLIENT_ID` 和 `GOOGLE_CLIENT_SECRET`，就会注册为内置 Google 提供商，与其他提供商无关。
 3.  **账户合并**：由于两个提供商都返回用户的邮箱，`OAUTH_MERGE_ACCOUNTS_BY_EMAIL=true` 确保用户无论点击"使用 Google 登录"还是"使用 Microsoft 登录"都登录同一个账户。
 
 ## 故障排查 {#troubleshooting}
 
-- **重定向不匹配**：确保两个控制台中的重定向 URI 与你的 `WEBUI_URL` 匹配。
+- **重定向不匹配**：确保两个控制台中的重定向 URI 与 `MICROSOFT_REDIRECT_URI`、`GOOGLE_REDIRECT_URI`（如果已设置）匹配，否则与访问 Open WebUI 所用的 URL 匹配，因为回调 URL 是根据传入请求构建的；`WEBUI_URL` 不设置回调 URL，只决定登录后浏览器落到哪里。
 - **合并失败**：仔细检查 `OAUTH_MERGE_ACCOUNTS_BY_EMAIL` 是否设置为 `true`。
-- **Microsoft 退出登录**：Microsoft 通常需要 `OPENID_PROVIDER_URL` 来正确处理退出登录后的重定向。如果退出失败，请确认该 URL 对应你的租户。
+- **Microsoft 退出登录**：退出登录会从会话登录所用的提供商那里发现 end-session 端点，因此 Microsoft 会话无需 `OPENID_PROVIDER_URL` 也能退出；如果设置了 `OPENID_END_SESSION_ENDPOINT`，它会覆盖该端点。
 - **Azure AD 刷新令牌失败（`AADSTS90009`）**：如果刷新时出现“Application is requesting a token for itself”错误，请设置 `OAUTH_REFRESH_TOKEN_INCLUDE_SCOPE=true`。Azure AD 要求刷新请求显式包含权限范围。你可能还需要在 `MICROSOFT_OAUTH_SCOPE` 中加入 `offline_access` 和所需的自定义 API 权限范围。

@@ -63,6 +63,14 @@ Open WebUI 天生就适合共享。一套实例可以服务整个组织。用户
 
 > `http://192.168.1.100:3000`
 
+Open WebUI 监听所有网络接口（`0.0.0.0`），除非 [`HOST`](/reference/env-configuration#host) 或 `--host` 另有说明。如果同事无法加载页面，请先检查以下几点：
+
+- 在同事的设备上，使用主机的局域网 IP 地址。那里的 `localhost` 指向同事自己的设备。
+- 使用主机端口：Docker 快速开始用 `3000`（`-p 3000:8080`），`open-webui serve` 用 `8080`。
+- 以 `-p 127.0.0.1:3000:8080` 发布的端口只接受来自主机自身的连接。若要允许局域网访问，请发布为 `-p 3000:8080`。参见 [Docker 端口发布](https://docs.docker.com/engine/network/port-publishing/)。
+- 在主机的防火墙中允许该端口的入站连接。在 Windows 上，检查当前所用网络配置文件（专用或公用）对应的规则。
+- 如果 Open WebUI 运行在 WSL 2 中，默认情况下其他设备无法访问它。请启用镜像网络模式，或添加 `netsh interface portproxy` 规则，详见[使用 WSL 访问网络应用](https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-a-wsl-2-distribution-from-your-local-area-network-lan)。
+
 ### 2. 安全的私有网络（推荐） {#2-secure-private-networks-recommended}
 
 适合无需暴露到公共互联网的远程团队。叠加网络和安全隧道可以在不开放防火墙端口的情况下提供加密访问。

@@ -78,7 +78,7 @@ from open_webui.models.users import User
 
 def count_active_users():
     with get_db_context() as db:
-        return db.query(User).filter_by(is_active=True).count()
+        return db.query(User).filter_by(role='user').count()
 ```
 
 #### 之后（0.9.0） {#after-090-1}
@@ -90,7 +90,7 @@ from open_webui.models.users import User
 async def count_active_users():
     async with get_async_db_context() as db:
         result = await db.execute(
-            select(func.count()).select_from(User).where(User.is_active == True)
+            select(func.count()).select_from(User).where(User.role == 'user')
         )
         return result.scalar_one()
 ```
@@ -249,7 +249,7 @@ result = await anyio.to_thread.run_sync(legacy_client.fetch, url)
 - 把同步 helper（`SessionLocal`、`get_db`、`get_session`）视为仅供启动阶段使用的内部实现，不要在插件代码或事件循环中使用它们
 - 插件入口签名不需要变——真正要改的是函数体内部代码。Event emitters（`__event_emitter__`、`__event_call__`）的使用方式完全不变
 - 不要阻塞事件循环；若无法避免同步调用，就用 `anyio.to_thread.run_sync` 包起来
-- 运维人员：Open WebUI 会自行把数据库 URL 改写到异步驱动上——SQLite 用 `aiosqlite`，Postgres 用 `psycopg` v3。0.9.0 不支持 SQLCipher 加密的 SQLite
+- 运维人员：Open WebUI 会自行把数据库 URL 改写到异步驱动上——SQLite 用 `aiosqlite`，自 0.9.2 起 Postgres 用 `psycopg` v3（0.9.0 和 0.9.1 使用的是 `asyncpg`）。从 0.9.0 起不再支持 SQLCipher 加密的 SQLite
 
 通常来说，做一次机械式全局排查（给所有 `Users.` / `Chats.` / `Files.` / `Models.` / `Functions.` / `Tools.` / `Knowledges.` 调用前加 `await`，然后逐级把调用者改成 `async`），就能解决绝大多数插件迁移问题。
 

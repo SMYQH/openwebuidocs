@@ -41,7 +41,7 @@ Open Terminal 在 Integrations 下有**独立的区域**——不要将它添加
 | :--- | :--- |
 | **URL** | `http://localhost:8000`（使用 Docker Compose 时为 `http://open-terminal:8000`） |
 | **API Key** | 安装时设置的密码 |
-| **Auth** | 保持默认的 `Bearer` |
+| **Auth** | 保持默认的 `Bearer`。[Auth](#auth) 说明其他选项为何会破坏交互式终端 |
 | **Chat Uploads** | 新连接默认为 `Filesystem`。参见 [Chat Uploads](#chat-uploads) 了解各选项的行为 |
 | **Working Directory Context** | 位于 **Advanced** 下，默认开启。[Working Directory Context](#working-directory-context) 一节说明何时应将其关闭 |
 | **User Shell Tools** | 位于 **Advanced** 下。保持 `Automatic`。[User Shell Tools](#user-shell-tools) 一节说明 `Always Include` 会带来哪些变化 |
@@ -57,7 +57,7 @@ Open Terminal 在 Integrations 下有**独立的区域**——不要将它添加
 
 ### 6.（可选）限制特定组的访问 {#6-optional-restrict-access-to-specific-groups}
 
-通过访问控制按钮，将终端访问限制到特定用户组。
+在连接表单的**访问**部分，将终端访问限制到特定用户组。
 
 ![列出用户组并带复选框的访问控制面板](/images/open-terminal-access-grants.png)
 
@@ -73,7 +73,7 @@ Open Terminal 在 Integrations 下有**独立的区域**——不要将它添加
 
 所选终端名称会显示在云图标旁边。AI 现在可以通过它执行命令、读取文件和运行代码。除正在生成回复时外，你可以随时切换到其他终端。
 
-将指针停在菜单中的终端上，点击 **System info** 按钮，即可查看服务器上报的 CPU、内存、磁盘和网络用量、运行时长及资源占用最高的进程。此视图打开时每 5 秒刷新一次。对于每个聊天使用独立实例的终端，该按钮会在聊天保存后出现。
+将指针停在菜单中的终端上，点击 **More** 按钮并选择 **System info**，即可查看服务器上报的 CPU、内存、磁盘和网络用量、运行时长及资源占用最高的进程。此视图打开时每 5 秒刷新一次。对于每个聊天使用独立实例的终端，**System info** 会在聊天保存后出现。
 
 ### 8. 启用原生函数调用 {#8-enable-native-function-calling}
 
@@ -81,7 +81,7 @@ Open Terminal 在 Integrations 下有**独立的区域**——不要将它添加
 
 1. 进入 **Workspace → Models**
 2. 点击你正在使用的模型的编辑按钮
-3. 确认 **Function Calling** 设置为 **Native**（默认值），而不是 **Legacy**
+3. 确认 **Function Calling** 设置为 **Default** 或 **Native**，而不是 **Legacy**
 4. 保存
 
 ![显示内置工具已启用的模型能力页面](/images/open-terminal-model-capabilities.png)
@@ -117,6 +117,23 @@ AI 应该会使用 Open Terminal 运行一条命令，然后告诉你答案。
 
 ---
 
+## 认证 {#auth}
+
+连接表单上的 **Auth** 决定 Open WebUI 以什么凭据向终端服务器发送请求。模型的工具以及文件浏览器的列表、读取和上传走 HTTP。**New Terminal** 标签页中的 shell、文件浏览器的实时刷新与监听端口、**Desktop** 标签页以及运行中命令的流式输出走 websocket。两条路径发送的内容不同：
+
+| Auth | HTTP 请求 | Websocket 连接 |
+| :--- | :--- | :--- |
+| `Bearer` | 把 **API Key** 作为 bearer 令牌 | **API Key** |
+| `None` | 不带密钥 | 空令牌 |
+| `Session` | 把用户自己的 Open WebUI 令牌作为 bearer 令牌 | 空令牌 |
+| `OAuth` | 当用户有 OAuth 登录会话时，把其 OAuth 访问令牌作为 bearer 令牌 | 空令牌 |
+
+`Bearer` 是唯一会发送 **API Key** 的选项，也是唯一能为两条路径都完成认证的选项。使用 `Session` 或 `OAuth` 时，模型的工具和文件浏览器可以对接受该令牌的终端服务器工作，但所有 websocket 功能都会带着空令牌访问服务器。这些功能只有在终端服务器允许无密钥连接时才可用。Open Terminal 是带 API key 配置的，因此请为它保留 `Bearer`。
+
+通过[终端编排器](/features/open-terminal/terminals/)连接创建的终端，无论 **Auth** 如何设置，都始终使用该连接的 **API Key** 和 `Bearer`。
+
+---
+
 ## 聊天上传 {#chat-uploads}
 
 连接表单上的 **Chat Uploads** 决定：在选中该终端时，聊天输入框中附加的文件会放到哪里。
@@ -138,7 +155,7 @@ zip 压缩包、SQLite 数据库、视频文件、远超上下文窗口的导出
 
 对[每个聊天使用独立实例](/features/open-terminal/terminals/orchestration/creating-terminals#machine-scope)的终端，发送新聊天的第一条消息时，其中的附件会上传到该聊天的实例。
 
-管理员添加的每个终端连接都有此字段。[Tether](/ecosystem/tether) 终端始终使用 **Filesystem**。
+管理员添加的每个终端连接都有此字段。[Tether](/ecosystem/tether) 终端始终使用 `Filesystem`。
 
 ![Chat Uploads 设置为 Filesystem 的连接表单](/images/open-terminal-chat-uploads-filesystem.png)
 
@@ -154,7 +171,7 @@ zip 压缩包、SQLite 数据库、视频文件、远超上下文窗口的导出
 
 **Tabs** 的 **+** 菜单中的 **New Terminal** 标签页是你自己的 shell。有两个工具让模型能够读取该 shell 最近的输出并向它发送输入。位于 **Advanced** 下的 **User Shell Tools** 决定模型何时获得这两个工具：
 
-- `Automatic`（默认）：仅当你正在发送消息的那个聊天中、该终端的 shell 处于打开状态时。每条消息之前，Open WebUI 都会询问你的浏览器它是否打开。
+- `Automatic`（默认）：仅当你正在发送消息的那个聊天中、该终端的 shell 处于打开状态时。每条消息之前，Open WebUI 都会询问终端服务器它是否打开。
 - `Always Include`：无论 shell 是否打开，每条消息都提供。工具列表在消息之间保持不变，这样在你打开和关闭 shell 时[提示词缓存](/features/chat-conversations/prompt-caching)仍然有效。
 
 自动化和子智能体始终无法使用这两项工具。管理员添加的每个终端连接都有此字段。[Tether](/ecosystem/tether) 终端始终使用 **Automatic**。
@@ -222,6 +239,12 @@ docker exec open-webui curl -s http://open-terminal:8000/health
 只有用户被允许使用的终端才会列出，因此请检查该连接的访问授权以及连接是否已启用。
 
 对于编排器连接，只有终端已对你共享，或你拥有连接的 **Write** 权限时，才会列出该终端。每个聊天使用独立实例的终端需要已保存的对话，因此临时聊天不会显示它。参见[创建终端](/features/open-terminal/terminals/orchestration/creating-terminals#machine-scope)。
+
+### 命令输出为空 {#command-output-is-empty}
+
+`run_command` 的结果显示 `"status": "running"` 和空的 `output` 列表。`run_command` 会在后台启动命令并立即返回其命令 ID。只有当调用发送了 `wait` 值（最长 `300` 秒）或服务器设置了 `OPEN_TERMINAL_EXECUTE_TIMEOUT`（默认未设置）时，它才会等待命令结束。模型稍后用该 ID 调用 `get_process_status` 读取输出，该调用同样接受 `wait`。
+
+若想在第一次结果中就拿到短命令的输出，请在 Open Terminal 服务器上设置 `OPEN_TERMINAL_EXECUTE_TIMEOUT`，例如 `OPEN_TERMINAL_EXECUTE_TIMEOUT=5`，并重启它。更早结束的命令会在结束时立即返回。运行更久的命令仍会返回状态 `running`，其输出要通过 `get_process_status` 获取。参见[配置](/features/open-terminal/advanced/configuration)。
 
 ### API Key 错误 {#wrong-api-key}
 

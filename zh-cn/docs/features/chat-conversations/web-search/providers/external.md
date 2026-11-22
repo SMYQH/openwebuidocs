@@ -33,7 +33,7 @@ title: "外部"
 
 1. 进入 Open WebUI `管理面板`
 2. 打开 `设置` 标签，再进入 `网页搜索`
-3. 将 `启用 Web Search` 切换为开启
+3. 将 `Web Search` 切换为开启
 4. 将 `网页搜索引擎` 从下拉菜单设为 `external`
 5. 在 **External Web Search URL**（`EXTERNAL_WEB_SEARCH_URL`）中填写你自定义搜索 API 的完整 URL（例如 `http://localhost:8000/search` 或 `https://my-search-api.example.com/api/search`）
 6. 在 **External Web Search API Key**（`EXTERNAL_WEB_SEARCH_API_KEY`）中填写验证自定义搜索端点所需的 API 密钥。如果端点不需要身份验证，可以留空，但不建议对公网端点这么做。

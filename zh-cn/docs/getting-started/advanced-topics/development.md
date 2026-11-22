@@ -40,7 +40,7 @@ docker run -d -p 3001:8080 --add-host=host.docker.internal:host-gateway -v open-
 | 要求 | 版本 |
 |-------------|---------|
 | **Python** | 3.11 或 3.12（见下方说明；暂不支持 3.13） |
-| **Node.js** | 22.10+ |
+| **Node.js** | 20.19+ 或 22.13+（`package.json` 允许到 22.x；Docker 镜像基于 Node 22 构建） |
 | **Git** | 任意较新版本 |
 
 :::info Python 版本兼容性
@@ -79,7 +79,7 @@ npm run build
 npm run dev
 ```
 
-`npm run build` 会先编译前端并尽早发现构建期错误；它以 12 GB 的 Node.js 堆上限运行 Vite。随后 `npm run dev` 会在 [http://localhost:5173](http://localhost:5173) 启动开发服务器。在后端启动之前，它会显示等待画面。
+`npm run build` 会先编译前端并尽早发现构建期错误；它以 12 GB 的 Node.js 堆上限运行 Vite。随后 `npm run dev` 会在 [http://localhost:5173](http://localhost:5173) 启动开发服务器。在后端启动之前，它会显示 "Backend Required" 页面；后端就绪后点击 **Check Again**。
 
 :::tip
 如果 `npm install` 因兼容性警告失败，可尝试运行 `npm install --force`。
@@ -114,7 +114,7 @@ pip install -r requirements.txt -U
 sh dev.sh
 ```
 
-后端会在 [http://localhost:8080](http://localhost:8080) 启动，API 文档可在 [http://localhost:8080/docs](http://localhost:8080/docs) 查看。
+`dev.sh` 不会生成密钥，因此请先把 `WEBUI_SECRET_KEY` 设置为一个足够长的随机值（在 shell 中导出，或写在根目录的 `.env` 中）；没有它后端会在启动时退出。后端会在 [http://localhost:8080](http://localhost:8080) 启动，API 文档可在 [http://localhost:8080/docs](http://localhost:8080/docs) 查看。`/docs` 页面只在 `ENV=dev` 时提供，这是从源码运行时的默认值；Docker 镜像会设置 `ENV=prod`，不提供该页面。
 
 刷新前端页面 [http://localhost:5173](http://localhost:5173)，你应该就能看到完整应用了。
 
@@ -132,6 +132,8 @@ export CORS_ALLOW_ORIGIN="http://localhost:5173;http://localhost:8080;http://192
 ```
 
 3. 重启后端，然后访问 `http://192.168.1.42:5173`
+
+`npm run dev` 运行的是 `vite dev --host`，因此开发服务器本来就监听所有接口，并把 `/api`、`/ollama`、`/openai`、`/oauth` 和 `/ws` 代理到后端。仍然需要 CORS 条目，因为 Socket.IO 会把浏览器的 `Origin` 头与 `CORS_ALLOW_ORIGIN` 比对。如果后端运行在另一台机器上，用 `WEBUI_BACKEND_URL=http://<host>:8080 npm run dev` 把代理指向它。
 
 ---
 
@@ -160,11 +162,11 @@ lsof -i :5173
 Get-Process -Id (Get-NetTCPConnection -LocalPort 5173).OwningProcess
 ```
 
-结束对应进程，或在 `vite.config.js`（前端）或 `dev.sh`（后端）中修改端口。
+结束对应进程，或换用其他端口启动：后端用 `PORT=9000 sh dev.sh`（随后用 `WEBUI_BACKEND_URL=http://localhost:9000 npm run dev` 启动前端），前端用 `npm run dev:5050`（先在 `backend/dev.sh` 中把 `http://localhost:5050` 加入 `CORS_ALLOW_ORIGIN`）。
 
-### 图标未加载（CORS） {#icons-not-loading-cors}
+### 图标未加载 {#icons-not-loading}
 
-如果静态资源加载失败，请在 `backend/dev.sh` 中配置 `CORS_ALLOW_ORIGIN`，使其包含你的前端 URL。详情参见 [CORS 配置](/reference/env-configuration#cors_allow_origin)。
+静态资源来自 Vite 开发服务器，API 请求也通过同一源上的代理发出，因此 `CORS_ALLOW_ORIGIN` 不会影响它们。请改为查看开发服务器的终端输出和浏览器的 Network 标签页，找出失败的那个请求。
 
 ### 热重载不工作 {#hot-reload-not-working}
 

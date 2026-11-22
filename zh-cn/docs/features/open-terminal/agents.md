@@ -1,15 +1,15 @@
 ---
 sidebar_position: 9
-title: "编程智能体"
+title: "智能体"
 ---
 
-# 编程智能体 {#coding-agents}
+# 智能体 {#agents}
 
-如果所选的 Open Terminal 列出了编程智能体，模型选择器就会将它们与常规模型一同显示。选中一个后，它会在终端的工作区中使用该环境的文件和工具。
+如果所选的 Open Terminal 列出了智能体，模型选择器就会将它们与常规模型一同显示。选中一个后，它会在终端的工作区中使用该环境的文件和工具。
 
 出现哪些智能体与模型取决于你选择的 Open Terminal。终端报告为不可用的智能体不会被列出。
 
-可以把完整的编程任务交给智能体。描述功能或缺陷后，它会编辑项目文件并在终端中运行命令。你可在聊天中查看进度、回答问题并批准工具请求。像选择其他模型一样，从模型选择器中选择 Claude Code、Codex 或其他列出的智能体。需要对项目进行实际修改时使用智能体，只需要回答时使用普通模型。
+可以让智能体总结项目文件、准备报告，或修复缺陷并运行测试。你可以在聊天中跟进它的工作、回答问题并审查工具请求。
 
 有关安装、登录和连接步骤，请先阅读[连接智能体](/getting-started/quick-start/connect-an-agent#quick-start-with-open-terminal)。
 
@@ -19,19 +19,19 @@ Open Terminal 通过下表的接口启动已安装的 CLI。请以运行终端�
 
 | 智能体 | 接口 | 可执行文件 |
 | :--- | :--- | :--- |
-| **Codex** | 原生 app-server 协议 | `codex` |
-| **Claude Code** | 原生流式 JSON 协议 | `claude` |
-| **Pi** | 原生 RPC 协议 | `pi` |
-| **Cursor** | ACP | `agent` |
-| **Grok** | ACP | `grok` |
-| **OpenCode** | ACP | `opencode` |
-| **Cline** | ACP | `cline` |
-| **Gemini CLI** | ACP | `gemini` |
-| **Hermes** | ACP | `hermes` |
-| **Antigravity** | ACP | `agy` |
-| **GitHub Copilot** | ACP | `copilot` |
-| **Goose** | ACP | `goose` |
-| **Qwen Code** | ACP | `qwen` |
+| [Codex](/getting-started/quick-start/connect-an-agent/codex-cli) | 原生 app-server 协议 | `codex` |
+| [Claude Code](/getting-started/quick-start/connect-an-agent/claude-code) | 原生流式 JSON 协议 | `claude` |
+| [Pi](/getting-started/quick-start/connect-an-agent/pi) | 原生 RPC 协议 | `pi` |
+| [Cursor](/getting-started/quick-start/connect-an-agent/cursor-cli) | ACP | `agent` |
+| [Grok](/getting-started/quick-start/connect-an-agent/grok-build) | ACP | `grok` |
+| [OpenCode](/getting-started/quick-start/connect-an-agent/opencode) | ACP | `opencode` |
+| [Cline](/getting-started/quick-start/connect-an-agent/cline) | ACP | `cline` |
+| [Gemini CLI](/getting-started/quick-start/connect-an-agent/gemini-cli) | ACP | `gemini` |
+| [Hermes](/getting-started/quick-start/connect-an-agent/hermes-agent) | ACP | `hermes` |
+| [Antigravity](/getting-started/quick-start/connect-an-agent/antigravity) | ACP | `agy` |
+| [GitHub Copilot](/getting-started/quick-start/connect-an-agent/github-copilot) | ACP | `copilot` |
+| [Goose](/getting-started/quick-start/connect-an-agent/goose) | ACP | `goose` |
+| [Qwen Code](/getting-started/quick-start/connect-an-agent/qwen-code) | ACP | `qwen` |
 
 [Agent Client Protocol (ACP)](https://agentclientprotocol.com/get-started/introduction) 规范化了智能体与其客户端之间的通信。这些集成使用 ACP v1。Open Terminal 负责启动智能体进程，Open WebUI 负责处理其协议消息，包括聊天输出、工具审批和会话延续。其余三个智能体有专用的协议适配器。
 
@@ -54,7 +54,7 @@ export OPEN_TERMINAL_ACP_AGENTS='{"kiro":{"name":"Kiro","command":"kiro-cli acp"
 在聊天中选中一个终端，然后打开模型选择器。每个智能体模型的名称形如 `<agent>/<model>`。
 
 - **每个会话只能使用一个智能体。** 一个聊天中只添加一个智能体模型。在多模型聊天中，智能体不能与其他模型组合使用。
-- **重新生成、编辑和分叉。** 可重新生成回复、编辑较早的消息，以及分叉或克隆聊天。Codex 和 Claude Code 会从所选位置继续自己的会话。Claude Code 需要新版 [Open Terminal](/features/open-terminal/setup/updating)，Codex 需要终端上安装新版 Codex CLI。其他智能体会根据当前聊天记录重新开始。智能体已修改的文件会留在终端中。
+- **重新生成、编辑或分叉。** 自 Open WebUI 0.13.4 起，你可以重新生成回复、编辑较早的消息，以及分叉或克隆智能体聊天。Codex 可以在终端上装有新版 Codex CLI 时从所选轮次继续。Claude Code 需要新版 [Open Terminal](/features/open-terminal/setup/updating) 才能做到同样的事。其他智能体会以截至该点的聊天记录开启新会话。文件改动会留在工作区中。[版本要求](https://github.com/open-webui/open-webui/releases/tag/v0.13.4)
 - **缺失的智能体。** 当终端或其智能体模型不可用时，该智能体会从可选项中移除，并改用默认模型。
 - **仅限已保存的聊天。** 智能体会话需要一个已保存的聊天，因此它们在临时聊天中不可用。
 
@@ -64,7 +64,7 @@ export OPEN_TERMINAL_ACP_AGENTS='{"kiro":{"name":"Kiro","command":"kiro-cli acp"
 
 ## 模型 ID {#model-ids}
 
-智能体的模型 ID 只含字母、数字、连字符和下划线。模型名称含有句点等其他字符时，这些字符会替换成连字符并加上短后缀。置顶项、默认模型和[自动化](/features/chat-conversations/chat-features/automations#running-a-coding-agent)都使用该 ID。
+智能体模型 ID 中的模型部分只含字母、数字、连字符和下划线。模型名称含有句点等其他字符时，这些字符会替换成连字符并加上短后缀。置顶项、默认模型和[自动化](/features/chat-conversations/chat-features/automations#running-a-coding-agent)都使用该 ID。
 
 ## 选项 {#options}
 
@@ -75,7 +75,7 @@ export OPEN_TERMINAL_ACP_AGENTS='{"kiro":{"name":"Kiro","command":"kiro-cli acp"
 ## 与智能体协作 {#working-with-an-agent}
 
 - **附件。** 你附加的文件会被上传到终端，智能体也会获知它们的路径。
-- **工作区。** 新会话从终端当前的工作目录开始。已有的智能体会话会保留它自己的工作区，即使你在[文件浏览器](./file-browser.md)中浏览到其他文件夹也是如此。
+- **工作区。** 新会话从消息输入框中 **Choose working directory** 下所选的文件夹开始。已有的智能体会话会保留它自己的工作区，即使你在[文件浏览器](./file-browser.md)中浏览到其他文件夹也是如此。
 - **工具请求。** 智能体请求运行工具时，聊天中会显示该请求，并遵循[工具权限模式](/features/extensibility/plugin/tools#tool-approval)。启用 [`ENABLE_TOOL_PERMISSIONS`](/reference/env-configuration#enable_tool_permissions) 和 [`ENABLE_TOOL_PERMISSIONS_AUTO`](/reference/env-configuration#enable_tool_permissions_auto) 后可使用 **Auto**。在此模式下，Codex 使用自己的审核机制，只转交需要升级审核的请求。支持此功能的 Claude Code 和 Grok 版本也采用同样方式。升级请求仍须经过 Open WebUI 的批准检查。其他 ACP 智能体在 **Auto** 下仍会请求批准，除非管理员在[自动权限](/features/extensibility/plugin/tools#auto)下设置了 **Engine**。
 - **提问。** 当智能体向你提问时，问题会出现在聊天中，智能体会等待你的回答。无论设置的是哪种权限模式，问题始终会显示。
 - **语音。** 选中了终端时，智能体可以在[实时语音通话](/features/chat-conversations/chat-features/voice-mode#realtime-calls)中工作。

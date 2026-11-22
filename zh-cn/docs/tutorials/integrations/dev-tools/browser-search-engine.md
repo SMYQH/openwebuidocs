@@ -20,11 +20,12 @@ Open WebUI 支持直接集成到浏览器。本教程将指导你把 Open WebUI 
 开始前请确认：
 
 - 你已安装 Chrome 或其他受支持浏览器。
-- `WEBUI_URL` 环境变量已正确设置，可通过 Docker 环境变量或 `.env` 文件配置，参见[环境变量指南](/reference/env-configuration)。
+- 你的 Open WebUI 实例可以通过浏览器访问一个稳定的 URL。
+- 如果你要使用 Firefox 的一键选项，`WEBUI_URL` 环境变量必须设置为该 URL，可通过 Docker 环境变量或 `.env` 文件配置，参见[环境变量指南](/reference/env-configuration)。
 
-### 第 1 步：设置 WEBUI_URL 环境变量 {#step-1-set-the-webui\_url-environment-variable}
+### 第 1 步：设置 WEBUI_URL 环境变量（仅 Firefox） {#step-1-set-the-webui\_url-environment-variable-firefox-only}
 
-设置 `WEBUI_URL` 能让浏览器知道查询请求应发送到哪里。
+下面的 Chrome 配置不需要 `WEBUI_URL`：浏览器会自行打开 `<your-open-webui-url>/?q=%s`。Firefox 的一键选项会读取 Open WebUI 的 `/opensearch.xml`，并用 `WEBUI_URL`（**Admin Panel > Settings > General** 中的 **WebUI URL** 字段）构建搜索 URL，因此请把它设置为你访问 Open WebUI 使用的地址。
 
 #### 使用 Docker 环境变量 {#using-docker-environment-variables}
 
@@ -105,6 +106,7 @@ webui your search query
 
 如果遇到问题，请检查：
 
-- 确认 `WEBUI_URL` 配置正确，并指向可访问的 Open WebUI 实例。
+- 确认浏览器搜索引擎设置中的 URL 指向一个正在运行的 Open WebUI 实例。
+- 对于 Firefox 的一键选项，确认 `WEBUI_URL` 已设置为你访问 Open WebUI 使用的地址。
 - 再次核对浏览器中的搜索引擎 URL 格式是否填写正确。
 - 确认网络连接正常，且 Open WebUI 服务正在运行。

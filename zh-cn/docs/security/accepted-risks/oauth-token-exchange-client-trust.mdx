@@ -16,7 +16,7 @@ title: "OAuth 令牌交换的客户端信任"
 
 OAuth 令牌交换端点接收提供方的访问令牌，并为令牌所标识的用户创建 Open WebUI 会话。提供方的 userinfo 端点可以确认令牌有效，却不会说明令牌发给了哪个 OAuth 客户端。若不额外检查，交换端点会接受提供方发给在其处注册的任一客户端的令牌，包括运维人员无法控制的应用。
 
-除非运维人员将 [`ENABLE_OAUTH_TOKEN_EXCHANGE`](/reference/env-configuration#enable_oauth_token_exchange) 设置为 `True`，否则该端点处于关闭状态；这并非默认设置，因此默认部署不受影响。以下内容仅涉及那些主动启用了它的部署。
+除非运维人员将 [`ENABLE_OAUTH_TOKEN_EXCHANGE`](/reference/env-configuration#enable_oauth_token_exchange) 设置为 `True`，否则该端点处于关闭状态；这并非默认设置，因此默认部署不受影响。以下内容仅涉及那些主动启用了它的部署。该端点绝不会创建账户：用户必须已经存在，通过提供商 subject 匹配，或在 `OAUTH_MERGE_ACCOUNTS_BY_EMAIL` 开启时通过邮箱匹配。它还有一个按地址的速率限制（`OAUTH_TOKEN_EXCHANGE_RATE_LIMIT` 和 `OAUTH_TOKEN_EXCHANGE_RATE_LIMIT_WINDOW`），在设置之前处于关闭状态。
 
 ## 已采取的缓解措施 {#what-we-mitigated}
 

@@ -64,9 +64,30 @@ docker run --rm --entrypoint python ghcr.io/open-webui/open-webui:main \
 
 ---
 
-## 离线模式新安装时出现 `ValueError: No embedding model is loaded` {#valueerror-no-embedding-model-is-loaded-with-offline-mode-on-a-fresh-install}
+## Hugging Face 缓慢或被阻断时，启动在横幅之后卡住 {#startup-stops-after-the-banner-while-hugging-face-is-slow-or-blocked}
 
 ### 症状 {#symptom-1}
+
+日志打印出 Open WebUI 横幅之后，几分钟内不再有新的输出。`Application startup complete.` 不会出现，页面也加载不了。这发生在服务器无法快速访问 Hugging Face 时，例如在公司代理或防火墙后面，或者完全没有互联网访问。
+
+### 原因 {#cause-1}
+
+使用**默认（SentenceTransformers）**嵌入引擎时，每次启动都会在服务器接受连接之前加载本地嵌入模型（[`RAG_EMBEDDING_MODEL`](/reference/env-configuration#rag_embedding_model)，默认为 `sentence-transformers/all-MiniLM-L6-v2`）。只要 [`RAG_EMBEDDING_MODEL_AUTO_UPDATE`](/reference/env-configuration#rag_embedding_model_auto_update) 为 `True`（默认值），这一步就会访问 Hugging Face 来检查模型并下载缺失的文件，即使本地已有缓存副本也一样。启动会一直等到该请求完成或失败。启用混合检索时，重排序模型在 `RAG_RERANKING_MODEL_AUTO_UPDATE` 下也走同样的步骤。如果模型没有缓存且请求失败，日志会显示 `Cannot determine model snapshot path`。
+
+### 修复 {#fix-1}
+
+任选一种：
+
+- **模型已缓存后跳过检查。** 设置 `RAG_EMBEDDING_MODEL_AUTO_UPDATE=false`。这样 Open WebUI 会直接加载缓存副本，不再访问 Hugging Face。如果模型尚未缓存，它会记录 `Cannot determine model snapshot path` 并按 Hugging Face 名称加载模型，因此首次启动仍然需要网络。
+- **完全离线运行。** 设置 [`OFFLINE_MODE=true`](/reference/env-configuration#offline_mode)，它同时会设置 `HF_HUB_OFFLINE=1` 并关闭两个自动更新变量。模型必须已经缓存，参见下一节。
+- **让下载走你的代理。** Hugging Face 客户端会从 Open WebUI 进程的环境变量中读取[标准代理变量](https://www.python-httpx.org/environment_variables/) `HTTPS_PROXY`（或 `https_proxy`）和 `NO_PROXY`。请在设置其他 Open WebUI 变量的地方设置它们，例如 `docker run` 的 `-e`，或 shell 中的导出。
+- **使用外部嵌入引擎。** 在 **Settings > Documents**（管理员区域）中把 **Embedding Model Engine** 设为 **Ollama**、**OpenAI** 或 **Azure OpenAI**，或设置 [`RAG_EMBEDDING_ENGINE`](/reference/env-configuration#rag_embedding_engine)。这样启动时不会加载本地嵌入模型。
+
+---
+
+## 离线模式新安装时出现 `ValueError: No embedding model is loaded` {#valueerror-no-embedding-model-is-loaded-with-offline-mode-on-a-fresh-install}
+
+### 症状 {#symptom-2}
 
 容器启动了，它的日志中带有下面的 `LocalEntryNotFoundError`，随后第一次文档上传或 RAG 查询会以 `ValueError` 失败：
 
@@ -81,11 +102,11 @@ SentenceTransformer model name, or configure an external RAG_EMBEDDING_ENGINE
 
 这发生在**新安装**上设置了 [`OFFLINE_MODE=true`](/reference/env-configuration#offline_mode) 和/或 [`HF_HUB_OFFLINE=1`](/reference/env-configuration#hf_hub_offline) 时。
 
-### 原因 {#cause-1}
+### 原因 {#cause-2}
 
 离线模式会屏蔽 Hugging Face 下载和版本检查。默认的 RAG 嵌入引擎使用一个**必须下载一次的本地 SentenceTransformers 模型**。在新安装上已经启用了离线模式的情况下，模型从未被缓存，因此没有可加载的内容。该错误会在第一次嵌入调用时浮现。
 
-### 修复 {#fix-1}
+### 修复 {#fix-2}
 
 选择一种方案：
 
@@ -99,7 +120,7 @@ SentenceTransformer model name, or configure an external RAG_EMBEDDING_ENGINE
 
 ## 全新 Windows 安装时报 `WEBUI_SECRET_KEY is not set` {#webui\_secret\_key-is-not-set-on-a-fresh-windows-install}
 
-### 症状 {#symptom-2}
+### 症状 {#symptom-3}
 
 `backend\start_windows.bat` 在启动时中止：
 
@@ -107,14 +128,51 @@ SentenceTransformer model name, or configure an external RAG_EMBEDDING_ENGINE
 WEBUI_SECRET_KEY is not set. It is a hard requirement when authentication is enabled.
 ```
 
-### 原因 {#cause-2}
+### 原因 {#cause-3}
 
 该脚本从 `.webui_secret_key` 读取密钥，并且只在该文件不存在时才生成一个。早期一次失败运行遗留的空 `.webui_secret_key`，会被读成空密钥。
 
-### 修复 {#fix-2}
+### 修复 {#fix-3}
 
 **删除 `backend` 文件夹中空的 `.webui_secret_key` 文件**，然后重新启动，让脚本生成一个密钥。
 
 自己设置 `WEBUI_SECRET_KEY` 同样有效，而且这才是个人机器之外一切环境的正确配置方式。设置之后，脚本会完全跳过密钥生成。
 
 各种启动方式如何生成并持久化该密钥，请参阅 [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key)。
+
+---
+
+## 启动时报 `Could not parse SQLAlchemy URL from given URL string` {#could-not-parse-sqlalchemy-url-from-given-url-string-at-startup}
+
+### 症状 {#symptom-4}
+
+Open WebUI 在加载过程中停止，堆栈跟踪的最后一行是：
+
+```text
+sqlalchemy.exc.ArgumentError: Could not parse SQLAlchemy URL from given URL string
+```
+
+### 原因 {#cause-4}
+
+`DATABASE_URL` 被设置成了空值，例如等号后面什么都没有的 `DATABASE_URL=` 行。只有在该变量完全没有设置时，Open WebUI 才会使用它的 SQLite 默认值，因此空值会被当作数据库 URL 传下去。你的 shell 中残留的、来自另一个项目的 `DATABASE_URL` 同样会替换掉默认值，Open WebUI 随后会连到那个项目的数据库。
+
+### 修复 {#fix-4}
+
+删除或取消设置 `DATABASE_URL`（在启动 Open WebUI 的那个 shell 中执行 `unset DATABASE_URL`），以使用 [`DATA_DIR`](/reference/env-configuration#data_dir) 中的 SQLite 数据库；或者把它设置为完整 URL。参见 [`DATABASE_URL`](/reference/env-configuration#database_url)。
+
+---
+
+## 某个 Function 导致 Open WebUI 无法加载 {#a-function-stops-open-webui-loading}
+
+### 症状 {#symptom-5}
+
+在你添加或更新某个 Function 之后，Open WebUI 无法启动，或者界面加载不出来。
+
+### 修复 {#fix-5}
+
+1. 使用 [`SAFE_MODE=true`](/reference/env-configuration#safe_mode) 重启 Open WebUI。启动时它会关闭数据库中的每个 Function，因此它们都不会被加载。
+2. 打开 **Admin Panel > Functions**，删除或修复出问题的那个 Function。
+3. 移除 `SAFE_MODE` 并重启。只要它还开着，每次重启都会再次关闭所有 Function。
+4. 在 **Admin Panel > Functions** 中把仍然需要的 Function 逐个重新打开。移除 `SAFE_MODE` 并不会把它们重新打开。
+
+参见[安全模式](/getting-started/advanced-topics/hardening#safe-mode)。

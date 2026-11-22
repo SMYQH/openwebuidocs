@@ -35,6 +35,24 @@ Open WebUI 提供强大的文档提取能力，使你可以在 RAG（Retrieval A
 
 :::
 
+## PDF 加载器模式 {#pdf-loader-mode}
+
+使用默认的**内容提取引擎**时，**设置 > 文档**（管理员区域）中的 **PDF Loader Mode**，或 [`PDF_LOADER_MODE`](/reference/env-configuration#pdf_loader_mode)，决定 PDF 的页面在切块之前如何转换成文本。其他引擎会忽略该设置。
+
+| | **Page**（默认） | **Single** |
+| --- | --- | --- |
+| 文本 | 每页一个文档 | 所有页面合并为一个文档 |
+| 语块 | 不会跨页 | 可以跨页 |
+| 引用 | 显示 `(page N)` 并打开到该页的 PDF | 不显示页码 |
+
+当句子或表格经常延续到下一页，并且你可以不使用引用页码时，选择 **Single**。该模式在文件被提取时生效。已经在知识库中的文件，只有在同一设置页面执行 **Reindex Knowledge and Memory Vectors**、重新提取之后才会改变。
+
+## 没有专用加载器的文件 {#files-without-a-dedicated-loader}
+
+使用默认的**内容提取引擎**时，扩展名没有专用加载器的文件会按纯文本读取。源代码和配置文件，例如 `.py`、`.js`、`.ts`、`.go`、`.sql`、`.json`、`.yaml` 或 `.toml`，在 RAG 中就是这样工作的。没有加载器的二进制格式，例如 `.ods` 或 `.odp`，同样按此方式读取，产生的不是错误而是一堆无法辨认的文本，因此检索会从中返回噪声。在 slim 镜像上，这类文件则直接失败并提示 `This file type requires an external document extractor in slim. Configure one that supports it.`。
+
+若只想接受你清楚知道能良好提取的格式，请在 **设置 > 文档**（管理员区域）的 **Allowed File Extensions** 中列出它们（不带前导的点），或写入 [`RAG_ALLOWED_FILE_EXTENSIONS`](/reference/env-configuration#rag_allowed_file_extensions)。此后上传其他扩展名的文件会失败并提示 `File type <extension> is not allowed`。
+
 ## 可用提取方式 {#available-extraction-methods}
 
 Open WebUI 支持多种文档提取引擎，以适配不同需求与文档类型。每种提取方式都有各自优势，适合不同场景。

@@ -77,7 +77,7 @@ Event Function 针对**系统事件**（用户注册、聊天删除、服务器�
 
 ### 类型检测 {#type-detection}
 
-保存 Function 时，Open WebUI 扫描 Python 源代码中名为 `Pipe`、`Filter`、`Action` 或 `Event` 的顶级类。第一个匹配项确定函数类型。你永远不需要手动设置类型，因为它是从代码推断出来的。
+保存 Function 时，Open WebUI 会加载 Python 源代码，并按 `Pipe`、`Filter`、`Action`、`Event` 的顺序查找顶级类。找到的第一个类决定函数类型，因此同时定义了 `Pipe` 和 `Filter` 的文件会被识别为 Pipe。你永远不需要手动设置类型，因为它是从代码推断出来的。
 
 ```
 # This is detected as a Pipe function:

@@ -150,14 +150,14 @@ MICROSOFT_CLIENT_SECRET=your_client_secret
 MICROSOFT_CLIENT_TENANT_ID=your_tenant_id
 MICROSOFT_REDIRECT_URI=https://your-open-webui-domain/oauth/microsoft/callback
 
-# Required for logout to work properly
+# Optional: a sign-out fallback that also silences the startup logout warning
 OPENID_PROVIDER_URL=https://login.microsoftonline.com/your_tenant_id/v2.0/.well-known/openid-configuration
 
 # Enable OAuth signup
 ENABLE_OAUTH_SIGNUP=true
 
 # OAuth Group Management
-OAUTH_GROUP_CLAIM=groups
+OAUTH_GROUPS_CLAIM=groups
 ENABLE_OAUTH_GROUP_MANAGEMENT=true
 ENABLE_OAUTH_GROUP_CREATION=true
 
@@ -169,7 +169,7 @@ WEBUI_SECRET_KEY=your_secure_secret_key
 
 | 变量 | 默认值 | 描述 |
 | ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `OAUTH_GROUP_CLAIM`             | `groups` | ID/访问令牌中包含用户群组成员资格的声明。 |
+| `OAUTH_GROUPS_CLAIM`            | `groups` | ID/访问令牌中包含用户群组成员资格的声明（`OAUTH_GROUP_CLAIM` 仍作为回退被读取）。 |
 | `ENABLE_OAUTH_GROUP_MANAGEMENT` | `false`  | 设置为 `true` 时，每次登录时用户群组成员资格将与 OAuth 声明同步。 |
 | `ENABLE_OAUTH_GROUP_CREATION`   | `false`  | 设置为 `true` 时，启用**即时（JIT）群组创建**——OAuth 声明中存在但 Open WebUI 中不存在的群组将自动创建。 |
 
@@ -178,7 +178,7 @@ WEBUI_SECRET_KEY=your_secure_secret_key
 当 `ENABLE_OAUTH_GROUP_MANAGEMENT` 设置为 `true` 时，用户在 Open WebUI 中的群组成员资格将在每次登录时与其 OAuth 声明中收到的群组**严格同步**。
 
 - 用户将被**添加**到与其 OAuth 声明匹配的 Open WebUI 群组中。
-- 如果某个 Open WebUI 群组（包括在 Open WebUI 中手动分配的群组）**不**存在于该登录会话的 OAuth 声明中，用户将被从该群组中**移除**。
+- 如果某个 Open WebUI 群组（包括在 Open WebUI 中手动分配的群组）**不**存在于该登录会话的 OAuth 声明中，用户将被从该群组中**移除**。如果该声明缺失或为空，则不会改动任何成员关系；与 `OAUTH_BLOCKED_GROUPS` 匹配的群组永远不会被添加或移除。
 
 :::
 
@@ -187,12 +187,12 @@ WEBUI_SECRET_KEY=your_secure_secret_key
 完成配置后：
 
 1. **测试令牌**：使用 [https://jwt.ms](https://jwt.ms) 解码您的 ID 令牌，验证 `groups` 声明包含显示名称而非 GUID。
-2. **以非管理员用户身份登录**：管理员用户的群组成员资格不会通过 OAuth 群组管理自动更新。使用标准用户账户进行测试。
+2. **以测试用户身份登录**：自 v0.8.11 起，管理员与非管理员账户的同步方式相同。
 3. **检查 Open WebUI**：导航至管理面板，验证群组显示的是可读名称。
 
 :::info 管理员用户
 
-管理员用户的群组成员资格**不会**通过 OAuth 群组管理自动更新。如果需要测试配置，请使用非管理员用户账户。
+自 v0.8.11 起，管理员用户的群组成员资格与其他用户完全同步，因此管理员账户也可以用于测试。
 
 :::
 

@@ -46,7 +46,7 @@ Open WebUI 可能运行正常，而你的模型提供商却已经离线。监控
 curl http://your-open-webui-instance:8080/health
 ```
 
-这验证 Web 服务器可用性、应用程序初始化和基本数据库连通性。
+这只能验证 Web 服务器是否在响应：`/health` 无条件返回 `{"status": true}`。`GET /health/db` 用于探测数据库，`GET /ready` 在启动完成、数据库以及已配置的 Redis 都能响应之前一直返回 503，因此就绪探针应使用 `/ready`。
 
 ### Uptime Kuma 配置（健康检查） {#uptime-kuma-setup}
 

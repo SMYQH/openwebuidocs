@@ -117,7 +117,7 @@ S3_REGION_NAME=REPLACE_WITH_AWS_REGION
 
 把目标组的健康检查路径设置为 `/ready`，它在启动完成且数据库与 Redis 正常响应后返回结果。先把服务健康检查宽限期设为 300 秒，再根据实测启动时间调整。`/health` 用作独立的进程存活检查。模型 API 与 S3 权限需要通过[添加用户前的验证](#verify-before-adding-users)中的检查。
 
-根据你的流式负载调整 ALB 空闲超时。目标组粘性会话是可选的，仅在 `ENABLE_WEBSOCKET_SUPPORT=false` 时才必须开启。参见[会话亲和性](/troubleshooting/multi-replica#session-affinity-sticky-sessions)。请通过 ALB 验证 WebSocket 与流式响应。
+根据你的流式负载调整 ALB 空闲超时。目标组粘性会话是可选的，仅在 `ENABLE_WEBSOCKET_SUPPORT=false` 时才必须开启。参见[会话亲和性](/troubleshooting/multi-replica#session-affinity-sticky-sessions)。请通过 ALB 验证 WebSocket 与流式响应。Socket.IO 在 `/ws/socket.io/` 下提供服务。
 
 使用 AWS CLI 等待并查看服务事件，替换其中的标识符：
 
@@ -127,11 +127,11 @@ aws ecs describe-services --cluster CLUSTER --services openwebui \
   --query 'services[0].{running:runningCount,desired:desiredCount,events:events[0:5]}'
 ```
 
-打开 `WEBUI_URL` 中配置的 HTTPS 主机名。初始管理员凭据会在启动过程中创建第一个账户。验证通过后即可提高期望任务数，并可选择配置 Service Auto Scaling。请为最大任务数预留 PostgreSQL 与 Redis 连接数。
+打开 `WEBUI_URL` 中配置的 HTTPS 主机名。初始管理员凭据会在启动过程中创建第一个账户。验证通过后即可提高期望任务数，并可选择配置 Service Auto Scaling。请为最大任务数预留 PostgreSQL 与 Redis 连接数。每个工作进程都有一个同步数据库引擎和一个异步数据库引擎，每个都可以打开 `DATABASE_POOL_SIZE` + `DATABASE_POOL_MAX_OVERFLOW` 个连接（未设置 `DATABASE_POOL_SIZE` 时为 SQLAlchemy 默认的 5 + 10）。使用 `VECTOR_DB=pgvector` 时，PGVector 会打开自己的连接池，大小为 `PGVECTOR_POOL_SIZE` + `PGVECTOR_POOL_MAX_OVERFLOW`（未设置时同样是 5 + 10），即使它使用的是 `DATABASE_URL`。
 
 ## 添加用户前的验证 {#verify-before-adding-users}
 
-- 使用初始管理员账户登录，确认开放注册已关闭。在放开更多访问权限前，请先配置你的[身份提供方](/features/authentication-access/auth/sso)。
+- 使用初始管理员账户登录，确认开放注册已关闭（用 `WEBUI_ADMIN_EMAIL` 和 `WEBUI_ADMIN_PASSWORD` 创建管理员会关闭它）。在放开更多访问权限前，请先配置你的[身份提供方](/features/authentication-access/auth/sso)。
 - 选择一个模型并以流式方式获取响应，然后重新打开已保存的会话。
 - 上传一份包含明显事实的小文档。确认索引完成，并就该事实提问以验证能够检索到来源。
 - 替换一个应用实例，确认同一账户、会话与已上传文件依然可用。

@@ -75,6 +75,10 @@ MCP 服务器以 `server:mcp:<server-id>` 形式的工具 ID 来寻址。参见[
 你可以通过 `GET /api/v1/models/model?id=<model-id>` 读取模型配置的终端并使用 `meta.terminalId`，或者直接从 `/api/v1/terminals/` 中挑选，后者已经只列出你的用户被允许使用的终端。
 :::
 
+:::warning 模型的工具、默认功能和知识库同样是界面默认值
+Web 界面还会把模型的 **Tools**（`meta.toolIds`）复制到 `tool_ids`，把它的 **Default Features** 复制到 `features`。后端两者都不会做，因此请自行发送。模型的 **Knowledge** 只能通过内置工具搜索，而这些工具需要 `session_id`，或者在旧版模式下搜索。两者都没有的请求完全不会使用模型的知识库。完整列表参见 [Chat Completions](/reference/api-endpoints#chat-completions)。
+:::
+
 ### 终端实例范围 {#terminal-scope}
 
 Terminals 服务器上的终端具有 `scope` 字段，值为 `null`、`user`、`chat` 或 `model`。该值决定请求需要携带哪些信息才能使用终端：
@@ -95,7 +99,7 @@ Terminals 服务器上的终端具有 `scope` 字段，值为 `null`、`user`、
 
 ### A1. 创建聊天 {#a1-create-the-chat}
 
-补全请求必须依附于一个已经存在的聊天和一条助手消息。请先创建好两者：
+补全端点可以自行创建聊天（发送 `"parent_id": null`、不带 `chat_id`、带一个 `user_message` 对象和 `session_id`；响应中会带上新的 `chat_id`），并为你传入的 `id` 插入助手占位消息。像下面这样预先创建两者仍然可用，只要 A2 也发送同样的用户消息 `user_message`；缺少它时，占位消息会被保存为没有父消息：
 
 ```bash
 USER_MSG_ID=$(uuidgen)
@@ -132,6 +136,7 @@ curl -s -X POST $OWUI_URL/api/chat/completions \
     \"stream\": true,
     \"chat_id\": \"$CHAT_ID\",
     \"id\": \"$ASSISTANT_MSG_ID\",
+    \"user_message\": {\"id\": \"$USER_MSG_ID\", \"role\": \"user\", \"content\": \"Search the web for the latest Open WebUI release and summarise it.\", \"parentId\": null, \"childrenIds\": [\"$ASSISTANT_MSG_ID\"], \"timestamp\": $TS, \"models\": [\"gpt-5.6-sol\"]},
     \"session_id\": \"api-$(uuidgen)\",
     \"features\": {\"web_search\": true, \"code_interpreter\": true, \"image_generation\": false, \"memory\": true},
     \"tool_ids\": [\"my_workspace_tool\", \"server:mcp:my_mcp_server\"],
@@ -154,6 +159,7 @@ curl -s -X POST $OWUI_URL/api/chat/completions \
 | :--- | :--- |
 | `stream: true` | 必需。原生工具循环只存在于流式路径上。 |
 | `chat_id` + `id` | 两者均为必需。缺少任一项，服务端都不会执行工具。 |
+| `user_message` | 本次运行所回答的用户消息，与 A1 中存储的一致。后端会据其 `id` 设置助手消息的 `parentId`；缺少它时，助手消息会被保存为没有父消息。 |
 | `session_id` | **内置工具的开关。** 任意非空字符串都可以。缺少它时，内置工具不会提供给模型。它还会让请求变为异步（你得到 `task_ids`，而不是阻塞等待）。 |
 | `features` | 开启四组可切换的内置工具：`web_search`、`code_interpreter`、`image_generation`、`memory`。其他内置工具（知识库、文件、笔记、频道、日历、自动化、聊天、时间、任务、子智能体）不需要开关，只要其全局设置、你的权限和模型类别允许，就会被提供。 |
 | `tool_ids` | 工作区工具和 MCP 服务器。可选。 |
@@ -329,6 +335,15 @@ def run(
         "stream": True,  # required, the native tool loop is streaming-only
         "chat_id": chat_id,
         "id": assistant_msg_id,
+        "user_message": {
+            "id": user_msg_id,
+            "role": "user",
+            "content": prompt,
+            "parentId": None,
+            "childrenIds": [assistant_msg_id],
+            "timestamp": now,
+            "models": [MODEL],
+        },
         "background_tasks": {
             "title_generation": False,
             "tags_generation": False,

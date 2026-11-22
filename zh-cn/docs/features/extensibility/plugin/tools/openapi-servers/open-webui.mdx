@@ -56,7 +56,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 ![设置页面](/images/openapi-servers/open-webui/settings.png)
 
-请求由 Open WebUI 后端发送，因此后端必须能够访问该 URL。`localhost` 指后端服务器。如果后端在 Docker 中运行，容器中的 `localhost` 无法访问宿主机，请使用 `host.docker.internal` 或宿主机的实际 IP。只公开可供多人安全使用的端点。
+请求由 Open WebUI 后端发送，因此后端必须能够访问该 URL。`localhost` 指后端服务器。如果后端在 Docker 中运行，容器中的 `localhost` 无法访问宿主机，请使用 `host.docker.internal` 或宿主机的实际 IP。如果工具服务器运行在同一个 Docker 网络的另一个容器中，请使用该容器的服务名和它在自己容器内监听的端口，例如 `http://time-server:8000`，而不是 `localhost` 或宿主机上发布的端口。参见 Docker 的 [Compose 中的网络](https://docs.docker.com/compose/how-tos/networking/)。只公开可供多人安全使用的端点。
 
 #### 2. 在 Tether 中添加的工具服务器 {#2-tool-servers-added-in-tether}
 
@@ -131,6 +131,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 
 - 全局工具默认是隐藏的，必须按用户手动启用
 - 你需要打开消息输入框的 **+** 菜单，选择 **工具**，再手动启用需要的全局工具
+- 若希望使用某个模型的每个新对话都默认带上它，请把它加入模型编辑器（**工作区 > 模型**）中该模型的 **工具** 列表。该模型的每个新对话开始时，有权访问它的用户都会自动开启该工具服务器。用户仍可在对话中把它关闭。
 
 效果如下：
 
@@ -139,7 +140,7 @@ uvicorn main:app --host 0.0.0.0 --reload
 ⚠️ 全局工具服务器注意事项：
 
 - 在你从 **+** 菜单启用之前，它们不会显示在工具指示器弹窗中
-- 每个全局工具都必须单独打开，才能在当前聊天中生效
+- 每个全局工具都必须单独打开，才能在当前聊天中生效，除非该模型已把它列入 **工具** 列表
 - 管理员可通过基于角色的权限控制来限制全局工具访问
 
 这非常适合团队场景或共享环境：例如文档检索、memory 或 web lookup 这类常用工具，可以集中提供给多个用户使用。
@@ -197,6 +198,10 @@ uvicorn main:app --host 0.0.0.0 --reload
 ### 服务器正在运行，但连接失败 {#connection-fails-even-though-the-server-is-running}
 
 **确认“localhost”指哪台机器。** 这是最常见的连接问题。请求由后端发送，因此 `localhost` 和 `host.docker.internal` 遵循[管理员所添加服务器的规则](#1-tool-servers-added-by-an-admin)。如果工具服务器位于另一台机器上，请确保它绑定到 `0.0.0.0`。
+
+### 部分端点未出现在工具列表中 {#some-endpoints-are-missing-from-the-tool-list}
+
+Open WebUI 会把 OpenAPI 规范中每个带 `operationId` 的操作变成一个工具，并以 `operationId` 作为工具名称。没有 `operationId` 的操作会被直接排除，既不报错也没有日志消息。请为模型应当调用的每个端点设置唯一的 `operationId`。
 
 ### 通用建议 {#general-tips}
 

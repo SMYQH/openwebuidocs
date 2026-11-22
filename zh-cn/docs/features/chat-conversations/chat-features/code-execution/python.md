@@ -60,6 +60,20 @@ Code Interpreter 是一种模型能力，可让 LLM 在对话过程中自主编�
 当选择 Pyodide 引擎时，Open WebUI 会自动在代码解释器指令后附加一段与文件系统相关的提示，告知模型 `/mnt/uploads/` 的存在以及如何发现用户上传的文件。使用 Jupyter 时，则不会附加这一段（因为 Jupyter 有自己的文件系统）。因此，你无需在自定义 `CODE_INTERPRETER_PROMPT_TEMPLATE` 中手动加入文件系统说明——系统会自动补上。
 :::
 
+### Jupyter 连接设置 {#jupyter-connection-settings}
+
+**设置 > 代码执行**（管理员区域）包含两个彼此独立的部分。**代码执行**由**启用代码执行**开关控制，决定代码块上的**运行**按钮。**代码解释器**由**启用代码解释器**开关控制，决定模型自行运行的代码。每个部分都有各自的引擎、**Jupyter URL**、**Jupyter Auth**、凭据和**代码执行超时**，因此在其中一处配置 Jupyter 并不会配置另一处。当某个部分被打开且其引擎设为 **jupyter (Legacy)** 后，Jupyter 相关字段才会出现。
+
+**Jupyter Auth** 提供 **None**、**Token** 和 **Password** 三种选项，下方的字段会随之变化：
+
+| **Jupyter Auth** | 字段 | Open WebUI 发给 Jupyter 服务器的内容 |
+| --- | --- | --- |
+| **None** | 无 | 不发送凭据 |
+| **Token** | **Jupyter Token** | 令牌作为 `token` 查询参数附加在内核 API 调用和内核 WebSocket URL 上 |
+| **Password** | **Jupyter Password** | 先用 `GET login` 读取 `_xsrf` cookie，再提交带密码的 `POST login` 表单；随后内核 API 调用和 WebSocket 会带上会话 cookie 和 `X-XSRFToken` 请求头 |
+
+只有所选模式对应的凭据会被发送。在选择 **Password** 时，此前保存的令牌不会被使用。每次运行都会启动一个新的 Jupyter 内核，并在运行结束时将其删除，因此变量和导入不会从一次运行延续到下一次。
+
 ### 原生函数调用（Native Mode） {#native-function-calling-native-mode}
 
 当你在当前的模型上启用 **原生函数调用模式**（最低需要 GPT-5.6 Luna、Gemini 3.5 Flash-Lite、MiniMax M3，或本地运行的 Muse Glimmer 30B）时，代码解释器会以一个名为 `execute_code` 的内置工具形式提供。这会带来更自然的集成体验：

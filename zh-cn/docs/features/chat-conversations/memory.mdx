@@ -33,6 +33,14 @@ Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话
 用户可以通过以下位置手动新增、编辑或删除记忆：
 **设置 > 个性化 > 记忆**
 
+只有在 **Memory** 开关开启时才会列出**已保存的记忆**。关闭开关会隐藏该列表，也不再把记忆加入你的聊天，但不会删除任何内容；重新打开后，同样的记忆会回来。
+
+**Add Memory** 会要求选择**类型**。**User** 记忆是关于你的事实、偏好或指令，它们在每次回复时都会全部提供给模型，上限为 [`MEMORIES_USER_CHAR_LIMIT`](/reference/env-configuration#memories_user_char_limit) 预算。**Context** 记忆只在与当前聊天相关时才会提供：Open WebUI 用你最近七条消息检索你的记忆，并加入最相近的匹配项，上限为 [`MEMORIES_CONTEXT_CHAR_LIMIT`](/reference/env-configuration#memories_context_char_limit) 预算。记忆按字母顺序列出，有路径时路径排在最前，超出预算的文本会被直接截断且没有提示。**User** 记忆过多时，排在末尾的那些永远无法传给模型。
+
+该检索还会应用 **Settings > Documents**（管理员区域）中的**相关性阈值**，或 [`RAG_RELEVANCE_THRESHOLD`](/reference/env-configuration#rag_relevance_threshold)。当它大于 `0` 时，与你的消息向量相似度低于该值的 **Context** 记忆会从检索结果中掉出，既不报错也没有提示。记忆不会经过重排序器处理，而且即使 **Hybrid Search** 关闭、该字段被隐藏，阈值依然生效，因此为重排序器分数调好的数值可能让所有 **Context** 记忆都无法匹配。若 **Context** 记忆不再传给模型，请降低阈值或将其设为 `0`。**User** 记忆和按文本匹配的 `search_memories` 工具不受影响。
+
+列表上方 **Actions** 菜单中的 **Clear memory** 会删除你账号上的全部记忆，包括被搜索框隐藏的记忆。在 **Clear Memory** 对话框（`Are you sure you want to clear all memories? This action cannot be undone.`）中确认后，Open WebUI 会从数据库中删除这些记忆并清除其搜索索引，随后显示 `Memory cleared successfully`。没有撤销，也没有回收站。若只想删除部分记忆，请改为在列表中逐条删除。
+
 ### 2. 原生记忆工具（Agentic 模式） {#2-native-memory-tools-agentic-mode}
 
 当你使用启用了 **原生函数调用（Agentic 模式）** 的模型时，高质量模型可以通过内置工具自主管理你的记忆。关于管理员如何配置和管理这些系统级工具的详细说明，请参阅 [**中央工具调用指南**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。

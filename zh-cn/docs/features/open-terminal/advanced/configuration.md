@@ -29,7 +29,7 @@ Open Terminal 开箱即用，提供合理的默认值。本页面涵盖所有可
 | **Enable Terminal** | `true` | `OPEN_TERMINAL_ENABLE_TERMINAL` | 开启/关闭交互式终端 |
 | **Enable Notebooks** | `true` | `OPEN_TERMINAL_ENABLE_NOTEBOOKS` | 开启/关闭 Jupyter notebook 执行 |
 | **TERM** | `xterm-256color` | `OPEN_TERMINAL_TERM` | 终端颜色支持 |
-| **Execute Timeout** | 未设置 | `OPEN_TERMINAL_EXECUTE_TIMEOUT` | 等待命令输出的时长（秒） |
+| **Execute Timeout** | 未设置 | `OPEN_TERMINAL_EXECUTE_TIMEOUT` | 当调用未发送 `wait` 值时，`run_command` 和 `get_process_status` 等待命令结束的时间（秒）。未设置时，`run_command` 会立即返回命令 ID，通常状态为 `running` 且尚无输出（[命令输出为空](/features/open-terminal/setup/connecting#command-output-is-empty)） |
 | **Execute Description** | — | `OPEN_TERMINAL_EXECUTE_DESCRIPTION` | 告知 AI 已安装工具的自定义文本 |
 | **Enable System Prompt** | `true` | `OPEN_TERMINAL_ENABLE_SYSTEM_PROMPT` | 暴露 `/system` 提示词端点 |
 | **System Prompt** | 自动生成 | `OPEN_TERMINAL_SYSTEM_PROMPT` | 用自定义模板替换生成的提示词 |

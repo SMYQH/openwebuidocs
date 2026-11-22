@@ -86,7 +86,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 | 变量 | 说明 |
 | :--- | :--- |
-| `{{CLIPBOARD}}` | 剪贴板中的内容。如果浏览器阻止了剪贴板访问，会提示无法读取剪贴板 |
+| `{{CLIPBOARD}}` | 剪贴板中的内容。读取剪贴板需要 HTTPS 或 `localhost`。浏览器阻止读取时（例如在局域网的 `http://` 地址上），Open WebUI 会提示 `Failed to read clipboard contents`，并把 `{{CLIPBOARD}}` 原样留在提示词中 |
 | `{{CURRENT_DATE}}` | 当前日期 |
 | `{{CURRENT_DATETIME}}` | 当前日期和时间 |
 | `{{CURRENT_TIME}}` | 当前时间 |
@@ -100,7 +100,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | `{{USER_BIRTH_DATE}}` | 设置 > 账户 > 用户资料中的出生日期（未设置则不替换） |
 | `{{USER_AGE}}` | 根据出生日期计算的年龄（未设置则不替换） |
 | `{{USER_LANGUAGE}}` | 您选择的语言 |
-| `{{USER_LOCATION}}` | 您的位置。浏览器会直接请求地理位置权限，这需要 HTTPS。界面开关仅控制随聊天请求发送的位置 |
+| `{{USER_LOCATION}}` | 您的位置。浏览器会直接请求地理位置权限，这需要 HTTPS 或 `localhost`。浏览器阻止请求、你拒绝授权，或 10 秒内没有收到位置信息时，Open WebUI 会提示 `Location access not allowed` 并插入 `LOCATION_UNKNOWN`。界面开关仅控制随聊天请求发送的位置 |
 | `{{USER_GROUPS}}` | 您所属用户组的逗号分隔列表，包含通过父组继承的用户组（若没有则为空）。仅在占位符存在时才会从数据库解析，并且仅用于模型系统提示词和任务模板。在以 `/` 插入的提示词中，它会保持字面量形式。 |
 
 ### 自定义输入变量 {#custom-input-variables}
@@ -222,6 +222,18 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 :::note 迁移说明
 在引入版本控制之前创建的提示词已自动迁移，原内容保留为初始生效版本。URL 从基于命令改为基于 ID，因此现有书签可能需要更新。从 v0.5.0 起，所有变量默认为可选。
 :::
+
+---
+
+## 导入和导出 {#import-and-export}
+
+**工作区 > 提示词**的工作区标题栏中的 **Export JSON** 会把你有权读取的所有提示词保存到一个 JSON 文件。某个提示词的 **⋯** 菜单中的 **Export** 只保存该提示词。两者都需要[**导出提示词**](/features/authentication-access/rbac/permissions)权限，**Import JSON** 则需要**导入提示词**权限。管理员始终能看到这三项。
+
+导出文件包含每个提示词的命令、名称、内容、标签、`is_active`、`data`、`meta`、所有者、时间戳和访问授权。它不包含版本历史。
+
+**Import JSON** 只读取文件中每个提示词的 `command`、`name` 和 `content`，忽略其他一切内容。导入后的提示词没有标签，处于启用状态，且仅对你自己可见。导入后请重新添加标签和共享设置。
+
+若某个提示词的命令在实例上已存在（无论属于哪个用户），它会被跳过并提示 `Uh-oh! This command is already registered. Please choose another command string.`，文件中的其余内容仍会导入。
 
 ---
 

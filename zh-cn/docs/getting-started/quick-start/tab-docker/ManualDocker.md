@@ -6,13 +6,13 @@ docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-
 
 | 参数 | 作用 |
 |---|---|
-| `-p 3000:8080` | 界面运行在你机器的 3000 端口上。如果 3000 已被占用，请修改左边的数字。 |
-| `-v open-webui:/app/backend/data` | 你的聊天、用户和设置都保存在这个卷中。它能在更新后保留；切勿在没有它的情况下运行。 |
+| `-p 3000:8080` | 界面运行在你机器的 3000 端口上。如果 3000 已被占用，请修改左边的数字。右边的数字请保持为 8080，这是 Open WebUI 在容器内监听的端口（除非你设置了 `PORT`）。使用 `-p 3000:3000` 时页面永远加载不出来。 |
+| `-v open-webui:/app/backend/data` | 你的聊天、用户和设置都保存在这个卷中。它能在更新后保留；切勿在没有它的情况下运行。请把它挂载到 `/app/backend/data`，而不是 `/app/backend`：挂载到 `/app/backend` 会[覆盖](https://docs.docker.com/engine/storage/volumes/)镜像中的应用程序代码，容器运行的将是挂载所包含的内容，更新看起来就像没有生效。 |
 | `--add-host=host.docker.internal:host-gateway` | 让容器能够访问运行在你机器上的 Ollama 或其他任何服务。 |
 | `--restart always` | 重启之后自动恢复运行。 |
 | `-e WEBUI_SECRET_KEY=your-secret-key` | 设置一次并妥善保存。没有固定的密钥，每次重建容器都会让所有人退出登录。用 `openssl rand -hex 32` 生成一个。 |
 
-
+日志行 `Waiting for application startup.` 每次正常启动都会出现。日志显示 `Uvicorn running on http://0.0.0.0:8080` 后，Open WebUI 才会接受连接。
 
 ## 镜像变体 {#image-variants}
 
@@ -21,7 +21,7 @@ docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-
 | `:main` | 标准镜像（推荐）。功能齐全：应用本身加上内置的语音转文字和 embedding 模型。 |
 | `:dev` | 来自 `dev` 分支的预发布（每夜）构建。修复和新功能最先到达这里。参见[使用开发分支](#using-the-dev-branch)。 |
 | `:slim`, `:main-slim` | 下载体积约为 **197 MB 而非 1.62 GB**，在 Linux/amd64 上**小 88%**。搭配你的模型提供商，聊天体验完全相同。参见[为什么选择 slim？](#what-slim-leaves-out) |
-| `:cuda` | Nvidia GPU 支持，CUDA 12.8（在 `docker run` 中加上 `--gpus all`） |
+| `:cuda` | 在 Nvidia GPU 上运行 Open WebUI 自己的本地模型（嵌入、重排序、本地 Whisper），CUDA 12.8（在 `docker run` 中加上 `--gpus all`）。聊天回复不会更快；参见 [GPU 支持](#gpu-support-nvidia) |
 | `:cuda126` | 与 `:cuda` 相同，基于 CUDA 12.6 构建 |
 | `:ollama` | 在容器内捆绑 Ollama，适合一体化部署 |
 
@@ -153,11 +153,18 @@ docker pull ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 docker run -d -p 3000:8080 --gpus all --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data -e WEBUI_SECRET_KEY=your-secret-key --name open-webui --restart always ghcr.io/open-webui/open-webui:cuda
 ```
 
+`:cuda` 镜像会在 GPU 上运行本地嵌入模型、本地重排序模型和本地 Whisper 语音转文字。聊天回复来自 Ollama 或你的提供商，因此它们的速度取决于那个模型运行在哪里：请把 GPU 交给 Ollama。如果容器无法使用 CUDA，Open WebUI 会先记录 `CUDA unavailable (USE_CUDA_DOCKER=true), falling back to CPU`，随后是具体原因，并在 CPU 上运行这些模型。如果不带 `--gpus all` 启动，该行会以 `CUDA not available` 结尾。
+
+`--gpus all` 需要主机上安装 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)。没有它，`docker run` 会失败并报 `could not select device driver "" with capabilities: [[gpu]]`，容器不会启动。请安装该工具包，运行 `sudo nvidia-ctk runtime configure --runtime=docker`，用 `sudo systemctl restart docker` 重启 Docker，然后再次运行该命令。Docker 的 [GPU 访问](https://docs.docker.com/engine/containers/gpu/)页面列出了驱动相关步骤。
+
+Open WebUI 没有 ROCm 镜像。使用 AMD GPU 时，请运行 `:main` 镜像，并把 GPU 交给 Ollama 的 `rocm` 镜像，如 [Ollama 的 Docker 指南](https://docs.ollama.com/docker)所示。
+
 ### 与 Ollama 打包在一起 {#bundled-with-ollama}
 
 将 Open WebUI 和 Ollama 放在同一个容器中：
 
-**使用 GPU：**
+**使用 GPU：** `--gpus=all` 会传入 NVIDIA GPU，需要 NVIDIA Container Toolkit，参见 [GPU 支持](#gpu-support-nvidia)。使用 AMD GPU 时，请改用那里介绍的 ROCm 配置。
+
 ```bash
 docker run -d -p 3000:8080 --gpus=all -v ollama:/root/.ollama -v open-webui:/app/backend/data -e WEBUI_SECRET_KEY=your-secret-key --name open-webui --restart always ghcr.io/open-webui/open-webui:ollama
 ```

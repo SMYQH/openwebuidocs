@@ -28,7 +28,7 @@ Open WebUI 中的 Artifacts 是一项受 Claude.AI Artifacts 启发的创新功�
 
 Open WebUI 创建 Artifact 后，其内容会显示在主聊天右侧的 Artifacts 窗口。你可以随时通过[标签栏](/features/chat-conversations/chat-features/#tabs-side-panel)的 **+** 菜单选择 **Artifacts**，重新打开该窗口。你可以执行以下操作：
 
-- **编辑与迭代**：直接在聊天中要求 LLM 修改或迭代该内容，更新结果会立即显示在 Artifact 窗口中。你可通过 Artifact 左下角的版本选择器切换不同版本。每次编辑都会生成一个新版本，方便追踪变化
+- **编辑与迭代**：直接在聊天中要求 LLM 修改或迭代该内容，更新结果会立即显示在 Artifact 窗口中。你可通过 Artifact 左上角的版本选择器切换不同版本。每次编辑都会生成一个新版本，方便追踪变化
 - **自动更新**：Open WebUI 可能会根据你的后续消息更新现有 Artifact，窗口会显示最新内容
 - **操作按钮**：可复制内容、全屏打开 Artifact，或使用其他操作。
 

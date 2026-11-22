@@ -73,17 +73,24 @@ dns_duckdns_token=f4e2a1b9-c78d-e593-b0d7-67f2e1c9a5b8
 - 将协议设为 HTTP（默认），启用 ``Websockets support``，并指向你的 Docker IP 地址。如果运行 open-webui 的 Docker 和 NGINX Manager 位于同一台电脑上，就使用前面填过的 IP，例如 ``192.168.0.6``。
 - 选择前面生成的 SSL 证书，强制启用 SSL，并开启 HTTP/2。
 
-:::danger 关键：为 WebSocket 连接配置 CORS
+:::tip 将 CORS_ALLOW_ORIGIN 设置为你的公共源
 
-WebSocket 连接有一个非常常见且难以调试的问题：跨域资源共享（CORS）策略配置错误。当 Open WebUI 运行在 Nginx Proxy Manager 之类的反向代理之后时，你**必须**在 Open WebUI 配置中设置 `CORS_ALLOW_ORIGIN` 环境变量。
+`CORS_ALLOW_ORIGIN` 默认为 `*`，因此不设置它永远不会破坏 WebSocket 连接。作为加固措施，请把它设置为你精确的公共源（例如 `https://chat.example.com`）。真正会破坏 Socket.IO 连接（以及任何跨源浏览器请求）的，是缺少该源的值，例如在你提供 `https://` 时却填写了 `http://` 条目。
 
-即使你已在 Nginx Proxy Manager 中启用 "Websockets support"，不这样做仍会导致 WebSocket 连接失败。
+**示例：**
+如果你通过 `https://openwebui.hello.duckdns.org` 访问 UI，请设置：
+
+```bash
+CORS_ALLOW_ORIGIN="https://openwebui.hello.duckdns.org"
+```
+
+你也可以提供一个用分号分隔的允许源列表。默认的 `*` 允许所有源；上面的值则把范围缩小到你的源。
 
 :::
 
-:::danger 关键：关闭流式响应的代理缓冲
+:::warning 关闭流式响应的代理缓冲
 
-**这是 Markdown 乱码和流式响应损坏最常见的原因。**
+Web 界面通过 Socket.IO 连接流式发送聊天 token，因此只要 WebSocket 正常，缓冲就不会让浏览器中的聊天出现乱码。它确实会拖住 API 客户端读取的流式响应。
 
 在 Nginx Proxy Manager 中，进入你的代理主机 → **Advanced** 标签页，并把以下指令添加到 **Custom Nginx Configuration** 字段：
 
@@ -92,7 +99,7 @@ proxy_buffering off;
 proxy_cache off;
 ```
 
-不加这段配置，Nginx 会重新切分 SSE 数据流，破坏 Markdown 格式，导致 `##`、`**` 原样显示或文字缺失。关闭缓冲后，流式响应也会明显加快。
+不加这段配置，Nginx 会拖住流式响应，因此 API 客户端收到的响应会成批到达，或只在最后一次性到达。
 
 :::
 
@@ -122,19 +129,10 @@ NPM 的默认配置已经正确处理了这一点——只有在明确知道后�
 
 :::
 
-**示例：**
-如果你通过 `https://openwebui.hello.duckdns.org` 访问 UI，则必须设置：
-
-```bash
-CORS_ALLOW_ORIGIN="https://openwebui.hello.duckdns.org"
-```
-
-你也可以提供一个用分号分隔的允许域名列表。**不要跳过这一步。**
-
-6. **把你的 URL 添加到 open-webui（否则会出现 HTTPS 错误）：**
+6. **告诉 Open WebUI 它的公共 URL：**
 
 - 在 Open WebUI 中，转到 Settings → General（管理员区域）。
-- 在 **Webhook URL** 输入框中，填入你通过 Nginx 反向代理连接 open-webui 所使用的 URL。例如：``hello.duckdns.org``（这个不关键）或 ``openwebui.hello.duckdns.org``（这个必须填）。
+- 在 **WebUI URL** 字段中，填入你通过代理将使用的 URL，例如 ``https://openwebui.hello.duckdns.org``。它用于 SSO 登录后的重定向以及通知中的链接。
 
 #### 访问 WebUI {#access-the-webui}
 

@@ -71,11 +71,11 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 
 ## 实现指南 {#implementation-guide}
 
-### 关键步骤：在聊天响应中补充助手消息 {#critical-step-enrich-chat-response-with-assistant-message}
+### 预创建助手消息（可选） {#pre-creating-the-assistant-message-optional}
 
-助手消息必须作为关键前提**先**存在于聊天数据中，然后才能触发补全。这个步骤至关重要，因为 Open WebUI 前端期望助手消息具有特定的结构。
+对于已存在的 `chat_id`，`POST /api/chat/completions` 会在你传入助手消息的 `id` 时自行插入助手占位符，并把它挂在你作为 `user_message` 发送的用户消息之下（第 2 步），因此不再需要预先创建它。如果仍要预创建，请始终发送 `user_message`：后端会用该消息的 `id` 覆盖已保存占位符的 `parentId`，缺少 `user_message` 时则覆盖为 null。
 
-助手消息必须同时出现在以下两个位置：
+预创建的助手消息必须同时出现在以下两个位置：
 
 - `chat.messages[]` — 主要消息数组（用于旧版兼容）
 - `chat.history.messages[<assistantId>]` — 按 ID 索引的消息历史（前端用它来渲染树状结构）
@@ -97,7 +97,7 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 }
 ```
 
-如果不做这一步补充，即使补全成功，助手的回复也不会出现在前端界面中。
+如果你选择预创建，就使用这个结构。
 
 ## 分步实现 {#step-by-step-implementation}
 
@@ -107,7 +107,7 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 
 :::tip
 
-你可以把创建对话和补充助手消息合并到这一步。关键是在初始载荷中同时包含用户消息和空的助手消息，并正确设置 `parentId`、`childrenIds` 和 `currentId` 字段。
+你可以把创建对话和助手占位符合并到这一步。关键是在初始载荷中同时包含用户消息和空的助手消息，并正确设置 `parentId`、`childrenIds` 和 `currentId` 字段。
 
 :::
 
@@ -303,9 +303,9 @@ curl -X POST https://<host>/api/chat/completions \
 
 根据你的实现需求，助手响应可以通过两种方式处理：
 
-#### 选项 A：流式处理（推荐） {#option-a-stream-processing-recommended}
+#### 选项 A：流式处理 {#option-a-stream-processing}
 
-如果在补全请求中使用 `stream: true`，你就可以实时处理流式响应，并等待流结束。这是 OpenWebUI Web 界面采用的方式，能提供即时反馈。
+只有当请求不带 `session_id`（或不带 `chat_id`）时，才会通过 HTTP 响应流式返回。两者都带上时（如第 2 步那样），补全会作为后台任务运行，响应体立即返回 `{"status": true, "task_ids": [...], "chat_id": "..."}`；输出则通过 Socket.IO 的 `events` 通道发往 `user:<id>` 房间（即以该用户身份登录的每个套接字），而不是发往 `session_id`。要通过 HTTP 流式接收，请省略 `session_id`；要跟踪后台任务，请轮询 `GET /api/tasks/chat/{chat_id}` 或聊天本身（选项 B）。该通道上的消息类型列在[实时事件](#real-time-events)中。
 
 #### 选项 B：轮询方式 {#option-b-polling-approach}
 
@@ -362,14 +362,14 @@ curl -X GET https://<host>/api/v1/models/model?id=<model-name> \
 
 ### 向现有对话发送更多消息 {#send-additional-messages-to-an-existing-chat}
 
-对于多轮对话，你可以向现有聊天中追加新消息。你必须提供完整更新后的消息树，并正确维护 `parentId` 和 `childrenIds` 的关联：
+对于多轮对话，把新的用户消息和助手占位符加入现有聊天，并各自设置正确的 `parentId`：
 
 ```bash
 NEW_USER_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 NEW_ASSISTANT_MSG_ID=$(uuidgen || python3 -c "import uuid; print(uuid.uuid4())")
 
 # First: update the chat to add the new user + assistant placeholder
-# You need to link the previous assistant message to the new user message via childrenIds
+# childrenIds is recomputed from parentId, so the previous assistant message need not be resent
 curl -X POST https://<host>/api/v1/chats/<chatId> \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
@@ -378,9 +378,6 @@ curl -X POST https://<host>/api/v1/chats/<chatId> \
       "history": {
         "currentId": "'"$NEW_ASSISTANT_MSG_ID"'",
         "messages": {
-          "'"$ASSISTANT_MSG_ID"'": {
-            "childrenIds": ["'"$NEW_USER_MSG_ID"'"]
-          },
           "'"$NEW_USER_MSG_ID"'": {
             "id": "'"$NEW_USER_MSG_ID"'",
             "role": "user",
@@ -435,9 +432,59 @@ curl -X POST https://<host>/api/chat/completions \
 
 :::note
 
-通过 `POST /api/v1/chats/<chatId>` 更新现有聊天时，请求体将与现有的聊天数据**合并**。你只需包含你要更改的字段。对于 `history.messages`，你可以传递部分更新——未包含在更新中的现有消息将被保留。
+通过 `POST /api/v1/chats/<chatId>` 更新现有聊天时，请求体将与现有的聊天数据**合并**。你只需包含你要更改的字段。对于 `history.messages`，合并是按消息进行的，而不是按字段：你略去的消息会被保留，但你包含的消息会整体替换已保存的那条，因此请发送完整的消息对象。`childrenIds` 会根据每条消息的 `parentId` 重新计算，因此你不必在父消息上设置它。
 
 :::
+
+## 实时事件 {#real-time-events}
+
+此列表对应 Open WebUI v0.13.4。自 v0.13.4 起，笔记、在线状态、评论、收件箱和访问权限变更的更新，都以带类型的消息形式到达 `events` 通道。把 `events:note` 或 `note:presence` 当作通道名来监听的客户端什么也收不到，必须改为监听 `events` 并读取 `data.type`。
+
+### 连接 {#connecting}
+
+- 把一个 Socket.IO 客户端连接到 Open WebUI 主机的根路径，路径为 `/ws/socket.io`，并把 `{"token": "<token>"}` 作为 `auth` 对象传入。
+- 该 token 必须是登录返回的会话 token。套接字会把它作为 JWT 解码，因此不接受 API key（`sk-...`）。只接受角色为 `user` 或 `admin` 的用户。
+- token 有效时，套接字会加入房间 `user:<user id>`，该房间会收到发给该用户的所有事件，包括来自其任意会话的事件。
+- 连接后，发出 `user-join`，并携带 `{"auth": {"token": "<token>"}}`。它返回 `{"id", "name"}`，并在用户属于某个频道且有权使用频道时，为每个这样的频道加入 `channel:<channel id>` 房间。
+- 服务器每 30 秒检查每个套接字的 token，并断开 token 已失效的套接字。
+
+### 按需加入的房间 {#rooms-you-join-on-request}
+
+| 发出 | 载荷 | 加入的房间 | 条件 |
+|---|---|---|---|
+| `events:chat` | `{"chat_id": "<id>", "data": {"type": "join"}}` | `chat:<chat id>` | 对已保存对话有读权限。确认结果为 `true` 或 `false`。发送 `{"type": "leave"}` 可离开 |
+| `note:join` | `{"note_id": "<id>", "auth": {"token": "<token>"}}` | `note:<note id>` | 笔记已启用，用户拥有笔记功能，且拥有该笔记或可读该笔记。发出 `note:leave` 并携带 `{"note_id": "<id>"}` 可离开 |
+| `comments:join` | `{"resource_type": "<type>", "resource_id": "<id>", "subscription_id": "<name>"}` | 该资源对应的评论房间 | 评论已启用且用户可读该资源。`resource_type` 为 `model`、`knowledge`、`prompt`、`skill`、`tool`、`note` 或 `chat`。确认结果为 `{"ok": true}` 或 `{"error": "..."}`。一个套接字最多可持有 10 个订阅。发出 `comments:leave` 并携带相同的 `subscription_id` 可离开 |
+
+### `events` 通道上的消息 {#messages-on-the-events-channel}
+
+`events` 上的每条消息都是 `{"data": {"type": "<type>", "data": {...}}}` 形式。聊天消息还会在顶层携带 `chat_id` 和 `message_id`。
+
+| `type` | 发送对象 | `data` |
+|---|---|---|
+| 聊天输出类型，如 `chat:completion`、`status`、`source`、`files`、`chat:message:error` | `user:<id>` | 模型或工具发出的事件。类型列表见[事件](/features/extensibility/plugin/development/events) |
+| 已保存对话的聊天输出副本、`chat:messages` 和 `chat:active` | `chat:<id>`，发起请求的套接字除外 | 顶层还携带 `"shared": true` 和发送者的 `user_id` |
+| `chat:presence` | `chat:<id>` | `{"users": [{"id", "name"}]}`，即打开该对话的人 |
+| `typing` | `chat:<id>`，发送者除外 | `{"typing": true or false}`。顶层携带带 `id` 和 `name` 的 `user`。要自行发送，请用 `events:chat` 并携带 `{"chat_id": "<id>", "data": {"type": "typing", "data": {"typing": true}}}`，这需要写权限和已加入的房间 |
+| `chat:access` | 打开了他人的对话、且该对话的访问权限被重新检查的每个套接字 | `{}`。重新获取该对话。若访问权限已被移除，套接字此时已离开房间 |
+| `chat:list` | `user:<id>` | 有时是 `{"chat_id", "last_read_at", "folder_unread_counts"}`，有时为空。刷新对话列表 |
+| `chat:reload` | `user:<id>` | 空。重新获取该对话 |
+| `note:updated` | `note:<id>` | 该笔记。在编辑器中编辑后为 `{"id", "page", "updated_at"}`，只含已保存的页面 |
+| `note:presence` | `note:<id>` | `{"note_id", "users": [...]}`。每个用户有 `id` 和 `name`，已知时还有 `page_id`、`document_id`、`cursor`、`cursor_position` 和 `updated_at` |
+| `comments:changed` | 评论房间 | `{"resource_type", "resource_id"}`，不含评论正文。重新获取 `GET /api/v1/comments/?resource_type=<type>&resource_id=<id>` |
+| `comments:unavailable` | 失去访问权限的那个套接字 | `{"resource_type", "resource_id"}`。该套接字此时已离开房间 |
+| `notifications:changed` | `user:<id>` | 空。重新获取 `GET /api/v1/notifications/inbox` |
+| `access:updated` | 用户组发生变化的用户的每个套接字，或管理员保存默认用户权限时的每个套接字 | 空。组变化后服务器会在此消息之后立刻断开这些套接字，因此请重新连接并再次获取权限 |
+| `terminals:changed` | `user:<id>` | 空。重新获取终端服务器、模型和工具 |
+| `calendar:alert` | `user:<id>` | `{"event_id", "title", "description", "start_at", "minutes_until", "calendar_id", "location"}`，用于日历提醒 |
+| `channel:app` | `user:<id>` | 当某个应用无法在频道中回复时为 `{"app_id", "app_name", "channel_id", "message_id", "parent_id", "reply": {"type": "error", "content"}}` |
+| `encryption:available` | `channel:<id>` | 该频道中的私聊开始时为 `{"channel", "session"}`，结束时 `session` 置为 `null`。其数据包使用独立的 `encryption:event` 通道 |
+
+### 其他通道 {#other-channels}
+
+- `events:channel` 以 `{"channel_id", "message_id", "data": {"type", "data"}}` 的形式把频道消息发往 `channel:<id>` 房间。类型包括 `message`、`message:update`、`message:reply`、`message:delete`、`message:reaction:add`、`message:reaction:remove` 和 `typing`。`channel:created` 和 `channel:mute` 发往 `user:<id>`。
+- `automation:result` 在自动化运行结束时发往 `user:<id>`，携带 `automation_id`、`name`、`chat_id` 和 `status`。
+- 协作式笔记编辑使用 `ydoc:document:*` 和 `ydoc:awareness:update`，它们承载编辑器用的 Yjs 更新。
 
 ## 响应处理 {#response-processing}
 
@@ -835,10 +882,10 @@ echo "$cleaned_response" | jq '.'
 - `id`: 助手消息 ID
 - `messages`: ChatCompletionMessage 数组
 - `model`: 模型标识符
-- `session_id`: 会话标识（调用方生成的 UUID）
 
 **ChatCompletionsRequest - 可选字段：**
 
+- `session_id`: 会话标识（由调用方生成）。它与 `chat_id` 一起会让补全作为后台任务运行并返回 `task_ids`；省略它则通过 HTTP 流式返回。
 - `stream`: 启用流式返回（默认为 false）
 - `background_tasks`: 控制自动任务
 - `features`: 启用/禁用功能
@@ -895,7 +942,7 @@ echo "$cleaned_response" | jq '.'
 |---|---|---|
 | 对话已创建，但消息未显示在界面中 | 消息缺少 `childrenIds` | 添加 `childrenIds` 数组，把父消息链接到子消息 |
 | 对话显示"How can I help you today?" | 使用了 `current_id` 而非 `currentId` | 在 history 对象中使用 camelCase `currentId` |
-| 补全成功，但响应只以通知形式出现 | 触发补全前，助手消息不在对话历史中 | 在第 1 步中加入空的助手消息占位 |
+| 补全成功，但响应只以通知形式出现 | 触发补全前，助手消息不在对话历史中 | 在补全请求（第 2 步）中传入助手消息的 `id` 和 `user_message`，或在第 1 步中加入助手占位符 |
 | 消息已存在于数据库中，但前端显示空对话 | 缺少 `parentId` 或树连接断裂 | 确保每条消息的 `parentId` 正确，且父消息的 `childrenIds` 包含该子消息 |
 | 补全执行后刷新页面，用户消息消失 | `/api/chat/completions` 请求缺少 `user_message`，助手消息保存时没有父消息 | 在补全请求（第 2 步）中发送携带用户消息 `id` 的 `user_message` |
 

@@ -53,6 +53,7 @@ title: "性能与内存"
 - **Admin Panel**：`Settings > Connections > Cache Base Model List`（管理员区域）
 - **Env Var**：`ENABLE_BASE_MODELS_CACHE=True`
   *   *说明*：缓存基础模型列表；配置了 Redis 时缓存在 Redis 中（所有副本共享），否则缓存在每个副本自己的内存里。在 Connections 设置中点击 **Save**、或使用开关旁边的刷新按钮时会刷新；没有 Redis 时重启也会刷新。
+  *   *模型选择器显示陈旧数据*：缓存开启期间，模型选择器显示的是缓存的列表。提供商新增或移除的模型不会出现或消失，llama.cpp 和 LM Studio 模型上的 **Loaded** 标签会保持列表被缓存时的状态，因此提供商自行加载或卸载的模型仍显示旧状态。在 Open WebUI 中加载、卸载、下载或删除模型会刷新该列表。否则请点击 **Cache Base Model List** 旁边的 **Refresh**。
 
 - **Env Var**：`MODELS_CACHE_TTL=300`
   *   *说明*：缓存每个 OpenAI 和 Ollama 连接的模型列表响应 5 分钟。默认值为 `1` 秒。
@@ -151,6 +152,7 @@ SQLite 使用自己的连接池配置，参见[受限容器中的 SQLite 内存�
 
 - **推荐**：`RAG_EMBEDDING_ENGINE=openai`（OpenAI 或兼容 API）、`azure_openai`，或 `ollama`（自托管，例如 `nomic-embed-text` 这类模型）。
 - **效果**：不会再向 Open WebUI 进程加载任何嵌入模型。
+- **保留本地引擎**：在 **Settings > Documents**（管理员区域）中提高 **Embedding Batch Size**，或设置 [`RAG_EMBEDDING_BATCH_SIZE`](/reference/env-configuration#rag_embedding_batch_size)。默认值 `1` 让本地模型每次只嵌入一个分块，因此大批量 CSV、XLSX 和多文件上传会变慢。更大的批次会占用更多内存。
 
 ### 优化文档切块 {#optimizing-document-chunking}
 
@@ -187,6 +189,16 @@ SQLite 使用自己的连接池配置，参见[受限容器中的 SQLite 内存�
 
 - **Env Var**：`CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE=7`
   *   *建议*：高并发实例可设置为 **5-10**
+
+#### 回复成批到达，或只在结束时才出现 {#replies-arrive-in-bursts-or-only-when-finished}
+
+Open WebUI 逐行读取提供商的流，并在线完整后立刻把每次文本更新发送到聊天。在默认设置下它本身不做任何批处理。如果回复成大块出现，或在结束时一次性出现，请按顺序检查以下几项：
+
+1.  **Stream Chat Response 被关闭。** 设为 **Off** 时，Open WebUI 会要求提供商一次性返回完整回复，聊天只会在结束时才显示它。它在模型的 **Advanced Params**（位于 **Workspace** > **Models**）、聊天的 **Controls** > **Advanced Params** 以及 **Settings** > **General** > **Advanced Parameters** 中设置。模型的值优先于聊天的，聊天的又优先于 **Settings**。
+2.  **分块大小被调高。** `CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE` 和 **Stream Delta Chunk Size** 参数会把许多文本更新合并后再交给聊天。Open WebUI 取两者中较大的值，模型上设置的值会替换聊天中设置的值。该参数出现在同样的 **Advanced Params** 区域中，仅管理员可见。把环境变量设为 `1`、参数设为 **Default**，即可看到每次更新到达时的效果。
+3.  **反向代理对流做了缓冲。** 参见**[流式传输故障排查](/troubleshooting/connection-error#garbled-markdown--streaming-response-corruption)**。
+4.  **提供商按块释放文本。** 提供商、它前面的网关，或提供商一侧的内容过滤器都可能暂缓文本，攒够后再一次性发送。开启流式后，把同样的提示词直接发给提供商的 API。如果文本在那里也是成批到达，原因就在 Open WebUI 之外。
+5.  **安全软件扫描 HTTP 流量。** 用户机器或网络上的杀毒软件、终端保护或网络网页过滤器可能在扫描期间暂缓流式响应。换一个网络或另一个浏览器测试，或把 Open WebUI 地址排除在扫描之外，再做对比。
 
 #### HTTP 响应压缩 {#http-response-compression}
 

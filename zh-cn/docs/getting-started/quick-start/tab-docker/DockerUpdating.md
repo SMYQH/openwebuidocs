@@ -26,6 +26,8 @@ docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock nickfedor/wat
    docker pull ghcr.io/open-webui/open-webui:main
    ```
 
+   请拉取与你正在运行的相同标签，例如 `:cuda`、`:ollama` 或某个版本标签，并在第 3 步中继续使用它。拉取 `:main` 不会更新由 `:cuda` 启动的容器所使用的镜像，因此它仍会启动旧版本。
+
 3. 重新启动容器：
 
    ```bash

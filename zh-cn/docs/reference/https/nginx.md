@@ -16,11 +16,9 @@ title: "使用 Nginx 的 HTTPS"
 - **Let's Encrypt**：适合需要受信任 SSL 证书的生产环境，使用 Docker。
 - **Windows + 自签名证书**：适合开发和内部部署，步骤简单，无需 Docker。
 
-:::danger 关键：为 WebSocket 连接配置 CORS
+:::tip 将 CORS_ALLOW_ORIGIN 设置为你的公共源
 
-WebSocket 连接中一个非常常见、而且很难排查的问题，是跨源资源共享（CORS）策略配置错误。当你把 Open WebUI 放在像 Nginx Proxy Manager 这样的反向代理后面时，**必须**在 Open WebUI 配置中设置 `CORS_ALLOW_ORIGIN` 环境变量。
-
-如果不这样做，即使你在 Nginx Proxy Manager 中启用了 “Websockets support”，WebSocket 连接也会失败。
+`CORS_ALLOW_ORIGIN` 默认为 `*`，因此不设置它永远不会破坏 WebSocket 连接。作为加固措施，请把它设置为你精确的公共源（例如 `https://chat.example.com`）。真正会破坏 Socket.IO 连接（以及任何跨源浏览器请求）的，是缺少该源的值，例如在你提供 `https://` 时却填写了 `http://` 条目。
 
 ### HTTP/2 与 WebSockets {#http2-and-websockets}
 
@@ -36,11 +34,9 @@ proxy_set_header Connection "upgrade";
 
 :::
 
-:::danger 关键：为 SSE 流式传输关闭代理缓冲
+:::warning 为 SSE 流式传输关闭代理缓冲
 
-**这是导致 Markdown 乱码和流式响应损坏的最常见原因。**
-
-当 Nginx 的 `proxy_buffering` 处于启用状态（默认就是启用！）时，它会随意重新分块 SSE 流。这会把 Markdown 标记拆散——例如 `**bold**` 会变成 `**` + `bold` + `**`——从而导致输出损坏，出现可见的 `##`、`**` 或缺词。
+Web 界面通过 `/ws/socket.io` 上的 Socket.IO 连接流式发送聊天 token，而不是通过 HTTP 响应，因此只要 WebSocket 正常，缓冲就不会让浏览器中的聊天出现乱码。它确实会拖住 API 客户端从 `/api/chat/completions`、`/openai/*` 和 `/ollama/v1/*`（SSE）以及 `/ollama/api/*`（NDJSON）读取的流式响应，因此请保持缓冲关闭。
 
 **你必须在 Nginx 的 location 块中加入以下指令：**
 
@@ -50,12 +46,7 @@ proxy_buffering off;
 proxy_cache off;
 ```
 
-**如果忘了这一步，典型症状包括：**
-
-- 原始 Markdown 标记可见（`##`、`**`、`###`）
-- 粗体/标题标记显示异常
-- 响应中随机缺少单词或段落
-- 关闭缓冲时正常，开启时就出问题
+**如果忘了这一步，典型症状：** API 客户端收到的流式响应会成批到达，或只在最后一次性到达。
 
 **额外好处：** 关闭缓冲后，流式响应还会**明显更快**，因为内容会直接流向客户端，不再经过 Nginx 的缓冲延迟。
 
@@ -115,7 +106,7 @@ location /api/ {
     proxy_read_timeout 1800;
 }
 
-# WebSocket connections need even longer timeouts
+# The server pings every 25s, so any idle timeout above 45s keeps the socket alive
 location ~ ^/(ws/|socket\.io/) {
     proxy_connect_timeout 86400;  # 24 hours
     proxy_send_timeout 86400;
@@ -129,12 +120,14 @@ location ~ ^/(ws/|socket\.io/) {
 
 ```nginx
 # In http {} or server {} block
-client_max_body_size 100M;           # Large file uploads
+client_max_body_size 100M;           # File uploads and saves of long chats
 proxy_buffer_size 128k;              # Large headers (OAuth tokens)
 proxy_buffers 4 256k;
 proxy_busy_buffers_size 256k;
 large_client_header_buffers 4 32k;
 ```
+
+`client_max_body_size` 限制每一个请求，而不只是上传。保存编辑过的消息、评分或**另存为副本**会在一次 `POST` 到 `/api/v1/chats/{id}` 的请求中发送整个聊天，因此该请求会随聊天增长。nginx 的默认值是 `1m`，它会用 `413 (Request Entity Too Large)` 回应更大的请求（[`client_max_body_size`](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size)）。请把它设得足够大，以容纳你最长的聊天和最大的上传。参见[长聊天重新加载后编辑与评分丢失](/troubleshooting/connection-error#edits-and-ratings-lost-after-reload-in-long-chats)。
 
 ### 常见的流式传输误区 {#common-streaming-mistakes}
 
@@ -170,8 +163,8 @@ server {
     gzip_types text/plain text/css application/javascript image/svg+xml;
     # DO NOT include: application/json, text/event-stream
 
-    # API endpoints - streaming optimized
-    location /api/ {
+    # API endpoints and the /openai and /ollama proxies - streaming optimized
+    location ~ ^/(api|openai|ollama)/ {
         proxy_pass http://openwebui;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -202,12 +195,15 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
 
         gzip off;
         proxy_buffering off;
         proxy_cache off;
 
-        # 24-hour timeout for persistent connections
+        # The server pings every 25s, so any idle timeout above 45s keeps the socket alive
         proxy_connect_timeout 86400;
         proxy_send_timeout 86400;
         proxy_read_timeout 86400;

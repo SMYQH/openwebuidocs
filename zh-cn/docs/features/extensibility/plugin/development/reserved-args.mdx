@@ -128,7 +128,7 @@ title: "保留参数"
   "tool_ids": null,
   # tool_ids is a list of str.
   "files": "[Same as in body['files']]",
-  # If no files are given, the files key exists in __metadata__ and its value is []
+  # If no files are given, the files key exists in __metadata__ and its value is None
   "features": {
     "image_generation": false,
     "code_interpreter": false,
@@ -289,9 +289,7 @@ async def pipe(self, body: dict, __metadata__: dict, __user__: dict) -> str:
 
 当前聊天或会话的唯一标识 `chat_id`，类型为 `str`。
 
-Pipe、Tool 以及过滤器的 `inlet()` 和 `request()` 都会收到它（只要调用源自聊天上下文），包括：
-- 普通用户消息
-- 内部任务调用（标题生成、查询生成、标签生成等）
+Pipe、Tool 以及过滤器的 `inlet()` 和 `request()` 会在源自聊天上下文的调用中收到它。当 Pipe 的模型是 [task model](/features/administration/task-models) 时，它在内部任务调用（标题生成、查询生成、标签生成等）中也会收到它。过滤器在内部任务调用中根本不会运行。
 
 过滤器的 `stream()` 和 `outlet()` 拿不到它，Action 也一样。在那里请改读 `body["chat_id"]`。
 

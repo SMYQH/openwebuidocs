@@ -213,6 +213,8 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 在 **Settings** > **Documents**（管理员区域）中更改 RAG 嵌入模型。嵌入引擎可以是内置的 SentenceTransformers 默认值、Ollama、OpenAI 或 Azure OpenAI。
 
+如果你的嵌入模型文档要求搜索查询使用一个前缀、存储文本使用另一个前缀，请在同一页面的 **Embedding** 部分、**Advanced** 之下分别以 **Query Prefix** 和 **Content Prefix** 填写。它们对应 [`RAG_EMBEDDING_QUERY_PREFIX`](/reference/env-configuration#rag_embedding_query_prefix) 和 [`RAG_EMBEDDING_CONTENT_PREFIX`](/reference/env-configuration#rag_embedding_content_prefix)。请包含模型所期望的尾部空格。Ollama、OpenAI 和 Azure OpenAI 会把前缀加到每段文本的开头，除非 [`RAG_EMBEDDING_PREFIX_FIELD_NAME`](/reference/env-configuration#rag_embedding_prefix_field_name) 把它作为单独的请求字段发送。内置引擎则把它作为 `prompt` 传给 SentenceTransformers。更改 **Content Prefix** 后请为已有文档重建索引，因为改动之前嵌入的文档仍保留旧前缀。
+
 ## 初始设置后更改 RAG 设置 {#changing-rag-settings-after-initial-setup}
 
 如果您需要在文件已经建立索引之后更改切块配置（语块大小、重叠）或嵌入模型，理解您需要采取的行动以及这些变更的后果非常重要。
@@ -261,6 +263,17 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 |---|---|---|---|---|
 | **Chunk Size / Overlap** | ✅ 使用新设置 | ⚠️ 旧块依然可用，但质量可能不一 | ✅ 使用新设置重新切块 | ⚠️ 仍为旧块，需重新上传更新 |
 | **Embedding Model** | ✅ 使用新模型 | ❌ 仍为旧嵌入，向量空间不兼容 | ✅ 使用新模型重嵌 | ❌ 仍为旧嵌入，需重新上传更新 |
+
+### 危险区域重置按钮 {#danger-zone-reset-buttons}
+
+**设置** > **Documents**（管理员区域）底部的**危险区域**有两个重置按钮。两者都作用于实例上的每个用户，且都无法撤销。
+
+| 按钮 | 删除什么 | 保留什么 |
+|---|---|---|
+| **Reset Upload Directory** | 每条文件记录、每个已存储文件（上传目录，或所用的 S3、GCS 或 Azure 存储）以及向量存储 | 知识库（此时不再有文件和向量）和记忆（记忆不再有向量） |
+| **Reset Vector Storage/Knowledge** | 向量存储和每个知识库 | 已上传的文件和记忆（它们不再有向量） |
+
+使用默认的 Chroma 向量数据库时，重置向量存储会删除所有集合：知识库、单个文件、缓存的网页搜索结果和用户记忆。记忆保留其文本，因此在同一部分执行 **Reindex Knowledge and Memory Vectors** 即可用当前的嵌入模型重建它们的向量。被 **Reset Vector Storage/Knowledge** 删除的知识库已经不存在，因此没有可重建索引的对象。
 
 ## RAG 功能中的引用（Citations） {#citations-in-rag-feature}
 

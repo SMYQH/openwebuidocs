@@ -33,12 +33,12 @@ Notion 在 `https://mcp.notion.com/mcp` 托管了一个远程 MCP 服务器，Op
 | **Name** | `Notion` |
 | **Connection ID** | `ntn`（默认根据名称填充，请改为与下方导入配置一致的值） |
 
-点击 **Register Client**，然后 **Save**。如果您已预先创建 OAuth 客户端凭据，请使用 `OAuth 2.1 (Static)`。
+点击 **Register Client**，然后 **Save**。如果您已预先创建 OAuth 客户端凭据，请使用 `OAuth 2.1 (Static)`。您在 Notion 的 OAuth 客户端随后需要把重定向 URI 设置为 `<WebUI URL>/oauth/clients/mcp:ntn/callback`，参见 [OAuth 2.1 (Static) 设置](/features/extensibility/mcp#oauth-21-static-setup)。
 
 <details>
 <summary>备选方案：导入 JSON</summary>
 
-您也可以点击弹窗中的 **Import** 并粘贴以下配置：
+您也可以把这份配置保存为 `.json` 文件，然后用弹窗中的 **Import** 加载它，该按钮会打开文件选择器；之后仍然需要点击 Register Client 和 Save：
 
 ```json
 [

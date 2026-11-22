@@ -229,7 +229,7 @@ class Event:
 
 ## 使用阀门进行配置 {#configuration-with-valves}
 
-与其他函数一样，Event 函数支持[阀门](/features/extensibility/plugin/development/valves)用于管理员可配置的设置（以及适用的 `UserValves`）。将你的端点、允许列表、调度、API 密钥和开关放在 `Valves` 中，这样行为就可以从**管理面板 → 函数 → ⚙️** 配置，而不是硬编码。
+与其他函数一样，Event 函数支持[阀门](/features/extensibility/plugin/development/valves)用于管理员可配置的设置。它们没有 `UserValves`，因为 `event()` 是在没有用户的情况下调用的。将你的端点、允许列表、调度、API 密钥和开关放在 `Valves` 中，这样行为就可以从**管理面板 → 函数 → ⚙️** 配置，而不是硬编码。
 
 `function.valves_updated` 事件也会在管理员保存新的阀门值时触发，因此函数可以**响应自身配置的变化**并实时应用。
 

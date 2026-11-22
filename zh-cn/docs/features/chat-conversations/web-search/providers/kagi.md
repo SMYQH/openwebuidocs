@@ -36,7 +36,7 @@ title: "Kagi"
 1. 前往 [kagi.com/api](https://kagi.com/api) 开通 API 计费。
 2. 前往 [kagi.com/api/keys](https://kagi.com/api/keys) 创建一个 API key，并复制它。
 3. 打开**设置 > 网页搜索**（管理员区域）。
-4. 启用 **Web search**，并将 **Web Search Engine** 设为 `kagi`。
+4. 启用 **Web Search**，并将 **Web Search Engine** 设为 `kagi`。
 5. 将 API key 粘贴到 **Kagi Search API Key** 字段。
 6. 点击 **Save**。
 

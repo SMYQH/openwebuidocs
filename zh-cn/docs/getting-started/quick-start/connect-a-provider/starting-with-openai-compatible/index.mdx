@@ -142,7 +142,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
   </TabItem>
   <TabItem value="mistral" label="Mistral">
 
-  **Mistral AI** 完全兼容 OpenAI，并支持 `/models` 自动发现。
+  **Mistral AI** 提供兼容 OpenAI 的 API，并支持 `/models` 自动发现。推理回复是例外，见下文。
 
   | 设置项 | 值 |
   |---|---|
@@ -152,6 +152,10 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
   :::caution 不再提供 `-latest` 别名
   Mistral 不再发布 `mistral-large-latest` 这类 `-latest` 别名。请改用 [Mistral 模型总览](https://docs.mistral.ai/getting-started/models/models_overview/) 中带日期的模型 ID。
+  :::
+
+  :::caution 推理回复会显示原始的 `thinking` 片段
+  开启推理后，Mistral 会把回复的 `content` 作为一组片段而不是文本返回（[Mistral 推理文档](https://docs.mistral.ai/inference/conversations/reasoning)）。Open WebUI 会把任何非文本的 `content` 转换成文本，因此聊天中显示的是原始列表，开头是 `[{'type': 'thinking'`，而不是一个思考块。一种做法是为该模型关闭推理：在 **高级参数** 中把 **推理力度** 切换为 **自定义** 并填入 `none`。这样 Mistral 会返回纯文本，不带推理内容。
   :::
 
   </TabItem>
@@ -682,7 +686,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 
 只为你自己掌控、并且通过 Cookie 来认证请求发起者的服务器开启它，通常是你自己网络内、使用同一套登录体系的那类服务器。浏览器为你的 Open WebUI 域名保存的 Cookie 都会随请求转发，包括会话 Cookie，因此第三方端点绝不应该开启它。
 
-**这一点发生了变化：** 使用 **Session** 或 **System OAuth** 认证类型的连接过去会无条件转发 Cookie，现在不会了。如果这类连接在升级后不再能够通过认证，请开启此项。
+**这一点发生了变化：** 使用 **Session** 或 **OAuth** 认证类型的连接过去会无条件转发 Cookie，现在不会了。如果这类连接在升级后不再能够通过认证，请开启此项。
 
 :::
 
@@ -696,13 +700,13 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 
 每一条 OpenAI 连接都有一个 **服务商（Provider）** 下拉框，位于连接对话框中 **高级（Advanced）** 选项之后。它用于提示另一端的服务器实际上是什么。Open WebUI 无法通过访问 `/v1/chat/completions` 来区分 llama.cpp 服务器和 LiteLLM 代理，因为两者的响应方式完全相同，所以这个下拉框就是你告诉它服务器类型的方式，而每个选项会开启该服务器所支持的额外功能。
 
-保持 **默认（Default）** 始终是安全的。无论选择哪个选项，聊天行为都完全一样；该设置只会在聊天之外补充额外能力。
+**默认（Default）** 适用于任何普通的兼容 OpenAI 服务器。选择与你的服务器对应的选项会开启它的额外功能；对 llama.cpp 服务器和 DeepSeek 的 API 而言，这包括把推理内容发回以及续写回复，如下表所示。
 
 | 选项 | 会改变什么 |
 | :--- | :--- |
 | **默认（Default）** | 什么都不改变。该连接会被视为普通的兼容 OpenAI 端点。 |
 | **Azure OpenAI** | 请求会被改写成 Azure 基于部署的 URL 形式，并附带 `api-version` 参数，因此该连接需要填写 **API Version**，并在 **Model IDs** 中列出部署名称。对于形似 Azure 的 URL 会自动开启此项，参见[云端提供商](#cloud-providers)下的 Azure OpenAI 标签页。 |
-| **llama.cpp** | 启用[模型管理面板](#managing-local-models-from-open-webui)、模型选择器中的绿色 **Loaded** 标记和管理员 **Eject** 按钮，以及模型行中的更多模型详情。已保存的推理也会作为 `reasoning_content` 字段重新发送给服务器，由 llama.cpp 通过聊天模板处理。此选项以请求格式命名，支持该格式的托管服务器也可使用它，例如思考模式要求把推理内容发回给它的 DeepSeek API。参见 [llama.cpp 指南](/getting-started/quick-start/connect-a-provider/starting-with-llama-cpp)和[推理模型](/features/chat-conversations/chat-features/reasoning-models)。 |
+| **llama.cpp** | 启用[模型管理面板](#managing-local-models-from-open-webui)、模型选择器中的绿色 **Loaded** 标记和管理员 **Eject** 按钮，以及模型行中的更多模型详情。已保存的推理也会作为 `reasoning_content` 字段重新发送给服务器，由 llama.cpp 通过聊天模板处理。此选项以请求格式命名，支持该格式的托管服务器也可使用它，例如思考模式要求把推理内容发回给它的 DeepSeek API。当你点击 **继续回复（Continue Response）** 时，Open WebUI 会在请求中加入 `continue_final_message: true` 和 `add_generation_prompt: false`，让服务器续写最后一条回复。保持 **默认（Default）** 的连接不会发送这些字段，**API 类型**为 **Responses** 时也不会。如果 llama.cpp 服务器上的 **继续回复** 重复了之前的文字或从头开始新的回复，请设置此项。参见 [llama.cpp 指南](/getting-started/quick-start/connect-a-provider/starting-with-llama-cpp)和[推理模型](/features/chat-conversations/chat-features/reasoning-models)。 |
 | **LM Studio** | 解锁同样的[模型管理面板](#managing-local-models-from-open-webui)、已加载标记与模型详情，但不支持删除模型，也没有 **弹出（Eject）** 按钮。 |
 | **LiteLLM** | 到达 Open WebUI 自带的 [Anthropic Messages 端点](/reference/api-endpoints#anthropic-messages-api)的请求会被原样转发给 LiteLLM，而不会被转换成聊天补全再转回来。在 Open WebUI 内部发起的聊天不受影响。 |
 
@@ -755,6 +759,19 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 ### 支持的参数 {#supported-parameters}
 
 Open WebUI 会传递 OpenAI 标准参数，例如 `temperature`、`top_p`、`max_tokens`（或 `max_completion_tokens`）、`stop`、`seed` 和 `logit_bias`。如果你的模型和服务支持 `tools` 与 `tool_choice` 参数，它也支持**工具使用**（Function Calling）。
+
+#### 模型 ID 如何改变请求 {#how-the-model-id-changes-the-request}
+
+在任何兼容 OpenAI 的连接上发送聊天请求之前，Open WebUI 都会检查它将要发送的模型 ID。那是去掉连接的 **Prefix ID** 之后的 ID，对自定义模型来说则是基础模型的 ID。该检查不区分大小写，并会先去掉开头的 `openai.` 或 `<region>.openai.`（例如 Amazon Bedrock 风格的 `us.openai.gpt-5`）。当 ID 以 `o` 开头且后接一个数字（`o1`、`o3-mini`、`o4-mini`），或以 `gpt-` 开头且后接一个不小于 5 的数字（`gpt-5`、`gpt-5.2`、`gpt-6`）时，该 ID 会被视为 OpenAI 推理模型。
+
+- **匹配的 ID：** `max_tokens` 会被重命名为 `max_completion_tokens`。如果第一条消息的角色是 `system`，它会以 `developer` 角色发送，对于以 `o1-mini` 或 `o1-preview` 开头的 ID 则以 `user` 角色发送。
+- **其他 ID，且 URL 中不包含 `api.openai.com`：** `max_completion_tokens` 会被重命名为 `max_tokens`。
+
+这适用于所有服务器，不只是 OpenAI，因此它解释了下面这些情况：
+
+- **你的服务器对 `developer` 角色报错，或者名为 `gpt-5`、`o3` 之类的模型没有遵循系统提示词。** 即使背后的服务器不是 OpenAI，该模型 ID 也符合这条规则。请在服务器或代理上给该模型换一个 ID（例如在 LiteLLM 配置中），使它不再以 `o<digit>` 或 `gpt-<5 or higher>` 开头。
+- **代理后面的推理模型不受 token 上限影响。** 对于匹配的 ID，**高级参数** 中的 **max_tokens** 值会作为 `max_completion_tokens` 发送。请确认你的服务器或代理接受该参数。
+- **像 `openai/gpt-5` 这样的代理模型收到的是 `max_tokens` 和 `system` 消息。** 只有 `openai.` 这种形式的提供商前缀会被去掉，因此带 `openai/` 的 ID 不匹配。如果上游 API 要求 `max_completion_tokens` 或 `developer` 角色，请用不带该前缀的 ID 暴露这个模型。
 
 ---
 

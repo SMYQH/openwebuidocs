@@ -105,7 +105,7 @@ title: "URL 参数"
 ### 11. **设置深链** {#11-settings-deep-link}
 
 - **说明**：`settings` 参数会在指定标签页上打开设置对话框，随后把自己从 URL 中移除
-- **如何设置**：使用用户标签页 id（`general`、`interface`、`notifications`、`shortcuts`、`connections`、`tools`、`personalization`、`audio`、`data_controls`、`usage`、`archived_chats`、`account`、`about`），或以 `admin:<tab>` 形式使用管理员标签页（`general`、`authentication`、`connections`、`models`、`subagents`、`evaluations`、`analytics`、`integrations`、`documents`、`web`、`code-execution`、`interface`、`audio`、`images`、`db`、`pipelines`）
+- **如何设置**：使用用户标签页 id（`general`、`interface`、`notifications`、`shortcuts`、`personalization`、`audio`、`data_controls`、`usage`、`archived_chats`、`account`、`about`），或以 `admin:<tab>` 形式使用管理员标签页（`general`、`authentication`、`interface`、`connections`、`models`、`subagents`、`integrations`、`apps`、`documents`、`audio`、`images`、`videos`、`web`、`code-execution`、`pipelines`、`analytics`、`evaluations`、`db`）
 - **示例**：`/?settings=admin:documents`
 - **行为**：对话框会在该标签页上打开。非管理员打开 `admin:` 链接时，会改为显示常规（General）标签页。
 

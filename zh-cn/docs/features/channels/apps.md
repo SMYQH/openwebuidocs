@@ -10,7 +10,7 @@ App 是以成员身份加入[频道](/features/channels)的外部服务。提及
 App 运行在它自己的服务器上。由 Open WebUI 主动向 App 建立连接，因此 Open WebUI 本身可以留在私有网络中，无需公开的回调地址。若只是想往频道里发消息而不回复任何人，[频道 webhook](/features/administration/webhooks#3-channel-webhooks-external-message-integration) 会更简单。
 
 :::info
-App 属于实验性功能。**Settings > Apps**（管理员区域） 会显示 **Experimental** 徽标。
+App 属于实验性功能。**Settings > Integrations**（管理员区域）中的 **Apps** 部分会显示 **Experimental** 徽标。
 :::
 
 ---
@@ -42,7 +42,7 @@ App 对提及的回应是一条频道消息。而对按钮点击的回应可以�
 
 按钮点击之后，App 还可以把一个 Markdown 文件作为私有回复发送。它会显示为一个带文件名的 **Download** 按钮，例如 **Download report.md**，点击即可把文件保存到你的设备。
 
-如果提及失败，Open WebUI 会以该 App 的名义把原因作为对你消息的回复发布出来，开头是 `App error:`，频道中的所有人都能看到。如果该 App 无法在频道中发言（例如它已被禁用或缺少发言所需的 scope），原因会显示在你的消息下方，且只有你能看到。如果按钮点击失败，原因会显示在该 App 的消息下方，同样只有你能看到。请让管理员在 **Settings > Apps**（管理员区域） 中检查该 App。[故障排查](#troubleshooting)列出了你最可能看到的各类信息。
+如果提及失败，Open WebUI 会以该 App 的名义把原因作为对你消息的回复发布出来，开头是 `App error:`，频道中的所有人都能看到。如果该 App 无法在频道中发言（例如它已被禁用或缺少发言所需的 scope），原因会显示在你的消息下方，且只有你能看到。如果按钮点击失败，原因会显示在该 App 的消息下方，同样只有你能看到。请让管理员在 **Settings > Integrations**（管理员区域）的 **Apps** 部分中检查该 App。[故障排查](#troubleshooting)列出了你最可能看到的各类信息。
 
 ### 按钮 {#buttons}
 
@@ -56,7 +56,7 @@ App 发布的频道消息可以带有按钮和卡片。链接按钮会在新标�
 
 1. 前往 **Settings > General**（管理员区域）。
 2. 打开 **Apps** 与 **Channels**，然后保存。App 只在频道中起作用，因此两者都需要。
-3. 管理设置中会出现 **Apps** 标签页。
+3. **Settings > Integrations**（管理员区域）底部会出现 **Apps** 部分。
 
 同一个开关也可以通过 [`ENABLE_APPS`](/reference/env-configuration#enable_apps) 设置。关闭它会断开所有 App 连接。
 
@@ -66,7 +66,7 @@ App 发布的频道消息可以带有按钮和卡片。链接按钮会在新标�
 
 若该 App 位于你自己的网络、Docker 宿主机上，或使用纯 HTTP，请先配置[私有与纯 HTTP 的 App 服务器](#private-and-plain-http-app-servers)。
 
-1. 前往 **Settings > Apps**（管理员区域） 并点击 **Add app**（加号按钮）。
+1. 前往 **Settings > Integrations**（管理员区域），滚动到 **Apps** 并点击 **Add app**（加号按钮）。
 2. 填写 **App URL** 与 **API Key**，然后点击 **Continue**。Open WebUI 会从该 URL 加载 App 的详情。
 3. 审阅该 App 请求的 scope。关掉你不想授予的项，然后点击 **Continue**。
 4. 检查 **Name**、**App handle** 与 **Access**。handle 是一个简短的唯一 ID，会显示在 **Apps** 列表中名称旁边。它由小写字母、数字和连字符组成，以字母开头，长度最多 40 个字符。App 保存后，handle 与 App URL 即固定；若要把 App 迁移到新地址，请用一个新 handle 重新安装。
@@ -118,7 +118,7 @@ Scope 限定了 App 能做什么。安装 App 时由你选择授予哪些 scope�
 
 ### 连接状态 {#connection-status}
 
-Open WebUI 会与每个已启用的 App 保持一条长连接，并自动重连，两次尝试之间最多等待 30 秒。每个 Open WebUI 工作进程都会各自建立连接；关于工作进程与 Redis，请参阅[扩展 Open WebUI](/getting-started/advanced-topics/scaling)。**Apps** 标签页会显示每个已启用 App 的状态，并每隔几秒刷新一次：
+Open WebUI 会与每个已启用的 App 保持一条长连接，并自动重连，两次尝试之间最多等待 30 秒。每个 Open WebUI 工作进程都会各自建立连接；关于工作进程与 Redis，请参阅[扩展 Open WebUI](/getting-started/advanced-topics/scaling)。**Apps** 部分会显示每个已启用 App 的状态，并每隔几秒刷新一次：
 
 | 状态 | 含义 |
 |--------|---------|
@@ -175,7 +175,7 @@ Open WebUI 会与每个已启用的 App 保持一条长连接，并自动重连�
 
 | 信息 | 需要检查什么 |
 |---------|---------------|
-| `App is disconnected; event was not sent` | 在 **Apps** 标签页中检查状态。 |
+| `App is disconnected; event was not sent` | 在 **Settings > Integrations** 的 **Apps** 部分中检查状态。 |
 | `App response timed out; execution outcome may be unknown` | 该 App 未能在 10 秒内确认提及、未能在 3 秒内回复按钮点击，或在 Open WebUI 等待期间断开了连接。它可能实际上已经执行了动作。提及之后还会跟上一行：`Delivery was not confirmed. The app may have accepted the message; check before retrying.` |
 | `App returned an invalid delivery receipt` | 提及之后显示。该 App 的应答不是它的送达确认。使用 oix 构建的 App 需要 oix 0.8.0 或更高版本。 |
 | `App is inactive` | 该 App 已被禁用或已卸载。 |

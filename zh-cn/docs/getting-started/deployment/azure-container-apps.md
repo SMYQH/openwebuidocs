@@ -40,7 +40,7 @@ Azure 容器应用让你无需运维 Kubernetes 即可运行本应用。本指�
 | `WEBUI_ADMIN_EMAIL` 与 `WEBUI_ADMIN_PASSWORD` | 空数据库的初始管理员凭据。请将密码保存在密钥库中。 |
 | `LICENSE_KEY` | 可选，已签发的企业版许可证密钥。 |
 
-另外请把 `AZURE_STORAGE_KEY` 也存为密钥。本示例使用账户密钥访问 Blob 存储；对 Key Vault 的托管标识访问并不会自动让 Open WebUI 通过该存储账户的身份验证。
+如果你使用账户密钥，请另外把 `AZURE_STORAGE_KEY` 存为密钥。不设置它时，Open WebUI 会用 `DefaultAzureCredential` 向 Blob 存储进行身份验证，因此只要 Container App 的托管标识在存储账户上拥有 Blob 数据角色，它就能正常工作；仅对 Key Vault 的托管标识访问并不会授予该角色。
 
 在应用配置中把每个密钥映射到对应的环境变量。请替换下面的非机密取值：
 
@@ -121,7 +121,7 @@ az containerapp logs show --name openwebui --resource-group RESOURCE_GROUP --fol
 
 ## 添加用户前的验证 {#verify-before-adding-users}
 
-- 使用初始管理员账户登录，确认开放注册已关闭。在放开更多访问权限前，请先配置你的[身份提供方](/features/authentication-access/auth/sso)。
+- 使用初始管理员账户登录，确认开放注册已关闭（用 `WEBUI_ADMIN_EMAIL` 和 `WEBUI_ADMIN_PASSWORD` 创建管理员会关闭它）。在放开更多访问权限前，请先配置你的[身份提供方](/features/authentication-access/auth/sso)。
 - 选择一个模型并以流式方式获取响应，然后重新打开已保存的会话。
 - 上传一份包含明显事实的小文档。确认索引完成，并就该事实提问以验证能够检索到来源。
 - 替换一个应用实例，确认同一账户、会话与已上传文件依然可用。
@@ -149,7 +149,7 @@ az containerapp logs show --name openwebui --resource-group RESOURCE_GROUP --fol
 | 镜像或密钥无法加载 | 注册表拉取权限、托管标识、Key Vault 权限，以及私有 DNS/出口。 |
 | 修订版本未通过就绪检查 | 端口 `8080`、应用日志、PostgreSQL 的 TLS/登录、向量扩展，以及探针预算。 |
 | Redis 连接失败 | TLS、认证、网络可达性，以及单机模式与集群模式的差异。 |
-| 上传失败 | Blob 端点/容器、存储密钥、账户网络规则，以及 Tika/嵌入端点。 |
+| 上传失败 | Blob 端点/容器、存储密钥或托管标识的 Blob 数据角色、账户网络规则，以及 Tika/嵌入端点。 |
 | 流式响应或请求超时 | 入口请求限制、亲和性设置，以及客户端重连行为。 |
 
 删除应用或迁移作业不会删除单独创建的 PostgreSQL、Blob 存储或 Key Vault 资源。在保留策略允许删除之前，请保留备份与凭据。

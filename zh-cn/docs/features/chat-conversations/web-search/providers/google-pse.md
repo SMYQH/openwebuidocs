@@ -38,7 +38,7 @@ title: "Google PSE"
 3. 输入搜索引擎名称，根据需要设置其他属性，通过机器人验证后点击 `创建`
 4. 生成 `API key` 并获取 `搜索引擎 ID`（创建完成后可用）
 5. 拿到 `API key` 与 `搜索引擎 ID` 后，打开 `Open WebUI 管理面板`，点击 `设置`，再进入 `网页搜索`
-6. 启用 `网页搜索`，并将 `网页搜索引擎` 设为 `google_pse`
+6. 启用 `Web Search`，并将 `网页搜索引擎` 设为 `google_pse`
 7. 使用第 4 步获得的信息：在 `Google PSE API Key` 中填写 `API key`，在 `Google PSE Engine Id` 中填写搜索引擎 ID。
 8. 点击 `保存`
 

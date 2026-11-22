@@ -1,105 +1,109 @@
 ---
 sidebar_position: 0
-title: "连接 Agent"
+sidebar_label: "连接 Agent"
+title: "用 Open Terminal 运行 Claude Code、Codex 等"
+description: "用 Open Terminal 把 Claude Code、Codex、Gemini CLI 或其他 Agent 接入 Open WebUI。找到你的 Agent，登录，并在项目中运行一个任务。"
 ---
 
-# 🤖 连接 Agent {#connect-an-agent}
+# 在 Open WebUI 中运行 Claude Code、Codex 和其他 Agent {#run-claude-code-codex-and-other-agents-in-open-webui}
 
-**用 Open Terminal 在 Open WebUI 中运行 Agent，或接入已有的 Agent 网关。**
+要在 Open WebUI 中使用 Agent，先选择**安装了它 CLI 的终端**，再在**模型选择器中选择该 Agent**。你在聊天中发送消息并审查它的工作。Agent 使用自己的工具和模型提供商，在终端的工作区中读取文件、运行命令并做出修改。
 
-Agent 框架是围绕模型的一层软件，负责管理工具、指令、权限，以及"采取行动并检查结果"的循环。Open WebUI 可以用普通模型加 Open Terminal 跑起这个循环，也可以在同一个聊天界面中接入 Claude Code、Codex 或 Hermes 这样的独立框架。
+已经连接好终端并且 Agent CLI 可用？直接[开始你的第一个 Agent 聊天](#start-your-first-agent-chat)。如果你已经在运行 Hermes 或 OpenClaw 网关，也可以[直接连接它的 API](#connect-an-existing-agent-gateway)。
 
-## 选择你的接入方式 {#choose-your-setup}
+## Open Terminal 支持哪些 Agent {#which-agents-does-open-terminal-support}
 
-| 你想要 | 接入方式 | 在哪里连接 |
+Open Terminal 内置了下面 13 个 Agent 的集成。`:agents` Docker 镜像自带 **Claude Code 和 Codex**。其他 CLI 请自行安装到同一个终端环境中。从下面选择你的 Agent，了解安装、登录和模型选择方式。
+
+| Agent | CLI 可执行文件 | 模型选择器前缀 |
 | :--- | :--- | :--- |
-| 让现有模型拥有用于命令、文件和代码的工作区 | **Open WebUI + Open Terminal**：Open WebUI 管理模型的工具调用，Open Terminal 负责执行 | **Settings > Integrations > Open Terminal**（管理员区域） |
-| 在聊天中使用 Claude Code、Codex、Cursor、Gemini CLI、Hermes 或其他受支持的 Agent | **通过 Open Terminal 使用 Agent**：Agent CLI 在终端环境中运行，自带工具和 Agent 循环 | 同一个 **Open Terminal** 连接；先选终端，再选 Agent 模型 |
-| 使用你已经在运维的 Agent 服务 | **Agent 网关**：Open WebUI 将聊天请求发送到该服务兼容 OpenAI 的 API | **Settings > Connections > OpenAI**（管理员区域） |
+| [Claude Code](/getting-started/quick-start/connect-an-agent/claude-code) | `claude` | `claude-code/` |
+| [OpenAI Codex CLI](/getting-started/quick-start/connect-an-agent/codex-cli) | `codex` | `codex/` |
+| [Cline CLI](/getting-started/quick-start/connect-an-agent/cline) | `cline` | `cline/` |
+| [Cursor CLI](/getting-started/quick-start/connect-an-agent/cursor-cli) | `agent` | `cursor/` |
+| [Gemini CLI](/getting-started/quick-start/connect-an-agent/gemini-cli) | `gemini` | `gemini/` |
+| [GitHub Copilot CLI](/getting-started/quick-start/connect-an-agent/github-copilot) | `copilot` | `copilot/` |
+| [Google Antigravity CLI](/getting-started/quick-start/connect-an-agent/antigravity) | `agy` | `antigravity/` |
+| [Goose](/getting-started/quick-start/connect-an-agent/goose) | `goose` | `goose/` |
+| [Grok Build](/getting-started/quick-start/connect-an-agent/grok-build) | `grok` | `grok/` |
+| [Hermes Agent](/getting-started/quick-start/connect-an-agent/hermes-agent) | `hermes` | `hermes/` |
+| [OpenCode](/getting-started/quick-start/connect-an-agent/opencode) | `opencode` | `opencode/` |
+| [Pi](/getting-started/quick-start/connect-an-agent/pi) | `pi` | `pi/` |
+| [Qwen Code](/getting-started/quick-start/connect-an-agent/qwen-code) | `qwen` | `qwen/` |
 
-如果是全新接入，先从 **Open Terminal** 开始。一个连接就能同时为普通模型提供工作区，并让你访问其中安装的受支持 Agent CLI。
+Open Terminal 会在需要时启动各个 CLI。Codex 使用它的 app server，Claude Code 使用流式 JSON，Pi 使用 RPC。其他内置 Agent 使用 **Agent Client Protocol (ACP)**。要接入其他 ACP v1 Agent，例如 **Kiro CLI** 或 **Factory Droid**，请安装并配置该 CLI，在 `OPEN_TERMINAL_ACP_AGENTS` 中注册它的启动命令，然后重启 Open Terminal。[自定义 ACP Agent 设置](/features/open-terminal/agents#add-another-acp-agent) · [Agent 启动命令](https://github.com/open-webui/open-terminal#coding-agents-in-chat)
 
 ## 用 Open Terminal 快速开始 {#quick-start-with-open-terminal}
 
-### 1. 准备终端环境 {#1-prepare-the-terminal-environment}
+### 1. 选择 Agent 的运行位置 {#1-choose-where-the-agent-will-work}
 
-按 [Open Terminal 安装指南](/features/open-terminal/setup/installation)操作。选择 Docker 以获得容器工作区，或选择裸机以使用宿主机上的文件和工具。
+- **在你自己的电脑上。** 用 Open WebUI Tether 把你的电脑连接进来。在那台电脑上安装并登录 CLI。在聊天中于 **Terminal > Your devices** 下选择它，然后继续[开始你的第一个 Agent 聊天](#start-your-first-agent-chat)。[Tether 设置](/ecosystem/tether#get-started)
+- **在已有的 Open Terminal 上。** 在该环境中打开一个 shell，继续第 2 步。如果你要把已有容器换成 `:agents` 镜像，请保留它的主目录卷。[更新 Open Terminal](/features/open-terminal/setup/updating)
+- **在新的 Docker 工作区中。** 如果 Open WebUI 直接运行在同一台主机上，就启动下面的容器。如果 Open WebUI 本身运行在 Docker Compose 中，就把 `open-terminal` 服务用 `:agents` 镜像加到同一个 Compose 网络里。[Docker Compose 与裸机安装](/features/open-terminal/setup/installation)
 
-如果你要用 **Codex 或 Claude Code**，`ghcr.io/open-webui/open-terminal:agents` 镜像已包含这两个 CLI。全新 Docker 安装示例：
+把 `your-secret-key` 换成你自己的密钥。这个卷会在你更换容器时保留单用户的工作区、CLI 设置和基于文件的凭据。如果需要分离的用户和凭据，请参阅[团队部署](/features/open-terminal/advanced/multi-user)。
 
 ```bash
 docker run -d \
   --name open-terminal \
   --restart unless-stopped \
-  -p 8000:8000 \
+  -p 127.0.0.1:8000:8000 \
   -v open-terminal:/home/user \
   -e OPEN_TERMINAL_API_KEY=your-secret-key \
   ghcr.io/open-webui/open-terminal:agents
 ```
 
-把 `your-secret-key` 换成你自己的密钥。已有安装请按[更新指南](/features/open-terminal/setup/updating)操作，更换镜像时保留工作区卷。
+### 2. 在终端中登录 Agent {#2-sign-in-to-the-agent-inside-the-terminal}
 
-### 2. 安装并登录你的 Agent {#2-install-and-sign-in-to-your-agent}
-
-如果使用带终端工具的普通模型，继续第 3 步。如果使用 Agent CLI，请把它**安装在运行 Open Terminal 的环境内部**，并以终端的操作系统用户完成登录或提供商配置。装在你笔记本电脑上的 CLI 不会自动出现在 Docker 容器或远程终端里。
-
-对于上面的 Docker 容器，打开一个 shell：
+对于上面的 Docker 示例，以终端用户身份打开一个 shell。
 
 ```bash
 docker exec -it open-terminal bash
 ```
 
-运行 `codex` 或 `claude` 并完成设置。其他 Agent 请在同一个环境中按其安装说明操作。接入聊天前，先确认 Agent 能在该环境中响应提示词。参见[受支持的 Agent](/features/open-terminal/coding-agents#supported-agents)和 [Agent 部署指南](https://github.com/open-webui/open-terminal/blob/main/docs/deployment.md#coding-agents)。
+**Codex** 需要你的账户允许设备登录时，运行 `codex login --device-auth`，然后启动 `codex`。**Claude Code** 则运行 `claude` 并按其登录提示操作。其他 Agent 请按上表中的设置链接操作。给 CLI 提一个简短问题，确认它在这个 shell 中能回答。用完后退出交互式 CLI。[Agent 认证与 API 密钥选项](https://github.com/open-webui/open-terminal/blob/main/docs/deployment.md#coding-agents)
 
-**Open Terminal API 密钥**用于验证到终端服务器的连接。每个 Agent 还需要各自的登录凭据或模型提供商凭据。请保持主目录卷挂载，以便更换容器后仍能保留存放在文件中的 Agent 设置和凭据。
+### 3. 把终端连接到 Open WebUI {#3-connect-the-terminal-to-open-webui}
 
-### 3. 连接 Open Terminal {#3-connect-open-terminal}
+以管理员身份打开 **Settings > Admin > Integrations**。在 **Open Terminal** 下点击 **+**，给连接起个名字，并填写 **Open WebUI 服务器**能够访问的 URL。上面的主机安装用 `http://127.0.0.1:8000`，Compose 服务名为 `open-terminal` 且在同一网络中时用 `http://open-terminal:8000`。
 
-在 Open WebUI 中打开 **Admin** 分区下的 **Settings > Integrations**。在 **Open Terminal** 中添加终端的 URL 和 API 密钥，保存并启用该连接。
+选择 **Bearer**，填入你的 **Open Terminal API 密钥**。保存并启用该连接。这个密钥让 Open WebUI 获得工作区访问权。CLI 使用第 2 步中的提供商登录来生成回复。[连接设置与访问授权](/features/open-terminal/setup/connecting)
 
-使用 Open WebUI 服务器能访问到的地址：例如在共享的 Docker Compose 网络上用 `http://open-terminal:8000`，两个进程直接运行在同一台机器上时用 `http://localhost:8000`。分离的容器、远程主机和访问授权请按[连接指南](/features/open-terminal/setup/connecting)操作。
+### 开始你的第一个 Agent 聊天 {#start-your-first-agent-chat}
 
-### 4. 选择终端和模型 {#4-select-a-terminal-and-model}
+使用终端工作区中已经存在的项目。如果你是从空容器开始的，在它的 shell 中运行下面的命令，创建一个可以从聊天中检查的小项目。
 
-开始一个已保存的聊天，点击**终端按钮**（云图标），然后选择你的终端。接着二选一：
-
-- **一个普通模型**，需具备足够强的原生工具调用能力。Open WebUI 会给它终端工具来执行命令、处理文件。如果工具缺失，请检查该模型的[Terminal 能力与绑定](/features/workspace/models#capabilities-and-bindings)。
-- **一个 Agent 模型**，命名为 `<agent>/<model>`。Open WebUI 会发现所选终端中可用的 Agent 和模型。只有能成功上报自身模型的 Agent 才会出现。
-
-智能体对话一次只支持一个智能体，而且需要已保存的聊天。重新生成、编辑和创建分支的具体行为见[编程智能体](/features/open-terminal/coding-agents)。
-
-### 5. 试一个任务 {#5-try-a-task}
-
-在[文件浏览器](/features/open-terminal/file-browser)中打开你的项目目录，开始一个新的 Agent 会话，然后提出要求：
-
-> 检查这个项目，说明如何运行它，并运行它已有的测试。报告所有失败项及相应输出。
-
-Agent 在该终端的工作区中工作。工具请求会出现在聊天里，并遵循所选的[工具权限模式](/features/extensibility/plugin/tools#tool-approval)。已存在的 Agent 会话在你浏览其他目录时会保留原有工作目录。
-
-## Open Terminal 如何对接不同的框架 {#how-open-terminal-connects-different-harnesses}
-
-Open Terminal 启动每个受支持的 Agent CLI，并通过它们各自的原生接口通信。**Agent Client Protocol (ACP)** 为许多 Agent 提供统一接口；Codex、Claude Code 和 Pi 则使用各自协议的专用集成。参见[协议与 Agent 列表](/features/open-terminal/coding-agents#supported-agents)。
-
-```mermaid
-flowchart LR
-    UI["Open WebUI chat"] <-->|"Session and streaming connection"| OT["Open Terminal"]
-    OT <-->|"ACP"| ACP["Cursor, Gemini CLI, Hermes, and other ACP agents"]
-    OT <-->|"Native protocols"| Native["Codex, Claude Code, Pi"]
-    ACP --> Workspace["Terminal workspace: files, tools, and commands"]
-    Native --> Workspace
+```bash
+mkdir -p ~/agent-demo
+printf '%s\n' '# Field Notes' 'Run the project with: python -m http.server 8080' > ~/agent-demo/README.md
 ```
 
-Open Terminal 会发现已安装 Agent 提供的模型，并以终端用户的身份运行这些 Agent 的进程。Open WebUI 将它们的流式输出、工具请求和提问呈现在聊天中，把附件上传到工作区，并保存会话信息，以便后续消息接续同一会话。可用的模型和可选控制项取决于各个 Agent 上报的内容。
+1. 打开 **New Chat**，并关闭 **Temporary Chat**。在消息输入框中打开 **Terminal**，选择你已连接的工作区。
+2. 在终端选择器旁边打开 **Choose working directory**，选择你的项目文件夹（Docker 示例中为 `/home/user/agent-demo`）。新的 Agent 对话就从那里开始。在 **Files** 标签中浏览其他文件夹不会改变聊天的工作目录。
+3. 打开**模型选择器**，搜索你的 Agent 前缀，例如 `claude-code/` 或 `codex/`。选择 CLI 上报的模型之一。这个聊天只使用一个 Agent 模型。
+4. 发送下面的提示。在聊天中展开 Agent 的读取或命令步骤，把它的回复与 **Files** 中的 README 对照。对于示例项目，答案应包含 `python -m http.server 8080`。
 
-你也可以通过配置[注册另一个 ACP Agent](/features/open-terminal/coding-agents#add-another-acp-agent)。该 Agent 必须支持此集成所用的协议，并能在终端环境中成功运行。
+   > Read the README in this folder. What command does it give for running the project? Quote the relevant line.
+
+在同一个聊天中继续让 Agent 运行命令或编辑文件。你可以附加文件、回答 Agent 的提问，并按你的[工具权限模式](/features/extensibility/plugin/tools#tool-approval)审查工具请求。重新生成回复或分叉聊天都会保留 Agent 已经做出的文件改动。Agent 如何续接对话取决于 CLI 及其版本。[Agent 聊天行为](/features/open-terminal/agents#picking-an-agent)
+
+## 为什么我的 Agent 没有出现在模型选择器中 {#why-is-my-agent-missing-from-the-model-picker}
+
+| 你看到的现象 | 需要检查 |
+| :--- | :--- |
+| 终端本身不见了 | 检查从 Open WebUI 服务器看到的连接 URL、Bearer 密钥、启用开关，以及你的账户对终端的访问权限。使用 Tether 时，检查你的设备是否在线并连接到同一账户。 |
+| 终端正常，但 Agent 不见了 | 在该终端的 shell 中，用表格里的可执行文件运行 `command -v`（例如 Cursor 用 `command -v agent`）。以终端用户身份完成 CLI 的提供商配置。使用支持该集成的 Open WebUI、Open Terminal 和 CLI 版本，然后重新选择终端以刷新发现结果。 |
+| Agent 出现了，但第一次回复失败 | 在该工作区内的 CLI 中试同一个模型。CLI 可能在提供商登录可用之前就上报模型名称。检查它的凭据和到提供商的连通性。 |
+| Codex 能回复，但某个 shell 步骤报 `bwrap: No permissions to create a new namespace` | 容器运行时阻止了 Codex 用来执行命令的 Linux 沙箱。请改用支持 Codex 沙箱的终端环境，例如在受支持的主机上直接运行的 Open Terminal，然后重试同一次文件读取。 |
+| Agent 看到了错误的文件 | 检查第一条消息之前你选择的终端和工作目录。要切换到别的项目，请开始新的聊天并选择该项目的目录。 |
+
+## 用带终端工具的普通模型 {#use-a-regular-model-with-terminal-tools}
+
+要让已有模型获得 shell 和文件访问权限，请选择终端并保持使用你原来的普通模型。Open WebUI 管理它的工具调用，Open Terminal 负责执行。这条路径需要模型具备原生工具调用能力和 **Terminal** 能力。你可以跳过 Agent CLI 的安装和登录。[模型能力与绑定](/features/workspace/models#capabilities-and-bindings)
 
 ## 接入已有的 Agent 网关 {#connect-an-existing-agent-gateway}
 
-当你想让一个独立运行的 Agent 服务通过兼容 OpenAI 的 API 处理请求时，使用网关连接。
+如果你的 Agent 已经作为服务运行并提供兼容 OpenAI 的 API，请在 **Settings > Admin > Connections > OpenAI** 下添加它的端点。网关自行管理工作区、工具和对话处理。
 
-| Agent | 连接方式 | 指南 |
-| :--- | :--- | :--- |
-| **Hermes Agent** | Hermes 网关兼容 OpenAI 的 API；Hermes 也可通过 Open Terminal 的 ACP 集成接入 | [配置 Hermes 网关](/getting-started/quick-start/connect-an-agent/hermes-agent) |
-| **OpenClaw** | OpenClaw 网关兼容 OpenAI 的 API | [配置 OpenClaw](/getting-started/quick-start/connect-an-agent/openclaw) |
-
-使用网关时，Open WebUI 将对话发送给网关，由远端 Agent 自行管理工作区、工具和执行循环。请按对应指南启用网关接口，并配置其 URL、认证方式和模型 ID。仅兼容 Chat Completions 协议，并不代表支持 Open WebUI 的全部功能，也不代表支持 Agent 的原生审批和会话控制。
+- **Hermes Agent** 两条路径都支持。选择上面的终端集成，即可在选定的项目文件夹中使用 Hermes；也可以连接正在运行的 Hermes 网关的 API。[Hermes 网关设置](/getting-started/quick-start/connect-an-agent/hermes-agent#connect-the-hermes-gateway)
+- **OpenClaw** 提供一个网关，你可以在聊天中把它选为模型。[OpenClaw 网关设置](/getting-started/quick-start/connect-an-agent/openclaw)

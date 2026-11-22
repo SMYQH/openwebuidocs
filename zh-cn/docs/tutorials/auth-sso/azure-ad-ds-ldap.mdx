@@ -172,7 +172,7 @@ LDAP_SERVER_HOST="1.222.222.222"
 LDAP_SERVER_PORT="636"
 
 # TLS Options
-LDAP_USE_TLS="true"
+LDAP_USE_TLS="true" # LDAPS from connect; there is no STARTTLS mode, so pair it with port 636
 LDAP_VALIDATE_CERT="false"          # Set to true for a public CA
 
 #LDAP_CA_CERT_FILE="/etc/ssl/certs/openwebui_ca.crt"
@@ -215,7 +215,7 @@ Open WebUI 可以直接从您的 LDAP 目录同步群组成员资格。当用户
 sudo cp certificate_wildcard.crt /usr/local/share/ca-certificates/openwebui.crt
 sudo update-ca-certificates
 ```
-进行此更改后重启 Open WebUI。
+进行此更改后重启 Open WebUI。只有当 Open WebUI 直接在主机上运行时这才有用：在 `LDAP_CA_CERT_FILE` 为空的情况下，LDAP 客户端使用它所在机器或容器的系统 CA 存储，而 Docker 容器看不到主机的存储。在 Docker 中，请把证书挂载进容器，并把 `LDAP_CA_CERT_FILE` 指向该路径（第 7 节中以注释形式给出）；对于已经启动过的实例，则改在 **Settings > Authentication**（管理员区域）的 LDAP 下的 **Certificate Path** 中设置同一路径，因为存储的值优先于环境变量。
 
 ## 10. 测试 LDAPS 连接 {#10-test-ldaps-connection}
 

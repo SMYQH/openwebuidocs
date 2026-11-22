@@ -30,7 +30,7 @@ title: "SerpApi"
 1. 前往 [SerpApi](https://serpapi.com/) 并登录或创建账号
 2. 进入 `Dashboard`（控制台），复制 API key
 3. 拿到 `API key` 后，打开 `Open WebUI 管理面板`，点击 `Settings`，再进入 `Web Search`
-4. 启用 `Web search`，并将 `Web Search Engine` 设为 `serpapi`
+4. 启用 `Web Search`，并将 `Web Search Engine` 设为 `serpapi`
 5. 在 `SerpApi API Key` 中填写你在第 2 步从 [SerpApi](https://serpapi.com/) 控制台复制的 `API key`
 6. [可选] 输入你要查询的 `SerpApi engine` 名称，例如 `google`、`bing`、`baidu`、`google_news`、`google_videos`、`google_scholar`、`google_patents`。默认值为 `google`。更多选项请参阅 [SerpApi 文档](https://serpapi.com/dashboard)
 7. 点击 `Save`

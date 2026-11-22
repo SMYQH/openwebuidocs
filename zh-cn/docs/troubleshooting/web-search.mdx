@@ -17,7 +17,7 @@ description: "修复 Open WebUI 中的网络搜索连接失败、页面内容为
 - `Connection timeout to host`
 - `None of the web search results could be loaded`
 
-这是因为网页内容抓取器默认不会使用你的 `http_proxy`/`https_proxy` 环境变量。
+默认是信任代理的（`WEB_SEARCH_TRUST_ENV`），因此在默认安装下，这通常意味着 **信任代理环境** 已在 **设置 > Web Search**（管理员区域）中关闭并保存——在那里保存的值优先于环境变量。每个结果 URL 在抓取前也会在本地解析。只有代理才能解析域名时，日志中会显示 `Could not resolve host`，你还需要设置 `ENABLE_LOCAL_WEB_FETCH=True`，它同时允许抓取内网地址。
 
 ✅ **解决方法：**
 
@@ -74,6 +74,8 @@ search:
 
 - **设置真实的 User-Agent**：如果来自维基百科、受 Cloudflare 保护的网站或其他大型发布商的结果为空（或日志中出现 403），说明网站的机器人检测机制过滤了 Python `requests`/`aiohttp` 的默认用户代理。请将 [`USER_AGENT`](/reference/env-configuration#user_agent) 设置为类似真实浏览器的字符串（例如 `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36`）。此设置影响网页搜索结果的抓取、`fetch_url` 工具和通过 `#` 附加的网页，包括检查链接是否指向 PDF 等文件。
 
+- **你自己网络上的结果会被跳过**：解析到私有地址、回环地址或其他非全局可路由地址的结果 URL 会在抓取前被丢弃，日志中会显示 `Blocked non-global address:` 及该地址。要搜索内网，请设置 [`ENABLE_LOCAL_WEB_FETCH=True`](/reference/env-configuration#enable_local_web_fetch)，这样每个能发起对话的用户都可以通过服务器访问内部地址。
+
 - **压缩响应会被拒绝**：Open WebUI 会请求未压缩的页面和文件，并以 `The server answered with a compressed response, which is not accepted.` 拒绝压缩响应。如果主机总是以压缩方式发送文件（例如上传时带有 `Content-Encoding` 说明头的 S3 或 MinIO 对象），就无法读取。请在不带该说明头的情况下重新上传文件。
 
 关于上下文窗口问题的更多细节，请参阅 [RAG 故障排查指南](./rag)。
@@ -90,7 +92,8 @@ search:
 
 - **为网页搜索工作流使用现代的高质量工具调用模型。** 前沿模型或近期的大型开放权重模型，在判断何时该搜索以及正确组织工具调用方面，都比老旧或较小的模型可靠得多。有关模型要求与建议，请参阅[工具调用模式：原生与旧版](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
 - **确认原生函数调用已启用**：在管理后台的 **设置 > 模型 > 编辑** 中打开模型的 **高级参数 > 函数调用**。内置的网页搜索工具属于原生模式工具。
-- **检查三道网页搜索开关**：全局已启用网页搜索、模型上已启用网页搜索、对话中已打开网页搜索开关。
+- **如果模型一直不作答也不搜索**，例如回答“我没有实时访问能力”，请把模型切换到旧版。在模型的 **高级参数** 中把 **函数调用** 设为 **旧版**。在旧版模式下，只要对话的网页搜索开关是打开的，Open WebUI 就会在模型作答前自行执行搜索，查询由任务模型撰写，因此模型不必自行决定是否搜索。如果任务模型返回空的查询列表，则会跳过搜索，对话中显示状态 `No search query generated`。如果 **设置 > 界面**（管理员区域）中的 **网页搜索查询生成** 处于关闭状态，或者查询生成失败，Open WebUI 会用你原样发送的消息进行搜索。旧版模式不受支持，也没有内置工具，因此 `fetch_url` 和其他原生工具都不可用。请参阅[工具调用模式](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
+- **检查五道网页搜索开关**：全局已启用网页搜索、模型上已启用网页搜索、模型的内置工具中包含网页搜索类别、对话中已打开网页搜索开关，以及用户所在用户组拥有 `features.web_search` 权限。
 - **对于 DDGS / DuckDuckGo 配置**，请参照 [DDGS 提供商指南](/features/chat-conversations/web-search/providers/ddgs)单独确认提供商配置；但如果 DDGS 在日志中返回了结果而助手却从不调用 `search_web`，请更换模型。
 
 ---
@@ -101,11 +104,28 @@ search:
 
 ✅ **解决方法：**
 
-- **降低并发请求数**：设置 `WEB_SEARCH_CONCURRENT_REQUESTS=1`，按顺序执行（Brave 免费层需要这样做）。
+- **降低并发请求数**：设置 `WEB_SEARCH_CONCURRENT_REQUESTS=1`，按顺序执行（推荐用于 Brave 免费层；Brave 客户端在收到 429 后已经会自动重试一次）。
 
 - **调整 loader 并发**：如果同时抓取很多页面，请降低 `WEB_LOADER_CONCURRENT_REQUESTS`。
 
 - **检查网络连通性**：确认 Open WebUI 能访问搜索引擎以及搜索结果对应的 URL。
+
+---
+
+### 6. SearXNG 没有报错，但返回空结果 {#6-searxng-returns-no-results-without-an-error}
+
+SearXNG 可能用一份空的结果列表来回应一次搜索，例如它查询的上游搜索引擎用验证码或速率限制拦住了这个实例。Open WebUI 只读取 SearXNG 响应中的 `results` 列表，因此它把这当成一次什么都没搜到的搜索，而不是一次 SearXNG 故障。
+
+你看到什么取决于模型的 **函数调用** 设置：
+
+- **旧版**：回复下方的网页搜索状态显示 `No results found from web search`，模型在没有网页内容的情况下作答。
+- **原生**或**默认**：`search_web` 工具给模型返回一份空列表。对话中不会出现错误，模型可能会说自己什么都没找到。
+
+✅ **解决方法：**
+
+- **查看 SearXNG 日志**，寻找验证码、超时或访问被拒之类的引擎错误。
+- **在 SearXNG 的 Web 界面中运行同一个查询**，看看是否有引擎返回了结果。
+- **在 SearXNG 的 `settings.yml` 中关闭出问题的引擎或启用其他引擎**，然后重启 SearXNG。
 
 ---
 
@@ -119,8 +139,8 @@ search:
 |----------|-------------|
 | `WEB_SEARCH_TRUST_ENV` | 为内容抓取启用代理支持 |
 | `WEB_SEARCH_RESULT_COUNT` | 要抓取的搜索结果数量 |
-| `WEB_SEARCH_CONCURRENT_REQUESTS` | 向搜索引擎发起的并发请求数 |
-| `WEB_LOADER_CONCURRENT_REQUESTS` | 页面抓取并发数 |
+| `WEB_SEARCH_CONCURRENT_REQUESTS` | 向搜索引擎发起的并发请求数（位于“搜索结果数量”旁的“并发请求数”字段；`0` 表示不限制） |
+| `WEB_LOADER_CONCURRENT_REQUESTS` | 页面抓取并发数（位于 Loader 部分的“并发请求数”字段；默认为 10） |
 | `WEB_LOADER_ENGINE` | 内容提取引擎 |
 
 

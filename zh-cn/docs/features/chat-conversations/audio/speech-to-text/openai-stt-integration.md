@@ -29,7 +29,7 @@ title: "OpenAI 语音转文本集成"
 | **API 基础 URL** | `https://api.openai.com/v1` |
 | **API 密钥** | 你的 OpenAI API 密钥 |
 | **STT 模型** | `gpt-transcribe` |
-| **支持的内容类型** | 可留空使用默认值，或设置为 `audio/wav,audio/mpeg,audio/webm` |
+| **支持的 MIME 类型** | 留空则使用运行时默认值 `audio/*,video/webm`，或设置为 `audio/wav,audio/mpeg,audio/webm` |
 
 5. 点击**保存**
 
@@ -127,10 +127,11 @@ OpenAI Whisper API 支持：`mp3`、`mp4`、`mpeg`、`mpga`、`m4a`、`wav`、`w
 2. 确认 API 基础 URL 是否正确
 3. 查看容器日志中的报错信息
 4. 如果 API 基础 URL 指向其他兼容 OpenAI 的服务，请将 **STT 模型**设为该服务支持的模型 ID
+5. 如果错误信息中提到 `response_format`，参见[代理后的 OpenAI 兼容 STT 失败](/troubleshooting/audio#openai-compatible-stt-fails-behind-a-proxy)
 
 ### 语言识别问题 {#language-issues}
 
-OpenAI Whisper API 会自动检测语言。如果你需要强制指定语言，请考虑改用 Local Whisper，并设置 `WHISPER_LANGUAGE` 环境变量。
+Open WebUI 会发送设置 → 音频 → 语言中的语言；若设置了 `WHISPER_LANGUAGE`，则发送该值（它同样适用于 Local Whisper 和 Deepgram）；如果请求失败，它会不带语言重试。两处都留空则由 OpenAI 检测语言。
 
 更多排查信息请参阅 [音频故障排查指南](/troubleshooting/audio)。
 

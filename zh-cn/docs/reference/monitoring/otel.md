@@ -15,6 +15,8 @@ Open WebUI 支持通过 OpenTelemetry（OTel）协议（OTLP）导出**分布式
 pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 ```
 
+这三个包本身并不够：这套配置还会导入八个 `opentelemetry-instrumentation-*` 包（FastAPI、SQLAlchemy、Redis、requests、httpx、aiohttp-client、logging 和 system-metrics）。请安装 `backend/requirements.txt` 中的 `## Trace` 段落，它固定了所有这些包的版本。
+
 :::
 
 ## 🚀 使用 Docker Compose 快速开始 {#quick-start-with-docker-compose}
@@ -41,7 +43,7 @@ docker compose -f docker-compose.otel.yaml up -d
 
 ## ⚙️ 环境变量 {#environment-variables}
 
-你可以使用下面这些环境变量（与 Compose 文件中的配置一致）在 Open WebUI 中配置 OpenTelemetry：
+你可以使用下面这些环境变量（与 Compose 文件中的配置一致）在 Open WebUI 中配置 OpenTelemetry。在该文件之外，代码中的默认值是四个 `ENABLE_OTEL*` 开关全部关闭，端点为 `http://localhost:4317`，`OTEL_EXPORTER_OTLP_INSECURE` 关闭：
 
 | 变量                                  | 默认值                              | 描述                                                       |
 | ------------------------------------- | ----------------------------------- | ---------------------------------------------------------- |
@@ -54,6 +56,7 @@ docker compose -f docker-compose.otel.yaml up -d
 | `OTEL_LOGS_EXPORTER_OTLP_ENDPOINT`    | 在 Compose 中为 `http://lgtm:4317`  | 用于日志的 OTLP 端点                                       |
 | `OTEL_EXPORTER_OTLP_INSECURE`         | 在 Compose 中为 **true**            | 使用不安全连接（无 TLS）连接 OTLP                          |
 | `OTEL_SERVICE_NAME`                   | `open-webui`                        | 服务名称（会显示在追踪和指标中）                           |
+| `OTEL_OTLP_SPAN_EXPORTER`             | `grpc`                              | 导出器协议：`grpc`（端口 4317）或 `http`（端口 4318，信号路径写在端点中，例如 `/v1/traces`，因为端点会原样传给导出器）；`OTEL_METRICS_OTLP_SPAN_EXPORTER` 和 `OTEL_LOGS_OTLP_SPAN_EXPORTER` 可按信号分别覆盖它 |
 | `OTEL_METRICS_EXPORT_INTERVAL_MILLIS` | `10000`                             | 指标导出间隔（毫秒）。10 秒对应约 6 个数据点/分钟；设为 `60000` 则约为 1 个数据点/分钟。 |
 | `OTEL_BASIC_AUTH_USERNAME` / `OTEL_BASIC_AUTH_PASSWORD` | *(为空)* | 如果收集器需要，可配置基本认证凭据                         |
 
@@ -85,9 +88,12 @@ docker compose -f docker-compose.otel.yaml up -d
 Open WebUI 后端会自动为以下组件启用追踪：
 
 - **FastAPI**（路由）
-- **SQLAlchemy**（数据库查询）
+- **SQLAlchemy**（仅同步引擎：`/ready` 和 `/health/db` 探测、用户数指标，以及与主数据库共用时的 pgvector 或 openGauss；按请求执行的查询走异步引擎）
 - **Redis**
 - **requests**、**httpx**、**aiohttp**（外部调用）
+- **logging**（日志记录上的追踪 ID 和跨度 ID）以及主机 **system metrics**
+
+日志导出需要同时开启 `ENABLE_OTEL` 和 `ENABLE_OTEL_LOGS`。
 
 每个追踪跨度都会包含丰富的数据，例如：
 

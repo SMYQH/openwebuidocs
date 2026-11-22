@@ -41,7 +41,7 @@ app.add_middleware(
 - Spring Boot（Java）
 - Go + Swag 或 Echo
 
-关键是让服务提供有效的 OpenAPI 模式定义，并通过 HTTP(S) 通信。还应为所有端点设置自定义 `operationId`。
+关键是让服务提供有效的 OpenAPI 模式定义，并通过 HTTP(S) 通信。请为每个端点设置 `operationId`。Open WebUI 会把没有 `operationId` 的操作排除在工具列表之外，参见[部分端点未出现在工具列表中](/features/extensibility/plugin/tools/openapi-servers/open-webui#some-endpoints-are-missing-from-the-tool-list)。
 
 ---
 

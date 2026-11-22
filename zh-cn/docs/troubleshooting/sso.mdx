@@ -360,6 +360,10 @@ MICROSOFT_REDIRECT_URI=https://your-domain/oauth/microsoft/callback
 ENABLE_OAUTH_SIGNUP=true
 ```
 
+**问题：** 登录在回调阶段失败，浏览器显示 `Sign-in with your identity provider failed. Please contact your administrator for assistance.`，而以 `OAuth callback error during authorize_access_token for provider microsoft` 开头的日志行中包含 `AADSTS7000215`。Microsoft 的[错误代码参考](https://learn.microsoft.com/en-us/entra/identity-platform/reference-error-codes)把该代码描述为 “Invalid client secret is provided.”。
+
+**解决方案：** `MICROSOFT_CLIENT_SECRET` 必须保存密钥的 **Value**，而不是紧挨着它列出的 **Secret ID**。在 Microsoft Entra 管理中心，打开 **App registrations** 下的应用，然后进入 **Certificates & secrets** > **Client secrets**。Microsoft 只在创建密钥时显示一次 **Value**，因此如果你已经没有它，请新建一个客户端密钥并复制其 **Value**。参见[添加和管理应用凭据](https://learn.microsoft.com/en-us/entra/identity-platform/how-to-add-credentials?tabs=client-secret)。
+
 #### Authentik 常见问题： {#authentik-common-issues}
 
 **问题：** provider URL 格式错误。
@@ -385,6 +389,18 @@ OAuth callback failed: Unsupported {'app_id'} in header
 
 **解决方案：** 更新 Open WebUI。无法识别的参数会被忽略，因此提供商一侧无需改动。签名和签名算法仍会照常校验。
 
+#### 加密 ID 令牌的提供商： {#providers-that-encrypt-the-id-token}
+
+**问题：** 登录在回调阶段失败，浏览器显示 `Sign-in with your identity provider failed. Please contact your administrator for assistance.`，日志记录为：
+
+```
+OAuth callback failed: decode_error: Invalid JSON Web Signature
+```
+
+该 ID 令牌不是 Open WebUI 所校验的三段式签名令牌。常见原因是提供商被设置为加密 ID 令牌（JWE）。Open WebUI 没有解密密钥的设置项，因此无法读取加密后的 ID 令牌。
+
+**解决方案：** 在提供商一侧，为 Open WebUI 客户端关闭 ID 令牌加密，并保持 ID 令牌为签名形式。
+
 ---
 
 ### 12. 长时间未升级后已有账户无法登录 {#12-existing-accounts-cannot-sign-in-after-a-long-delayed-upgrade}
@@ -400,6 +416,46 @@ oauth
 把账户的身份提供商 subject 迁移到当前字段的升级步骤把该值编码了两次，因此它保存的是 JSON 对象的文本而不是对象本身。只有在升级那一刻仍早于 v0.6.41 的数据库会受影响，而且只影响当时已存储 subject 的账户。
 
 **解决方案：** 更新 Open WebUI。启动时会运行一个修复迁移，重写受影响的行，其他行一律不动。不需要手工操作数据库，不需要重新绑定，也不需要在提供商一侧做任何改动。`OAUTH_MERGE_ACCOUNTS_BY_EMAIL` 无法绕过这个问题，因为回退查找读取的是同一个账户，同样会失败。
+
+---
+
+### 13. 首次 SSO 登录处于待激活状态或被拒绝 {#13-first-sso-sign-in-is-pending-or-refused}
+
+**问题：** 某个人第一次通过提供商登录。他要么落到 **Account Activation Pending** 页面，要么带着下面的错误返回登录页：
+
+```
+You do not have permission to access this resource. Please contact your administrator for assistance.
+```
+
+#### 新账户处于待激活状态 {#the-new-account-is-pending}
+
+新的 SSO 账户会获得 **设置 > 认证**（管理员区域）中 **用户访问** 部分设置的 **默认用户角色**，即 [`DEFAULT_USER_ROLE`](../reference/env-configuration.mdx#default_user_role)。其默认值是 `pending`，因此该账户会停留在 **Account Activation Pending** 页面，直到管理员更改它的角色。开启两步登录后，登录页会改为显示 `Your account is awaiting administrator approval.`。在空实例上创建的第一个账户会成为 `admin`。
+
+**解决方案：** 使用以下任一方式：
+- 在 **管理面板 > 用户** 中把该账户的角色改为 `user`。
+- 把 **默认用户角色** 设为 `user`，这样新账户可以立即使用 Open WebUI。这同样适用于注册表单和 LDAP 创建的新账户。
+- 开启 **角色映射**（[`ENABLE_OAUTH_ROLE_MANAGEMENT`](../reference/env-configuration.mdx#enable_oauth_role_management)），让提供商的角色在 `user` 和 `admin` 之间决定。参见 [OAuth 角色管理](/features/authentication-access/auth/sso#oauth-role-management)。
+
+#### 登录被拒绝 {#the-sign-in-is-refused}
+
+在回调阶段，Open WebUI 会查找已关联到该提供商和该用户 `sub` 的账户。当不存在这样的账户时：
+
+- 开启 [`OAUTH_MERGE_ACCOUNTS_BY_EMAIL`](../reference/env-configuration.mdx#oauth_merge_accounts_by_email) 时，邮箱相同的已有账户会被关联并登录。
+- 否则，在 [`ENABLE_OAUTH_SIGNUP`](../reference/env-configuration.mdx#enable_oauth_signup) 关闭时（默认），登录会以上面的错误被拒绝。当这个人已经拥有邮箱相同的本地邮箱密码账户时，也会这样。
+- 开启 `ENABLE_OAUTH_SIGNUP` 时，会创建新账户。如果该邮箱的账户已存在，登录会失败并显示 `Uh-oh! This email is already registered. Sign in with your existing account or choose another email to start anew.`
+
+当 **角色映射** 开启、而提供商的角色既不匹配 **允许的角色** 也不匹配 **管理员角色** 时，也会出现同样的错误。参见 [`OAUTH_ALLOWED_ROLES`](../reference/env-configuration.mdx#oauth_allowed_roles)。
+
+**解决方案：**
+- 要让 SSO 创建账户，请设置 `ENABLE_OAUTH_SIGNUP=true`（管理面板中的 **OAuth 注册**）。
+- 要让已有本地账户的人通过 SSO 登录，请设置 `OAUTH_MERGE_ACCOUNTS_BY_EMAIL=true`（**按邮箱合并账户**）。它会把登录关联到任何拥有该邮箱的账户，包括管理员账户，而 Open WebUI 不会检查提供商是否验证过该地址。只为会验证邮箱地址的提供商开启它。
+- 在 [`ENABLE_OAUTH_PERSISTENT_CONFIG`](../reference/env-configuration.mdx#enable_oauth_persistent_config) 为 `false`（默认值）期间，这两个开关在管理面板中只读。请设置环境变量并重启。
+
+#### 提供商不发送 `roles` 声明 {#the-provider-sends-no-roles-claim}
+
+开启 **角色映射** 后，Open WebUI 会从 ID 令牌的声明（与 userinfo 响应合并后）中读取 **角色声明**（[`OAUTH_ROLES_CLAIM`](../reference/env-configuration.mdx#oauth_roles_claim)，默认 `roles`）所指定名称的声明。该声明缺失时，新账户会获得 **默认用户角色**，已有账户则保持其角色。
+
+**解决方案：** 如果提供商把你想要映射的值放在另一个声明下（例如 `groups`），请把 **角色声明** 设为那个声明的名称。然后在 **允许的角色** 和 **管理员角色** 中列出该声明的值。该声明可以是列表，也可以是字符串；字符串会按 [`OAUTH_ROLES_SEPARATOR`](../reference/env-configuration.mdx#oauth_roles_separator)（默认 `,`）分割。像 `user.roles` 这样带点的名称会读取嵌套声明。
 
 ---
 
@@ -469,6 +525,8 @@ ls -la /app/backend/data/
 - `httpcore.ReadTimeout` → 网络超时问题
 - `Sign-in with your identity provider failed. Please contact your administrator for assistance.` → 登录在回调阶段失败，例如提供商拒绝访问、账户没有邮箱，或邮箱域不被允许。这些情况显示相同的文本，因此应查看后端日志确定真正原因。角色不匹配或禁止注册时会显示禁止访问的文本，邮箱重复时会显示已经注册的错误，其他异常则显示 `Error during OAuth process`
 - `Unsupported {'app_id'} in header` → 提供商在 ID 令牌中添加了厂商特有的参数，而当前版本仍会拒绝它。参见[在 ID 令牌中添加自有参数的提供商](#providers-that-add-their-own-parameters-to-the-id-token)
+- `decode_error: Invalid JSON Web Signature` → 该 ID 令牌不是签名令牌，通常是因为提供商对它做了加密。参见[加密 ID 令牌的提供商](#providers-that-encrypt-the-id-token)
+- `Username claim is missing, using email as name` → 创建新账户时用邮箱作为它的名称，因为 [`OAUTH_USERNAME_CLAIM`](../reference/env-configuration.mdx#oauth_username_claim) 所指定的声明缺失或为空
 - `1 validation error for UserModel`，发生在 `oauth` 字段 → 旧的升级步骤把身份提供商 subject 存成了文本。参见[长时间未升级后已有账户无法登录](#12-existing-accounts-cannot-sign-in-after-a-long-delayed-upgrade)
 - 回调 URL 返回 `404` → Redirect URI 配置错误
 
@@ -489,6 +547,7 @@ ls -la /app/backend/data/
 | 🔐 CSRF / session 问题 | 检查 `WEBUI_SECRET_KEY` 与会话配置 |
 | 🔀 多实例问题 | 配置 Redis 与共享密钥 |
 | 长时间未升级后，SSO 账户在升级后立即无法登录 | 更新 Open WebUI；启动时的修复迁移会修复存储的身份数据 |
+| 首次 SSO 登录处于待激活状态或被拒绝 | 更改 **默认用户角色**，或设置 `ENABLE_OAUTH_SIGNUP` 或 `OAUTH_MERGE_ACCOUNTS_BY_EMAIL`。参见[首次 SSO 登录处于待激活状态或被拒绝](#13-first-sso-sign-in-is-pending-or-refused) |
 | 仍未解决？ | 开启 debug 日志、绕过代理测试、复查 provider 配置 |
 
 ---

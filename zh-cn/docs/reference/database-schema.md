@@ -344,7 +344,7 @@ docker exec -it open-webui /bin/sh
 - 当聊天具有活动的分享链接时，`share_id` 引用 `shared_chat.id` 令牌。
 - `current_message_id` 由迁移 `9a1b2c3d4e5f` 添加。它记录聊天当前所处的消息，即新回复所延续的活动分支的叶子节点，并在迁移运行时依据现有历史回填。上下文压缩和上下文用量解析会读取它，因此它们作用于实际生效的分支，而不是整棵消息树。
 - `variables` 由迁移 `c49178636c78` 添加。它以变量名为键的扁平映射保存用户为模型系统提示词所声明的[聊天变量](/features/chat-conversations/chat-features/chat-params#chat-variables)填入的值，并在聊天所有者派生或克隆该聊天时一并复制。由其他人创建的副本从空映射开始。临时聊天只在请求中保留其值，因此不会存储任何内容。
-- 迁移 `242a2047eae0` 添加了一个 **`old_chat`** 列（Text），用于以文本形式备份原始的 JSON `chat` blob。它是迁移阶段的安全网，不属于活动模型，运行时也不会读取。
+- 迁移 `242a2047eae0` 会先把原来的 Text `chat` 列临时重命名为 `old_chat`，再添加一个新的 JSON `chat` 列，把数据复制过去，最后删除 `old_chat`；升级后的数据库不会保留 `old_chat` 列。
 ## Shared Chat 表 {#shared-chat-table}
 
 | **列名** | **数据类型** | **约束**                  | **描述**                    |
@@ -1669,7 +1669,7 @@ DETACH DATABASE plaintext;
 ### 相关的数据库环境变量 {#related-database-environment-variables}
 | 变量 | 默认值 | 说明 |
 |----------|---------|------------|
-| `DATABASE_ENABLE_SQLITE_WAL` | `False` | 启用预写式日志（WAL）以获得更好的性能 |
+| `DATABASE_ENABLE_SQLITE_WAL` | `True` | 启用预写式日志（WAL）以获得更好的性能 |
 | `DATABASE_SQLITE_PRAGMA_SYNCHRONOUS` | `NORMAL` | SQLite 同步模式（与 WAL 结合安全，避免每个事务执行 fsync） |
 | `DATABASE_SQLITE_PRAGMA_BUSY_TIMEOUT` | `5000` | 写锁等待时间（毫秒） |
 | `DATABASE_SQLITE_PRAGMA_CACHE_SIZE` | `-65536` | 页面缓存大小（负数 = KiB；≈ 64 MB） |
@@ -1677,6 +1677,7 @@ DETACH DATABASE plaintext;
 | `DATABASE_SQLITE_PRAGMA_MMAP_SIZE` | `268435456` | 内存映射 I/O 大小（以字节为单位，≈ 256 MB） |
 | `DATABASE_SQLITE_PRAGMA_JOURNAL_SIZE_LIMIT` | `67108864` | 检查点之后 WAL 文件的最大大小（≈ 64 MB） |
 | `DATABASE_POOL_SIZE` | `None` | 数据库连接池大小 |
+| `DATABASE_POOL_MAX_OVERFLOW` | `0` | 超出连接池大小后允许的额外连接数 |
 | `DATABASE_POOL_TIMEOUT` | `30` | 连接池连接超时时间（秒） |
 | `DATABASE_POOL_RECYCLE` | `3600` | 连接池连接回收时间（秒） |
 

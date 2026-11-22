@@ -161,7 +161,7 @@ apiBase: http://localhost:3000/api
 
 ### API 密钥 {#api-key}
 
-要向 Open WebUI 实例进行身份验证，您需要生成一个 API 密钥。
+要向 Open WebUI 实例进行身份验证，您需要生成一个 API 密钥。API 密钥默认关闭：需要管理员开启（[`ENABLE_API_KEYS`](/reference/env-configuration#enable_api_keys)），非管理员用户还需要 **API Keys** 权限（[`USER_PERMISSIONS_FEATURES_API_KEYS`](/reference/env-configuration#user_permissions_features_api_keys)，默认关闭）。
 请按照 [API 端点指南](/reference/api-endpoints)中的说明创建密钥。
 
 ```yaml

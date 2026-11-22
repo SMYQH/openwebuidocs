@@ -20,6 +20,8 @@ Open WebUI 的设计预期是运行在私有、可信网络中，类似数据库
 
 DDoS 防护和暴力破解防护（限速、连接节流、fail2ban）应由代理层或网络层承担。
 
+Open WebUI 默认监听所有网络接口（`0.0.0.0`）。当同一台机器上的反向代理为它转发流量时，请让 Open WebUI 只监听回环地址，避免客户端绕过代理：在 Docker 中把端口发布为 `-p 127.0.0.1:3000:8080`，或运行 `open-webui serve --host 127.0.0.1`。参见 [`HOST`](/reference/env-configuration#host)。Open WebUI 也会从后端访问 Ollama，因此 Ollama 的端口 `11434` 不需要对你的用户开放；参见[让端口 11434 远离你的网络](/troubleshooting/connection-error#accessing-ollama-from-open-webui)。
+
 ### 请求不存在的路径 {#requests-for-paths-that-do-not-exist}
 
 Open WebUI 提供的是单页应用，因此请求应用不认识的路径时，返回的是应用外壳且状态为 200，而不是 404。对 JavaScript 文件的请求是例外，它们会返回 404，因为缺失的脚本必须失败，而不能被塞给浏览器一页 HTML。
@@ -621,7 +623,7 @@ RAG_FILE_MAX_SIZE=50
 RAG_FILE_MAX_COUNT=10
 
 # Restrict allowed file extensions (empty = all allowed)
-RAG_ALLOWED_FILE_EXTENSIONS=.pdf,.txt,.md,.docx,.csv
+RAG_ALLOWED_FILE_EXTENSIONS=pdf,txt,md,docx,csv
 ```
 
 ---
@@ -672,7 +674,7 @@ CODE_INTERPRETER_ENGINE=pyodide
 SAFE_MODE=true
 ```
 
-这样你就能重新进入管理面板，手动关闭出问题的 Function。
+这样你就能重新进入管理面板，手动关闭出问题的 Function。安全模式会在数据库中把每个 Function 都设为未激活，因此在你移除 `SAFE_MODE` 并重启之后，请在 **Admin Panel > Functions** 中把需要的 Function 逐个重新打开。
 
 ### 依赖安装 {#dependency-installation}
 

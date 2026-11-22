@@ -141,6 +141,18 @@ Open WebUI 通过服务器发布的 OAuth 发现文档来定位授权服务器�
 
 当你已经有来自身份提供商的客户端 ID/客户端密钥时使用。
 
+:::info 重定向 URI
+身份提供商处的 OAuth 客户端必须允许以下重定向 URI：
+
+```text
+<WebUI URL>/oauth/clients/mcp:<Connection ID>/callback
+```
+
+对于位于 `https://ai.example.com` 的实例，以及 **Connection ID** 为 `notion` 的连接，即 `https://ai.example.com/oauth/clients/mcp:notion/callback`。`<WebUI URL>` 是**管理面板 > 设置 > 常规**中的 **WebUI URL** 字段（[`WEBUI_URL`](/reference/env-configuration#webui_url)）。点击**注册客户端**之前，请把它设为用户访问 Open WebUI 的公开地址。该字段为空时，Open WebUI 会使用注册客户端时那次请求的地址。
+
+**注册客户端**用它当时看到的 **WebUI URL** 和 **Connection ID** 拼出重定向 URI，保存后的连接会保留该值。更改 **WebUI URL** 或 **Connection ID** 之后，请再次点击**注册客户端**、点击**保存**，并在身份提供商处更新重定向 URI。**OAuth 2.1** 在动态客户端注册时发送同样的重定向 URI，因此你无需在任何地方输入它。
+:::
+
 1. 打开 **设置 > 集成**（管理员区域）。
 2. 在 **外部工具服务器**，点击 **+ 添加连接**。“集成”页面包含多个部分，请确保您选择的是该部分。
 3. 将**类型**设置为 **MCP（Streamable HTTP）**。
@@ -189,8 +201,13 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 
 ### 连接 URL {#connection-urls}
 
+Open WebUI 后端会发起该连接，因此 URL 必须从后端可达，而不是从浏览器可达。该 URL 必须指向服务器的 Streamable HTTP 端点。SSE 端点不可用，参见[SSE URL 无法连接](#an-sse-url-does-not-connect)。
+
 如果你在 **Docker** 中运行 Open WebUI，而 MCP 服务器在**宿主机**上：
-*   使用 `http://host.docker.internal:<port>`（如 `http://host.docker.internal:3000/sse`）而不是 `localhost`。
+*   使用 `http://host.docker.internal:<port>`（如 `http://host.docker.internal:3000/mcp`）而不是 `localhost`。
+
+如果 MCP 服务器与 Open WebUI 运行在**同一个 Docker 网络的另一个容器**中：
+*   使用该容器的服务名和服务器在其容器内监听的端口（如 `http://mcp-server:8000/mcp`）。从 Open WebUI 容器内部无法通过 `localhost` 或宿主机上发布的端口访问它。参见 Docker 的 [Compose 中的网络](https://docs.docker.com/compose/how-tos/networking/)。
 
 ### 自定义标头 {#custom-headers}
 无论是 MCP 还是 OpenAPI 工具服务器连接，都支持一个自由格式的 **Headers** 字段（JSON 对象），其内容会被合并进每一次出站请求。Header 值支持模板占位符，例如 `{{USER_ID}}`、`{{USER_EMAIL}}`、`{{USER_GROUPS}}`、`{{CHAT_ID}}`、`{{MESSAGE_ID}}`、`{{MODEL_ID}}` 和 `{{USER_IP}}`，Open WebUI 会在请求发起时将它们展开。这样无需为每个用户、每个聊天或每条消息单独配置连接，就能让同一条连接路由到不同的后端逻辑，也允许工具服务器按用户组（而非单个用户）进行鉴权。
@@ -208,6 +225,22 @@ Open WebUI 这边不需要任何配置——resource indicator 会自动被发�
 Open WebUI 会以 `<server ID>_<tool name>` 的形式向模型提供每个 MCP 工具。某些提供商（例如 OpenAI API 和 AWS Bedrock）会拒绝工具名超过 64 个字符的请求，因此较长的名称会被缩短为其前 55 个字符、一个下划线以及 8 位哈希。同一个工具总会得到相同的缩短名称，而调用 MCP 服务器时仍使用原始工具名。
 
 启用大量 MCP 工具后，[工具搜索](/features/extensibility/plugin/tools#tool-search) 会把庞大的工具定义排除在每次请求之外，直到模型主动查找。它的 **始终加载的工具** 模式正是针对这些名称，因此 `github_*` 会让 ID 为 `github` 的服务器的所有工具保持加载。
+
+### MCP 工具会收到什么 {#what-an-mcp-tool-receives}
+
+当模型调用 MCP 工具时，Open WebUI 只会把工具名和模型写下的参数发给 MCP 服务器，不会发送其他内容。[工作区 Python 工具](/features/extensibility/plugin/development/reserved-args)获得的保留参数（例如 `__user__`、`__metadata__` 和 `__files__`）绝不会传给 MCP 工具，因此聊天中附加的文件到不了它那里。OpenAPI 工具服务器上的工具也是同样的处理：Open WebUI 会丢弃该操作未声明的所有参数，把其余参数作为路径、查询和请求体参数发送。
+
+服务器通过以下请求头得知是谁发起了调用：
+
+- **Auth** 设置所选择的令牌，参见[身份验证模式](#authentication-modes)。**Session**、**OAuth** 和 **OAuth 2.1** 发送属于该用户的令牌，而 **Bearer** 对所有人都发送同一把密钥。
+- 你的[自定义标头](#custom-headers)，其中 `{{USER_ID}}`、`{{CHAT_ID}}` 等占位符已填入实际值。
+- 当 [`ENABLE_FORWARD_USER_INFO_HEADERS`](/reference/env-configuration#enable_forward_user_info_headers) 设为 `true` 时，用户的姓名、ID、邮箱和角色会通过 `X-OpenWebUI-User-*` 请求头发送（或在设置了 `FORWARD_USER_INFO_HEADER_JWT_SECRET` 时发送一个签名 JWT），另外还有 `X-OpenWebUI-Chat-Id` 和 `X-OpenWebUI-Message-Id`。
+
+要把聊天文件交给 MCP 或 OpenAPI 工具：
+
+- **传递内容或 URL。** 给工具一个用于文本或可下载 URL 的参数，让模型自行填入。
+- **传递文件 ID。** 当 **Function Calling** 未设为 **Legacy** 且模型的 **Builtin Tools** 能力开启时，每条用户消息到达模型时会带一个 `<attached_files>` 块，其中列出每个附加文件的 `id`。给工具一个文件 ID 参数，并让服务器用它收到的令牌从你的 Open WebUI 实例的 `/api/v1/files/<id>/content` 下载文件。使用 **Session** 认证时，那就是用户自己的 Open WebUI 令牌，对用户有权读取的文件有效。
+- **使用工作区 Python 工具。** 在**工作区 > 工具**中编写的工具会在 `__files__` 中收到附加文件，并可自行转发给你的服务。
 
 ### 结构化工具结果 {#structured-tool-results}
 
@@ -248,6 +281,36 @@ MCP 工具可以附带交互式应用（[MCP Apps](https://modelcontextprotocol.
 2.  **过滤列表 Bug**：如果"函数名称过滤列表"为空，尝试向其添加逗号（`,`）。
 3.  **OAuth 2.1 默认工具**：如果失败的工具使用 OAuth 2.1 并被设置为模型的默认工具，这是已知限制。从模型的默认工具中删除它，让用户每次对话手动启用。
 4.  **握手缓慢**：如果服务器冷启动较慢，或暴露了大量工具，连接、列出工具或读取资源都可能超出其超时时间。可以提高 [`MCP_INITIALIZE_TIMEOUT`](/reference/env-configuration#mcp_initialize_timeout)（默认 `10` 秒）。工具调用则使用 [`AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER`](/reference/env-configuration#aiohttp_client_timeout_tool_server)。
+
+### OAuth 登录后出现 `{"detail":"Not Found"}` {#detailnot-found-after-the-oauth-sign-in}
+
+**现象**：在提供商处批准访问后，浏览器落到 `/oauth/clients/mcp:<Connection ID>/callback`，页面上只显示 `{"detail":"Not Found"}`。
+
+**原因**：Open WebUI 没有在该 URL 的 **Connection ID** 下保存 OAuth 客户端。redirect URI 保留的是你点击**注册客户端**时的那份 **Connection ID**，因此这种情况发生在 **Connection ID** 之后被改动过，或者该连接已被删除或从未保存。
+
+**解决方案**：在**设置 > 集成**（管理员区域）中打开该连接，用当前的 **Connection ID** 点击**注册客户端**，然后点击**保存**。使用 **OAuth 2.1（静态）** 时，请在身份提供商处把 redirect URI 更新为相同值，参见 [OAuth 2.1（静态）设置](#oauth-21-static-setup)。然后在对话中重新启用该工具。
+
+### SSE URL 无法连接 {#an-sse-url-does-not-connect}
+
+**现象**：
+URL 指向服务器 SSE 端点的连接（通常是结尾为 `/sse` 的 URL）无法连接。对话显示 "Failed to connect to MCP server"。
+
+**原因**：
+Open WebUI 只通过 Streamable HTTP 连接 MCP 服务器。它从不建立 SSE 连接，因此 SSE 端点无法应答它的请求。
+
+**解决方案**：
+1.  **使用 Streamable HTTP 路径**：如果服务器也提供 Streamable HTTP，请把该端点填为 **URL**。服务器的文档中会写明这个路径。
+2.  **用 mcpo 桥接 SSE**：如果服务器只提供 SSE，请让它运行在 [mcpo](https://github.com/open-webui/mcpo) 之后，例如 `mcpo --port 8000 --server-type "sse" -- http://127.0.0.1:8001/sse`，并把 mcpo 的 URL 添加为 **OpenAPI** 连接。参见 [MCP 支持](/features/extensibility/plugin/tools/openapi-servers/mcp)。
+
+### 出现 “Maximum tools limit reached” 错误 {#maximum-tools-limit-reached}
+
+错误 `Maximum tools limit reached. <n> tools have been provided but the maximum is <m>` 来自模型提供商或其前方的代理，而不是 Open WebUI。该请求携带的工具定义超过了该端点所能接受的数量。Open WebUI 会发送聊天中启用的每个 MCP 服务器的全部工具（通过其 **Function Name Filter List** 的那些），再加上 Native 模式下的内置工具。
+
+要减少发送的工具数量：
+
+- **开启[工具搜索](/features/extensibility/plugin/tools#tool-search)。** 延迟加载的工具不会进入发送给提供商的工具列表，因此该列表只保留始终加载的工具加上 `search_tools` 和 `call_tool`。只有定义长度超过 **Deferral Threshold (characters)** 的工具才会被延迟。将其设为 `0` 可延迟所有工具。
+- **只列出需要的工具**，在每个服务器的[函数名称过滤列表](#function-name-filter-list)中设置。
+- **启用更少的 MCP 服务器**，或在对话中关闭模型不需要的[内置工具类别](/features/extensibility/plugin/tools#granular-builtin-tool-categories-per-model)。
 
 ### 添加外部工具后出现无限加载界面 {#infinite-loading-screen-after-adding-external-tool}
 

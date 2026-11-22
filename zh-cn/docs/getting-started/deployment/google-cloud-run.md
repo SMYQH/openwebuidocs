@@ -125,7 +125,7 @@ gcloud run services logs read openwebui --region REGION --limit=50
 
 ## 添加用户前的验证 {#verify-before-adding-users}
 
-- 使用初始管理员账户登录，确认开放注册已关闭。在放开更多访问权限前，请先配置你的[身份提供方](/features/authentication-access/auth/sso)。
+- 使用初始管理员账户登录，确认开放注册已关闭（用 `WEBUI_ADMIN_EMAIL` 和 `WEBUI_ADMIN_PASSWORD` 创建管理员会关闭它）。在放开更多访问权限前，请先配置你的[身份提供方](/features/authentication-access/auth/sso)。
 - 选择一个模型并以流式方式获取响应，然后重新打开已保存的会话。
 - 上传一份包含明显事实的小文档。确认索引完成，并就该事实提问以验证能够检索到来源。
 - 替换一个应用实例，确认同一账户、会话与已上传文件依然可用。

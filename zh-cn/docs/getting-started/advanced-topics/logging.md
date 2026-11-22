@@ -13,7 +13,7 @@ Open WebUI 在两处记录日志：**浏览器控制台**用于调试前端，**
 
 ## 前端日志 {#frontend-logging}
 
-前端使用标准浏览器 `console.log()` 调用。打开浏览器开发者工具（**F12**，或 macOS 上的 **Cmd+Option+I**），切换到 **控制台** 标签页，即可看到客户端应用输出的信息、警告与错误。
+前端使用标准浏览器 `console` 调用。打开浏览器开发者工具（**F12**，或 macOS 上的 **Cmd+Option+I**）并切换到 **控制台** 标签页。生产构建（Docker 镜像也包括在内）会在构建时剥离 `console.log`、`console.debug` 和 `console.error` 调用，除非前端是用 `ENV=dev` 构建的，因此在那里你主要看到的是 `console.warn` 和 `console.info` 的输出，以及浏览器自身的错误。
 
 各浏览器文档：
 
@@ -60,11 +60,28 @@ environment:
 `DEBUG` 适合开发和故障排查。生产环境建议保持在 `INFO` 或 `WARNING`，以免日志量过大。
 :::
 
+Python `logging` 模块无法识别的值（例如 `TRACE`）会回退为 `INFO`。请使用上表中的级别名称：别名 `WARN` 和 `FATAL` 能通过该检查，但 Loguru 会拒绝它们，后端将无法启动。
+
 ---
 
 ### 日志级别的代价 {#what-the-log-level-costs}
 
 提高日志级别不仅能减少日志量，还能减少处理开销，因为被该级别过滤掉的消息根本不会生成。知识库搜索只在 `DEBUG` 级别记录找到的文件名和完整结果。External、Firecrawl、Kagi、Mojeek、SearchApi、SerpApi、Serply 和 Yandex 搜索引擎也是如此。`DEBUG` 级别的运行开销最高，还会记录完整的聊天请求载荷。排查完问题后，请将日志级别调回原值。
+
+---
+
+### 关闭访问日志 {#turning-off-access-logs}
+
+每个 HTTP 请求都会由 uvicorn 的 `uvicorn.access` 记录器在 `INFO` 级别写出一行访问日志。启动时，Open WebUI 会接管 `AUDIT_UVICORN_LOGGER_NAMES` 中列出的所有记录器，默认是 `uvicorn.access`：它把该记录器的处理器替换为自己的，并把级别设置为 `GLOBAL_LOG_LEVEL`。这就是为什么单独设置 `UVICORN_ACCESS_LOG=false` 不会去掉这些访问日志行。
+
+在 Docker 镜像中，uvicorn 是从命令行启动的。要去掉访问日志行并保持 `GLOBAL_LOG_LEVEL=INFO`，请同时设置：
+
+```bash
+UVICORN_ACCESS_LOG=false
+AUDIT_UVICORN_LOGGER_NAMES=
+```
+
+空的 `AUDIT_UVICORN_LOGGER_NAMES` 会停止接管，于是 uvicorn 自身的开关才生效。`open-webui serve` 是从 Python 启动 uvicorn 的，不读取 `UVICORN_ACCESS_LOG`，因此那里的访问日志行遵循 `GLOBAL_LOG_LEVEL`，只有高于 `INFO` 的级别（例如 `WARNING`）才能隐藏它们。[审计日志](/getting-started/advanced-topics/hardening#audit-logging)由 Open WebUI 自己写入，而不是由 `uvicorn.access` 写入，因此它仍然可用。
 
 ---
 
@@ -94,8 +111,8 @@ environment:
 | `msg` | 日志消息 |
 | `caller` | 源代码位置（`module:function:line`） |
 | `extra` | 额外上下文数据（如有） |
-| `error` | 错误详情（如适用） |
-| `stacktrace` | 堆栈跟踪（如适用） |
+| `error` | 错误详情（如适用）：包含 `type`、`message` 和 `stacktrace` 的对象，或启动早期行中的纯字符串 |
+| `stacktrace` | 堆栈跟踪，仅出现在以 `stack_info=True` 记录的启动早期行中 |
 
 **示例输出：**
 

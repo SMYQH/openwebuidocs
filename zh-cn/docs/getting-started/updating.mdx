@@ -39,6 +39,8 @@ ghcr.io/open-webui/open-webui:vX.Y.Z-cuda
 ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 ```
 
+`-ollama` 镜像在构建镜像时安装 Ollama。内置的 Ollama 只在你拉取更新的 Open WebUI 镜像时才会变化，而固定的 `vX.Y.Z-ollama` 标签会保留构建时使用的 Ollama 版本。若要按自己的节奏更新 Ollama，请按 [Ollama 的 Docker 指南](https://docs.ollama.com/docker)把它作为独立容器运行。
+
 你可以在 [GitHub releases 页面](https://github.com/open-webui/open-webui/releases) 查看所有可用标签。
 
 ---
@@ -49,8 +51,8 @@ ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 2. **查看 [发布说明](https://github.com/open-webui/open-webui/releases)**，确认是否有破坏性变更。
 3. 更新后**清理浏览器缓存**（`Ctrl+F5` / `Cmd+Shift+R`），避免旧前端资源残留。
 
-:::info 早期版本中的编程智能体聊天
-在本次更新之前开始的编程智能体聊天中，发送第一条新消息时会开启新的智能体会话。智能体会以文本形式收到此前的聊天内容。
+:::info 早期版本中的智能体聊天
+在本次更新之前开始的智能体聊天中，发送第一条新消息时会开启新的智能体会话。智能体会以文本形式收到此前的聊天内容。
 :::
 
 :::info Tether 取代 Direct Connections
@@ -94,7 +96,7 @@ docker run -d -p 3000:8080 \
   ghcr.io/open-webui/open-webui:main
 ```
 
-如需 NVIDIA GPU 支持，请在 `docker run` 命令中加入 `--gpus all`。
+如需 NVIDIA GPU 支持，请在 `docker run` 命令中加入 `--gpus all`，并使用 `:cuda` 标签。请在第 2 步和第 3 步拉取与你正在运行的相同标签：由 `:cuda`、`:ollama` 或某个版本标签启动的容器，在拉取 `:main` 之后仍会启动旧版本。
 
   </TabItem>
   <TabItem value="docker-compose" label="Docker Compose">
@@ -155,6 +157,7 @@ open-webui serve
 2. **打开界面：** 访问 [http://localhost:3000](http://localhost:3000)，应看到登录页。
 3. **如果界面显示异常，** 清理浏览器缓存（`Ctrl+F5` / `Cmd+Shift+R`）。
 4. **如果日志里看到迁移错误，** 请查看[发布说明](https://github.com/open-webui/open-webui/releases)中的已知问题，以及[连接错误](/troubleshooting/connection-error) 故障排查页面。
+5. **如果更新后没有任何变化，** 请检查卷挂载在哪里。应把它挂载到 `/app/backend/data`，绝不要挂到 `/app/backend`。镜像把应用程序代码放在 `/app/backend`，因此挂到那里的卷或绑定挂载会覆盖新代码，容器运行的仍是挂载所包含的代码。要修复类似 `./backend:/app/backend` 的绑定挂载，请改成 `./backend/data:/app/backend/data`。如果你从未设置 `WEBUI_SECRET_KEY`，请先把 `./backend/.webui_secret_key` 中的值复制到该变量：生成的密钥保存在 `/app/backend/.webui_secret_key`，位于数据目录之外，因此移动之后 Open WebUI 会生成新的密钥，所有人都会被登出。
 
 ---
 

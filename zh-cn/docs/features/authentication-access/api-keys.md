@@ -7,7 +7,7 @@ title: "API 密钥"
 
 **面向脚本、机器人和集成的 Open WebUI 程序化访问入口。**
 
-API 密钥是一种个人访问令牌，允许外部代码调用与 Web 界面相同的端点。您在浏览器中能做的任何事情——对话补全、模型列举、文件上传、RAG 查询——您的脚本都可以通过单个 `Authorization: Bearer` 请求头来完成。密钥代表创建它的那个用户，因此不存在另一套需要单独学习的权限模型。
+API 密钥是一种个人访问令牌，允许外部代码调用与 Web 界面相同的端点。您在浏览器中能做的任何事情——对话补全、模型列举、文件上传、RAG 查询——您的脚本都可以通过单个 `Authorization: Bearer` 请求头来完成，但[需要已登录会话的端点](#endpoints-that-need-a-signed-in-session)一节列出的少数账户安全端点除外。密钥代表创建它的那个用户，因此不存在另一套需要单独学习的权限模型。
 
 每个账号只能有**一个** API 密钥。已有密钥时，创建新密钥会替换原密钥，原密钥随即失效。
 
@@ -25,7 +25,7 @@ API 密钥代表你执行操作。它继承你的角色和用户组权限。系�
 
 ### 可撤销且可审计 {#revocable-and-auditable}
 
-一个密钥可以直接替换或彻底删除。创建新密钥会覆盖旧密钥，删除密钥则会让账号不再拥有任何密钥——无论采用哪种方式，泄露的凭据都只需一步就能完成退役，且变更立即生效。这个过程不涉及重置密码，也不涉及使会话失效。管理员还可以通过关闭全局 **API Keys** 开关一次性停用所有密钥，或者通过移除某用户的功能权限、或者[代其删除](#managing-a-users-key-admin)来停用某个用户的密钥。密钥的创建与删除都会被记录为认证事件。开启[审计日志](/getting-started/advanced-topics/hardening#audit-logging)后，使用密钥发起的请求都会出现在审计日志中，并归属于该密钥的所有者——无论密钥是以 Bearer token 还是以 `x-api-key` 请求头的形式到达（请求头名可通过 [`CUSTOM_API_KEY_HEADER`](/reference/env-configuration#custom_api_key_header) 重命名）。
+一个密钥可以直接替换或彻底删除。创建新密钥会覆盖旧密钥，删除密钥则会让账号不再拥有任何密钥——无论采用哪种方式，泄露的凭据都只需一步就能完成退役，且变更立即生效。这个过程不涉及重置密码，也不涉及使会话失效。管理员还可以通过关闭全局 **API Keys** 开关一次性停用所有密钥，或者通过移除某用户的功能权限（管理员的密钥不受该权限约束）、或者[代其删除](#managing-a-users-key-admin)来停用某个非管理员用户的密钥。密钥的创建与删除都会被记录为认证事件。密钥以明文形式存储在数据库中，更改密码或退出登录都不会影响它们。开启[审计日志](/getting-started/advanced-topics/hardening#audit-logging)后，使用密钥发起的请求都会出现在审计日志中，并归属于该密钥的所有者——无论密钥是以 Bearer token 还是以 `x-api-key` 请求头的形式到达（请求头名可通过 [`CUSTOM_API_KEY_HEADER`](/reference/env-configuration#custom_api_key_header) 重命名）。
 
 ---
 
@@ -193,6 +193,7 @@ CUSTOM_API_KEY_HEADER=X-OpenWebUI-Key
 - 全局的 **API Keys** 开关可能已被关闭，这会使已有密钥失效
 - 密钥所有者可能已失去 **API Keys** 功能权限
 - 如果启用了端点限制，确认您调用的路由在允许列表中
+- 如果响应正文为 `A human session is required.`，说明该路由完全不接受 API 密钥。参见[需要已登录会话的端点](#endpoints-that-need-a-signed-in-session)
 
 ---
 
@@ -205,6 +206,24 @@ CUSTOM_API_KEY_HEADER=X-OpenWebUI-Key
 ### 不支持按密钥设置权限 {#no-per-key-permissions}
 
 密钥会继承创建者的全部权限。您无法把某个密钥限制为其所有者权限的子集，而且端点限制是实例级的，而不是按密钥生效。
+
+### 需要已登录会话的端点 {#endpoints-that-need-a-signed-in-session}
+
+这些路由只接受浏览器登录得到的令牌。无论密钥所有者的角色或权限如何，使用 API 密钥都会得到 `403` 和 `A human session is required.`：
+
+| 路由 | 作用 |
+| :--- | :--- |
+| `GET /api/v1/auths/` | 返回已登录用户及其令牌，并设置 `token` cookie |
+| `GET /api/v1/auths/mfa/status` | 双因素认证状态 |
+| `POST /api/v1/auths/mfa/replace` | 开始替换某个双因素认证方式 |
+| `POST /api/v1/auths/mfa/recovery/codes` | 创建新的恢复码 |
+| `GET /api/v1/auths/sessions` | 列出供原生客户端使用的持久会话 |
+| `POST /api/v1/auths/sessions` | 为原生客户端创建持久会话 |
+| `GET /api/v1/auths/sessions/{session_id}/request` | 读取原生客户端发起的待处理登录请求 |
+| `POST /api/v1/auths/sessions/{session_id}/authorize` | 批准该登录请求 |
+| `DELETE /api/v1/auths/sessions/{session_id}` | 吊销持久会话 |
+
+要用 API 密钥读取密钥所有者本人的账户，请调用 `GET /api/v1/users/user/status`。它返回用户记录，其中包含 `id`、`name`、`email` 和 `role`；当通过 [`ENABLE_USER_STATUS`](/reference/env-configuration#enable_user_status) 关闭用户状态接口时，它会返回 `403`。`GET /api/v1/users/permissions` 返回所有者的权限。
 
 ### 不会自动过期 {#no-automatic-expiration}
 

@@ -24,3 +24,13 @@ import DocCardList from '@theme/DocCardList';
 与 Open WebUI 对话，让它也回应你。通过语音转文字进行口述，通过文字转语音听取回复，支持多种引擎和语音。
 
 <DocCardList />
+
+## 个人文字转语音设置 {#personal-text-to-speech-settings}
+
+每个用户都可以在自己的**设置**的 **Audio** 标签页中调整回复的朗读方式，位置在 **TTS Settings** 和 **Voice** 之下。
+
+| 设置项 | 显示条件 | 作用 |
+| :--- | :--- | :--- |
+| **Kokoro.js Dtype** | 你的**文字转语音引擎**为 **Kokoro.js (Browser)** | 设置浏览器下载并运行的 Kokoro 模型（`onnx-community/Kokoro-82M-v1.0-ONNX`）的精度：`fp32`（全精度）、`fp16`、`q8` 或 `q4`。在你选择之前不会加载任何模型，**Voice** 部分会一直显示 **Loading Kokoro.js...** 而没有语音列表。选择之后模型开始加载，提示信息会显示百分比。请保持设置页面打开，直到语音列表出现，然后点击 **Save** 保存该 dtype。当浏览器提供 GPU 适配器时，模型运行在 WebGPU 上，否则运行在 WebAssembly 上。如果没有保存 dtype，**Read Aloud** 和语音通话会使用 `fp32`。 |
+| **Auto-Playback Response** | 始终显示 | 切换后立即保存，无需点击 **Save**。当一条回复结束时，Open WebUI 会按下该消息的 **Read Aloud** 按钮，因此播放使用相同的引擎和语音。它不会播放以错误结束的回复，也不会在语音通话期间运行，因为语音通话会自行朗读回复。它依赖 **Read Aloud** 按钮，因此没有 **Allow Text to Speech** 权限的用户不会获得播放。开启期间，Open WebUI 会在你首次点击或按键时播放一段短静音片段，让 Safari 等 WebKit 浏览器允许之后的播放。 |
+| **Allow non-local voices** | 管理员的**文字转语音引擎**为 **Web API**，且你的**文字转语音引擎**为 **Default** | 默认关闭，因此 **Set Voice** 只列出浏览器报告为本地的声音（`localService` 为 `true`）。打开后，还会列出浏览器报告为非本地的声音。点击 **Save** 保存该更改。 |

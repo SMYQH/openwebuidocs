@@ -13,8 +13,14 @@ title: "开发"
 
 工具包定义在一个 Python 文件中，文件顶部使用包含元数据的文档字符串，并提供一个 `Tools` 类。
 
-:::warning 为未来兼容性使用异步函数
-工具方法通常应定义为 `async`，以确保与未来版本的 Open WebUI 兼容。后端正在逐步转向完全异步执行，同步函数在未来版本中可能会阻塞执行或引发问题。
+:::warning 用 `async def` 定义工具方法
+不是 `async def` 的工具方法会被 Open WebUI 直接放在它的事件循环上运行。在它运行期间，该 Open WebUI worker 不再处理任何其他请求，因此一个缓慢或阻塞的工具会拖住该 worker 上每位用户的对话。用 `requests` 调用 Open WebUI 自身 HTTP API 的同步工具，最终可能等在它自己阻塞的那个 worker 上，调用会一直挂起直到请求超时。`async def` 方法内部的阻塞调用同样会以这种方式拖住 worker。
+
+- 请用 `async def` 定义工具方法，并使用异步 HTTP 客户端（例如 `httpx.AsyncClient` 或 `aiohttp`）代替 `requests`。Open WebUI 本身就包含这两个库。
+- 确实无法避免的阻塞工作，请用 `await anyio.to_thread.run_sync(...)` 放到工作线程中运行。
+- 需要读取或修改 Open WebUI 数据时，请调用内部模型，例如 `from open_webui.models.chats import Chats`，而不是 Open WebUI 的 HTTP API。
+
+示例参见[尚不支持异步的第三方库](/features/extensibility/plugin/migration/to-0.9.0#7-third-party-libraries-that-dont-yet-support-async)。
 :::
 
 ### 顶层文档字符串示例 {#example-top-level-docstring}
@@ -1354,6 +1360,8 @@ Tools 和 Actions 可以返回 HTML 内容，并在聊天中直接渲染为可�
 
 在 Tools 定义元数据中，你可以指定自定义包。点击 `Save` 后，这一行会被解析，系统会一次性对所有依赖执行 `pip install`。
 
+Open WebUI 在每次重启后也会重新执行这些安装。启动时，它会安装每个处于启用状态的 Function 以及每个由管理员拥有的启用状态 Tool 的 `requirements:`。由其他用户拥有的 Tool 不参与这次启动安装。它的包会在重启后 Open WebUI 第一次加载该 Tool 时安装，例如在第一次使用它的对话中，而那次对话会一直等待 pip 执行完毕。当 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS`](/reference/env-configuration#enable_pip_install_frontmatter_requirements) 为 `False` 或 [`OFFLINE_MODE`](/reference/env-configuration#offline_mode) 为 `True` 时，这两种安装都不会执行。
+
 :::warning
 
 **🚨 关键警告：可能存在包版本冲突**
@@ -1379,6 +1387,17 @@ RUN pip install --no-cache-dir python-docx requests beautifulsoup4
 ```
 
 运行时安装只适用于**开发或家庭实验环境**，也就是你在试验新函数和工具的时候。对于任何服务多个用户的部署，都应该把依赖打包进容器镜像。
+
+:::
+
+:::warning 安装依赖时保存失败
+
+Open WebUI 通过运行 `python -m pip install` 来安装 `requirements:` 这一行，用的是与 Open WebUI 相同的 Python。该安装失败时，保存也会失败。创建工具或函数时会显示 `[ERROR: Error creating tool]` 或 `[ERROR: Error creating function]`。保存已有的工具或函数同样会报错。服务器日志会显示 `Error installing packages:` 及随后列出的包，pip 自身的输出就在它前面。
+
+常见的原因有两个：
+
+- **列出了标准库模块。** `smtplib`、`json`、`datetime` 之类的模块随 Python 一起提供，并不是 pip 包。请把它们从 `requirements:` 中移除，只保留 `import`。
+- Open WebUI 所运行的 Python 环境中**缺少 pip**，例如某些用 uv 搭建的环境。请自行把这些包装进该环境，并设置 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements)，从而跳过安装。
 
 :::
 

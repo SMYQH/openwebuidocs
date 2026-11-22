@@ -15,7 +15,7 @@ title: "备份"
 
  本指南旨在为用户提供一些基本建议，说明如何进行备份。
 
- 本指南假设用户已通过 Docker 安装 Open WebUI（或计划这样做）。
+ 本指南假设用户已通过 Docker 安装 Open WebUI（或计划这样做）。对于 pip、uv 和 Conda 安装，请参见 [pip、uv 和 Conda 安装](#pip-uv-and-conda-installs)。
 
 ## 确保数据持久化 {#ensuring-data-persistence}
 
@@ -77,6 +77,23 @@ services:
 
 如果采用这种部署方式，请记下这些绑定挂载在宿主机上的实际路径。
 
+## pip、uv 和 Conda 安装 {#pip-uv-and-conda-installs}
+
+用 `open-webui serve` 启动的实例把数据保存在 [`DATA_DIR`](/reference/env-configuration#data_dir) 指定的目录中。未设置 `DATA_DIR` 时，该目录是 Python 环境 `site-packages` 内的 `open_webui/data`，因此删除或重建环境会连同数据一起删掉。要打印该路径，请在已激活的环境中运行：
+
+```bash
+python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).resolve().parent / 'data')"
+```
+
+需要备份两样东西：
+
+- **数据目录。** 它保存与 Docker 卷相同的文件，列表见[持久化数据存储中的文件](#files-in-persistent-data-store)。
+- **`.webui_secret_key` 文件**，除非你已在环境中设置 [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key)。`open-webui serve` 会在首次启动时于你运行命令所在的目录中创建它，而不是放在数据目录里，并且每次启动都会打印它的路径：`Loading WEBUI_SECRET_KEY from <path>`。恢复实例时若缺少该文件，会生成新密钥，从而让所有人退出登录。
+
+复制之前请先停止 Open WebUI，这样 `webui.db` 和它的 `webui.db-wal` 文件才会以相同状态被复制。
+
+若要把数据移出环境，请停止 Open WebUI，把数据目录复制到你自己的某个文件夹，然后让 `DATA_DIR` 指向它来启动，例如 `DATA_DIR=~/.open-webui open-webui serve`。请从存放 `.webui_secret_key` 的文件夹启动，或把该文件复制到你启动时所在的文件夹。
+
 ## 编写备份任务脚本 {#scripting-a-backup-job}
 
 无论您的实例如何配置，都建议检查服务器上应用的数据存储，了解需要备份的数据。您应该会看到类似如下的结构：
@@ -98,6 +115,22 @@ services:
 | `uploads/` | 用于存储用户上传文件的目录。 |
 | `vector_db/` | 包含 ChromaDB 向量数据库的目录。 |
 | `webui.db` | 用于持久存储其他实例数据的 SQLite 数据库。 |
+
+## 导出管理员配置 {#exporting-the-admin-configuration}
+
+**Settings > Database**（管理员区域）中的 **Config** 部分提供 **Export Config** 和 **Import Config**。它们只复制管理员设置，因此不能替代对数据存储的备份。
+
+**Export Config** 会下载 `config-<timestamp>.json`，这是一个扁平的 JSON 对象，用点分隔的键（如 `openai.api_base_urls` 或 `ui.banners`）保存 `config` 表中的每一行。
+
+- 该文件以明文保存机密：连接 API 密钥（`openai.api_keys`）、网页搜索 API 密钥、Jupyter token 和密码，以及 OAuth 客户端密钥。请像保存密码文件一样对待它。
+- 它不包含存储在 `config` 表之外的一切：用户、聊天、模型、知识库、文件、functions 和 tools。仅以环境变量存在的设置（例如 `WEBUI_SECRET_KEY`）也不在其中。
+- 在 `ENABLE_PERSISTENT_CONFIG=False` 时，该文件保存的是 Open WebUI 实际运行所用的值，而这些值起始于环境变量。
+
+**Import Config** 读取同样格式的文件，并把其中每个键按原样写入，不检查键名或取值。文件中缺失的键保持当前值，因此导入会合并进现有设置，而不会重置其余部分。导入成功后会显示 `Config imported successfully`。
+
+- 在 `ENABLE_PERSISTENT_CONFIG=False` 时，以及在 `ENABLE_OAUTH_PERSISTENT_CONFIG` 关闭时的 `oauth.*` 键上，导入的值只影响运行中的实例，重启后即丢失。
+- 完整导出包含 MFA 密钥（`auth.mfa.enable`、`auth.mfa.allow_oauth_bypass`、`auth.mfa.allow_trusted_header_bypass`）。携带这些键的导入必须来自已登录浏览器的管理员。用 API key 发送时会失败并提示 `A human administrator session is required to change MFA settings.`。
+- 如果导入的 MFA 值与当前值不同，所有用户都会被登出。如果该文件打开 MFA 而实例无法运行它（没有认证、没有持久化配置，或已存储的 MFA 密钥无法再解密），导入会失败并提示 `Unable to update MFA policy. Check configuration and retry.`，且不会写入任何内容。
 
 # 文件级备份方案 {#file-level-backup-approaches}
 

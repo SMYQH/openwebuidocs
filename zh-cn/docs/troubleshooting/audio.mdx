@@ -243,6 +243,17 @@ services:
     restart: unless-stopped
 ```
 
+### Kokoro.js（浏览器）一直停在 "Loading Kokoro.js..." {#kokorojs-browser-stuck-on-loading-kokorojs}
+
+**症状：** 在 **Settings → Audio** 中把 **Text-to-Speech Engine** 设为 **Kokoro.js (Browser)** 后，模型下载达到 100% 时 **Voice** 区域仍一直显示 `Loading Kokoro.js...`，并且不出现音色列表。
+
+**原因：** 只要浏览器报告了 WebGPU adapter，Open WebUI 就会在 WebGPU 上运行 Kokoro.js；只有在浏览器没有报告 adapter 时才使用 WebAssembly。如果在 WebGPU 上加载失败，Open WebUI 不会改用 WebAssembly 重试。设置页面会一直显示加载提示，错误只出现在浏览器控制台中。
+
+**可尝试的方案：**
+- 在同一区域选择另一个 **Kokoro.js Dtype**。每次更改都会让 Open WebUI 重新加载模型。
+- 换一个浏览器。
+- 在浏览器中关闭 WebGPU，让 Open WebUI 在 WebAssembly 上加载 Kokoro.js。
+
 ### TTS 音色不存在 / 没有音频输出 {#tts-voice-not-found--no-audio-output}
 
 **检查清单：**
@@ -337,6 +348,14 @@ environment:
 pip install av==14.0.1
 ```
 
+### 通过 pip 安装后缺少 ffmpeg {#ffmpeg-missing-on-a-pip-install}
+
+**症状：** 服务器日志显示 `Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work`，需要转换音频的语音转文字或文字转语音请求失败。
+
+**原因：** Open WebUI 用 ffmpeg 为语音转文字转换、压缩和切分音频，并把兼容 OpenAI 的文字转语音引擎返回的非 MP3 回复转换为 MP3。标准 Docker 镜像已安装它，pip、uv、Conda 或 venv 安装则没有。
+
+**解决方案：** 用操作系统的包管理器安装 ffmpeg，确保 `ffmpeg` 位于运行 Open WebUI 的进程的 `PATH` 中，然后重启。若要跳过这一步处理，请把 [`BYPASS_PYDUB_PREPROCESSING`](/reference/env-configuration#bypass_pydub_preprocessing) 设为 `True`；此时音频会不做转换直接送入引擎。
+
 ### STT 识别准确率差 {#stt-not-recognizing-speech-correctly}
 
 **提高识别效果的小建议：**
@@ -364,6 +383,22 @@ pip install av==14.0.1
 - 将 [`AIOHTTP_CLIENT_SESSION_SSL=False`](/reference/env-configuration#aiohttp_client_session_ssl) 设为 False，以关闭这些出站调用的证书校验。
 - 文本转语音和语音转文本都会遵循该设置。
 - 建议优先把内部 CA 安装进容器的信任库；关闭校验会让该连接失去针对中间人攻击的保护。
+
+### 兼容 OpenAI 的 STT 在代理后面失败 {#openai-compatible-stt-fails-behind-a-proxy}
+
+**症状：** 每次转写都以 `Error transcribing chunk: External:` 开头的错误失败，错误信息的其余部分说明服务器不支持某个 `response_format` 取值。
+
+**原因：** 使用 **OpenAI** **Speech-to-Text Engine** 时，Open WebUI 会向 `<API Base URL>/audio/transcriptions` 发送请求，并且从不发送 `response_format`：
+
+- **Request Format** 设为 **Multipart Upload**（默认）时，表单包含 `model` 字段（即 **STT Model**）、设置了语言时的 `language` 字段，以及 `file`。
+- 使用 **JSON Base64** 时，JSON 请求体包含 `model`、设置了语言时的 `language`，以及带 base64 音频及其 `format` 的 `input_audio`。
+
+Open WebUI 以 JSON 读取回复，只使用其中的 `text` 字段。如果错误信息提到 `response_format`，说明 Open WebUI 与转写服务器之间的某个组件添加了它，例如 LiteLLM 这样的代理。
+
+**解决方案：**
+
+- 配置代理为该模型请求 `json`。在 LiteLLM 中，在模型的 `litellm_params` 中设置 `response_format: json`。
+- 或者把 **API Base URL** 直接指向转写服务器，前提是它接受不带 `response_format` 的请求。
 
 ---
 

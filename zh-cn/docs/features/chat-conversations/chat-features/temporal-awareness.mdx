@@ -16,6 +16,8 @@ title: "时间感知"
 - **`CURRENT_DATETIME`**：日期与时间合在一起。`CURRENT_TIMEZONE` 和 `USER_LANGUAGE` 只由浏览器填充，因此对 API 调用方、自动化和定时器来说会保持字面量。
 - **`CURRENT_WEEKDAY`**：（例如 Monday、Tuesday）。
 
+服务器的本地时间遵循 [`TZ`](/reference/env-configuration#tz) 环境变量。如果 API 调用、自动化或定时器拿到的是 UTC 时间，请在 Open WebUI 服务器或容器上设置 `TZ`。
+
 这些变量也可以在 [**提示词**](/features/workspace/prompts) 或 [**模型文件**](/features/workspace/models) 中通过 `{{CURRENT_DATE}}` 语法手动使用。
 
 ---

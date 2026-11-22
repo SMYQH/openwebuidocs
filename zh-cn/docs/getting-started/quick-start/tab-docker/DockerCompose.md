@@ -83,14 +83,14 @@ deploy:
           capabilities: [gpu]
 ```
 
-这样，应用就能使用可用的 GPU 资源。`:cuda` 镜像会在 GPU 上运行 Open WebUI 自己的本地模型，包括嵌入、重排序和 Whisper 语音转文字。只有给 Ollama 容器分配 GPU 后，Ollama 的模型才会使用它。如果没有检测到 GPU，镜像会回退到 CPU，不会报错。预发布通道对应的标签是 `:dev-cuda`。
+这样，应用就能使用可用的 GPU 资源。`:cuda` 镜像会在 GPU 上运行 Open WebUI 自己的本地模型，包括嵌入、重排序和 Whisper 语音转文字。只有给 Ollama 容器分配 GPU 后，Ollama 的模型才会使用它。`driver: nvidia` 预留需要主机上安装 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)，与 [GPU 支持](#gpu-support-nvidia) 中的 `--gpus all` 一样。如果没有检测到 GPU，镜像会回退到 CPU 并记录 `CUDA unavailable (USE_CUDA_DOCKER=true), falling back to CPU`。预发布通道对应的标签是 `:dev-cuda`。
 
 ### 辅助脚本 {#helper-scripts}
 
 代码库中附带了一组辅助脚本，用于简化常见的 Docker 工作流：
 
-- `docker-compose-launcher.sh` —— 交互式 Compose 启动器，具备 GPU 自动检测、可配置的 WebUI/API 端口、用于存放 Ollama 模型的宿主机数据卷挂载以及可选的 Playwright 支持。运行 `./docker-compose-launcher.sh --help` 查看完整参数列表。使用 `--drop` 可以停止并移除 Compose 项目。含方括号的选项要用引号括起来，例如 `./docker-compose-launcher.sh '--enable-gpu[count=1]'`，否则 zsh（macOS 的默认 shell）会报 `no matches found`。
-- `docker-cleanup.sh` —— 停止 Compose 项目并**删除所有卷**，包括持久化数据。销毁数据前会要求确认。
+- `docker-compose-launcher.sh` —— 交互式 Compose 启动器，具备 GPU 自动检测、可配置的 WebUI/API 端口、用于存放 Ollama 模型的宿主机数据卷挂载以及可选的 Playwright 支持。它运行的是仓库自带的 `docker-compose.yaml`，而不是上面的文件；后者会在 Open WebUI 旁边再启动一个 Ollama 容器。该 Ollama 不会在你的机器上发布任何端口；`--enable-api` 会加上 `docker-compose.api.yaml` 并在 `11435` 端口发布它。`--build` 会从你的检出目录构建镜像，而不是拉取镜像。运行 `./docker-compose-launcher.sh --help` 查看完整参数列表。使用 `--drop` 可以停止并移除 Compose 项目。含方括号的选项要用引号括起来，例如 `./docker-compose-launcher.sh '--enable-gpu[count=1]'`，否则 zsh（macOS 的默认 shell）会报 `no matches found`。
+- `docker-cleanup.sh` —— 停止 Compose 项目，并用 `docker compose down -v` **删除所有卷**，包括你的聊天记录以及存放所有已下载模型的 Ollama 卷。销毁数据前会要求确认。
 - `docker-run.sh` —— 构建 Open WebUI 镜像并运行单容器，通过 `OPEN_WEBUI_PORT`（默认 `3000`）对外暴露。它不会设置 `WEBUI_SECRET_KEY`，因此在把该容器用于快速测试之外的场景前，请先在其 `docker run` 命令行中补上一个。
 - `docker-ollama.sh` —— 拉取并运行官方 Ollama 容器，支持可选的 GPU 透传，通过 `OLLAMA_PORT`（默认 `11434`）对外暴露。
 - `docker-update-models.sh` —— 遍历 Ollama 容器中已安装的每一个模型，并拉取其最新版本。

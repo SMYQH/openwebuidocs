@@ -266,7 +266,8 @@ if run_once(f"signup-log:{event['actor']['id']}"):
 - **跨插件干扰不会被检测。** 两个插件 patch 同一个函数、注册同一条路由，或写入同一个 `app.state` key，会发生冲突。加载顺序不是确定性的。请优先采用加法式（additive）的模式（你自己的命名空间、会委托的包装器），而不是破坏性的模式。
 - **禁用不会卸载。** 模块会一直留在 `sys.modules` 中，所有模块级别的副作用也都会一直保留。要完全回滚请重启进程。
 - **没有并发控制，也没有 exactly-once 语义。** Open WebUI 不会串行化你的处理器，也不会在多个副本之间对工作去重。异步钩子在同一进程内会交错执行；在多副本部署中，同一个处理器可能在每个 worker 上同时运行——本应全局只触发一次的副作用，除非你自己做协调，否则会*每个副本触发一次*。参见[并发与多实例](#concurrency-and-multiple-instances)。
-- **`requirements:` 会在每个副本加载时运行 `pip install`。** 在多副本部署中，请将 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements) 关闭，并在镜像中预装依赖；运行时的安装会在多个 worker 之间产生竞态并导致崩溃。参见 [Scaling → Function/Tool Dependency Installation Crashes](/troubleshooting/multi-replica#9-functiontool-dependency-installation-crashes)。
+- **`requirements:` 会在每个副本加载时运行 `pip install`。** 在多副本部署中，请将 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements) 关闭，并在镜像中预装依赖；运行时的安装会在多个 worker 之间产生竞态并导致崩溃。参见 [Scaling → Function/Tool Dependency Installation Crashes](/troubleshooting/multi-replica#9-functiontool-dependency-installation-crashes)。安装失败会导致保存失败，例如依赖 `smtplib` 这样的标准库名称，或环境中没有 pip。参见[外部包](/features/extensibility/plugin/tools/development#external-packages)。
+- **同步的工具方法在事件循环上运行。** 不是 `async def` 的工具方法在运行期间会阻塞其所在 worker 上的其他所有请求。参见[用 `async def` 定义工具方法](/features/extensibility/plugin/tools/development#writing-a-custom-toolkit)。
 - **内部 API 并不是稳定的公共接口。** `open_webui.utils.*`、内部 model 类、middleware 辅助函数，以及文档化的双下划线参数和事件类型之外的所有内容，在不同版本之间都可能被重命名、移位或更改签名。如果你的 monkey-patch 在升级后挂了，修复责任在你。
 
 ---

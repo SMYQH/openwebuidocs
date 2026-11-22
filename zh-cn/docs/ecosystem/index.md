@@ -23,7 +23,7 @@ Open WebUI 是核心 AI 界面和智能体控制层。生态系统由多个独�
 
 ## 项目 {#projects}
 
-- [**Open Terminal 与终端**](/ecosystem/open-terminal)：在聊天中构建应用、产出报告并运行编码智能体。为人和项目提供各自持久化的工作区，或共享一个环境用于协作。
+- [**Open Terminal 与终端**](/ecosystem/open-terminal)：在聊天中构建应用、产出报告并运行智能体。为人和项目提供各自持久化的工作区，或共享一个环境用于协作。
 - [**知识库同步 (oikb)**](/ecosystem/knowledge-base-sync)：将文件夹、仓库、存储桶、Wiki 和其他来源镜像到 Open WebUI 知识库，支持增量同步。
 - [**Open WebUI Tether**](/ecosystem/tether)：让 AI 使用你电脑上的文件和工具，在受支持的设备上选择工作区沙箱，并从另一台设备继续工作。
 - [**Open WebUI 社区**](/ecosystem/community)：位于 openwebui.com 的社区平台，人们在这里分享模型、提示词、工具、函数和聊天，评价模型，并按真实使用量排名。模型、提示词、工具和函数可以直接从帖子导入你的实例。

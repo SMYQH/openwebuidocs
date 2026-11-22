@@ -134,7 +134,7 @@ OAUTH_PROVIDER_NAME="Okta"
 
 # The claim name in the ID token containing group information (must match Okta config)
 
-# OAUTH_GROUP_CLAIM="groups"
+# OAUTH_GROUPS_CLAIM="groups"
 
 # Optional: Enable Just-in-Time (JIT) creation of groups if they exist in Okta claims but not in Open WebUI.
 
@@ -147,7 +147,7 @@ OAUTH_PROVIDER_NAME="Okta"
 
 将 `YOUR_OKTA_CLIENT_ID`、`YOUR_OKTA_CLIENT_SECRET` 和 `YOUR_OKTA_OIDC_DISCOVERY_URL` 替换为 Okta 应用程序配置中的实际值。
 
-要根据 Okta 声明启用群组同步，设置 `ENABLE_OAUTH_GROUP_MANAGEMENT="true"`，并确保 `OAUTH_GROUP_CLAIM` 与 Okta 中配置的声明名称匹配（默认为 `groups`）。
+要根据 Okta 声明启用群组同步，设置 `ENABLE_OAUTH_GROUP_MANAGEMENT="true"`，并确保 `OAUTH_GROUPS_CLAIM`（旧的 `OAUTH_GROUP_CLAIM` 仍作为回退被读取）与 Okta 中配置的声明名称匹配（默认为 `groups`）。
 
 要*同时*启用自动即时（JIT）创建存在于 Okta 但尚未在 Open WebUI 中的群组，设置 `ENABLE_OAUTH_GROUP_CREATION="true"`。如果您只想管理 Open WebUI 中已存在群组的成员资格，可以将其保留为 `false`。
 
@@ -156,7 +156,7 @@ OAUTH_PROVIDER_NAME="Okta"
 群组成员资格管理
 当 `ENABLE_OAUTH_GROUP_MANAGEMENT` 设置为 `true` 时，用户在 Open WebUI 中的群组成员资格将在每次登录时与其 Okta 声明中收到的群组**严格同步**。这意味着：
 *   用户将被**添加**到与其 Okta 声明匹配的 Open WebUI 群组中。
-*   如果某个 Open WebUI 群组（包括在 Open WebUI 中手动创建或分配的群组）**不**存在于该登录会话的 Okta 声明中，用户将被从该群组中**移除**。
+*   如果某个 Open WebUI 群组（包括在 Open WebUI 中手动创建或分配的群组）**不**存在于该登录会话的 Okta 声明中，用户将被从该群组中**移除**。如果该声明缺失或为空，则不会改动任何成员关系；与 `OAUTH_BLOCKED_GROUPS` 匹配的群组永远不会被添加或移除。
 
 确保所有必要的群组在 Okta 中正确配置和分配，并包含在群组声明中。
 
@@ -205,13 +205,13 @@ ENABLE_LOGIN_FORM="false"
 1.  访问你的 Open WebUI 登录页面，你应该能看到一个标有"Login with Okta"的按钮（或者你为 `OAUTH_PROVIDER_NAME` 设置的任何名称）。
 2.  点击该按钮，并通过 Okta 登录流程完成身份验证。
 3.  验证成功后，你应该会被重定向回 Open WebUI 并已登录。
-4.  如果 `ENABLE_OAUTH_GROUP_MANAGEMENT` 为 true，请以非管理员用户身份登录。他们在 Open WebUI 中的群组现在应严格反映其在 Okta 中的当前群组成员资格（任何位于 *不在* Okta 声明中的群组的成员资格将被移除）。如果同时启用了 `ENABLE_OAUTH_GROUP_CREATION`，用户 Okta 声明中存在但此前在 Open WebUI 中并不存在的群组应已自动创建。请注意，管理员用户的群组不会通过 SSO 自动更新。
+4.  如果 `ENABLE_OAUTH_GROUP_MANAGEMENT` 为 true，请以测试用户身份登录。他们在 Open WebUI 中的群组现在应严格反映其在 Okta 中的当前群组成员资格（任何位于 *不在* Okta 声明中的群组的成员资格将被移除）。如果同时启用了 `ENABLE_OAUTH_GROUP_CREATION`，用户 Okta 声明中存在但此前在 Open WebUI 中并不存在的群组应已自动创建。自 v0.8.11 起，管理员用户的群组也以同样的方式同步。
 5.  如果遇到问题，请查看 Open WebUI 服务器日志中与 OIDC 或群组相关的错误。
 
 ## 故障排查 {#troubleshooting}
 
 *   **400 Bad Request / 重定向 URI 不匹配：** 仔细检查 Okta 应用程序中的 **Sign-in redirect URI** 是否与 `<your-open-webui-url>/oauth/oidc/callback` 完全一致。
-*   **群组未同步：** 确认 `OAUTH_GROUP_CLAIM` 环境变量与 Okta ID 令牌设置中配置的声明名称一致。确保用户在群组变更后已退出并重新登录——更新 OIDC 需要重新走一次登录流程。请记住管理员群组不会被同步。
+*   **群组未同步：** 确认 `OAUTH_GROUPS_CLAIM` 环境变量与 Okta ID 令牌设置中配置的声明名称一致。确保用户在群组变更后已退出并重新登录——更新 OIDC 需要重新走一次登录流程。自 v0.8.11 起，管理员群组也会被同步。
 *   **配置错误：** 查看 Open WebUI 服务器日志中与 OIDC 配置相关的详细错误信息。
 
 *   请参阅官方 [Open WebUI SSO 文档](/features/authentication-access/auth/sso)。

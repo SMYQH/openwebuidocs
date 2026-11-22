@@ -63,14 +63,15 @@ Tavily 是一个针对 AI 应用优化的搜索 API，可返回经过整理和�
 1. 保存设置
 2. 在 Open WebUI 中开启一段新的聊天
 3. 点击提示词输入框中的 **加号（+）** 按钮以启用 web search
-4. 输入一个查询（例如 `+latest AI news`），确认 Tavily 能返回实时结果
+4. 输入一个查询（例如 `latest AI news`），确认 Tavily 能返回实时结果
 
-> **示例：** `+latest AI news` 会触发 Tavily 搜索，并将结果嵌入回复中。
+> **示例：** 开启**网页搜索**后，`latest AI news` 会触发 Tavily 搜索，并将结果嵌入回复中。
 
 ## 可选配置 {#optional-configurations}
 
 - **搜索参数**：Open WebUI 会向 Tavily 发送 `query`、`max_results` 和 `search_depth`。搜索深度可在 **Tavily Search Depth** 中设置（`ultra-fast`、`fast`、`basic` 或 `advanced`，默认 `basic`），也可以通过 [`TAVILY_SEARCH_DEPTH`](/reference/env-configuration#tavily_search_depth) 设置。域名过滤由 Open WebUI 自己的 **Domain Filter List** 在结果返回之后应用。
 - **端点**：请求会发往 `TAVILY_API_BASE_URL` 加上 `/search`，默认值为 `https://api.tavily.com`。该变量只能从环境变量读取，没有对应的管理界面字段。
+- **Tavily 作为网页加载器**：把**网页加载引擎**设为 `tavily`，即可通过 Tavily 的 `/extract` 端点读取网页。使用的密钥就是 **Tavily API Key** 中的那个；当 Tavily 同时不是搜索引擎时，加载器部分会显示该字段。**Tavily Extract Depth**（`TAVILY_EXTRACT_DEPTH`，默认 `basic`）会作为 `extract_depth` 发送，每次请求最多 20 个 URL。Open WebUI 的加载器只接受 `basic` 或 `advanced`，并原样传递文本而不做检查。Tavily 标记为失败的 URL 会被跳过，并记录为 `Failed to extract content from <url>: <error>`；返回但没有文本的结果会记录为 `No content extracted from <url>`。
 - **环境变量**：可在 `.env` 文件或 Docker 命令中设置 `TAVILY_API_KEY`：
 
   ```bash

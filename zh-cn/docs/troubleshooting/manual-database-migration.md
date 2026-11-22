@@ -125,6 +125,10 @@ Open WebUI 会在启动时自动执行数据库迁移。**绝大多数情况下�
     ```
     Alembic 配置文件位于 `/app/backend/open_webui/alembic.ini`。无论你当前在哪个目录，最终都需要切换到这里。
     :::
+
+    :::note 镜像中没有 `sqlite3` 命令
+    Open WebUI 镜像不包含 `sqlite3` 命令。在容器内，本页的 SQLite 命令使用 `python3 -m sqlite3`，即 Python 内置的 SQLite shell。它可以执行 SQL 语句，但不支持 `.tables` 或 `.schema` 这类点命令，并且会把每一行输出为 Python 元组。
+    :::
   </TabItem>
   <TabItem value="local" label="本地安装">
     ```bash title="终端"
@@ -274,8 +278,8 @@ b8f2c6d91a04 (head)
 <Tabs groupId="database-type">
   <TabItem value="sqlite" label="SQLite" default>
     ```bash title="终端"
-    sqlite3 /app/backend/data/webui.db ".tables"
-    sqlite3 /app/backend/data/webui.db "SELECT * FROM alembic_version;"
+    python3 -m sqlite3 /app/backend/data/webui.db "SELECT name FROM sqlite_master WHERE type='table';"
+    python3 -m sqlite3 /app/backend/data/webui.db "SELECT * FROM alembic_version;"
     ```
   </TabItem>
   <TabItem value="postgresql" label="PostgreSQL">
@@ -370,11 +374,11 @@ alembic history -r current:head
 # If it shows a single line marked (head), you're up to date
 
 # Verify key tables exist (SQLite)
-sqlite3 /app/backend/data/webui.db ".tables" | grep -E "user|chat|model"
+python3 -m sqlite3 /app/backend/data/webui.db "SELECT name FROM sqlite_master WHERE type='table';" | grep -E "user|chat|model"
 # Should show user, chat, model tables among others
 
 # Test a simple query to ensure schema is intact
-sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM user;"
+python3 -m sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM user;"
 # Should return a number, not an error
 ```
 
@@ -539,7 +543,7 @@ alembic current
 
 # 2. Check how much data the table has (if any)
 # SQLite:
-sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM <table_name>;"
+python3 -m sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM <table_name>;"
 # PostgreSQL:
 psql $DATABASE_URL -c "SELECT COUNT(*) FROM <table_name>;"
 
@@ -554,7 +558,7 @@ ls migrations/versions/ | grep <revision_id>
 
 ```bash title="终端 - 删表并重跑"
 # SQLite:
-sqlite3 /app/backend/data/webui.db "DROP TABLE <table_name>;"
+python3 -m sqlite3 /app/backend/data/webui.db "DROP TABLE <table_name>;"
 
 # PostgreSQL:
 psql $DATABASE_URL -c "DROP TABLE <table_name>;"
@@ -611,8 +615,8 @@ alembic history
 
 # Check for schema elements that shouldn't exist yet at your current revision
 # (these indicate partial application of later migrations)
-sqlite3 /app/backend/data/webui.db "PRAGMA table_info(channel_member);" | grep status
-sqlite3 /app/backend/data/webui.db "SELECT name FROM sqlite_master WHERE type='table' AND name='chat_message';"
+python3 -m sqlite3 /app/backend/data/webui.db "PRAGMA table_info(channel_member);" | grep status
+python3 -m sqlite3 /app/backend/data/webui.db "SELECT name FROM sqlite_master WHERE type='table' AND name='chat_message';"
 ```
 
 如果 `alembic current` 显示的是早期 revision，但你能在数据库里看到属于后续迁移的表/列，说明你处于"部分迁移链"状态。
@@ -659,14 +663,14 @@ alembic upgrade <next_revision>
 
 ```bash title="终端 - 检查回填是否完成"
 # Check if the table has data
-sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM <table_name>;"
+python3 -m sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM <table_name>;"
 ```
 
 如果行数大于 0，回填很可能已经完成——stamp 跳过即可。如果行数为 0，你有两个选择：
 
 1. **删表后重跑**（不丢数据，但大库回填可能很慢）：
    ```bash
-   sqlite3 /app/backend/data/webui.db "DROP TABLE <table_name>;"
+   python3 -m sqlite3 /app/backend/data/webui.db "DROP TABLE <table_name>;"
    alembic upgrade <that_revision>
    ```
 
@@ -831,7 +835,7 @@ alembic heads
     如果数据库本身已损坏，迁移会一直卡住。
 
     ```bash title="终端 - 完整性检查"
-    sqlite3 /app/backend/data/webui.db "PRAGMA integrity_check;"
+    python3 -m sqlite3 /app/backend/data/webui.db "PRAGMA integrity_check;"
     ```
 
     如果完整性检查不通过，从备份恢复。
@@ -919,12 +923,12 @@ UNIQUE constraint failed: alembic_version.version_num
 
 ```bash title="终端 - 查找重复列"
 # List all columns in the message table
-sqlite3 /app/backend/data/webui.db "PRAGMA table_info(message);"
+python3 -m sqlite3 /app/backend/data/webui.db "PRAGMA table_info(message);"
 
 # Look for duplicate column names in the output
 # Example problematic output:
-# 10|reply_to_id|TEXT|0||0
-# 15|reply_to_id|TEXT|0||0  <- Duplicate!
+# (10, 'reply_to_id', 'TEXT', 0, None, 0)
+# (15, 'reply_to_id', 'TEXT', 0, None, 0)  <- Duplicate!
 ```
 
 **解决方法 —— 手动移除列：**
@@ -938,14 +942,14 @@ sqlite3 /app/backend/data/webui.db "PRAGMA table_info(message);"
 cp /app/backend/data/webui.db /app/backend/data/webui.db.pre-fix
 
 # 2. Enter SQLite
-sqlite3 /app/backend/data/webui.db
+python3 -m sqlite3 /app/backend/data/webui.db
 
 # 3. Check current table structure
 PRAGMA table_info(message);
 
 # 4. SQLite doesn't support DROP COLUMN directly - must recreate table
 # First, get the CREATE TABLE statement
-.schema message
+SELECT sql FROM sqlite_master WHERE name='message';
 
 # 5. Create new table without duplicate column
 -- Copy the CREATE TABLE statement but remove duplicate column definition
@@ -973,7 +977,7 @@ ALTER TABLE message_new RENAME TO message;
 .quit
 
 # 10. Verify fix worked
-sqlite3 /app/backend/data/webui.db "PRAGMA table_info(message);"
+python3 -m sqlite3 /app/backend/data/webui.db "PRAGMA table_info(message);"
 
 # 11. Try migration again
 cd /app/backend/open_webui
@@ -986,14 +990,14 @@ alembic upgrade head
 # This only works if the column truly is completely duplicate
 # and SQLite's table rebuilding handles it correctly
 
-sqlite3 /app/backend/data/webui.db <<EOF
+python3 -m sqlite3 /app/backend/data/webui.db <<EOF
 -- Create temporary table with correct schema
 CREATE TABLE message_temp AS SELECT DISTINCT * FROM message;
 
 -- Drop original table
 DROP TABLE message;
 
--- Recreate with proper schema (get from .schema message originally)
+-- Recreate with proper schema (get it from SELECT sql FROM sqlite_master WHERE name='message')
 -- Then copy data back
 EOF
 ```
@@ -1033,7 +1037,7 @@ EOF
 
 ```bash title="终端 - 手动过渡"
 # Check if old Peewee migrations exist
-sqlite3 /app/backend/data/webui.db "SELECT * FROM migratehistory;" 2>/dev/null
+python3 -m sqlite3 /app/backend/data/webui.db "SELECT * FROM migratehistory;" 2>/dev/null
 
 # If Peewee migrations exist, ensure they completed
 # Then run Alembic migrations
@@ -1219,9 +1223,9 @@ docker logs open-webui > migration-failure-logs.txt
 <Tabs groupId="database-type">
   <TabItem value="sqlite" label="SQLite" default>
     ```bash title="终端 - SQLite 完整性检查"
-    sqlite3 /app/backend/data/webui.db "PRAGMA integrity_check;"
+    python3 -m sqlite3 /app/backend/data/webui.db "PRAGMA integrity_check;"
 
-    # Should output: ok
+    # Should output: ('ok',)
     # If it outputs anything else, database is corrupted
     ```
   </TabItem>
@@ -1268,8 +1272,8 @@ alembic current -v >> diagnostics.txt
 alembic history >> diagnostics.txt
 
 # Database info (SQLite)
-sqlite3 /app/backend/data/webui.db ".tables" >> diagnostics.txt
-sqlite3 /app/backend/data/webui.db "SELECT * FROM alembic_version;" >> diagnostics.txt
+python3 -m sqlite3 /app/backend/data/webui.db "SELECT name FROM sqlite_master WHERE type='table';" >> diagnostics.txt
+python3 -m sqlite3 /app/backend/data/webui.db "SELECT * FROM alembic_version;" >> diagnostics.txt
 
 # Full migration log
 alembic upgrade head 2>&1 >> diagnostics.txt

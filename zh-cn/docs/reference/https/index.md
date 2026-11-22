@@ -13,6 +13,8 @@ HTTPS 对用户与 Open WebUI 之间的所有流量进行加密，保护聊天�
 现代浏览器会阻止非 HTTPS 源访问麦克风。除 `localhost` 外，**语音通话无法通过**纯 `http://` 使用。
 :::
 
+`{{CLIPBOARD}}` 和 `{{USER_LOCATION}}` 这两个[提示词变量](/features/workspace/prompts#system-variables)同样需要安全上下文。在 `localhost` 以外的任意地址上使用纯 `http://` 时，Open WebUI 会显示 `Failed to read clipboard contents` 或 `Location access not allowed`。此时 `{{CLIPBOARD}}` 会保持原样留在提示词中，`{{USER_LOCATION}}` 则变成 `LOCATION_UNKNOWN`。当浏览器的剪贴板 API 不可用时，复制按钮会切换到回退方案，因此在没有 HTTPS 的情况下复制仍然可用。
+
 ---
 
 ## 选择你的方式 {#choose-your-approach}
@@ -25,6 +27,7 @@ HTTPS 对用户与 Open WebUI 之间的所有流量进行加密，保护聊天�
 | [**Nginx**](/reference/https/nginx) | 完全控制的自托管生产环境 | 手动或 Let's Encrypt |
 | [**Caddy**](/reference/https/caddy) | 最简配置的自托管生产环境 | 自动（Let's Encrypt） |
 | [**HAProxy**](/reference/https/haproxy) | 高可用/负载均衡 | 手动或 Let's Encrypt |
+| [**Apache、Synology DSM、IIS**](/reference/https/apache) | 你已经在运行的 Web 服务器或 NAS | 手动 |
 | **云负载均衡** | AWS ALB、GCP LB、Azure 应用网关 | 由云提供商管理 |
 
 ---
@@ -43,8 +46,13 @@ HTTPS 对用户与 Open WebUI 之间的所有流量进行加密，保护聊天�
 
 | 设置 | 重要性 |
 | :--- | :--- |
-| `WEBUI_URL` | 设置为你的公共 HTTPS URL，使 OAuth 回调和内部链接能正确解析 |
-| `CORS_ALLOW_ORIGIN` | 必须与你的公共 URL 匹配，否则 WebSocket 连接将静默失败 |
-| 代理缓冲**关闭** | SSE 流式传输的必要条件。开启缓冲会导致聊天响应中 Markdown 渲染异常 |
-| WebSocket 支持 | 确保你的代理传递 `Upgrade` 和 `Connection` 头部以支持实时功能 |
-| 延长超时 | LLM 响应可能需要几分钟。将代理读取超时至少设为 300 秒 |
+| `WEBUI_URL` | 设置为你的公共 HTTPS URL。为空时，SSO 登录后返回 Open WebUI 的重定向会回退到请求自身的 URL，但通知和 webhook 事件中的链接会丢失主机名。它不会设置发送给身份提供方的 SSO 回调 URL——它由请求构建，除非设置了 `OPENID_REDIRECT_URI` 或提供商自己的重定向 URI 变量。它属于[持久化配置](/reference/env-configuration#important-note-on-configvar-environment-variables)：首次启动之后，请在管理员设置 > 通用中修改 |
+| `CORS_ALLOW_ORIGIN` | 默认为 `*`，因此不设置它永远不会破坏 WebSocket。如果设置，它必须包含你精确的公共源（协议、主机、端口），否则 Socket.IO 连接（以及任何跨源浏览器请求）都会失败 |
+| 代理缓冲**关闭** | 让 API 客户端的流式响应持续流动。Web 界面通过 `/ws/socket.io` 流式发送聊天 token，因此只要 WebSocket 正常，缓冲就不会影响它 |
+| WebSocket 支持 | 带 `Upgrade` 和 `Connection` 头部代理 `/ws/socket.io`。默认浏览器只使用 WebSocket 传输，没有 polling 回退；在无法升级的代理后面，请设置 `ENABLE_WEBSOCKET_SUPPORT=false`，让服务端和客户端都改用 long-polling |
+| 转发头部 | 传递原始 `Host` 头部，并转发 `X-Forwarded-For` 和 `X-Forwarded-Proto`。审计日志中的客户端 IP 来自 `X-Forwarded-For`；发送给身份提供方的 SSO 回调 URL（未设置重定向 URI 时）由 `Host` 和 `X-Forwarded-Proto` 构建。除非 `FORWARDED_ALLOW_IPS` 指明代理地址，否则 Open WebUI 信任来自任何对端的 `X-Forwarded-*` 头部。`X-Real-IP` 不会被读取 |
+| 安全 Cookie | `token` 和 `owui-session` cookie 以及 OAuth 会话 cookie 默认不带 `Secure` 发送。一旦前面有 TLS，请设置 `WEBUI_AUTH_COOKIE_SECURE=true` 和 `WEBUI_SESSION_COOKIE_SECURE=true` |
+| 延长超时 | 从 `/api/chat/completions` 流式读取的 API 客户端，以及耗时的非流式请求（带处理的上传、网页抓取、转写）可能需要几分钟；请把代理读取超时至少设为 300 秒。Socket.IO 连接每 25 秒发送一次 ping，因此任何高于约 45 秒的空闲超时都能保持连接 |
+| 上传大小 | 在设置 Max Upload Size（管理员设置 > 文档，或 `RAG_FILE_MAX_SIZE`）之前，应用没有上传上限，因此返回 413 的是代理的 body size 限制；请把它设为你在那里配置的值或更高。同样的限制也适用于聊天保存：保存编辑过的消息或评分会在一次请求中发送整个聊天，因此限制过低会在长聊天中丢失这些改动（[详情](/troubleshooting/connection-error#edits-and-ratings-lost-after-reload-in-long-chats)） |
+| 健康检查 | 让负载均衡器指向 `/health`（存活检查）或 `/ready`（就绪检查：启动已完成、数据库和 Redis 可达） |
+| 多实例 | Socket.IO 状态保存在进程内。在多个实例之间做负载均衡，或把 `UVICORN_WORKERS` 设为大于 1，需要 `WEBSOCKET_MANAGER=redis` 配合 `REDIS_URL`、共享数据库，并在每个实例上设置相同的 `WEBUI_SECRET_KEY` |

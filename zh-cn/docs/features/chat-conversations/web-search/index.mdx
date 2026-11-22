@@ -38,6 +38,14 @@ import DocCardList from '@theme/DocCardList';
 
 即使关闭网页搜索，网页加载器的设置依然有效。只有开启**网页搜索**时才必须选择**网页搜索引擎**，因此不选搜索引擎也能保存**加载器**设置。关闭**网页搜索**后，页面会隐藏**网页搜索确认**、**网页搜索引擎**及其设置、**搜索限制**、**抓取 URL 内容长度上限**、**域名过滤列表**和**绕过网页加载器**，但会保留已保存的值。**绕过嵌入与检索**和**信任代理环境变量**仍然可见。
 
+### Playwright 与外部加载器设置 {#playwright-and-external-loader-settings}
+
+把 **网页加载器引擎** 设为 `playwright` 或 `external` 时，**加载器**部分会显示额外字段。
+
+- **Playwright WebSocket URL**（`PLAYWRIGHT_WS_URL`）：Open WebUI 会连接该地址上的 Chromium 浏览器，而不再自行启动。Docker 镜像不包含 Chromium。只有当环境变量设置了 `WEB_LOADER_ENGINE=playwright` 且 `PLAYWRIGHT_WS_URL` 留空时，容器才会在启动时安装它。仅在管理面板中选择 `playwright` 不会安装任何浏览器，因此请设置该环境变量后重启，或填写一个 WebSocket URL。
+- **Playwright Timeout (ms)**（`PLAYWRIGHT_TIMEOUT`，默认 `10000`）：Open WebUI 允许每个页面加载、以及页面加载期间发出的每个请求所用的时间（毫秒）。超时的页面会被跳过，并记录为 `Error loading <url>:` 加上 Playwright 的错误。其他页面仍会加载。如果没有任何页面加载成功，网页搜索会失败并提示 `[ERROR: None of the web search results could be loaded]`（除非开启**绕过嵌入与检索**），用 `#` 附加的链接则会失败并提示 `[ERROR: Could not read content from <url>]`。
+- **External Web Loader URL**（`EXTERNAL_WEB_LOADER_URL`）：Open WebUI 会向该 URL 发送 `POST` 请求，请求体是 JSON `{"urls": [...]}`，每次请求最多 20 个 URL，并带上请求头 `Authorization: Bearer <External Web Loader API Key>`。服务必须返回 JSON 数组，其中每个对象包含 `page_content`（页面文本）和 `metadata`。请把 `metadata.source` 设为文本来源的 URL：网页搜索只保留链接与返回的 `source` 匹配的结果。状态为错误或返回的不是这种数组时，整批结果都会被跳过，并记录为 `Error extracting content from batch <urls>: <error>`。Open WebUI 对该请求不设超时，因此永不响应的服务会拖住搜索。
+
 ## 为什么有这么多选项？ {#why-are-there-so-many-options}
 
 Open WebUI 允许你为每项工作选择不同的服务。这些列表是**供你挑选的备选项**。你**不需要**把它们全部配置起来。
@@ -64,6 +72,12 @@ Open WebUI 允许你为每项工作选择不同的服务。这些列表是**供�
 
 :::tip 搜索前要求确认
 管理员可以要求用户在**执行网页搜索前先确认**，以避免查询在无意中被发送到外部提供商。可在 **设置 → 网页搜索**（管理员区域） 中开启（当 **网页搜索** 处于开启状态时该开关才会显示，或通过 [`ENABLE_WEB_SEARCH_CONFIRMATION`](/reference/env-configuration#enable_web_search_confirmation) 开启）；提示文本由 [`WEB_SEARCH_CONFIRMATION_CONTENT`](/reference/env-configuration#web_search_confirmation_content) 设置。
+
+提示文本填在 **网页搜索确认内容** 中，开启后该字段会显示在开关下方。用户在聊天输入框中开启**网页搜索**，或在网页搜索已开启但尚未确认时发送消息，都会看到一个 `Use Web Search?` 对话框，其中包含 **继续** 和 **取消** 两个按钮。该字段留空时，对话框显示 `Your query will be sent to the configured web search provider.`。一次确认对该聊天的其余部分都有效。开始新聊天或关闭网页搜索时会再次询问。该检查只在聊天界面中运行，因此直接发往 API 的请求不会被拦下等待确认。
+:::
+
+:::info 关闭聊天开关时仍会进行网页搜索
+**设置 → 界面**中的**聊天中的网页搜索**可在 **默认** 和 **始终** 之间切换。选择 **始终** 后，即使你在聊天输入框中关闭**网页搜索**，每条消息仍会使用网页搜索。唯一的例外是所选模型的 **网页搜索**能力处于关闭状态。若要按聊天开关网页搜索，请把**聊天中的网页搜索**改回 **默认**。
 :::
 
 <DocCardList />

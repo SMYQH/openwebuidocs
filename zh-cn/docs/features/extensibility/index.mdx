@@ -62,7 +62,7 @@ Functions 允许你在消息到达模型之前（输入过滤器）或到达用�
 
 ### 运行重型或长时任务 {#run-heavy-or-long-running-work}
 
-Open WebUI 的后端**完全异步**。长时运行的 Tools 和 Functions（等待外部 API、慢查询、多步代理）不会阻塞其他用户；同步/CPU 密集型插件代码会被卸载到 worker 线程池（参见 [`THREAD_POOL_SIZE`](/reference/env-configuration#thread_pool_size)），因此也不会阻塞事件循环。实际上你可以**在进程内**运行重型任务，而不会出现旧版本同步运行时的那种延迟问题。
+Open WebUI 的后端**完全异步**。长时运行的 `async def` Tools 和 Functions（等待外部 API、慢查询、多步代理）不会阻塞其他用户。普通的 `def` 处理函数仍会在事件循环内联执行，运行期间会拖住其他所有请求，因此请自行卸载 CPU 密集型或阻塞式的插件工作，例如使用 `anyio.to_thread.run_sync`，它使用由 [`THREAD_POOL_SIZE`](/reference/env-configuration#thread_pool_size) 决定大小的 worker 线程池。按这种方式编写后，你可以**在进程内**运行重型任务，而不会出现旧版本同步运行时的那种延迟问题。
 
 如果你真的需要**GPU 访问、大或冲突的依赖、强隔离或独立伸缩**，把这种工作作为 **[OpenAPI 或 MCP 工具服务器](mcp)** 背后的外部服务来运行。
 
@@ -79,7 +79,7 @@ Open WebUI 的后端**完全异步**。长时运行的 Tools 和 Functions（等
 | | |
 | :--- | :--- |
 | **Tools** | 赋予模型新能力的 Python 脚本：网络搜索、API 调用、代码执行 |
-| **Functions** | 添加模型提供商（Pipes）、消息处理（Filters）或 UI 操作（Actions）的平台扩展 |
+| **Functions** | 添加模型提供商（Pipes）、消息处理（Filters）、UI 操作（Actions）或对系统事件的反应（Events）的平台扩展 |
 | **MCP 支持** | 对 Model Context Protocol 服务器的原生 Streamable HTTP 支持 |
 | **OpenAPI 服务器** | 从任意 OpenAPI 兼容端点自动发现并暴露工具 |
 | **社区库** | 一键导入社区构建的 Tools 和 Functions |
@@ -94,7 +94,7 @@ Open WebUI 的后端**完全异步**。长时运行的 Tools 和 Functions（等
 
 | 层 | 运行位置 | 最适合 | 权衡 |
 |-------|-----------|----------|-----------|
-| **Tools & Functions** | Open WebUI 进程内 | 实时数据、过滤器、UI 操作、新增提供商——包括重型/长时任务（异步后端会避免阻塞） | 与主服务器共享 CPU/RAM |
+| **Tools & Functions** | Open WebUI 进程内 | 实时数据、过滤器、UI 操作、新增提供商——包括重型/长时任务（处理函数为 `async def` 且卸载了 CPU 密集型工作时） | 与主服务器共享 CPU/RAM |
 | **OpenAPI / MCP** | 任意 HTTP 端点 | 连接现有服务、第三方 API，以及 GPU / 重型依赖 / 隔离工作负载 | 需要运行中的外部服务器 |
 
 大多数用户从 **Tools & Functions** 开始。它们无需额外配置，内置代码编辑器，可覆盖绝大多数使用场景。
@@ -129,7 +129,7 @@ Tools 和 Functions 在你的服务器上执行**任意 Python 代码**。请只
 
 ### 资源共享 {#resource-sharing}
 
-进程内的 Tools 和 Functions 与 Open WebUI 共享 CPU 和内存。异步后端能避免长时运行和阻塞任务拖慢其他请求，但它无法凭空变出更多硬件——真正 CPU 或 GPU 密集型的工作负载仍会争抢同一台机器的资源。对于这种情况，把工作作为 [OpenAPI / MCP 工具服务器](mcp) 背后的外部服务来运行，从而独立伸缩。
+进程内的 Tools 和 Functions 与 Open WebUI 共享 CPU 和内存。异步后端能避免长时运行的 `async def` 任务拖慢其他请求（阻塞代码必须卸载到线程中），但它无法凭空变出更多硬件——真正 CPU 或 GPU 密集型的工作负载仍会争抢同一台机器的资源。对于这种情况，把工作作为 [OpenAPI / MCP 工具服务器](mcp) 背后的外部服务来运行，从而独立伸缩。
 
 ### MCP 传输 {#mcp-transport}
 

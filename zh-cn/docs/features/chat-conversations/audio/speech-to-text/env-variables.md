@@ -14,7 +14,7 @@ title: "环境变量"
 下文汇总了语音转文本（STT）和文本转语音（TTS）相关的环境变量。
 
 :::tip UI 配置
-其中大多数设置也可以在**设置 → 音频**（管理员区域）中配置。环境变量在启动时优先生效，但之后仍可在 UI 中覆盖。
+其中大多数设置也可以在**设置 → 音频**（管理员区域）标签页中配置。环境变量只设置初始值：Open WebUI 会在首次启动时存储它们，此后使用的是已存储的值（包括在 UI 中保存的值），并忽略对环境变量的修改，除非 `ENABLE_PERSISTENT_CONFIG=false`。
 :::
 
 ## 语音转文本（STT）环境变量 {#speech-to-text-stt-environment-variables}
@@ -32,7 +32,7 @@ title: "环境变量"
 | `WHISPER_MODEL` | Whisper 模型大小 | `base` |
 | `WHISPER_MODEL_DIR` | Whisper 模型文件的存储目录 | `{CACHE_DIR}/whisper/models` |
 | `WHISPER_COMPUTE_TYPE` | 推理使用的计算类型（见下方说明） | `int8` |
-| `WHISPER_LANGUAGE` | ISO 639-1 语言代码（留空 = 自动检测） | 留空 |
+| `WHISPER_LANGUAGE` | 为 Local Whisper、OpenAI 和 Deepgram 引擎强制指定的 ISO 639-1 语言代码（留空 = 使用用户的设置 → 音频语言，否则自动检测） | 留空 |
 | `WHISPER_MULTILINGUAL` | 使用多语言 Whisper 模型 | `false` |
 | `WHISPER_MODEL_AUTO_UPDATE` | 自动下载模型更新 | `false` |
 | `WHISPER_VAD_FILTER` | 启用语音活动检测过滤器 | `false` |
@@ -50,10 +50,11 @@ title: "环境变量"
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
-| `AUDIO_STT_ENGINE` | STT 引擎：留空（本地 Whisper）、`openai`、`azure`、`deepgram`、`mistral` | 留空 |
+| `AUDIO_STT_ENGINE` | STT 引擎：留空（本地 Whisper）、`openai`、`web`（浏览器中的语音识别，不调用服务器）、`azure`、`deepgram`、`mistral` | 留空 |
 | `AUDIO_STT_MODEL` | 外部提供商使用的 STT 模型 | 留空 |
 | `AUDIO_STT_OPENAI_API_BASE_URL` | OpenAI 兼容 API 基础 URL | `https://api.openai.com/v1` |
-| `AUDIO_STT_OPENAI_API_KEY` | OpenAI API 密钥 | 留空 |
+| `AUDIO_STT_OPENAI_API_KEY` | OpenAI API 密钥 | 与 `https://api.openai.com/v1` 配对的 `OPENAI_API_KEY`，否则留空 |
+| `AUDIO_STT_OPENAI_API_REQUEST_FORMAT` | `multipart`（文件上传）或 `json`（JSON 正文中的 base64 音频）；管理员字段为 Request Format | `multipart` |
 | `AUDIO_STT_SUPPORTED_CONTENT_TYPES` | 支持的音频 MIME 类型，逗号分隔 | 留空 |
 
 ### Azure 语音转文本 {#azure-stt}
@@ -88,7 +89,7 @@ title: "环境变量"
 
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
-| `AUDIO_TTS_ENGINE` | TTS 引擎：留空（禁用）、`openai`、`openai-realtime`、`mistral`、`elevenlabs`、`azure`、`transformers` | 留空 |
+| `AUDIO_TTS_ENGINE` | TTS 引擎：留空（通过 Web Speech API 在浏览器中合成语音）、`openai`、`openai-realtime`、`mistral`、`elevenlabs`、`azure`、`transformers` | 留空 |
 | `AUDIO_TTS_MODEL` | TTS 模型 | `tts-1` |
 | `AUDIO_TTS_VOICE` | 默认语音 | `alloy` |
 | `AUDIO_TTS_SPLIT_ON` | 文本切分方式：`punctuation`、`paragraphs` 或 `none` | `punctuation` |
@@ -99,7 +100,7 @@ title: "环境变量"
 | 变量 | 说明 | 默认值 |
 |----------|-------------|---------|
 | `AUDIO_TTS_OPENAI_API_BASE_URL` | OpenAI 兼容 TTS API 基础 URL | `https://api.openai.com/v1` |
-| `AUDIO_TTS_OPENAI_API_KEY` | OpenAI TTS API 密钥 | 留空 |
+| `AUDIO_TTS_OPENAI_API_KEY` | OpenAI TTS API 密钥 | 与 `https://api.openai.com/v1` 配对的 `OPENAI_API_KEY`，否则留空 |
 | `AUDIO_TTS_OPENAI_PARAMS` | OpenAI TTS 附加 JSON 参数 | 留空 |
 | `REALTIME_TTS_PROMPT_TEMPLATE` | 当 `AUDIO_TTS_ENGINE` 为 `openai-realtime` 时给模型的指令 | 留空（使用内置提示词） |
 

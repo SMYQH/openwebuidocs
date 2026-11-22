@@ -29,7 +29,7 @@ Open WebUI 提供了简单直观的 [API 端点](/reference/api-endpoints)，方
 
 ### 2. 生成 Open WebUI API 密钥 {#2-generate-your-open-webui-api-key}
 
-要向 Open WebUI 实例进行身份验证，需要生成 API 密钥。
+要向 Open WebUI 实例进行身份验证，需要生成 API 密钥。API 密钥默认关闭：需要管理员开启（[`ENABLE_API_KEYS`](/reference/env-configuration#enable_api_keys)），非管理员用户还需要 **API Keys** 权限（[`USER_PERMISSIONS_FEATURES_API_KEYS`](/reference/env-configuration#user_permissions_features_api_keys)，默认关闭）。如果启用了端点限制，`/api/chat/completions` 必须列在 `API_KEYS_ALLOWED_ENDPOINTS` 中。
 请按 [API 端点指南](/reference/api-endpoints)中的步骤创建。
 
 ## 配置 {#configuration}

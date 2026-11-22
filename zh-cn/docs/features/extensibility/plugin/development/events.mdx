@@ -999,7 +999,7 @@ Pipe、Tool 或 Action 的执行 **没有超时限制**。你的代码可以运�
 | `notification` | toast 弹窗——仅 Socket.IO |
 
 :::tip 流式 LLM 输出的替代方案
-如果你的 pipe 或 tool 需要调用 LLM，并且希望即使浏览器关闭结果也能持久化，你可以从 Open WebUI 的内部实现中导入并使用 `generate_chat_completion`，而不是发出 `chat:completion` 事件。这个 completion 会走正常的聊天管线，其结果会像其他 assistant 消息一样被保存到数据库。
+如果你的 pipe 需要调用 LLM，并且希望即使浏览器关闭结果也能持久化，请改为从 `pipe()` 返回结果，而不是发出 `chat:completion` 事件。`open_webui.utils.chat` 中的 `generate_chat_completion` 会把请求直接发往模型的连接，并把响应返回给你的代码。它会跳过聊天管线，本身也不保存任何内容，因此结果只会在你的 `pipe()` 返回它时被保存。参见[使用 Open WebUI 内部函数](/features/extensibility/plugin/functions/pipe#using-internal-open-webui-functions)。
 :::
 
 #### ⚠️ 需要在线连接（关闭标签页会报错） {#requires-live-connection-errors-on-tab-close}

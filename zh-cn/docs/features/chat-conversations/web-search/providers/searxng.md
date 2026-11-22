@@ -340,7 +340,7 @@ docker exec -it open-webui curl http://host.docker.internal:8080/search?q=this+i
 
 请将 URL 指向 `/search` 端点。Open WebUI 会自行添加查询参数（`q`、`format=json`、`language` 等）。旧式的 `/search?q=<query>` 写法仍然可用，因为 Open WebUI 在看到 `<query>` 时会去掉查询字符串，但这并非必需。
 
-**Searxng search language** 字段（`SEARXNG_LANGUAGE`，默认 `all`）会作为 SearXNG 的 `language` 参数发送。
+**Searxng search language (all, en, es, de, fr, etc.)** 字段（`SEARXNG_LANGUAGE`，默认 `all`）会作为 SearXNG 的 `language` 参数发送，其中首尾空格和末尾逗号会被去掉。无论该字段填什么，请求的 `Accept-Language` 请求头始终是 `en-US,en;q=0.5`。
 
 5. 根据需要调整 `搜索结果数量` 与 `并发请求数`
 6. 保存更改

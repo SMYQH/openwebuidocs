@@ -218,7 +218,7 @@ curl -X POST http://localhost:5050/v1/audio/speech \
 
 现在 `/v1` 前缀是可选的。
 
-此外，项目还提供 **Azure AI Speech** 和 **ElevenLabs** 相关端点，以便未来在 Open WebUI 支持这些自定义 API 端点时使用。
+Open WebUI 还接受 **Azure AI Speech**（`AUDIO_TTS_AZURE_SPEECH_BASE_URL`，即 Endpoint URL 字段）和 **ElevenLabs**（`ELEVENLABS_API_BASE_URL`，仅限环境变量）的自定义端点，因此这些引擎也可以指向兼容的服务器。
 
 你也可以通过设置环境变量 `EXPAND_API=False` 来关闭这些扩展接口。
 

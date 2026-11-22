@@ -31,8 +31,8 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 ## 库的工作原理 {#how-the-library-works}
 
 - **浏览** openwebui.com 上的[工具和函数](https://openwebui.com/)，或按关键字[搜索](https://openwebui.com/search)。
-- **一键导入**（或通过将源代码粘贴到内置编辑器中）。无需 `pip install`，无需重启。
-- **导入后的位置：** 导入的**工具**出现在**工作区 → 工具**下，导入的**函数**出现在**管理面板 → 函数**下。两者均由管理员管理。关于两者的区别，请参见[工具与函数](/features/extensibility/plugin/)。
+- **一键导入**：可以把源代码粘贴到内置编辑器中，也可以给 Import 提供原始文件或 GitHub 文件 URL。Get 按钮会打开你实例的创建页面并预填代码，按下 Save 之前不会保存任何内容。无需 `pip install`，无需重启。
+- **导入后的位置：** 导入的**工具**出现在**工作区 → 工具**下，导入的**函数**出现在**管理面板 → 函数**下。函数仅限管理员使用；拥有 `workspace.tools` 或 `workspace.tools_import` 权限的用户也可以创建和编辑工具，而两种情况下从 URL 导入都仅限管理员使用。关于两者的区别，请参见[工具与函数](/features/extensibility/plugin/)。
 
 ## 根据你想要的功能查找插件 {#find-a-plugin-by-what-you-want-to-do}
 

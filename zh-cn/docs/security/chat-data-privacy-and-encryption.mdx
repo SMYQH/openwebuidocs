@@ -20,13 +20,13 @@ Open WebUI 的标准体验旨在提供自托管控制、可审计性、历史记
 | 限定管理员工作区列表/选择器可见性 | 设置 `BYPASS_ADMIN_ACCESS_CONTROL=false` |
 | 生产数据库存储暴露 | 使用 PostgreSQL，配合加密卷、提供商加密、TDE（如可用）、TLS 和加密备份 |
 | 仅 SQLite 部署 | 将数据目录放在加密文件系统上（LUKS、BitLocker、FileVault） |
-| 员工提出敏感或个人问题 | 使用临时聊天，或通过 `USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true` 强制所有用户使用临时聊天 |
+| 员工提出敏感或个人问题 | 使用临时聊天，或通过 `USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true` 强制非管理员用户使用临时聊天 |
 | 用户互相讨论敏感话题 | 在私聊和私密群组中使用[加密聊天](/features/channels/encrypted-chats)：在浏览器中端到端加密，且从不存储在服务器上 |
 | 将提示保留在基础设施内部 | 使用本地或私有模型端点，并按组限制批准的模型 |
-| 敏感文档上传或索引 | 默认关闭文件上传和知识库权限；仅按组授予 |
+| 敏感文档上传或索引 | 关闭文件上传权限（它默认开启），并保持知识库权限关闭；仅按组授予 |
 | 控制服务器端代码执行 | 将工具和函数限制为受信任的管理员 |
 | 聊天内容出现在日志中 | 除非明确批准记录正文，否则将审计日志保持在元数据级别 |
-| 共享控制 | 默认关闭社区共享，并审查聊天共享权限 |
+| 共享控制 | 关闭社区共享（它默认开启），并审查聊天共享权限 |
 | 不同团队需要不同的信任边界 | 使用独立的 Open WebUI 实例，配备独立的数据库、备份、凭证、操作员和模型提供商 |
 
 ## 推荐基线 {#recommended-baseline}
@@ -74,7 +74,7 @@ DEFAULT_USER_ROLE=pending
 USER_PERMISSIONS_CHAT_TEMPORARY=true
 ```
 
-要强制所有用户默认使用临时聊天：
+要强制非管理员用户使用临时聊天：
 
 ```bash
 USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true
@@ -115,6 +115,8 @@ LOG_FORMAT=json
 
 仅在您的日志平台获批用于聊天内容时，使用 `REQUEST` 或 `REQUEST_RESPONSE` 审计日志记录。
 
+审计日志默认关闭（`AUDIT_LOG_LEVEL=NONE`）。默认情况下，`/api/v1/chats/*`、`/api/v1/folders/*` 和 `/api/chat/*`（包括 `/api/chat/completions`）路由在任何级别都被排除，除非修改 `AUDIT_EXCLUDED_PATHS` 或设置 `AUDIT_INCLUDED_PATHS`；但 `/openai/chat/completions` 和 `/ollama/api/chat` 代理路由不在排除范围内。请求体默认截断为 2048 字节（`MAX_BODY_LOG_SIZE`），文件输出默认写入数据卷内的 `DATA_DIR/audit.log`，除非设置了 `AUDIT_LOGS_FILE_PATH`。
+
 ## 谁可以阅读聊天数据？ {#who-can-read-chat-data}
 
 ### 普通用户 {#regular-users}
@@ -137,6 +139,8 @@ LOG_FORMAT=json
 
 ## 加密保护什么 {#what-encryption-protects}
 
+Open WebUI 把聊天标题以明文存储，把聊天内容以明文 JSON 存储在数据库中，把上传的文件未加密地存放在 `DATA_DIR/uploads`（或配置的对象存储）中，并把文档分块以明文存放在向量存储中，因此静态保护来自数据库、卷或存储层（pgvector 可以用 `PGVECTOR_PGCRYPTO=true` 加密分块文本）。
+
 静态加密有助于防止以下情况：
 
 - 磁盘丢失或被盗。
@@ -147,7 +151,7 @@ LOG_FORMAT=json
 
 将这些路径保留在您的运营信任边界内：
 
-- 运行中的 Open WebUI 应用程序及其数据库密钥。
+- 运行中的 Open WebUI 应用程序、其数据库密钥，以及 `WEBUI_SECRET_KEY`——后者用于签署会话，并默认加密已存储的 OAuth 令牌、OAuth 客户端密钥和其他已存储的机密（它不加密聊天数据）。
 - 具有实时查询访问权限的数据库管理员。
 - 有权访问环境变量或挂载密钥的主机操作员。
 - 包含聊天数据的导出、日志、跟踪和备份。
@@ -169,12 +173,12 @@ LOG_FORMAT=json
 - 使用独立的数据库和备份。
 - 使用独立操作员和凭证。
 - 使用私有/本地模型。
-- 考虑强制临时聊天，或通过 `USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true` 默认启用。
+- 考虑对非管理员用户强制临时聊天，通过 `USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED=true` 设置。
 
 对于个人或高度敏感的员工问题：
 
 - 发布清晰的使用指南。
-- 提供临时聊天，或默认要求所有用户使用。
+- 提供临时聊天，或要求非管理员用户使用。
 - 仅将那些提示路由到批准的模型提供商。
 - 明确说明谁管理系统以及保留什么内容。
 

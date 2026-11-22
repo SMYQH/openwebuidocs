@@ -310,7 +310,7 @@ yield details_block
 
 ## 使用 Open WebUI 内部函数 {#using-internal-open-webui-functions}
 
-有时你可能希望在 Pipe 中利用 Open WebUI 的内部函数。你可以直接从 `open_webui` 包中导入这些函数。需要注意的是，虽然这种情况不太常见，但内部函数可能会为了优化而发生变化，因此请始终参考最新文档。
+有时你可能希望在 Pipe 中利用 Open WebUI 的内部函数。你可以直接从 `open_webui` 包中导入这些函数。它们属于内部代码，不是稳定的插件 API，可能在任何版本中发生变化。
 
 下面示例展示了如何使用 Open WebUI 的内部函数：
 
@@ -351,11 +351,12 @@ class Pipe:
   - **流程**：
     1. **获取用户对象**：根据用户 ID 检索用户对象。
     2. **设置模型**：指定要使用的模型。
-    3. **生成回复**：调用 `generate_chat_completion` 处理输入并生成输出。
+    3. **生成回复**：调用 `generate_chat_completion` 处理输入并生成输出。它会把请求直接发往目标模型的连接，因此该模型的过滤器、工具和附加知识都不会运行；但它仍会检查 `user` 角色账号是否有权访问该模型，除非 [`BYPASS_MODEL_ACCESS_CONTROL`](/reference/env-configuration#bypass_model_access_control) 已开启。
 
 ### 重要说明 {#important-notes}
 
 - **函数签名**：请参考最新的 Open WebUI 代码库或文档，以获取最准确的函数签名与参数。
+- **不要调用聊天路由**：`open_webui.main` 也导出了 `generate_chat_completion` 和 `generate_chat_completions`，但它们就是 `/api/chat/completions` 路由本身。当表单数据带有 `session_id` 和 `chat_id` 时，该路由会启动一个独立的后台聊天任务，并返回 `{"status": true, "task_ids": [...], "chat_id": ...}` 而不是一段回复。
 - **最佳实践**：始终妥善处理异常和错误，以确保流畅的用户体验。
 
 ---

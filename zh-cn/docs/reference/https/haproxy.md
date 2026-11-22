@@ -6,7 +6,7 @@ title: "使用 HAProxy 的 HTTPS"
 # Open WebUI 的 HAProxy 配置 {#haproxy-configuration-for-open-webui}
 
 
-HAProxy（High Availability Proxy，高可用代理）是一款专门的负载均衡和反向代理方案，可配置性很强，设计目标是在较低资源占用下处理大量连接。更多信息请参阅：[https://www.haproxy.org/](https://www.haproxy.org/)
+HAProxy（High Availability Proxy，高可用代理）是一款专门的负载均衡和反向代理方案，可配置性很强，设计目标是在较低资源占用下处理大量连接。更多信息请参阅：https://www.haproxy.org/
 
 ## 安装 HAProxy 和 Let's Encrypt {#install-haproxy-and-lets-encrypt}
 
@@ -100,8 +100,6 @@ frontend web
 
  #Subdomain method
     acl chat-acl hdr(host) -i subdomain.domain.tld
-    #Path Method
-    acl chat-acl path_beg /owui/
     use_backend owui_chat if chat-acl
 
 #Pass SSL Requests to Lets Encrypt
@@ -110,14 +108,17 @@ backend letsencrypt-backend
 
 #OWUI Chat
 backend owui_chat
-    # add X-FORWARDED-FOR
+    # add X-Forwarded-For; Open WebUI reads it and X-Forwarded-Proto for client IPs and the SSO callback URL
     option forwardfor
-    # add X-CLIENT-IP
-    http-request add-header X-CLIENT-IP %[src]
+    option httpchk GET /health
  http-request set-header X-Forwarded-Proto https if { ssl_fc }
-    server chat <ip>:3000
+    server chat <ip>:3000 check
 
 ```
+
+:::note 负载均衡多个实例
+Socket.IO 状态保存在每个进程内。要在多个 Open WebUI 容器之间做负载均衡，或要把 `UVICORN_WORKERS` 设为大于 1，请设置 `WEBSOCKET_MANAGER=redis` 并配置 `REDIS_URL`，使用共享数据库，并在每个实例上设置相同的 `WEBUI_SECRET_KEY`。
+:::
 
 ## WebSocket 与 HTTP/2 兼容性 {#websocket-and-http2-compatibility}
 
@@ -135,9 +136,9 @@ defaults
     option h2-workaround-bogus-websocket-clients
 ```
 
-你会看到其中为 Open WebUI 和 Let's Encrypt 分别定义了 ACL 记录（路由）。要在 OWUI 上使用 WebSocket，必须配置好 SSL，而最简单的方式就是使用 Let's Encrypt。
+你会看到其中为 Open WebUI 和 Let's Encrypt 分别定义了 ACL 记录（路由）。WebSocket 并不需要 TLS（在普通 HTTP 上使用 `ws://` 即可）；HTTPS 是麦克风等浏览器特性所需要的，而获得它的最简单方式就是使用 Let's Encrypt。
 
-你可以选择子域名方式或路径方式，把流量路由到 Open WebUI。子域名方式需要一个独立的子域名（例如 chat.yourdomain.com），路径方式则允许你通过域名下的特定路径访问 Open WebUI（例如 yourdomain.com/owui/）。选择最适合你的方式，并相应更新配置。
+Open WebUI 必须从某个主机名的根路径提供：前端会从域名根路径请求 `/api/...`、`/ws/socket.io` 和 `/_app/...`，并且没有 base-path 设置，因此请按子域名路由（例如 `chat.yourdomain.com`），而不是使用 `/owui/` 这样的路径。
 
 :::info
 
@@ -197,7 +198,7 @@ chown haproxy:haproxy /etc/haproxy/certs/{domain}.pem
 
 如果你希望有工具自动管理 HAProxy 配置和 Let's Encrypt SSL 证书，我写了一个简单的 Python 脚本，并提供了一个 Docker 容器，可用于创建和管理 HAProxy 配置，以及处理 Let's Encrypt 证书的生命周期。
 
-[https://github.com/shadowdao/haproxy-manager](https://github.com/shadowdao/haproxy-manager)
+https://github.com/shadowdao/haproxy-manager
 
 :::warning
 

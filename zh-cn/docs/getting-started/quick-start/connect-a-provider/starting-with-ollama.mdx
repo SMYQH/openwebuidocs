@@ -40,10 +40,14 @@ Open WebUI 的设计是**面向协议（Protocol-Oriented）**的。当我们提
 *   **Docker 用户：** 如果 Ollama 运行在宿主机上，请使用 `http://host.docker.internal:11434` 作为 URL。
 *   **负载均衡：** 你可以添加**多个** Ollama 实例。Open WebUI 会采用**随机选择**策略在它们之间分发请求，从而为并发用户提供基础负载均衡。
     *   **注意：** 要启用这一点，必须确保各实例中的 **Model ID 完全一致**。如果使用了 **Prefix ID**，它们也必须一致（或都为空），这样模型才会合并为同一条目。
+    *   **在每台服务器上拉取同一个标签**：模型只按名称合并。Open WebUI 不比较版本或摘要，因此两台服务器上同名但不同构建的模型仍会显示为同一个模型，聊天请求可能落到其中任意一台。模型选择器中显示的参数规模、量化方式和文件大小，来自列表中第一个提供该模型的连接。更新之后，请在每个连接上执行 **更新所有模型**。
+    *   **每个请求各自选一台服务器**：Open WebUI 会为每个请求随机选择一台提供该模型的服务器，因此同一段聊天中的消息可能发往不同服务器。
+    *   **多用户共用一台服务器**：Open WebUI 收到请求就立即发给 Ollama，自己不维护队列。一台 Ollama 服务器是同时处理同一模型的多个请求，还是让它们排队等待，由 Ollama 服务器上的 `OLLAMA_NUM_PARALLEL` 决定，默认值为 `1`。内存占用会随之增长。请参阅 Ollama 的[并发请求 FAQ](https://docs.ollama.com/faq#how-does-ollama-handle-concurrent-requests)。
+    *   **一台宿主机上两个 Ollama 容器**：Ollama 在容器内监听 `11434` 端口，因此要给第二个实例映射一个不同的宿主机端口，例如 `docker run -d -v ollama2:/root/.ollama -p 11435:11434 --name ollama2 ollama/ollama`，并把它添加为 `http://host.docker.internal:11435`。
 
 ### 高级配置 {#advanced-configuration}
 
-*   **Prefix ID：** 如果你有多个 Ollama 实例都在提供相同模型名，可加上前缀（例如 `remote/`）加以区分。
+*   **Prefix ID：** 如果你有多个 Ollama 实例都在提供相同模型名，可加上前缀（例如 `remote`）加以区分。Open WebUI 用一个点把前缀和模型名连起来，因此 `llama3` 会显示为 `remote.llama3`。
 *   **Model IDs (Filter)**：在此列出要显示的模型（白名单）。留空则显示全部模型。
 
 :::tip 连接超时配置
@@ -67,7 +71,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=3
 
 ## 快速高效下载模型 {#a-quick-and-efficient-way-to-download-models}
 
-如果你想更快开始，也可以直接在 **模型选择器** 中下载模型。只需输入模型名称；如果本地尚未可用，Open WebUI 会提示你直接从 Ollama 下载。
+如果你想更快开始，管理员可以直接在 **模型选择器** 中下载模型。只需输入模型名称；如果本地尚未可用，Open WebUI 会提示你直接从 Ollama 下载。
 
 示例如下：
 
@@ -132,6 +136,15 @@ Open WebUI 会在当前由运行时保持预热的 Ollama 模型旁显示一个�
 
 这在需要腾出 GPU/显存以在多个大模型之间切换时很有用，也可以在拉取新版本后强制重新加载。尝试卸载一个已连接提供商不支持卸载的模型时会返回错误，而不是静默失败。
 
+### 暂停后首次回复很慢 {#slow-first-reply-after-a-pause}
+
+当一段安静期之后的首次回复比之后的回复慢得多时，说明 Ollama 正在把模型重新加载进内存。默认情况下，Ollama 会卸载 5 分钟内没有使用过的模型。有两个设置可以改变模型保持加载的时间：
+
+- **`OLLAMA_KEEP_ALIVE`**，在 **Ollama 服务器** 上设置，对所有模型生效。它接受 `10m` 或 `24h` 这样的时长、秒数，或者一个负数，用来让模型保持加载。请参阅 Ollama 的[keep-alive FAQ](https://docs.ollama.com/faq#how-do-i-keep-a-model-loaded-in-memory-or-make-it-unload-immediately)。
+- **keep_alive (Ollama)**，是 Open WebUI 的高级参数，会作为 `keep_alive` 随每次聊天请求发给 Ollama，并在该请求中取代 `OLLAMA_KEEP_ALIVE`。可以在 **工作区** > **模型** 中按模型设置，也可以在聊天的 **控制** 或 **设置 > 通用** 中设置，后者只有管理员账号可见（参见[聊天参数](/features/chat-conversations/chat-features/chat-params)）。把它从 **默认** 改为 **自定义** 会填入 `5m`。保持 **默认** 时，Open WebUI 不发送任何内容，适用的是 `OLLAMA_KEEP_ALIVE`。
+
+模型会在内存中停留 keep-alive 指定的时长，因此该值越大，对话之间占用的内存就越多。
+
 ---
 
 ## 使用推理 / Thinking 模型 {#using-reasoning--thinking-models}
@@ -171,6 +184,14 @@ Ollama 会自行把模型的思考过程与它的答案分开。自 Ollama v0.9.
 - 要为所有 Ollama 模型设置默认值，请在 **Ollama 服务器**上设置 `OLLAMA_CONTEXT_LENGTH`，并在 Open WebUI 中**保持 `num_ctx` 未设置**，这样就不会被覆盖。
 - 要按模型或按聊天设置，请将 `num_ctx` 设置为模型的合理值（例如 `8192`、`16384` 或模型的最大值），而不是 `2048` 预填值。请记住它会覆盖 `OLLAMA_CONTEXT_LENGTH`。
 - 更大的上下文会使用更多 VRAM 和 RAM，请根据你的硬件容量合理设置。
+
+---
+
+## 工具调用之前写下的文字 {#text-written-before-a-tool-call}
+
+当模型在同一次回复中先写下一句话再调用工具，例如先说 “Let me check the calendar.” 然后给出工具调用时，聊天中会同时显示两者。对于 **管理 Ollama API 连接** 下的连接所提供的模型，之后的每个请求都会把该助手轮次以空文本、只带工具调用的形式发给 Ollama。这适用于工具结果之后的追问请求，也适用于聊天中的每一条后续消息。模型的思考和工具调用会保留下来，聊天本身仍会存储并显示那段文字。
+
+Open WebUI 之所以这样做，是为了让模型在后续轮次中看不到那句话，这是对每个带工具调用的助手轮次都生效的。
 
 ---
 

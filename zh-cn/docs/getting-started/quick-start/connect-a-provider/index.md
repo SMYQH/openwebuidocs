@@ -84,7 +84,7 @@ flowchart LR
 | **API Type** | 默认使用 **Chat Completions**。选择 **Responses** 可将连接切换到 Responses API。 |
 | **Forward cookies** | 将发往 Open WebUI 的请求中的 Cookie 转发给此服务器。 |
 | **Headers** | JSON 格式的额外请求头。 |
-| **Prefix ID** | 为此连接的每个模型 ID 添加前缀，区分两个连接提供的同名模型。 |
+| **Prefix ID** | 为此连接的每个模型的 ID 和显示名称添加前缀和一个点，例如 `work.gpt-5.6`，从而区分两个连接提供的同一模型。在 **Settings > Models**（管理员区域）中为该模型保存的名称会替换带前缀的名称。 |
 | **Model IDs** | 要显示的模型列表。留空时显示服务器上报的所有模型。 |
 
 ---

@@ -145,6 +145,8 @@ Open WebUI 需要每个账户都有邮箱地址。mail 属性为空的用户无�
 
 :::
 
+`LDAP_ATTRIBUTE_FOR_USERNAME` 仅用于根据登录页输入的名称查找用户条目。通过 LDAP 登录创建的账户，其名称取自条目的 `cn` 属性，邮箱取自 mail 属性，而它的 Open WebUI 用户名保持为空。
+
 ### UI 配置 {#ui-configuration}
 
 也可以直接在 UI 中配置这些设置：
@@ -152,7 +154,7 @@ Open WebUI 需要每个账户都有邮箱地址。mail 属性为空的用户无�
 1. 以管理员身份登录。
 2. 打开 **管理面板**，进入 **设置** > **认证**，找到 **LDAP** 部分。
 3. 打开 **LDAP** 开关。
-4. 填写与上述环境变量对应的字段。
+4. 填写与上述环境变量对应的字段。每个字段的标签及其对应变量列在[环境变量配置参考的 LDAP 章节](/reference/env-configuration#ldap)中。不要复制 **Search Filters** 的占位符 `(&(objectClass=inetOrgPerson)(uid=%s))`：Open WebUI 不会替换 `%s`，该过滤器找不到任何用户，登录会以 `User not found in the LDAP server` 失败。
 5. 保存设置。它会作用于下一次登录尝试，无需重启。
 
 ## 5. 登录 {#5-logging-in}
@@ -164,7 +166,29 @@ Open WebUI 需要每个账户都有邮箱地址。mail 属性为空的用户无�
 
 登录成功后，Open WebUI 会自动创建一个新用户账户，并赋予该实例的默认角色——除非管理员在 **设置** > **认证** 下另行修改，该角色默认为 `pending`。实例上的第一个账户会成为管理员。管理员之后可以按需修改用户角色。
 
-## 6. 常见错误排查 {#6-troubleshooting-common-errors}
+## 6. 从 LDAP 同步用户组 {#6-syncing-groups-from-ldap}
+
+在 **LDAP** 部分打开**组映射**（`ENABLE_LDAP_GROUP_MANAGEMENT`）后，Open WebUI 会在每次 LDAP 登录时读取用户的用户组，属性取自**组属性**（`LDAP_ATTRIBUTE_FOR_GROUPS`，默认为 `memberOf`）的设置。每个取值都是一个组 DN，Open WebUI 取其中第一个 `CN` 作为组名。
+
+:::warning 手动分配的组不会在下一次登录后保留
+
+当用户条目中列出至少一个组时，同步会让该用户的 Open WebUI 用户组与其 LDAP 用户组保持一致：
+
+- 用户会被加入所有名称与其某个 LDAP 组名相同的 Open WebUI 用户组。
+- 用户会从其他所有 Open WebUI 用户组中移除，包括管理员手动添加的组。
+- 为新用户设置的**默认组**同样会被移除。有 LDAP 用户组的新用户在首次登录时就会离开默认组，除非默认组名称与其某个 LDAP 用户组相同。
+- 管理员账户也以同样方式同步。
+
+若要让某个用户留在某个组中，就在目录中把他加入同名的 LDAP 组。LDAP 没有可以豁免某个组不被同步的设置。
+
+:::
+
+- 打开**自动创建组**（`ENABLE_LDAP_GROUP_CREATION`）时，Open WebUI 会为该用户创建所有尚无同名 Open WebUI 用户组的 LDAP 用户组，然后把他加入其中；关闭时，这些 LDAP 用户组会被跳过。
+- 当用户条目没有组属性或该属性为空时，同步不会运行，用户的 Open WebUI 用户组保持原样。
+- 目录中的变更会在该用户下次 LDAP 登录时生效。
+- 如果同步失败，登录仍会成功，服务端日志会显示 `Failed to sync groups for user`。
+
+## 7. 常见错误排查 {#7-troubleshooting-common-errors}
 
 以下是 LDAP 集成过程中常见错误的解决方案。
 
@@ -192,6 +216,14 @@ ERROR | LDAP authentication error: ("('socket ssl wrapping error: [SSL: UNEXPECT
 -   **如果不打算使用 TLS：** 设置 `LDAP_USE_TLS="false"` 并连接到标准明文端口 `389`。
 -   **如果打算使用 LDAPS：** 确保您的 LDAP 服务器已配置 TLS 并监听端口 `636`。设置 `LDAP_SERVER_PORT="636"` 和 `LDAP_USE_TLS="true"`。
 -   **不支持 StartTLS。** `LDAP_USE_TLS` 只会建立隐式 TLS 连接，因此对监听在 `389` 端口的明文服务设置为 `"true"` 会失败。请改用 `636` 上的 LDAPS 或 `389` 上的明文。
+
+### `Failed to configure TLS for LDAP connection.` {#failed-to-configure-tls}
+
+**原因：** Open WebUI 无法为 LDAP 连接构建 TLS 设置，因此在联系 LDAP 服务器之前登录就会中止。常见原因是**证书路径**（[`LDAP_CA_CERT_FILE`](/reference/env-configuration#ldap_ca_cert_file)）指向的文件在 Open WebUI 容器内并不存在。此时服务端日志会显示 `TLS configuration error: invalid CA public key file`。
+
+**解决方法：**
+-   **如果你使用自定义 CA：** 把 CA 证书文件挂载到容器中，并把**证书路径**设为它在容器内的路径，而不是宿主机上的路径。
+-   **如果你不需要自定义 CA：** 在 **设置 > 认证** 的 **LDAP** 部分清空**证书路径**。
 
 ### `err=49 text=`（凭据无效） {#err49-text-invalid-credentials}
 
