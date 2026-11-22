@@ -3,28 +3,37 @@
 ## en-us Source Version
 
 - **Repo**: `en-us` (submodule)
-- **Git commit**: `f53eb3305197b54a2f5eb708cf9e6a65ae76a901`
+- **Git commit**: `307b3ad867f4bfa2d36598c7ab3a858b47763a63`
 - **Branch**: `main`
-- **Snapshot date**: 2026-11-18
+- **Snapshot date**: 2026-11-21
 
 ## Translation Progress Overview
 
 | Metric | Value |
 | --- | --- |
-| en-us source files (.md/.mdx) | 396 |
-| zh-cn files (.md/.mdx) | 396 |
+| en-us source files (.md/.mdx) | 409 |
+| zh-cn files (.md/.mdx) | 409 |
 | en-us `_category_.json` | 43 |
 | zh-cn `_category_.json` | 43 |
-| File coverage | **100%** (all 396 en-us documents have corresponding zh-cn translations) |
-| Semantic review | **439/439 pairs passed** against the current source and translation. This includes 396 documents and 43 category records. |
+| File coverage | **100%** (all 409 en-us documents have corresponding zh-cn translations) |
+| Semantic review | **452 pairs** cover the current source and translation: 409 documents and 43 category records. The 168 pairs changed by this sync were read against upstream; the 284 unchanged pairs carry the review recorded for `f53eb330`. |
 | Verbatim code blocks | No hard code-preservation errors. The HAProxy and Nginx Proxy Manager fence repairs were reviewed against upstream. |
 | Upstream inline code spans preserved | No unwaived hard preservation errors. Review signals and exact exceptions remain; this is not a universal preservation certification. |
 | Explicit heading IDs matching upstream | No hard heading-structure failures. The reviewed HAProxy repair restored a heading hidden by upstream fence markup. |
 | Untranslated English prose | No unwaived language warnings. Leftover English `endpoint` wording was normalized to the project terminology (`端点`, `API 端点`, `基础 API 端点`), and the `终结点` variant was replaced. |
-| Production build | **Passed on 2026-11-20** with zero broken links, anchors, Markdown links, or duplicate routes. The build generated 374 routed documentation pages. Local sitemap synchronization skips runs without `DOMAIN`. |
-| Checker behaviour tests | **182 tests passed on 2026-11-20** in a fresh Windows checkout with a uv-managed Python 3.14 environment. |
+| Production build | **Passed on 2026-11-22** with zero broken links, anchors, Markdown links, or duplicate routes. The build generated 393 routed documentation pages. Local sitemap synchronization skips runs without `DOMAIN`. |
+| Checker behaviour tests | **182 tests passed on 2026-11-22** with a uv-managed Python environment. |
 
 Workflow: [semantic review](.agents/skills/translation-semantic-review/SKILL.md) is separate from the [Python checker](.agents/skills/translation-checker/SKILL.md), which now owns the scripts, tests, config, provider helpers, and ignored local artifacts. The move does not change review counts or checker behavior. Edits to a translated file expire the exact exceptions of that file; `scripts/restamp_exceptions.py` re-binds the surviving exceptions to their current fingerprints and reports the findings that need a manual decision.
+
+### 2026-11-22 Sync through `307b3ad8`
+
+- Translated 168 upstream documents and added 12 new pages under `getting-started/quick-start/connect-an-agent/` (Antigravity, Claude Code, Cline, Codex CLI, Cursor CLI, Gemini CLI, GitHub Copilot, Goose, Grok Build, OpenCode, Pi, Qwen Code) plus `reference/https/apache.md`.
+- Renamed `features/open-terminal/coding-agents.md` to `features/open-terminal/agents.md` and copied the new `static/features/open-terminal/coding-agents/index.html` asset byte for byte.
+- The upstream release adds explanations for Notes audio capture, the code-block Save button, the LDAP TLS error, `OPENSEARCH_SSL`, the Settings > Documents danger zone, retrieval query generation variance, the Ollama embedding-model swap, the `/app/backend` mount warning, the `DATA_DIR` defaults and backups, the admin password reset, an empty `DATABASE_URL`, Open Terminal `run_command` returning no output, Filter Functions skipping background task calls, tool requirement reinstalls, `--gpus all`, the encrypted ID token username claim fallback, the proxy body-size limit, the MCP OAuth redirect URI, private CA bundles, the Ollama OpenAI-compatible routes, pending SSO sign-ins, the Microsoft client secret value, and the workspace model settings a plain API call does not apply.
+- `reference/env-configuration.mdx` picked up the upstream variable changes. 17 sections that upstream marks as environment variables (not `ConfigVar`) had a stale Chinese persistence line corrected, and 9 descriptions that had dropped a clause were restored.
+- Agent product names (`Claude Code`, `Cline CLI`, `OpenAI Codex CLI`, `Cursor CLI`, `Gemini CLI`, `GitHub Copilot CLI`, `Google Antigravity CLI`, `Goose`, `Grok Build`, `OpenCode`, `Qwen Code`) are now terminology exclusions, so the untranslated `sidebar_label` metadata stays verbatim. `Pi` is deliberately not a global term because it collides with "Raspberry Pi"; `connect-an-agent/pi.md` uses a per-file exception instead.
+- The strict audit reported **0 errors, 0 warnings, 15 notes, and 46 exact exceptions** across **452 pairs**. The heading-structure audit reported no mismatch, and the production build passed with zero broken links, anchors, Markdown links, or duplicate routes.
 
 ### 2026-11-20 Translation tool setup
 
