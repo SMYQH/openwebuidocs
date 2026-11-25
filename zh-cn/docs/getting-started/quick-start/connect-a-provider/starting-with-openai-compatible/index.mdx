@@ -27,7 +27,7 @@ Open WebUI 建立在**标准协议**之上。与其为每个单独的 AI 提供�
 
 这意味着，Open WebUI 负责**界面与工具层**，而你的后端应遵循通用的聊天补全标准。
 
-- **我们支持协议：** 只要提供商遵循广泛采用的 API 标准，就能获得原生支持。我们也对 **[Open Responses](https://www.openresponses.org/)** 提供实验性支持。
+- **我们支持协议**：任何遵循广泛采用的 API 标准的提供商都可获得原生支持。我们也支持 **[Open Responses](https://www.openresponses.org/)**。
 - **我们避免支持私有 API：** 为了保持代码库通用且可维护，我们不会在核心中为每个厂商的非标准私有 API 单独实现适配。对于未原生支持的提供商，请使用 [pipe](/features/extensibility/plugin/functions/pipe) 或 LiteLLM、OpenRouter 等中间代理进行桥接。
 
 关于这一架构决策的完整解释，请参见 **[协议支持 FAQ](/faq#q-why-doesnt-open-webui-natively-support-provider-xs-proprietary-api)**。
@@ -708,6 +708,7 @@ AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST=30
 | **Azure OpenAI** | 请求会被改写成 Azure 基于部署的 URL 形式，并附带 `api-version` 参数，因此该连接需要填写 **API Version**，并在 **Model IDs** 中列出部署名称。对于形似 Azure 的 URL 会自动开启此项，参见[云端提供商](#cloud-providers)下的 Azure OpenAI 标签页。 |
 | **llama.cpp** | 启用[模型管理面板](#managing-local-models-from-open-webui)、模型选择器中的绿色 **Loaded** 标记和管理员 **Eject** 按钮，以及模型行中的更多模型详情。已保存的推理也会作为 `reasoning_content` 字段重新发送给服务器，由 llama.cpp 通过聊天模板处理。此选项以请求格式命名，支持该格式的托管服务器也可使用它，例如思考模式要求把推理内容发回给它的 DeepSeek API。当你点击 **继续回复（Continue Response）** 时，Open WebUI 会在请求中加入 `continue_final_message: true` 和 `add_generation_prompt: false`，让服务器续写最后一条回复。保持 **默认（Default）** 的连接不会发送这些字段，**API 类型**为 **Responses** 时也不会。如果 llama.cpp 服务器上的 **继续回复** 重复了之前的文字或从头开始新的回复，请设置此项。参见 [llama.cpp 指南](/getting-started/quick-start/connect-a-provider/starting-with-llama-cpp)和[推理模型](/features/chat-conversations/chat-features/reasoning-models)。 |
 | **LM Studio** | 解锁同样的[模型管理面板](#managing-local-models-from-open-webui)、已加载标记与模型详情，但不支持删除模型，也没有 **弹出（Eject）** 按钮。 |
+| **vLLM** 和 **OpenRouter** | 已存储的推理在后续轮次中回传给模型。参见[推理模型](/features/chat-conversations/chat-features/reasoning-models#how-reasoning-is-sent-back)。 |
 | **LiteLLM** | 到达 Open WebUI 自带的 [Anthropic Messages 端点](/reference/api-endpoints#anthropic-messages-api)的请求会被原样转发给 LiteLLM，而不会被转换成聊天补全再转回来。在 Open WebUI 内部发起的聊天不受影响。 |
 
 :::info 下拉框不出现的情况

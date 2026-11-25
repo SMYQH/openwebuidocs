@@ -57,11 +57,11 @@ Open WebUI 提供了一个可选的**上下文压缩**功能，帮你处理最�
 - **Context Compaction**：开关（[`ENABLE_CONTEXT_COMPACTION`](/reference/env-configuration#enable_context_compaction)）。
 - **Context Compaction Model**：负责撰写摘要的模型（[`CONTEXT_COMPACTION_MODEL`](/reference/env-configuration#context_compaction_model)）。保持为 **Current Model** 即使用对话自身的模型。
 - **Token Threshold**：触发压缩的预估上下文大小（以 token 计），超过此值时较旧的消息会被压缩（默认 `80000`，[`CONTEXT_COMPACTION_TOKEN_THRESHOLD`](/reference/env-configuration#context_compaction_token_threshold)）。请将其设置得低于模型的实际窗口。这是全局默认值：单个模型可以在自己的高级参数中设置 **Context Compaction Threshold**（`compact_token_threshold`），可高可低，但受 **Token Cap**（[`CONTEXT_COMPACTION_TOKEN_CAP`](/reference/env-configuration#context_compaction_token_cap)）约束，而该上限默认等于阈值。因此，只有提高上限，模型才能比全局默认值更晚触发压缩。**Advanced Params** 下的 **Context Compaction Threshold** 字段仅在 **Context Compaction** 开启时显示。在模型编辑器中，任何有权编辑该模型的用户都能看到它；而在模型默认值、对话设置、对话的 **Controls** 以及任务模型参数中，只有管理员能看到。已经保存的阈值会被保留，并在压缩重新开启后继续生效。
-- **Retained Messages**：保留原文的最近消息所占百分比，更早的消息则由摘要取代（默认 `40`，[`CONTEXT_COMPACTION_RETENTION_PERCENTAGE`](/reference/env-configuration#context_compaction_retention_percentage)）。超出 `10` 到 `50` 范围的值会被截断，因此对话始终至少完整保留十分之一、至多完整保留一半。
+- **Retained Messages**：保留原文的最近消息所占百分比，更早的消息则由摘要取代（默认 `40`，[`CONTEXT_COMPACTION_RETENTION_PERCENTAGE`](/reference/env-configuration#context_compaction_retention_percentage)）。超出 `10` 到 `50` 的值会限制在该范围内，因此对话始终至少完整保留十分之一、至多完整保留一半。
 - **Context Compaction Prompt**：可选的自定义摘要提示词（[`CONTEXT_COMPACTION_PROMPT_TEMPLATE`](/reference/env-configuration#context_compaction_prompt_template)）；留空则使用内置默认值。它支持 `{{COMPACTED_MESSAGES}}`（被摘要的消息）和 `{{RECENT_MESSAGES}}`（保留在上下文中的消息）。
 - **Task Model Parameters**：摘要请求所用的生成参数（[`TASK_MODEL_PARAMS`](/reference/env-configuration#task_model_params)），位于同一页面上方的 **Tasks**。摘要请求本身没有输出上限；如果你需要，可以在这里设置 `max_tokens`。该设置与标题、标签及其他后台任务共用，因此修改前请参阅[任务模型](/features/administration/task-models)。
 
-这是摘要替换策略（上述第 4 种），内置于系统中。如果你需要不同的策略（硬上限、优先裁剪附件、按模型窗口），请改用 filter Function。
+这是内置的摘要替换策略（见下文第 4 项）。如果你需要不同的策略（硬上限、优先裁剪附件、按模型窗口），请改用 filter Function。
 
 ### 工作原理 {#how-it-works}
 
@@ -87,7 +87,7 @@ Open WebUI 提供了一个可选的**上下文压缩**功能，帮你处理最�
 
   当压缩被禁用或对话没有消息时，它为 `null`。`source` 始终是 `estimated`，即使该计数是基于服务商报告的用量算出来的，因此它无法区分两者。Open WebUI 会优先采用服务商自己报告的 token 计数：它回溯到最近一条带用量记录的消息，取其 prompt 与 completion 总量，只估算此后的消息。当没有消息带用量时，整个数值都是估算的，而估算并不是分词器级别的精确值，因此请把它当作参考刻度，而不是计费数字。
 
-  对话中显示的上下文用量，与压缩使用的阈值是同一个。
+  在对话中，使用 `/status` 打开**上下文**一行。如果有大于零的压缩阈值，该行会显示已用 token 占阈值的百分比，并显示进度条。如果有 token 估算值但没有大于零的阈值，则只显示数量。对话中的**上下文已压缩**标记表示已执行压缩。
 
   各服务商使用的字段名不同，常见字段都能读取：`prompt_tokens` / `completion_tokens`（OpenAI 风格）、`input_tokens` / `output_tokens`、`prompt_eval_count` / `eval_count`（Ollama），以及 `prompt_n` / `predicted_n` 加上 `cache_n`（llama.cpp）。因此本地后端会依据报告值而非估算值触发压缩。用量随对话历史保存，后续轮次也能读取提供商报告的计数。
 
@@ -100,7 +100,7 @@ Open WebUI 提供了一个可选的**上下文压缩**功能，帮你处理最�
 1. **硬限制聊天长度。** 如果 `len(body["messages"]) > N` 就直接拒绝或报错。实现简单、行为可预测，不需要 token 统计。
 2. **仅保留最新 N 轮。** 保留 system prompt 和最近 N 轮 user/assistant 消息，删除更旧内容。
 3. **按模型预算做 token 窗口裁剪。** 为每条消息估算 token（例如 OpenAI 系列使用 `tiktoken`，其他模型用 char/4 近似），从最旧的非 system 消息开始删除，直到总量落入模型窗口。
-4. **摘要替换。** 当上下文将要溢出时，调用一个便宜模型先对最旧的消息块做摘要，再用一条 assistant 摘要消息替换原始消息块。这样可以保留长期上下文，而不是简单丢弃。
+4. **摘要替换。** 当上下文将要溢出时，调用一个便宜模型先对最旧的消息块做摘要，再用一条 assistant 摘要消息替换原始消息块。这样可以保留长期上下文，同时避免超出上下文窗口。
 5. **优先裁剪附件或工具输出。** 在动对话正文之前，先去掉旧轮次中的大文件内容或工具结果。
 
 上述多数策略都已有社区过滤器可用，发布在 [Open WebUI 社区](https://openwebui.com/) 上。安装一个、配置阀门参数，就能直接使用。如果没有完全满足你的策略，再把最接近的那个复制到 **Functions** 管理页里修改即可——过滤器就是纯 Python，通常很容易调。
@@ -170,7 +170,7 @@ class Filter:
 在 **Admin Panel → Functions** 中全局启用这个过滤器，或仅将其挂到特定模型上。`max_turns` 阀门还可以在模型卡上按模型分别配置，因此你可以给本地 8k 模型设更小窗口，而给 Gemini 1M 设更大窗口。
 
 :::info 为什么需要 tool-call 修复块？
-启用工具调用后，发起工具调用的 `assistant` 消息会与一个或多个 `tool` 消息成对出现，它们通过相同的 `tool_call_id` 关联。如果 `max_turns` 正好把会话切在这一组的中间，只保留了一半，上游提供商就会因为工具调用结构不完整而返回 400。修复块的作用就是把这些孤立消息剔除，确保裁剪后的窗口总是从一个有效边界开始。这也是生产级社区上下文过滤器常见的处理方式。
+启用工具调用后，发起工具调用的 `assistant` 消息会与一个或多个 `tool` 消息成对出现，它们通过相同的 `tool_call_id` 关联。如果 `max_turns` 正好把会话切在这一组的中间，只保留了一半，上游提供商就会因为工具调用结构不完整而返回 400。修复块的作用就是把这些孤立消息剔除，确保裁剪后的窗口总是从一个有效边界开始。生产级社区上下文过滤器也采用这种处理方式。过滤器的其余部分是通用的裁剪逻辑。
 :::
 
 :::note 服务端对账：`tool_use ids were found without tool_result blocks`
@@ -379,13 +379,13 @@ class Filter:
 - **配置错误时选择 fail-open。** 如果你不小心把 headroom 设得比预算还大，过滤器会原样放行请求，而不是默默清空会话。此时让提供商返回错误，比静默丢数据更安全。
 
 :::warning 检查你的模型 ID
-Open WebUI 传给 `body["model"]` 的，不一定是提供商原始 id。如果管理员设置了 connection 的 `prefix_id`，模型 id 会变成 `{prefix}.{raw_id}`（例如 `openai.gpt-5.6-sol`）。Pipe function manifest 中的子模型也会被包装成 `{pipe.id}.{sub_id}`（例如 `anthropic.claude-sonnet-5-20260514`）。Workspace 中自定义模型甚至可能用 UUID。
+Open WebUI 传给 `body["model"]` 的，不一定是提供商原始 id。如果管理员设置了 connection 的 `prefix_id`，模型 id 会变成 `{prefix}.{raw_id}`（例如 `openai.gpt-5.6-sol`）。Pipe 函数在 manifold 模式下的子模型也会被包装成 `{pipe.id}.{sub_id}`（例如 `anthropic.claude-sonnet-5-20260514`）。Workspace 中自定义模型甚至可能用 UUID。
 
 请把模型选择器里**实际显示的 id**复制到 `model_budgets_json` 中，而不是盲目使用上游提供商的原始 id。格式不对时，请求会静默落回 `default_budget_tokens`，直到真正需要更大预算的聊天失败你才会发现。
 :::
 
 :::warning RAG 和原生工具定义会在此过滤器之后追加
-这个过滤器运行在 `inlet()` 阶段，也就是 Open WebUI 的 RAG 检索（`chat_completion_files_handler`）以及原生工具定义挂载之前。这两部分都会在**过滤器裁剪之后**继续往请求中增加字节。如果你依赖 Knowledge Base，或者模型有较重的内置工具定义（web search + memory + code interpreter + MCP servers + …），请额外增大 `response_headroom_tokens`，给这些后续追加内容预留空间。
+这个过滤器运行在 `inlet()` 阶段，也就是 Open WebUI 的 RAG 检索（`chat_completion_files_handler`）以及原生工具定义挂载之前。这两部分都会在**过滤器裁剪之后**继续向请求追加不少数据。如果你依赖 Knowledge Base，或者模型有较重的内置工具定义（web search + memory + code interpreter + MCP servers + …），请额外增大 `response_headroom_tokens`，给这些后续追加内容预留空间。
 :::
 
 本示例已经使用 `tiktoken`（通过 `encoding_for_model(model_id)` 以及一个带缓存的回退编码）来计数，对 tiktoken 认识的 OpenAI 模型是精确的，对其他模型也是一个不错的近似。如果你需要为非 OpenAI 提供商做更高精度的统计，可以把 `_estimate_tokens` 替换为该提供商自己的 tokenizer（Anthropic 的、Gemini 的，或本地模型使用的 `transformers` tokenizer）。对于带 headroom 的裁剪预算而言，tiktoken 近似已经足够保证你留在限制之内，*前提是你为上述 RAG / 工具追加内容预留了足够 headroom*。

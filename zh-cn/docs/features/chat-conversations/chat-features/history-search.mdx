@@ -100,7 +100,10 @@ Open WebUI 会按聊天跟踪已读状态，并在你打开对话时更新，这
 ### 可用历史工具： {#available-history-tools}
 - **`search_chats`**：在聊天标题和消息内容中做文本搜索，匹配规则与 **参考对话** 选择器相同，并跳过模型当前所在的对话。返回匹配的聊天 ID 和摘录。
 - **`view_chat`**：按 ID 读取并返回某个聊天的消息历史；当设置了 [`VIEW_CHAT_MAX_CHARS`](/reference/env-configuration#view_chat_max_chars) 时只截取最新的消息。
-- **`search_users`**：按姓名或邮箱查找用户，以便模型在回复中提及他们。被提及且有权查看该聊天的用户会收到[收件箱](/features/chat-conversations/chat-features/notifications#inbox)通知，点击可打开聊天中的对应回复。
+
+启用**内置工具**时，**聊天历史**类别默认开启。要禁止模型使用这些工具搜索以前的聊天，请在**工作区 > 模型**或**管理面板 > 设置 > 模型**中编辑模型，打开**内置工具**，关闭**聊天历史**后保存。模型的内置工具集中将移除上面列出的三个工具。
+
+如需一并移除内置的时钟和日期计算工具，请在同一区域关闭**时间与计算**。该类别默认开启，控制 `get_current_timestamp` 和 `calculate_timestamp`。
 
 ### 为什么要为搜索使用原生工具调用？ {#why-use-native-tool-calling-for-search}
 

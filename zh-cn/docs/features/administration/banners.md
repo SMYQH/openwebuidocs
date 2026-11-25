@@ -394,6 +394,7 @@ Service updates: <a href="https://example.com/status" target="_blank"><u>Status 
 - 确保 `WEBUI_BANNERS` 是有效的 JSON **数组**（不是单个对象）。
 - 检查服务器日志中与 `WEBUI_BANNERS` 相关的解析错误。
 - 如果使用管理面板，确认已点击 **保存**。
+- 如果重启后 `WEBUI_BANNERS` 的更改未生效，请检查管理区域的**设置 > 常规**中的**横幅**。启用持久化配置后，保存的列表优先于环境变量，即使保存的是空列表。请在那里更新列表并点击**保存**。
 
 ### 横幅无法关闭 {#banner-cannot-be-dismissed}
 

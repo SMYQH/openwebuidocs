@@ -7,6 +7,47 @@ sidebar_position: 1
 
 Open WebUI 完全无法启动？从这里开始。关于 Alembic 迁移的问题（`no such table`、`Can't locate revision`），请参阅[数据库迁移](./manual-database-migration.md)。
 
+## 容器反复重启 {#container-keeps-restarting}
+
+即使容器存在且已发布端口，Open WebUI 也可能仍在启动或反复退出。如果浏览器无法连接，请先检查容器状态和近期日志，再决定是否重建容器：
+
+```bash
+docker ps -a --filter name=open-webui
+docker inspect --format 'status={{.State.Status}} restarts={{.RestartCount}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}}' open-webui
+docker logs --tail 100 --timestamps open-webui
+```
+
+将 `open-webui` 替换为容器名称。重启次数持续增加，表示进程在反复退出。如果显示 `oom=true`，请检查可用内存以及容器的内存限制。否则，请查找每次重启前的最后一条错误。如果容器仍在运行，但日志停在 Open WebUI 横幅处，请参见[访问 Hugging Face 时启动延迟](#startup-stops-after-the-banner-while-hugging-face-is-slow-or-blocked)。
+
+## 使用 Docker 安装后无法连接 {#cannot-connect-after-docker-install}
+
+先检查 Open WebUI 容器内部是否就绪，再通过已发布的端口检查。v0.13.4 镜像的 Docker 健康检查会在容器内部调用 `/health`。健康状态表明 Web 服务器在容器内能够响应。`/ready` 端点还会检查启动是否完成，以及数据库和已配置的 Redis 连接能否响应。
+
+```bash
+docker exec open-webui sh -c 'curl -i --max-time 5 "http://127.0.0.1:${PORT:-8080}/ready"'
+curl -i --max-time 5 http://127.0.0.1:3000/ready
+```
+
+在 Docker 主机上运行这两个命令。将 `open-webui` 替换为容器名称，将 `3000` 替换为已发布的主机端口。正在监听的服务器仍可能从 `/ready` 返回 HTTP 503，并附带 `Startup not complete`、`Database not ready` 或 `Redis not ready`。结合该响应与容器日志，找出仍未就绪的部分。如果无法在容器内连接，请按上文检查容器状态及启动日志。
+
+如果容器内的探测返回 HTTP 200 和 `{"status":true}`，但通过主机端口无法连接，请运行 `docker port open-webui` 检查端口映射。容器端口默认为 `8080`，例如 `3000:8080` 会把主机端口 `3000` 的请求转发到容器端口 `8080`。如果修改了 `PORT`，请确认映射指向对应的容器端口。
+
+## 设备空间不足 {#no-space-left-on-device}
+
+如果启动或上传失败并报错 `No space left on device` 或 `database or disk is full`，请检查服务器日志中的路径。在标准 Docker 镜像中，`/app/backend/data` 保存默认的 SQLite 数据库、上传文件和应用缓存。使用 S3 存储时，上传文件仍会先写入本地磁盘，再发送到存储桶。读取文件时也会下载本地副本。
+
+确认出错路径位于哪个文件系统上。对于使用默认数据目录且正在运行的 Linux 容器，请运行：
+
+```bash
+docker inspect --format '{{json .Mounts}}' open-webui
+docker exec open-webui df -h /app/backend/data
+docker exec open-webui df -i /app/backend/data
+```
+
+将 `open-webui` 替换为容器名称。如果配置了不同的 [`DATA_DIR`](/reference/env-configuration#data_dir) 路径，请使用实际路径。第二条命令检查剩余空间，第三条检查剩余 inode。即使还有空间，inode 也可能耗尽。如果容器无法持续运行，请根据挂载信息检查 Docker 主机上的底层文件系统。如果错误由 Docker 本身在拉取或创建期间报告，请检查 Docker 存放数据的文件系统。
+
+释放空间或扩展受影响的文件系统后重试。保留 Open WebUI 数据卷。从中删除文件前请参见[备份](/tutorials/maintenance/backups)。
+
 ## Apple Silicon (M1/M2/M3) 上容器启动时挂起 {#container-hangs-at-startup-on-apple-silicon-m1m2m3}
 
 ### 症状 {#symptom}

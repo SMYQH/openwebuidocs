@@ -1361,7 +1361,8 @@ def compare(path: str, source: Document, target: Document, config: dict) -> list
 
 
 def verify(source_root: Path, target_root: Path, config: dict, patterns: list[str] | None = None,
-           *, review_entries: list[dict] | None = None, review_results: dict | None = None) -> dict:
+           *, review_entries: list[dict] | None = None, review_results: dict | None = None,
+           added_review_terms: re.Pattern | None = None) -> dict:
     require_docs_directory(source_root)
     require_docs_directory(target_root)
     src, dst = files(source_root), files(target_root)
@@ -1387,8 +1388,9 @@ def verify(source_root: Path, target_root: Path, config: dict, patterns: list[st
             current = [Issue(path, 1, "warning", "extra-file", "Target file has no upstream counterpart")]
         else:
             matched += 1
-            current = compare(path, Document(source_text, src[path].suffix, config["terms"]),
-                              Document(target_text, dst[path].suffix, config["terms"]), config)
+            source_doc = Document(source_text, src[path].suffix, config["terms"])
+            target_doc = Document(target_text, dst[path].suffix, config["terms"])
+            current = compare(path, source_doc, target_doc, config)
         source_fingerprint_hash = digest(normalize_line_endings(a)) if a is not None else None
         target_fingerprint_hash = digest(normalize_line_endings(b)) if b is not None else None
         for issue in current:
@@ -1398,8 +1400,16 @@ def verify(source_root: Path, target_root: Path, config: dict, patterns: list[st
                 issue.suppressed, issue.reason = True, exceptions[issue.fingerprint]
         issues.extend(current)
         if review_entries is not None and a is not None:
-            review_entries.append({"path": path, "source_sha256": source_hash, "target_sha256": target_hash,
-                                   "source": source_text, "target": target_text, "issues": [asdict(i) for i in current]})
+            entry = {"path": path, "source_sha256": source_hash, "target_sha256": target_hash,
+                     "source": source_text, "target": target_text, "issues": [asdict(i) for i in current]}
+            if b is not None and added_review_terms is not None:
+                # Metadata segments contain decoded strings that may not appear verbatim in the file.
+                entry["new_term_present"] = any(
+                    added_review_terms.search(doc.text)
+                    or any(added_review_terms.search(segment.text) for segment in doc.segments)
+                    for doc in (source_doc, target_doc)
+                )
+            review_entries.append(entry)
     counts = Counter(i.severity for i in issues if not i.suppressed)
     source_count = sum(p in src for p in paths)
     quality = {"semantic_review": "required", "note": "File coverage and deterministic checks do not prove semantic completeness or translation accuracy."}
@@ -1438,24 +1448,30 @@ def review_bundle(source_root: Path, target_root: Path, config: dict, patterns: 
     earlier = {}
     review_entries = result_entries(previous) if previous is not None else {}
     bound_config = config
+    added_review_terms = None
     if previous_config is not None:
         if previous is None or previous.get("config_sha256") != digest(json.dumps(previous_config, sort_keys=True)):
             raise ValueError("Previous config does not match the reused review")
-        # Exceptions affect deterministic severity, not the meaning of the
-        # reviewed bytes. The new bundle still runs the full current audit.
-        if dict(previous_config, exceptions=[]) != dict(config, exceptions=[]):
-            raise ValueError("Cannot reuse review after a non-exception configuration change")
+        if (dict(previous_config, exceptions=[], terms=[]) != dict(config, exceptions=[], terms=[])
+                or config["terms"][:len(previous_config["terms"])] != previous_config["terms"]):
+            raise ValueError("Cannot reuse review after configuration changes other than exact exceptions or appended terms")
+        added_terms = config["terms"][len(previous_config["terms"]):]
+        if added_terms:
+            # A conservative substring match also covers plural forms and terms inside literals.
+            added_review_terms = re.compile("|".join(map(re.escape, added_terms)), re.IGNORECASE)
         bound_config = previous_config
     if previous is not None and previous.get("config_sha256") == digest(json.dumps(bound_config, sort_keys=True)):
         earlier = review_entries
     entries: list[dict] = []
-    report = verify(source_root, target_root, config, patterns, review_entries=entries, review_results=review_results)
+    report = verify(source_root, target_root, config, patterns, review_entries=entries,
+                    review_results=review_results, added_review_terms=added_review_terms)
     identities = {e["path"]: (e["source_sha256"], e["target_sha256"]) for e in entries}
     template = review_template(identities, config)
     pending, reused = [], []
     for index, entry in enumerate(entries):
         prior = earlier.get(entry["path"])
-        if (prior and entry["target_sha256"] is not None
+        new_term_present = entry.pop("new_term_present", False)
+        if (prior and not new_term_present and entry["target_sha256"] is not None
                 and (prior["source_sha256"], prior["target_sha256"]) == identities[entry["path"]]
                 and review_passed(prior)):
             template["files"][index] = prior

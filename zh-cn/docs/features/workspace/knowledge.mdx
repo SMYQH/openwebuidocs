@@ -23,9 +23,9 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 提出第一个文档问题 {#ask-your-first-document-question}
 
-先准备好三样东西：一个正在运行的 Open WebUI 实例、一个已连接的模型，以及创建知识库和上传文件的权限。要使用聚焦检索，请选择支持[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)的模型，并启用 **Builtin Tools** 和 **Knowledge Base** 工具类别。原生是默认模式；模型必须调用自己的工具来检索已附加的知识。
+先准备好三样东西：一个正在运行的 Open WebUI 实例、一个已连接的模型，以及创建知识库和上传文件的权限。要使用聚焦检索，请选择支持[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)的模型，并启用 **内置工具** 开关和 **知识库** 工具类别。原生是默认模式；模型必须调用自己的工具来检索已附加的知识。
 
-1. 点击**Workspace > Knowledge**，然后点击**Create**。为知识库起一个名称并填写描述。
+1. 点击 **工作区 > 知识**，然后点击 **创建**。为知识库起一个名称并填写描述。
 2. 上传一份体积较小、文字可选中的 PDF，或一份小型文本文件。在提问之前等待处理完成。
 3. 把知识库附加到该聊天，或附加到某个模型并用该模型开始对话。[附加知识与笔记](#attaching-knowledge-and-notes)说明了可以附加的位置。
 4. 提出一个答案就在文件里的问题，例如："使用附加的手册查找办公时间。引用相关段落。"
@@ -37,7 +37,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | :--- | :--- |
 | 在一次对话中询问某一个文件 | [把文件上传到对话](/features/chat-conversations/data-controls/files#using-files-in-open-webui) |
 | 在多次对话中复用一组文档 | 知识库，按照上面的步骤操作 |
-| 分析电子表格或通过代码创建文件 | [Open Terminal的文件分析指南](/features/open-terminal/use-cases/file-analysis) |
+| 分析电子表格或通过代码创建文件 | [Open Terminal 的文件分析指南](/features/open-terminal/use-cases/file-analysis) |
 
 一条[笔记](/features/notes)以完整文本的形式到达模型，而知识库可以按需检索相关段落。这使知识库适合那些如果完整发送就会超出模型上下文窗口的文档集合。知识库和笔记的附加位置相同，本页所说的“知识”同时涵盖两者，以及单个文件。若要纯本地地进行文档对话，请同时遵循[离线运行 Open WebUI](/tutorials/maintenance/offline-mode)。
 
@@ -65,13 +65,13 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 满足不同需求的两种检索模式 {#two-retrieval-modes-for-different-needs}
 
-选择**使用聚焦检索**（RAG）让 AI 高效搜索大型文档集，或选择**使用完整文档**在精度重要时逐字注入整个文档。
+检索相关片段（RAG）可让 AI 高效搜索大型文档集。对精确性要求较高时，可开启**全文**，逐字注入整个文档。
 
 ### 通过原生函数调用自主探索 {#autonomous-exploration-with-native-function-calling}
 
 启用[原生函数调用](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)后，模型不只是搜索。它们可以浏览您的知识库、逐页阅读文件，并在没有手动提示的情况下跨多个文档综合内容。
 
-### 有序范围访问 {#scoped-access-keeps-things-organized}
+### 限定知识访问范围 {#scoped-access-keeps-things-organized}
 
 当你把知识附加到模型、文件夹或聊天时，就等于精确指定了该模型要搜索哪些知识。它的知识工具随后只列出并搜索已附加的条目。这样答案会保持聚焦且可预测，因为模型只依据你挑选的来源作答。这也让你能决定每个模型搜索哪些文档：云端提供商上的模型可以只拿到一份公开手册，而跑在你自有硬件上的模型还能拿到内部文档。用户自身的访问权限在此之上仍然生效。
 
@@ -79,7 +79,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 - 模型 **Knowledge** 字段中的任何内容（知识库、笔记和文件），
 - 聊天所在文件夹的 **Knowledge** 字段中的任何内容，
-- 在模型 **Preload files** 能力关闭时，聊天中直接附加的知识库和笔记；开启该能力时，它们会被注入对话。
+- 在模型 **预加载文件** 能力关闭时，聊天中直接附加的知识库和笔记；开启该能力时，它们会被注入对话。
 
 在聊天中，上传的文件、从知识库中挑选的单个文件、文件夹、被引用的聊天和网页都以各自的方式到达模型，而不会改变知识工具的范围。
 
@@ -105,7 +105,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 检索模式 {#retrieval-modes}
 
-将文件或知识库附加到模型时，点击已附加项在**使用聚焦检索**和**使用完整文档**之间切换：
+向模型附加文件或知识库时，点击附件即可通过其**全文**开关在检索相关片段（关闭）与注入整个文件（开启）间切换：
 
 ![知识库列表](/images/workspace/knowledge-list.png)
 
@@ -119,11 +119,11 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 📄 全文上下文 {#full-context}
 
-将文件的完整内容注入每条消息。无分块，无语义搜索。对于在聊天中附加的文件和知识库，只要模型的 **Preload files** 能力开启，无论函数调用模式如何都会注入。而附加到模型上的知识库只在旧版函数调用模式下才注入：在原生函数调用下，模型通过知识工具访问附加到模型上的知识，无论是否使用全文上下文。
+将文件的完整内容注入每条消息。无分块，无语义搜索。对于在聊天中附加的文件和知识库，只要模型的 **预加载文件** 能力开启，无论函数调用模式如何都会注入。而附加到模型上的知识库只在旧版函数调用模式下才注入：在原生函数调用下，模型通过知识工具访问附加到模型上的知识，无论是否使用全文上下文。
 
 最适合简短的参考文档、风格指南，或始终相关的上下文。
 
-**Settings** > **Documents**（管理员区域）中不超过 **Full Text Threshold (Characters)** 的文件和文本附件无需选择该模式即完整包含，而 **Always Use Full Text** 会把它应用到每个文档。知识库附件不受该阈值影响。
+大小不超过管理区域**设置** > **文档**中**全文阈值（字符）**或**全文阈值（token）**的文件和文本附件，无需开启**全文**即可完整加入提示词。采用哪个阈值取决于**全文阈值类型**。**始终使用全文**会将该模式用于每个文档。
 
 ---
 
@@ -187,7 +187,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 - `grep_knowledge_files` —— 由 `grep "<pattern>"` 替代
 - `view_file` 和 `view_knowledge_file` —— 由 `cat`、`head`、`tail`、`sed -n '<a>,<b>p'` 替代
 
-**仍然与 `kb_exec` 并存注入的工具**（因其能做 `kb_exec` 做不到的事）：
+**仍与 `kb_exec` 一起提供给模型的工具**（因其能做 `kb_exec` 做不到的事）：
 
 - **`query_knowledge_files`** —— 语义/RAG 搜索（始终保留）
 - **`display_file`** —— 始终保留
@@ -227,7 +227,7 @@ find docs/ "*.md" | head -10
 
 文件可以用三种方式寻址——选择最明确的那种：
 
-- **路径** —— `docs/api/auth.md`（相对于知识库根目录；可穿透目录树解析）
+- **路径** —— `docs/api/auth.md`（相对于知识库根目录；按目录层级查找文件）
 - **文件名** —— `auth.md`（当多个目录或知识库中存在同名文件时，同一文件名会匹配多项，并显示 "ambiguous filename" 提示）
 - **文件 ID** —— `ls`、`find` 或 `grep` 返回的 UUID
 
@@ -268,7 +268,7 @@ find docs/ "*.md" | head -10
 
 1. **添加系统提示词指令**，告诉模型使用 `list_knowledge` 和 `query_knowledge_files`。
 2. **用[知识库故障排查](/troubleshooting/rag#13-knowledge-base-attached-to-model-not-working)检查模型的工具能力和检索设置**。保持原生模式开启，并使用能可靠调用工具的模型。
-3. **对于小文档，在聊天中以使用完整文档模式附加它**，并开启模型的 **Preload files** 能力，这样它的完整文本会被注入。附加到模型或文件夹上的知识在原生函数调用下永远不会被注入。
+3. **对于小文档，在聊天中附加它并开启其全文开关**，同时开启模型的**预加载文件**能力，以注入全文。采用原生函数调用时，附加到模型或文件夹的知识库始终不会注入。
 :::
 
 ---
@@ -283,7 +283,7 @@ find docs/ "*.md" | head -10
 
 ### 文件限制 {#file-limits}
 
-管理员在 **Settings > Documents**（管理员区域）中设置全局上限：**知识库批量上传上限**（每次上传的文件数）、**知识库文件大小上限**（每个文件的 MB 数）和**知识库文件数量上限**（每个知识库的文件总数）。留空表示不限制。相同的值也可以通过 [`KNOWLEDGE_MAX_UPLOAD_COUNT`](/reference/env-configuration#knowledge_max_upload_count)、[`KNOWLEDGE_MAX_FILE_SIZE`](/reference/env-configuration#knowledge_max_file_size) 和 [`KNOWLEDGE_MAX_FILE_COUNT`](/reference/env-configuration#knowledge_max_file_count) 设置。
+管理员在 **设置 > 文档**（管理员区域）中设置全局上限：**知识库批量上传上限**（每次上传的文件数）、**知识库文件大小上限**（每个文件的 MB 数）和**知识库文件数量上限**（每个知识库的文件总数）。留空表示不限制。相同的值也可以通过 [`KNOWLEDGE_MAX_UPLOAD_COUNT`](/reference/env-configuration#knowledge_max_upload_count)、[`KNOWLEDGE_MAX_FILE_SIZE`](/reference/env-configuration#knowledge_max_file_size) 和 [`KNOWLEDGE_MAX_FILE_COUNT`](/reference/env-configuration#knowledge_max_file_count) 设置。
 
 知识库的所有者或管理员可以为单个知识库设置更低的**文件数量上限**和**文件大小上限（MB）**，在创建时的**高级**选项中设置，或之后通过知识库页面上的三点菜单 > **设置**设置。当全局上限和局部上限同时存在时，适用较低的那个。外部知识库没有局部上限。
 
@@ -313,6 +313,10 @@ find docs/ "*.md" | head -10
 **下载**
 
 **下载**位于预览的**⋯** 菜单以及每个文件行的三点菜单中，它保存原始文件。对于因原始文件不可用而只在**索引文本**中打开的文件，下载会把索引文本保存为 `.txt` 文件。
+
+**移除文件**
+
+仍在使用的知识库应保留存储中的上传文件。建立索引会保存可搜索的文本，而**下载**和重建索引仍可能需要原始文件。直接从存储中删除上传文件，会留下对应的 Open WebUI 记录。请使用文件移除操作将其从知识库中移除。存储副本如何处理，参见[文件保留设置](/reference/env-configuration#enable_knowledge_file_retention)。
 
 **搜索、筛选与排序**
 
@@ -350,7 +354,7 @@ find docs/ "*.md" | head -10
 
 - **检索与标准 RAG** 仍然覆盖整个知识库。目录不会切分向量索引；任意子目录中的片段在单次搜索中仍然可达。
 - **智能体工具** 具有目录感知能力：
-  - `kb_exec`（启用时）把子目录当作文件系统：`ls docs/`、`tree`、`grep "x" docs/`、以及路径式引用（`docs/api/auth.md`）都可用——参见下方的[类文件系统访问（`kb_exec`）](#filesystem-style-access-kb_exec)。
+  - `kb_exec`（启用时）把子目录当作文件系统：`ls docs/`、`tree`、`grep "x" docs/`、以及路径式引用（`docs/api/auth.md`）都可用——参见上文的[类文件系统访问（`kb_exec`）](#filesystem-style-access-kb_exec)。
   - 其他知识工具（`query_knowledge_files`、`grep_knowledge_files`、`search_knowledge_files`）忽略目录边界，从整个知识库返回匹配结果。
 
 ### 重命名文件 {#renaming-files}
@@ -368,11 +372,12 @@ find docs/ "*.md" | head -10
 需要了解的行为：
 
 - 隐藏文件和文件夹（以 `.` 开头的任何内容）会被跳过。
-- 本地修改过的文件会以新的内容哈希上传；旧的文件条目会从知识库中移除并替换。
+- 对于在本地修改的文件，同步会先从知识库中移除旧条目，再上传替代文件。如果上传或处理失败，后续同步成功之前，该文件可能无法检索。
+- 如果同步报告 `Upload failed for … of … files.`，请打开浏览器开发者控制台，查找 `Upload failed:`，以确定受影响文件的相对路径和对应错误。修复报告的问题后，对同一个本地文件夹再次执行**添加内容 → 同步目录**。
 - 本地删除的文件会在清理步骤中从知识库中删除。
 - 该操作对未修改的文件是**非破坏性**的。
-- 知识库中仍标记为 **Processing** 的文件，例如 Open WebUI 在它处理完成前重启，只要其路径、名称和内容未变，在最初上传后一小时内不会再次上传。在这一小时内，同步会在 `Sync complete` 消息中把它计入**未修改**。一小时后，下一次同步会重新上传它。
-- **Processing** 状态的文件没有条目菜单，因此无法从知识库视图中移除它。若想在一小时结束前重试，先用 `GET /api/v1/knowledge/{id}/files/pending` 找到它的 ID，再用 `DELETE /api/v1/files/{file_id}` 删除它，然后重新同步。
+- 知识库中仍标记为 **处理中** 的文件，例如 Open WebUI 在它处理完成前重启，只要其路径、名称和内容未变，在最初上传后一小时内不会再次上传。在这一小时内，同步会在 `Sync complete` 消息中把它计入**未修改**。一小时后，下一次同步会重新上传它。
+- **处理中** 状态的文件没有条目菜单，因此无法从知识库视图中移除它。若想在一小时结束前重试，先用 `GET /api/v1/knowledge/{id}/files/pending` 找到它的 ID，再用 `DELETE /api/v1/files/{file_id}` 删除它，然后重新同步。
 
 对于编程使用，相同的工作流通过下方的[API 访问](#api-access)中两个端点暴露。
 
@@ -411,11 +416,11 @@ find docs/ "*.md" | head -10
 
 **增量目录同步**
 
-- `POST /api/v1/knowledge/{id}/sync/diff` — 提交本地清单（`manifest: [{path, filename, checksum}]`，其中 `checksum` 是文件字节的 SHA-256），返回 `{added, modified, deleted, mkdir, rmdir, unmodified_count}` 描述要上传、替换、删除的内容，以及要创建/移除的目录。只读——不会修改知识库。不到一小时前上传到该知识库、且仍处于待处理或处理中的文件，在其路径、名称和校验和都匹配时会被计为未修改，因此第二次同步不会重复上传它；满一小时后它会再次被提供上传。
+- `POST /api/v1/knowledge/{id}/sync/diff` — 提交本地清单（`manifest: [{path, filename, checksum}]`，其中 `checksum` 是文件字节的 SHA-256），返回 `{added, modified, deleted, mkdir, rmdir, unmodified_count}` 描述要上传、替换、删除的内容，以及要创建/移除的目录。只读——不会修改知识库。不到一小时前上传到该知识库、且仍处于待处理或处理中的文件，在其路径、名称和校验和都匹配时会被计为未修改，因此第二次同步不会重复上传它；满一小时后，下一次同步会将它列为待上传文件。
 - 在按 diff 操作后（创建 `mkdir` 路径，通过 `POST /api/v1/files/` 上传 `added` + `modified` 文件并附带哈希），调用：
 - `POST /api/v1/knowledge/{id}/sync/cleanup` — body：`{file_ids: [...], dir_ids: [...]}`。移除陈旧的文件（从知识库、向量存储和每文件集合中）以及 `sync/diff` 返回的现已为空的目录。请最后运行，避免删除赶在上传之前。
 
-文件处理是异步的。在将文件添加到知识库之前，必须轮询状态端点直到处理完成，否则会收到“内容为空”错误。有关工作流示例，请参阅 [API 端点](/reference/api-endpoints#retrieval-augmented-generation-rag)。
+文件处理是异步的。在将文件添加到知识库之前，必须轮询状态端点，直到处理完成，否则会收到 `empty content` 错误。有关工作流示例，请参阅 [API 端点](/reference/api-endpoints#retrieval-augmented-generation-rag)。
 
 ---
 
@@ -439,7 +444,7 @@ find docs/ "*.md" | head -10
 
 ### 全文上下文模式的上下文窗口 {#context-window-with-full-context-mode}
 
-“使用完整文档”会注入全文。将大型文档附加到上下文窗口较小的模型，将会挤占对话历史。
+**全文**会注入整个文档。如果给上下文窗口较小的模型附加大型文档，文档会挤占聊天记录的空间。
 
 ### API 上传的处理延迟 {#processing-delay-for-api-uploads}
 

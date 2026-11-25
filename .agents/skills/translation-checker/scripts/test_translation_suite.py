@@ -525,6 +525,18 @@ class VerificationTests(Fixture):
                  if i.code == "literal-error-message"]
         self.assertEqual([i.severity for i in found], ["error"])
 
+    def test_browser_warning_term_survives_bilingual_gloss(self):
+        source = "- Mixed content warnings when accessing the site.\n"
+        local = generated_cjk(5)
+        target = f"- {local} mixed content ({local}) {local}\n"
+        missing = target.replace(" mixed content", "")
+        self.assertFalse(self.issues(source, target))
+        self.assertTrue(any(issue.code == "literal-term" and issue.severity == "error"
+                            for issue in self.issues(source, missing)))
+        self.put(self.source, "warning.md", source)
+        task = self.fill(prepare(self.source, self.target, self.config, []))
+        self.assertIn("Mixed content", apply_bundle(task, self.source, self.target, self.config)[0][1])
+
     def test_fence_directives_are_preserved_apart_from_title(self):
         source = '```python title="Example source" {1,3} showLineNumbers\nrun()\n```\n'
         for changed in [source.replace("{1,3}", "{2}"), source.replace(" showLineNumbers", ""),
@@ -1242,10 +1254,39 @@ class VerificationTests(Fixture):
         with self.assertRaisesRegex(ValueError, "does not match"):
             review_bundle(self.source, self.target, self.config, [],
                           previous=previous, previous_config=self.config)
-        changed_policy = dict(self.config, terms=self.config["terms"] + ["Sample Product"])
-        with self.assertRaisesRegex(ValueError, "non-exception"):
+        changed_policy = dict(self.config, terms=self.config["terms"][1:])
+        with self.assertRaisesRegex(ValueError, "other than exact exceptions or appended terms"):
             review_bundle(self.source, self.target, changed_policy, [],
                           previous=previous, previous_config=previous_config)
+
+    def test_appended_term_reopens_only_affected_reviews(self):
+        term = "Sample Product"
+        source = "Use the source system.\n"
+        local = generated_cjk(8)
+        for path, original, translation in (
+            ("unaffected.md", source, local),
+            ("source.md", f"Find all {term.upper()}s.\n", local),
+            ("target.md", source, f"{local} `{term}`"),
+            ("escaped/_category_.json", '{"label": "\\u0053ample Product"}', json.dumps({"label": local})),
+            ("edited.md", source, local),
+        ):
+            self.put(self.source, path, original)
+            self.put(self.target, path, translation)
+        previous = review_bundle(self.source, self.target, self.config, [])["result_format"]
+        for row in previous["files"]:
+            row.update(reviewed_all_sections=True, **dict.fromkeys(REVIEW_DIMENSIONS, "pass"))
+        self.put(self.target, "edited.md", local + "\n")
+        current_config = dict(self.config, terms=self.terms + [term])
+        bundle = review_bundle(self.source, self.target, current_config, [],
+                               previous=previous, previous_config=self.config)
+        self.assertEqual(bundle["reused_files"], ["unaffected.md"])
+        self.assertEqual([row["path"] for row in bundle["files"]],
+                         ["edited.md", "escaped/_category_.json", "source.md", "target.md"])
+        self.assertTrue(any(issue["path"] == "source.md" and issue["code"] == "literal-term"
+                            for issue in bundle["deterministic_report"]["issues"]))
+        with self.assertRaisesRegex(ValueError, "other than exact exceptions or appended terms"):
+            review_bundle(self.source, self.target, dict(current_config, untranslated_min_words=2), [],
+                          previous=previous, previous_config=self.config)
 
     def test_semantic_review_rejects_stale_missing_duplicate_and_bad_status(self):
         initial = self.review_result()

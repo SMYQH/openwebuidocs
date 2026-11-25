@@ -136,6 +136,8 @@ Open WebUI 加上 Open Terminal 就是完整的智能体框架：控制层、动
 
 **[安装 →](./setup/installation)** · **[连接到 Open WebUI →](./setup/connecting)**
 
+如果想在自己的服务器或笔记本电脑上运行 Open Terminal 且不使用 Docker，请[添加 SSH 机器](/features/open-terminal/setup/ssh-machines)。如果想直接在 Open WebUI 服务器上运行，请[添加本地机器](/features/open-terminal/setup/local-machine)，Open WebUI 在 Docker 中运行时也支持此方式。
+
 :::info 模型要求
 Open Terminal 需要能可靠地自主调用工具的模型。模型需经过许多轮操作：选择动作、查看文件或输出、判断变化、从错误中恢复，然后继续处理。即使小型模型能发出有效的工具调用，也常难以持续完成这个过程。复杂的软件开发、数据处理和自动化任务应使用能力较强的前沿模型。原生工具调用是默认模式。如果工具没有被调用，请[检查模型的工具调用模式](./setup/connecting#8-enable-native-function-calling)。
 :::

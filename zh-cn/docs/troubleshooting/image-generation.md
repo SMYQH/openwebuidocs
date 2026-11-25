@@ -33,6 +33,11 @@ title: "图像生成"
     - 占位符不可点击，因此无法显示的图片不会打开全屏预览。如果该消息后来指向了另一个图片地址，图片会重新加载。
     - 如果你运行了多个副本且占位符时有时无，请检查 `/app/backend/data` 是否确实在它们之间共享。参见[扩展与高可用 → 上传的文件或 RAG 知识不可访问](/troubleshooting/multi-replica#5-uploaded-files-or-rag-knowledge-inaccessible)。
 
+### OpenAI 兼容图像编辑 {#openai-compatible-image-edits}
+
+- **编辑模型只收到一张输入图像。** 在 Open WebUI v0.13.4 中，服务器向连接的 `/images/edits` 端点发送图像列表时，使用 multipart 表单数据，每个文件对应一个 `image[]` 部分。以字符串形式提供的单张图像使用 `image` 字段。
+- 测试自定义提供商或代理时，请使用两张小测试图像，并在端点检查字段名和部分数量。配置 multipart 解析器，使其收集所有 `image[]` 值。手动测试时反复发送 `image` 字段，使用的是另一种请求结构。
+
 ### ComfyUI 问题 {#comfyui-issues}
 
 - **工作流不兼容／JSON 错误**（上传工作流后显示 `Invalid JSON format for ComfyUI Workflow.`）：

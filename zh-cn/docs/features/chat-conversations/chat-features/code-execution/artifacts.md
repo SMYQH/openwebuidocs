@@ -26,11 +26,12 @@ Open WebUI 中的 Artifacts 是一项受 Claude.AI Artifacts 启发的创新功�
 
 ## 如何在 Open WebUI 中使用 Artifacts？ {#how-do-i-use-artifacts-in-open-webui}
 
-Open WebUI 创建 Artifact 后，其内容会显示在主聊天右侧的 Artifacts 窗口。你可以随时通过[标签栏](/features/chat-conversations/chat-features/#tabs-side-panel)的 **+** 菜单选择 **Artifacts**，重新打开该窗口。你可以执行以下操作：
+从[标签栏](/features/chat-conversations/chat-features/#tabs-side-panel)的 **+** 菜单打开**产物**。如果对话中有可渲染的产物，并且你的账户可见“产物”控件，就会显示此项。**设置 > 界面 > 产物 > 自动检测产物**默认开启，控制生成新产物时是否打开标签页。移动端和紧凑预览不会自动打开。关闭自动检测后仍可通过标签栏菜单打开。
 
 - **编辑与迭代**：直接在聊天中要求 LLM 修改或迭代该内容，更新结果会立即显示在 Artifact 窗口中。你可通过 Artifact 左上角的版本选择器切换不同版本。每次编辑都会生成一个新版本，方便追踪变化
 - **自动更新**：Open WebUI 可能会根据你的后续消息更新现有 Artifact，窗口会显示最新内容
-- **操作按钮**：可复制内容、全屏打开 Artifact，或使用其他操作。
+
+使用预览上方的工具栏复制或下载所选版本。对于 HTML 预览，请点击工具栏最右端的**全屏打开**。SVG 预览有平移和缩放控件。以富 UI 嵌入呈现的工具输出有自己的查看器，不显示产物工具栏。
 
 ## 使用 CSP 保护 Artifact 预览 {#securing-artifact-previews-with-a-csp}
 

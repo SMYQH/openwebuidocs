@@ -21,7 +21,7 @@ Terminals 可为每个人、聊天或模型提供独立的工作区，使文件�
 
 :::tip 快速导航
 - **需要操作用户终端环境？** → [编排指南](/features/open-terminal/terminals/orchestration)
-- **需要创建和共享终端？** → [创建终端](/features/open-terminal/terminals/orchestration/creating-terminals)
+- **需要创建和共享终端？** 请参见[创建机器](/features/open-terminal/terminals/orchestration/creating-terminals)
 :::
 
 ```mermaid
@@ -110,7 +110,7 @@ Open WebUI 发出的所有调用都使用该密钥，包括 **Verify Connection*
 1. **查看编排器日志。** 编排器记录完整的实例置备流程，包括拉取镜像和创建工作区。检查与镜像可用性、终端设置或资源限制有关的错误。
 2. **核对 API 密钥。** 确认 Open WebUI 和编排器的 `TERMINALS_API_KEY` 一致。两端不匹配会导致连接失败并返回 `401` 错误。
 3. **检查镜像拉取权限。** 如果使用私有容器镜像仓库，请确保编排器（Docker）或集群（Kubernetes）已配置拉取凭据。
-4. **提高超时时间。** 如果请求以 `Terminal '<name>' timed out. It may still be starting. Please try again.` 失败，请提高 [`AIOHTTP_CLIENT_TIMEOUT_TERMINAL`](/reference/env-configuration#aiohttp_client_timeout_terminal)。
+4. **提高超时。** 如果请求失败并显示 `Machine '<name>' timed out. It may still be starting.`，请提高 [`AIOHTTP_CLIENT_TIMEOUT_MACHINE`](/reference/env-configuration#aiohttp_client_timeout_machine)。
 
 ### 认证失败 {#authentication-failures}
 

@@ -45,7 +45,7 @@ flowchart LR
 
 ## 始终设置密码 {#always-set-a-password}
 
-API Key 控制所有访问权限：任何能访问该端口并提供密钥的人都可以运行命令、读取文件并控制终端。服务器在没有密钥的情况下拒绝启动：直接运行 `uvicorn` 需要设置 `OPEN_TERMINAL_API_KEY`，CLI 会在你未提供时为你生成一个。请设置一个自己的强密钥，而不是依赖自动生成的密钥。
+API 密钥控制全部访问。任何能访问端口并提供密钥的人都能运行命令、读取文件并控制机器。没有密钥时，服务器拒绝启动。直接运行 `uvicorn` 需要设置 `OPEN_TERMINAL_API_KEY`，而使用 CLI 且未自行提供密钥时，CLI 会生成密钥。请自行设置强密钥，避免依赖生成的密钥。
 
 ```bash
 -e OPEN_TERMINAL_API_KEY=a-strong-password-here
@@ -72,11 +72,11 @@ docker logs open-terminal
 
 ## 使用管理员连接 {#use-admin-connections}
 
-以管理员身份添加 Open Terminal 连接。API 密钥保留在服务器上，请求经 Open WebUI 后端发送，你可控制哪些用户能够访问。
+以管理员身份添加机器。API 密钥保留在服务器端，不会暴露。请求通过 Open WebUI 的后端发送，访问权限由你控制。
 
-用户在 Tether 中添加的终端通过该用户自己的电脑访问，见[使用自己的模型和工具](/ecosystem/tether#bring-your-own-models-and-tools)。
+用户在 Tether 中添加的机器列在**你的设备**下，通过该用户自己的电脑访问。参见[自带模型与工具](/ecosystem/tether#bring-your-own-models-and-tools)。
 
-![管理设置中的 Open Terminal 连接，API Key 已掩码显示](/images/open-terminal-connection-masked-key.png)
+![在管理设置中编辑机器，API 密钥已遮挡](/images/open-terminal-connection-masked-key.png)
 
 ---
 
@@ -234,13 +234,13 @@ flowchart LR
 
 当 agent 启动一个服务器时，[浏览器标签页](../use-cases/web-development.md#the-browser-tab)会在一个沙箱化的框架中显示它。脚本、表单、弹窗、模态框和下载都是允许的，因此普通应用可以正常工作；但默认情况下，该框架被视为与 Open WebUI 相互独立的源，这让终端中运行的东西与你的会话隔离开来。
 
-**Settings > Interface > Terminal Preview Allow Same Origin** 可以放宽这一限制，默认是关闭的，只有你主动开启才会生效。仅当你编写并信任的某个东西确实需要同源浏览器 API（例如存储或 cookie）时才打开它，并记住正在预览的代码往往正是 agent 刚刚写出来的代码。
+**设置 > 界面 > 允许机器预览使用同源**会放宽上述限制，默认关闭。只有你亲自编写、信任且确实需要存储或 cookie 等同源浏览器 API 的内容才应开启。请记住，预览的代码通常是智能体刚刚编写的。
 
 ## 多用户模式是工作区级别的拆分 {#multi-user-mode-is-a-workspace-split}
 
 `OPEN_TERMINAL_MULTI_USER=true` 会让每个 Open WebUI 用户在同一个容器内拥有各自独立的 Linux 账户和主目录，从而在工作时把人们及其 agent 隔离开，不去翻对方的文件。但所有人仍然共享同一个内核、进程列表、网络命名空间和系统，而且配置这些账户需要在容器内具备提升的权限，因此其中的 root 对任何账户来说都是触手可及的。只在实例上的每位用户都受到同等信任的环境里运行它。
 
-当用户之间需要相互隔离时，请为每个人提供独立的容器，参见[终端](../terminals/)。两种方案的并列对比请参阅[多用户设置](./multi-user.md)。
+当用户之间需要相互隔离时，请使用 [Terminals](../terminals/) 为每个人提供独立容器。两种方案的对比请参阅[多用户设置](./multi-user.md)。
 
 ---
 
@@ -254,7 +254,7 @@ flowchart LR
 - [ ] 在不需要互联网访问时启用出站过滤
 - [ ] 除非必要，否则不要挂载 Docker socket
 - [ ] 如果不需要运行时安装软件包，请使用 `slim` 或 `alpine` 镜像
-- [ ] 除非预览确实需要，否则保持 **Terminal Preview Allow Same Origin** 关闭
+- [ ] **允许机器预览使用同源**保持关闭，除非预览确实需要它
 - [ ] 当用户之间需要相互保护时，为每位用户提供独立的容器
 
 ## 相关链接 {#related}

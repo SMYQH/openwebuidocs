@@ -10,7 +10,7 @@ import TabItem from '@theme/TabItem';
 
 **保持最新，同时不丢失你的数据。**
 
-你的数据（聊天、用户、设置、上传文件）存放在 Docker 卷或本地数据库中，而不在容器内部。更新 Open WebUI，本质上就是把容器镜像替换成更新版本；数据会保持原样。
+对于 Docker 安装，更新 Open WebUI 需要拉取较新的镜像，并使用相同的数据挂载重新创建容器。默认的 SQLite 数据库和本地上传文件位于 `/app/backend/data`。请将现有命名卷或绑定挂载继续挂载到该路径（或配置的 `DATA_DIR`）。如果使用外部数据库或对象存储，请在替换容器中保留相同的连接。
 
 ---
 
@@ -63,6 +63,10 @@ ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 引擎、模型、API URL、密钥、ComfyUI 工作流及 AUTOMATIC1111 的图像环境变量（如 `IMAGE_GENERATION_ENGINE`、`IMAGES_OPENAI_API_*`、`COMFYUI_*` 和 `IMAGE_EDIT_*` 等）仅在首次启动时读取。此次启动会将现有图像生成和编辑设置及这些变量迁移成名为 OpenAI、Gemini、ComfyUI 或 AUTOMATIC1111 的图像连接。独立的编辑后端会带有 ` (edit)` 后缀，迁移后的连接向所有用户开放。此后不再读取这些变量。若设置 `ENABLE_PERSISTENT_CONFIG=false`，则每次启动都会重新迁移。在 **Settings > Images**（管理员区域）管理连接。参见[图像生成和编辑](/features/chat-conversations/image-generation-and-editing)。`ENABLE_IMAGE_GENERATION`、`ENABLE_IMAGE_EDIT` 和 `ENABLE_IMAGE_PROMPT_GENERATION` 仍然有效。
 :::
 
+:::info 竞技场模型转换为路由模型
+竞技场模型现为[路由模型](/features/administration/router-models)。首次启动会把现有竞技场模型转换为默认策略为**随机**的路由模型，以保留盲测功能。已经关闭的竞技场模型转换后仍为关闭。如果竞技场模型从所有模型中抽取，或排除了部分模型，转换时会根据首次启动时已连接的模型生成固定列表。将以后连接的模型手动添加到[默认模型](/features/administration/router-models#default-models)中。只含一个模型的竞技场仍可使用，但不再隐藏回答所用模型，因为**随机**至少需要两个默认模型。启用**竞技场模型**且尚未添加任何竞技场模型时使用的内置**竞技场模型**不会转换。要保留盲测功能，请创建一个使用**随机**策略且有两个或更多默认模型的路由模型。带有**竞技场模型**选项的**评测**设置标签页已移除，改为在管理区域的**设置 > 模型**中管理。系统不再读取 `ENABLE_EVALUATION_ARENA_MODELS`。`EVALUATION_ARENA_MODELS` 由 [`ROUTER_MODELS`](/reference/env-configuration#router_models) 取代，后者使用不同的 [JSON 结构](/features/administration/router-models#set-them-up-from-the-environment)，因此使用 `EVALUATION_ARENA_MODELS` 的部署需迁移至 `ROUTER_MODELS`。
+:::
+
 :::info v0.12.1 为 SCIM 用户添加登录记录
 这个版本会运行一次数据库迁移，为每个缺少登录记录的账号补上一条——实际上就是通过 [SCIM](/features/authentication-access/auth/scim#integration-with-sso) 创建的账号。它只会改动数据。请先备份。新增的记录不包含可用的密码，因此这些用户仍然通过 SSO 登录。
 :::
@@ -76,6 +80,8 @@ ghcr.io/open-webui/open-webui:vX.Y.Z-ollama
 ---
 
 ## 手动更新 {#manual-update}
+
+在管理区域的**设置 > 常规**中，**检查更新**会查询 GitHub 上的最新发布版本。要在 Docker 中安装该版本，请按下文操作拉取镜像并重新创建容器。当 [`ENABLE_VERSION_UPDATE_CHECK`](/reference/env-configuration#enable_version_update_check) 已启用（默认）时，发布渠道的构建版会显示该按钮。`OFFLINE_MODE=true` 会禁用检查。
 
 <Tabs groupId="setup-method">
   <TabItem value="docker-run" label="Docker 容器" default>
@@ -96,7 +102,7 @@ docker run -d -p 3000:8080 \
   ghcr.io/open-webui/open-webui:main
 ```
 
-如需 NVIDIA GPU 支持，请在 `docker run` 命令中加入 `--gpus all`，并使用 `:cuda` 标签。请在第 2 步和第 3 步拉取与你正在运行的相同标签：由 `:cuda`、`:ollama` 或某个版本标签启动的容器，在拉取 `:main` 之后仍会启动旧版本。
+如需 NVIDIA GPU 支持，请在 `docker run` 命令中加入 `--gpus all`，并使用 `:cuda` 标签。第 2 步拉取的镜像标签须与第 3 步运行的镜像标签一致：由 `:cuda`、`:ollama` 或某个版本标签启动的容器，在拉取 `:main` 之后仍会启动旧版本。
 
   </TabItem>
   <TabItem value="docker-compose" label="Docker Compose">

@@ -8,7 +8,7 @@ title: "vLLM"
 vLLM 提供**兼容 OpenAI 的 API**（聊天补全），因此可以很容易接入 Open WebUI。本指南将展示如何连接你的 vLLM 服务器。
 
 :::tip
-对于实现该规范的提供商，Open WebUI 也支持实验性的 [Open Responses](/getting-started/quick-start/connect-a-provider/starting-with-open-responses) 规范。
+Open WebUI 也支持实现了 [Open Responses](/getting-started/quick-start/connect-a-provider/starting-with-open-responses) 规范的提供商。
 :::
 
 ---
@@ -30,11 +30,12 @@ http://localhost:8000/v1
 1. 转到 **Settings > Connections**（管理员区域）。
 2. 找到 **Manage OpenAI API Connections** 列表。
 3. 点击 **Add Connection**。
-4. 填写以下内容：
+4. 填写以下信息：
    - **URL**：`http://localhost:8000/v1`（或你的 vLLM 服务器 URL）
      *   **Docker 用户：** 如果 Open WebUI 运行在容器中，请使用 `http://host.docker.internal:8000/v1`。
    - **Auth**：如果未配置密钥，请选择 **None**。否则，请选择 **Bearer** 并输入你的密钥。
-5. 点击 **Save**。
+   - **高级 > 提供商**：选择 **vLLM**，让已存储的推理在后续轮次回传给模型。参见[提供商设置](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible#the-provider-setting)
+5. 点击**保存**。
 
 ---
 

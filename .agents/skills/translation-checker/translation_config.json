@@ -231,7 +231,8 @@
     "MariaDB",
     "pymysql",
     "pip",
-    "uv"
+    "uv",
+    "mixed content"
   ],
   "source_term_aliases": {
     "gPRC": "gRPC",
@@ -282,10 +283,6 @@
     {
       "fingerprint": "596adbd85be5161caf05f527051ef9a1b89bf139fd725fae25d4b42203358c02",
       "reason": "Caddy: the extra destination links to the existing security-headers section on the same page. No upstream destination changed."
-    },
-    {
-      "fingerprint": "b2b83e3d0d4e698a36684286ac8ed018145e2cfe5b4a9396f0824db30e892bc1",
-      "reason": "Firefox sidebar: the bare upstream documentation URL becomes a labeled link to the same page on the localized site."
     },
     {
       "fingerprint": "0efd529de854c29555f6a9432cc98475e983e8570e62d2191b46f194d13846cf",
@@ -348,36 +345,8 @@
       "reason": "The Prerequisites heading uses the product name Open WebUI instead of upstream's OpenWebUI. It retains the original openwebui fragment and introduces no additional product reference."
     },
     {
-      "fingerprint": "0178c0404927caf4f8ed2710379b67b735b080ac069fc22a2c8fdbb051a226fb",
-      "reason": "The Chinese Knowledge and RAG overview adds one link to its own oikb guide. The source table, feature links, and original knowledge-base link are retained."
-    },
-    {
-      "fingerprint": "17a6e88af94b285d1cc2b844ae841fac0b1b947c6c909a1b2b05e87cc5371b76",
-      "reason": "The extra Git mention is in the local oikb cross-reference; the pinned upstream Knowledge Base Sync guide lists Git among its supported connectors."
-    },
-    {
-      "fingerprint": "49f3e87203b9fc457060a3ee23f331f648a201607c0db17ca770b26fcdeaf149",
-      "reason": "The added local oikb guide explains how to keep knowledge bases synchronized with folders, Git repositories, wikis, and storage buckets."
-    },
-    {
-      "fingerprint": "4970e3f93060f347d47a5b95cab4004355cbe98e056df12aecda02e0ed6452af",
-      "reason": "Open Terminal Docker tab: the editor-only MD041 directive permits a tab fragment without a standalone title. It does not change rendered content."
-    },
-    {
-      "fingerprint": "1f1e7dc6dba6f566b6e84e840f79d9f2b06be7278a743925d00b9c5f9717cdd8",
-      "reason": "The Chinese homepage keeps its translation-status notice and its link to the English source; the extra bold delimiters belong to that notice."
-    },
-    {
-      "fingerprint": "3376571aa525604702791ceb90b271a97cd78e489a6374da624ffdd61b4a7705",
-      "reason": "The Chinese translation Beta notice directs readers to the official English documentation because translated content may be out of date or incomplete."
-    },
-    {
       "fingerprint": "e3bb76001ad618ab0e7096974fd2245a61b0b150fd68748e55793d03ede072db",
       "reason": "Nginx: the local MD060 directive allows the editor's table formatting and does not change rendered content."
-    },
-    {
-      "fingerprint": "2acf44937f76dabecffcbb0546b4f8ccc1ec51b9328e16305bcecbdd5ab12f61",
-      "reason": "OpenTelemetry: the local MD060 directive allows the editor's table formatting and does not change rendered content."
     },
     {
       "fingerprint": "bee73982b0e0ef9120f813ece16a30a8a83c4c4d905da9c40c4fbf47e101d022",
@@ -390,14 +359,6 @@
     {
       "fingerprint": "18bb96c59c5d05eecaa36452df81c90ef3458f5dcbca987daa000a10386dcc78",
       "reason": "The translation repeats HTTPS to clarify the mobile browser requirement, explicitly locates Settings in Open WebUI, and uses a straight apostrophe in Let's Encrypt where upstream uses a curly apostrophe."
-    },
-    {
-      "fingerprint": "c7896de4c8a7fe72391906312cbdc28325ad16733b1f159a6ded51f391edf123",
-      "reason": "The community-support bullet keeps the upstream Discord and Reddit wording and adds the GitHub Discussions link; the extra bracket pair belongs to that link."
-    },
-    {
-      "fingerprint": "d500744f06f38b65151ef7e38daf570ea51ffb04b1cd1b4e2008cafbfa9e76fa",
-      "reason": "The community-support bullet adds the GitHub Discussions link because the upstream Discord and Reddit links are removed under the site's external-link policy."
     },
     {
       "fingerprint": "b372925902666f78b232d753f82007a707554cd304647024bd5ee31a6d2f1aeb",
@@ -434,6 +395,54 @@
     {
       "fingerprint": "95278fab2cc031fc01aab35671820a6ad2e45698bb83a63e7e0d689b7e1304fb",
       "reason": "Monitoring: retain the published authentication-setup-for-api-key- fragment next to the API key setup guidance. The anchor is empty, and the built page exposes the ID."
+    },
+    {
+      "fingerprint": "494b6b87829790effaa336a681385544749a59e96e502381d5f3f41369f275ce",
+      "reason": "The Chinese Knowledge and RAG overview adds one link to its own oikb guide. The source table, feature links, and original knowledge-base link are retained."
+    },
+    {
+      "fingerprint": "71bcf5047dd94552e9c2239ee1af61834382a5d6ca6f99943b6cfb8eddcb7c6b",
+      "reason": "The extra Git mention is in the local oikb cross-reference; the pinned upstream Knowledge Base Sync guide lists Git among its supported connectors."
+    },
+    {
+      "fingerprint": "88a0810e0df0f49e57f6d142fa3aacffd32c911013d2307cf9751fa956b81613",
+      "reason": "The added local oikb guide explains how to keep knowledge bases synchronized with folders, Git repositories, wikis, and storage buckets."
+    },
+    {
+      "fingerprint": "373391e4f5f8a466f8ee8f2a1537bba77647e4409a26f05d27eac004bf47922a",
+      "reason": "Open Terminal Docker tab: the editor-only MD041 directive permits a tab fragment without a standalone title. It does not change rendered content."
+    },
+    {
+      "fingerprint": "4102a5e6df793404c64f930d99bea1821e3ebe1c6e23db499fd70dea172c2f62",
+      "reason": "OpenTelemetry: the local MD060 directive allows the editor's table formatting and does not change rendered content."
+    },
+    {
+      "fingerprint": "8e5637e1b414e14a108004f5d286e0e8e777733b3338d5639c227ce5208bc214",
+      "reason": "The community-support bullet keeps the upstream Discord and Reddit wording and adds the GitHub Discussions link; the extra bracket pair belongs to that link."
+    },
+    {
+      "fingerprint": "f55a723a082ab9b8cfbad657633e01add03ff81ad589e267cbf8bd2996b384e7",
+      "reason": "The community-support bullet adds the GitHub Discussions link because the upstream Discord and Reddit links are removed under the site's external-link policy."
+    },
+    {
+      "fingerprint": "dc18296815b4c9ced735942f72a9e3640f5a5654154de520d38cb9340c287858",
+      "reason": "Firefox sidebar: the bare upstream documentation URL becomes a labeled link to the same page on the localized site."
+    },
+    {
+      "fingerprint": "e34439d1cfe353cbc31b1095497e5b3ac80856ee24b4aa14d9369b92226521da",
+      "reason": "The Chinese homepage keeps its translation-status notice and its link to the English source; the extra bold delimiters belong to that notice."
+    },
+    {
+      "fingerprint": "692965be7b2a481af51be98252b2a86be85eb7542902fcaba885470b506cbe73",
+      "reason": "The Chinese translation Beta notice directs readers to the official English documentation because translated content may be out of date or incomplete."
+    },
+    {
+      "fingerprint": "ce5dde2f8f201bec97462ab88a5ac0bc09f8fe036500103d8bd8077cc7586fd8",
+      "reason": "The first base URL in the OpenAI-compatible audio settings is defined as 基础 API 端点（Base URL） per the Chinese API terminology convention. All three Base URL references and the API key reference are retained."
+    },
+    {
+      "fingerprint": "4198f93a468165a808ff0faf40b2eab19eb0d47f93b83891bc4e17629ce33b9f",
+      "reason": "The upstream TERMINAL_PROXY_HEADERS alias interrupts ENABLE_AUTOCOMPLETE_GENERATION before its type, default, description, and persistence rows. The Chinese page moves the intact alias directly after MACHINE_PROXY_HEADERS to keep those rows under the correct setting. Every heading retains its level and anchor."
     }
   ]
 }

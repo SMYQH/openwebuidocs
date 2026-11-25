@@ -26,7 +26,11 @@ Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话
 
 ## 工作原理 {#how-it-works}
 
-记忆系统会存储关于你的若干信息片段（例如"我偏好用 Python 处理后端任务"或"我住在维也纳"）。这些记忆有两种使用方式：
+记忆系统存储有关你的信息片段，例如“我偏好用 Python 完成后端任务”或“我住在维也纳”。记忆记录保存在 Open WebUI 数据库中，其内容还会使用配置的嵌入模型在向量存储中编制索引。添加记忆或修改其内容需要正常工作的嵌入模型和向量数据库。
+
+精简镜像需要外部嵌入引擎，并使用带 pgvector 的 PostgreSQL 进行向量存储。如果添加或编辑记忆时返回 `Configure PGVECTOR_DB_URL for remote vector storage`，请配置向量数据库连接。参见[精简镜像省略了哪些内容](/getting-started/quick-start#what-slim-leaves-out)和[切换到外部向量数据库](/getting-started/advanced-topics/scaling#step-4-switch-to-an-external-vector-database)。
+
+这些记忆有两种用法：
 
 ### 1. 手动管理（设置中） {#1-manual-management-settings}
 
@@ -116,6 +120,20 @@ Open WebUI 内置了一套完善的记忆系统，使模型能够跨不同对话
 
 - **后台审查** — 当启用了 [`ENABLE_MEMORY_BACKGROUND_REVIEW`](/reference/env-configuration#enable_memory_background_review)（默认**关闭**），Open WebUI 会定期使用该对话自身的模型回顾最近的对话内容，并每 [`MEMORIES_REVIEW_INTERVAL_TURNS`](/reference/env-configuration#memories_review_interval_turns) 轮（默认 `10`）添加、替换、移动或删除两种类型的记忆（其中也包括 `user` 类型），而不只是依赖显式的工具调用。
 - **注入预算** — [`MEMORIES_CONTEXT_CHAR_LIMIT`](/reference/env-configuration#memories_context_char_limit) 和 [`MEMORIES_USER_CHAR_LIMIT`](/reference/env-configuration#memories_user_char_limit)（均默认 `2000`）限制注入到提示词中的 `context` 和 `user` 类型记忆的最大字符数。
+
+字符限制在 Open WebUI 将记忆加入模型请求时生效。提高限制可以让模型读取更多现有记忆。已保存的记忆条目保留完整文本。
+
+如果实例开启了持久化配置，在保存限制之后更改环境变量，存储的值仍会生效。要更新存储的用户记忆限制，请用管理员会话令牌向 `POST /api/v1/configs/import` 发送以下 JSON：
+
+```json
+{
+  "config": {
+    "memories.user_char_limit": 6000
+  }
+}
+```
+
+使用 `memories.context_char_limit` 设置上下文记忆预算。
 
 ### 记忆系统上下文 {#memory-system-context}
 

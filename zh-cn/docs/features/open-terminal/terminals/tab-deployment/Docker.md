@@ -18,7 +18,7 @@ services:
       - "3000:8080"
     environment:
       - >-
-        TERMINAL_SERVER_CONNECTIONS=[{
+        MACHINE_CONNECTIONS=[{
           "id": "terminals",
           "name": "Terminals",
           "enabled": true,
@@ -78,7 +78,7 @@ TERMINALS_API_KEY=change-me-to-a-strong-random-value
 docker compose up -d
 ```
 
-通过 `http://localhost:3000` 可访问 Open WebUI。上面的连接会为所有用户授予 **Read** 权限，他们可使用共享给自己的终端。请在连接的 **Access** 设置中，为负责创建终端的用户授予 **Write** 权限。参见[创建终端](/features/open-terminal/terminals/orchestration/creating-terminals)。用户打开终端时，编排器会自动置备实例。
+Open WebUI 可通过 `http://localhost:3000` 访问。上述连接向每个用户授予**读取**权限，因此用户可使用共享给自己的终端。请在连接的**访问权限**设置中向创建终端的人员授予**写入**权限，参见[创建机器](/features/open-terminal/terminals/orchestration/creating-terminals)。用户打开终端时，编排器会自动配置实例。
 
 :::warning Docker 套接字访问
 编排器需要访问 Docker 套接字 (`/var/run/docker.sock`) 来管理容器。在生产环境中，请使用 Docker 套接字代理，如 [Tecnativa/docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy)，以限制其可以进行的 API 调用。

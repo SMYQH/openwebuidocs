@@ -50,6 +50,6 @@ uv run --locked translation-check --strict --files alternatives --review-results
 
 Use the same scope when exporting and validating. The last command validates current results and exports pending pairs in one audit. It requires a results file for the current snapshot, including entries for unread pairs. A valid partial result still exits nonzero.
 
-If files changed, export a fresh bundle with `--reuse-review` but without submitting stale results. Only finding-free passes with matching source, target, and config digests are reused. When only exact exceptions change, preserve the previous config before editing and pass it with `--reuse-review-config` plus `--reuse-review`. The report re-audits the current config; other config changes require a fresh review.
+If files changed, export a fresh bundle with `--reuse-review`. Reuse requires a finding-free pass and matching source and target digests. If only exact exceptions changed or protected terms were appended, pass the saved previous config with `--reuse-review-config`. The checker verifies the previous digest and audits under the current config. It reopens pairs that contain an appended term on either side. Other config changes require a fresh review.
 
 Report errors, warnings, notes, and exact exceptions separately from semantic passes and pending pairs. After changing translated site content, require the production build and its link, anchor, and route checks per [upstream-sync](../upstream-sync/SKILL.md).

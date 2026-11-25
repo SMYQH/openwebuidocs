@@ -49,7 +49,7 @@ Open WebUI 中的权限是**累加**的。
 | **模型导入** | *（需要模型访问）* 从 JSON/文件导入模型的能力。 |
 | **模型导出** | *（需要模型访问）* 将模型导出到文件的能力。 |
 | **隐藏模型** | *（需要模型访问）* 在工作区模型中选择隐藏模型作为基础模型的能力（[`USER_PERMISSIONS_WORKSPACE_MODELS_HIDDEN`](/reference/env-configuration#user_permissions_workspace_models_hidden)）。默认关闭。 |
-| **知识库访问** | 访问**知识库**工作区以管理知识库。 |
+| **知识库访问** | 打开**知识库**工作区并创建知识库（[`USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ACCESS`](/reference/env-configuration#user_permissions_workspace_knowledge_access)）。非管理员默认关闭。已有知识库的访问由所有权和[资源授权](./groups.md#access-grant-system)另行控制。 |
 | **提示词访问** | **（父级）** 访问**提示词**工作区以管理自定义系统提示词。 |
 | **提示词导入** | *（需要提示词访问）* 导入提示词的能力。 |
 | **提示词导出** | *（需要提示词访问）* 导出提示词的能力。 |
@@ -85,6 +85,7 @@ Open WebUI 中的权限是**累加**的。
 | **公开技能** | *（需要共享技能）* 使技能公开的能力。 |
 | **共享笔记** | **（父级）** 共享笔记的能力。 |
 | **公开笔记** | *（需要共享笔记）* 使笔记公开的能力。 |
+| **共享自动化** | 将自动化共享给指定用户或用户组的能力。参见[共享](/features/chat-conversations/chat-features/automations#sharing)（[`USER_PERMISSIONS_AUTOMATIONS_ALLOW_SHARING`](/reference/env-configuration#user_permissions_automations_allow_sharing)）。 |
 | **共享文件夹** | 将对话文件夹及其中的对话共享给特定用户或用户组的能力。参见[共享文件夹](/features/chat-conversations/chat-features/conversation-organization#sharing-folders)。 |
 | **对话公开共享** | *（需要共享对话）* 使对话分享链接可被该实例中每个已登录用户访问的能力。打开链接仍需要登录。禁用时，用户仍可通过访问控制选择器与特定用户或用户组共享对话，但非管理员的"公开"选项将被隐藏。管理员始终豁免。 |
 | **对话开放共享** | *（需要共享对话）* 使对话分享链接无需登录即可被任何持有链接的人阅读的能力。这是唯一会把内容暴露到实例之外的权限。默认关闭。参见[开放链接](/features/chat-conversations/chat-features/chatshare#open-links-no-sign-in)。 |
@@ -147,9 +148,9 @@ Open WebUI 中的权限是**累加**的。
 | **视频生成** | 使用[视频生成](/features/chat-conversations/image-generation-and-editing/video-generation)（[`USER_PERMISSIONS_FEATURES_VIDEO_GENERATION`](/reference/env-configuration#user_permissions_features_video_generation)）。默认关闭，管理员始终拥有此权限。视频生成启用时才会显示此开关。 |
 | **代码解释器** | 使用 Python 代码解释器的能力。手动执行代码（代码块上的**运行**按钮）没有单独的权限，它对所有人都遵循 [`ENABLE_CODE_EXECUTION`](/reference/env-configuration#enable_code_execution)。参见[手动代码执行](/features/chat-conversations/chat-features/code-execution/python#manual-code-execution-pyodide)。 |
 | **记忆** | 访问用于持久化用户上下文的记忆功能。收回该权限会隐藏**个性化**设置标签页、屏蔽记忆 API 端点、不向模型提供记忆工具，并阻止已存储的记忆被注入聊天的系统上下文中。注入检查会在每次聊天请求时于服务端执行，因此仍在请求记忆的客户端也不会得到它。管理员始终不受此限制。 |
-| **自动化** | 非管理员用户可访问自动化页面，并创建、编辑、运行、暂停或删除自己的定时自动化。能编辑文件夹的用户也能暂停向该文件夹发布内容的自动化。见[文件夹](/features/chat-conversations/chat-features/automations#folders)。 |
+| **自动化** | 非管理员用户可以访问自动化页面，创建、编辑和删除自己的定时自动化，并运行或暂停以写入权限共享给自己的自动化。拥有此项权限的所有用户都可以使用 webhook。任何可以编辑文件夹的人也能运行和暂停向该文件夹发帖的自动化。参见[文件夹](/features/chat-conversations/chat-features/automations#folders)。 |
 | **日历** | 访问日历功能，用于创建日历、管理事件和查看共享日历。 |
-| **子智能体** | 使用 `delegate_task` 和 `timer` 工具（[`USER_PERMISSIONS_FEATURES_SUBAGENTS`](/reference/env-configuration#user_permissions_features_subagents)）。启用[子智能体](/features/chat-conversations/chat-features/subagents)后才会显示此开关。 |
+| **子智能体** | 使用 `delegate_task`、`timer` 和 `send_message` 工具的能力（[`USER_PERMISSIONS_FEATURES_SUBAGENTS`](/reference/env-configuration#user_permissions_features_subagents)）。启用[子智能体](/features/chat-conversations/chat-features/subagents)时显示此开关。 |
 | **用户 Webhooks** | 用户设置其个人 Webhook URL（位于 **设置 > 账户**）以接收通知的能力。默认禁用。 |
 
 :::info 图像生成与当前启用模型

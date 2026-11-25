@@ -18,9 +18,11 @@ Open WebUI 的设计预期是运行在私有、可信网络中，类似数据库
 - Zero Trust 访问代理（Cloudflare Access、Pomerium）
 - 带认证与 IP allowlist 的反向代理
 
+自动化 Webhook URL 无需登录即可访问，因为 URL 中的密钥就是凭据。如果前置代理要求每条路径都进行身份验证，就需要为这些调用设置例外。如果不使用自动化 Webhook，请将 [`ENABLE_AUTOMATION_WEBHOOKS`](/reference/env-configuration#enable_automation_webhooks) 设为 `false`。
+
 DDoS 防护和暴力破解防护（限速、连接节流、fail2ban）应由代理层或网络层承担。
 
-Open WebUI 默认监听所有网络接口（`0.0.0.0`）。当同一台机器上的反向代理为它转发流量时，请让 Open WebUI 只监听回环地址，避免客户端绕过代理：在 Docker 中把端口发布为 `-p 127.0.0.1:3000:8080`，或运行 `open-webui serve --host 127.0.0.1`。参见 [`HOST`](/reference/env-configuration#host)。Open WebUI 也会从后端访问 Ollama，因此 Ollama 的端口 `11434` 不需要对你的用户开放；参见[让端口 11434 远离你的网络](/troubleshooting/connection-error#accessing-ollama-from-open-webui)。
+Open WebUI 默认监听所有网络接口（`0.0.0.0`）。当同一台机器上的反向代理为它转发流量时，请让 Open WebUI 只监听回环地址，避免客户端绕过代理：在 Docker 中把端口发布为 `-p 127.0.0.1:3000:8080`，或运行 `open-webui serve --host 127.0.0.1`。参见 [`HOST`](/reference/env-configuration#host)。Open WebUI 也会从后端访问 Ollama，因此 Ollama 的端口 `11434` 不需要对你的用户开放；参见[请勿在网络上暴露端口 11434](/troubleshooting/connection-error#accessing-ollama-from-open-webui)。
 
 ### 请求不存在的路径 {#requests-for-paths-that-do-not-exist}
 
@@ -167,7 +169,7 @@ JWT_EXPIRES_IN=24h
 
 配置 Redis 后，登出会把该 token 加入一个会自动过期的撤销列表，而 OIDC back-channel logout 会让受影响的用户从所有设备登出。这才是面向生产的预期行为。
 
-**撤销检查采用 fail-open 策略。** 撤销检查无法访问 Redis 时会接受该 token，每个工作进程最多每分钟记录一次 `Revocation check failed; accepting token`。Redis 故障期间，实例会退回到上述无 Redis 时的行为，单个会话的登出不会使 token 失效。请把服务可用性纳入身份验证监控，并针对这条日志配置告警。
+**撤销检查采用 fail-open 策略。** 撤销检查无法访问 Redis 时会接受该 token，每个工作进程最多每分钟记录一次 `Revocation check failed; accepting token`。此类故障期间，实例会退回到上述无 Redis 时的行为，单个会话的登出不会使 token 失效。请将 Redis 可用性纳入身份验证监控，并针对这条日志配置告警。
 
 **如果你暂时无法部署 Redis**， 请缩短 `JWT_EXPIRES_IN`（例如 `1h` 或 `4h`）以缩小暴露窗口。Redis 配置请参考 [Redis 教程](/tutorials/integrations/redis)。
 
@@ -463,7 +465,7 @@ ENABLE_ADMIN_EXPORT=true
 
 `ENABLE_COMMUNITY_SHARING` 控制是否显示把聊天、模型、提示词、工具、Functions、Skills 和使用统计发送到 Open WebUI 社区的选项，以及发现社区内容的链接。设为 `false` 即可让一切都留在你自己的实例上。聊天分享链接是另一个独立功能：新建的链接默认保持私密，直到其所有者选择谁可以查看，参见[聊天分享](/features/chat-conversations/chat-features/chatshare)。
 
-### Workspace 权限 {#workspace-permissions}
+### 工作区权限 {#workspace-permissions}
 
 这些设置控制普通用户在共享工作区中的可操作范围：
 
@@ -489,7 +491,7 @@ AUDIT_LOG_LEVEL=METADATA
 | 级别 | 记录内容 |
 |---|---|
 | `NONE` | 不记录（默认） |
-| `METADATA` | 用户、IP、用户代理、请求方法、URL、时间戳、请求的模型 |
+| `METADATA` | 用户、IP、用户代理、方法、URL、时间戳、请求的模型、响应状态码 |
 | `REQUEST` | 元数据 + 请求体 |
 | `REQUEST_RESPONSE` | 元数据 + 请求体和响应体 |
 
@@ -500,6 +502,8 @@ AUDIT_LOG_LEVEL=METADATA
 ENABLE_AUDIT_LOGS_FILE=true
 AUDIT_LOGS_FILE_PATH=/app/backend/data/audit.log
 AUDIT_LOG_FILE_ROTATION_SIZE=10MB
+# Refuse to start when the audit log file cannot be opened
+ENABLE_AUDIT_LOGS_FILE_STARTUP_CHECK=true
 
 # Also send to stdout, useful for log aggregators
 ENABLE_AUDIT_STDOUT=true
@@ -510,24 +514,24 @@ MAX_BODY_LOG_SIZE=2048
 
 ### 路径过滤 {#path-filtering}
 ```bash
-# Only audit specific paths (whitelist mode)
+# Only audit specific paths (whitelist mode, list openai or ollama to audit those routes)
 AUDIT_INCLUDED_PATHS=auths,users,configs
 
 # Exclude specific paths (blacklist mode, default)
 AUDIT_EXCLUDED_PATHS=/chats,/chat,/folders
 ```
 
-无论路径排除规则如何，认证端点（登录、登出、注册以及 MFA 端点）始终会被审计。`/api/v1/auths` 和 `/oauth/` 下的请求在各层级都只记录其元数据，从而让密码、MFA 验证码和会话令牌不进入日志。其他地方，凡是字段名以 `password`、`secret`、`token`、`key` 或 `authorization` 结尾（或其复数形式，例如 `tokens`）的，无论大小写，在请求体和响应体中都会被遮蔽。这包括值列表以及被请求体大小限制截断的值。
+无论路径排除设置如何，登录、退出登录、注册和 MFA 端点始终接受审计。LDAP 登录端点不携带凭据，因此只有 [`ENABLE_AUDIT_ANONYMOUS_REQUESTS`](/reference/env-configuration#enable_audit_anonymous_requests) 为 `true` 时才会审计。对于 `/api/v1/auths` 和 `/oauth/` 下的请求，各级别均仅记录元数据，避免密码、MFA 验证码和会话令牌进入日志。其他请求和响应正文中，所有名称以 `password`、`secret`、`token`、`key` 或 `authorization`（或其复数形式，如 `tokens`）结尾的字段都会被遮蔽，不区分大小写。这也包括值列表和因正文大小限制被截断的值。
 
-每条记录都有一个 `model_id` 字段，表示客户端请求的模型。对于聊天和补全请求它会被填充：`/api/chat/completions`（同时也以 `/api/v1/chat/completions` 提供）、兼容 Anthropic 的 `/api/v1/messages`（同时也以 `/api/message` 提供）、`/openai/chat/completions`、`/openai/responses`，以及 `/ollama` 下的聊天、补全、Messages 和 Responses 请求。开启 [`ENABLE_OPENAI_API_PASSTHROUGH`](/reference/env-configuration#enable_openai_api_passthrough) 后，转发给 `/openai` 下提供方的每个请求也会记录其请求体中的 `model`。那些让 Open WebUI 转而调用模型的请求（例如 `/api/v1/tasks` 下的任务端点，或提及某个模型的频道消息）可以记录被调用的模型。其他请求则记录 `null`。`AUDIT_INCLUDED_PATHS` 只匹配 `/api/` 下的路由，因此设置它之后，`/openai` 和 `/ollama` 下的请求不会留下审计记录。无论 `MAX_BODY_LOG_SIZE` 如何设置，该字段都在各层级完整写入，因此仅凭 `METADATA` 就足以看出谁使用了哪个模型。默认排除项会跳过 `/api/chat/completions`，也就是聊天界面使用的端点。若要记录这些请求，请从列表中移除 `/chat`：
+每条记录都有 `model_id` 字段，用于记录客户端请求的模型。聊天、补全和嵌入请求会填写此字段，包括 `/api/chat/completions`（也提供 `/api/v1/chat/completions`）、`/api/embeddings`（也提供 `/api/v1/embeddings`）、Anthropic 兼容的 `/api/v1/messages`（也提供 `/api/message`）、`/openai/chat/completions`、`/openai/responses`，以及 `/ollama` 下的聊天、补全、嵌入、Messages 和 Responses 请求。图像生成及编辑（`/api/v1/images/generations` 和 `/api/v1/images/edit`）与视频生成（`/api/v1/videos/generations`）使用 `<connection id>:<model>` 记录模型。启用 [`ENABLE_OPENAI_API_PASSTHROUGH`](/reference/env-configuration#enable_openai_api_passthrough) 后，转发给提供商的每个 `/openai` 下的请求，只要 JSON 正文有 `model` 就会记录该值。如果某个请求使 Open WebUI 再调用模型（例如 `/api/v1/tasks` 下的任务端点），就可以记录被调用的模型。其他请求记录 `null`。每个级别都会完整写入此字段，不受 `MAX_BODY_LOG_SIZE` 影响，因此使用 `METADATA` 即可查看谁使用了哪个模型。默认排除项会跳过聊天界面所用的端点 `/api/chat/completions`。要记录这些请求，请从列表中移除 `/chat`。
 
 ```bash
 AUDIT_EXCLUDED_PATHS=/chats,/folders
 ```
 
-启用聊天请求审计后，对 `/api/chat/completions` 请求的模型回复会在请求条目之外另写审计条目。如果回复调用工具，两次工具调用之间的每轮回答各记一条。条目在 `model_id` 中记录回答的模型，在 `usage` 中记录提供商报告的 token 计数（`input_tokens`、`output_tokens` 和 `total_tokens`）。`extra.request_id` 保存请求条目的 `id`，从而关联两条记录。如果提供商未报告 token 计数，则不写回复条目。标题和标签生成等后台任务也不写这类条目。
+记录聊天请求后，对 `/api/chat/completions` 请求的每条模型回复，都会在请求记录旁写入一条独立的审计记录。如果回复调用工具，每轮工具调用之间的模型回答都有自己的记录。该记录的 `model_id` 包含回答的模型，`usage` 包含提供商报告的 token 数（`input_tokens`、`output_tokens` 和 `total_tokens`）。`extra.request_id` 保存请求记录的 `id`，用于关联二者。如果提供商不报告 token 数，则不为该回复写入记录。生成标题和标签等后台任务以同样方式写入记录，任务名称保存在 `extra.task` 中。
 
-在这些过滤范围内，审计日志覆盖携带凭据的 `POST`、`PUT`、`PATCH` 和 `DELETE` 请求（可通过 [`ENABLE_AUDIT_GET_REQUESTS`](/reference/env-configuration#enable_audit_get_requests) 加入 `GET`），以及上述认证端点。凭据是 `Authorization` 请求头（通常为 `Bearer`）、会话 cookie，或者 `x-api-key` 请求头中的 API 密钥（请求头名可通过 [`CUSTOM_API_KEY_HEADER`](/reference/env-configuration#custom_api_key_header) 重命名）。使用 API 密钥登录的请求会记在该密钥所有者名下。密钥错误的请求则不带用户记录。Socket.IO 流量在两种传输方式上都在其外，包括当 [`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configuration#enable_websocket_support) 关闭时浏览器使用的 `/ws/socket.io` 长轮询请求。
+在这些筛选条件下，审计日志涵盖携带凭据的 `POST`、`PUT`、`PATCH` 和 `DELETE` 请求（使用 [`ENABLE_AUDIT_GET_REQUESTS`](/reference/env-configuration#enable_audit_get_requests) 可加入 `GET`），以及上面提到的身份验证端点。凭据包括 `Authorization` 请求头（通常是 `Bearer`）、会话 cookie，或 `x-api-key` 请求头中的 API 密钥（可通过 [`CUSTOM_API_KEY_HEADER`](/reference/env-configuration#custom_api_key_header) 重命名）。使用 API 密钥登录的请求记在密钥所有者名下。密钥错误的请求不关联用户。启动会话的登录或注册请求记在登录账户名下。开启双因素登录后，输入验证码的步骤会记录该账户。无凭据的请求会跳过，除非 [`ENABLE_AUDIT_ANONYMOUS_REQUESTS`](/reference/env-configuration#enable_audit_anonymous_requests) 为 `true`。当 `AUDIT_LOG_LEVEL` 为 `NONE` 时，该设置无效。Socket.IO 的两种传输方式均不在审计范围内，包括 [`ENABLE_WEBSOCKET_SUPPORT`](/reference/env-configuration#enable_websocket_support) 关闭时浏览器使用的 `/ws/socket.io` 下的长轮询请求。
 
 ---
 
@@ -649,7 +653,7 @@ ENABLE_FUNCTIONS=false
 ENABLE_TOOL_SERVERS=false
 ```
 
-这比[安全模式](#safe-mode)的限制更严格。安全模式会停用所有函数，但保留该功能。`ENABLE_PLUGINS=false` 会隐藏工作区的 **Tools** 页面和管理区的 **Functions** 页面，并阻止工具、函数、OpenAPI 和 MCP 工具服务器、Open Terminal 连接、Tether 终端及 Tether 工具服务器加载或运行。[`ENABLE_TOOLS`](/reference/env-configuration#enable_tools)、[`ENABLE_FUNCTIONS`](/reference/env-configuration#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](/reference/env-configuration#enable_tool_servers) 则各自关闭其中一部分。更改这四项中的任何一项都需要重启。
+此设置比[安全模式](#safe-mode)更严格。安全模式会停用所有函数，但保留相关功能。`ENABLE_PLUGINS=false` 会隐藏工作区的**工具**页面和管理区域的**函数**页面，并阻止工具、函数、OpenAPI 和 MCP 工具服务器、Open Terminal 机器、Tether 机器及 Tether 工具服务器加载或运行。[`ENABLE_TOOLS`](/reference/env-configuration#enable_tools)、[`ENABLE_FUNCTIONS`](/reference/env-configuration#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](/reference/env-configuration#enable_tool_servers) 各关闭其中一部分。这四个设置都需要重启。
 
 ### 代码执行 {#code-execution}
 Open WebUI 默认启用两项代码执行功能：
@@ -674,7 +678,7 @@ CODE_INTERPRETER_ENGINE=pyodide
 SAFE_MODE=true
 ```
 
-这样你就能重新进入管理面板，手动关闭出问题的 Function。安全模式会在数据库中把每个 Function 都设为未激活，因此在你移除 `SAFE_MODE` 并重启之后，请在 **Admin Panel > Functions** 中把需要的 Function 逐个重新打开。
+这样你就能重新进入管理面板，手动关闭出问题的 Function。安全模式会在数据库中把每个 Function 都设为未激活，因此在你移除 `SAFE_MODE` 并重启之后，请在 **管理面板 > 函数** 中把需要的 Function 逐个重新打开。
 
 ### 依赖安装 {#dependency-installation}
 
@@ -687,7 +691,7 @@ ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=false
 
 关闭后，上传的 Tools 就不能在运行时自动拉取任意包。对于生产部署，尤其是那些允许非管理员创建 Tools 的环境，建议设为 `false`。
 
-### Workspace 访问 {#workspace-access}
+### 工作区访问 {#workspace-access}
 
 控制谁可以创建、导入与共享 Tools / Functions：
 

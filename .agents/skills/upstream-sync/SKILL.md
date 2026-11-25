@@ -122,7 +122,7 @@ For large-scale changes:
 
 #### 4.1 Verify completeness and quality before committing
 
-1. Use [translation-checker](../translation-checker/SKILL.md) for the deterministic audit, finding triage, and offline tooling tests. Keep unresolved pre-existing findings separate from newly introduced defects.
+1. Use [translation-checker](../translation-checker/SKILL.md) for the deterministic audit, finding triage, and offline tooling tests. Keep unresolved pre-existing findings separate from newly introduced defects. Save the old config before adding exact exceptions or appending protected terms so the checker can verify eligible prior reviews against the new config.
 2. Use [translation-semantic-review](../translation-semantic-review/SKILL.md) to read each complete pair and approve the exact candidate. A clean audit does not establish meaning or completeness.
 
 The update CLI requires a passed review of the exact candidate before writing. Use the same result file to verify the installed bytes, then build:

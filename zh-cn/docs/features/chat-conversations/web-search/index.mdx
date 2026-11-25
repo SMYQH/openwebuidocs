@@ -43,6 +43,8 @@ import DocCardList from '@theme/DocCardList';
 把 **网页加载器引擎** 设为 `playwright` 或 `external` 时，**加载器**部分会显示额外字段。
 
 - **Playwright WebSocket URL**（`PLAYWRIGHT_WS_URL`）：Open WebUI 会连接该地址上的 Chromium 浏览器，而不再自行启动。Docker 镜像不包含 Chromium。只有当环境变量设置了 `WEB_LOADER_ENGINE=playwright` 且 `PLAYWRIGHT_WS_URL` 留空时，容器才会在启动时安装它。仅在管理面板中选择 `playwright` 不会安装任何浏览器，因此请设置该环境变量后重启，或填写一个 WebSocket URL。
+
+客户端与服务端版本不同时，远程 Playwright 连接可能会报 `428 Precondition Required`。确保 Playwright 服务端的主版本和次版本与该 Open WebUI 版本内置的客户端相同。Open WebUI v0.13.4 使用 Playwright `1.60.x`。该版本的 [Playwright Compose 文件](https://github.com/open-webui/open-webui/blob/v0.13.4/docker-compose.playwright.yaml)将服务端固定为 `1.60.0`。参见 [Playwright 连接要求](https://playwright.dev/python/docs/api/class-browsertype#browser-type-connect)。
 - **Playwright Timeout (ms)**（`PLAYWRIGHT_TIMEOUT`，默认 `10000`）：Open WebUI 允许每个页面加载、以及页面加载期间发出的每个请求所用的时间（毫秒）。超时的页面会被跳过，并记录为 `Error loading <url>:` 加上 Playwright 的错误。其他页面仍会加载。如果没有任何页面加载成功，网页搜索会失败并提示 `[ERROR: None of the web search results could be loaded]`（除非开启**绕过嵌入与检索**），用 `#` 附加的链接则会失败并提示 `[ERROR: Could not read content from <url>]`。
 - **External Web Loader URL**（`EXTERNAL_WEB_LOADER_URL`）：Open WebUI 会向该 URL 发送 `POST` 请求，请求体是 JSON `{"urls": [...]}`，每次请求最多 20 个 URL，并带上请求头 `Authorization: Bearer <External Web Loader API Key>`。服务必须返回 JSON 数组，其中每个对象包含 `page_content`（页面文本）和 `metadata`。请把 `metadata.source` 设为文本来源的 URL：网页搜索只保留链接与返回的 `source` 匹配的结果。状态为错误或返回的不是这种数组时，整批结果都会被跳过，并记录为 `Error extracting content from batch <urls>: <error>`。Open WebUI 对该请求不设超时，因此永不响应的服务会拖住搜索。
 

@@ -149,8 +149,13 @@ docker run -d --name open-webui \
 - 仔细检查 `ENABLE_OTEL`、`ENABLE_OTEL_TRACES` 和 `ENABLE_OTEL_METRICS` 是否都设为 `true`
 - 端点是否正确？在示例 Compose 中，必须能从 Open WebUI 容器内以 `http://lgtm:4317` 访问该端点。
 - 检查 Open WebUI 日志（`docker logs open-webui-otel`）以查找 OTLP 错误
-- 收集器的 OTLP 端口（`4317`）应保持开放且可达。可以尝试：
-  `curl http://localhost:4317` (根据需要替换主机)
+- 检查 Open WebUI 容器能否访问收集器。向端口 `4317` 发送普通的 HTTP `curl` 请求，无法验证收集器是否通过 gRPC 接收 OTLP。
+
+### OTLP 报告 UNAVAILABLE {#otlp-reports-unavailable}
+
+如果端口可达，但导出器仍记录 `UNAVAILABLE`，请检查导出器协议是否与收集器的监听协议一致。gRPC 默认使用端口 `4317`，HTTP 默认使用端口 `4318`。使用 HTTP 时，检查失败的信号所用的路径，例如 `/v1/traces`、`/v1/metrics` 或 `/v1/logs`。[OTLP 协议规范](https://opentelemetry.io/docs/specs/otlp/)
+
+对于链路追踪，检查 `OTEL_OTLP_SPAN_EXPORTER`。指标和日志可以分别通过 `OTEL_METRICS_OTLP_SPAN_EXPORTER` 和 `OTEL_LOGS_OTLP_SPAN_EXPORTER` 覆盖该设置。
 
 **需要认证？**
 

@@ -43,6 +43,8 @@ Filter 就像 AI 工作流里的**翻译器或编辑器**：你可以在不打�
 
 ### 🦴 Filter 的基本骨架 {#basic-skeleton-of-a-filter}
 
+每个服务器工作进程按函数 ID 缓存 `Filter` 实例，并可在多个请求之间复用。将请求专有的值保存在钩子参数或局部变量中。例如，在 `inlet()` 中用局部变量计算某次请求的 token 数，并将实例属性留给 `self.toggle` 等配置。
+
 ``` python
 from pydantic import BaseModel
 from typing import Optional
@@ -109,7 +111,7 @@ class Filter:
 
 `inlet` 在这一轮接近开头处运行；`request` 在末尾运行，作用于即将发出的载荷。流水线所做的一切都发生在两者之间，这会改变你拿到的 `body` 里有什么。
 
-**等到 `request` 运行时已经消失的东西。** 在 `inlet` 返回之后，流水线会把若干键从 body 中弹出：`features`、`tool_ids`、`terminal_id`、`files`、`folder_id` 和 `skill_ids`。需要其中任何一项的过滤器只能写成 `inlet`。`variables`、`regeneration_prompt` 和 `params` 被弹出的时间更早，在 `inlet` 运行之前就已移除，而 `variables` 仍可通过 `__metadata__["variables"]` 读取。（`features` 在 `request` 中仍可通过保留参数 `__features__` 取到，因为流水线在弹出该键之前会把它另存一份；其余的则不行。）
+**运行 `request` 时已移除。** `inlet` 返回后，流程会从正文中弹出 `features`、`tool_ids`、`machine_id`、`files`、`folder_id` 和 `skill_ids`。需要其中任一项的过滤器必须用 `inlet`。`variables`、`regeneration_prompt` 和 `params` 移除得更早，在 `inlet` 运行之前，且仍可通过 `__metadata__["variables"]` 读取 `variables`。在 `request` 中，只有 `features` 仍可通过保留参数 `__features__` 访问。流程在弹出该键之前会预先保留该参数。
 
 **等到 `request` 运行时才存在的东西。** 用 `<source>` 标签包裹的 RAG 检索 chunk、解析完成的 `tools` 数组（服务端工具与过滤器或调用方添加的内容合并而成）、聊天自身的系统消息与文件夹系统提示词（工作区模型自己的 System Prompt 是在 `request` 返回之后由 provider 路由添加的），以及网页搜索上下文，在旧版函数调用下还包括记忆上下文。在原生函数调用下，召回的记忆、技能列表和附加的知识列表会在 `inlet` 和第一次 `request` 调用之后以隐藏的工具结果形式加入，因此 `inlet` 永远看不到它们，而 `request` 从一次回复的第二次调用起会以工具消息的形式看到它们。如果你想读取或改写的是*检索到的 chunk 文本*而不是文件引用，`request` 原生就能看到，无需 `file_handler` 开关，也不需要自己写检索代码。这通常比[自行接管检索](#owning-retrieval-with-file_handler)更简单：当你要*替换*检索方式时用 `file_handler`，只需要转换检索结果时用 `request`。
 
@@ -203,7 +205,7 @@ class Filter:
 
 当一个可切换 Filter 在当前聊天的作用范围内时，它会出现在两个地方：
 
-- **聊天输入栏的 + 菜单。** 列出作用范围内的每个可切换 Filter，并显示它的 `self.icon`、名称以及开/关**开关**。如果该 Filter 定义了 `UserValves` 类，菜单里还会有一个 **Valves** 按钮。
+- **聊天输入栏的 + 菜单。** 列出作用范围内的每个可切换 Filter，并显示它的 `self.icon`、名称以及**开关**。如果该 Filter 定义了 `UserValves` 类，菜单里还会有一个 **Valves** 按钮。
 - **+ 按钮旁边的标签**，仅当用户在 **设置 > 界面** 中开启了 **Show Input Selections** 时才会显示（默认关闭）。它会为每个被选中的 Filter 显示一个。点击它：如果该 Filter 定义了 `UserValves` 就打开用户 valves 模态框，否则把它从选中列表中移除；悬停时出现的 **x** 始终会移除它。
 
 开关处于开启状态的 Filter 会在下一次请求时运行。
@@ -315,16 +317,13 @@ Filter 在数据库中由两个布尔标志控制，可以处于四种状态之�
 
 | 状态 | `is_active` | `is_global` | 影响 |
 |-------|------------|------------|--------|
-| **全局启用** | ✅ `True` | ✅ `True` | 自动应用于 **所有** 模型，且无法在单个模型上禁用 |
+| **全局启用** | `True` | `True` | 自动对所有模型可用 |
 | **全局禁用** | ❌ `False` | `True` | 不会应用到任何地方——尽管它被设为全局，Filter 本身仍处于禁用状态 |
 | **模型专属** | ✅ `True` | ❌ `False` | 只应用到管理员明确启用它的模型 |
 | **未激活** | ❌ `False` | ❌ `False` | 不会应用到任何地方，即便管理员已在模型上启用它——Filter 本身处于关闭状态 |
 
 :::tip 全局 Filter 的行为
-当某个 Filter 被设为**全局**（`is_global=True`）且**激活**（`is_active=True`）时，它会对所有模型**强制启用**：
-- 它会在每个模型的 Filter 列表中显示为**已勾选且灰显**
-- 管理员**无法**在模型设置中取消勾选它
-- 无论模型是什么，它都会在**每一次**聊天补全请求中运行
+已激活的全局过滤器适用于每个模型，在模型设置中显示为已勾选且呈灰色。始终开启的过滤器会自动运行，[用户可切换的过滤器](#toggleable-filters-making-filters-user-controllable-selftoggle)则仅在请求的 `filter_ids` 包含其 ID 时运行。如果聊天补全 API 的调用者省略 `filter_ids`，服务器会使用空选择。聊天界面使用模型的 `defaultFilterIds` 初始化所选过滤器。
 :::
 
 #### 管理面板：将 Filter 设为全局 {#admin-panel-making-a-filter-global}
@@ -339,10 +338,7 @@ Filter 在数据库中由两个布尔标志控制，可以处于四种状态之�
 5. 切换该菜单中的 **全局** 开关
 6. 确保该 Filter 也处于**激活**状态（绿色开关）
 
-**API 端点：**
-```http
-POST /api/v1/functions/id/{filter_id}/toggle/global
-```
+通过[函数激活 API](./index.mdx#activation-via-api) 以编程方式读取或更改**激活**和**全局**标记。
 
 **视觉标识：**
 - 🟢 绿色开关 = `is_active=True`（Filter 处于激活状态）
@@ -498,7 +494,7 @@ class WebSearchFilter:
 1. **模型设置 → Filters → 在新聊天中默认启用**
    - 管理员决定哪些可切换 Filter 在使用该模型的新聊天中默认处于选中状态。
 2. **聊天输入栏 → + 菜单**
-   - 列出当前模型作用范围内所有可切换的 Filter，每个都有一个正式的开/关**开关**；当该 Filter 定义了 `UserValves` 时还会显示一个 **Valves** 按钮。
+   - 列出当前模型作用范围内所有可切换的 Filter，每个都有一个**开关**；当该 Filter 定义了 `UserValves` 时还会显示一个 **Valves** 按钮。
 3. **聊天输入栏 → + 按钮旁边的标签**
    - 仅当 **设置 > 界面** 中的 **Show Input Selections** 开启时，才会为用户选中列表中的每个可切换 Filter 显示标签。
    - 点击标签会**打开用户 valves 模态框**（若该 Filter 定义了 `UserValves`），否则**将该 Filter 从当前选中状态中移除**。
@@ -547,7 +543,7 @@ class WebSearchFilter:
 :::note 后台任务调用会跳过 Filter 函数
 过滤器只在聊天请求中运行。Open WebUI 的后台调用，例如在 [task model](/features/administration/task-models) 上进行的标题、标签、后续提示、查询、自动补全、表情和图像提示词生成，以及上下文压缩、记忆复核和 **Legacy** 工具选择，都不会运行任何 Filter 函数的 `inlet()`、`request()`、`stream()` 或 `outlet()`，全局过滤器也不例外。过滤器无法读取或修改这些提示词及其回复。
 
-若要介入任务调用，请把 [Pipe](/features/extensibility/plugin/functions/pipe) 设为 task model。它从 `__task__` 读取任务名称。另一个选择是 Pipelines 过滤器：标题、标签、后续提示、查询、自动补全、表情和图像提示词调用会为 task model 运行 Pipelines 的 inlet 过滤器，但不会运行 outlet 过滤器。上下文压缩、记忆复核和 **Legacy** 工具选择两者都不会运行。
+若要介入任务调用，请把 [Pipe](/features/extensibility/plugin/functions/pipe) 设为 task model。它从 `__task__` 读取任务名称。也可以使用 Pipelines 过滤器。标题、标签、后续提示、查询、自动补全、表情和图像提示词生成会运行任务模型的 Pipelines inlet 过滤器，但不会运行 outlet 过滤器。上下文压缩、记忆复核和 **Legacy** 工具选择两者都不会运行。
 :::
 
 ---
@@ -1143,14 +1139,29 @@ async def inlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
 
 ```python
 async def inlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
-    # Clean the last user input (from the end of the 'messages' list)
-    last_message = body["messages"][-1]["content"]
-    body["messages"][-1]["content"] = last_message.replace("!!!", "").strip()
+    messages = body.get("messages", [])
+    if not messages or messages[-1].get("role") != "user":
+        return body
+
+    message = messages[-1]
+    content = message.get("content")
+    if isinstance(content, str):
+        message["content"] = content.replace("!!!", "").strip()
+    elif isinstance(content, list):
+        for part in content:
+            if (
+                isinstance(part, dict)
+                and part.get("type") == "text"
+                and isinstance(part.get("text"), str)
+            ):
+                part["text"] = part["text"].replace("!!!", "").strip()
     return body
 ```
 
 📖 **会发生什么？**
 - 之前：`"How can I debug this issue!!!"` ➡️ 发送给模型后变成 `"How can I debug this issue"`
+
+图像提示词会将 `content` 作为分段列表发送。过滤器只编辑文本部分，并保留图像部分。如果附加图像后过滤器报 `expected string or bytes-like object, got 'list'`，请禁用该过滤器并重试提示词，以隔离错误。
 
 :::note
 
@@ -1276,7 +1287,7 @@ async def stream(self, event: dict) -> dict:
 
 :::note Valves 是每次响应解析一次，而不是每个数据块一次
 
-`stream()` 会为每个片段运行，因此它的 valves 是在响应开始时从数据库读取一次、并在其余部分中复用，而不是被反复读取上千次。于是 `self.valves` 和 `__user__["valves"]` 在一次流式回复的整个过程中都是稳定的：在回复流式输出期间修改某个 valve，会在下一次回复中生效，而不是在当前回复中途生效。`inlet()` 和 `outlet()` 不受影响，因为它们本来就各只运行一次。
+`stream()` 会为每个片段运行，因此它的 valves 是在响应开始时从数据库读取一次、并在其余部分中复用，而不是被反复读取上千次。于是 `self.valves` 和 `__user__["valves"]` 在一次流式回复的整个过程中都是稳定的：在回复流式输出期间修改某个 valve，会从下一次回复开始生效。`inlet()` 和 `outlet()` 不受影响，因为它们本来就各只运行一次。
 
 :::
 
@@ -1312,7 +1323,7 @@ async def stream(self, event: dict) -> dict:
 对于直接调用 `/api/chat/completions` 的客户端，`outlet()` 在流式和非流式路径上默认运行，由 [`ENABLE_API_OUTLET_FILTERS`](/reference/env-configuration#enable_api_outlet_filters) 控制。关闭后，直接集成 API 的客户端必须在请求结束后调用 `POST /api/chat/completed`。无论哪种情况，过滤后的内容都不会写回 HTTP 响应。详见 [API 请求中的 Filter 行为](#filter-behavior-with-api-requests)。
 :::
 
-一个会修改回复的 outlet，同时会改动该消息的 `content` 以及 `output` 里的文本——因为聊天界面展示的回复正是取自 `output`。
+如果用 outlet 修改回复，请同时修改该消息的 `content` 和 `output` 中的文本，因为聊天界面从 `output` 读取回复。
 
 💡 **示例用法**：把不希望用户看到的敏感 API 响应内容去掉：
 ``` python
@@ -1379,7 +1390,7 @@ class Filter:
 
 #### 这种 Filter 应当观察什么 {#what-such-a-filter-would-observe}
 
-流式过程中，Filter 会收到一连串 **`event`** 对象（来自上游 provider / Open WebUI 栈的 chunk）。典型字段包括 **`choices[].delta`**（assistant 增量文本）、可选的 **`choices[].finish_reason`**（完成后的回复也会交给 `outlet`，参见 [`outlet`](#outlet-function-output-post-processing)）、**`usage`**（通常只在终止 chunk 上出现），或合成的终止标志（一个 **`done`** 标志位、**`type`** 哨兵值）——具体形状会因 connector 与协议而异。
+流式过程中，Filter 会收到一连串 **`event`** 对象（来自上游 provider / Open WebUI 栈的 chunk）。典型字段包括 **`choices[].delta`**（assistant 增量文本）、可选的 **`choices[].finish_reason`**（此结束原因也会随完成后的回复传给 `outlet`，参见 [`outlet`](#outlet-function-output-post-processing)）、**`usage`**（通常只在终止 chunk 上出现），或合成的终止标志（一个 **`done`** 标志位、**`type`** 哨兵值）——具体形状会因 connector 与协议而异。
 
 计时最简单的方式是用**单调时钟**（Python 里用 `time.perf_counter()`）：记录第一次看到 assistant 回复流片段的时刻，对包含可打印模型文本（包括一些 API 暴露的 reasoning / 音频转写字段）的 delta 累加计数，并在你判定流**已结束**时对比时间戳。
 

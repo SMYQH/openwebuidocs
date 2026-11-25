@@ -61,7 +61,8 @@ flowchart LR
 | 要连接的服务 | 添加位置 | 要更改的设置 |
 |---|---|---|
 | **Ollama** | Ollama 连接 | 只需 URL。Open WebUI 会自动识别 Ollama。参见 [Ollama 入门](/getting-started/quick-start/connect-a-provider/starting-with-ollama)。 |
-| **OpenAI、Anthropic、Gemini、Mistral、Groq、OpenRouter、xAI、vLLM 及其他使用 OpenAI 格式的服务器** | OpenAI 连接 | URL 和 API 密钥。将 **Provider** 保持为 **Default**。 |
+| **OpenAI、Anthropic、Gemini、Mistral、Groq、xAI 及其他使用 OpenAI 格式的服务器** | OpenAI 连接 | URL 和 API 密钥。**提供商**保持为**默认**。 |
+| **OpenRouter 和 vLLM** | OpenAI 连接 | URL 和 API 密钥，然后选择**高级 > 提供商 > OpenRouter** 或 **vLLM**，以向模型回传已存储的推理。 |
 | **DeepSeek（托管 API）** | OpenAI 连接 | 填写 URL 和 API 密钥，再选择 **Advanced > Provider > llama.cpp**。DeepSeek 的思考模式要求在每轮工具调用时把之前的推理发回服务器，llama.cpp 选项会发送这些内容。 |
 | **Azure OpenAI** | OpenAI 连接 | 选择 **Provider > Azure OpenAI**，设置 **API Version**，并在 **Model IDs** 下填入部署名称。Open WebUI 识别到 Azure 格式的 URL 时也会自动切换到 Azure 模式。 |
 | **llama.cpp 服务器** | OpenAI 连接 | 选择 **Provider > llama.cpp**，即可在 Open WebUI 中管理模型。参见 [llama.cpp 入门](/getting-started/quick-start/connect-a-provider/starting-with-llama-cpp)。 |
@@ -81,7 +82,7 @@ flowchart LR
 |---|---|
 | **Connection Type** | 将连接标为 **Local** 或 **External**。模型选择器用此标签进行 Local 和 External 筛选。 |
 | **Auth** | **Bearer** 发送你的 API 密钥。**None** 调用服务器时不发送密钥。**Session**、**OAuth** 和 **Entra ID** 转发已登录用户的凭据或 Azure 身份。 |
-| **API Type** | 默认使用 **Chat Completions**。选择 **Responses** 可将连接切换到 Responses API。 |
+| **API 类型** | 默认为 **Chat Completions**。**Responses** 将连接切换至 Responses API。输入 `api.openai.com` URL 时会自动选择该项。 |
 | **Forward cookies** | 将发往 Open WebUI 的请求中的 Cookie 转发给此服务器。 |
 | **Headers** | JSON 格式的额外请求头。 |
 | **Prefix ID** | 为此连接的每个模型的 ID 和显示名称添加前缀和一个点，例如 `work.gpt-5.6`，从而区分两个连接提供的同一模型。在 **Settings > Models**（管理员区域）中为该模型保存的名称会替换带前缀的名称。 |

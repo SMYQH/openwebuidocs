@@ -41,7 +41,7 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 | **Preload files（RAG）** | 检索文件/知识库分块，并在每一轮把它们（连同 RAG 模板）注入到最新消息中 | 高：注入的内容每次查询都会变化 |
 | **Citations** | 在 Native 函数调用下，来源标记会附加到产生它们的工具结果上，并随该结果一同保存。在 Legacy 下，来源会连同 RAG 模板在每一轮加入你的消息（通过 `RAG_SYSTEM_CONTEXT` 加入系统消息） | Native 下无影响，参见下方说明；Legacy 下影响高 |
 | **Memory** | 在 Native 函数调用下，召回的记忆会作为隐藏的 `recall_memories` 工具结果在每条回复中于你的消息之后加入一次；否则它们会在每一轮被追加到你的消息上 | Native 下无影响；Legacy 下影响高：记忆一变就会变化 |
-| **"Using Entire Document"** | 把整个文件注入每一条消息 | 极高：但它是 **Preload files** 的一个子模式，只在 Preload files 开启时才会触发 |
+| **全文**开关 | 将整个文件注入每条消息 | 很高：此功能是**预加载文件**的子模式，只在预加载文件开启时生效 |
 | **动态语音模式提示** | 在系统消息前附加一条简短的语音指令 | 低：语音模式开启期间保持不变 |
 | **附件元数据块** | 在该消息中以元数据（id 和名称）的形式列出所附带的文件、知识库、笔记和聊天 | 低：只要附件不变就保持稳定 |
 | **已附加的知识库列表** | 在 Native 函数调用下，附着于模型或文件夹的知识会在每条回复中作为隐藏的 `list_attached_knowledge` 工具结果于你的消息之后列出一次。没有可列内容时会跳过 | 无影响：随回复保存并原样重放 |
@@ -49,7 +49,7 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 | **Open Terminal 技能** | 把终端技能加入技能列表；在 Native 函数调用下，它是每条回复中一次的隐藏 `list_available_skills` 工具结果（没有技能时跳过）。在 Legacy 下，只有你选中的技能会被写入系统消息 | 只在添加或移除技能的那一轮改变请求的尾部。工具列表仅在第一个技能出现或最后一个技能消失时才会改变，因为只要列表中至少有一个技能，技能工具就会提供 |
 | **Open Terminal 工作目录** | 在每一轮把终端当前的工作目录写入命令工具的说明中 | 工作目录一变，工具列表就会变化。请关闭该连接的[工作目录上下文](/features/open-terminal/setup/connecting#working-directory-context)以保持稳定 |
 | **Open Terminal 用户 shell 工具** | 默认只在你的 shell 打开期间加入对应你自身 shell 的那两个工具 | 打开或关闭 shell 时工具列表会变化。请把连接的[用户 Shell 工具](/features/open-terminal/setup/connecting#user-shell-tools)设为 `Always Include` 以保持稳定 |
-| **[Tool Search](/features/extensibility/plugin/tools#tool-search)** | 在系统消息末尾添加固定的 `<available_tools>` 指令，把大型工具排除在工具列表之外，并把 `search_tools` 与 `call_tool` 加入其中。模型通过一次工具调用加载某个工具的完整定义，并通过 `call_tool` 运行它 | 低：该指令与工具列表仅在启用的工具集合发生变化时才会改变。加载某个工具不会改变工具列表 |
+| **[工具搜索](/features/extensibility/plugin/tools#tool-search)** | 在系统消息末尾添加固定的 `<available_tools>` 指令，将大型工具移出工具列表，并在列表中添加 `search_tools` 和 `call_tool`。模型通过工具调用加载完整的工具定义，再通过 `call_tool` 运行该工具 | 低：仅在已启用工具的集合改变时，指令和工具列表才会改变。加载工具不会更改工具列表。开启 [`TOOL_SEARCH_LIST_TOOLS`](/reference/env-configuration#tool_search_list_tools)（默认开启）后，指令中的延迟工具列表在该集合变化时也会更改前缀 |
 
 :::info
 附件元数据块有意只包含**元数据**（不含文件内容），因此它在各轮之间保持稳定，不会明显损害缓存。上表中真正需要留意的是那些会注入内容的行。
@@ -113,8 +113,8 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 用 `#` 附带或拖入输入框的**聊天文件夹**只能通过 Preload files 抵达模型，而后者是从该文件夹附带的知识中检索的。关闭 Preload files 后，请直接用 `#` 附带该文件夹的知识库和文件，或者在文件夹内部开启聊天，此时其中的知识会经由知识工具处理。
 :::
 
-:::info "Using Entire Document" 是 Preload files 的一个子模式
-按文件/按知识库的 **Using Entire Document** 模式会把完整文档注入每一条消息，是所有因素中最伤缓存的一个。但它运行在 **Preload files 内部**，因此关闭 Preload files（本步骤）**就已经禁用了它**——在 Preload files 关闭时启用 Using Entire Document 不会有任何作用。请不要把重新开启 Preload files + Using Entire Document 当作检索的变通手段，而应改用按需工具。参见[检索模式](/features/workspace/knowledge#retrieval-modes)。
+:::info 全文开关是预加载文件的子模式
+每个文件或知识库的**全文**开关会将整个文档注入每条消息，对缓存的影响最大。不过，它在预加载文件**内部**运行，因此关闭预加载文件（本步骤）时，**已经禁用了它**。关闭预加载文件时，开启**全文**不会产生效果。保持预加载文件关闭，并通过按需工具检索。参见[检索模式](/features/workspace/knowledge#retrieval-modes)。
 :::
 
 ### 3. 关闭 Citations，并把引用规则移入系统提示 {#3-turn-citations-off-and-move-citation-rules-into-the-system-prompt}
@@ -198,7 +198,7 @@ Open WebUI 可以在每一轮动态插入内容。任何改变**系统消息**�
 在**设置 > 模型**（管理员区域）中点击模型的铅笔图标（**编辑**），再进入**功能**和**内置工具**：
 
 - [ ] 静态系统提示（不每轮重新生成）
-- [ ] 开启 **File Upload**，关闭 **Preload files**，不做自动内容注入（这也会禁用 "Using Entire Document"），**并且**正是它负责注入文件工具
+- [ ] 开启**文件上传**，关闭**预加载文件**，则不自动注入内容（也会禁用**全文**开关），**并且**这也是注入文件工具的条件
 - [ ] 可选：关闭 **Citations**，把引用规则移入系统提示
 - [ ] 开启 **Builtin Tools**，并保持 **Files**、**Knowledge Base**、**Notes** 和 **Chat History** 分类处于启用状态
 - [ ] 函数调用设为 **Native**（Legacy 模式下不存在内置工具）

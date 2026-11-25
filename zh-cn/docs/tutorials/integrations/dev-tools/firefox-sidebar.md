@@ -82,7 +82,7 @@ title: "Firefox 侧栏"
 ### 临时聊天会话 {#temporary-chat-sessions}
 
 - `temporary-chat`：将此参数设为 `true` 可标记为临时会话（例如 `/?temporary-chat=true`）
-  - *注意：临时聊天中的文档处理仅在前端执行。需要后端解析的复杂文件可能无法工作。*
+  - 有关浏览器提取哪些内容以及哪些内容会发往后端，请参见[临时对话中的文档附件](/features/chat-conversations/rag/document-extraction#document-attachments-in-temporary-chats)。
 
 更多 URL 参数及用法请参阅[参数文档](/features/chat-conversations/chat-features/url-params)。
 

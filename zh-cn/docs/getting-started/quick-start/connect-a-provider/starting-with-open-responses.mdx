@@ -6,11 +6,7 @@ title: "Open Responses"
 
 ## 概览 {#overview}
 
-Open WebUI 对 **[Open Responses](https://www.openresponses.org/)** 提供实验性支持。它是一套面向多提供商、可互操作的开放 LLM 接口规范。本指南将带你为某个连接启用 Open Responses API。
-
-:::warning 实验性功能
-该功能目前仍处于实验阶段，未必能在所有提供商上按预期工作。
-:::
+Open WebUI 支持 **[Open Responses](https://www.openresponses.org/)**，这是一种适用于多提供商、可互操作的 LLM 接口的开放规范。本指南介绍如何为连接启用 Open Responses API。
 
 ---
 
@@ -40,7 +36,7 @@ Open Responses 基于 OpenAI Responses API 格式，但目标是面向任何实�
 - **聊天补全**（默认）：使用标准 OpenAI 聊天补全 API 格式
 - **Responses**：使用 Open Responses API 格式
 
-点击切换到 **Responses**。
+点击 **API 类型**开关即可在两者之间切换。使用其他提供商时，点击一次并选择 **Responses**。输入 `api.openai.com` URL 会自动选择 **Responses**。输入 URL 后请检查开关，并保留 **Responses**。
 
 ![API Type 切换](/images/getting-started/quick-start/api-type-responses.gif)
 
@@ -91,13 +87,15 @@ Open Responses 基于 OpenAI Responses API 格式，但目标是面向任何实�
 你也可以在工具对象中包含提供商特定的选项（对于网络搜索，例如 `search_context_size` 或 `user_location`）。请参阅你的提供商的 Responses API 文档。较旧的 OpenAI 模型快照可能需要 `{"type": "web_search_preview"}` 而不是 `web_search`。
 :::
 
-:::warning 仅限管理员
-**Add Custom Parameter** 按钮在模型编辑器中仅对管理员显示。自定义参数会按原样转发给提供商，因此请仅使用有效的 Responses API 工具定义。
+:::warning 自定义参数会原样转发
+自定义参数原样发送给提供商，因此请仅使用有效的 Responses API 工具定义。
 :::
 
 :::info 实例级设置的自定义参数依然生效
 **设置 > 模型**（管理员区域） 下的 **Model Defaults** 中也有同一个按钮，它会作用于每个模型。两处的自定义参数按名称逐个合并，因此在这里添加 `tools` 不会丢掉实例级那些模型未点名的参数。两处使用相同名称时，模型的值才是被发送的那个。参见[全局模型默认值](/features/workspace/models#global-model-defaults-admin)。
 :::
+
+以同样方式添加值为 `["reasoning.encrypted_content"]` 的 `include` 自定义参数，可让模型跨轮次保留其推理。参见[如何回传推理](/features/chat-conversations/chat-features/reasoning-models#how-reasoning-is-sent-back)。
 
 ---
 

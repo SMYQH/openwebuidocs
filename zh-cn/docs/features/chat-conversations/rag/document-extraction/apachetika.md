@@ -100,78 +100,24 @@ This is Tika Server. Please PUT
 
 ### 3. 验证集成 {#3-verify-the-integration}
 
-你也可以尝试发送一个文件进行分析，以测试集成是否正常。可以用以下 `curl` 命令测试 Apache Tika：
+向知识库上传一个小型、文本可选中的 PDF。打开文件的**已索引文本**选项卡，查找 PDF 中你能识别的句子。即使选择了 Tika，Open WebUI 也会在本地读取纯文本文件，因此请用 PDF 验证 Tika 提取流程。
 
-```bash
-curl -T test.txt http://localhost:9998/tika
-```
-
-请将 `test.txt` 替换为你本机上一份实际文本文件的路径。
-
-Apache Tika 会返回该文件的已检测元数据和内容类型。
-
-### 使用脚本验证 Apache Tika {#using-a-script-to-verify-apache-tika}
-
-如果你想把验证流程自动化，下面这个脚本会向 Apache Tika 发送一个文件，并检查返回结果中是否包含预期元数据。若元数据存在，脚本会输出成功信息和文件元数据；否则会输出错误信息以及 Apache Tika 的响应。
-
-```python
-import requests
-
-def verify_tika(file_path, tika_url):
-    try:
-        # Send the file to Apache Tika and verify the output
-        response = requests.put(tika_url, files={'file': open(file_path, 'rb')})
-
-        if response.status_code == 200:
-            print("Apache Tika successfully analyzed the file.")
-            print("Response from Apache Tika:")
-            print(response.text)
-        else:
-            print("Error analyzing the file:")
-            print(f"Status code: {response.status_code}")
-            print(f"Response from Apache Tika: {response.text}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-if __name__ == "__main__":
-    file_path = "test.txt"  # Replace with the path to your file
-    tika_url = "http://localhost:9998/tika"
-
-    verify_tika(file_path, tika_url)
-```
-
-运行该脚本的说明如下：
-
-### 脚本运行前提条件 {#prerequisites-1}
-
-- 系统中已安装 Python 3.x
-- 已安装 `requests` 库（可通过 `pip install requests` 安装）
-- Apache Tika Docker 容器已运行（例如使用 `docker run -p 9998:9998 apache/tika` 启动）
-- 将 `"test.txt"` 替换为你要发送给 Apache Tika 的文件路径
-
-### 运行脚本 {#running-the-script}
-
-1. 将脚本保存为 `verify_tika.py`（例如使用 Notepad 或 Sublime Text）
-2. 打开终端或命令提示符
-3. 使用 `cd` 命令进入脚本所在目录
-4. 执行 `python verify_tika.py`
-5. 脚本将输出 Apache Tika 是否工作正常的结果
-
-:::note
-
-注意：如果你遇到问题，请确认 Apache Tika 容器运行正常，并且文件确实被发送到了正确 URL。
-
-:::
-
-### 小结 {#conclusion}
-
-按上述步骤可以验证 Apache Tika 在 Docker 环境中是否正常工作。你可以发送文件进行分析、发出 GET 请求确认服务器正在运行，或使用脚本自动执行这些检查。如果遇到问题，请确认 Apache Tika 容器运行正常，且文件发送到了正确的 URL。
+如果能提取可选中的文本，但无法从扫描版 PDF 中提取文本，请检查 Tika 服务器日志及其 OCR 设置。PDF 预览显示的是原始文件。请查看**已索引文本**来确认提取结果。
 
 ## 故障排查 {#troubleshooting}
 
 - 确保 Apache Tika 服务正在运行，并且 Open WebUI 实例可以访问它
 - 查看 Docker 日志，确认 Apache Tika 服务没有报错
 - 确认 Open WebUI 中配置的 **Tika Server URL** 正确无误
+
+### 上传时连接被拒绝 {#connection-refused-during-upload}
+
+Open WebUI 后端负责将文档发送给 Tika。如果在 Docker 宿主机上测试成功，但上传失败并显示 `Connection refused`，请从 Open WebUI 容器内检查 URL。
+
+- 在共享 Compose 网络中，使用 Tika 服务名和容器端口，例如 `http://tika:9998`。
+- 在 Docker Desktop 上，如果 Tika 在宿主机上发布了端口，请使用 `http://host.docker.internal:9998`，并将 `9998` 替换为宿主机上发布的端口。参阅 [Docker Desktop 网络文档](https://docs.docker.com/desktop/features/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host)。
+
+将 **Tika 服务器 URL** 设为容器可访问的地址，再向知识库上传一个 PDF 来验证提取结果。
 
 ## 集成优势 {#benefits-of-integration}
 
@@ -181,6 +127,6 @@ if __name__ == "__main__":
 - **支持多种文件格式**：Apache Tika 支持大量文件格式，非常适合需要处理多样文档类型的组织
 - **增强内容分析能力**：Apache Tika 的高级内容分析能力可以帮助你从文件中提取更多有价值的信息
 
-## 结论 {#conclusion-1}
+## 结论 {#conclusion}
 
 将 Apache Tika 集成到 Open WebUI 并不复杂，还能增强 Open WebUI 实例的元数据提取能力。按本文步骤操作，即可将 Apache Tika 设置为 Open WebUI 的上下文提取引擎。

@@ -96,7 +96,7 @@ redis-cli INFO clients | grep connected_clients
 Open WebUI 把 Redis 当作**有状态存储，而不是一次性缓存**。它的键分为两组：
 
 - **带 TTL 的安全键**：令牌吊销条目（`{prefix}:auth:token:<jti>:revoked`，过期时间恰好与令牌一致）和分布式锁（设置时带过期时间）。
-- **持久化的运维键**：websocket 的 **session** 与 **usage** 池（没有过期时间的 Redis 哈希），以及缓存的工具服务器和终端服务器列表。
+- **持久化的运行键**：WebSocket 的 **会话**池和**用量**池（无过期时间的 Redis 哈希），以及缓存的工具服务器和机器列表。
 
 在 `allkeys-lru`、`allkeys-lfu` 或 `allkeys-random` 策略下，Redis 会在内存写满时驱逐**任意**键，包括上面两组。这可能会：
 
@@ -109,7 +109,7 @@ Open WebUI 把 Redis 当作**有状态存储，而不是一次性缓存**。它�
 maxmemory-policy noeviction
 ```
 
-Open WebUI 的 Redis 工作集很小（websocket 池、吊销记录、锁、任务、限流、模型缓存、协作笔记文档以及缓存的工具/终端服务器列表），因此在 `maxmemory` 未设置的情况下，Redis 只会按需使用，永远不会驱逐。只有在你确有理由时才设置 `maxmemory` 上限；如果设置了，请对使用量配置告警，而不是依赖驱逐。
+Open WebUI 在 Redis 中使用的数据量很小，包括 WebSocket 池、吊销记录、锁、任务、速率限制、模型缓存、协作笔记文档，以及缓存的工具服务器和机器列表。不设置 `maxmemory` 时，Redis 会按需使用内存，且不会驱逐键。只有确实需要时才设置 `maxmemory` 上限。设置上限后应为内存用量配置告警，避免依赖驱逐机制。
 
 如果你确实必须在**带驱逐**的情况下限制内存，唯一可接受的策略是 `volatile-ttl` 或 `volatile-lru`：它们**只**驱逐带 TTL 的键（锁和吊销记录），绝不驱逐持久化池。请注意这仍可能提前丢弃吊销记录，因此相比启用驱逐，更推荐增加 RAM。
 

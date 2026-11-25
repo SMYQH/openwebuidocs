@@ -24,6 +24,8 @@ Open WebUI 支持在聊天界面中直接渲染美观的 MermaidJS 图表、流�
 
 如果模型生成了 MermaidJS 语法，但图没有成功渲染，通常说明代码里存在语法错误。别担心——回复完整生成后，系统会提示你相关错误。如果发生这种情况，请参考 [MermaidJS 文档](https://mermaid.js.org/intro/) 查找问题，并据此调整提示词。
 
+如果流程图因节点标签含有括号而无法渲染，请在方括号内用双引号包住标签。例如，将 `A[Retry (manual)]` 改为 `A["Retry (manual)"]`。如果可以编辑助手回复，请在 Mermaid 代码块中修改并保存消息。
+
 ## 与可视化结果交互 {#interacting-with-your-visualization}
 
 一旦图形显示出来，你可以：

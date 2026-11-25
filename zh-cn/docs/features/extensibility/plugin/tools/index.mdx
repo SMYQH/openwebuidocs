@@ -144,6 +144,8 @@ Tools 是你扩展 LLM 能力、超越简单文本生成的各种方式。启用
 
 Open WebUI 在**模型设置 → 高级参数 → 函数调用**中提供两种模式：**Native 模式（Agentic 模式）**是默认且唯一受支持的模式；基于提示词的 **Legacy 模式**仅为向后兼容性保留。
 
+无论哪种模式，管理员都可通过 [`TOOL_OUTPUT_MAX_CHARS`](/reference/env-configuration#tool_output_max_chars)（**设置 > 常规 > 工具输出限制**）限制传给模型的工具结果长度。超过限制的结果会被截断，并在末尾注明原始长度。如果聊天选中了[机器](/features/open-terminal)，完整结果还会作为文本文件保存到机器上，并在末尾说明中向模型提供路径，以便读取剩余内容。除了机器自带的工具，每个工具的结果都会保留完整副本。
+
 ### 🔴 Legacy 模式（基于提示词） {#legacy-mode-prompt-based}
 
 :::warning 不受支持
@@ -154,7 +156,7 @@ Legacy 模式**不受支持**。此处仅供参考。新部署和现有部署均
 
 为什么它已过时：
 - **破坏 KV 缓存。** 注入的提示每轮都会改变，阻止 LLM 引擎重用缓存的键值对。每条消息都要再次支付完整的预填充成本。
-- **更高的延迟和令牌成本。** 每轮都有大量工具描述提示。
+- **更高的延迟和 token 成本。** 每轮都有大量工具描述提示。
 - **对多步骤链接不可靠。** 解析自然语言工具请求比结构化工具调用更脆弱。
 - **无法访问内置系统工具。** 记忆、笔记、知识、频道、Agentic Research、交错思考以及工具注入的网络搜索/图像生成/代码解释器功能都是**仅 Native 模式**可用的。
 - **不支持现代能力。** 2024 年以来发布的每个新功能都针对 Native 模式。
@@ -200,7 +202,7 @@ Native 模式（也称为 **Agentic 模式**）利用模型内置的能力处理
 
 #### 为什么使用 Native 模式（Agentic 模式）？ {#why-use-native-mode-agentic-mode}
 - **速度与效率**：避免大量基于提示的工具选择，延迟更低。
-- **KV 缓存友好**：工具定义作为结构化参数发送（而不是注入提示中），因此不会使轮次间的 KV 缓存失效。这可以显著降低延迟和令牌成本。
+- **KV 缓存友好**：工具定义作为结构化参数发送（而不是注入提示中），因此不会使轮次间的 KV 缓存失效。这可以显著降低延迟和 token 成本。
 - **可靠性**：遵循工具模式的准确性更高（使用质量模型）。
 - **多步骤链接**：对于需要连续调用多个工具的 **Agentic Research** 和**交错思考**至关重要。
 - **自主决策**：模型可以决定何时搜索、使用哪些工具以及如何组合结果。
@@ -272,7 +274,7 @@ Native 模式是**默认值**，因此新模型和现有模型都会使用它，
 即使针对 DeepSeek，Legacy 模式**也不是**受支持的规避方案——它已是遗留模式，未来也不会为此扩展支持。这是 DeepSeek 模型/API 的问题，而不是 Open WebUI 的问题。Open WebUI 已按标准 OpenAI 格式正确发送工具定义；格式错误输出源自 DeepSeek 内部的非标准 DSML 格式。
 :::
 
-| 特性 | Legacy 模式（遗留 / 不受支持） | Native 模式（唯一受支持的模式） |
+| 特性 | Legacy 模式（遗留 / 不受支持） | Native 模式（默认且唯一受支持） |
 |:---|:---|:---|
 | **状态** | ❌ 遗留模式，已不再支持 | ✅ 必需 —— 所有模型都应使用它 |
 | **延迟** | 中 / 高 | 低 |
@@ -385,6 +387,7 @@ Decide whether this exact tool call requires human approval before execution. Re
 | **搜索引擎**（[`TOOL_SEARCH_ENGINE`](/reference/env-configuration#tool_search_engine)） | **BM25** | 搜索如何匹配到被延迟的工具：**BM25**、**嵌入** 或 **决策 API**。参见[搜索引擎](#search-engines)。 |
 | **延迟内置工具**（[`TOOL_SEARCH_DEFER_BUILTIN_TOOLS`](/reference/env-configuration#tool_search_defer_builtin_tools)） | 开启 | 把内置工具与其他工具同等对待。关闭后始终完整发送内置工具。 |
 | **延迟阈值（字符数）**（[`TOOL_SEARCH_DEFER_THRESHOLD`](/reference/env-configuration#tool_search_defer_threshold)） | `400` | 定义（名称、描述和参数 schema，以 JSON 表示）超过该字符数的工具会被延迟。设为 `0` 会延迟所有工具。 |
+| **列出延迟工具**（[`TOOL_SEARCH_LIST_TOOLS`](/reference/env-configuration#tool_search_list_tools)） | 开启 | 在系统提示词中列出每个延迟工具的名称和简短描述，让模型知道要搜索哪些工具。 |
 | **始终加载的工具**（[`TOOL_SEARCH_ALWAYS_LOADED`](/reference/env-configuration#tool_search_always_loaded)） | 空 | 以逗号分隔的工具名称或通配模式，例如 `jira_create_issue, github_*`，这些工具始终完整发送。匹配区分大小写。 |
 
 ![设置 > 界面中的对话部分（管理员区域），已开启工具搜索，延迟内置工具，延迟阈值（字符数）设为 400，始终加载的工具为空](/images/features/plugin/tools/tool-search-settings.webp)
@@ -392,9 +395,9 @@ Decide whether this exact tool call requires human approval before execution. Re
 工作原理：
 
 - **哪些工具会被延迟。** 每次请求都会检查为该对话启用的所有工具：工作区工具、MCP 与 OpenAPI 工具服务器、Open Terminal 工具以及内置工具。当工具定义长于阈值且不匹配任何始终加载模式时，它会被延迟。内置工具只在开启 **延迟内置工具** 时才会被延迟。较小的工具照常完整发送，而没有任何工具符合条件时，请求会与之前完全一样发送。
-- **模型看到什么。** 系统提示词末尾会有一段简短的 `<available_tools>` 指令，告诉模型用 `search_tools` 查找工具。它不会列出被延迟的工具。工具列表中会新增两个内置工具：`search_tools` 和 `call_tool`。
+- **模型看到的内容。** 系统提示词末尾的一段简短 `<available_tools>` 指令会让模型用 `search_tools` 查找工具。工具列表中会添加两个内置工具：`search_tools` 和 `call_tool`。
 - **模型如何加载工具。** 模型用若干关键词或确切的工具名调用 `search_tools`，并可附带可选的 `count`（默认 `5`，最多 `20`）。它会拿回最佳匹配项的完整定义。传入确切工具名时只返回该工具；否则每个被延迟的工具会按所选搜索引擎排序。要运行找到的工具，模型调用 `call_tool` 并传入 `calls` 数组。每一项包含 `tool_name`（工具的确切名称）和 `params`（以 JSON 编码对象字符串表示的工具参数），例如 `call_tool(calls=[{"tool_name": "get_weather", "params": "{\"city\":\"Dubai\"}"}])`。一次 `call_tool` 调用可以运行多个彼此独立的工具。Open WebUI 会把每一项都当作模型直接调用了该工具来执行，因此审批、结果、引用和对话显示都按工具分别进行。
-- **提示词缓存。** 通过搜索加载工具时，发送给服务商的工具列表保持不变。工具列表和 `<available_tools>` 块只会在启用的工具集合发生变化时才改变，因此缓存的前缀可以在多轮工具调用和多轮对话中保持有效。参见[提示词缓存](/features/chat-conversations/prompt-caching)。
+- **提示词缓存。** 通过搜索加载工具时，发送给提供商的工具列表保持原样。只有已启用的工具集合变化时，工具列表和 `<available_tools>` 块才会变化，因此缓存的前缀跨工具轮次和消息轮次有效。开启**列出延迟工具**时，该块会列出每个延迟工具的名称，因此延迟工具集合的变化也会重置缓存的前缀。如果经常如此，可以关闭此选项。参见[提示词缓存](/features/chat-conversations/prompt-caching)。
 - **工具审批。** 开启 **请求审批** 时，`search_tools` 会像其他工具一样请求审批，因此使用一个被延迟的工具通常需要两次审批：一次用于搜索，一次用于工具本身。在 **自动** 下，`search_tools` 不经过审查。`call_tool` 调用所运行的每个工具都会以其自身名称单独审批。
 - **后端支持。** 模型发起的每次调用都会进入发送给服务商的工具列表中的某个工具，因此工具搜索在只接受对已列出工具调用的后端上同样有效，例如 OpenAI API（Chat Completions 和 Responses 两种）、xAI 以及 llama.cpp 服务器。
 
@@ -459,6 +462,7 @@ Decide whether this exact tool call requires human approval before execution. Re
 | **聊天历史** | *需要在模型级别启用 "Chat History" 类别（默认开启）。* |
 | `search_chats` | 在聊天标题和消息内容中做文本搜索，并跳过模型当前所在的对话。多词查询会匹配包含全部关键词（顺序不限）的聊天，精确短语匹配排在前面。返回匹配的聊天 ID 和片段。 |
 | `view_chat` | 按 ID 读取并返回指定聊天的消息历史。设置 [`VIEW_CHAT_MAX_CHARS`](/reference/env-configuration#view_chat_max_chars) 后，它会保留最新的消息直到达到该字符数，并说明结果已被截断。 |
+| **用户** | *要求启用模型的“用户”类别（默认开启）。* |
 | `search_users` | 按姓名或邮箱查找用户。模型可在回复中提及找到的用户，被提及且有权查看聊天的人会收到[收件箱](/features/chat-conversations/chat-features/notifications#inbox)通知，点击可查看该回复。 |
 | **频道** | *需要启用 `ENABLE_CHANNELS`，并且在模型级别启用 "Channels" 类别（默认开启）。* |
 | `search_channels` | 按名称 / 描述查找公开或可访问的频道。 |
@@ -492,8 +496,9 @@ Decide whether this exact tool call requires human approval before execution. Re
 | `calculate_timestamp` | 计算相对时间戳（例如 "3 days ago"）。 |
 | **询问用户** | *需要在模型级别启用 "Ask User" 类别（默认开启）。在已保存的对话中，待回答的问题会存放在助手消息上；在[临时对话](/features/chat-conversations/chat-features/url-params#8-temporary-chat-sessions)中则会以实时对话框打开。频道中不可用，因为频道没有可提问的浏览器标签页。* |
 | `ask_user` | 暂停回复并在消息框上方放出一个问题卡片，用户回答后继续。该轮中它必须是唯一的工具调用，且每轮只能有一个 `ask_user`；其他情况会以错误形式返回给模型。待回答的问题在刷新页面后依然保留。 |
-| **子智能体** | *要求开启 [`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents)（默认关闭）及各模型的“子智能体”类别（默认开启），用户还须拥有 `features.subagents` 权限（管理员始终通过）。不会注入子智能体本身或临时聊天。该类别也控制 `timer`，定时器没有独立类别。* |
-| `delegate_task` | 把一个聚焦的任务委派给使用相同工具并行运行的子智能体，并返回其结果。参见[子智能体](/features/chat-conversations/chat-features/subagents)。 |
+| **子智能体** | *要求启用 [`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents)（默认关闭）、启用模型的“子智能体”类别（默认开启），并且用户拥有 `features.subagents` 权限（管理员始终通过）。子智能体本身无法使用 `delegate_task` 或 `timer`，临时聊天无法使用此类别的任何工具。该类别也控制 `timer`，没有单独的定时器类别。* |
+| `delegate_task` | 将明确的任务委派给使用相同工具的并行子智能体。在已保存的聊天中，结果稍后发布到该聊天。参见[子智能体](/features/chat-conversations/chat-features/subagents)。 |
+| `send_message` | 向该用户的另一个聊天发送消息，例如子智能体或父聊天。可用于已保存的聊天。参见[子智能体](/features/chat-conversations/chat-features/subagents)。 |
 | `timer` | 设置一次性计时器，到时后把提示词发送回当前对话并产生一条新的回复。参见[计时器](/features/chat-conversations/chat-features/timers)。 |
 | **通知** | *需要启用 [`ENABLE_USER_WEBHOOKS`](/reference/env-configuration#enable_user_webhooks)（默认关闭），用户拥有 `features.webhooks` 权限（管理员始终通过），并在模型级别启用 "Notifications" 类别（默认开启）。* |
 | `notify` | 向用户配置的某个 webhook 目标发送通知。参见[通知](/features/chat-conversations/chat-features/notifications)。 |
@@ -506,14 +511,14 @@ Decide whether this exact tool call requires human approval before execution. Re
 | `call_tool` | 在一次调用中运行一个或多个通过 `search_tools` 找到的工具，每个工具由 `tool_name` 指定，参数以 JSON 编码的对象字符串放在 `params` 中。 |
 #### 对话附带文件 {#attached-chat-files}
 
-**文件** 类别是把上传文件的文本直接放进提示词之外的智能体式替代方案。只有当模型上传了文件但 **预加载文件** 关闭时，它才会被注入。开启 **预加载文件** 时，内容已经存在于对话中，工具就会显得多余，而且仅在该对话确实带有附件时才有意义。
+**文件** 类别让模型按需读取上传的文件。只有模型启用了文件上传、关闭了 **预加载文件**，且当前对话确实有附件时，才会注入这类工具。开启 **预加载文件** 时，文件内容已在对话中，无需再调用这些工具。
 
-随后模型会像处理知识库那样处理这些文件：用 `list_chat_files` 查看有哪些文件，用 `query_chat_files` 查询含义，用 `grep_chat_files` 查找字面字符串和行号，用 `view_file` 阅读段落。`query_chat_files` 返回的文本块会像知识库结果一样渲染为引用。每个文件在被读取前仍会对照用户自身的访问权限重新检查，因此用户已无法打开的附件会被跳过，而不会被检索。
+随后模型会像处理知识库那样处理这些文件：用 `list_chat_files` 查看有哪些文件，用 `query_chat_files` 做语义检索，用 `grep_chat_files` 查找字面字符串和行号，用 `view_file` 阅读段落。`query_chat_files` 返回的文本块会像知识库结果一样渲染为引用。每个文件在被读取前仍会对照用户自身的访问权限重新检查，因此用户已无法打开的附件会被跳过，而不会被检索。
 #### 工具结果中的图片 {#images-in-tool-results}
 
 工具除了返回文本也可以返回图片，`generate_image` 和 `edit_image` 就是如此，自定义工具同样可以。图片以何种方式送达模型取决于服务商：
 
-- 在 **Responses API** 上，图片随工具结果一起返回，位置恰到好处。
+- 在 **Responses API** 上，图片包含在工具结果中。
 - 在 **Chat Completions** 上，工具消息只能携带文本。因此图片会被拆分出来：工具结果以纯文本形式送达，随附的图片则通过一条简短的用户消息跟进，交给模型分析。
 
 这样一来，运行在 Chat Completions 服务商上的模型就能真正看到工具产出的内容，先生成一张图片再对它点评或编辑，而不是收到一个打不开的结果。对话中不会额外显示任何内容；这些图片本来就已经从工具结果中渲染出来了。
@@ -548,7 +553,7 @@ Decide whether this exact tool call requires human approval before execution. Re
 
 [范围访问](/features/workspace/knowledge#scoped-access-keeps-things-organized)解释了原因，以及如何选择模型获得哪些内容。
 
-当 **知识库** 类别已启用且上述内容存在时，用户消息之后会附带一条隐藏的 `list_attached_knowledge` 工具结果，其中包含一个 `<attached_knowledge>` 块，列出每一项的类型、ID 和名称，以及它来自模型还是文件夹。对话附件不会被列出，因为每条用户消息本身都会指明自己的附件。如果没有任何附加内容，或回复是延续上一轮，该结果会被跳过。这只是一份目录而不是内容本身：它告诉模型可以取用哪些东西，并把 ID 提供给 `list_knowledge` 和 `search_knowledge_files` 等工具，使模型能够翻页或搜索某个知识库。
+当 **知识库** 类别已启用且上述内容存在时，用户消息之后会附带一条隐藏的 `list_attached_knowledge` 工具结果，其中包含一个 `<attached_knowledge>` 块，列出每一项的类型、ID 和名称，以及它来自模型还是文件夹。对话附件不会被列出，因为每条用户消息本身都会指明自己的附件。没有任何附加内容或用户继续生成当前回复时，会省略该结果。这只是一份目录而不是内容本身：它告诉模型可以取用哪些东西，并把 ID 提供给 `list_knowledge` 和 `search_knowledge_files` 等工具，使模型能够翻页或搜索某个知识库。
 
 :::info 启用后 `kb_exec` 会取代这张矩阵
 设置 [`ENABLE_KB_EXEC`](/reference/env-configuration#enable_kb_exec) 后，Open WebUI 会用 `kb_exec` 取代上面列出的面向文件的工具。仍然与它一同注入的有：`query_knowledge_files` 和 `display_file`（始终注入）、`view_note`（附加了笔记时），以及 `query_knowledge_bases` + `search_knowledge_bases`（什么都没附加时）。模型通过熟悉的 shell 命令与文件交互。详情参见[知识功能页面](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
@@ -594,6 +599,7 @@ Decide whether this exact tool call requires human approval before execution. Re
 | **聊天历史** | | |
 | `search_chats` | `query`（必填；精确短语或一组关键词），`count`（默认：5），`start_timestamp`，`end_timestamp` | `{id, title, snippet, updated_at}` 数组。若查询命中标题但没有命中任何消息，`snippet` 会是 `Title match: <title>` |
 | `view_chat` | `chat_id`（必填） | `{id, title, messages: [{role, content}], updated_at, created_at}`。被 [`VIEW_CHAT_MAX_CHARS`](/reference/env-configuration#view_chat_max_chars) 截断的结果会额外带上 `truncated: true`、`total_messages` 和 `returned_messages` |
+| **用户** | | |
 | `search_users` | `query`（必填，姓名或邮箱）、`count`（默认 5，最多 20） | `{id, name, email, mention}` 数组。模型将用户的 `mention` 值复制到回复中来提及该用户 |
 | **频道** | | |
 | `search_channels` | `query`（必填），`count`（默认：5） | `{id, name, description, type}` 数组 |
@@ -630,7 +636,8 @@ Decide whether this exact tool call requires human approval before execution. Re
 | **询问用户** | | |
 | `ask_user` | `questions`（必填，1-3 个 `{id, header, question, options}` 对象，其中 `options` 为 2-3 组 `{label, description}`，每个问题还可单独设置 `allow_other`），`allow_other`（默认：`true`），`timeout_ms`（默认：`120000`，限制在 60000-240000 之间） | `{status: "answered", answers}`（按问题 id 索引），卡片超时则为 `{status: "cancelled", answers: {}}`。关闭卡片会返回拒绝错误 |
 | **子智能体** | | |
-| `delegate_task` | `task`（必填），`context`（可选；需要传递的决定、结论或文件路径），`file_ids`（可选列表；要交给子智能体的父对话附件，子智能体否则不会收到任何文件。传入未附加到父对话的 ID 会在执行前直接失败），`model_id`（可选；取自该模型的[子智能体模型](/features/workspace/models#capabilities-and-bindings)，仅在配置了子智能体模型时提供；省略则使用当前模型运行），`background`（默认：false；除非 [`SUBAGENTS_BACKGROUND_ENABLED`](/reference/env-configuration#subagents_background_enabled) 开启，否则该参数会从 schema 中完全移除） | 前台：子智能体的最终回答文本，长度按 [`SUBAGENTS_MAX_OUTPUT`](/reference/env-configuration#subagents_max_output) 截断。后台：返回一个 JSON 句柄 `{status: "dispatched", delegation_id, subagent_chat_id, mode, task}`，结果稍后发布到父对话中。错误以 `Error: ...` 字符串返回，而不是抛出异常 |
+| `delegate_task` | `task`（必填）、`context`（可选，用于传递决策、发现或文件路径）、`file_ids`（可选列表，指定交给子智能体的父聊天附件，否则不会收到任何文件。如果某个 ID 未附加到父聊天，调用会在运行前失败）、`model_id`（可选，选择模型的某个[子智能体模型](/features/workspace/models#capabilities-and-bindings)，仅在已配置时提供。省略则使用当前模型）、`title`（可选，3 至 6 个词的任务名称） | 在已保存的聊天中，返回 JSON 句柄 `{status: "dispatched", delegation_id, subagent_chat_id, mode, task}`，随后将结果发布到父聊天。在频道或自动化运行中，返回子智能体最终答案的文本，并按 [`SUBAGENTS_MAX_OUTPUT`](/reference/env-configuration#subagents_max_output) 截断。错误作为 `Error: ...` 字符串返回，不会抛出 |
+| `send_message` | `chat_id`（必填，该用户的另一个聊天）、`message`（必填） | 返回 `Sent.`。如果找不到聊天、目标是当前聊天或目标正在等待用户，则返回 `Error: ...` |
 | `timer` | `prompt`（必填；计时器触发时发送回对话中），`at`（必填；相对偏移，例如 `10s`、`5m`、`1h`、`2d`、`+10s` 或 `in 10 seconds`，也可以是 RFC 3339 时间戳，但**必须**带明确时区；必须是将来的时间），`cancel_on`（可选，取值为 `chat.read`、`chat.user_message` 的列表） | 以 JSON 字符串返回 `{"status": "set", "at": "<RFC 3339 UTC>", "cancel_on": [...]}`。错误以普通 `Error: ...` 字符串返回，而不是 JSON |
 | **通知** | | |
 | `notify` | `message`（必填；通知正文），`target`（可选，目标 **id**；留空则使用默认目标），`title`（可选） | `Notification sent to {target_id}.` 或 `Notification failed: {reason}` |
@@ -693,7 +700,7 @@ Open WebUI 在你登录时自动检测并存储你的时区。这允许与时间
 2. 然后使用 `query_knowledge_files` 在相关 KB 中搜索文件内容
 3. 如果仍然为空，文件可能尚未嵌入，或者你可能启用了**始终使用全文**（它会绕过向量存储）
 
-**不要将始终使用全文或使用整篇文档与知识工具一起使用。** 全文会直接注入文件内容且不存储嵌入，因此 `query_knowledge_files` 将返回空。基于工具的访问请使用聚焦检索（默认）。
+**不要将始终使用全文或全文开关与知识库工具一起使用。** 全文模式直接注入文件内容，不存储嵌入，因此 `query_knowledge_files` 将返回空结果。通过工具访问时，请保留默认的相关片段检索。
 :::
 
 :::tip 知识库工具和混合搜索
@@ -706,7 +713,7 @@ Open WebUI 在你登录时自动检测并存储你的时区。这允许与时间
 **如果你的模型没有使用附加知识：**
 1. **在系统提示词中加入明确指令**，要求模型先发现再查询知识库。例如：*“当用户提问时，先使用 list_knowledge 查看可用知识，再用 query_knowledge_files 搜索相关知识库后再回答。如果该模型未附加知识，请先调用 list_knowledge_bases 来发现可用 KB。”*
 2. **或者为该模型关闭 Native 函数调用**，恢复自动的 RAG 注入行为。
-3. **或者在聊天中以"使用整篇文档"模式附加一个小文档**（点击附件并切换其模式），同时开启模型的 **预加载文件** 能力，这样会注入其完整内容。附加到模型或文件夹上的知识在原生模式下永远不会被注入。
+3. **或者，在聊天中附加小型文档并开启其全文开关**（点击附件），同时启用模型的**预加载文件**能力，以注入文档全文。在原生模式下，不会注入附加到模型或文件夹的知识库。
 
 更多细节请参见[使用原生函数调用时的知识限定范围](/features/workspace/knowledge#scoped-access-keeps-things-organized)。
 :::
@@ -744,7 +751,8 @@ Open WebUI 在你登录时自动检测并存储你的时区。这允许与时间
 | **时间与计算** | `get_current_timestamp`、`calculate_timestamp` | 获取当前时间并进行日期 / 时间计算 |
 | **询问用户** | `ask_user` | 暂停回复，向用户提出一个澄清问题 |
 | **记忆** | `search_memories`、`list_memory_paths`、`read_memory_path`、`list_memories`、`update_memory`、`add_memory`、`replace_memory_content`、`delete_memory` | 搜索并管理用户记忆 |
-| **聊天历史** | `search_chats`、`view_chat`、`search_users` | 搜索和查看用户的聊天历史，并查找可提及的用户 |
+| **聊天历史** | `search_chats`、`view_chat` | 搜索和查看用户的聊天历史 |
+| **用户** | `search_users` | 搜索用户目录以解析 @提及 |
 | **笔记** | `search_notes`、`view_note`、`write_note`、`replace_note_content` | 搜索、查看并管理用户笔记 |
 | **知识库** | `list_knowledge`、`list_knowledge_bases`、`search_knowledge_bases`、`query_knowledge_bases`、`search_knowledge_files`、`query_knowledge_files`、`grep_knowledge_files`、`view_file`、`view_knowledge_file`、`display_file`，附加了笔记时还有 `view_note`（或启用 [`ENABLE_KB_EXEC`](/reference/env-configuration#enable_kb_exec) 后按需使用 `kb_exec` + `query_knowledge_files` + `display_file` + `view_note`/`query_knowledge_bases`/`search_knowledge_bases`） | 浏览并查询知识库 |
 | **网页搜索** | `search_web`、`fetch_url` | 搜索网页并抓取 URL 内容 |

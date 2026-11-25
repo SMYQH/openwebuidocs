@@ -28,6 +28,12 @@ title: "音频"
 
 只有当通话可用时，消息输入框中的 **语音模式** 按钮才会显示。具体来说：当 **通话模式** 为 **Realtime**、当已有通话正在进行，或当管理员的**语音转文本引擎**不是 **Web API** 且用户拥有 **Allow Speech to Text** 权限时。用户还需要拥有 **Allow Call** 权限。管理员始终通过权限校验。带 `?call=true` 的链接或桌面应用的通话快捷键同样遵循这些校验。如果按钮不见了，请先检查这些设置。
 
+### OpenAI 兼容音频设置 {#openai-compatible-audio-settings}
+
+在**管理面板 > 设置 > 音频**中，OpenAI 兼容的语音转文本和文本转语音分别使用各自的基础 API 端点（Base URL）和 API 密钥。在**连接**中添加提供商只会配置聊天。若要让该提供商也处理音频，请为相应的音频引擎选择 **OpenAI**，然后填入提供商的音频 Base URL、凭据和音频模型。
+
+对于语音转文本，Open WebUI 会附加 `/audio/transcriptions`。对于文本转语音，则会附加 `/audio/speech`。请填入未附加该后缀的 Base URL，例如 `https://provider.example/v1`，并确认服务器支持相应端点和请求格式。仅支持聊天中的音频功能无法满足这些引擎的要求。
+
 ### 用户设置（每用户） {#user-settings-per-user}
 
 每个用户都可以单独调整自己的音频体验：
@@ -262,6 +268,14 @@ services:
 3. 如果使用外部 TTS 服务，确认 Open WebUI 容器可以访问该 API Base URL
 4. 查看容器日志，检查是否有具体错误信息
 
+### SpeechT5 音色始终不变 {#speecht5-voice-stays-the-same}
+
+如果配置值与任何说话者嵌入文件名都不匹配，本地 Transformers TTS 会使用默认说话者。`bdl` 和 `slt` 等说话者简称都会回退到同一种音色。
+
+1. 在管理员区域的**设置 > 音频**中，将**文本转语音引擎**设为 **Transformers（本地）**。
+2. 从 [CMU ARCTIC 说话者嵌入数据集](https://huggingface.co/datasets/Matthijs/cmu-arctic-xvectors)的 `filename` 列复制完整值，例如 `cmu_us_awb_arctic-wav-arctic_a0001`。
+3. 将该值粘贴到 **TTS 模型**并保存。要听到服务器配置的音色，请将个人**文本转语音引擎**保留为**默认**。
+
 ### TTS 的 Docker 网络问题 {#docker-networking-issues-with-tts}
 
 如果 Open WebUI 无法访问你的 TTS 服务：
@@ -329,7 +343,7 @@ environment:
 | `int8` | **CPU（默认）** | 最快，但在旧 GPU 上不可用 |
 | `float16` | **CUDA/GPU（推荐）** | 在 GPU 上兼顾速度与兼容性 |
 | `int8_float16` | 混合精度 GPU | 权重用 int8，计算用 float16 |
-| `float32` | 最大兼容性 | 最慢，但几乎所有硬件都能运行 |
+| `float32` | 最大兼容性 | 最慢，但所有硬件都能运行 |
 
 :::info 默认行为
 - **CPU 模式：** 默认使用 `int8` 以获得最佳性能
@@ -380,7 +394,7 @@ pip install av==14.0.1
 
 如果你的 STT 或 TTS 引擎部署在自签名证书或内部 CA 之后，且请求因 TLS 校验失败而报错（例如 `SSLCertVerificationError`、`certificate verify failed`）：
 
-- 将 [`AIOHTTP_CLIENT_SESSION_SSL=False`](/reference/env-configuration#aiohttp_client_session_ssl) 设为 False，以关闭这些出站调用的证书校验。
+- 设置 [`AIOHTTP_CLIENT_SESSION_SSL=False`](/reference/env-configuration#aiohttp_client_session_ssl)，以关闭这些出站调用的证书校验。
 - 文本转语音和语音转文本都会遵循该设置。
 - 建议优先把内部 CA 安装进容器的信任库；关闭校验会让该连接失去针对中间人攻击的保护。
 
@@ -388,7 +402,7 @@ pip install av==14.0.1
 
 **症状：** 每次转写都以 `Error transcribing chunk: External:` 开头的错误失败，错误信息的其余部分说明服务器不支持某个 `response_format` 取值。
 
-**原因：** 使用 **OpenAI** **Speech-to-Text Engine** 时，Open WebUI 会向 `<API Base URL>/audio/transcriptions` 发送请求，并且从不发送 `response_format`：
+**原因：** 使用 **OpenAI** **Speech-to-Text Engine** 时，Open WebUI 会向 `<API Base URL>/audio/transcriptions` 发送 POST 请求，并且从不发送 `response_format`：
 
 - **Request Format** 设为 **Multipart Upload**（默认）时，表单包含 `model` 字段（即 **STT Model**）、设置了语言时的 `language` 字段，以及 `file`。
 - 使用 **JSON Base64** 时，JSON 请求体包含 `model`、设置了语言时的 `language`，以及带 base64 音频及其 `format` 的 `input_audio`。

@@ -23,9 +23,11 @@ Open WebUI 提供强大的文档提取能力，使你可以在 RAG（Retrieval A
 - 以结构化格式提取数据，供后续处理
 - 支持多语言内容识别
 
-:::note 临时聊天中的隐私
-在 **临时聊天** 模式下，文档提取会**仅在浏览器中执行**，以防止数据在后端被存储或处理。由于这一严格隐私策略，某些依赖后端解析器的复杂文件格式（例如部分 DOCX 文件）可能无法被正确处理。
-:::
+### 临时聊天中的文档附件 {#document-attachments-in-temporary-chats}
+
+在**临时聊天**中附加本地文档时，浏览器会提取文本，不会将原始文档作为 Open WebUI 文件上传。发送消息时，提取的文本会作为聊天请求的一部分发送给 Open WebUI 后端。
+
+浏览器在这一步使用内置解析器。PDF 提取会读取文本层并用空格连接文本项，不执行 OCR，因此扫描页可能无法提取到文本，表格布局也可能丢失。DOCX 提取返回纯文本。如果需要服务器配置的提取引擎，请使用普通聊天。
 
 :::info 将图片和视频发送到提取引擎
 
@@ -46,6 +48,20 @@ Open WebUI 提供强大的文档提取能力，使你可以在 RAG（Retrieval A
 | 引用 | 显示 `(page N)` 并打开到该页的 PDF | 不显示页码 |
 
 当句子或表格经常延续到下一页，并且你可以不使用引用页码时，选择 **Single**。该模式在文件被提取时生效。已经在知识库中的文件，只有在同一设置页面执行 **Reindex Knowledge and Memory Vectors**、重新提取之后才会改变。
+
+## ODT、MSG 和 PowerPoint 的依赖项 {#dependencies-for-odt-msg-and-powerpoint}
+
+在非精简版安装中，默认的**内容提取引擎**使用下列解析器处理这些格式。
+
+| 格式 | 提取依赖项 |
+| --- | --- |
+| OpenDocument Text (`.odt`) | 需要 `unstructured`、`pypandoc` 及 Pandoc 可执行文件。解析器先将文件转换为 DOCX，再提取文本。 |
+| Outlook 邮件 (`.msg`) | 需要 `unstructured` 和 `python-oxmsg` 来处理 Outlook MSG 内容。Open WebUI 会跳过邮件附件。 |
+| PowerPoint (`.ppt`、`.pptx`) | 如果能导入 `unstructured`，就使用它。导入失败时，Open WebUI 会尝试使用可读取 `.pptx` 文件的 `python-pptx`。旧版二进制 `.ppt` 文件需要支持该格式的提取器。 |
+
+PowerPoint 的回退机制发生在选择加载器时。如果成功导入 `unstructured`，但随后解析失败，则不会触发回退。
+
+**允许的文件扩展名**决定哪些上传文件会被接受处理。要编制 RAG 索引，所选提取器还必须能读取文件。能否预览取决于文件查看器。
 
 ## 没有专用加载器的文件 {#files-without-a-dedicated-loader}
 

@@ -22,7 +22,7 @@ Open WebUI 会把自己的界面翻译成多种语言，但你在其中创建的
 | **技能** | 名称、描述 | Workspace > Skills 中的技能编辑器 |
 | **Functions** | 名称、描述、valve 标签、各动作标签 | Admin Panel > Functions 中的函数编辑器 |
 | **横幅** | 内容（不含标题） | Settings > General（管理员区域） 中 Banners 标题旁 |
-| **竞技场模型** | 名称、描述 | Settings > Evaluations（管理员区域） 中的竞技场模型对话框 |
+| **路由模型** | 名称、描述 | 管理区域的设置 > 模型，在路由模型对话框中 |
 | **默认提示建议** | 建议内容本身 | Settings > Models > Model Defaults（管理员区域） |
 | **Open WebUI 自身的界面** | 应用自带的任意字符串 | Settings > General（管理员区域） 中的 UI Translations。参见[界面文本](#interface-text) |
 
@@ -36,7 +36,7 @@ Open WebUI 提供的每一种语言都在列表中，包括英语。**Default** 
 
 在资源编辑器中，已经填写了内容的语言会标上 `*`，你可以一眼看出哪些已经翻译过。
 
-在模型编辑器、横幅列表和竞技场对话框中，已翻译的字段旁边有两个小按钮：**Copy default** 会把原文填入作为起点，**Use default** 会清空译文从而重新使用原文。Tool 和技能的名称与描述没有这些按钮，直接在字段中输入即可，清空字段就能回到原文。
+在模型编辑器、横幅列表和路由模型对话框中，已翻译的字段会显示两个小按钮。**复制默认值**会复制原文作为起点，**使用默认值**会清除译文并再次使用原文。工具和技能的名称与描述没有按钮，直接在字段中输入即可，清空字段就会恢复原文。
 
 ![切换到德语的模型编辑器，其中的名称、描述和提示建议都已翻译](/images/features/translations/model-editor-translations.png)
 

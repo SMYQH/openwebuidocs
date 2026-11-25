@@ -178,7 +178,7 @@ Open WebUI 通过服务器发布的 OAuth 发现文档来定位授权服务器�
 
 `Register Client` 对 `oauth_2.1` 和 `oauth_2.1_static` 都是必需的。在静态认证下，Open WebUI 使用你提供的凭据以及服务器元数据发现（不进行动态客户端注册）。
 
-静态认证会在请求体中发送客户端密钥（`client_secret_post`），当服务器只声明支持时，则改用 HTTP Basic 请求头（`client_secret_basic`）。
+静态认证会在请求体中发送客户端密钥（`client_secret_post`）。如果服务器声明只支持 `client_secret_basic` 认证方式，则改用 HTTP Basic 请求头。
 
 :::
 
@@ -255,15 +255,15 @@ MCP 服务器可以在 Open WebUI 连接时发送指令。Open WebUI 会把它�
 MCP 服务器可以在工具调用过程中向你征询输入（MCP elicitation）。Open WebUI 会显示一个对话框，其中包含服务器 ID 和服务器的消息：
 
 - **表单请求** 会显示一个表单，其中包含服务器所请求的字段。点击 **提交** 会发送你的答案。Open WebUI 会依据服务器的 schema 校验这些答案，并且只发送与之匹配的答案。
-- **链接请求** 会显示一个需要打开的链接。打开它即等于告诉服务器你已经照做。不以 `http://` 或 `https://` 开头的链接，或包含用户名与密码的链接，会在对话框出现之前被取消。
+- **链接请求** 会显示一个需要打开的链接。打开它即等于告诉服务器你已经照做。不以 `http://` 或 `https://` 开头的链接，或包含用户名或密码的链接，会在对话框出现之前被取消。
 
-**拒绝** 会回绝该请求，**取消** 则关闭对话框，之后如何继续由服务器决定。对话框最多等待 120 秒，若 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout) 设置得更低则以该值为准，之后请求会被取消。只有当该对话正是浏览器标签页中打开的那个对话框时才会出现；否则请求会立即被取消。
+**拒绝** 会回绝该请求，**取消** 则关闭对话框，之后如何继续由服务器决定。对话框最多等待 120 秒，若 [`WEBSOCKET_EVENT_CALLER_TIMEOUT`](/reference/env-configuration#websocket_event_caller_timeout) 设置得更低则以该值为准，之后请求会被取消。只有在浏览器标签页中打开了该对话时，才会显示此对话框；否则请求会立即被取消。
 
 ### MCP 应用 {#mcp-apps}
 
 MCP 工具可以附带交互式应用（[MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview)）。当工具的 `_meta.ui.resourceUri` 指向一个类型为 `text/html;profile=mcp-app` 的 `ui://` 资源（最大 5 MB）时，Open WebUI 会在工具运行后于对话中内嵌展示该应用。
 
-该应用运行在沙箱化的 iframe 中，可以执行脚本、下载文件并打开弹窗，但没有权限访问 Open WebUI 的源。其内容安全策略来自资源的 `csp` 元数据（`resourceDomains`、`connectDomains`、`frameDomains`、`baseUriDomains`），并且在此之上还会应用 [`IFRAME_CSP`](/reference/env-configuration#iframe_csp)。该应用可以读取并列出服务器的资源，在新标签页中打开 `http` 和 `https` 链接，调用服务器的工具并向对话发送消息。应用发起的每次工具调用都会先在 **工具调用** 对话框中请你确认。来自应用的消息会在 **确认来自嵌入的提示** 对话框中显示其文本，确认后作为你的下一条对话消息发送。应用只能发送文本，因此消息中的图片和文件会被忽略。
+应用在沙箱 iframe 中运行，可以运行脚本、下载文件、打开弹窗，但无法访问 Open WebUI 的源。其内容安全策略由资源的 `csp` 元数据（`resourceDomains`、`connectDomains`、`frameDomains`、`baseUriDomains`）设置，并额外应用 [`IFRAME_CSP`](/reference/env-configuration#iframe_csp)。应用可以读取和列出服务器资源、在新标签页中打开 `http` 和 `https` 链接、调用服务器工具，并向聊天发送消息。应用每次调用工具前，都会在**工具调用**对话框中请求确认。应用发送的消息会先在**确认来自嵌入内容的提示词**对话框中显示文本，确认后才会成为你的下一条聊天消息。应用只能发送文本，因此消息中的图像和文件会被省略。应用也可以提供文件下载。**下载**对话框会先列出文件和链接，确认后保存各个文件，并在新标签页打开 `http` 或 `https` 链接。
 
 工具的 `_meta.ui.visibility` 决定谁可以使用它：没有 `model` 的工具对模型隐藏，没有 `app` 的工具无法被应用调用。MCP 应用需要稳定的 [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key)。
 
@@ -274,7 +274,7 @@ MCP 工具可以附带交互式应用（[MCP Apps](https://modelcontextprotocol.
 **现象**：
 使用工具时，即便设置中的验证按钮已报告成功，对话也可能显示 "Failed to connect to MCP server"。连接采用任一种 OAuth 2.1 模式时，该按钮显示为 **检查 OAuth 发现**，只确认能否找到并解析授权服务器的发现文档。
 
-服务器日志会以 error 级别记录每次失败，格式为 `Failed to connect to MCP server '<id>'`，随后是具体原因，因此请优先查看它。对话过程中变得不可达的服务器只会让那一次工具调用失败：模型会收到连接错误作为工具结果，并结束本次回复。
+服务器日志会以 error 级别记录每次失败，格式为 `Failed to connect to MCP server '<id>'`，随后是具体原因，因此请优先查看它。对话过程中变得不可达的服务器只会让那一次工具调用失败：模型会收到连接错误作为工具结果，并继续完成本次回复。
 
 **解决方案**：
 1.  **检查身份验证**：确保没有在没有密钥的情况下选择 `Bearer`。如果不需要令牌，切换到 `None`。

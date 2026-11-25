@@ -14,7 +14,7 @@ Open WebUI 提供两种执行 Python 代码的方式：
 1. **手动代码执行**：对 LLM 生成的 Python 代码块点击 “Run” 按钮，即可在浏览器中运行（基于 Pyodide / WebAssembly）
 2. **Code Interpreter**：一种 AI 能力，允许模型在回复过程中自动编写并执行 Python 代码（基于 Pyodide 或 Jupyter）
 
-这两种方式都支持像 matplotlib 图表这样的可视化输出，并可直接在聊天中内联显示。使用 Pyodide 引擎时，还会提供一个位于 `/mnt/uploads/` 的**持久化虚拟文件系统**——文件会在多次代码执行之间保留（若启用 [`ENABLE_PYODIDE_FILE_PERSISTENCE`](/reference/env-configuration#enable_pyodide_file_persistence)，页面刷新后同样保留），并且附加到消息的文件会自动放入其中，供代码直接访问。
+两种方式都支持可在聊天中内联显示的可视化输出，例如 matplotlib 图表。Pyodide 引擎在 `/mnt/uploads/` 提供**持久化虚拟文件系统**。文件在多次代码执行之间保留（启用 [`ENABLE_PYODIDE_FILE_PERSISTENCE`](/reference/env-configuration#enable_pyodide_file_persistence) 后，重新加载页面也会保留）。带有服务器文件 ID 的消息附件可挂载到该目录，供代码访问。
 
 :::caution Pyodide 与 Jupyter 均为旧版引擎
 浏览器内的 **Pyodide** 引擎与 **Jupyter** 引擎都属于**旧版**。它们保留下来是为了提供零配置、聊天气泡内的 Python；但面对真实负载、完整的包支持以及 shell 访问时，请改用 **[Open Terminal](/features/chat-conversations/chat-features/code-execution#open-terminal)**。Pyodide 在未来的版本中可能会被弃用。
@@ -39,9 +39,9 @@ Code Interpreter 是一种模型能力，可让 LLM 在对话过程中自主编�
 
 **全局配置（Admin Panel）：**
 
-这些设置可以在 **Settings → Code Execution**（管理员区域） 中配置：
+可以在管理区域的**设置 > 代码执行**中的**旧版**下配置这些设置：
 - 全局启用 / 禁用 code interpreter
-- 选择引擎：**Pyodide（旧版）** 或 **Jupyter（旧版）**（如需完整的 Python 与 shell 访问权限，请改用 [Open Terminal](/features/open-terminal)）
+- 选择引擎：**pyodide** 或 **jupyter（旧版）**（如需完整的 Python 和 Shell 访问，请改用 [Open Terminal](/features/open-terminal)）
 - 配置 Jupyter 连接设置
 - 编辑代码解释器的提示词模板
 
@@ -197,7 +197,7 @@ AI **不能安装**上述列表之外的库。任何导入不受支持包的代�
 
 - **跨执行持久化** —— 一次代码执行写入的文件，在后续执行中仍可访问
 - **跨刷新持久化** *（需手动开启）* —— 只有在设置 [`ENABLE_PYODIDE_FILE_PERSISTENCE=true`](/reference/env-configuration#enable_pyodide_file_persistence) 后，文件才会在页面刷新后保留（默认关闭）。关闭该开关时，Pyodide 运行在不透明源（opaque origin）的沙箱中，基于 IndexedDB 的文件系统不会跨刷新保留
-- **自动挂载上传文件** —— 附件会在执行前从服务器拉取，并放入 `/mnt/uploads/`，因此模型能直接读取
+- **自动挂载上传文件**：在执行代码前，Pyodide 会获取带有服务器文件 ID 的消息附件，并放入 `/mnt/uploads/`。临时聊天中内联附加的图像没有服务器文件 ID，因此会被跳过。要让 Python 读取图像字节，请通过 Pyodide 的**文件**选项卡上传图像。
 - **文件浏览器面板** —— 启用 Code Interpreter 后，聊天的[标签页](/features/chat-conversations/chat-features/#tabs-side-panel)中会显示一个 **Files** 标签页。你可浏览、预览、上传、下载和删除文件，无需终端
 
 ### 在代码中操作文件 {#working-with-files-in-code}
@@ -219,7 +219,7 @@ print('Saved result.csv to /mnt/uploads/')
 ```
 
 :::tip
-文件浏览器面板允许你下载模型生成的任意文件。你只需让模型把输出保存到 `/mnt/uploads/`，它就会出现在文件浏览器中供你下载。
+请让模型将输出保存到 `/mnt/uploads/`，再通过 Pyodide 的**文件**选项卡下载。此处创建的文件存放在浏览器内。用于显示已上传文件的 `display_file` 工具使用服务器文件 ID 或内容 URL，因此无法打开 Pyodide 路径或模型生成的 `sandbox:` 链接。
 :::
 
 :::note Jupyter 引擎

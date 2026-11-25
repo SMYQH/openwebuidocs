@@ -6,9 +6,19 @@
 
 1. **创建虚拟环境：**
 
-   ```bash
-   python3 -m venv venv
-   ```
+   已安装 Python 3.12 时，请显式选择该版本：
+
+   - 在 Linux/macOS 上：
+
+     ```bash
+     python3.12 -m venv venv
+     ```
+
+   - 在 Windows 上使用 Python 启动器：
+
+     ```powershell
+     py -3.12 -m venv venv
+     ```
 
 2. **激活虚拟环境：**
 
@@ -27,7 +37,7 @@
 3. **安装 Open WebUI：**
 
    ```bash
-   pip install open-webui
+   python -m pip install open-webui
    ```
 
 4. **启动服务：**

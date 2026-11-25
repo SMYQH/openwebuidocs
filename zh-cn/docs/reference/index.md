@@ -60,13 +60,13 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 
 **发送提示词，让 Open WebUI 在服务端运行工具，并把完整答案返回给你。**
 
-你需要的每一种请求都能让模型在服务端调用内置工具、工作区工具、MCP 服务器和 Open Terminal，并沿用你自己的用户权限。支持流式与非流式、可选择是否保存对话，最终沉淀为可复用的脚本。
+本指南提供所需的请求示例，让模型在服务端以你的用户权限调用内置工具、工作区工具、MCP 服务器和 Open Terminal。示例涵盖流式与非流式调用，以及保存和不保存对话的方式，最后提供可复用的脚本。
 
 | | |
 | :--- | :--- |
 | **完整的代理循环** | 多轮原生工具调用，结果可从对话中读回 |
 | **单请求模式** | 一次 HTTP 调用进，一次补全出，工具结果已经生效 |
-| **逐字段控制** | `chat_id`、`id`、`session_id`、`tool_ids`、`terminal_id`、`features` |
+| **逐字段** | `chat_id`、`id`、`session_id`、`tool_ids`、`machine_id`、`features` |
 
 [**在服务端运行工具 →**](/reference/server-side-tool-calling)
 
@@ -135,4 +135,3 @@ Open WebUI 提供完整的 REST API，通过 Bearer Token 或 JWT 进行认证�
 | 🐧 **Linux** | 相同拓扑，包含 Linux 特定的网络行为 |
 
 [**查看网络架构图 →**](/reference/network-diagrams)
-

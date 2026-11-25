@@ -26,6 +26,10 @@ description: "选择本地、浏览器或托管的语音转文本引擎，配置
 
 **Web API** 则通过浏览器内置语音识别提供 STT（无需 API 密钥，在用户设置中配置）。
 
+### 服务器端录音存储 {#server-side-recording-storage}
+
+将录音上传到 Open WebUI 的转写端点时，服务器先将原始音频保存到 `DATA_DIR/cache/audio/transcriptions`，再发送给所选引擎。该端点处理完毕后仍保留原始文件。决定保留哪些音频，以及如何保护数据卷和备份时，请考虑此目录。浏览器语音识别不会经由此端点发送录音。
+
 ## 配置你的 STT 提供商 {#configuring-your-stt-provider}
 
 要配置语音转文本提供商：

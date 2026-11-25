@@ -209,11 +209,13 @@ validate current results and export the next pending pairs in one audit. Pass
 the same results file to both input options. A partial result still exits
 nonzero, and its report lists the pending paths.
 
-When only exact exceptions change, pass the old configuration using
-`--reuse-review-config` with `--reuse-review`. The old config must match the
-review digest. The exported result binds to the new config, and deterministic
-checks run again. A changed document or any other config change prevents reuse
-through this option.
+When only exact exceptions change or protected terms are appended, pass the
+saved configuration using `--reuse-review-config` with `--reuse-review`. The
+old config must match the review digest. The checker runs deterministic checks
+again and binds the exported result to the current config. It reopens a pair
+if either document contains an appended term, including in decoded metadata.
+Changed document bytes always require a fresh review. Other configuration
+changes require a fresh review of the selected pairs.
 
 ## Re-binding exceptions after an edit
 

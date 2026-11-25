@@ -1,12 +1,12 @@
 ---
 sidebar_position: 400
-title: "API 接口"
+title: "API 端点"
 ---
 
-本指南提供了有效使用 API 接口所需的关键信息，帮助你实现与模型的无缝集成和自动化。请注意，该配置目前处于实验阶段，未来可能会有更新和改进。
+本指南介绍如何使用 API 端点集成模型并实现自动化。这套方案仍处于实验阶段，未来可能会有更新和改进。
 
-:::note 接口不再被文档化
-API 变化频繁，为它编写文档意义不大。要查找最新的接口和规范，可以让 AI Agent 指向 Open WebUI 后端并让它自行读取。下面的接口仅供参考。
+:::note 不再维护端点文档
+API 变化频繁，难以持续维护端点文档。要查找最新的端点和规范，可以让 AI 智能体读取 Open WebUI 的后端代码。下列端点仅供参考。
 :::
 
 ## 认证 {#authentication}
@@ -19,17 +19,9 @@ API 变化频繁，为它编写文档意义不大。要查找最新的接口和�
 
 ## Swagger 文档链接 {#swagger-documentation-links}
 
-:::important
+后端以 `ENV=dev` 启动时，Open WebUI 在 `/docs` 提供 Swagger UI，并在 `/openapi.json` 提供机器可读的 OpenAPI schema。未设置 `ENV` 时后端默认为 `dev`，但 Docker 镜像将 `ENV` 设为 `prod`，因此禁用这两条路由。
 
-请确保将 `ENV` 环境变量设置为 `dev`，以访问这些服务的 Swagger 文档。没有此配置，文档将不可用。
-
-:::
-
-访问 Open WebUI 提供的各服务的详细 API 文档：
-
-| 应用 | 文档路径 |
-|-------------|-------------------------|
-| 主应用 | `/docs` |
+如果本地 Docker 测试实例无法访问这些 URL，请在容器环境中设置 `ENV=dev`，然后重新创建容器。使用访问 Open WebUI 的同一主机地址和端口。生产部署则保持 `ENV=prod`。
 
 ## 主要 API 端点 {#notable-api-endpoints}
 
@@ -57,9 +49,18 @@ API 变化频繁，为它编写文档意义不大。要查找最新的接口和�
 | `POST /api/v1/models/sync` | **（管理员）** 声明式**同步**：按请求中的列表创建或更新模型，并**删除**未列出的模型，使实例与列表完全一致。 |
 | `POST /api/v1/models/create` | 创建单个模型。 |
 | `POST /api/v1/models/model/update` | 更新单个模型。 |
-| `POST /api/v1/models/model/delete` | 删除单个模型。 |
+| `POST /api/v1/models/model/delete` | 按 ID 删除已保存的自定义模型。 |
 
-**认证：** 需要管理员 [API Key](/features/authentication-access/api-keys)（或对于 `import`，具有 `workspace.models_import` 权限的用户）。`sync` 仅限管理员。`import` 和 `sync` 都接受形如 `{"models": [ ... ]}` 的请求体，其中数组正是 `export` 返回的内容。
+**批量操作。** `sync` 仅限管理员。非管理员使用 `import` 需要 `workspace.models_import` 权限，使用 `export` 需要 `workspace.models_export` 权限。`import` 和 `sync` 都接收形如 `{"models": [ ... ]}` 的正文，其中的数组就是 `export` 的返回值。
+
+**删除自定义模型。** 发送 JSON 正文，其中包含已保存的自定义模型 ID（字符串）。管理员、模型所有者或具有模型写入权限的用户均可删除。成功时响应正文为 JSON 布尔值 `true`。
+
+```bash
+curl -X POST https://open-webui.example.com/api/v1/models/model/delete \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"id": "my-custom-model"}'
+```
 
 **背景图片以数据形式随行。** 模型的背景会以文件形式存储在实例上，因此 `export` 会读取该文件并以 `background_image_data`（一个 `data:image/...;base64,...` URI）的形式放入记录中，同时将 `meta.background_image_url` 设为 `null`。`import` 则反向处理：解码该 data URI，在目标实例上重新上传为文件，并把新的文件 URL 写回 `meta`。这使导出的模型可以在实例之间移植。编写脚本时有两个值得注意的结果：导出一个背景文件已丢失的模型会使整个请求以 `400` 失败；超出限制（5 MiB、2500 万像素、PNG/JPEG/WebP/GIF）的图片会在导入时被拒绝。
 
@@ -87,13 +88,17 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
 - **端点**：`POST /api/chat/completions`
 - **说明**：作为兼容 OpenAI API 的聊天补全端点，为 Open WebUI 上的模型提供服务，包括 Ollama 模型、OpenAI 模型以及 Open WebUI Function 模型。位于 Responses API 连接上的模型同样会以 Chat Completions 格式作答（无论是否流式）；当回复被截断时，`finish_reason` 会被设为 `length` 或 `content_filter`。
 
-**该端点适用于工作区模型。** 只有 `/api/chat/completions`（及其别名 `/api/v1/chat/completions`）会应用工作区模型的设置。在普通 API 调用中，它会应用基础模型、系统提示词、参数和过滤器，但不会应用该模型的工具、知识库或默认功能——这些需要额外的字段，如下表所列。`/openai` 下的代理路由跳过的更多：
+**连接 OpenAI 兼容聊天客户端。** 如果客户端会在基础 URL 后附加 `/models` 和 `/chat/completions`，请将基础 URL 设为 Open WebUI URL 后加 `/api/v1`，例如 `http://localhost:3000/api/v1`。使用**设置 > 账户 > API 密钥 > 密钥 > 显示**中的密钥，并从 `GET /api/v1/models` 的响应复制模型 ID。API 密钥默认禁用。管理员须启用 **API 密钥**，非管理员账户还需要 **API 密钥**功能权限。设置方法见 [API 密钥](/features/authentication-access/api-keys)。
+
+如果在管理区域的**设置 > 身份验证**中开启了 **API 密钥端点限制**，对调用这两个端点的客户端，请在**允许的端点**中加入 `/api/v1/models` 和 `/api/v1/chat/completions`。校验使用客户端实际调用的路径，仅添加 `/api/chat/completions` 不涵盖别名 `/api/v1/chat/completions`。
+
+**该端点适用于工作区模型。** 只有 `/api/chat/completions`（及其别名 `/api/v1/chat/completions`）完整支持工作区模型的设置。普通 API 调用会应用基础模型、系统提示词、参数和过滤器。工具、知识库和默认功能需要通过表格下方所述的额外字段指定。`/openai` 下的代理路由支持的工作区模型设置更少：
 
 | 路由 | 工作区模型的处理方式 |
 | :--- | :--- |
 | `POST /api/chat/completions` | 应用基础模型、系统提示词、参数和过滤器。工具、知识库和默认功能只在请求明确要求时才应用。 |
 | `POST /openai/chat/completions` | 替换为基础模型，并应用该工作区模型的系统提示词和参数。知识库、工具和过滤器都不运行。 |
-| `POST /openai/responses` | 什么都不应用。你发送的 `model` 会原样转发给提供方，而任何连接都不提供的工作区模型 ID 会落到第一个 OpenAI 连接上，通常会被拒绝。 |
+| `POST /openai/responses` | 不应用任何工作区模型设置。你发送的 `model` 会原样转发给提供方。如果没有连接提供该工作区模型 ID，请求会发往第一个 OpenAI 连接，通常会被拒绝。 |
 
 要使用 `/openai/responses`，请发送提供方自己的模型 ID。在这两条 `/openai` 路由上，非管理员请求一个没有已保存模型记录的模型，会得到 `403` 和 `Model not found`，除非 [`BYPASS_MODEL_ACCESS_CONTROL`](/reference/env-configuration#bypass_model_access_control) 已开启。
 
@@ -130,7 +135,7 @@ curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \
 
 #### 通过 API 使用 Open WebUI 工具（包括 MCP） {#using-open-webui-tools-including-mcp-from-the-api}
 
-`/api/chat/completions` 端点可以在请求体中传入 Open WebUI 工具 ID 时，服务端执行这些工具——包括已在 Open WebUI 中配置并启用的原生 Python 工具、OpenAPI 工具服务器和 MCP 工具服务器。
+在请求体中传入 Open WebUI 工具 ID，`/api/chat/completions` 端点即可在服务端调用这些工具，包括已在 Open WebUI 中配置并启用的原生 Python 工具、OpenAPI 工具服务器和 MCP 工具服务器。
 
 1. 先在 Open WebUI 中配置好工具服务器。MCP 相关内容参见 [Model Context Protocol (MCP)](/features/extensibility/mcp)。
 2. 从工具列表端点获取工具 ID，或在聊天中启用该工具时通过浏览器网络请求获取。MCP 工具服务器的 ID 形如 `server:mcp:<server-id>`。
@@ -284,7 +289,7 @@ Open WebUI 提供兼容 Anthropic 消息 API 的端点。这允许为 Anthropic 
 
 - **Claude Code 配置**：
 
-  要将 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 与 Open WebUI 作为代理一起使用，请将其配置为指向你的 Open WebUI 实例：
+  要让 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 通过 Open WebUI 代理请求，请将其配置为连接你的 Open WebUI 实例：
 
   ```bash
   # Set environment variables for Claude Code
@@ -315,7 +320,7 @@ Open WebUI 中配置的所有模型都可以通过此端点访问——包括 Ol
 
 **用量上报：** 响应会携带上游模型上报的用量信息：流式时位于收尾的 `message_delta` 中，非流式时位于 `usage` 中。当提供方发送这些字段时，提示词缓存计数器（`cache_creation_input_tokens`、`cache_read_input_tokens`）、`output_tokens_details`、`server_tool_use` 和 `service_tier` 都会被透传，因此追踪缓存命中或推理 token 的客户端看到的是真实数值，而不是在转换中丢失。以 OpenAI 风格上报缓存 token 的提供方，其 `prompt_tokens_details.cached_tokens` 会被映射为 `cache_read_input_tokens`；而 `input_tokens` 会按照 Anthropic 客户端的预期上报：即未被缓存的提示词 token，缓存创建与缓存读取单独计数，而不是重复计算一次。在流式请求中，只有在确实已知时才会上报 `input_tokens`，因此从不报告该字段的提供方会把它整体省略，而不是显示一个凭空捏造的零值。
 
-只有在模型的编辑器中启用了 **Usage** 能力时，才会向上游提供方请求用量信息。未启用时，不会要求提供方在流中包含用量，客户端收到的 token 计数会退回到 Open WebUI 自身能够判定的结果。
+只有在模型编辑器中启用了**用量**能力时，才会向上游提供方请求用量信息。未启用时，不会要求提供方在流中包含用量，客户端收到的 token 计数以 Open WebUI 自行确定的结果为准。
 :::
 
 #### Token 计数 {#counting-tokens}
@@ -347,6 +352,19 @@ curl -X POST http://localhost:3000/api/v1/messages/count_tokens \
 Messages API 此前在流式响应的 `message_start` 块中总是报告 `input_tokens: 0`。现在输入 token 会被预先计数，并在流式和非流式响应中一并报告。若计数失败，请求仍然会成功，因此客户端应将该值视为尽力而为的结果，而非绝对保证。
 :::
 
+### 语音转文本 {#speech-to-text-transcription}
+
+使用 Bearer 身份验证和 `multipart/form-data` 正文，将录音发送到 `POST /api/v1/audio/transcriptions`。将录音放在必填的 `file` 字段中。可选的 `language` 字段为支持该参数的转写引擎提供语言提示。非管理员调用者需要语音转文本权限（`chat.stt`）。此端点在服务器上保留原始上传文件。参见[服务器端录音存储](/features/chat-conversations/audio/speech-to-text/stt-config#server-side-recording-storage)。
+
+```bash
+curl https://open-webui.example.com/api/v1/audio/transcriptions \
+  -H "Authorization: Bearer $OPEN_WEBUI_TOKEN" \
+  -F "file=@recording.wav" \
+  -F "language=en"
+```
+
+从 JSON 响应的 `text` 中读取转写结果。如果要让模型回答关于录音的问题，请在另一个[聊天补全请求](#chat-completions)中将转写结果作为用户消息发送。
+
 ### 图像生成与编辑 {#image-generation-and-editing}
 
 - **端点**：`POST /api/v1/images/generations`（请求体：`prompt`、可选的 `model`、`size`、`n`、`steps`、`negative_prompt`）和 `POST /api/v1/images/edit`（请求体：`image`，可以是一个或多个 base64 编码的图片或 URL，以及 `prompt`、可选的 `model`、`size`、`n`、`negative_prompt`、`background`）。
@@ -375,10 +393,10 @@ curl -X POST http://localhost:3000/api/v1/images/generations \
 
 ### 🔧 API 请求中的过滤器和 Function 行为 {#filter-and-function-behavior-with-api-requests}
 
-直接使用 API 接口时，过滤器（Functions）的行为与通过 Web 界面发出请求时有所不同。
+直接调用 API 端点时，过滤器函数的行为与通过 Web 界面发出请求时有所不同。
 
 :::info 认证说明
-Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** 进行 API 认证。这是有意为之的——Web 界面在内部对相同的 API 接口使用 JWT Token。两种认证方式提供同等的 API 访问权限。
+Open WebUI 同时接受 **API 密钥**（以 `sk-` 为前缀）和 **JWT** 进行 API 认证。Web 界面也使用 JWT 调用相同的 API 端点。两种认证方式提供同等的 API 访问权限。
 :::
 
 #### 过滤器执行 {#filter-execution}
@@ -460,6 +478,21 @@ Open WebUI 同时接受 **API Key**（以 `sk-` 为前缀）和 **JWT Token** �
 如果你今天需要通过 HTTP 获取 `outlet()` 的输出，请先调用 `/api/chat/completions`，再调用 `/api/chat/completed`。`dev` 版本上的内联执行仍会运行你的 outlet 过滤器及其副作用（持久化消息、`chat:outlet` WebSocket 事件、日志或追踪调用），但过滤后的文本不会在 HTTP 响应中返回。有关过滤器行为的更多详情，请参阅[过滤器 Function 文档](/features/extensibility/plugin/functions/filter#filter-behavior-with-api-requests)。
 :::
 
+### OpenAI 兼容嵌入 {#openai-compatible-embeddings}
+
+在 Open WebUI v0.13.4 中，向 `POST /api/embeddings`（也可使用 `/api/v1/embeddings`）发送模型 ID 和待嵌入的文本。选择你的账户可通过 Ollama 或 OpenAI 兼容连接访问的嵌入模型。使用 [`GET /api/models`](#retrieve-all-models) 返回的 ID。如果配置了连接前缀，也要包含该前缀。
+
+此端点根据请求的 `model` 字段路由。**管理面板 > 设置 > 文档**下的嵌入引擎和模型用于单独配置 RAG。如果只在**文档**下配置了嵌入模型，请先通过模型连接提供该模型，再通过此端点调用。
+
+```bash
+curl https://open-webui.example.com/api/v1/embeddings \
+  -H "Authorization: Bearer $OPEN_WEBUI_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "YOUR_EMBEDDING_MODEL_ID", "input": ["First text", "Second text"]}'
+```
+
+从 JSON 响应中的 `data[].embedding` 读取向量。如需原生 Ollama 请求和响应格式，请使用 [Ollama 嵌入代理](#generate-embeddings)。
+
 ### 🦙 Ollama API 代理支持 {#ollama-api-proxy-support}
 
 如果你想直接与 Ollama 模型交互——包括生成嵌入向量或原始提示词流式传输——Open WebUI 通过代理路由提供对原生 Ollama API 的透明直通。
@@ -499,7 +532,7 @@ curl -X POST http://localhost:3000/ollama/api/embed \
 ```
 
 :::info
-使用 Ollama 代理接口时，POST 请求**必须**包含 `Content-Type: application/json` 头部，否则 API 可能无法解析请求体。如果实例已配置安全认证，还需要包含授权头部。
+使用 Ollama 代理端点时，POST 请求**必须**包含 `Content-Type: application/json` 请求头，否则 API 可能无法解析请求体。如果实例启用了身份认证，还需要包含认证请求头。
 :::
 
 #### 🔮 Responses API（兼容 OpenAI） {#responses-api-openai-compatible}
@@ -689,7 +722,7 @@ The content provided is empty. Please ensure that there is text or data present 
 
 #### 将文件添加到知识库集合 {#adding-files-to-knowledge-collections}
 
-上传完成后，你可以将文件分组到知识库集合中，或在聊天中单独引用。
+上传后，可以将文件归入知识库，或在聊天中分别引用。向现有的本地知识库添加文件需要知识库所有权、对该库的**写入**授权或管理员账户。对于非本人拥有的文件，非管理员还需要文件读取权限。
 
 :::important
 **将文件添加到知识库之前，必须等待文件处理完成。** 仍在处理中的文件内容为空，会导致 `400` 错误。使用上方的状态端点验证文件状态为 `completed`。
@@ -953,7 +986,7 @@ result = upload_and_add_to_knowledge('/path/to/document.pdf', 'your-knowledge-id
 - **非流式**（`"stream": false`）：JSON 响应在 `choices` 旁边还有一个顶层 `sources` 键。
 - **流式**（`"stream": true`）：第一个事件是 `data: {"sources": [...]}`，在模型的首个分块之前发送。它没有 `choices` 键，因此从每个事件读取 `choices[0].delta.content` 的客户端必须跳过它。
 
-`sources` 中的每个条目都包含 `source`（文件或集合的来源）、`document`（检索到的文本块）、`metadata`（每个文本块一个对象），以及在向量数据库返回时包含的 `distances`。没有检索到任何内容时，该键会被省略。
+`sources` 中的每个条目都包含 `source`（文本块来自哪个文件或集合）、`document`（检索到的文本块）和 `metadata`（每个文本块一个对象）。如果向量数据库返回了 `distances`，条目也会包含该字段。没有检索到任何内容时，响应会省略 `sources`。
 
 借助 Open WebUI API，这些方法可以利用上传的文件和整理好的知识库中的外部知识，增强聊天应用的能力。无论是单独使用文件还是将其纳入知识库，你都可以根据具体需要自定义集成方式。
 

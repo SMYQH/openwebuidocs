@@ -105,6 +105,8 @@ docker exec -it open-webui /bin/sh
 | 50 | comment_reaction | 记录对评论的表情回应 |
 | 51 | notification | 存储每位用户的收件箱通知 |
 | 52 | chat_view_state | 存储每位用户为某个聊天保存的标签页布局 |
+| 53 | resource_tag | 将标签关联到使用这些标签的聊天和笔记 |
+| 54 | folder_view_state | 存储每位用户为文件夹保存的标签页布局 |
 
 注意：记录已应用迁移的 `alembic_version` 表与 Open-WebUI 的核心功能无关，因此未列入本表。
 
@@ -322,13 +324,13 @@ docker exec -it open-webui /bin/sh
 | id | String | PRIMARY KEY | 唯一标识符（UUID） |
 | user_id | String | - | 聊天的拥有者 |
 | title | Text | - | 聊天标题 |
-| chat | JSON | - | 聊天内容和历史 |
+| chat | JSON | - | 聊天设置，例如模型和参数。消息保存在 `chat_message` 中 |
 | created_at | BigInteger | - | 创建时间戳 |
 | updated_at | BigInteger | - | 最后更新时间戳 |
 | share_id | Text | UNIQUE, nullable | 共享标识符 |
 | archived | Boolean | default=False | 归档状态 |
 | pinned | Boolean | default=False, nullable | 置顶状态 |
-| meta | JSON | server_default="{}" | 包含标签的元数据 |
+| meta | JSON | server_default="{}" | 元数据 |
 | folder_id | Text | nullable | 父文件夹 ID |
 | tasks | JSON | nullable | 代理工作流使用的聊天级任务/待办事项列表 |
 | summary | Text | nullable | 可选的聊天摘要文本 |
@@ -355,7 +357,7 @@ docker exec -it open-webui /bin/sh
 | title | Text | nullable | 分享时的聊天标题 |
 | chat | JSON | nullable | 分享时的聊天内容快照 |
 | created_at | BigInteger | nullable | 分享创建时间戳 |
-| updated_at | BigInteger | nullable | 最后重新快照时间戳 |
+| updated_at | BigInteger | nullable | 最近一次更新快照的时间戳 |
 
 关于 shared_chat 表的注意事项：
 
@@ -366,7 +368,7 @@ docker exec -it open-webui /bin/sh
 
 ## Chat Message 表 {#chat-message-table}
 
-`chat_message` 表是聊天会话的**标准化逐条消息存储**：每条消息一行，独立于 `chat.chat` 中的 JSON 历史 blob，并且与频道 [Message 表](#message-table)（保存频道/线程消息，而非聊天模型轮次）不同。
+`chat_message` 表保存每个聊天的消息，每条消息占一行。它与保存频道和线程消息的[频道消息表](#message-table)分开。
 
 | **列名** | **数据类型** | **约束** | **说明** |
 | --------------- | ------------- | ---------------------------------------- | -------------------------------------------------------- |
@@ -387,16 +389,18 @@ docker exec -it open-webui /bin/sh
 | error | JSON | nullable | 生成失败时的错误载荷 |
 | usage | JSON | nullable | Token/使用统计 |
 | context_summary | Text | nullable | 每条消息的上下文摘要 |
+| data | JSON | nullable | 没有专用列的其他消息字段 |
 | created_at | BigInteger | indexed | 创建时间戳 |
 | updated_at | BigInteger | - | 最后更新时间戳 |
 
 关于 chat_message 表的注意事项：
 
 - 删除聊天会级联删除其消息（带有 `ON DELETE CASCADE` 的 `chat_id` 外键）。
-- 复合索引支持常见的访问模式：(`chat_id`, `parent_id`)、(`model_id`, `created_at`) 和 (`user_id`, `created_at`)。
+- 复合索引支持常见访问模式：(`chat_id`, `parent_id`)、(`model_id`, `created_at`)、(`user_id`, `created_at`) 和 (`chat_id`, `role`, `done`)。
 - `context_summary` 由迁移 `4c5ce3d2f27f` 添加，用于存储消息上下文的摘要。
 - `meta` 由迁移 `856c5b02fb54` 添加。它保存逐条消息的元数据，也正是它标记了 Open WebUI 代表用户注入的消息，例如[子代理](/features/chat-conversations/chat-features/subagents)的结果或已触发的[定时器](/features/chat-conversations/chat-features/timers)，从而让界面可以将它们与用户亲手输入的消息区别渲染。
-- [聊天搜索](/features/chat-conversations/chat-features/history-search)针对不同后端读取不同的存储位置。在 PostgreSQL 上，它会匹配 `chat_message.content`，以及 `chat.chat` blob 内部的 `history.messages` 映射和更早的扁平 `messages` 数组。在 SQLite 上，它只匹配后两处 JSON 位置。
+- 迁移 `5e7a2c9d4b13` 将每个聊天的消息从 `chat.chat` 数据块（其中的 `history` 及旧版扁平 `messages` 列表）移入此表，并加入 `data`。对于大型实例，升级后首次启动需要一些时间。
+- [聊天搜索](/features/chat-conversations/chat-features/history-search)匹配 `chat_message.content` 中的文本和聊天标题。
 ## Chat View State 表 {#chat-view-state-table}
 
 | **列名** | **数据类型** | **约束** | **说明** |
@@ -421,7 +425,7 @@ docker exec -it open-webui /bin/sh
 | user_id | Text | NOT NULL | 自动化任务的所有者 |
 | folder_id | Text | nullable | 运行所创建的聊天所在的文件夹 |
 | name | Text | NOT NULL | 自动化的显示名称 |
-| data | JSON | NOT NULL | 自动化有效负载 (`prompt`, `model_id`, `rrule`, 可选终端配置) |
+| data | JSON | NOT NULL | 自动化载荷（`prompt`、`model_id`、`rrule`、可选的机器配置） |
 | meta | JSON | nullable | 可选元数据 |
 | is_active | Boolean | NOT NULL, default=True | 激活/暂停状态 |
 | last_run_at | BigInteger | nullable | 上次执行时间 |
@@ -553,7 +557,7 @@ docker exec -it open-webui /bin/sh
 | user_id | String | nullable | 用户引用 |
 | timestamp | BigInteger | nullable | 创建时间戳 |
 
-关于 `chatidtag` 表的说明：这是聊天标签迁移到聊天记录之前的**旧版**表。其数据行已被读入 `chat` 表（迁移 `1af9b942657b`），该迁移把每个标签写入 `chat.meta.tags`，并把 `pinned` 标签转换为 `chat.pinned`，现在已不再向该表写入任何内容。该迁移会保留这些行，且没有任何迁移会删除该表，因此较旧的数据库中可能仍存有过期数据行。当前代码中没有对应的模型。聊天标签现在位于 `tag` 表中。
+关于 `chatidtag` 表：这是聊天标签移入聊天记录以前使用的**旧版**表。迁移 `1af9b942657b` 已把它的各行读入 `chat` 表，将每个标签写到 `chat.meta.tags` 中，并将 `pinned` 标签转为 `chat.pinned`。如今不再写入此表。迁移会保留原行和表结构，因此旧数据库中可能还有过时记录。当前代码不再为它提供对应模型。聊天和笔记上的标签现在通过[资源标签表](#resource-tag-table)关联。
 ## Comment 表 {#comment-table}
 
 | **列名** | **数据类型** | **约束** | **描述** |
@@ -617,7 +621,7 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 | version | BigInteger | default=0 | 反馈版本号 |
 | type | Text | - | 反馈类型 |
 | data | JSON | nullable | 包括评分在内的反馈数据 |
-| meta | JSON | nullable | 元数据 (arena, chat_id 等) |
+| meta | JSON | nullable | 元数据（chat_id 等） |
 | snapshot | JSON | nullable | 关联的聊天快照 |
 | created_at | BigInteger | - | 创建时间戳 |
 | updated_at | BigInteger | - | 最后更新时间戳 |
@@ -669,6 +673,22 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 - 文件夹可以嵌套（`parent_id` 引用）
 - 根文件夹的 `parent_id` 为 null
 - 在同一父级文件夹内，文件夹名称必须唯一
+
+## 文件夹视图状态表 {#folder-view-state-table}
+
+| **列名** | **数据类型** | **约束** | **描述** |
+| --------------- | ------------- | -------------------- | ------------------------------------------------------------ |
+| user_id | Text | PRIMARY KEY | 视图所属用户 |
+| folder_id | Text | PRIMARY KEY, indexed | 视图所属文件夹 |
+| state | JSON | NOT NULL | 打开的标签页、分屏布局和选定的终端 |
+| revision | BigInteger | NOT NULL | 保存计数。拒绝基于过时修订版的保存 |
+| updated_at | BigInteger | NOT NULL | 最后更新时间戳（秒） |
+
+关于 folder_view_state 表：
+
+- 由迁移 `d2f86c0b41ae` 创建。其主键为 (`user_id`, `folder_id`)，并在 `folder_id` 上建有索引（`ix_folder_view_state_folder_id`）。
+- 保存用户在文件夹中打开的标签页，以便在任何设备上重新打开文件夹时恢复它们。即使是共享文件夹，每行也仅对对应用户可见。
+- 删除文件夹会删除其对应的行。
 
 ## Function 表 {#function-table}
 
@@ -757,6 +777,8 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 
 ## Knowledge Directory 表 {#knowledge-directory-table}
 
+用于组织单个知识库内部文件的可嵌套文件夹。由迁移 `3c9b0ca343fd` 添加，该迁移同时为[知识文件表](#knowledge-file-table)添加了 `directory_id`。
+
 | **列名** | **数据类型** | **约束** | **说明** |
 | --------------- | ------------- | --------------- | -------------------------------------- |
 | id | Text | PRIMARY KEY | 唯一标识符 (UUID) |
@@ -766,8 +788,6 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 | user_id | Text | NOT NULL | 创建该目录的用户 |
 | created_at | BigInteger | NOT NULL | 创建时间戳 |
 | updated_at | BigInteger | NOT NULL | 最后更新时间戳 |
-
-用于组织单个知识库内部文件的可嵌套文件夹。由迁移 `3c9b0ca343fd` 添加，该迁移同时为[知识文件表](#knowledge-file-table)添加了 `directory_id`。
 
 关于 knowledge_directory 表的注意事项：
 
@@ -897,10 +917,11 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 | meta | JSON | nullable | 笔记元数据 |
 | created_at | BigInteger | nullable | 创建时间戳 |
 | updated_at | BigInteger | nullable | 最后更新时间戳 |
+| folder_id | Text | nullable, INDEX | 父文件夹 ID |
 
 笔记正文位于 `data` 的 `content.md` 下，是 markdown 文本。如果某行在该位置存放的是对象或数组（模型向笔记工具传入结构化数据时可能产生这种情况），那么返回该内容时会将其渲染为围栏 `json` 代码块，并且在下一次保存该笔记时该行会被重写为与之匹配。
 
-置顶状态不再存储在该表中。旧版的 `is_pinned` 列已在迁移 `4de81c2a3af1` 中移除，改为按用户存储的[置顶笔记表](#pinned-note-table)。此前已有的置顶会回填到笔记所有者；API 以针对调用用户行的按请求联接形式提供 `is_pinned`。
+置顶状态不再存储在该表中。旧版的 `is_pinned` 列已在迁移 `4de81c2a3af1` 中移除，改为按用户存储的[置顶笔记表](#pinned-note-table)。原有的置顶记录已归入各笔记所有者名下。每次 API 请求都会联接当前调用者的置顶记录，并返回 `is_pinned`。
 ## Pinned Note 表 {#pinned-note-table}
 
 每位用户的笔记置顶记录。每一行表示某个用户为侧边栏置顶了某条笔记——置顶是私有的，不会影响能够访问同一笔记的其他用户。
@@ -1034,6 +1055,26 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 关于 tag 表需要知道的事项：
 
 - 主键是复合主键（id, user_id）
+- 每条标签记录属于一位用户，由该用户的聊天和笔记共享。没有聊天或笔记使用标签时，记录会被删除。
+
+## 资源标签表 {#resource-tag-table}
+
+将标签关联到使用它的每个聊天和笔记。
+
+| **列名** | **数据类型** | **约束** | **描述** |
+| --------------- | ------------- | --------------- | ------------------------------------------------- |
+| id | Text | PRIMARY KEY | 唯一标识符（UUID） |
+| resource_type | Text | NOT NULL | `chat` 或 `note` |
+| resource_id | Text | NOT NULL | 聊天或笔记的 ID |
+| tag_id | Text | NOT NULL | 规范化标签标识符，与 `tag` 表相同 |
+| user_id | Text | NOT NULL | 聊天或笔记的所有者，也是该标签的所有者 |
+| created_at | BigInteger | NOT NULL | 创建时间戳，用于维持标签顺序 |
+
+关于资源标签表：
+
+- `UNIQUE(resource_type, resource_id, tag_id)` 约束防止同一标签在同一个聊天或笔记中被重复关联，(`user_id`, `tag_id`) 上的索引用于查找和筛选标签。
+- 迁移 `b7d4f1a2c960` 创建了此表，并将所有标签从 `chat.meta.tags` 和 `note.meta.tags` 移入此表，因此 `meta` 不再保存标签。
+- 删除聊天或笔记会移除其在此表中的关联。
 
 ## Tool 表 {#tool-table}
 
@@ -1102,7 +1143,7 @@ config 表采用**每键一行**格式：每个设置都是独立的一行，以
 - 与 `oauth_session` 表是一对多关系（通过 `user_id` 外键），每次登录一行
 - `email` 不区分大小写且唯一，由 `lower(email)` 上（`email` 不为 null 时）的部分唯一索引 `uq_user_email_lower` 保证（迁移 `f0bd01a18a3d`）。升级到已存在两个仅大小写不同的账户的数据库时，升级会中止并列出这两个账户，而不是替您二选一；参见[重复邮箱](/troubleshooting/manual-database-migration#duplicate-emails-migration-failure)。
 - 数据库中的 `email` 列没有普通的 `UNIQUE` 约束，因此上表才没有显示它。SQLAlchemy 模型在其上声明了 `unique=True`，但 schema 仅由迁移构建，而没有任何迁移创建该约束，因此上面的索引就是全部的约束手段。
-- `variables` 由迁移 `b0018471bbbe` 添加。它以字符串键到字符串值的扁平映射保存用户自己的[用户变量](/features/chat-conversations/chat-features/chat-params#user-variables)，并在请求时替换进系统提示词。它不会出现在用户 API 响应中，而是通过自己的端点读取。
+- `variables` 由迁移 `b0018471bbbe` 添加。它以扁平映射保存用户自己的[用户变量](/features/chat-conversations/chat-features/chat-params#user-variables)，其中键和值均为字符串。处理请求时，这些值会替换系统提示词中的对应变量。用户 API 响应不包含这些变量，可通过专用端点读取。
 - `oauth` 取代了单个 `oauth_sub` 文本列（迁移 `b10670c03dd5`），因此一个账户可以同时持有多个身份提供方的用户标识。它存储 `{"<provider>": {"sub": "<subject>"}}`。跨越大段时间间隔升级的数据库可能把该值写成文本而非对象，从而导致相关账户无法登录；迁移 `6d09d1bf1f23` 会在启动时重写这些行，而不动其他任何行。参见[长时间延迟升级后已有账户无法登录](/troubleshooting/sso#12-existing-accounts-cannot-sign-in-after-a-long-delayed-upgrade)。
 - API 密钥是[API Key 表](#api-key-table)中的行。
 - `timezone` 保存 IANA 时区名称（例如 `Europe/Vienna`），由 `POST /api/v1/auths/update/timezone` 写入。日历重复规则展开、自动化调度和按用户的使用统计都会读取它。未设置或无法识别的值，对日历和自动化回退到服务器时区，对使用统计回退到 UTC。
@@ -1172,12 +1213,16 @@ erDiagram
 
     %% Content Relationships
     message ||--o{ message_reaction : "has"
-    chat ||--o{ tag : "tagged_with"
+    chat ||--o{ resource_tag : "tagged_with"
+    note ||--o{ resource_tag : "tagged_with"
+    tag ||--o{ resource_tag : "linked_by"
     chat ||--o{ chat_message : "contains"
     chat ||--o{ shared_chat : "shared_via"
     chat ||--o{ chat_view_state : "viewed_as"
     user ||--o{ chat_view_state : "saves"
     chat }|--|| folder : "organized_in"
+    folder ||--o{ folder_view_state : "viewed_as"
+    user ||--o{ folder_view_state : "saves"
     calendar ||--o{ calendar_event : "contains"
     calendar_event ||--o{ calendar_event_attendee : "has"
     channel ||--o{ message : "contains"
@@ -1263,6 +1308,14 @@ erDiagram
         text user_id PK
         text chat_id PK
         json state
+        bigint updated_at
+    }
+
+    folder_view_state {
+        text user_id PK
+        text folder_id PK
+        json state
+        bigint revision
         bigint updated_at
     }
 
@@ -1597,6 +1650,15 @@ erDiagram
         string user_id PK "composite"
         string name
         json meta
+    }
+
+    resource_tag {
+        text id PK
+        text resource_type
+        text resource_id
+        text tag_id FK
+        text user_id FK
+        bigint created_at
     }
 
     skill {

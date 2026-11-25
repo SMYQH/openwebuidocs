@@ -41,7 +41,7 @@ helm upgrade --install open-webui open-webui/open-webui \
 ```
 
 :::tip 自动配置连接
-`terminals.enabled` 为 `true` 时，Chart 会设置 `TERMINAL_SERVER_CONNECTIONS`，使其指向集群内的编排器。在管理员区域的 **Settings > Integrations** 打开该连接并保存一次，使 Open WebUI 将其识别为编排器。请在连接的 **Access** 设置中向负责创建终端的用户授予 **Write** 权限。参见[创建终端](/features/open-terminal/terminals/orchestration/creating-terminals)。
+当 `terminals.enabled` 为 `true` 时，Chart 会将 `TERMINAL_SERVER_CONNECTIONS` 指向集群内的编排器。在管理区域的**设置 > 集成**中打开连接并保存一次，让 Open WebUI 将其识别为编排器。在连接的**访问权限**设置中向创建终端的人员授予**写入**权限，参见[创建机器](/features/open-terminal/terminals/orchestration/creating-terminals)。
 :::
 
 Terminal CRD 必须定义 `spec.templateId`。Helm Chart 附带的 CRD 要求 `spec.userId`，因此请从 [Terminals 仓库](https://github.com/open-webui/terminals/blob/main/manifests/terminal-crd.yaml)安装与你的 Terminals 版本匹配的 CRD，并设置 `terminals.crd.install: false`。

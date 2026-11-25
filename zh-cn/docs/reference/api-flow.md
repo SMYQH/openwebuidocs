@@ -31,7 +31,7 @@ title: "后端控制的 API 流程"
 本教程描述了一个包含 6 个步骤的完整流程，能够实现对 Open WebUI 对话的服务器端编排，同时确保助手回复能在前端 UI 中正常显示。
 
 :::tip 你关心的是工具调用？
-如果你的目标是让模型使用工具（内置工具、工作区工具、MCP 服务器或终端），并让 Open WebUI 在服务器端执行它们，请参见 [Server-Side Tool Calling (API)](/reference/server-side-tool-calling)。它在此处记述的聊天结构之上添加了开启工具执行所需的字段。
+如果要让模型使用工具（内置工具、工作区工具、MCP 服务器或机器），并让 Open WebUI 在服务器端执行它们，请参见[服务器端工具调用（API）](/reference/server-side-tool-calling)。该指南在此处介绍的聊天结构上，补充了启用工具执行的字段。
 :::
 
 ### 流程步骤 {#process-flow}
@@ -75,10 +75,7 @@ Open WebUI 前端将消息渲染为一个**树形结构**。每条消息必须�
 
 对于已存在的 `chat_id`，`POST /api/chat/completions` 会在你传入助手消息的 `id` 时自行插入助手占位符，并把它挂在你作为 `user_message` 发送的用户消息之下（第 2 步），因此不再需要预先创建它。如果仍要预创建，请始终发送 `user_message`：后端会用该消息的 `id` 覆盖已保存占位符的 `parentId`，缺少 `user_message` 时则覆盖为 null。
 
-预创建的助手消息必须同时出现在以下两个位置：
-
-- `chat.messages[]` — 主要消息数组（用于旧版兼容）
-- `chat.history.messages[<assistantId>]` — 按 ID 索引的消息历史（前端用它来渲染树状结构）
+预先创建的助手消息放在 `chat.history.messages[<assistantId>]`，即前端用于渲染消息树的索引消息历史。
 
 **助手消息的预期结构：**
 
@@ -178,7 +175,7 @@ curl -X POST https://<host>/api/v1/chats/new \
 
 :::note
 
-顶层的 `messages[]` 数组是用于旧版兼容的扁平列表。`history.messages{}` 对象才是权威结构——它是一个以消息 ID 为键的字典，前端会通过 `parentId` 和 `childrenIds` 用它来构建对话树。
+顶层的 `messages[]` 数组是为旧客户端保留的扁平列表，仅当缺少 `history.messages{}` 时才读取。`history.messages{}` 对象是权威结构。它是以消息 ID 为键的字典，前端通过 `parentId` 和 `childrenIds` 构建对话树。
 
 :::
 
@@ -475,7 +472,7 @@ curl -X POST https://<host>/api/chat/completions \
 | `comments:unavailable` | 失去访问权限的那个套接字 | `{"resource_type", "resource_id"}`。该套接字此时已离开房间 |
 | `notifications:changed` | `user:<id>` | 空。重新获取 `GET /api/v1/notifications/inbox` |
 | `access:updated` | 用户组发生变化的用户的每个套接字，或管理员保存默认用户权限时的每个套接字 | 空。组变化后服务器会在此消息之后立刻断开这些套接字，因此请重新连接并再次获取权限 |
-| `terminals:changed` | `user:<id>` | 空。重新获取终端服务器、模型和工具 |
+| `machines:changed` | `user:<id>` | 无。重新获取机器、模型和工具 |
 | `calendar:alert` | `user:<id>` | `{"event_id", "title", "description", "start_at", "minutes_until", "calendar_id", "location"}`，用于日历提醒 |
 | `channel:app` | `user:<id>` | 当某个应用无法在频道中回复时为 `{"app_id", "app_name", "channel_id", "message_id", "parent_id", "reply": {"type": "error", "content"}}` |
 | `encryption:available` | `channel:<id>` | 该频道中的私聊开始时为 `{"channel", "session"}`，结束时 `session` 置为 `null`。其数据包使用独立的 `encryption:event` 通道 |

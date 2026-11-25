@@ -21,7 +21,7 @@ def main(argv=None):
     parser.add_argument("--review-results", type=Path, help="Validate completed AI review coverage and source/target hashes")
     parser.add_argument("--reuse-review", type=Path, help="With --review-bundle, reuse passed reviews for unchanged source and target files")
     parser.add_argument("--reuse-review-config", type=Path,
-                        help="Config matching --reuse-review when only exact exceptions have changed")
+                        help="Config matching --reuse-review when only exact exceptions changed or protected terms were appended")
     parser.add_argument("--summary-only", action="store_true", help="Do not print individual findings; include them in --report")
     parser.add_argument("--strict", action="store_true", help="Treat heuristic warnings as failures too")
     args = parser.parse_args(argv)

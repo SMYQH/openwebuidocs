@@ -101,6 +101,8 @@ services:
 
 `textScale` 对应 **界面缩放比例** 滑块，`highContrastMode` 对应 **无障碍模式**。开启无障碍模式后，手机允许最多 5 倍的捏合缩放；关闭时缩放会被锁定，因此手机不会自行把小号文本框放大。
 
+启用**复制格式化文本**后，助手回复的**复制**操作会尝试将 HTML 和纯文本同时写入剪贴板。粘贴目标应用会选择格式，因此纯文本编辑器仍以纯文本粘贴。如果浏览器无法写入富文本剪贴板，Open WebUI 会尝试改为复制纯文本。
+
 `fontFamily` 指定的是一种必须安装在每个人自己机器上的字体。它不会下载任何东西，因此如果默认值中指定的字体你的用户没有安装，就会回退到标准字体，所有人看到的仍是常见界面。只在你清楚哪些字体已安装的场景下设置它，例如配备了企业字体的受管设备群。
 
 ### 对话 {#chat}
@@ -133,8 +135,8 @@ services:
 | `expandDetails` | 始终展开详细信息 | `false` |
 | `chatHoverPreview` | 对话悬停预览 | `true` |
 | `displayMultiModelResponsesInTabs` | 以标签页的形式展示多个模型的回答 | `false` |
-| `terminalFileDisplay` | 终端文件显示 | `sidebar` |
-| `terminalPreviewAllowSameOrigin` | 终端预览允许同源 | `false` |
+| `machineFileDisplay` | 机器文件显示方式 | `sidebar` |
+| `machinePreviewAllowSameOrigin` | 允许机器预览使用同源 | `false` |
 | `stylizedPdfExport` | 美化 PDF 导出 | `true` |
 | `showFloatingActionButtons` | 快捷操作浮窗 | `true` |
 | `floatingActionButtons` | 快捷操作浮窗 > **管理** | `null` |
@@ -147,11 +149,14 @@ services:
 | 键 | 在 设置 > 界面 中的标签 | 内置默认值 |
 | --- | --- | --- |
 | `ctrlEnterToSend` | Enter 键行为 | `false`（**Enter 键发送**）；`true` 表示 **Ctrl+Enter 发送**，在对话、频道消息和线程回复中均适用 |
+| `showInputSelections` | 显示输入框选择项 | `false` |
 | `richTextInput` | 富文本输入框 | `true` |
 | `promptAutocomplete` | 自动补全提示词 | `false` |
 | `showFormattingToolbar` | 显示文本格式工具栏 | `false` |
 | `insertPromptAsRichText` | 以富文本的形式回填提示词 | `false` |
 | `largeTextAsFile` | 粘贴大文本为文件 | `false` |
+
+**显示输入框选择项**会在聊天输入框的 **+** 菜单旁显示已选择的工具、技能和过滤器，以及符合条件且已启用的能力。先在用户的**设置 > 界面**中检查实际生效的开关。如果开关已启用，但非管理员仍看不到所选工具的指示，请检查管理区域的**设置 > 界面**中**可见控件**下的**所选工具**。其他指示各有自己的可见性开关。
 
 ### 产物 {#artifacts}
 
@@ -174,7 +179,7 @@ services:
 
 | 键 | 在 设置 > 界面 中的标签 | 内置默认值 |
 | --- | --- | --- |
-| `defaultUploadContext` | 默认上传模式 | `"focused"`（**使用聚焦检索**）；`"full"` 表示 **使用完整文档** |
+| `defaultUploadContext` | 默认上传模式 | `"focused"`（**相关片段**）；`"full"` 表示**全文** |
 | `imageCompression` | 压缩图像 | `false` |
 | `imageCompressionSize` | 压缩图像 > **管理** | `{"width": "", "height": ""}` |
 | `imageCompressionInChannels` | 压缩频道中的图片 | `true` |

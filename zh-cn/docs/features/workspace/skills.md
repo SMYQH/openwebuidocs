@@ -74,7 +74,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 每对话技能 {#per-chat-skills}
 
-通过 **+** 菜单中的 **Skills** 可为当前聊天启用技能。列表分为 **Workspace** 和以所选终端服务器命名的分组，参见[来自终端服务器的技能](#skills-from-a-terminal-server)。徽标显示启用的技能数。所选技能与通过 `$` 提及的技能采用相同的加载方式。
+通过 **+** 菜单 > **技能**为当前聊天启用技能。列表按**工作区**及所选机器分组，机器分组以其名称命名。参见[机器中的技能](#skills-from-a-machine)。徽标显示已开启的数量。所选技能的加载方式与用 `$` 提及的技能相同。
 
 ### 绑定到模型的技能 {#model-attached-skills}
 
@@ -115,11 +115,11 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 留空即使用默认值，也可以设置 [`SKILL_CONTENT_MAX_CHARS`](/reference/env-configuration#skill_content_max_chars) 和 [`SKILL_PREVIEW_MAX_CHARS`](/reference/env-configuration#skill_preview_max_chars)。
 
-### 来自终端服务器的技能 {#skills-from-a-terminal-server}
+### 机器中的技能 {#skills-from-a-machine}
 
-已连接的[Open Terminal](/features/open-terminal)服务器可以携带自己的技能，保存在工作区中它们所描述的文件旁边。Open WebUI 会从服务器读取这些技能，并在 `$` 选择器中与你的工作区技能并列提供，ID 形如 `terminal:<url-encoded name>`。它们与其他技能表现一致：`$` 提及会注入内容，否则它们会出现在同一份清单中并通过 `view_skill` 加载。被注入的内容包含技能所在目录及其附带文件，因此模型知道应从工作区的何处读取。`read_skill_file` 可分页浏览终端技能的 `SKILL.md`，`grep_skill_files` 可在其中搜索；其其他文件保留在终端上，模型使用终端自带的文件工具打开它们。技能编辑器、版本历史和 `update_skill_files` 仅适用于工作区技能。
+已连接的 [Open Terminal](/features/open-terminal) 机器可以拥有自己的技能，它们与所描述的文件一起留在工作区中。Open WebUI 从服务器读取它们，并在 `$` 选择器中与工作区技能一起提供，ID 格式为 `terminal:<url-encoded name>`。它们与其他技能的用法相同：用 `$` 提及时会注入内容，否则它们留在同一清单中，通过 `view_skill` 加载。注入的内容包含技能目录及随附文件信息，让模型知道在工作区中的何处读取。`read_skill_file` 分页读取终端技能的 `SKILL.md`，`grep_skill_files` 则搜索该文件。其他文件仍留在机器上，由模型通过机器自带的文件工具打开。技能编辑器、版本历史和 `update_skill_files` 适用于工作区技能。
 
-对于管理员配置的终端，Open WebUI 服务器使用该连接的身份验证信息调用终端，并携带 `Accept: application/json`、`X-User-Id`、`X-Session-Id`（聊天 ID），对于编排终端还会携带 [`X-Terminal-*` 请求头](/features/open-terminal/terminals/orchestration/api-troubleshooting#headers-sent-to-the-terminals-server)。这些身份请求头与其他终端调用相同，让按用户或聊天划分技能的服务器可以识别请求。调用不会跟随重定向。对于用户在 [Tether 应用](/ecosystem/tether#bring-your-own-models-and-tools)中添加的终端，请求经 Tether 从用户的电脑发出。当 Tether 保持连接时，这台电脑上的终端可与部署在其他地方的 Open WebUI 一起使用。
+管理员配置的机器由 Open WebUI 服务器调用，使用连接的认证信息、`Accept: application/json`、`X-User-Id`、`X-Session-Id`（聊天 ID），以及编排机器的 [`X-Terminal-*` 请求头](/features/open-terminal/terminals/orchestration/api-troubleshooting#headers-sent-to-the-terminals-server)。这些身份请求头与其他机器调用相同，因此按用户或聊天划分技能作用域的服务器可以获得所需信息。不会跟随重定向。用户在 [Tether 应用](/ecosystem/tether#bring-your-own-models-and-tools)中添加的机器由 Tether 从该用户的电脑调用，因此只要 Tether 保持连接，该机器就可用于托管在别处的 Open WebUI。
 
 ---
 

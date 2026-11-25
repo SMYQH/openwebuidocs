@@ -24,7 +24,7 @@ Open WebUI 定义了三种主要的**系统角色**，用于确定用户账户�
 虽然管理员通常拥有不受限制的访问权限，但某些系统配置可能会出于安全和隐私原因限制其能力：
 *   **隐私控制**：[`ENABLE_ADMIN_CHAT_ACCESS=False`](/reference/env-configuration#enable_admin_chat_access) 会在界面中对管理员隐藏用户的对话。它并不会阻止管理员访问数据；参见[聊天数据隐私](/security/chat-data-privacy-and-encryption#admin-users)。
 *   **个别功能可能有例外**：某些功能可能不受管理员绕过规则约束，仍会执行额外检查。对于 API 密钥，只要启用了 `ENABLE_API_KEYS`，管理员就可以生成密钥。
-*   **访问控制例外**：如果禁用了 `BYPASS_ADMIN_ACCESS_CONTROL`，管理员也会像其他人一样受到访问授权检查。私有的工作区项目（模型、知识库、提示词、工具、技能、笔记）仅所有者以及被共享的人可见。由管理员配置且没有任何授权的连接和 arena 模型仍仅对管理员可见。参见[各资源类型中“私有”的具体含义](/features/authentication-access/rbac/groups#what-private-means-for-each-resource-type)。
+*   **访问控制例外**：如果关闭 `BYPASS_ADMIN_ACCESS_CONTROL`，管理员也与其他用户一样，须经过访问授权检查。私有工作区项目（模型、知识库、提示词、工具、技能和笔记）仅对其所有者和获共享的用户可见。管理员配置且未授权的连接仍仅限管理员访问。参见[不同资源类型的私有含义](/features/authentication-access/rbac/groups#what-private-means-for-each-resource-type)。
 
 为确保安全，建议通过用户组为管理员明确分配权限，不要只依赖管理员角色默认绕过检查。即使日后限制绕过权限检查，管理员也能保有原有的访问权限。
 :::

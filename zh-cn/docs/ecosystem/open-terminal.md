@@ -40,22 +40,22 @@ sidebar_position: 2
 
 对于协作，聊天范围内的环境让获得授权的协作者共享同一批文件和运行环境。有人提出修改要求，另一个人检查结果，成果与讨论放在一起。
 
-对于团队，可以准备好一个带软件包和报表脚本的分析环境，然后把它的模板共享给某个群组。使用用户范围时，每个人获得独立的容器和该配置下持久化的文件。把终端与模型预设的 **Default terminal** 配对，人们就能选到一个已经具备工作场所的报表助手。你也可以为某个模型预设单独配备环境，或在所有获授权的人之间共享同一个环境。
+对于团队，可以先安装所需的软件包、准备报表脚本，搭建分析环境，再向用户组共享其模板。采用用户作用域时，每个人都会获得独立的容器和持久化文件。将机器设为模型预设的**默认机器**，用户便可选择一个已有工作环境的报表助手。也可以为一个模型预设专门分配环境，或向所有获授权的用户共享环境。
 
 人们通过 Open WebUI 干活；运维人员在集中位置维护模板、访问权限和资源限制。你可以为整个团队提供一个有用的助手，而不必在每台笔记本上都搭一套开发环境。
 
 ## 自动重复执行任务 {#make-useful-work-repeatable}
 
-在个人或共享工作区里写一个报表脚本，然后为 Open WebUI 的[自动化任务](/features/chat-conversations/chat-features/automations)指定该终端和工作目录。定时发送提示词，让模型或受支持的智能体用新数据运行脚本并汇总结果。同一工作区既可供交互式使用，也可用于定期任务。
+在个人或共享工作区中编写报表脚本，然后为 Open WebUI [自动化](/features/chat-conversations/chat-features/automations)指定这台机器及工作目录。定时运行提示词，让它针对新数据执行脚本并汇总结果。工作区既可用于交互式工作，也可用于定期任务，可以使用模型或受支持的智能体。
 
 Terminals 可以停止空闲的环境，同时保留其持久化文件，然后按需重新启动。为每个模板设置 CPU 和内存上限。工作区可以为下一个任务保持可用，而不必让它的容器整天运行。
 
 ## 从一个真实任务开始 {#start-with-one-real-task}
 
 1. **[安装 Open Terminal](/features/open-terminal/setup/installation)。** Docker 会给它一个独立的容器环境；直接安装在宿主机上则可以使用该机器的文件和软件，权限受操作系统用户限制。
-2. **[把它连接到 Open WebUI](/features/open-terminal/setup/connecting)。** 在 **Settings > Admin > Integrations > Open Terminal** 下填写它的地址和 API 密钥。
-3. **在聊天中选择终端并让它干活。** 选一个能力足够的模型或已安装的智能体，带上文件或项目，然后提出一个用得上结果的要求。
+2. **[连接到 Open WebUI](/features/open-terminal/setup/connecting)。** 在管理区域的**设置 > 集成**中，找到**机器**区域，添加地址和 API 密钥。
+3. **在聊天中选择并使用机器。** 选择合适的模型或已安装的智能体，提供一个文件或项目，并说明你需要什么可用的结果。
 
-对于按需创建的工作区，**[部署 Terminals](https://github.com/open-webui/terminals#quick-start)**，并从 Open WebUI 的 **New terminal** 菜单创建你的第一个模板。想要一个连接你自己电脑的桌面应用，请使用 [Open WebUI Tether](/ecosystem/tether)。
+如需按需创建工作区，请**[部署 Terminals](https://github.com/open-webui/terminals#quick-start)**，然后在 Open WebUI 的**新建机器**菜单中创建第一个模板。如需用桌面应用连接自己的电脑，请使用 [Open WebUI Tether](/ecosystem/tether)。
 
 Open Terminal 采用 [MIT 许可证](https://github.com/open-webui/open-terminal/blob/main/LICENSE)，也可以通过它的 REST API 与你自己的应用集成。[Terminals](https://github.com/open-webui/terminals/blob/main/LICENSE) 对个人非商业用途免费；商业或组织内部的生产使用需要带 Terminals 权限的 [Open WebUI 企业版许可证](/enterprise)。

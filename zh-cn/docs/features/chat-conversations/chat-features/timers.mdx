@@ -16,7 +16,7 @@ title: "定时器"
 定时器**没有自己的开关**。它们属于 **Sub-agents** 功能的一部分，由 [`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents) 启用，该项默认关闭。
 
 :::warning 定时器由 Sub-agents 设置启用
-`timer` 工具与 `delegate_task` 一起提供，启用条件相同：开启 [`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents)、模型的**子智能体**内置工具类别，以及[子智能体权限](/features/chat-conversations/chat-features/subagents#enable-sub-agents)。定时器没有独立类别或权限，因此**关闭子智能体也会移除定时器**。要启用定时器，必须开启子智能体。
+`timer` 工具与 `delegate_task` 一起注入，并由相同的条件控制：[`ENABLE_SUBAGENTS`](/reference/env-configuration#enable_subagents)、模型的**子智能体**内置工具类别及[子智能体权限](/features/chat-conversations/chat-features/subagents#enable-sub-agents)。没有单独的定时器类别或权限，因此**关闭子智能体也会移除 `timer` 工具**。要开启定时器，需要先开启子智能体。
 :::
 
 与其他内置工具一样，定时器需要从界面发起聊天并启用原生函数调用。子智能体的聊天中不提供定时器。
@@ -35,7 +35,7 @@ title: "定时器"
 
 定时器触发时，系统提示会再次根据原消息所用的相同素材构建：聊天自身的系统提示（来自 **Model controls > Controls** 或你的 **Settings**）、模型的系统提示、聊天的变量，以及消息中提到的任何技能的完整文本。文件夹的系统提示、工具服务器与终端指令则与聊天中的任何消息一样照常生效。
 
-工具服务器随聊天的工具 ID 一起传递，附加文件、终端连接和提示词变量也会一并传递。你在 [Tether](/ecosystem/tether#bring-your-own-models-and-tools) 中添加的工具服务器，仅当定时器触发时 Tether 设备仍在线才可用。编写依赖该工具服务器的提示词时请考虑这一点。
+工具服务器随聊天的工具 ID 一起传递，附加文件、所选机器和提示词变量也会随之传递。定时器触发时，你在 [Tether](/ecosystem/tether#bring-your-own-models-and-tools) 中添加的工具服务器只有在 Tether 设备已连接时才能解析。如果提示词的任务完全依赖该服务器，请留意这一点。
 
 定时器绝不会打断你：如果定时器到期时聊天正在生成内容，它会等待，等聊天空闲后再触发。
 
@@ -52,8 +52,8 @@ title: "定时器"
 
 正是这一点让"除非我自己处理了，否则一小时后提醒我"成为可能：如果你自己回来过，提醒就永远不会到达。
 
-:::info 待触发的定时器没有对应的界面
-定时器无法在界面中列出、查看或取消。没有 `cancel_on` 事件的定时器一定会触发。唯一可见的痕迹，是触发时出现在聊天中的那一行可折叠的 **Timer**。
+:::info 状态面板列出待触发的定时器
+聊天顶栏的**状态**按钮会列出该聊天待触发的定时器，点击**取消**可将其移除。如果定时器没有设置 `cancel_on` 事件，除非在此取消，否则它会触发。触发时，聊天中会显示可折叠的**定时器**行。
 :::
 
 ## 运维注意事项 {#operator-notes}

@@ -29,6 +29,8 @@ RAG 的主要优势之一是它能够访问并整合来自多种来源的信息�
 
 要在 RAG 中使用本地文档，可在**工作区 > 知识**中将其添加到知识库，或直接上传到聊天。在聊天中查询时，请在查询前输入 `#`，从消息输入框上方的建议列表中选择文档。
 
+点击回答下方来自上传文件的来源，可在聊天旁打开该文件的独立标签页。如果已知引用页码，会跳至该页。预览会高亮引用文本，但 PowerPoint 幻灯片以图像显示，不高亮文本。在文档预览中，将指针悬停在高亮处可查看提供给模型的片段。纯文本和代码文件仅在来源有相关性分数时显示该片段。网页、无法预览的文件（如 `.doc` 或 `.epub`）及只读共享聊天中的来源会在弹窗中显示检索到的文本。
+
 ![文档与检索设置](/images/admin/admin-documents.png)
 
 :::tip 批量文件管理
@@ -193,7 +195,7 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 ### 边缘情况 {#edge-cases}
 
-**连续的微小语块**：处理得很自然。它们不断积累成一个单一的语块，直到达到阈值或最大尺寸被超过。
+**连续的微小语块**：处理得很自然。它们不断积累成一个单一的语块，直到达到阈值，或继续合并就会超过大小上限。
 
 **小语块后跟大语块**：如果小语块后跟一个语块大到合并会超过 `CHUNK_SIZE`，那么小语块就会按原样确定下来，仍然不足尺寸。如果不向后合并或内容拆分，这是不可避免的，但在实践中也很罕见。它通常发生在自然的语义边界（密集章节前的简短过渡），并且在边界处将小语块独立保留其实也是正确的。
 
@@ -213,7 +215,7 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 
 在 **Settings** > **Documents**（管理员区域）中更改 RAG 嵌入模型。嵌入引擎可以是内置的 SentenceTransformers 默认值、Ollama、OpenAI 或 Azure OpenAI。
 
-如果你的嵌入模型文档要求搜索查询使用一个前缀、存储文本使用另一个前缀，请在同一页面的 **Embedding** 部分、**Advanced** 之下分别以 **Query Prefix** 和 **Content Prefix** 填写。它们对应 [`RAG_EMBEDDING_QUERY_PREFIX`](/reference/env-configuration#rag_embedding_query_prefix) 和 [`RAG_EMBEDDING_CONTENT_PREFIX`](/reference/env-configuration#rag_embedding_content_prefix)。请包含模型所期望的尾部空格。Ollama、OpenAI 和 Azure OpenAI 会把前缀加到每段文本的开头，除非 [`RAG_EMBEDDING_PREFIX_FIELD_NAME`](/reference/env-configuration#rag_embedding_prefix_field_name) 把它作为单独的请求字段发送。内置引擎则把它作为 `prompt` 传给 SentenceTransformers。更改 **Content Prefix** 后请为已有文档重建索引，因为改动之前嵌入的文档仍保留旧前缀。
+如果你的嵌入模型文档要求搜索查询使用一个前缀、存储文本使用另一个前缀，请在同一页面**嵌入**分区的**高级**设置中，分别填写**查询前缀**和**内容前缀**。它们对应 [`RAG_EMBEDDING_QUERY_PREFIX`](/reference/env-configuration#rag_embedding_query_prefix) 和 [`RAG_EMBEDDING_CONTENT_PREFIX`](/reference/env-configuration#rag_embedding_content_prefix)。请包含模型所期望的尾部空格。Ollama、OpenAI 和 Azure OpenAI 会把前缀加到每段文本的开头，除非 [`RAG_EMBEDDING_PREFIX_FIELD_NAME`](/reference/env-configuration#rag_embedding_prefix_field_name) 把它作为单独的请求字段发送。内置引擎则把它作为 `prompt` 传给 SentenceTransformers。更改**内容前缀**后请为已有文档重建索引，因为改动之前嵌入的文档仍保留旧前缀。
 
 ## 初始设置后更改 RAG 设置 {#changing-rag-settings-after-initial-setup}
 
@@ -242,7 +244,7 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 1. **删除**该知识库现有的向量集合。
 2. 使用当前的内容提取引擎及其设置，从原始上传文件**重新提取**每个文件。
 3. 使用当前的语块大小、重叠和文本分割设置，**重新切分**所有文件。
-4. 使用当前配置的嵌入模型，**重新生成嵌入**所有块。
+4. 使用当前配置的嵌入模型，为所有分块**重新生成嵌入向量**。
 5. 同时**重建**知识库中每个文件的逐文件集合，这样单独把某个文件附加到聊天中时，检索到的内容与在它所属的知识库中搜索时相同。
 
 这意味着，一次重建索引能同时应用内容提取、分块设置和嵌入模型变更。
@@ -264,16 +266,22 @@ Markdown 标题拆分是一种较好的结构化分块方法，因为标题是�
 | **Chunk Size / Overlap** | ✅ 使用新设置 | ⚠️ 旧块依然可用，但质量可能不一 | ✅ 使用新设置重新切块 | ⚠️ 仍为旧块，需重新上传更新 |
 | **Embedding Model** | ✅ 使用新模型 | ❌ 仍为旧嵌入，向量空间不兼容 | ✅ 使用新模型重嵌 | ❌ 仍为旧嵌入，需重新上传更新 |
 
+### 监控重建索引进度 {#monitoring-re-index-progress}
+
+日志级别设为 info 时，服务器日志会显示文件计数，并从处理完第一个文件后显示预计剩余时间。随后，管理操作会重建知识库搜索索引和记忆向量，最后才显示成功。
+
+即使界面显示成功，也请检查服务器日志。知识库文件处理阶段可在某些文件出错后继续，并返回成功。查找错误行和 `Failed to process ... files` 汇总，确定哪些文件需要处理。
+
 ### 危险区域重置按钮 {#danger-zone-reset-buttons}
 
 **设置** > **Documents**（管理员区域）底部的**危险区域**有两个重置按钮。两者都作用于实例上的每个用户，且都无法撤销。
 
 | 按钮 | 删除什么 | 保留什么 |
 |---|---|---|
-| **Reset Upload Directory** | 每条文件记录、每个已存储文件（上传目录，或所用的 S3、GCS 或 Azure 存储）以及向量存储 | 知识库（此时不再有文件和向量）和记忆（记忆不再有向量） |
-| **Reset Vector Storage/Knowledge** | 向量存储和每个知识库 | 已上传的文件和记忆（它们不再有向量） |
+| **重置上传目录** | 每条文件记录、每个已存文件（上传目录，或正在使用的 S3、GCS 或 Azure 存储）及向量存储 | 知识库会保留，但不含文件或向量。记忆会保留，但不含向量 |
+| **Reset Vector Storage/Knowledge** | 向量存储和每个知识库 | 已上传的文件和记忆，两者都不再有向量 |
 
-使用默认的 Chroma 向量数据库时，重置向量存储会删除所有集合：知识库、单个文件、缓存的网页搜索结果和用户记忆。记忆保留其文本，因此在同一部分执行 **Reindex Knowledge and Memory Vectors** 即可用当前的嵌入模型重建它们的向量。被 **Reset Vector Storage/Knowledge** 删除的知识库已经不存在，因此没有可重建索引的对象。
+使用默认的 Chroma 向量数据库时，重置向量存储会删除所有集合，包括知识库、单个文件、缓存的 Web 搜索结果及用户记忆。记忆保留文本，因此同一区域中的**重建知识库索引和记忆向量**可使用当前嵌入模型重建记忆向量。
 
 ## RAG 功能中的引用（Citations） {#citations-in-rag-feature}
 
@@ -301,7 +309,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 :::
 
 :::tip 基于单个文件的检索模式
-聊天中的单个附件或知识库可通过 **“使用整篇文档（Using Entire Document）”** 开关完全绕过 RAG。无论原生函数调用如何设置，系统都会将文件全文注入每条消息。上传的文件和文本附件如果不超过管理员区域 **Settings** > **Documents** 中设定的**全文阈值（字符数）**，系统会自动包含全文。打开**始终使用全文**可将这条规则应用于所有文档。详情参阅[完整上下文与重点检索](/features/workspace/knowledge#retrieval-modes)。
+聊天中附加的单个文件和知识库也可以通过**全文**开关完全绕过 RAG。无论原生函数调用的设置如何，该开关都会将文件全文注入每条消息。详见[检索模式](/features/workspace/knowledge#retrieval-modes)。
 
 如果不想逐个选择，请在**设置 > 界面 > 文件**中设置**默认上传模式**。此后每个附件都会默认使用所选模式，之后仍可单独切换。
 :::
@@ -351,7 +359,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 :::
 
 :::tip 选择正确的配置
-- **多数模型**：二者均保持开启（默认设定）以获得完整体验。
+- **多数模型**：保持两项功能开启，以使用全部功能。
 - **小型/本地模型**：如果它们不支持函数调用，请关闭[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
 - **仅按需检索**：如果你希望由模型决定检索内容而非预先提供全部内容，请禁用预加载文件、启用[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)，并把模型设为默认或原生函数调用。这在旧版下不起作用——旧版从不使用按需工具，因此在关闭预加载文件后将完全检索不到任何内容。
 :::
@@ -359,6 +367,8 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 ## 增强的 RAG Pipeline {#enhanced-rag-pipeline}
 
 我们的 RAG 嵌入功能带有可切换的混合搜索子功能，通过 `BM25` 增强了 RAG，并借由 `CrossEncoder` 实现重排打分，其相关度阈值可以自由配置。这为您的特定用例提供了更精准、更个性化的 RAG 体验。
+
+可以在管理区域的**设置 > 文档**中启用**混合搜索**，无需重建知识库索引或重新上传聊天文件。嵌入设置不变时，混合搜索的向量部分会使用已有嵌入，关键词搜索会使用已存的分块文本。
 
 :::tip 类文件系统的知识库访问（`kb_exec`）
 若想获得更强大的代理式体验，可设置 `ENABLE_KB_EXEC=True`。这会让模型获得一个 shell 风格的知识库操作界面（`ls`、`tree`、`grep`、`cat`、`head`/`tail`、按行读取，并支持管道）。相比起一组分散的搜索工具，能力较强的模型通常能更可靠地将其串联起来，因此往往能更准确地定位到目标片段。它要求**原生函数调用**（它是原生模式的[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)），默认关闭；对于设置为 Legacy 的模型它没有任何效果。我们建议为能力足够的模型开启它。详见[类文件系统的知识库访问](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
@@ -374,7 +384,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 多种不同的解析器能够提取本地及远程文档的内容：内置引擎如 Tika、Docling 和 Mistral OCR，或者在你需要按文件类型路由或自定义逻辑时，通过[外部引擎](/features/chat-conversations/rag/document-extraction/external)运行你自己的服务。完整列表和配置步骤请查阅[文档提取](/features/chat-conversations/rag/document-extraction)。
 
 :::warning 临时聊天限制
-当使用**临时聊天 (Temporary Chat)** 时，为了保证数据私密且不在服务器驻留，文档处理受限在**纯前端**环节。由此，基于后端的高级解析功能（服务于如复杂的 DOCX 格式）会被停用，你可能会看到原始数据而不是整理好的解析文字。要获取完备的文档支持，请使用标准会话（Standard Chat）。
+对于在**临时聊天**中附加的本地文档，浏览器会提取文本，并在提交消息时将文本发送到后端。如果需要使用服务器配置的提取引擎，请使用普通聊天。参见[临时聊天中的文档附件](/features/chat-conversations/rag/document-extraction#document-attachments-in-temporary-chats)。
 :::
 
 ### CSV 表格摘要 {#csv-table-summary}
@@ -399,7 +409,7 @@ Open WebUI 提供两项分别控制文件处理方式的能力。理解它们之
 8. 给该 API Key 配置 API 约束限制，使其只准存取 Google Drive API & Google Picker API。
 9. 配置环境变量，将 `GOOGLE_DRIVE_CLIENT_ID` 设置为步骤 2 里的 OAuth 客户端的客户端 ID。
 10. 将环境变量 `GOOGLE_DRIVE_API_KEY` 设为步骤 7 生成的 API 密钥，而不是步骤 2 的 OAuth 客户端密钥。
-11. 建立 `GOOGLE_REDIRECT_URI` 设定为你 Open-WebUI 实例的 URL (包含端口)。
+11. 将 `GOOGLE_REDIRECT_URI` 设为你的 Open-WebUI 实例 URL（如有端口，也需包含）。
 12. 接着，在环境里携带着那三项变量重新启动你的 Open-WebUI。
 13. 完成之后，去确保 Google Drive 已经在 `Settings` > `Documents` > `Google Drive`（管理员区域）被开启。
 

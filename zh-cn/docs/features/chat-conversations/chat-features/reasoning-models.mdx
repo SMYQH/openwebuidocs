@@ -110,7 +110,7 @@ Reasoning Effort 仅适用于支持该参数的特定提供商模型。在原生
    - **Value**：`{"enable_thinking": false}`
 4. 保存模型。
 
-**Add Custom Parameter** 按钮仅对管理员显示。Open WebUI 会把该值按 JSON 解析，并把它加到请求体的顶层。模板读取的键取决于模型：Qwen3 用的是 `enable_thinking`，而其他一些模型读取 `thinking`。请查阅模型卡片或 [vLLM 推理输出页面](https://docs.vllm.ai/en/latest/features/reasoning_outputs.html)，并在 [llama.cpp 服务器 README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)中查看 `chat_template_kwargs`。如果想对每个请求都关闭 thinking，vLLM 还接受在启动时传入 `--default-chat-template-kwargs`。
+Open WebUI 将该值解析为 JSON，并添加到请求正文的顶层。模板读取的键取决于模型。Qwen3 使用 `enable_thinking`，其他一些模型读取 `thinking`。请查阅模型卡或 [vLLM 推理输出页面](https://docs.vllm.ai/en/latest/features/reasoning_outputs.html)，以及 [llama.cpp 服务器 README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) 中的 `chat_template_kwargs`。如果要关闭所有请求的思考，也可在启动 vLLM 时传入 `--default-chat-template-kwargs`。
 
 ---
 
@@ -136,13 +136,37 @@ Reasoning Effort 仅适用于支持该参数的特定提供商模型。在原生
 
 大多数 Chat Completions API 会拒绝 assistant 消息上的未知字段，因此推理文本在那里会被略去。Pipe 函数和过滤器可以按提供商特定的形式把它加回去。
 
-提供商在 `reasoning_details` 字段中返回的推理细节（如 OpenRouter 所做的那样），会在工具调用循环内部以及后续轮次中原样通过该字段发回。当由另一个模型继续对话时，这些细节会被丢弃。
+如果提供商（例如 OpenRouter）在 `reasoning_details` 字段中返回推理详情，工具调用循环和后续轮次都会在同一字段中原样回传该详情。对于使用 Responses API 的连接，提供商返回的加密推理也会以同样的方式回传，方便模型保留先前的推理。换用另一个模型继续聊天时，两者都会被丢弃。
+
+除非组织使用零数据保留，否则 OpenAI 只在请求明确要求时返回加密推理。要为模型启用此功能，请执行以下步骤。
+
+1. 转到**工作区 → 模型**并编辑模型。
+2. 展开**高级参数**。
+3. 点击底部的**添加自定义参数**，然后设置：
+   - **名称**：`include`
+   - **值**：`["reasoning.encrypted_content"]`
+4. 保存模型。
+
+要为每个模型启用此功能，请在管理区域的**设置 → 模型**下的**模型默认值**中添加同一参数。
+
+使用 [LiteLLM](https://docs.litellm.ai/) 代理时，在每个模型的 `litellm_params` 中配置一次 `include`，并且不要在 Open WebUI 中添加该自定义参数。Open WebUI 发送的自定义参数会覆盖 LiteLLM 的值。如果在两处都设置，请保留其中的 `reasoning.encrypted_content`。
+
+```yaml
+- model_name: gpt-5.5
+  litellm_params:
+    model: openai/gpt-5.5
+    api_key: os.environ/OPENAI_API_KEY
+    include: ["reasoning.encrypted_content"]
+```
+
+通过 LiteLLM 的 Responses 端点访问的 Anthropic 模型无需配置。LiteLLM 默认会以加密推理形式返回它们的思考。
 
 ### 提供商兼容性 {#provider-compatibility}
 | 提供商 | 重放时的 reasoning 处理 |
 | :--- | :--- |
 | Ollama | 通过 `thinking` 字段发回 |
 | llama.cpp（*Provider* 设为 `llama.cpp`） | 以 `reasoning_content` 发回。DeepSeek thinking 模式需要此设置 |
+| vLLM 和 OpenRouter（*Provider* 为 `vLLM` 或 `OpenRouter`） | 以 `reasoning` 发回 |
 | OpenAI Responses API | 已存储的 reasoning item 会被发回。启用 `ENABLE_RESPONSES_API_STATEFUL` 后，状态由 `previous_response_id` 携带 |
 | OpenAI / Azure / Vertex AI（Chat Completions，*Provider* 为 `Default`） | 会被略去（可用 pipe 或 filter 加回去） |
 | Anthropic（extended thinking） | 不原生支持；请使用 [pipe function](/features/extensibility/plugin/functions/pipe) |

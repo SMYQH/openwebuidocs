@@ -250,7 +250,7 @@ Analytics 统计的是 **AI 助手响应**而非用户消息。这能更准确�
 
 ### 会话详情 {#session-details}
 
-点击某个会话即可查看其 Token 与缓存总量、每次响应的图表（**Tokens** 或 **Timeline**）以及执行轨迹：每次响应及其工具调用、结果与错误、它们的结果与耗时。**All**、**Tools** 和 **Errors** 可用于筛选轨迹。**Open chat** 会在新标签页中打开该对话。耗时信息只为新的回复保存。
+点击某个会话可查看其 Token 与缓存总量、每次响应的图表（**Tokens** 或 **Timeline**）以及执行轨迹。轨迹列出每次响应及其工具调用、返回结果和错误，并标明执行结果与耗时。**All**、**Tools** 和 **Errors** 可用于筛选轨迹。**Open chat** 会在新标签页中打开该对话。耗时信息只为新的回复保存。
 
 标题会被截断为 10 个单词。链接、文件路径、长标识符，以及位于 token 或 password 等词之后的值都会被移除。
 
@@ -264,7 +264,7 @@ Token 是语言模型处理文本的单位。**输入**（您的提示词）和*
 
 ### Token 跟踪的工作原理 {#how-token-tracking-works}
 
-Open WebUI 自动从模型响应中捕获 Token 使用量，并与每条消息一起存储。Analytics 功能汇总这些数据以显示：
+Open WebUI 将报告的 token 用量保存到已保存的助手消息上。同时省略 `chat_id` 和 `parent_id` 的无状态 `/api/chat/completions` 调用可以向 API 调用者返回用量，却不会保存助手消息，因此这部分用量不计入分析汇总。分析会汇总已保存的用量，以显示：
 
 - **输入 Token** - 用户提示词和上下文中的 Token
 - **输出 Token** - 模型响应中的 Token
@@ -272,12 +272,12 @@ Open WebUI 自动从模型响应中捕获 Token 使用量，并与每条消息�
 
 Token 数据在不同模型提供商（OpenAI、Ollama、llama.cpp 等）之间进行标准化，无论使用哪个后端都能提供一致的指标。
 
-每次对提供商的调用只计一次，即使提供商在每个流式数据块中都重新发送其用量。当一次回复因为模型使用工具而发起多次调用时，这些调用的用量会累加。没有用量数据的回复不会被记录，而只有部分调用上报用量的回复会被标记为部分。
+每次对提供商的调用只计一次，即使提供商在每个流式数据块中都重新发送其用量。当一次回复因为模型使用工具而发起多次调用时，这些调用的用量会累加。若回复没有用量数据，则不记录其用量。只有部分调用上报用量时，会标记为部分记录。
 
 这些数字就是提供商所报告的数字，而大多数 OpenAI 兼容提供商在流式回复中除非被询问否则什么都不报告。**Settings > Models > Edit**（管理员区域）（自己的模型则用 **Workspace > Models**）中的 **Usage** 能力正是用来提出这一请求的，因此一个没有该能力的模型可能完全不显示 Token。参见[能力与绑定](/features/workspace/models#capabilities-and-bindings)。
 
 :::info 定时运行和委派运行同样会被计入
-获取 Token 计数的请求是在服务端添加的，因此启用了 **Usage** 的模型会在它运行的每个对话中报告 Token，包括 Open WebUI 通过[自动化](/features/chat-conversations/chat-features/automations)、[定时任务](/features/chat-conversations/chat-features/timers)、[子 agent](/features/chat-conversations/chat-features/subagents) 和 [channels](/features/channels) 代用户发起的那些运行。这些运行与用户手动输入的对话计入同一批总数。
+token 计数请求由服务器端添加。启用**用量**的模型会为它执行的每次聊天报告 token 数，包括 Open WebUI 通过[自动化](/features/chat-conversations/chat-features/automations)、[定时器](/features/chat-conversations/chat-features/timers)和[子智能体](/features/chat-conversations/chat-features/subagents)代表用户启动的聊天。这些运行与用户手动输入的聊天计入同一份汇总。分析覆盖保存在聊天中的回复，因此不包括模型对[频道](/features/channels)中 @ 提及的回复。
 :::
 
 ### Token 使用量指标 {#token-usage-metrics}
@@ -367,15 +367,7 @@ Analytics 数据存储在 `chat_message` 表中，包含：
 - **Token 使用量** - 输入、输出和总 Token
 - **关联关系** - 与父消息和对话的链接
 
-升级时，无论是否设置该开关，每个实例上 Open WebUI 都会：
-1. 创建带有优化索引的 `chat_message` 表
-2. **回填**您对话历史中的现有消息
-3. **双写**新消息到对话 JSON 和消息表
-
-这种双写方式确保：
-- **向后兼容** - 现有功能继续正常工作
-- **快速查询** - Analytics 不影响对话性能
-- **数据一致性** - 所有消息均被捕获
+升级时，Open WebUI 会创建 `chat_message` 表和对应的索引，并从聊天记录回填现有消息。每条消息在保存时都会写入该表，聊天本身不再存放消息副本。因此，分析查询既能保持快速，也能覆盖全部消息。
 
 ### 数据库索引 {#database-indexes}
 
@@ -403,7 +395,7 @@ GET /api/v1/analytics/tokens
 
 **模型详情端点：**
 ```
-GET /api/v1/analytics/models/{model_id}/chats    # Get chats using this model
+GET /api/v1/analytics/models/{model_id}/chats    # Get chats using this model (403 when ENABLE_ADMIN_CHAT_ACCESS is off)
 GET /api/v1/analytics/models/{model_id}/overview # Get feedback history and tags
 ```
 
@@ -449,7 +441,7 @@ GET /api/v1/users/usage
 响应中除 `users` 列表外还带有 `total`，即该范围内有活动的用户数。
 
 :::tip API 访问
-所有 Analytics 端点均需要管理员身份验证。包含您的管理员 Bearer 令牌：
+Analytics 管理端的所有端点均需要管理员身份验证。包含您的管理员 Bearer 令牌：
 ```bash
 curl -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   "https://your-instance.com/api/v1/analytics/summary?group_id=abc123"

@@ -53,8 +53,6 @@ services:
       - DOCLING_SERVE_ENABLE_UI=true
       # CRITICAL: Required for picture description with external LLM APIs
       - DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true
-      # Maximum wait time for sync requests (seconds) - increase for large documents
-      - DOCLING_SERVE_MAX_SYNC_WAIT=600
       # Number of local engine workers
       - DOCLING_SERVE_ENG_LOC_NUM_WORKERS=2
       # CPU thread configuration
@@ -143,7 +141,6 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 | -------- | ------- | ---- |
 | `DOCLING_SERVE_ENABLE_UI` | `false` | 在 `/ui` 端点启用 Web UI |
 | `DOCLING_SERVE_ENABLE_REMOTE_SERVICES` | `false` | **API 模式图片描述所必需** |
-| `DOCLING_SERVE_MAX_SYNC_WAIT` | `120` | 同步请求最大等待秒数 |
 | `DOCLING_SERVE_ENG_LOC_NUM_WORKERS` | `1` | 本地引擎 worker 数量 |
 | `DOCLING_SERVE_ARTIFACTS_PATH` | `/app/data` | 模型 artifacts 存储路径 |
 | `UVICORN_WORKERS` | `1` | Uvicorn worker 数量（**务必保持为 1！**） |
@@ -208,20 +205,14 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 
 **解决方案：**
 
-- 将 Open WebUI 更新到最新版（新版使用 `/v1/convert/file`）
-- 将 docling-serve 更新到 v1.0+（新版使用 `/v1` API）
+- 将 Open WebUI 更新到最新版本
+- 将 docling-serve 更新到 v1.0 或更高版本
 
 ### docling-serve 日志中的 "Invalid JSON for field ..." {#invalid-json-for-field--in-the-docling-serve-logs}
 
 **原因：** 某个嵌套的 Docling 参数被写成了内联对象。Open WebUI 会把 Docling 参数原样作为表单字段透传，因此 Docling 收到的是该对象的各个键，而不是对象本身。
 
 **解决方案：** 把 `picture_description_api` 之类的嵌套值写成经过转义的 JSON 字符串。参见 [JSON 配置示例](#json-configuration-examples)。
-
-### 大文档出现超时错误 {#timeout-errors-on-large-documents}
-
-**原因：** `DOCLING_SERVE_MAX_SYNC_WAIT` 对文档处理时间来说太低。
-
-**解决方案：** 提高 `DOCLING_SERVE_MAX_SYNC_WAIT`（例如设为 `600`，即 10 分钟）。
 
 ### OCR 不工作或语言识别错误 {#ocr-not-working-or-incorrect-language-detection}
 
@@ -252,5 +243,4 @@ Open WebUI 会把你填写的 Docling Parameters 值原样作为 multipart 表�
 
 - **始终设置 `UVICORN_WORKERS=1`**，避免任务路由问题
 - 在使用 API 模式图片描述时，**务必开启 `DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true`**
-- 对大文档，**适当提高 `DOCLING_SERVE_MAX_SYNC_WAIT`**
 - 在所有配置字段中，**务必校验 JSON 语法**

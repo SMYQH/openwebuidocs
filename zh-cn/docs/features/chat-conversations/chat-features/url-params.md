@@ -83,7 +83,7 @@ title: "URL 参数"
 - **示例**：`/?temporary-chat=true`
 - **行为**：启动一个一次性聊天会话，不保存历史，也不会应用高级配置
   - **注意**：临时聊天在重新连接后会接上仍在进行中的回复。
-  - **注意**：出于隐私考虑，临时聊天中的文档处理仅在前端进行。需要后端解析的复杂文件（例如 DOCX）可能无法完整支持。
+  - 关于浏览器会提取哪些内容、哪些内容会发送到后端，参见[临时聊天中的文档附件](/features/chat-conversations/rag/document-extraction#document-attachments-in-temporary-chats)。
   - **注意**：临时聊天采用会话专属 ID，没有已保存的聊天记录。运行产生的消息、图像、状态更新、标题或标签都不会写入数据库。需要已保存聊天的功能在此不可用，包括[任务列表](/features/chat-conversations/chat-features/task-management)、[每个聊天使用独立实例的终端](/features/open-terminal/terminals/orchestration/creating-terminals#machine-scope)、[子智能体](/features/chat-conversations/chat-features/subagents)、[定时器](/features/chat-conversations/chat-features/timers)和分叉。临时聊天的回复下没有**分叉聊天**操作，`/` 菜单中也没有 `/fork`。手动输入 `/fork` 会提示 **No chat to fork**。[频道](/features/channels)中的聊天也遵循这些限制，且频道中也无法使用[询问用户工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
   - **注意**：在临时聊天中，来自[询问用户工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)的问题，或等待 [**Ask for approval**](/features/extensibility/plugin/tools#tool-approval) 的工具调用，会以对话框形式出现在打开的浏览器标签页中。大约两分钟内无人回答、离开该聊天，或标签页失去连接，都视为拒绝。在已保存的聊天中，刷新或连接中断并不是终局：如果你在 60 秒内、且在超时之前重新打开该聊天，问题会再次发出。必须是该标签页中打开的那个临时聊天，否则请求会立即被取消。
   - **注意**：上面列出的不可用功能是完整的。列表之外的任何功能或工具在临时聊天中的表现与普通聊天完全一致——包括会自行存储或发送数据的工具、记忆、便签和网络搜索等。如果你不希望临时聊天使用某个工具，请在模型上禁用它。

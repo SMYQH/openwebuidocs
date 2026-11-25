@@ -162,7 +162,7 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 
 - 类型：`str`
 - 默认值：空字符串（`''`）
-- 描述：自动创建的管理员账号密码，需与 `WEBUI_ADMIN_EMAIL` 一起使用。
+- 描述：指定首次启动且尚无用户时自动创建的管理员账户密码。必须与 `WEBUI_ADMIN_EMAIL` 一起使用。存储前会对密码进行安全哈希处理，方式与手动创建账户时相同。
 
 :::danger
 
@@ -193,7 +193,7 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：控制 **设置 > 账户** 中密码修改界面的可见性。设为 `False` 时，用户看不到密码修改表单，适用于以 SSO 为中心的部署。
+- 描述：控制 **设置 > 账户** 中密码修改界面的可见性。设为 `False` 时，用户看不到密码修改表单。适用于以 SSO 为主且无需在界面中提供密码修改功能的部署。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -283,7 +283,7 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 
 - 请使用合法的 JSON（例如：`{"temperature":0.7,"function_calling":"native"}`）
 - 如果解析失败，Open WebUI 会记录错误并回退到 `{}`
-- `custom_params` 下的内容（在界面中为**添加自定义参数**）会与模型自身的自定义参数逐条合并，因此模型新增的参数会保留此处设置的值；若模型使用了同名参数，则仅该名称以模型的值优先
+- `custom_params` 下的内容（在界面中为**添加自定义参数**）会与模型自身的自定义参数逐条合并，因此模型添加自己的参数时，仍会保留此处设置的其他参数。如果模型使用同名参数，则只有该参数以模型的值为准
 - 此处的参数与模型已保存的参数都只会补全请求中未指定的部分，因此请求体中传入的参数会保留调用方传入的值
 
 :::
@@ -343,6 +343,7 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 | `model_editor.tools.user_input` | 询问用户 | 模型编辑器**内置工具**下的**询问用户** |
 | `model_editor.tools.memory` | 记忆 | 模型编辑器**内置工具**下的**记忆** |
 | `model_editor.tools.chats` | 聊天历史 | 模型编辑器**内置工具**下的**聊天历史** |
+| `model_editor.tools.users` | 用户 | 模型编辑器**内置工具**下的**用户** |
 | `model_editor.tools.notes` | 笔记 | 模型编辑器**内置工具**下的**笔记** |
 | `model_editor.tools.knowledge` | 知识库 | 模型编辑器**内置工具**下的**知识库** |
 | `model_editor.tools.files` | 文件 | 模型编辑器**内置工具**下的**文件** |
@@ -359,7 +360,7 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 | `model_editor.tools.visualizations` | 可视化 | 模型编辑器**内置工具**下的**可视化** |
 | `model_editor.tools.skills` | 技能 | 模型编辑器**内置工具**下的**技能** |
 | `model_editor.tools.tools` | 工具创建 | 模型编辑器**内置工具**下的**工具创建** |
-| `chat.capture` | 截图 | 聊天输入框 **+** 菜单中的**截图** |
+| `chat.capture` | 捕获 | 聊天输入框的 **+** 菜单中**捕获**下的**截屏**（移动端为**相机**） |
 | `chat.compare` | 对比文本 | **+** 菜单和 `/compare` 命令中的**对比文本** |
 | `chat.attach_webpage` | 附加网页 | **+** 菜单中的**附加网页** |
 | `chat.attach_files` | 附加文件 | **+** 菜单中的**附加文件** |
@@ -535,6 +536,13 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 - 描述：模型读取之前的聊天时，`view_chat` 工具返回的消息文本字符数上限。会保留最新的若干条消息，并在结果中告知模型内容被截断以及包含多少条消息。必须是正整数，否则 Open WebUI 会在启动时停止。参见[内置系统工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chats.view_max_chars`。可在 **设置 > 常规 > 聊天读取上限**（管理员区域） 中配置。留空表示不限制。
 
+#### `TOOL_OUTPUT_MAX_CHARS` {#tool\_output\_max\_chars}
+
+- 类型：`int`
+- 默认值：空，表示无限制
+- 描述：工具结果中最多有多少字符传给模型，参见[工具](/features/extensibility/plugin/tools)。必须为正整数，否则 Open WebUI 会在启动时退出。
+- 持久化：这是一个 `ConfigVar` 变量，保存在配置键 `tools.output_max_chars`。可在管理区域的**设置 > 常规 > 工具输出限制**中配置。留空表示无限制。
+
 #### `VISUALIZATION_PROMPT_TEMPLATE` {#visualization\_prompt\_template}
 
 - 类型：`str`
@@ -565,6 +573,20 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 - 描述：设置非管理员用户自动化重复执行之间允许的最小间隔（秒）。设置后，任何重复频率高于该值的自动化计划都会被拒绝，并返回 `400 Bad Request` 错误。一次性自动化（`COUNT=1`）不受此限制。管理员不受该限制。
 - 持久化：这是一个 `ConfigVar` 变量。
 
+#### `AUTOMATION_MAX_CONCURRENT` {#automation\_max\_concurrent}
+
+- 类型：`int`
+- 默认值：`("") empty string`（无限制）
+- 描述：同时执行的自动化运行的最大数量。超出上限的运行会等待空位，留空表示无限制。适用于所有运行，也包括管理员的自动化。按工作进程计数，因此实际的上限等于此值乘以工作进程数或副本数。更改后的值在重启后生效。
+- 持久化：这是一个 `ConfigVar` 变量。
+
+#### `ENABLE_AUTOMATION_WEBHOOKS` {#enable\_automation\_webhooks}
+
+- 类型：`bool`
+- 默认值：`True`
+- 描述：允许通过 Webhook URL 启动自动化。任何拥有 URL 的人都可以启动自动化并向其发送文本。禁用后，现有 Webhook URL 将失效。参见 [Webhook](/features/chat-conversations/chat-features/automations#webhooks)。也可以在**管理设置 > 常规**中设置**自动化 Webhook**。
+- 持久化：这是一个 `ConfigVar` 变量。
+
 #### `AUTOMATION_AUTH_TOKEN_EXPIRES_IN` {#automation\_auth\_token\_expires\_in}
 
 - 类型： `str` (duration)
@@ -588,26 +610,19 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用**子智能体**，让模型可以通过 `delegate_task` 内置工具把一个聚焦的任务委派给并行的子智能体。子智能体会使用相同的工具和技能运行自己的一整轮聊天补全，并把最终答案返回给父级聊天。默认关闭，因为每次委派都会产生额外的模型调用。它同时也是 `timer` 工具的开关，二者共用同一个**子智能体**内置类别。可在 **设置 > 子智能体**（管理员区域） 中设置。参见[子智能体](/features/chat-conversations/chat-features/subagents)。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-#### `SUBAGENTS_BACKGROUND_ENABLED` {#subagents\_background\_enabled}
-
-- 类型：`bool`
-- 默认值：`False`
-- 描述：允许子智能体在**后台**运行。模型会立即返回一个调度句柄而不必等待；子智能体完成后，其结果会被发布回父级聊天，父级聊天无需用户发送消息即可继续。关闭时，`background` 参数会从工具结构中完全移除，模型无法请求它。
+- 描述：启用**子智能体**，让模型通过 `delegate_task` 内置工具将明确的任务委派给并行运行的子智能体。子智能体使用相同的工具和技能独立执行一次完整的聊天补全，并将最终答案返回给父聊天。此开关也控制 `timer` 和 `send_message` 工具。可在管理区域的**设置 > 子智能体**中设置。参见[子智能体](/features/chat-conversations/chat-features/subagents)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `SUBAGENTS_MAX_CONCURRENT` {#subagents\_max\_concurrent}
 
 - 类型：`int`
 - 默认值：`("")` 空字符串（无限制）
-- 描述：同时运行的前台子智能体数量上限。超出上限的委派会**等待**空出名额。空值、`0` 或 `-1` 表示不限制。该计数**按 worker 进程**计算，而非整个集群，因此实际上限等于该值乘以 worker 或副本的数量。
+- 描述：同时运行的前台子智能体的最大数量，适用于在频道和自动化运行中启动的子智能体。超出限制的委派会**等待**空位。空值、`0` 或 `-1` 表示无限制。按**工作进程**计数，各进程的计数独立，因此实际的上限等于此值乘以工作进程数或副本数。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::warning 修改 `SUBAGENTS_MAX_CONCURRENT` 需要重启
 
-前台上限作用于首次委派时创建、且之后不再调整大小的信号量。在管理面板或环境中修改它**在 Open WebUI 重启前不会生效**。`SUBAGENTS_MAX_ASYNC` 不受影响，会立即生效。
+前台上限应用于第一次受限的前台委派时创建的信号量，之后不会调整大小。在管理面板或环境变量中更改此值，**只有重启 Open WebUI 后才会生效**。`SUBAGENTS_MAX_ASYNC` 不受影响，会立即生效。
 
 :::
 
@@ -615,7 +630,7 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 
 - 类型：`int`
 - 默认值：`("")` 空字符串（无限制）
-- 描述：同时运行的后台子智能体数量上限。与前台上限不同，超出该上限的委派会**立即失败**并返回一条错误，提示模型等待或提高上限。空值、`0` 或 `-1` 表示不限制。同样按 worker 进程计数。
+- 描述：同时运行的后台子智能体的最大数量，适用于在频道和自动化运行之外启动的子智能体。与前台上限不同，超出此上限的委派会**立即失败**，并返回错误，告知模型等待或提高上限。空值、`0` 或 `-1` 表示无限制。也按工作进程计数。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `SUBAGENTS_MAX_ITERATIONS` {#subagents\_max\_iterations}
@@ -629,7 +644,7 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 
 - 类型：`int`（字符数）
 - 默认值：`("")` 空字符串（无限制）
-- 描述：子智能体返回给父级聊天的结果长度上限。更长的输出会被截断并标记为 `[output truncated]`。空值或 `0` 表示不限制。该限制只作用于返回给父级的部分；子智能体自己的聊天中仍保留完整文本。
+- 描述：子智能体返回给父聊天的结果的最大长度。超出的输出会截断，并标记为 `[output truncated]`。空值或 `0` 表示无限制。此项仅限制返回给父聊天的内容，子智能体自己的聊天仍保留全文。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `SUBAGENTS_SYSTEM_PROMPT` {#subagents\_system\_prompt}
@@ -652,7 +667,7 @@ python -c "import open_webui, pathlib; print(pathlib.Path(open_webui.__file__).r
 
 #### `CALENDAR_ALERT_LOOKAHEAD_MINUTES` {#calendar\_alert\_lookahead\_minutes}
 
-- 类型：`int` (minutes)
+- 类型：`int`（分钟）
 - 默认值：`10`
 - 描述：日历事件提醒的默认提前窗口（分钟）。从当前时间起在该窗口内开始的事件会触发 toast 和 webhook 通知。单个事件可以在事件编辑器的**提醒**设置（`meta.alert_minutes`）中覆盖该值。
 
@@ -726,11 +741,11 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 #### `ENABLE_ADMIN_CHAT_ACCESS` {#enable\_admin\_chat\_access}
 - 类型：`bool`
 - 默认值：`True`
-- 描述：控制管理员是否可以在 Open WebUI 内打开其他用户的聊天。它会在产品界面中隐藏聊天，但并不能阻止管理员接触到这些数据；参见[聊天数据隐私](/security/chat-data-privacy-and-encryption#admin-users)。启用后，管理员可以阅读任意用户的聊天，聊天将以只读方式打开。通过 API，管理员还可以编辑或删除其中的消息、删除该聊天、修改其共享设置并克隆它。回复、重新生成、停止回复以及批准工具调用仍归聊天所有者以及通过[允许回复](/features/chat-conversations/chat-features/chatshare#allowing-replies)共享该聊天的人所有。禁用后，管理面板会隐藏其他用户的聊天，[分析](/features/administration/analytics#sessions)中的**会话**视图会被隐藏且其端点返回 `403`，聊天端点也只会向管理员提供与普通共享相同的内容。仅限管理员的 `GET /api/tasks` 和 `POST /api/tasks/stop/{task_id}` 端点仍会列出并停止任何正在运行的任务，无论此设置如何。如果你禁用了此项，请考虑同时禁用 `ENABLE_ADMIN_EXPORT`（尤其是在 SQLite 上），因为导出内容包含用户聊天。此开关只覆盖产品界面：管理员仍可通过数据库、服务器本身或 Function/Tool 访问所有聊天。请参阅上文关于管理员态势开关的说明。
+- 描述：控制管理员能否在 Open WebUI 内打开其他用户的聊天。这只在产品界面内隐藏聊天，管理员仍能访问数据，参见[聊天数据隐私](/security/chat-data-privacy-and-encryption#admin-users)。启用后，管理员可以只读方式打开任意用户的聊天。管理员也可通过 API 编辑或删除消息、删除聊天、更改共享设置及克隆聊天。回复、重新生成、停止回复及批准工具调用的权限仍属于所有者和通过[允许回复](/features/chat-conversations/chat-features/chatshare#allowing-replies)获得共享权限的用户。禁用后，管理面板会隐藏其他用户的聊天，[分析](/features/administration/analytics)中的**会话**视图和模型的**聊天**标签页也会隐藏，相关端点返回 `403`。管理员通过聊天端点只能获得共享所授予的权限。仅限管理员的 `GET /api/tasks` 和 `POST /api/tasks/stop/{task_id}` 端点不受此设置影响，仍可列出和停止任意运行中的任务。如果禁用此项，也请考虑禁用 `ENABLE_ADMIN_EXPORT`（尤其是 SQLite），因为导出包含用户聊天。此开关只影响产品层面，管理员仍能通过数据库、服务器或函数与工具访问所有聊天。参见上面的管理员权限开关说明。
 
-  **内部聊天的例外：** 即使此值为 `False`，管理员仍可检索标记为内部的聊天。内部聊天是指 Open WebUI 代表用户创建、但用户并未主动打开的聊天：[子智能体](/features/chat-conversations/chat-features/subagents)聊天、[定时器](/features/chat-conversations/chat-features/timers)聊天以及附加笔记的聊天。正是这一豁免让管理员能够检索到它们，因为内部聊天**被排除在聊天列表界面之外**：它们不会出现在聊天列表、搜索、计数、导出或管理员聊天列表中。除了 Analytics 中的**会话**视图会与其他聊天一并列出它们之外，只能通过 ID 访问。
+  **内部聊天**由 Open WebUI 代表用户创建，包括[子智能体](/features/chat-conversations/chat-features/subagents)聊天、[定时器](/features/chat-conversations/chat-features/timers)聊天及关联至笔记的聊天。它们与其他聊天一样遵循此设置。它们**不出现在列出聊天的功能中**，即聊天列表、搜索、计数、导出及管理员聊天列表。分析中的**会话**视图会将内部聊天与其他聊天一起列出。除此之外，管理员只能通过 ID 访问内部聊天。
 
-  这一点对审计很重要，对隐私的影响则较小：子智能体聊天承载着真实的模型工作，使用用户的模型和工具，并计入你的配额，但它不会出现在导出或管理员聊天列表中。在使用子智能体或定时器期间，不要把这些界面当作完整记录。
+  这对审计很重要。子智能体聊天保存了真实的模型工作，使用用户的模型和工具，并计入配额，但不会出现在导出或管理员聊天列表中。启用子智能体或定时器期间，请勿将这些途径视为完整记录。
 
 
 #### `ENABLE_ADMIN_ANALYTICS` {#enable\_admin\_analytics}
@@ -751,9 +766,9 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 - 默认值：`True`
 - 描述：控制管理员用户是否在**列表和选择器界面**中看到其他用户的工作区内容（模型/知识库/提示词/工具/笔记/技能的工作区标签页、聊天模型选择器、聊天输入框中的**附加文件**列表等）。设为 `True`（默认）时，这些界面会显示每位用户的全部内容，便于单管理员/小团队部署。设为 `False` 时，同样的界面只显示管理员自己的内容以及明确共享给他的内容，与普通用户看到的完全一致。无论该标志如何设置，**设置 > 数据控制 > 管理文件**始终只列出管理员自己的文件。
 
-  按 ID 直接访问的端点（`GET /api/v1/<resource>/id/{id}` 以及相应的更新/删除/访问授权路由）**有意**不受该标志约束，从设计上也从未受其约束。对它们加以限制既防不住任何管理员无法通过当初获取资源 ID 时所用的数据库查询轻易做到的事情，又会破坏管理员在已知条目 ID 上操作的正常流程。完整的架构论证参见上文的管理姿态开关说明。
+  按 ID 直接访问的端点（`GET /api/v1/<resource>/id/{id}` 以及相应的更新/删除/访问授权路由）**有意**不受该标志约束，从设计上也从未受其约束。管理员既然能通过数据库查到资源 ID，也能直接查询对应的数据。限制这些端点只会破坏管理员使用已知条目 ID 的正常流程。完整的架构论证参见上文的管理姿态开关说明。
 
-  同一个标志还决定管理员在管理员配置的资源上是否绕过访问授权，这些资源包括外部工具服务器、MCP 服务器、Open Terminal 连接和竞技场模型。为 `True` 时，管理员可以看到并使用全部这些资源。为 `False` 时，管理员需要与每个资源的访问名单逐一比对，但完全没有授权记录的资源仍为管理员专用，因为它没有可以回退的所有者。参见[私密对各类资源意味着什么](/features/authentication-access/rbac/groups#what-private-means-for-each-resource-type)。
+  同一标记决定管理员是否绕过管理员配置的资源的访问授权，包括外部工具服务器、MCP 服务器和 Open Terminal 机器。设为 `True` 时，管理员可以查看和使用全部资源。设为 `False` 时，管理员也遵循各资源的访问列表，但完全没有授权的资源仍限管理员使用，因为该资源没有所有者。参见[不同资源类型的私有含义](/features/authentication-access/rbac/groups#what-private-means-for-each-resource-type)。
 
   本环境变量取代了 `ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS`。如果你仍在使用 `ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS`，请改用 `BYPASS_ADMIN_ACCESS_CONTROL`。
 
@@ -875,7 +890,7 @@ Open WebUI 在架构上是单租户的，`admin` 角色在部署中按设计等�
 - 默认值：`True`
 - 描述：控制系统是否优先使用保存在数据库中的配置而非环境变量。
   - **`True`（默认值）：** 保存在**数据库**中的值（通过管理界面保存）优先。如果某个值已在界面中设置，则该设置会忽略环境变量。
-  - **`False`：** **环境变量**优先。如果存在环境变量，系统在启动时*不会*从数据库加载配置（而是使用默认值）。
+  - **`False`：** **环境变量**优先。系统在启动时*不会*从数据库加载配置。存在环境变量时使用其值，否则使用默认值。
     - **严重警告：** 设为 `False` 时，你在管理界面中似乎"更改"了设置。这些更改会作用于**当前运行会话**，但**重启后会丢失**。系统每次启动都会回退到环境变量（或默认值）中定义的值。
     - **使用场景：** 如果你希望严格通过 `docker-compose.yaml` 或 `.env` 文件管理配置，并阻止界面上的更改在重启后继续生效，请将其设为 `False`。
 
@@ -958,7 +973,7 @@ open-webui serve --port 9999
 - 类型：`bool`
 - 默认值：`False`
 - 描述：让流式回复的文本在分块到达时就地增长，而不是每个分块都复制到目前为止的完整答案。两种方式下用户看到的文本完全相同，而开启它可以降低内存峰值，因为复制需要新旧两个字符串同时驻留内存。当答案变长之后这种节省就值得了：复制的开销随长度平方增长，因此普通答案两种方式都是亚毫秒级，而几十万字符的答案则能快上数倍。在流量繁忙的实例和长输出场景（智能体记录、大段代码、长工具输出）中，这项工作会占用事件循环并拖慢该 worker 上所有其他流，因此这类部署开启它总是更快的选择。参见[扩展](/getting-started/advanced-topics/scaling)和[性能](/troubleshooting/performance#high-concurrency--network-optimization)。
-- 缺点：在附加分块期间该字段会先被清空、随后立即回填，因此若追加中途失败，那一条消息会留空，而不是保留到目前的文本。要触发这种情况需要内存分配被拒绝，而不是内核杀死进程——容器内存限制并不会导致后者——而且复制路径在那一刻本来就需要更多内存，会先失败。没有其他代码能在更新过程中观察到该响应。
+- 缺点：在附加分块期间该字段会先被清空、随后立即回填，因此若追加中途失败，那一条消息会留空，而不是保留到目前的文本。这种情况需要内存分配请求被直接拒绝。容器达到内存上限时，内核会终止进程，不会以这种方式拒绝分配。而且复制方案当时需要更多内存，会先失败。没有其他代码能在更新过程中观察到该响应。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 #### `ENABLE_IMAGE_CONTENT_TYPE_EXTENSION_FALLBACK` {#enable\_image\_content\_type\_extension\_fallback}
@@ -993,7 +1008,7 @@ open-webui serve --port 9999
 
 - 类型：`int`
 - 默认值：`1`
-- 描述：设置流式文本更新在发送给客户端之前至少要合并成多少批的系统级下限。这让管理员可以避免过小的批次，因为它们可能造成较高的 CPU 负载。模型的**流式增量块大小**会取代单聊天的值，最终取此变量与该值中的较大者。默认值为 1，即全局不设批量下限。参见[回复成批到达或只在结束时到达](/troubleshooting/performance#replies-arrive-in-bursts-or-only-when-finished)。
+- 描述：设置系统级下限，规定向客户端发送每一批流式文本更新前，至少要合并多少次更新。这让管理员可以避免过小的批次，因为它们可能造成较高的 CPU 负载。模型的**流式增量块大小**会取代单聊天的值，最终取此变量与该值中的较大者。默认值为 1，即全局不设批量下限。参见[回复成批到达或只在结束时到达](/troubleshooting/performance#replies-arrive-in-bursts-or-only-when-finished)。
 
 
 #### `CHAT_STREAM_RESPONSE_CHUNK_MAX_BUFFER_SIZE` {#chat\_stream\_response\_chunk\_max\_buffer\_size}
@@ -1004,7 +1019,7 @@ open-webui serve --port 9999
 
 :::info
 
-如果你在高并发、多用户、且模型流式速度很快的场景下运行 Open WebUI，建议将其设为几兆到十几兆字节的较大数值（该值以字节计，因此 `8388608` 即 8 MB）。
+如果你在高并发、多用户、且模型流式速度很快的场景下运行 Open WebUI，建议将其设为接近十兆字节的较高个位数至较低两位数（该值以字节计，因此 `8388608` 即 8 MB）。
 
 :::
 
@@ -1023,7 +1038,7 @@ open-webui serve --port 9999
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：将 `previous_response_id` 转发给上游端点，为 Responses API 启用有状态会话。启用后，Open WebUI 会将每条响应关联到上一条响应，使 上游提供商能在服务器端维护对话状态。
+- 描述：将 `previous_response_id` 转发给上游端点，为 Responses API 启用有状态会话。启用后，Open WebUI 会将每条响应关联到上一条响应，使上游提供商能在服务器端维护对话状态。
 
 :::warning 实验性
 
@@ -1155,8 +1170,8 @@ WEBUI_BANNERS="[{\"id\": \"1\", \"type\": \"warning\", \"title\": \"Your message
 #### `SSL_ASSERT_FINGERPRINT` {#ssl\_assert\_fingerprint}
 
 - 类型：`str`
-- 默认值：Empty string (' '), since `None` is set as default.
-- 描述：指定要使用的 SSL assert fingerprint。
+- 默认值：空字符串（' '），因为默认值设为 `None`。
+- 描述：指定校验 SSL 证书时使用的指纹。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 
@@ -1191,7 +1206,7 @@ WEBUI_BANNERS="[{\"id\": \"1\", \"type\": \"warning\", \"title\": \"Your message
 #### `DEFAULT_PROMPT_SUGGESTIONS` {#default\_prompt\_suggestions}
 - 类型：`dict` 的 `list`
 - 默认值：`null`（未设置，此时显示内置的提示建议）
-- 描述：设置用户开始新聊天时显示的全局默认提示建议。在未配置按模型的提示建议时生效。保持未设置（或设为 `null`）将显示内置建议；设为 `[]` 则关闭提示建议。提示建议也可以通过模型编辑器按模型配置（参见[提示建议](/features/workspace/models#prompt-suggestions)），或使用[全局模型默认值](/features/workspace/models#global-model-defaults-admin)功能为所有模型统一配置。格式如下：
+- 描述：设置用户开始新聊天时看到的全局默认提示词建议。没有配置模型专属的提示词建议且用户没有聊天记录时才会显示。有聊天记录的用户会在此处看到最近的聊天。留空或设为 `null` 时显示内置建议，设为 `[]` 时关闭建议。也可通过模型编辑器按模型配置（见[提示词建议](/features/workspace/models#prompt-suggestions)），或使用[全局模型默认值](/features/workspace/models#global-model-defaults-admin)为所有模型配置。格式如下：
 
 ```json
 [{"title": ["Title part 1", "Title part 2"], "content": "prompt"}]
@@ -1250,7 +1265,7 @@ WEBUI_BANNERS="[{\"id\": \"1\", \"type\": \"warning\", \"title\": \"Your message
 
 通过管理设置 UI 配置的连接 URL 会**持久化到数据库中**，并优先于环境变量生效。如果你保存了一个无法访问的 URL，导致 UI 失去响应，可以考虑以下恢复方式之一：
 
-- `RESET_CONFIG_ON_START=true` —— 在下次启动时将数据库配置重置为环境变量中的值
+- `RESET_CONFIG_ON_START=true`：在启动时清除已保存的数据库设置。如果数据目录中有旧版 `config.json`，请参见[重置顺序](#reset_config_on_start)
 - `ENABLE_PERSISTENT_CONFIG=false` —— 始终使用环境变量（UI 更改不会持久保存）
 
 详细恢复步骤请参见[模型列表加载问题](/troubleshooting/connection-error#model-list-loading-issues-slow-ui--unreachable-endpoints)故障排查指南。
@@ -1320,14 +1335,18 @@ c-ares 会读取 `/etc/resolv.conf` 和 hosts 文件，但不读取其它名称�
 
 - 类型：`int`
 - 默认值：`10`
-- 描述：设置获取 tool server 元数据/配置的超时时间（秒）。
+- 描述：设置获取工具服务器元数据或配置的超时时间（秒），例如加载服务器数据或规范信息。
 
 
-#### `AIOHTTP_CLIENT_TIMEOUT_TERMINAL` {#aiohttp\_client\_timeout\_terminal}
+#### `AIOHTTP_CLIENT_TIMEOUT_MACHINE` {#aiohttp\_client\_timeout\_machine}
 
 - 类型：`int`
 - 默认值：`60`。未设置时，如果 `AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER_DATA` 已设置则继承该值。
-- 描述：Open WebUI 向终端发出请求的超时时间（秒），例如读取其工作目录和技能，或向其上传聊天文件。空值或 `0` 表示禁用。
+- 描述：Open WebUI 向机器发出请求时的超时时间（秒），例如读取工作目录和技能或上传聊天文件时。留空、设为 `0` 或更小值时禁用该超时。
+
+#### `AIOHTTP_CLIENT_TIMEOUT_TERMINAL` {#aiohttp\_client\_timeout\_terminal}
+
+[`AIOHTTP_CLIENT_TIMEOUT_MACHINE`](#aiohttp_client_timeout_machine) 的旧名称。
 
 #### `AIOHTTP_FILE_STREAM_CHUNK_SIZE` {#aiohttp\_file\_stream\_chunk\_size}
 
@@ -1358,7 +1377,7 @@ c-ares 会读取 `/etc/resolv.conf` 和 hosts 文件，但不读取其它名称�
 
 - 类型：`int`
 - 默认值：未设置（无限制）
-- 描述：共享 AIOHTTP 池中单个主机的并发连接数上限。
+- 描述：限制共享 AIOHTTP 连接池对单个主机的并发连接数。未设置时不限制每个主机的连接数。此设置有助于避免超过提供方的速率或连接数限制。
 
 
 #### `AIOHTTP_POOL_DNS_TTL` {#aiohttp\_pool\_dns\_ttl}
@@ -1428,7 +1447,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：控制审计日志是否输出到 stdout（控制台）。
+- 描述：控制审计日志是否输出到 stdout（控制台）。适用于通过 stdout 收集日志的容器环境。
 
 
 #### `ENABLE_AUDIT_LOGS_FILE` {#enable\_audit\_logs\_file}
@@ -1438,11 +1457,17 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 - 描述：控制审计日志是否写入文件。启用后，日志会写入 `AUDIT_LOGS_FILE_PATH` 指定的位置。
 
 
+#### `ENABLE_AUDIT_LOGS_FILE_STARTUP_CHECK` {#enable\_audit\_logs\_file\_startup\_check}
+
+- 类型：`bool`
+- 默认值：`False`
+- 描述：启用审计日志且无法打开审计日志文件时，阻止 Open WebUI 启动。默认会记录错误，然后在不使用该日志文件的情况下启动。
+
 #### `AUDIT_LOGS_FILE_PATH` {#audit\_logs\_file\_path}
 
 - 类型：`str`
 - 默认值：`${DATA_DIR}/audit.log`
-- 描述：设置审计日志文件的存储位置。
+- 描述：设置审计日志文件的存储位置。可将日志存放在单独的卷或自定义位置，便于管理和持久化。
 - 示例：`/var/log/openwebui/audit.log`、`/mnt/logs/audit.log`
 
 
@@ -1465,7 +1490,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 - 类型：`str`
 - 默认值：`NONE`
 - 选项： `NONE`, `METADATA`, `REQUEST`, `REQUEST_RESPONSE`
-- 描述：控制审计日志的详细程度。`METADATA` 记录基本的请求信息，`REQUEST` 包含请求体，`REQUEST_RESPONSE` 同时包含请求和响应。对于 `/api/v1/auths` 和 `/oauth/` 下的请求，在任何级别下都只记录元数据，这样密码、MFA 验证码和会话令牌就不会进入审计日志。每条记录都有一个 `model_id` 字段，用于保存客户端请求的模型，在聊天和补全请求时会填充：`/api/chat/completions`（同时也在 `/api/v1/chat/completions` 提供）、兼容 Anthropic 的 `/api/v1/messages`（同时也在 `/api/message` 提供）、`/openai/chat/completions`、`/openai/responses`，以及 `/ollama` 下的 chat、completion、Messages 和 Responses 请求。启用 [`ENABLE_OPENAI_API_PASSTHROUGH`](#enable_openai_api_passthrough) 后，每个在 `/openai` 下转发给提供方的请求也会记录其请求体中的 `model`。某些会让 Open WebUI 转而调用模型的请求（例如 `/api/v1/tasks` 下的任务端点，或提及某个模型的频道消息）可以记录被调用的模型。其它请求记录 `null`。对于发往 `/api/chat/completions` 的请求，每条模型回复还会单独写一条记录，包含作出回复的模型以及在 `usage` 字段中报告的 token 数量，并通过 `extra.request_id` 与该请求的记录关联；参见[审计日志](/getting-started/advanced-topics/hardening#audit-logging)。`AUDIT_INCLUDED_PATHS` 只匹配 `/api/` 下的路由，因此设置它之后，`/openai` 和 `/ollama` 下的请求不会留下任何审计记录。该字段在任何级别下都会被完整写入，与 `MAX_BODY_LOG_SIZE` 的取值无关。审计日志涵盖使用 `Authorization` 头或会话 cookie 登录的 HTTP 请求，以及登录、登出、注册和 MFA 端点。Socket.IO 流量不在其范围内，两种传输方式都是如此，包括浏览器在 [`ENABLE_WEBSOCKET_SUPPORT`](#enable_websocket_support) 关闭时使用的 `/ws/socket.io` 长轮询请求。
+- 描述：控制审计日志的详细程度。`METADATA` 记录基本请求信息，`REQUEST` 包含请求正文，`REQUEST_RESPONSE` 包含请求和响应。所有级别都在 `response_status_code` 中记录响应状态码。对于 `/api/v1/auths` 和 `/oauth/` 下的请求，各级别都仅记录元数据，避免密码、MFA 验证码和会话令牌进入审计日志。审计哪些请求、`model_id` 字段以及每条回复的用量记录，详见[审计日志](/getting-started/advanced-topics/hardening#audit-logging)。
 
 
 #### `ENABLE_AUDIT_GET_REQUESTS` {#enable\_audit\_get\_requests}
@@ -1478,21 +1503,27 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 
 - 类型：`int`
 - 默认值：`2048`
-- 描述：设置审计日志中请求/响应 body 的最大字节数。
+- 描述：设置审计日志中请求正文和响应正文的最大字节数。超出此大小的正文会被截断。
 
+
+#### `ENABLE_AUDIT_ANONYMOUS_REQUESTS` {#enable\_audit\_anonymous\_requests}
+
+- 类型：`bool`
+- 默认值：`False`
+- 描述：也审计完全不携带凭据的请求。默认跳过这些请求，但登录、退出登录、注册和 MFA 请求始终记录。LDAP 登录不携带凭据，因此仅在开启此设置时记录。携带错误密钥或令牌的请求无论如何都会记录。`AUDIT_LOG_LEVEL` 为 `NONE` 时无效。
 
 #### `AUDIT_EXCLUDED_PATHS` {#audit\_excluded\_paths}
 
 - 类型：`str`
 - 默认值：`/chats,/chat,/folders`
-- 描述：从审计日志中排除的 URL 路径列表，以逗号分隔（黑名单模式）。路径不带前导斜杠，与 `/api/` 和 `/api/v1/` 前缀的路由进行匹配。设置了 `AUDIT_INCLUDED_PATHS` 时本项被忽略。默认的 `/chat` 条目会跳过 `/api/chat/completions`，也就是聊天界面所使用的端点。若要记录聊天请求以及[审计日志](/getting-started/advanced-topics/hardening#audit-logging)中所述的每条回复的模型用量条目，请移除该条目。
+- 描述：审计日志排除的 URL 路径，以逗号分隔（黑名单模式）。匹配时忽略开头的斜杠，匹配请求路径的起始部分，无论是否带 `/api` 或 `/api/v1` 前缀。例如，`chats` 会匹配 `/api/v1/chats` 和 `/chats`。设置 `AUDIT_INCLUDED_PATHS` 时忽略此项。默认项 `/chat` 跳过聊天界面使用的 `/api/chat/completions` 端点。移除它即可记录聊天请求及每条回复的模型用量，参见[审计日志](/getting-started/advanced-topics/hardening#audit-logging)。
 
 
 #### `AUDIT_INCLUDED_PATHS` {#audit\_included\_paths}
 
 - 类型：`str`
 - 默认值：空字符串（禁用）
-- 描述：以逗号分隔的 URL 路径列表，用于指定要记录到审计日志中的路径（白名单模式）。设置后，**仅**审计匹配的路径，并忽略 `AUDIT_EXCLUDED_PATHS`。匹配项不带前导斜杠，用于匹配以 `/api/` 或 `/api/v1/` 为前缀的路由。登录、退出、注册及 MFA 等身份验证端点始终会被记录，不受筛选模式影响。
+- 描述：审计日志纳入的 URL 路径，以逗号分隔（白名单模式）。设置后**仅**审计匹配路径，并忽略 `AUDIT_EXCLUDED_PATHS`。匹配时忽略开头的斜杠，匹配请求路径的起始部分，无论是否带 `/api` 或 `/api/v1` 前缀。例如，`chats` 会匹配 `/api/v1/chats` 和 `/chats`。列出 `openai` 或 `ollama` 可审计这些路由。无论筛选模式如何，登录、退出登录、注册及 MFA 端点始终会记录。
 
 :::tip 白名单与黑名单
 默认情况下，审计日志使用**黑名单模式**，记录除 `AUDIT_EXCLUDED_PATHS` 中所列路径之外的所有路径。设置 `AUDIT_INCLUDED_PATHS` 后，改用**白名单模式**，仅记录指定的路径。如果两者都已设置，白名单优先，系统会在启动时记录警告。
@@ -1734,7 +1765,7 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 #### `CONTEXT_COMPACTION_TOKEN_CAP` {#context\_compaction\_token\_cap}
 
 - 类型： `int`
-- 默认值： falls back to `CONTEXT_COMPACTION_TOKEN_THRESHOLD` when unset
+- 默认值：未设置时使用 `CONTEXT_COMPACTION_TOKEN_THRESHOLD`
 - 描述： 任何按模型上下文压缩阈值的绝对上限（以 token 计）。模型可以通过 `compact_token_threshold` 高级参数提高或降低自己的阈值，但有效值会被限制在此上限内。未设置时等同于 `CONTEXT_COMPACTION_TOKEN_THRESHOLD`，重现了以前按模型阈值只能降低的行为。也可在**设置 > 界面**（管理员区域）（**Token Cap**）中设置。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
@@ -1814,6 +1845,13 @@ Open WebUI 会复用一个长期存在的 AIOHTTP 客户端会话来处理外发
 - 默认值：空字符串
 - 描述：当 [`ENABLE_TOOL_SEARCH`](#enable_tool_search) 开启时，始终完整发送的工具名称或通配符模式，例如 `jira_create_issue,github_*`。模式匹配模型看到的工具名称，且区分大小写；MCP 工具带有其服务器 ID 前缀。也可在 **设置 > 界面**（管理员区域）（**始终加载的工具**）中设置。
 - 持久化：这是一个 `ConfigVar` 变量，存储在配置键 `chat.tool_search.always_loaded`。
+
+#### `TOOL_SEARCH_LIST_TOOLS` {#tool\_search\_list\_tools}
+
+- 类型：`bool`
+- 默认值：`True`
+- 描述：在系统提示词中列出每个延迟工具的名称和简短描述，让模型知道要用[工具搜索](/features/extensibility/plugin/tools#tool-search)找什么。对提供商缓存的影响见[提示词缓存](/features/chat-conversations/prompt-caching)。也可在管理区域的**设置 > 界面**中通过**列出延迟工具**切换。
+- 持久化：这是一个 `ConfigVar` 变量，保存在配置键 `chat.tool_search.list_tools`。
 
 #### `TOOL_SEARCH_DEFER_BUILTIN_TOOLS` {#tool\_search\_defer\_builtin\_tools}
 
@@ -1902,7 +1940,7 @@ JSON format: { "follow_ups": ["Suggested next message 1", "Suggested next messag
 
 - 类型：`str`
 - 描述：[旧版模式](/features/extensibility/plugin/tools#how-legacy-mode-picks-tools)在每次回复前发送给任务模型、用于挑选工具的系统提示词。原生模式不使用它。`{{TOOLS}}` 会被替换为该聊天工具定义的 JSON 列表，不会填充其他占位符。回复必须包含一个 JSON 对象，其中带有 `tool_calls` 数组，数组元素形如 `{"name": ..., "parameters": {...}}`。也可在 **设置 > 界面**（管理员区域）（**工具函数调用提示词**，位于**生成**之下）中设置。
-- 默认值：`DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE` 环境变量的值。
+- 默认值：空字符串。留空时使用下方的内置模板。`DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE` 是不可设置的内置常量。
 
 `DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE`:
 
@@ -2121,13 +2159,13 @@ The format for the JSON response is strictly:
 :::
 
 
-### 终端服务器 {#terminal-server}
+### 机器 {#machines}
 
-#### `TERMINAL_SERVER_CONNECTIONS` {#terminal\_server\_connections}
+#### `MACHINE_CONNECTIONS` {#machine\_connections}
 
 - 类型：`str`（JSON 数组）
 - 默认值：`[]`
-- 描述：指定终端服务器连接配置的 JSON 数组。每项定义连接到 [Open Terminal](/features/open-terminal) 实例或 [Terminals 编排器](/features/open-terminal/terminals/)所需的参数。这些连接由管理员配置，并通过 Open WebUI 代理，因此终端 URL 和 API 密钥不会暴露给浏览器。可通过 `access_grants` 按群组控制访问权限。
+- 描述：指定包含机器配置的 JSON 数组。每台机器定义连接到 [Open Terminal](/features/open-terminal) 实例或 [Terminals 编排器](/features/open-terminal/terminals/)所需的参数。这些机器由管理员配置并通过 Open WebUI 代理，因此机器 URL 和 API 密钥不会暴露给浏览器。支持使用 `access_grants` 按用户组控制访问。
 - 示例（直连 Open Terminal）：
 ```json
 [
@@ -2162,23 +2200,27 @@ The format for the JSON response is strictly:
 ```
 - 持久化：这是一个 `ConfigVar` 变量。
 
-`config.access_grants` 设置谁可以使用连接。`read` 允许用户使用共享给他的终端，`write` 允许用户在编排器连接上创建和管理终端。参见[创建终端](/features/open-terminal/terminals/orchestration/creating-terminals)。
+`config.access_grants` 设置谁可以使用连接。`read` 允许用户使用共享给自己的终端，`write` 允许用户在编排器连接上创建并管理终端。参见[创建机器](/features/open-terminal/terminals/orchestration/creating-terminals)。
 
-选中此终端时，`config.chat_uploads` 决定聊天输入框中的附件传到哪里。没有此键的连接使用 `default`，即上传文件到 Open WebUI，并提取其文本供模型读取。`filesystem` 则将文件写入终端的工作文件夹，不提取文本、不进行检索，也不在 Open WebUI 中存储任何内容。模型收到路径后使用终端自带的工具打开文件。任何其他值均按 `default` 处理。参见[聊天上传](/features/open-terminal/setup/connecting#chat-uploads)。
+`config.chat_uploads` 决定选中此机器时，聊天输入框中的附件发送到哪里。未配置此键的连接使用 `default`，将文件上传至 Open WebUI，提取文本供模型阅读。`filesystem` 会将文件写入机器的工作目录，不提取文本、不检索，也不会在 Open WebUI 中存储文件。模型会收到路径，并用机器自己的工具打开文件。其他值均视为 `default`。参见[聊天上传](/features/open-terminal/setup/connecting#chat-uploads)。
 
 `auth_type` 接受 `bearer`（将 `key` 作为 Bearer 令牌发送）、`session`（发送调用用户自己的 Open WebUI 凭据）、`system_oauth`（发送用户的 OAuth 访问令牌）和 `none`。编排器连接必须将 `key` 设为编排器的 `TERMINALS_API_KEY`。
 
 :::tip Helm Chart 自动配置
-在 Kubernetes 上使用 Open WebUI Helm Chart 部署且 `terminals.enabled: true` 时，该变量会被自动设置为指向集群内的编排器服务。详情参见[终端（编排器）指南](/features/open-terminal/terminals/)。
+使用 Open WebUI Helm Chart 部署到 Kubernetes 并设置 `terminals.enabled: true` 时，会自动设置连接并指向集群内的编排器服务。详见 [Terminals（编排器）指南](/features/open-terminal/terminals/)。
 :::
 
 :::warning
 
-随着新功能的加入，`TERMINAL_SERVER_CONNECTIONS` 的 JSON 数据结构可能会随之演进。
+`MACHINE_CONNECTIONS` 的 JSON 数据结构可能随新功能而变化。
 
 :::
 
-#### `TERMINAL_PROXY_HEADERS` {#terminal\_proxy\_headers}
+#### `TERMINAL_SERVER_CONNECTIONS` {#terminal\_server\_connections}
+
+[`MACHINE_CONNECTIONS`](#machine_connections) 的旧名称。
+
+#### `MACHINE_PROXY_HEADERS` {#machine\_proxy\_headers}
 
 - 类型：`str`（JSON 对象）
 - 默认值：`{}`
@@ -2187,11 +2229,15 @@ The format for the JSON response is strictly:
   **安全说明。** 默认值 `{}` 意味着代理会在 Open WebUI 的同源下原样转发上游内容（HTML、JS，无论什么）。这是有意为之——很多合法的 open-terminal 用例（开发服务器、内部工具、管理员通过终端跑的 Web UI）都依赖代理响应中的 JavaScript 真正执行。对于互相信任的多用户共用一条终端服务器连接的部署来说，这没有问题。如果同一信任组内的用户还需要互相隔离对方的代理内容（或者你在已记载的[多用户部署等级](/features/open-terminal/advanced/multi-user)之上把终端服务器功能开放给信任程度更低的用户），可以把它设置成一个 sandbox CSP，把代理过来的 JS 锁进一个 opaque origin，但仍然允许它为合法工作流执行：
 
   ```bash
-  TERMINAL_PROXY_HEADERS='{"Content-Security-Policy": "sandbox allow-scripts; default-src '\''none'\''; img-src '\''self'\'' data:; style-src '\''unsafe-inline'\''", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer", "X-Frame-Options": "DENY"}'
+  MACHINE_PROXY_HEADERS='{"Content-Security-Policy": "sandbox allow-scripts; default-src '\''none'\''; img-src '\''self'\'' data:; style-src '\''unsafe-inline'\''", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer", "X-Frame-Options": "DENY"}'
   ```
 
   注意：**不要**在 `sandbox` 指令中添加 `allow-same-origin`。该关键字会使 sandbox 的源隔离失效，从而无法防止 `localStorage` 被窃取。上面的示例特意未加。
 
+
+#### `TERMINAL_PROXY_HEADERS` {#terminal\_proxy\_headers}
+
+[`MACHINE_PROXY_HEADERS`](#machine_proxy_headers) 的旧名称。
 
 ### 自动补全 {#autocomplete}
 
@@ -2275,20 +2321,13 @@ Output:
 - 描述：设置用于自动补全生成的提示词模板。
 - 持久化：这是一个 `ConfigVar` 变量。
 
-### 评测竞技场模型 {#evaluation-arena-model}
+### 评测与路由模型 {#evaluation-and-router-models}
 
-#### `ENABLE_EVALUATION_ARENA_MODELS` {#enable\_evaluation\_arena\_models}
-
-- 类型：`bool`
-- 默认值：`False`
-- 描述：启用或禁用评测竞技场模型。新的默认值仅适用于全新安装；已有安装在管理员于**设置 > 评测**（管理员区域）中修改之前，会一直沿用数据库中已存储的值。
-- 持久化：这是一个 `ConfigVar` 变量。
-
-#### `EVALUATION_ARENA_MODELS` {#evaluation\_arena\_models}
+#### `ROUTER_MODELS` {#router\_models}
 
 - 类型：`str`（JSON）
 - 默认值：`[]`
-- 描述：以 JSON 对象列表的形式定义评测竞技场模型。用于在启动时初始化竞技场模型配置，与管理评测设置中可配置的内容一致。对象中 `meta.model_ids` 里的每个 ID 只应列出一次：在默认的 `include` 过滤模式下，每条消息会从其中随机抽取一个，而出现两次的 ID 被抽中的概率也是两倍。在[设置 > 评测（管理员区域）](/features/administration/evaluation/#configuring-an-arena-model)中编辑此类竞技场模型并保存后，重复项会被合并。
+- 描述：以 JSON 列表定义[路由模型](/features/administration/router-models)，与管理区域的**设置 > 模型**中可配置的内容一致。JSON 形状见[通过环境变量配置](/features/administration/router-models#set-them-up-from-the-environment)。此值包含决策 API 密钥，请作为机密处理。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `AUXILIARY_EMBEDDING_MODEL` {#auxiliary\_embedding\_model}
@@ -2480,6 +2519,7 @@ ASGI 层在比对头名时不区分大小写，所以可以按你的命名规范
   - 应用重启（未使用 Redis 时；存储在 Redis 中的列表可跨重启保留）
   - 在 **设置 > 连接**（管理员区域） 中保存连接设置（点击右下角的**保存**按钮会触发刷新，并用新获取的模型更新缓存）
   - 管理员在某个连接上下载、删除、加载或卸载模型
+  - 管理员在**管理面板 > 设置 > 连接 > 用户连接**下，点击**缓存基础模型列表**旁的**刷新**。只有启用缓存时才会显示此按钮。它会从已连接的提供商请求最新模型列表，无需更改连接设置。
 - **无 TTL**：没有基于时间的自动过期机制。
 
 :::tip 性能考量
@@ -2507,7 +2547,7 @@ Open WebUI 有**两种模型缓存机制**，它们彼此独立运行：
 
 | 设置 | 类型 | 默认值 | 刷新触发条件 |
 |---------|------|---------|-----------------|
-| `ENABLE_BASE_MODELS_CACHE` | 内存；配置了 Redis 时则使用它 | `False` | 管理员保存，或未使用 Redis 时应用重启 |
+| `ENABLE_BASE_MODELS_CACHE` | 内存，或配置后的 Redis | `False` | 管理员**刷新**、保存设置，或在未使用 Redis 时重启应用 |
 | `MODELS_CACHE_TTL` | 基于 TTL | `1` 秒 | TTL 到期后自动刷新 |
 
 若要获得最佳性能，请同时启用两者：`ENABLE_BASE_MODELS_CACHE=True` 搭配 `MODELS_CACHE_TTL=300`。
@@ -2520,6 +2560,8 @@ Open WebUI 有**两种模型缓存机制**，它们彼此独立运行：
 - 默认值：`4w`
 - 描述：设置登录令牌的有效期。填写数字和单位：`ms`、`s`、`m`、`h`、`d` 或 `w`，例如 `4w` 或 `12h`。使用 `-1` 表示永不过期。不带单位的数字（如 `30`）无效，管理员区域的**设置 > 身份验证**不会保存此类值。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
+
+要检查或更改当前有效期，请打开管理面板中的**设置 > 身份验证**，找到 **JWT 过期时间**。启用持久化配置后，已保存的值优先于环境变量。新有效期在保存后应用于新签发的登录令牌。现有令牌保留原到期时间，因此请退出后重新登录以测试新有效期。
 
 :::warning
 
@@ -2594,7 +2636,7 @@ Open WebUI 有**两种模型缓存机制**，它们彼此独立运行：
 | `X-OpenWebUI-Message-Id` | 仅工具服务器（OpenAPI 与 MCP） |
 | `X-OpenWebUI-Auth-Type` | 仅 OpenAI 和 Ollama 模型连接，用于模型列表和聊天请求 |
 
-因此，OpenAI、Ollama 或 Pipelines 请求会收到六个请求头中的**五个**（四个用户请求头加上 `X-OpenWebUI-Chat-Id`）；只有 `X-OpenWebUI-Message-Id` 是工具服务器专用的，因为正是它支撑着[外部工具事件发送](/features/extensibility/plugin/development/events#external-tool-events)。
+不计下文单独说明的认证类型请求头，OpenAI、Ollama 或 Pipelines 请求会收到其余六个请求头中的**五个**（四个用户请求头加上 `X-OpenWebUI-Chat-Id`）；只有 `X-OpenWebUI-Message-Id` 是工具服务器专用的，因为正是它支撑着[外部工具事件发送](/features/extensibility/plugin/development/events#external-tool-events)。
 
 `X-OpenWebUI-Auth-Type` 说明调用方是如何向 Open WebUI 认证的：`jwt` 表示浏览器会话，`api_key` 表示使用 API 密钥发出的请求。上游可以利用它把自动化请求与真人操作区别对待，例如拒绝由密钥驱动的请求访问昂贵的模型。可用 [`FORWARD_USER_INFO_HEADER_AUTH_TYPE`](#forward_user_info_header_auth_type) 重命名它。
 
@@ -2676,7 +2718,7 @@ FORWARD_SESSION_INFO_HEADER_MESSAGE_ID=X-Amzn-Bedrock-AgentCore-Runtime-Custom-M
 
 - 类型：`str`
 - 默认值：`X-OpenWebUI-User-Jwt`
-- 描述：当设置了 `FORWARD_USER_INFO_HEADER_JWT_SECRET` 时，承载已签名 JWT 的标头名称。此变量仅在启动时读取，不是 `ConfigVar`，无法在管理面板中修改。
+- 描述：当设置了 `FORWARD_USER_INFO_HEADER_JWT_SECRET` 时，携带已签名 JWT 的请求头名称。此变量仅在启动时读取，不是 `ConfigVar`，无法在管理面板中修改。
 
 
 #### `FORWARD_USER_INFO_HEADER_JWT_EXPIRES_SECONDS` {#forward\_user\_info\_header\_jwt\_expires\_seconds}
@@ -3013,7 +3055,7 @@ openssl rand -hex 32
 
 - 自动版本更新检查（参见标志 `ENABLE_VERSION_UPDATE_CHECK`）
 - 从 Hugging Face Hub 下载嵌入模型
-  - 如果你在启用 `OFFLINE_MODE` 之前没有下载过嵌入模型，任何 RAG、web search 和文档分析功能都可能无法正常工作。在**全新安装**上容器可以启动，但首次上传文档或发起 RAG 查询时会出现 `No embedding model is loaded`，相关修复参见[启动与 Docker 故障](/troubleshooting/startup#valueerror-no-embedding-model-is-loaded-with-offline-mode-on-a-fresh-install)。
+  - 如果你在启用 `OFFLINE_MODE` 之前没有下载过嵌入模型，RAG、网络搜索和文档分析功能可能无法正常工作。在**全新安装**上容器可以启动，但首次上传文档或发起 RAG 查询时会出现 `No embedding model is loaded`，相关修复参见[启动与 Docker 故障](/troubleshooting/startup#valueerror-no-embedding-model-is-loaded-with-offline-mode-on-a-fresh-install)。
 - 界面中的更新通知（参见标志 `ENABLE_VERSION_UPDATE_CHECK`）
 - 嵌入模型、重排序模型和 Whisper 模型的自动更新
 - 安装 Function 和 Tool 的 `requirements` frontmatter 中声明的 Python 包，无论 [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS`](#enable_pip_install_frontmatter_requirements) 如何设置。依赖未预先安装的插件在加载时会因 `ModuleNotFoundError` 而失败，并且跳过行为只会被记录到日志中，因此请在镜像中预先安装这些包。
@@ -3022,7 +3064,7 @@ openssl rand -hex 32
 
 - 外部 LLM API 连接（OpenAI 等）
 - OAuth 身份验证提供方
-- 使用外部 API 的 web search 和 RAG
+- 使用外部 API 的网络搜索和 RAG
 
 有关 `offline mode` 的更多信息，请参阅[离线模式指南](/tutorials/maintenance/offline-mode)。
 
@@ -3046,7 +3088,7 @@ openssl rand -hex 32
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：在启动时重置 `config.json` 文件。
+- 描述：启动时清除应用数据库中已保存的设置。Open WebUI 随后导入 `DATA_DIR/config.json`（若存在），将它重命名为 `old_config.json`，再用默认设置（包括环境变量）填充缺失项。因此，旧文件可能在重置后提供设置。仅在希望丢弃已保存设置的那次启动时设置此标记。
 
 
 #### `SAFE_MODE` {#safe\_mode}
@@ -3100,11 +3142,11 @@ CORS_ALLOW_ORIGIN: "https://yourdomain.com;http://yourdomain.com;https://yourhos
 
 :::
 
-#### 安全请求头 {#security-headers}
+#### 安全响应头 {#security-headers}
 
-下面的每个变量都会为 Open WebUI 发出的每个响应添加一个 HTTP 安全请求头。它们默认全部未设置，未设置的变量表示不发送对应请求头。取值在启动时读取一次。超出可接受格式的取值会被替换为最后一列的回退值，因此请求头仍会发送；匹配时忽略大小写。推荐的生产环境配置以及跨源隔离的注意事项，参见[加固：安全请求头](/getting-started/advanced-topics/hardening#security-headers)。[`CACHE_CONTROL`](#cache_control) 有自己独立的条目。
+下面的每个变量都会为 Open WebUI 发出的每个响应添加一个 HTTP 安全响应头。这些变量默认均未设置。未设置的变量对应的响应头不会发送。取值在启动时读取一次。取值不符合可接受的格式时，将使用最后一列的回退值发送响应头。匹配时忽略大小写。推荐的生产环境配置及跨源隔离注意事项见[加固：安全响应头](/getting-started/advanced-topics/hardening#security-headers)。[`CACHE_CONTROL`](#cache_control) 有独立的条目。
 
-| 变量 | 请求头 | 可接受取值 | 回退值 |
+| 变量 | 响应头 | 可接受取值 | 回退值 |
 |----------|--------|-----------------|----------|
 | `HSTS` | `Strict-Transport-Security` | `max-age=<seconds>`，可后接 `;includeSubDomains` 和 `;preload`（不含空格） | `max-age=31536000;includeSubDomains` |
 | `PERMISSIONS_POLICY` | `Permissions-Policy` | 以逗号分隔的 `feature=()` 或 `feature=(self)` 条目，不含空格，可用于 `accelerometer`、`autoplay`、`camera`、`clipboard-read`、`clipboard-write`、`fullscreen`、`geolocation`、`gyroscope`、`magnetometer`、`microphone`、`midi`、`payment`、`picture-in-picture`、`sync-xhr`、`usb` 和 `xr-spatial-tracking` | `none` |
@@ -3312,7 +3354,7 @@ pip install open-webui[all]
 #### `ELASTICSEARCH_USERNAME` {#elasticsearch\_username}
 
 - 类型：`str`
-- 默认值：空字符串（` `），因为默认值设为的是 `None`。
+- 默认值：空字符串（`''`），因为默认值设为 `None`。
 - 描述：指定 Elasticsearch 的用户名。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
@@ -3734,11 +3776,11 @@ pip install open-webui[all]
 
 - 类型：`str`
 - 选项：
-  - `ivfflat` - 使用扁平压缩的倒排文件，对高维数据集更友好。
+  - `ivfflat`：将向量分成多个列表，并搜索其中一部分。
   - `hnsw` - 使用 Hierarchical Navigable Small World 图，通常能提供更好的查询性能。
-- 默认值：未指定（pgvector 会使用其默认值）
-- 描述：指定 pgvector 的索引方法。该选择会影响查询性能和索引构建时间。
-- 持久化：这是一个 `ConfigVar` 变量。
+- 默认值：未设置。Open WebUI 为 `vector` 列选择 `ivfflat`，为 `halfvec` 列选择 `hnsw`。
+- 描述：指定 pgvector 的索引方式。如果现有 `idx_document_chunk_vector` 使用不同方式，初始化会失败，且 Open WebUI 会保留原索引。请安排维护窗口，先替换为使用新方式的索引，再重启。如果只更换索引方式，可以复用已存储的嵌入。
+- 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 :::info
 
@@ -3773,7 +3815,7 @@ pip install open-webui[all]
 :::info IVFFlat 会等待行数据后才建索引
 IVFFlat 根据建索引时已有的数据行确定各簇的位置。每个列表需要 50 行，因此在默认 `100` 个列表时需要 5,000 行。Open WebUI 会等到 `document_chunk` 表达到这一行数才创建索引，并记录等待状态。在此之前，搜索会执行精确扫描；在该数据量下，这种方式既准确又快速。
 
-在更早版本上创建的实例是在表刚建好、还是空表的时候立刻建立索引的，因此它的簇定位在空无一物的基础上，此后加入的每个分块都被归入其中。在一个有 20,000 行的表上，这会返回不到一半的正确分块：10 的召回率为 0.480，而索引建立在真实行上之后则为 1.000，两者的查询耗时都在约 5 毫秒。可用下面的命令一次性修复：
+旧版实例在新建空表时就立即建立索引。它在没有数据的情况下确定各簇的位置，此后添加的分块都分配到这些簇中。在一张有 20,000 行的表上，这样只能返回不到一半的正确分块：前 10 条结果的召回率为 0.480，用实际数据重新建索引后为 1.000。两者的查询耗时都约为 5 毫秒。可用以下命令一次性修复：
 
 ```sql
 REINDEX INDEX idx_document_chunk_vector;
@@ -3793,7 +3835,7 @@ REINDEX INDEX idx_document_chunk_vector;
 - 类型：`str`
 - 选项：`relaxed_order`、`strict_order`、`off`
 - 默认值：`relaxed_order`
-- 描述：告诉 pgvector 在搜索尚未找到足够多符合过滤条件的行时，继续遍历索引。所有集合的分块都存放在同一张表、同一个向量索引下，集合是在索引遍历之后才过滤的，因此若不开启此项，一个只占少量行的知识库几乎拿不到真正的近邻：索引返回的是全局最近的行，而过滤器会把其中几乎所有行都丢弃。在一张有 101,500 行的表上，若某集合只占 1.5% 的行，关闭扫描时实测 10 的召回率为 **0.070，耗时 4.9 毫秒**，开启后则为 **0.970，耗时 7.2 毫秒**（hnsw，`m=16`）。`strict_order` 以更高代价保持结果严格按距离排序；`off` 则回到旧有行为。
+- 描述：搜索未找到足够多符合过滤条件的行时，让 pgvector 继续遍历索引。所有集合的分块共用一张表和一个向量索引。查询遍历索引后才按集合过滤。关闭此设置时，索引返回全表中最近的行，而只占少量行的知识库会筛掉其中几乎所有结果，难以找到真正的近邻。在一张有 101,500 行的表上，某集合只占 1.5% 的行。关闭扫描时，前 10 条结果的召回率实测为 **0.070，耗时 4.9 毫秒**。开启后为 **0.970，耗时 7.2 毫秒**（hnsw，`m=16`）。`strict_order` 保持结果严格按距离排序，开销更高。`off` 恢复旧行为。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 :::info 仅在 pgvector 0.8 及以上版本生效
@@ -4398,11 +4440,11 @@ pip install --upgrade "valkey-glide-sync>=2.5.2"
 
 :::warning
 
-**Docling 2.0.0+ Required**
+**需要 Docling 2.0.0 或更高版本**
 
 Docling 集成已重构为使用服务端参数传递。如果你正在使用 Docling：
 
-1. 升级到 Docling server 2.0.0 或更高版本
+1. 将 Docling 服务器升级到 2.0.0 或更高版本
 2. 将所有单独的 `DOCLING_*` 配置变量迁移到 `DOCLING_PARAMS` JSON 对象
 3. 从配置中移除所有已弃用的 `DOCLING_*` 环境变量
 4. 如果你的服务器需要认证，请添加 `DOCLING_API_KEY`
@@ -4469,7 +4511,7 @@ Docling 集成已重构为使用服务端参数传递。如果你正在使用 Do
 
 如果你此前使用的是单独的 `DOCLING_*` 环境变量（如 `DOCLING_OCR_ENGINE`、`DOCLING_OCR_LANG` 等），这些变量现已弃用。你必须迁移到使用 `DOCLING_PARAMS` 作为单一 JSON 配置对象。
 
-**Example Migration:**
+**迁移示例：**
 ```bash
 # Old configuration (deprecated)
 DOCLING_OCR_ENGINE=tesseract
@@ -4653,7 +4695,7 @@ Open WebUI 会向 `/marker` 端点发起请求，而 Datalab 的 API 参考文�
 
 - 类型：`str`
 - 默认值：`""`（空）
-- 描述：PaddleOCR-vl 服务器的认证令牌。在每个布局解析请求中以 `Authorization: token <value>` 的形式发送。**如果此值为空，PaddleOCR-vl 引擎将在运行时被跳过**：即使设置了 `CONTENT_EXTRACTION_ENGINE=paddleocr_vl`，加载器也会回退到当前文档的默认 PyPDFLoader。设置此值以激活该引擎。
+- 描述：PaddleOCR-vl 服务器的认证令牌。在每个布局解析请求中以 `Authorization: token <value>` 的形式发送。**如果此值为空，PaddleOCR-vl 引擎将在运行时被跳过**：即使设置了 `CONTENT_EXTRACTION_ENGINE=paddleocr_vl`，加载器也会针对当前文档回退到默认加载器链。设置此值以激活该引擎。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::info 支持的文件类型
@@ -4726,7 +4768,7 @@ PaddleOCR-vl 只接收 `pdf`、`png`、`jpg`、`jpeg`、`bmp`、`tiff` 和 `webp
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用 `BM25` + `ChromaDB` 的混合搜索，并使用 `sentence_transformers` 模型进行重排序。启用后，此设置同时应用于标准 RAG 检索流水线和 Agent 模式下使用的原生知识库工具。
+- 描述：启用混合搜索（`BM25` + 向量检索）。如果配置了重排序模型，还可进行重排序。此设置适用于标准 RAG 检索流程和智能体模式下使用的原生知识库工具。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4740,13 +4782,13 @@ PaddleOCR-vl 只接收 `pdf`、`png`、`jpg`、`jpeg`、`bmp`、`tiff` 和 `webp
   - `view_note`，在模型附加了笔记时保留
   - `query_knowledge_bases` 和 `search_knowledge_bases`，在未附加知识时保留，以便模型仍能按名称/描述发现知识库
 
-  **推荐用于增强的、具备智能体能力的 RAG 体验。** shell 风格的接口让能力较强的模型可以像操作本地文件系统那样探索知识库（列出、grep、按行范围读取），相比一窝蜂的独立搜索工具，模型往往能更可靠地串联这些操作，从而更常找到正确的段落。它仅在**原生函数调用**下生效（默认模式；它是原生模式的内置工具）；对于设置为 Legacy 的模型则无效。该功能仍属实验性质，最好与擅长 shell 风格工具串联的前沿模型搭配使用。参见[文件系统风格的访问](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
+  **推荐用于增强的、具备智能体能力的 RAG 体验。** shell 风格的接口让能力较强的模型可以像操作本地文件系统那样探索知识库（列出、grep、按行范围读取），与分别调用多个搜索工具相比，模型往往能更可靠地串联这些操作，从而更常找到正确的段落。它仅在**原生函数调用**下生效（默认模式；它是原生模式的内置工具）；对于设置为 Legacy 的模型则无效。该功能仍属实验性质，最好与擅长 shell 风格工具串联的前沿模型搭配使用。参见[文件系统风格的访问](/features/workspace/knowledge#filesystem-style-access-kb_exec)。
 
 #### `KB_EXEC_MAX_OUTPUT_CHARS` {#kb\_exec\_max\_output\_chars}
 
 - 类型：`int`
 - 默认值：`30000`
-- 描述：限制单次 `kb_exec` 调用的总输出量，无论该输出由什么命令产生。超出上限的部分会被截断，并告知模型用路径、通配符、`head`/`tail`/`sed` 或 `grep` 收窄命令范围。这是整条流水线共用的一份预算，因此对超大文件执行 `cat` 和执行范围很广的 `grep` 受到同样的约束。如果你的模型擅长处理较长的工具输出，而你更希望每次调用读取更多内容，可以调高它；调低它则可以避免工具结果挤占上下文窗口。小于 `1` 的取值会回退为默认值。
+- 描述：限制单次 `kb_exec` 调用的总输出字符数，无论该输出由什么命令产生。超出上限的部分会被截断，并告知模型用路径、通配符、`head`/`tail`/`sed` 或 `grep` 收窄命令范围。这是整条流水线共用的一份预算，因此对超大文件执行 `cat` 和执行范围很广的 `grep` 受到同样的约束。如果你的模型擅长处理较长的工具输出，而你更希望每次调用读取更多内容，可以调高它；调低它则可以避免工具结果挤占上下文窗口。小于 `1` 的取值会回退为默认值。
 - 持久化：通过环境变量设置；启动时应用（非 `ConfigVar`）。
 
 #### `KB_EXEC_MAX_GREP_FILES` {#kb\_exec\_max\_grep\_files}
@@ -4807,27 +4849,11 @@ PaddleOCR-vl 只接收 `pdf`、`png`、`jpg`、`jpeg`、`bmp`、`tiff` 和 `webp
 `DEFAULT_RAG_TEMPLATE`：
 
 ```
+Answer the user's message using the sources inside <context> below. They were retrieved automatically for this conversation and may be incomplete or irrelevant.
 
-### Task:
-Respond to the user query using the provided context, incorporating inline citations in the format [id] **only when the <source> tag includes an explicit id attribute** (e.g., <source id="1">).
+Cite a source directly after each statement it supports, using its id in square brackets: "The warranty covers parts for two years [1]." For several sources, write [1][2]. Use only ids that appear in the context. A <source> tag with nothing inside it labels the material just above it.
 
-### Guidelines:
-- If you don't know the answer, clearly state that.
-- If uncertain, ask the user for clarification.
-- Respond in the same language as the user's query.
-- If the context is unreadable or of poor quality, inform the user and provide the best possible answer.
-- If the answer isn't present in the context but you possess the knowledge, explain this to the user and provide the answer using your own understanding.
-- **Only include inline citations using [id] (e.g., [1], [2]) when the <source> tag includes an id attribute.**
-- Do not cite if the <source> tag does not contain an id attribute.
-- Do not use XML tags in your response.
-- Ensure citations are concise and directly related to the information provided.
-
-### Example of Citation:
-If the user asks about a specific topic and the information is found in a source with a provided id attribute, the response should include the citation like in the following example:
-* "According to the study, the proposed method increases efficiency by 20% [1]."
-
-### Output:
-Provide a clear and direct response to the user's query, including inline citations in the format [id] only when the <source> tag with id attribute is present in the context.
+If the sources don't contain the answer, say so, then answer from your own knowledge if you can. If the context is unrelated to the message, ignore it. Reply in the user's language, and don't reproduce the <context> or <source> tags.
 
 <context>
 {{CONTEXT}}
@@ -4843,7 +4869,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：控制文件从知识库中移除、或知识库本身被删除时会发生什么。默认情况下，文件记录、文件存储副本及其嵌入都会被一并删除。启用它则保留这些内容，使移除操作只是把文件从知识库中取出而不销毁任何东西，这适合出于审计或复用目的而保留上传文件的部署。由于不会回收任何空间，存储会随着每次移除而增长。
+- 描述：控制从知识库工作区移除文件时是否也删除上传文件。设为 `False` 时，如果操作者拥有文件或是管理员，Open WebUI 会尝试删除文件记录和存储副本。设为 `True` 时，保留文件记录和存储副本。无论哪种设置，Open WebUI 都会从知识库中移除文件，并尝试从该库的搜索索引中移除相关条目。移除文件的 API 可以用 `delete_file` 查询参数覆盖默认值。此设置也控制知识库重置、删除目录及内容、同步清理时的文件保留。目录删除和同步清理还会保留仍关联到其他知识库的上传文件。删除整个本地知识库会移除其文件关联，并尝试移除其搜索索引，底层上传文件仍会保留。
 - 持久化：否
 
 #### `CHUNK_SIZE` {#chunk\_size}
@@ -4921,7 +4947,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：加载文档时使用 OCR 从 PDF 中提取图像。也可在**设置 > 文档**（管理员区域）中通过 **PDF 提取图像（OCR）**进行配置。OCR 在 Open WebUI 服务器上使用 RapidOCR 运行，其参数由 [`RAPIDOCR_PARAMS`](#rapidocr_params) 调节。
+- 描述：对默认 PDF 加载器中的嵌入图像运行 OCR，并将识别结果添加到提取的页面文本中。加载器输出的是文本，因此可检索的图表标签不包含图表图像或其视觉结构。也可在管理区域的**设置 > 文档**中配置 **PDF 图像提取（OCR）**。OCR 通过 RapidOCR 在 Open WebUI 服务器上运行，可用 [`RAPIDOCR_PARAMS`](#rapidocr_params) 调整。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4939,7 +4965,7 @@ Provide a clear and direct response to the user's query, including inline citati
   - `page` - 每页生成一个文档（默认）。
   - `single` - 将所有页面合并为一个文档，以便更好地跨页边界切分。
 - 默认值：`page`
-- 描述：控制使用**默认内容提取引擎**（PyPDFLoader）时 PDF 的加载和分割方式。页面模式为每页创建一个文档，而单页模式将所有页面合并为一个文档，当内容跨页时可以提高分块质量。此设置在使用外部内容提取引擎（如 Tika、Docling、Document Intelligence、MinerU 或 Mistral OCR）时不生效，因为这些引擎有自己的文档处理逻辑。也可在**设置 > 文档**（管理员区域）中通过 **PDF 加载器模式** 设置，只有使用默认引擎时才显示。在 `page` 模式下，文本分割器会逐页处理，因此不会有分块跨越分页，每个分块也保留自己的页码：引用会显示 `(page N)`，其链接会打开 PDF 的对应页面。在 `single` 模式下，页面会被拼接成一段文本，分块可以跨越分页，且分块不携带页码，因此引用两者都不会显示。该模式在文件被提取时生效；已有的知识文件只有在执行**重新索引知识与记忆向量**后才会改变。
+- 描述：控制使用**默认内容提取引擎**（PyPDFLoader）时 PDF 的加载和分割方式。逐页模式为每页创建一个文档，而合并模式将所有页面合并为一个文档，当内容跨页时可以提高分块质量。此设置在使用外部内容提取引擎（如 Tika、Docling、Document Intelligence、MinerU 或 Mistral OCR）时不生效，因为这些引擎有自己的文档处理逻辑。也可在**设置 > 文档**（管理员区域）中通过 **PDF 加载器模式** 设置，只有使用默认引擎时才显示。在 `page` 模式下，文本分割器会逐页处理，因此不会有分块跨越分页，每个分块也保留自己的页码：引用会显示 `(page N)`，其链接会打开 PDF 的对应页面。在 `single` 模式下，页面会被拼接成一段文本，分块可以跨越分页，且分块不携带页码，因此引用既不显示页码，也不提供定位到对应页的链接。该模式在文件被提取时生效；已有的知识文件只有在执行**重新索引知识与记忆向量**后才会改变。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -4961,7 +4987,7 @@ Provide a clear and direct response to the user's query, including inline citati
 #### `RAG_FILE_MAX_COUNT` {#rag\_file\_max\_count}
 - 类型：`int`
 - 默认值：未设置（不限制）
-- 描述：设置一次聊天中最多可上传的文件数量。知识库上传使用 [`KNOWLEDGE_MAX_UPLOAD_COUNT`](#knowledge_max_upload_count)。
+- 描述：限制聊天附件数量。编辑区添加文件时，会检查待发送附件与本批次新增附件的总数。发送消息时，会检查待发送附件与聊天中已保留的附件总数，因此此聊天已附加的文档和知识集合可能计入之后发送的消息。知识库上传使用 [`KNOWLEDGE_MAX_UPLOAD_COUNT`](#knowledge_max_upload_count)。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 #### `KNOWLEDGE_MAX_UPLOAD_COUNT` {#knowledge\_max\_upload\_count}
@@ -5028,7 +5054,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 ### 嵌入引擎配置 {#embedding-engine-configuration}
 
-#### 常规 Embedding Settings {#general-embedding-settings}
+#### 常规嵌入设置 {#general-embedding-settings}
 
 
 #### `RAG_EMBEDDING_BATCH_SIZE` {#rag\_embedding\_batch\_size}
@@ -5061,7 +5087,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 :::tip
 
-当开启异步嵌入且同时有大量用户使用你的 Open WebUI 实例时，可能需要调高 `THREAD_POOL_SIZE` 的值，以避免
+当开启异步嵌入且同时有大量用户使用你的 Open WebUI 实例时，可能需要调高 `THREAD_POOL_SIZE` 的值。
 
 :::
 
@@ -5132,7 +5158,7 @@ Provide a clear and direct response to the user's query, including inline citati
 
 - 类型：`str`
 - 默认值：`${OPENAI_API_BASE_URL}`
-- 描述：设置用于 RAG 嵌入的 OpenAI 基础 API URL。
+- 描述：设置用于 RAG 嵌入的 OpenAI API 基础 URL。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5179,13 +5205,13 @@ Provide a clear and direct response to the user's query, including inline citati
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
-#### Ollama Embeddings 配置 {#ollama-embeddings}
+#### Ollama 嵌入模型 {#ollama-embeddings}
 
 
 #### `RAG_OLLAMA_BASE_URL` {#rag\_ollama\_base\_url}
 
 - 类型：`str`
-- 描述：设置 RAG 模型中使用的 Ollama API 基础 URL。
+- 描述：设置 RAG 模型使用的 Ollama API 基础 URL。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -5369,18 +5395,30 @@ Strictly return in JSON format:
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
-#### `RAG_FULL_TEXT_CHAR_THRESHOLD` {#rag\_full\_text\_char\_threshold}
+#### `RAG_FULL_TEXT_THRESHOLD` {#rag\_full\_text\_threshold}
 
 - 类型：`int`
 - 默认值：`50000`
-- 描述：设置上传文件或文本附件的完整提取文本在多少字符以内会被直接包含进提示词。更大的文件则使用检索。知识库附件不受影响。`0` 表示始终使用检索。也可在**管理设置** > **文档**中以**全文阈值（字符数）**形式设置。别名 `RAG_RETRIEVAL_CHAR_THRESHOLD` 和 `RAG_FULL_CONTEXT_CHAR_THRESHOLD` 也会被读取。
+- 描述：设置上传文件或文本附件的大小阈值。大小不超过该阈值时，提示词会包含提取出的全部文本。默认以字符计数。将 [`RAG_FULL_TEXT_THRESHOLD_TYPE`](#rag_full_text_threshold_type) 设为 `token` 时按 token 计数。更大的文件采用检索。设为 `0` 时始终检索。也可在管理区域的**设置** > **文档**中配置**全文阈值（字符）**或**全文阈值（token）**。系统也读取旧名称 `RAG_FULL_TEXT_CHAR_THRESHOLD`、`RAG_RETRIEVAL_CHAR_THRESHOLD` 和 `RAG_FULL_CONTEXT_CHAR_THRESHOLD`。
 - 持久化：这是一个 `ConfigVar` 变量。
+
+#### `RAG_FULL_TEXT_THRESHOLD_TYPE` {#rag\_full\_text\_threshold\_type}
+
+- 类型：`str`
+- 默认值：空字符串（`""`），以字符计量
+- 选项：`""` 或 `token`
+- 描述：指定 [`RAG_FULL_TEXT_THRESHOLD`](#rag_full_text_threshold) 衡量文件大小的方式。`token` 使用 [`TIKTOKEN_ENCODING_NAME`](#tiktoken_encoding_name) 编码来统计 token，因此对于使用其他分词器的模型，这只是近似值。也可在管理区域的**设置** > **文档**中配置**全文阈值类型**。
+- 持久化：这是一个 `ConfigVar` 变量。
+
+#### `RAG_FULL_TEXT_CHAR_THRESHOLD` {#rag\_full\_text\_char\_threshold}
+
+[`RAG_FULL_TEXT_THRESHOLD`](#rag_full_text_threshold) 的旧名称。
 
 #### `RAG_SYSTEM_CONTEXT` {#rag\_system\_context}
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用后，将 RAG 上下文注入**系统消息**而非用户消息。对于使用支持 **KV 前缀缓存**或**提示词缓存**的模型，强烈建议启用此选项以优化性能。这包括本地引擎（如 Ollama、llama.cpp 或 vLLM）以及云提供商/模型即服务提供商（如 OpenAI 和 Vertex AI）。通过将上下文放置在系统消息中，它保持在对话开头的稳定位置，使缓存在多轮对话中持续有效。禁用时（默认），上下文被注入用户消息中，每轮位置都会移动，导致缓存失效。
+- 描述：启用后，将 RAG 上下文注入**系统消息**而非用户消息。对于支持 **KV 前缀缓存**或**提示词缓存**的模型（包括 Ollama、llama.cpp、vLLM 等本地引擎，以及 OpenAI、Vertex AI 等云提供商），此设置会让上下文保持在对话开头的固定位置，使缓存可跨轮次复用。禁用时（默认），上下文被注入用户消息中，每轮位置都会移动，导致缓存失效。
 
 
 #### `RAG_SOURCE_METADATA_KEYS` {#rag\_source\_metadata\_keys}
@@ -5574,7 +5612,7 @@ Strictly return in JSON format:
 
 - 类型：`string` (comma-separated list)
 - 默认值：`""` (empty, but default blocklist is always applied)
-- 描述：配置 Web 抓取操作的额外 URL 过滤规则，以防止服务端请求伪造（SSRF）攻击。系统包含一个默认阻止列表，用于防止访问云元数据端点（AWS、Google Cloud、Azure、阿里云）。不带 `!` 前缀的条目被视为允许列表（仅允许这些域名），带 `!` 前缀的条目被添加到阻止列表（始终拒绝这些域名）。默认阻止列表包括 `!169.254.169.254`、`!fd00:ec2::254`、`!metadata.google.internal`、`!metadata.azure.com` 和 `!100.100.100.200`。自定义条目与默认阻止列表合并。
+- 描述：配置 Web 抓取操作的额外 URL 过滤规则，以防止服务端请求伪造（SSRF）攻击。系统包含一个默认阻止列表，用于防止访问云元数据端点（AWS、Google Cloud、Azure、阿里云）。不带 `!` 前缀的条目被视为允许列表（仅允许这些域名），带 `!` 前缀的条目被添加到阻止列表（始终拒绝这些域名）。默认阻止列表包括 `!169.254.169.254`、`!fd00:ec2::254`、`!metadata.google.internal`、`!metadata.azure.com` 和 `!100.100.100.200`。它还涵盖不应成为抓取目标的地址，包括每台虚拟机都可访问的 Azure 平台通道、组播地址段、已弃用的 6to4 中继及 IPv6 站点本地地址段、由本地网络边缘设备应答的任播地址，以及规范保留但从不路由的若干前缀。自定义条目会与默认阻止列表合并。
 
 :::info
 Example:
@@ -5586,12 +5624,14 @@ Example:
 
 #### `WEB_SEARCH_DOMAIN_FILTER_LIST` {#web\_search\_domain\_filter\_list}
 
-- 类型：`list` of `str`
-- 默认值：`[]`
-- 描述：逗号分隔的域名列表，用于过滤 Web 搜索结果。带 `!` 前缀的域名被阻止；不带前缀的域名创建允许列表（仅允许这些域名）。
-- 示例：`wikipedia.org,github.com,!malicious-site.com`
+- 类型：由 `str` 组成的 `list`（环境变量中的 JSON 数组）
+- 默认值：`[]`（不筛选）
+- 描述：对支持此列表的搜索引擎（如 SearXNG）筛选结果。使用裸域名匹配该域及其子域。不支持 `example.com/news` 等 URL 路径。前缀为 `!` 的条目会排除匹配结果。如果包含任何无前缀条目，结果必须匹配其中至少一个，并且排除项始终优先。[Jina](/features/chat-conversations/web-search/providers/jina#limits) 不使用此列表。
+- 示例：`WEB_SEARCH_DOMAIN_FILTER_LIST='["example.com","!archive.example.com"]'`
 - 持久化：这是一个 `ConfigVar` 变量。
 
+
+在管理区域的**设置 > Web 搜索**中启用 **Web 搜索**，即可看到**域名筛选列表**。管理区域的字段接收逗号分隔的条目，如 `example.com,!archive.example.com`。在 v0.13.4 中，环境变量中的逗号分隔值无法通过 JSON 解析，会回退到空列表。
 
 #### `WEB_SEARCH_RESULT_COUNT` {#web\_search\_result\_count}
 
@@ -5663,7 +5703,7 @@ Example:
 
 - 类型：`str`
 - 默认值：`auto`
-- 选项： `auto` (Random), `bing`, `brave`, `duckduckgo`, `google`, `grokipedia`, `mojeek`, `wikipedia`, `yahoo`, `yandex`.
+- 选项： `auto`（随机）、`bing`, `brave`, `duckduckgo`, `google`, `grokipedia`, `mojeek`, `wikipedia`, `yahoo`, `yandex`.
 - 描述：指定 DDGS 引擎使用的后端。
 - 持久化：这是一个 `ConfigVar` 变量。可在**设置 > Web 搜索 > DDGS 后端**（管理员区域）中配置（当 DDGS 被选为搜索引擎时）。
 
@@ -5755,7 +5795,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`int`
 - 默认值：`8192`
-- 描述：当 `WEB_SEARCH_ENGINE=brave_llm_context` 时，每次查询所拉取的最大 token 总数。会以 `maximum_number_of_tokens` 发送给 Brave 的 LLM Context API。有效范围 `1024`–`32768`。值越大获取的提取段落越丰富，相应消耗的 API 配额也越多；值越小响应越精简。可在 **设置 → 网页搜索 → Context Tokens**（管理员区域） 中配置（仅在选择 `brave_llm_context` 引擎时显示）。
+- 描述：当 `WEB_SEARCH_ENGINE=brave_llm_context` 时，每次查询所拉取的最大 token 总数。会以 `maximum_number_of_tokens` 发送给 Brave 的 LLM Context API。有效范围 `1024`–`32768`。值越大获取的提取段落越丰富，相应消耗的 API 配额也越多；值越小响应越精简。可在 **设置 → 网页搜索 → 上下文 token 数**（管理员区域） 中配置（仅在选择 `brave_llm_context` 引擎时显示）。
 - 持久化：这是一个 `ConfigVar` 变量。存储于配置键 `rag.web.search.brave_search_context_tokens`。
 
 
@@ -6494,7 +6534,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 - 类型：`str`
 - 默认值：`mp3,wav,m4a,webm,ogg,flac,mp4,mpga,mpeg`
-- 描述：Speech-to-Text 上传端点接受的音频文件扩展名（逗号分隔）。扩展名不在该列表内的上传会以 `400 Invalid audio file extension` 拒绝。比对不区分大小写。设为空值可跳过扩展名校验（仍会通过 `AUDIO_STT_SUPPORTED_CONTENT_TYPES` 做 MIME 类型校验）。可在 **Admin Settings → Audio → STT** 中配置。
+- 描述：语音转文本上传端点接受的音频文件扩展名（以逗号分隔）。扩展名不在该列表内的上传会以 `400 Invalid audio file extension` 拒绝。比对不区分大小写。设为空值可跳过扩展名校验（仍会通过 `AUDIO_STT_SUPPORTED_CONTENT_TYPES` 做 MIME 类型校验）。管理员的**音频**设置不显示此列表，保存这些设置也不会更改它。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -6581,7 +6621,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 
 #### `VOICE_MODE_PROMPT_TEMPLATE` {#voice\_mode\_prompt\_template}
 - 类型：`str`
-- 默认值：The value of `DEFAULT_VOICE_MODE_PROMPT_TEMPLATE` environment variable.
+- 默认值：空字符串，此时使用内置语音提示词。（`DEFAULT_VOICE_MODE_PROMPT_TEMPLATE` 是内置常量，无法通过环境变量设置。）
 - 描述：配置语音模式交互的自定义系统提示词。允许管理员控制 AI 在语音对话中的响应方式（风格、长度、语气）。留空使用针对语音对话优化的默认提示词，或提供自定义指令来定制语音助手的行为。仅在 `ENABLE_VOICE_MODE_PROMPT` 为 `True` 时生效。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -6612,7 +6652,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 - 类型：`str`
 - 选项：
   - `api_key`：使用 `AUDIO_REALTIME_OPENAI_API_KEY` 登录。
-  - `microsoft_entra_id`：使用 Microsoft Entra ID 令牌登录，该令牌由 Open WebUI 服务器通过 `DefaultAzureCredential` 获取，使用服务器自身的 Azure 身份（托管标识、服务主体环境变量或 Azure CLI 登录）。要求 `AUDIO_REALTIME_PROVIDER=azure`；当为 `openai` 时，通话会以 **“Microsoft Entra ID 需要 Azure OpenAI 实时服务提供方”** 结束。
+  - `microsoft_entra_id`：使用 Microsoft Entra ID 令牌登录。Open WebUI 服务器使用自身的 Azure 身份（托管标识、服务主体环境变量或 Azure CLI 登录）通过 `DefaultAzureCredential` 获取该令牌。要求 `AUDIO_REALTIME_PROVIDER=azure`。若提供方为 `openai`，通话会结束并提示 **“Microsoft Entra ID requires the Azure OpenAI Realtime provider”**。
 - 默认值：`api_key`
 - 描述：设置实时通话的**认证方式**。
 - 持久化：这是一个 `ConfigVar` 变量。
@@ -6697,7 +6737,7 @@ Brave 免费套餐的速率限制为每秒 1 次请求。Open WebUI 会在收到
 #### `REALTIME_TTS_PROMPT_TEMPLATE` {#realtime\_tts\_prompt\_template}
 
 - 类型：`str`
-- 默认值：空字符串，即回退到内置的、要求模型逐字朗读的内置提示词。
+- 默认值：空字符串，此时使用要求模型逐字朗读的内置提示词。
 - 描述：设置当 `AUDIO_TTS_ENGINE` 为 [`openai-realtime`](/features/chat-conversations/audio/text-to-speech/openai-tts-integration#using-the-openai-realtime-engine) 时交给模型的指令。留空则使用内置提示词。
 - 持久化：这是一个 `ConfigVar` 变量。
 
@@ -7117,15 +7157,15 @@ curl -X POST "http://localhost:8080/api/v1/oauth/oidc/token/exchange" \
 #### `OAUTH_CLIENT_INFO_ENCRYPTION_KEY` {#oauth\_client\_info\_encryption\_key}
 
 - 类型：`str`
-- 默认值：Falls back to the value of `WEBUI_SECRET_KEY`.
+- 默认值：使用 `WEBUI_SECRET_KEY` 的值。
 - 描述：指定用于加密和解密存储在数据库中的 OAuth 客户端令牌的密钥。这是 OAuth 客户端令牌的关键安全组件。未设置时，默认使用主 `WEBUI_SECRET_KEY`，但强烈建议在生产环境中将其设置为唯一、安全生成的值。`OAUTH_CLIENT_INFO_ENCRYPTION_KEY` 与 OAuth 2.1 MCP 服务器认证配合使用。
 
 
 #### `OAUTH_SESSION_TOKEN_ENCRYPTION_KEY` {#oauth\_session\_token\_encryption\_key}
 
 - 类型：`str`
-- 默认值：Falls back to the value of `WEBUI_SECRET_KEY`.
-- 描述：指定用于加密和解密存储在数据库中的 OAuth 令牌的密钥。这是保护静态用户凭据的关键安全组件。未设置时，默认使用主 `WEBUI_SECRET_KEY`，但强烈建议在生产环境中将其设置为唯一、安全生成的值。
+- 默认值：使用 `WEBUI_SECRET_KEY` 的值。
+- 描述：指定用于加密和解密存储在数据库中的 OAuth 令牌的密钥。这是保护存储中的用户凭据的关键设置。未设置时，默认使用主 `WEBUI_SECRET_KEY`，但强烈建议在生产环境中为它单独安全生成一个密钥。
 
 :::warning
 
@@ -7225,7 +7265,7 @@ curl -X POST "http://localhost:8080/api/v1/oauth/oidc/token/exchange" \
 
 #### `GOOGLE_OAUTH_AUTHORIZE_PARAMS` {#google\_oauth\_authorize\_params}
 
-- 类型：`str` (JSON object)
+- 类型：`str`（JSON 对象）
 - 默认值：`{}`
 - 描述：向 OAuth `/authorize` 请求添加 Google 特定参数。适用于需要额外参数（如 `prompt`、`login_hint` 或 `hd`）的 Google 流程。
 
@@ -7633,9 +7673,9 @@ GOOGLE_OAUTH_AUTHORIZE_PARAMS={"prompt":"consent","login_hint":"user@example.com
 
 #### `OAUTH_AUTHORIZE_PARAMS` {#oauth\_authorize\_params}
 
-- 类型：`str` (JSON object)
+- 类型：`str`（JSON 对象）
 - 默认值：`{}`
-- 描述：在登录期间直接将额外参数传递给 OAuth 提供商的授权端点。当你的提供商需要专用变量未覆盖的自定义授权时参数时使用此项。
+- 描述：登录时将额外参数直接传给 OAuth 提供商的授权端点。如果提供商需要自定义授权参数，且没有对应的专用变量，请使用此项。
 
 常见示例包括 `prompt`、`login_hint`、`domain_hint`、`resource`、`audience` 等参数，或提供商特有的标志位。
 
@@ -7763,7 +7803,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：设置是否验证 LDAP CA 证书。
+- 描述：启用或禁用 LDAP 连接的 TLS。
 - 持久化：此环境变量是一个 `ConfigVar` 变量。
 
 
@@ -7938,7 +7978,7 @@ environment:
 #### `USER_PERMISSIONS_CHAT_CONTINUE_RESPONSE` {#user\_permissions\_chat\_continue\_response}
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用用户继续 AI 响应的权限。禁用后，用户无法使用"Continue Response"按钮，这有助于防止通过响应继续操纵导致的潜在系统提示词泄露。
+- 描述：控制用户能否继续生成 AI 回复。禁用后，用户无法使用“继续回复”按钮，有助于防止用户通过操纵续写泄露系统提示词。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7960,7 +8000,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用用户在聊天中使用语音转文字的权限。**音频**设置标签页会向至少持有 [`USER_PERMISSIONS_CHAT_STT`](#user_permissions_chat_stt)、[`USER_PERMISSIONS_CHAT_TTS`](#user_permissions_chat_tts) 和 [`USER_PERMISSIONS_CHAT_CALL`](#user_permissions_chat_call) 中至少一项的非管理员显示。
+- 描述：启用或禁用用户在聊天中使用语音转文字的权限。非管理员拥有 [`USER_PERMISSIONS_CHAT_STT`](#user_permissions_chat_stt)、[`USER_PERMISSIONS_CHAT_TTS`](#user_permissions_chat_tts) 和 [`USER_PERMISSIONS_CHAT_CALL`](#user_permissions_chat_call) 中任一权限时，可看到**音频**设置标签页。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -7968,7 +8008,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用用户在聊天中使用文字转语音的权限。**音频**设置标签页会向至少持有 [`USER_PERMISSIONS_CHAT_STT`](#user_permissions_chat_stt)、[`USER_PERMISSIONS_CHAT_TTS`](#user_permissions_chat_tts) 和 [`USER_PERMISSIONS_CHAT_CALL`](#user_permissions_chat_call) 中至少一项的非管理员显示。
+- 描述：启用或禁用用户在聊天中使用文字转语音的权限。非管理员拥有 [`USER_PERMISSIONS_CHAT_STT`](#user_permissions_chat_stt)、[`USER_PERMISSIONS_CHAT_TTS`](#user_permissions_chat_tts) 和 [`USER_PERMISSIONS_CHAT_CALL`](#user_permissions_chat_call) 中任一权限时，可看到**音频**设置标签页。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8090,7 +8130,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：启用或禁用非管理员用户访问子智能体的权限。没有此权限的用户无法使用 `delegate_task` 或 `timer` 工具。
+- 描述：启用或禁用非管理员用户对子智能体的访问。没有此权限的用户无法使用 `delegate_task`、`send_message` 或 `timer` 工具。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 :::info
@@ -8254,6 +8294,13 @@ environment:
 - 描述：允许非管理员共享工作区技能。
 - 持久化：这是一个 `ConfigVar` 变量。
 
+#### `USER_PERMISSIONS_AUTOMATIONS_ALLOW_SHARING` {#user\_permissions\_automations\_allow\_sharing}
+
+- 类型：`bool`
+- 默认值：`False`
+- 描述：允许非管理员向指定用户或用户组共享自动化。参见[共享](/features/chat-conversations/chat-features/automations#sharing)。
+- 持久化：这是一个 `ConfigVar` 变量。
+
 
 #### `USER_PERMISSIONS_NOTES_ALLOW_SHARING` {#user\_permissions\_notes\_allow\_sharing}
 - 类型：`bool`
@@ -8344,7 +8391,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`False`
-- 描述：启用或禁用日历的**公开分享**。禁用后，非管理员所有者在创建或更新日历时无法附加通配的 `read` 或 `write` 访问授权——公共主体会被静默从访问授权列表中过滤掉，因此日历无法在未经管理员授权的前提下被所有具备 Calendar 功能的用户读取或写入。按用户和按组的授权不受影响。管理员始终保留公开分享的权限。可在 **管理面板 → 用户 → 用户组 → 权限 → Calendars Public Sharing** 中按组配置。
+- 描述：启用或禁用日历的**公开分享**。禁用后，非管理员所有者在创建或更新日历时无法附加通配的 `read` 或 `write` 访问授权——公共主体会被静默从访问授权列表中过滤掉，因此日历无法在未经管理员授权的前提下被所有具备 Calendar 功能的用户读取或写入。按用户和按组的授权不受影响。管理员始终保留公开分享的权限。可在**管理面板 > 用户 > 用户组 > 权限 > 日历公开分享**中按组配置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8354,7 +8401,7 @@ environment:
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：控制非管理员用户是否可以与**特定个人用户**共享资源（知识库、模型、提示词、笔记、技能和工具）。设置为 `False` 时，个人用户授权会被静默从访问授权列表中移除——组共享和公开共享不受影响。无论此设置如何，管理员始终保留与个人用户共享的能力。也可按组在**管理面板 → 用户 → 组 → 权限 → 访问授权 → 允许与用户共享**中配置。
+- 描述：控制非管理员能否向**指定用户**共享资源，包括知识库、模型、提示词、笔记、技能、工具、文件夹、频道、日历和聊天分享链接。也可在**管理面板 > 用户 > 用户组 > 权限 > 访问授权 > 允许与用户共享**中按组配置。
 - 持久化：这是一个 `ConfigVar` 变量。
 
 
@@ -8608,20 +8655,20 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 
 - 类型：`str`
 - 默认值：`http://localhost:4317`
-- 描述：指定用于导出跟踪、指标和日志的默认 OTLP（OpenTelemetry Protocol）端点。如果设置了 `OTEL_METRICS_EXPORTER_OTLP_ENDPOINT`，指标可被覆盖；如果设置了 `OTEL_LOGS_EXPORTER_OTLP_ENDPOINT`，日志可被覆盖。
+- 描述：指定导出跟踪、指标和日志所用的默认 OTLP（OpenTelemetry Protocol）端点。可用 `OTEL_METRICS_EXPORTER_OTLP_ENDPOINT` 和 `OTEL_LOGS_EXPORTER_OTLP_ENDPOINT` 分别覆盖指标和日志的端点。
 
 
 #### `OTEL_METRICS_EXPORTER_OTLP_ENDPOINT` {#otel\_metrics\_exporter\_otlp\_endpoint}
 
 - 类型：`str`
-- 默认值：Value of `OTEL_EXPORTER_OTLP_ENDPOINT`
+- 默认值：使用 `OTEL_EXPORTER_OTLP_ENDPOINT` 的值
 - 描述：指定用于导出 OpenTelemetry 指标的专用 OTLP 端点。未设置时，默认使用 `OTEL_EXPORTER_OTLP_ENDPOINT` 的值。当跟踪和指标使用不同端点时很有用。
 
 
 #### `OTEL_LOGS_EXPORTER_OTLP_ENDPOINT` {#otel\_logs\_exporter\_otlp\_endpoint}
 
 - 类型：`str`
-- 默认值：Value of `OTEL_EXPORTER_OTLP_ENDPOINT`
+- 默认值：使用 `OTEL_EXPORTER_OTLP_ENDPOINT` 的值
 - 描述：指定用于导出 OpenTelemetry 日志的专用 OTLP 端点。未设置时，默认使用 `OTEL_EXPORTER_OTLP_ENDPOINT` 的值。当日志、跟踪和指标使用不同端点时很有用。
 
 
@@ -8635,14 +8682,14 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 #### `OTEL_METRICS_EXPORTER_OTLP_INSECURE` {#otel\_metrics\_exporter\_otlp\_insecure}
 
 - 类型：`bool`
-- 默认值：Value of `OTEL_EXPORTER_OTLP_INSECURE`
+- 默认值：使用 `OTEL_EXPORTER_OTLP_INSECURE` 的值
 - 描述：设为 `True` 时，OTLP 导出器对指标使用不安全连接。未指定时，使用 `OTEL_EXPORTER_OTLP_INSECURE` 的值。
 
 
 #### `OTEL_LOGS_EXPORTER_OTLP_INSECURE` {#otel\_logs\_exporter\_otlp\_insecure}
 
 - 类型：`bool`
-- 默认值：Value of `OTEL_EXPORTER_OTLP_INSECURE`
+- 默认值：使用 `OTEL_EXPORTER_OTLP_INSECURE` 的值
 - 描述：设为 `True` 时，OTLP 导出器对日志使用不安全连接。未指定时，使用 `OTEL_EXPORTER_OTLP_INSECURE` 的值。
 
 
@@ -8692,28 +8739,28 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 #### `OTEL_METRICS_BASIC_AUTH_USERNAME` {#otel\_metrics\_basic\_auth\_username}
 
 - 类型：`str`
-- 默认值：Value of `OTEL_BASIC_AUTH_USERNAME`
+- 默认值：使用 `OTEL_BASIC_AUTH_USERNAME` 的值
 - 描述：设置专门用于 OTLP 指标端点的基本认证用户名。未指定时，使用 `OTEL_BASIC_AUTH_USERNAME` 的值。
 
 
 #### `OTEL_METRICS_BASIC_AUTH_PASSWORD` {#otel\_metrics\_basic\_auth\_password}
 
 - 类型：`str`
-- 默认值：Value of `OTEL_BASIC_AUTH_PASSWORD`
+- 默认值：使用 `OTEL_BASIC_AUTH_PASSWORD` 的值
 - 描述：设置专门用于 OTLP 指标端点的基本认证密码。未指定时，使用 `OTEL_BASIC_AUTH_PASSWORD` 的值。
 
 
 #### `OTEL_LOGS_BASIC_AUTH_USERNAME` {#otel\_logs\_basic\_auth\_username}
 
 - 类型：`str`
-- 默认值：Value of `OTEL_BASIC_AUTH_USERNAME`
+- 默认值：使用 `OTEL_BASIC_AUTH_USERNAME` 的值
 - 描述：设置专门用于 OTLP 日志端点的基本认证用户名。未指定时，使用 `OTEL_BASIC_AUTH_USERNAME` 的值。
 
 
 #### `OTEL_LOGS_BASIC_AUTH_PASSWORD` {#otel\_logs\_basic\_auth\_password}
 
 - 类型：`str`
-- 默认值：Value of `OTEL_BASIC_AUTH_PASSWORD`
+- 默认值：使用 `OTEL_BASIC_AUTH_PASSWORD` 的值
 - 描述：设置专门用于 OTLP 日志端点的基本认证密码。未指定时，使用 `OTEL_BASIC_AUTH_PASSWORD` 的值。
 
 
@@ -8722,14 +8769,14 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 - 类型：`str`
 - 选项： `grpc`, `http`
 - 默认值：`grpc`
-- 描述：指定导出 OpenTelemetry 跟踪的默认协议（gRPC 或 HTTP）。如果设置了 `OTEL_METRICS_OTLP_SPAN_EXPORTER`，指标可被覆盖；如果设置了 `OTEL_LOGS_OTLP_SPAN_EXPORTER`，日志可被覆盖。
+- 描述：指定导出 OpenTelemetry 跟踪的默认协议（gRPC 或 HTTP）。可用 `OTEL_METRICS_OTLP_SPAN_EXPORTER` 和 `OTEL_LOGS_OTLP_SPAN_EXPORTER` 分别覆盖指标和日志的导出协议。
 
 
 #### `OTEL_METRICS_OTLP_SPAN_EXPORTER` {#otel\_metrics\_otlp\_span\_exporter}
 
 - 类型：`str`
 - 选项： `grpc`, `http`
-- 默认值：Value of `OTEL_OTLP_SPAN_EXPORTER`
+- 默认值：使用 `OTEL_OTLP_SPAN_EXPORTER` 的值
 - 描述：指定导出 OpenTelemetry 指标的协议（gRPC 或 HTTP）。未指定时，使用 `OTEL_OTLP_SPAN_EXPORTER` 的值。
 
 
@@ -8737,7 +8784,7 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 
 - 类型：`str`
 - 选项： `grpc`, `http`
-- 默认值：Value of `OTEL_OTLP_SPAN_EXPORTER`
+- 默认值：使用 `OTEL_OTLP_SPAN_EXPORTER` 的值
 - 描述：指定导出 OpenTelemetry 日志的协议（gRPC 或 HTTP）。未指定时，使用 `OTEL_OTLP_SPAN_EXPORTER` 的值。
 
 
@@ -8766,7 +8813,7 @@ pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
 
 :::danger SQLite 仅支持本地直连的 SSD/NVMe
 **不支持在 NFS、CIFS/SMB、Azure Files、GlusterFS、CephFS 或任何由网络存储支撑的 Kubernetes PersistentVolumeClaim 上运行 SQLite**——这是 SQLite 上游本身的立场（[SQLite FAQ #5](https://www.sqlite.org/faq.html#q5)）。在异步后端（0.9.0+）下，它会产生连接池超时错误（`QueuePool limit of size N overflow M reached`）、长达数分钟的卡顿、WAL 死锁，甚至可能导致数据库损坏。
-**对于多副本、多 worker、Kubernetes、Docker Swarm，或任何 `DATA_DIR` 位于共享/网络存储上的部署，请将 `DATABASE_URL` 设置为 PostgreSQL URL：**
+**对于多副本部署、Kubernetes、Docker Swarm，或任何 `DATA_DIR` 位于共享存储或网络存储上的部署，请将 `DATABASE_URL` 设置为 PostgreSQL URL：**
 
 ```
 DATABASE_URL=postgresql://user:password@host:5432/openwebui
@@ -8775,7 +8822,7 @@ DATABASE_URL=postgresql://user:password@host:5432/openwebui
 有关完整机制（fsync + 异步连接池饱和）请参阅[性能 → 磁盘 I/O 延迟](/troubleshooting/performance#disk-io-latency-sqlite--storage)，有关迁移指南请参阅[扩展 → 第 1 步](/getting-started/advanced-topics/scaling#step-1-switch-to-postgresql)。
 :::
 
-:::warning 多副本 / 多 worker 部署必须使用 PostgreSQL
+:::warning 多副本部署必须使用 PostgreSQL
 对于多副本或高可用部署（Kubernetes、Docker Swarm），你**必须**使用外部数据库（PostgreSQL）而不是 SQLite。SQLite 不支持来自多个实例的并发写入，会导致数据库损坏或数据不一致。NFS 上共享的 SQLite 文件也不属于“受支持”的场景——它仍会损坏或死锁。请参阅上文链接的扩展指南。
 :::
 
@@ -8802,8 +8849,8 @@ DATABASE_URL=postgresql://user:password@host:5432/openwebui
 #### `DATABASE_TYPE` {#database\_type}
 
 - 类型：`str`
-- 默认值：`None` (automatically set to `sqlite` if `DATABASE_URL` uses default SQLite path)
-- 描述：指定数据库类型（例如 `sqlite`、`postgresql`、`sqlite+sqlcipher`）。当未显式定义完整的 `DATABASE_URL` 时，与其他单独参数一起用于构建 `DATABASE_URL`。
+- 默认值：`None`（如果 `DATABASE_URL` 使用 SQLite 默认路径，则自动设为 `sqlite`）
+- 描述：指定数据库类型（例如 `sqlite`、`postgresql`）。当未显式定义完整的 `DATABASE_URL` 时，与其他单独参数一起用于构建 `DATABASE_URL`。
 - 持久化：否
 
 
@@ -8924,23 +8971,13 @@ DATABASE_URL=postgresql://user:password@host:5432/openwebui
 
 对于并发用户众多的部署，可以考虑同时调大 `DATABASE_POOL_SIZE` 和 `DATABASE_POOL_MAX_OVERFLOW`。一个不错的起点是 `DATABASE_POOL_SIZE=15` 和 `DATABASE_POOL_MAX_OVERFLOW=20`。
 
-**重要：** 二者之和（`DATABASE_POOL_SIZE` + `DATABASE_POOL_MAX_OVERFLOW`）应明显低于你数据库服务器的 `max_connections` 上限。PostgreSQL 默认允许 100 个最大连接，因此建议把总和控制在每个 Open WebUI 实例 50–80 以内，以给其它客户端和维护连接留出空间。
-
 :::
 
-:::warning 连接池大小会随并发倍数放大
+:::warning PostgreSQL 连接池数量随工作进程增长
 
-**每个 Open WebUI 进程都维护自己独立的连接池。** 这适用于每一个副本，无论是 Kubernetes Pod、Docker Compose 还是 Docker Swarm 的副本，也适用于单个实例内的每一个 Uvicorn worker。
+每个 Open WebUI 工作进程都有独立的同步和异步应用引擎。启用连接池后，每个引擎最多可打开 `DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW` 个连接。例如，连接池大小为 15、溢出量为 20，四个副本各有一个工作进程时，应用连接池容量为 280 个连接（2 × 35 × 4）。
 
-实际的最大数据库连接数为：
-
-```
-Total connections = (DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW) × Number of processes/instances
-```
-
-例如，在 `DATABASE_POOL_SIZE=15`、`DATABASE_POOL_MAX_OVERFLOW=20` 且有 4 个副本时，最多可能打开 **140 个连接**（35 × 4）。
-
-计算连接池设置时一定要把这个倍数算进去，以免耗尽数据库的 `max_connections` 上限。这是一项根本性限制：连接池无法在彼此独立的进程或容器之间共享。
+当 `VECTOR_DB=pgvector` 时，未设置的 `PGVECTOR_DB_URL` 默认使用 `DATABASE_URL`。非空 URL 会让 pgvector 创建独立引擎。即使它指向同一服务器，也采用[自己的连接池设置](#pgvector_pool_size)。将此连接池计入它所连接的服务器，并在每台服务器的 `max_connections` 限制内为 Open WebUI 以外的客户端预留余量。这些限制描述的是已配置的连接池。禁用连接池并不会设置连接数上限。
 
 :::
 
@@ -9488,7 +9525,7 @@ WEBSOCKET_REDIS_OPTIONS='{"socket_connect_timeout": 5}'
 
 - 类型：`str`
 - 默认值：未设置。此时应用页面（`index.html`）会带上 `Cache-Control: no-cache` 发送，因此浏览器每次访问都会检查是否有新版本，并在下次加载时获取到升级内容。
-- 描述：设置所有 HTTP 响应（含应用页面）的 Cache-Control 请求头。若要对静态资源做长缓存，参见[配合在代理侧缓存静态资源](/getting-started/advanced-topics/scaling#pair-it-with-static-asset-caching-at-the-proxy)。支持 `public`、`private`、`no-cache`、`no-store`、`must-revalidate`、`max-age=seconds` 等标准指令。如果提供了无效值，则回退为 `"no-store, max-age=0"`（不缓存）。
+- 描述：设置所有 HTTP 响应（含应用页面）的 Cache-Control 响应头。若要对静态资源做长缓存，参见[配合在代理侧缓存静态资源](/getting-started/advanced-topics/scaling#pair-it-with-static-asset-caching-at-the-proxy)。支持 `public`、`private`、`no-cache`、`no-store`、`must-revalidate`、`max-age=seconds` 等标准指令。如果提供了无效值，则回退为 `"no-store, max-age=0"`（不缓存）。
 - 示例：
   - `"private, max-age=86400"`：私有缓存 24 小时
   - `"public, max-age=3600, must-revalidate"`：公开缓存 1 小时，然后重新校验
@@ -9530,7 +9567,7 @@ Open WebUI 使用以下环境变量：
 
 - 类型： `bool`
 - 默认值： `True`
-- 描述：控制是否运行 Open WebUI 自身代码以外的代码或工具。设为 `False` 时，会同时关闭 [`ENABLE_TOOLS`](#enable_tools)、[`ENABLE_FUNCTIONS`](#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](#enable_tool_servers)，不受它们各自取值影响。工作区工具、函数（过滤器、操作和管道）、OpenAPI 和 MCP 工具服务器、Open Terminal 连接、Tether 终端及 Tether 工具服务器均停止运行。启动时也会跳过插件依赖安装。此值只在启动时读取一次，因此修改后需要重启。
+- 描述：用于控制从 Open WebUI 自身代码之外运行代码或工具的所有功能的总开关。设为 `False` 时，[`ENABLE_TOOLS`](#enable_tools)、[`ENABLE_FUNCTIONS`](#enable_functions) 和 [`ENABLE_TOOL_SERVERS`](#enable_tool_servers) 会同时关闭，不受其各自设置影响。工作区工具、函数（过滤器、操作、Pipe）、OpenAPI 和 MCP 工具服务器、Open Terminal 机器、Tether 机器及 Tether 工具服务器都会停止。启动时也会跳过插件依赖安装。仅在启动时读取一次，更改后需要重启。
 - 仍可使用：[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)（记忆、知识、网页搜索、子智能体等）和代码解释器，因为它们是 Open WebUI 自身的一部分。
 - 注意：它决定插件和工具服务器是否*运行*。关闭后部分管理端点仍可访问，例如删除工具或函数、保存工具服务器列表，因此应将其视为执行开关，并把创建工具与函数的权限限制给你信任的人。
 
@@ -9551,7 +9588,7 @@ Open WebUI 使用以下环境变量：
 
 - 类型：`bool`
 - 默认值：`True`
-- 描述：开启或关闭所有外部工具连接，包括管理员配置的 OpenAPI 和 [MCP](/features/extensibility/mcp) 工具服务器、[Open Terminal](/features/open-terminal) 连接，以及用户通过 [Tether](/ecosystem/tether) 添加的终端和工具服务器（OpenAPI 和 MCP）。设为 `False` 时，这些连接均不会加载或调用。**Settings > Integrations**（管理员区域）中的 **Tools** 和 **Terminal** 区域会变灰，聊天中也不再显示终端选择器。[`ENABLE_PLUGINS`](#enable_plugins) 为 `False` 时将强制关闭。此值只在启动时读取一次，因此修改后需要重启。
+- 描述：打开或关闭所有外部工具连接，包括管理员配置的 OpenAPI 和 [MCP](/features/extensibility/mcp) 工具服务器、[Open Terminal](/features/open-terminal) 连接，以及用户通过 [Tether](/ecosystem/tether) 添加的终端和工具服务器（OpenAPI 和 MCP）。设为 `False` 时，不会加载或调用它们，管理区域**设置 > 集成**下的**工具**和**机器**区域会呈灰色，聊天中的终端选择器会隐藏。[`ENABLE_PLUGINS`](#enable_plugins) 为 `False` 时强制关闭。仅在启动时读取一次，更改后需要重启。
 
 ### 安装必需的 Python 包 {#install-required-python-packages}
 

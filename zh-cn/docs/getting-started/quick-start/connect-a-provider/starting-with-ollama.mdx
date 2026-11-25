@@ -48,6 +48,8 @@ Open WebUI 的设计是**面向协议（Protocol-Oriented）**的。当我们提
 ### 高级配置 {#advanced-configuration}
 
 *   **Prefix ID：** 如果你有多个 Ollama 实例都在提供相同模型名，可加上前缀（例如 `remote`）加以区分。Open WebUI 用一个点把前缀和模型名连起来，因此 `llama3` 会显示为 `remote.llama3`。
+
+    添加、更改或移除**前缀 ID** 后，请检查使用该连接中模型的所有工作区预设。预设会保存旧的模型 ID。在**工作区 > 模型**中编辑预设，使用更新后的 ID 重新选择**基础模型（来源）**，然后保存。
 *   **Model IDs (Filter)**：在此列出要显示的模型（白名单）。留空则显示全部模型。
 
 :::tip 连接超时配置
@@ -143,7 +145,7 @@ Open WebUI 会在当前由运行时保持预热的 Ollama 模型旁显示一个�
 - **`OLLAMA_KEEP_ALIVE`**，在 **Ollama 服务器** 上设置，对所有模型生效。它接受 `10m` 或 `24h` 这样的时长、秒数，或者一个负数，用来让模型保持加载。请参阅 Ollama 的[keep-alive FAQ](https://docs.ollama.com/faq#how-do-i-keep-a-model-loaded-in-memory-or-make-it-unload-immediately)。
 - **keep_alive (Ollama)**，是 Open WebUI 的高级参数，会作为 `keep_alive` 随每次聊天请求发给 Ollama，并在该请求中取代 `OLLAMA_KEEP_ALIVE`。可以在 **工作区** > **模型** 中按模型设置，也可以在聊天的 **控制** 或 **设置 > 通用** 中设置，后者只有管理员账号可见（参见[聊天参数](/features/chat-conversations/chat-features/chat-params)）。把它从 **默认** 改为 **自定义** 会填入 `5m`。保持 **默认** 时，Open WebUI 不发送任何内容，适用的是 `OLLAMA_KEEP_ALIVE`。
 
-模型会在内存中停留 keep-alive 指定的时长，因此该值越大，对话之间占用的内存就越多。
+模型会在内存中停留 keep-alive 指定的时长，因此该值越大，模型在两次对话之间占用内存的时间就越长。
 
 ---
 

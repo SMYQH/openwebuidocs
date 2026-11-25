@@ -15,7 +15,7 @@
 3. **安装 Open WebUI：**
 
    ```bash
-   pip install open-webui
+   python -m pip install open-webui
    ```
 
 4. **启动服务：**

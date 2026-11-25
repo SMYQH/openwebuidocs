@@ -177,6 +177,18 @@ Functions 从 **Admin Panel > Functions** 管理。当 [`ENABLE_FUNCTIONS`](/ref
 | **Valves**（齿轮图标） | 打开该函数可由管理员配置的设置界面。 |
 | **导出 / 删除** | 将函数导出为文件，或将其移除。 |
 
+### 通过 API 激活 {#activation-via-api}
+
+这些端点需要管理员权限。`POST /api/v1/functions/create` 成功时会创建 `is_active: false` 和 `is_global: false` 的函数。
+
+| 端点 | 结果 |
+|:---------|:-------|
+| `GET /api/v1/functions/id/{id}` | 返回函数，包括其当前的 `is_active` 和 `is_global` 值。 |
+| `POST /api/v1/functions/id/{id}/toggle` | 反转 `is_active`，并返回更新后的函数。 |
+| `POST /api/v1/functions/id/{id}/toggle/global` | 反转 `is_global`，并返回更新后的函数。 |
+
+只有当前值与目标值不符时才调用切换端点。如果请求超时，请读取当前状态后再决定是否重试。对于已激活的过滤器，全局标记决定哪些模型可以使用它。[用户可切换的过滤器](/features/extensibility/plugin/functions/filter#toggleable-filters-making-filters-user-controllable-selftoggle)还需要在聊天请求中选中。
+
 ### 版本历史 {#version-history}
 
 Functions 保留一份版本历史，其工作方式与 Tools 的版本历史相同：版本选择器位于 **Back** 旁边，可使用 **Compare to current**、**Set as Production** 和 **Delete** 三项操作。详情参见[版本历史](/features/extensibility/plugin/tools#version-history)。对 Functions 而言：
@@ -189,7 +201,7 @@ Functions 保留一份版本历史，其工作方式与 Tools 的版本历史相
 
 ### 翻译 Function {#translating-a-function}
 
-函数编辑器中的地球图标选择器会为每种语言分别保存名称、描述、阀门标签和每个操作的标签，因此回复下方的操作按钮可以用用户自己的语言显示。参见[翻译](/features/administration/translations)。
+函数编辑器中的地球图标选择器会为每种语言分别保存名称、描述、Valves 标签和每个操作的标签，因此回复下方的操作按钮可以用用户自己的语言显示。参见[翻译](/features/administration/translations)。
 
 ### 将 Functions 分配给特定模型 {#assigning-functions-to-specific-models}
 

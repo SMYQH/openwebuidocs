@@ -109,7 +109,7 @@ Open WebUI 从一开始就是面向多用户设计的。即使你是唯一使用
 在 Tether 应用中添加的连接会将密钥保存在你的电脑上，参见[自带模型与工具](/ecosystem/tether#bring-your-own-models-and-tools)。管理员可在 **Settings > Connections**（管理员区域）中添加共享连接。
 
 **“我设置了系统提示词，但管理员的模型设置覆盖了它。”**
-管理员在工作空间中为模型配置的系统提示词优先于个人设置。高级参数则相反：实际发送的是你为账号设置的值，或在**模型控制 > 控制**中为单个聊天设置的值。完整优先级见[聊天参数](/features/chat-conversations/chat-features/chat-params)。
+Open WebUI 按顺序组合工作区模型的系统提示词、文件夹的提示词（如果有），以及聊天的提示词或账户提示词。如果聊天没有自己的提示词，就使用账户提示词。参见[聊天参数](/features/chat-conversations/chat-features/chat-params#how-system-prompts-combine)。
 
 **“设置 > 界面 中的某个开关旁边写着 Default。这是什么意思？”**
 这意味着你从未改动过该选项，因此它一直在跟随管理员配置的实例级[默认界面设置](/features/administration/interface-defaults)。改动之后它就归你了；把它改回当前默认值，它又会重新跟随。

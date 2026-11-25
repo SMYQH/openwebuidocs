@@ -69,15 +69,15 @@ title: "📋 安全政策"
 
 Open WebUI 的社区之所以蓬勃发展，是因为像您这样的人，他们深切关心为每个人制造更安全的软件。
 
-为确保您的发现确实有助于保护用户并迅速解决，请**仅**通过我们的[官方 GitHub 安全页面](https://github.com/open-webui/open-webui/security)提交所有安全漏洞报告。任何其他网站、服务或所谓的"赏金"平台都***不*与我们有关联**，您的重要工作根本无法到达能做出改变的人。
+为确保你的发现能切实保护用户并得到及时处理，请**仅**通过 [GitHub Security Advisories](https://github.com/open-webui/open-webui/security/advisories/new) 提交漏洞报告和 CVE ID 申请。其他网站、服务或所谓的“赏金”平台均***不*属于我们的关联渠道**，经由这些平台提交的成果无法送达能处理问题的人。
 
 :::
 
-我们**仅**通过 [GitHub Security Advisories](https://github.com/open-webui/open-webui/security/advisories/new) 接受漏洞报告。通过**任何**其他平台提交的报告，包括但不限于第三方漏洞报告平台、漏洞中介、社交媒体、电子邮件、Discord 或 Reddit，将不予处理。
+我们**仅**通过 [GitHub Security Advisories](https://github.com/open-webui/open-webui/security/advisories/new) 接受漏洞报告和 CVE ID 申请。通过**任何**其他渠道提交的报告均不予处理，包括但不限于第三方漏洞报告平台、漏洞经纪商、社交媒体、电子邮件、Discord 或 Reddit。
 
-安全流程延续了项目其他工作的透明原则。GitHub Security Advisories 是这一流程唯一的权威渠道。我们不监控外部报告平台，也不通过这些平台沟通；通过这些平台提交的报告将直接关闭，不予审查。
+我们的安全流程与其他工作一样遵循透明原则，[GitHub Security Advisories](https://github.com/open-webui/open-webui/security/advisories/new) 是承载该流程的唯一正式渠道。我们不会也无法监控外部报告平台或通过这些平台沟通，经由这些平台送达的报告将直接关闭，不予审查。
 
-在其他平台上提交的报告不具效力：它不产生优先权，不确立提交日期，也不使我们承担分流、发布或以其他方式处理的义务。本政策只认可 GitHub Security Advisories 中的记录，包括在确定提交先后时。
+通过其他平台提交的报告或 CVE ID 申请在这里无效。此类提交不具有优先权，不确立提交日期，也不产生分流、发布或以其他方式审查的义务。执行本政策时仅认可 GitHub Security Advisory 中的记录，包括认定谁最先提交。
 
 ## 威胁模型 {#threat-model}
 
@@ -91,7 +91,7 @@ Open WebUI 是一个**自托管、单租户、经过身份验证、基于角色*
 ## 报告指南 {#reporting-guidelines}
 
 我们感谢社区对发现潜在漏洞所表现出的关注！
-如果您想报告某项内容不符合此处列出的规则和指南，您仍可进行报告，我们将予以处理， [更多信息请参阅我们的“善意报告”部分](#good-faith-reports-that-arent-vulnerabilities)。
+如果你想报告的事项不符合此处的规则和指南，仍可通过 [GitHub Security Advisories](https://github.com/open-webui/open-webui/security/advisories/new) 提交，我们会予以处理。详情参见[善意提交的非漏洞报告](#good-faith-reports-that-arent-vulnerabilities)。
 
 我们 **不** 接受敷衍了事的漏洞报告。请确保 **提交的报告具有建设性、可操作、可重现、记录详实，并遵守以下准则**：
 
@@ -103,7 +103,7 @@ Open WebUI 是一个**自托管、单租户、经过身份验证、基于角色*
 
 3. **深入理解**：报告必须体现对代码库及 Open WebUI 使用方式的清晰理解，并提供有关该漏洞的具体细节，包括受影响的组件和潜在影响。
 
-4. **必须提供概念验证（PoC）**：每份提交必须包含一份记录详尽的概念验证（PoC），以证明该漏洞的存在。 如果担心保密问题，建议报告者创建该代码库的私人分叉，并向维护者授予访问权限。缺乏有效证据的报告可能会被忽略。
+4. **必须提供概念验证 (PoC)**：每份报告都必须附带一份说明充分的概念验证 (PoC)，以证实漏洞存在。如果需要保密，建议报告者创建私有仓库分叉，并在安全公告中向维护者授予访问权限。缺乏有效证据的报告可能不会被处理。
 
 :::note
 

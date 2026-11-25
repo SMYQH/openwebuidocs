@@ -25,7 +25,7 @@ title: "性能与内存"
 
 当 Open WebUI 在聊天生成或高并发下显得缓慢、卡顿时，可以优先考虑这些优化点。
 
-### 1. 专用 Task Models {#1-dedicated-task-models}
+### 1. 专用任务模型 {#1-dedicated-task-models}
 
 默认情况下，Open WebUI 会为标题生成、标签生成、自动补全等后台任务调用模型。这些任务虽然在后台执行，但如果与你的主聊天模型共用同一资源，往往会拖慢主对话体验。
 
@@ -59,7 +59,7 @@ title: "性能与内存"
   *   *说明*：缓存每个 OpenAI 和 Ollama 连接的模型列表响应 5 分钟。默认值为 `1` 秒。
 
 #### 搜索查询缓存 {#search-query-caching}
-在同一轮对话中，复用为 Web Search / RAG 生成的搜索查询，避免重复调用 LLM。
+在同一轮对话中，RAG 检索会复用 LLM 为网页搜索生成的查询。当多个检索功能处理同一条用户提示词时，这可以避免重复调用 LLM。
 
 - **Env Var**：`ENABLE_QUERIES_CACHE=True`
   *   *说明*：启用后，RAG 会复用同一个搜索查询，而不是为 RAG 重新生成查询，从而节省推理成本与 API 调用，进而提升性能。
@@ -107,7 +107,7 @@ Open WebUI 通过向数据库写入每个用户的 `last_active_at` 时间戳来
 
 SQLite 使用自己的连接池配置，参见[受限容器中的 SQLite 内存占用](#5-sqlite-memory-footprint-on-constrained-containers)。
 
-**重要：** 这两个值的总和（`DATABASE_POOL_SIZE` + `DATABASE_POOL_MAX_OVERFLOW`）应明显低于数据库的 `max_connections` 上限。PostgreSQL 默认上限是 100 个连接，因此单个 Open WebUI 实例建议保持在 50-80 以下，为其他客户端和维护操作留出余量。
+**重要：** 对于 PostgreSQL，请统计同步池、异步池以及连接到同一数据库服务器的所有 pgvector 连接池。将总数乘以所有副本上的工作进程数量，并为其他客户端留出余量。参见 [PostgreSQL 连接池大小](/reference/env-configuration#database_pool_size)。
 
 ### 向量数据库（RAG） {#vector-database-rag}
 
@@ -185,7 +185,7 @@ SQLite 使用自己的连接池配置，参见[受限容器中的 SQLite 内存�
 #### 批量流式输出 token {#batch-streaming-tokens}
 默认情况下（`1`），Open WebUI 会把 LLM 返回的*每一个 token*都立即流式推送给前端。高频推流会增加服务器网络 IO 与 CPU 开销。
 
-通过调大 chunk size，可以把这些更新打包后再发送给客户端。代价只是 UI 流式显示会稍微不那么“丝滑”，但对性能通常很有帮助。
+调大分块大小会先累积多条更新，再分批发送给客户端。代价只是 UI 流式显示会稍微不那么“丝滑”，但对性能通常很有帮助。
 
 - **Env Var**：`CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE=7`
   *   *建议*：高并发实例可设置为 **5-10**
@@ -194,8 +194,8 @@ SQLite 使用自己的连接池配置，参见[受限容器中的 SQLite 内存�
 
 Open WebUI 逐行读取提供商的流，并在线完整后立刻把每次文本更新发送到聊天。在默认设置下它本身不做任何批处理。如果回复成大块出现，或在结束时一次性出现，请按顺序检查以下几项：
 
-1.  **Stream Chat Response 被关闭。** 设为 **Off** 时，Open WebUI 会要求提供商一次性返回完整回复，聊天只会在结束时才显示它。它在模型的 **Advanced Params**（位于 **Workspace** > **Models**）、聊天的 **Controls** > **Advanced Params** 以及 **Settings** > **General** > **Advanced Parameters** 中设置。模型的值优先于聊天的，聊天的又优先于 **Settings**。
-2.  **分块大小被调高。** `CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE` 和 **Stream Delta Chunk Size** 参数会把许多文本更新合并后再交给聊天。Open WebUI 取两者中较大的值，模型上设置的值会替换聊天中设置的值。该参数出现在同样的 **Advanced Params** 区域中，仅管理员可见。把环境变量设为 `1`、参数设为 **Default**，即可看到每次更新到达时的效果。
+1.  **流式聊天响应已关闭。** 设为 **关闭** 时，Open WebUI 会要求提供商一次性返回完整回复，聊天只会在生成结束后显示回复。可在模型的 **高级参数**（位于 **工作区** > **模型**）、聊天的 **控件** > **高级参数**，以及 **设置** > **常规** > **高级参数** 中设置。模型设置优先于聊天设置，聊天设置优先于 **设置** 中的值。
+2.  **分块大小被调高。** `CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE` 和 **流式增量分块大小** 参数决定每批合并多少条文本更新，再一次性发送到聊天界面。Open WebUI 取环境变量和参数中较大的值，模型上的参数值会覆盖聊天中的参数值。该参数位于上述 **高级参数** 中，仅管理员可见。把环境变量设为 `1`、参数设为 **默认**，即可在每条更新到达时看到它。
 3.  **反向代理对流做了缓冲。** 参见**[流式传输故障排查](/troubleshooting/connection-error#garbled-markdown--streaming-response-corruption)**。
 4.  **提供商按块释放文本。** 提供商、它前面的网关，或提供商一侧的内容过滤器都可能暂缓文本，攒够后再一次性发送。开启流式后，把同样的提示词直接发给提供商的 API。如果文本在那里也是成批到达，原因就在 Open WebUI 之外。
 5.  **安全软件扫描 HTTP 流量。** 用户机器或网络上的杀毒软件、终端保护或网络网页过滤器可能在扫描期间暂缓流式响应。换一个网络或另一个浏览器测试，或把 Open WebUI 地址排除在扫描之外，再做对比。
@@ -242,7 +242,7 @@ Open WebUI 会在每个数据块到达时重建响应的文本，每次都复制
 
 - **环境变量**：`WEBSOCKET_HEARTBEAT_INTERVAL=60`
 
-*   **代价**：服务器会保留四倍间隔的时间（即 120 秒）作为在线状态记录，取两者中的较大值，因此合上笔记本离开的用户会在退出活跃用户统计之前更长时间地显示为活跃。
+*   **代价**：服务器按心跳间隔的四倍或 120 秒（取较大值）保留在线状态记录，因此合上笔记本离开的用户会在退出活跃用户统计之前更长时间地显示为活跃。
 *   **取值范围**：数值限定在 `5` 到 `90` 之间。该设置会发送到浏览器，因此无需重新构建前端即可生效。
 
 参见 [`WEBSOCKET_HEARTBEAT_INTERVAL`](/reference/env-configuration#websocket_heartbeat_interval)。
@@ -337,7 +337,7 @@ docker exec openwebui ls -la /proc/1/fd | wc -l
 
 ### 网络延迟（数据库与服务） {#network-latency-database--services}
 
-最常见的问题，是 **Open WebUI 与数据库之间的网络延迟**。
+云端性能问题最常见的原因是 **Open WebUI 与数据库之间的网络延迟**。
 
 很多云部署会把数据库放在其他节点、可用区，甚至托管数据库服务上。这样的架构本身没问题，但它会给*每一条数据库查询*都增加延迟。Open WebUI 每个请求往往会触发多次数据库操作，因此即使单次查询只多出 10-20ms，在并发下也可能叠加成多秒延迟。
 
@@ -358,8 +358,8 @@ docker exec openwebui ls -la /proc/1/fd | wc -l
 - **理想目标**：数据库查询延迟应尽量做到 **1-2ms 或更低**。如果网络延迟超过 **5ms**，对生产环境来说通常已经不理想，并很可能成为主要性能瓶颈。
 
 **解决方法：**
-1. **服务就近部署**：尽量让 Open WebUI 与 PostgreSQL 位于同一可用区，甚至同一节点池
-2. **谨慎使用托管数据库**：云上的“一键式”托管数据库虽然省心，但通常比同节点自托管数据库引入更高网络延迟
+1. **服务就近部署**：尽量让 Open WebUI 与 PostgreSQL 位于同一可用区，如果可行，还可让二者位于同一节点池，减少网络跳数。
+2. **谨慎使用托管数据库**：云上的“一键式”托管数据库便于扩展，但通常比在同一节点上自托管数据库带来明显更高的网络延迟。请认真权衡。
 3. **启用缓存**：使用 `ENABLE_BASE_MODELS_CACHE=True` 以及其他[缓存选项](#2-caching--latency-optimization)，减少每次请求的重复工作
 4. **减少数据库写入**：把 [`DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL`](#user-active-status-write-throttling-set-this-on-every-deployment) 保持在 `60` 或更高
 
@@ -438,7 +438,7 @@ connection timed out, timeout 30.00
 
 | 因素 | 影响 | 缓解方式 |
 |--------|--------|------------|
-| **Burstable VMs**（如 Azure B-series、AWS T-series） | 持续负载下 CPU 被限速 | 使用标准或 compute-optimized 节点池 |
+| **Burstable VMs**（如 Azure B-series、AWS T-series） | 持续负载下 CPU 会被限速，即使报告的使用率很低 | 使用标准或计算优化型节点池 |
 | **DNS 解析** | 每次外部请求都经过 CoreDNS，增加延迟 | 适当扩容 CoreDNS，必要时启用 node-local DNS cache |
 | **Service Mesh Sidecars** | Istio/Linkerd 为每个请求增加代理延迟 | 检查 pod 中是否有意外 sidecar |
 | **Network Policies** | CNI 处理增加额外开销 | 在可能情况下审计并简化策略 |
@@ -614,7 +614,7 @@ DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0         # disable the per-connection mmap win
 4. **Vector DB**：PGVector（推荐）或 ChromaDB（除非数据量极大，两者都可以）
 
 ### 档案 3：高规模 / 企业 {#profile-3-high-scale--enterprise}
-*目标：大量并发用户，稳定性优先。*
+*目标：支持大量并发用户，稳定性优先于持久性。*
 
 1. **数据库**：**PostgreSQL**（必需）
 2. **内容提取**：**Tika**、**Docling**、**或任何其他外部文档加载器**（必需：默认的 pypdf 会内存泄漏）。参见[内容提取引擎](#content-extraction-engine)。
@@ -639,7 +639,7 @@ DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0         # disable the per-connection mmap win
 
 正在流式输出的响应会保存在 Redis 中，以便断线重连的浏览器可以继续接收，响应结束后该条目会被删除。被中途杀死的 worker 遗留的条目会在 `REDIS_RESPONSE_STREAM_TTL` 秒（默认 `3600`）后过期。Redis 内存紧张时可以调低它；设为 `0` 则永久保留。参见 [`REDIS_RESPONSE_STREAM_TTL`](/reference/env-configuration#redis_response_stream_ttl)。
 
-常见 Redis 配置问题：
+导致不必要扩容的常见 Redis 配置问题：
 
 | 问题 | 症状 | 修复方式 |
 |---|---|---|
@@ -661,7 +661,7 @@ DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0         # disable the per-connection mmap win
 | **大规模部署仍使用 SentenceTransformers** | 每个 worker 都会加载 PyTorch 和自己的一份嵌入模型副本 → RAM 占用爆炸 → 被迫加更多机器 | 改用外部 embeddings（`RAG_EMBEDDING_ENGINE=openai`、`azure_openai` 或 `ollama`），或使用 [slim 镜像](#the-slim-image) |
 | **单实例 Redis 就够，却上 Redis Cluster** | 副本太多 → 连接太多 → Redis 扛不住 → 被迫上 Redis Cluster 来弥补 | 先修根因（减少副本、设置 `timeout 1800`、`maxclients 10000`） |
 | **靠加副本掩盖内存泄漏** | 泄漏进程 → OOM → 自动扩容 → Redis 连接更多 → Redis 被打爆 | 先修泄漏（内容提取、嵌入引擎），再做容量规划 |
-| **继续用 Default（prompt-based）tool calling** | 已过时 / 不再支持；注入式 prompt 会破坏 KV cache → 延迟更高 → 资源需求更大 | 把所有模型切到 Native Mode |
+| **继续使用旧版（基于提示词的）工具调用** | 旧版模式已不受支持，无法访问内置系统工具。注入提示词会破坏 KV cache，导致延迟升高、每次请求所需资源增多 | 把所有模型切到 Native Mode |
 | **没有为 Redis 配置空闲连接超时** | 连接永远不回收 → Redis OOM → 被迫上 Redis Cluster | 在 redis.conf 中加入 `timeout 1800` |
 | **在 Actions/Filters 中使用 base64 图标** | 图标数据会嵌入到 `/api/models` 响应中，前端每次为每个模型都加载一遍。20 个模型 × 3 个 Action × 500 KB base64 图标 = 每次请求多 **30 MB 负载** → 前端加载慢、带宽浪费、后端内存压力 | 把图标作为静态文件托管，并以 URL 形式在 `icon_url` / `self.icon` 中引用。参见 [Action Function icon_url 警告](/features/extensibility/plugin/functions/action#example-specifying-action-frontmatter) |
 | **在小容器上使用默认 SQLite 连接池** | 未设置 `DATABASE_POOL_SIZE` 会回退到 512 个连接加 10 个溢出连接的连接池；每个连接自带约 64 MB 页面缓存和一个 256 MB mmap 窗口，因此一个会扇出大量连接的工作流（编辑模型/知识库权限、重新加载长长的模型列表）会让 1 GB 容器 OOM-kill | 限制 `DATABASE_POOL_SIZE`（例如 `8`），设置 `DATABASE_SQLITE_PRAGMA_CACHE_SIZE=-2000` 和 `DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0`，给容器 ≥ 2 GB 内存。参见 [SQLite 内存占用](#5-sqlite-memory-footprint-on-constrained-containers) |
@@ -670,7 +670,7 @@ DATABASE_SQLITE_PRAGMA_MMAP_SIZE=0         # disable the per-connection mmap win
 ---
 
 ## 🔗 环境变量参考 {#environment-variable-references}
-所有可用变量的完整说明，请参阅 [Environment Configuration](/reference/env-configuration)。
+所有可用变量的完整说明，请参阅[环境配置](/reference/env-configuration)。
 
 | 变量 | 说明与链接 |
 | :--- | :--- |

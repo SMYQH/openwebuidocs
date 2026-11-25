@@ -21,7 +21,7 @@ flowchart LR
 
 ## 阅读本节 {#read-this-section}
 
-- [创建终端](/features/open-terminal/terminals/orchestration/creating-terminals)：配置对话框、实例范围、共享和实例管理。
+- [创建机器](/features/open-terminal/terminals/orchestration/creating-terminals)：对话框、实例作用域、共享和实例管理。
 - [环境变量](/features/open-terminal/terminals/orchestration/environment-variables)：原始值、引号处理、转发行为和保留键。
 - [自定义镜像](/features/open-terminal/terminals/orchestration/custom-images)：构建、标记、推送和使用自定义 Open Terminal 镜像。
 - [系统提示词](/features/open-terminal/terminals/orchestration/system-prompts)：自动生成的提示词、`OPEN_TERMINAL_SYSTEM_PROMPT`、占位符和 `OPEN_TERMINAL_INFO`。

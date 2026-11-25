@@ -29,7 +29,7 @@ Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的
 | :--- | :--- |
 | **[Task Models（任务模型）](/features/administration/task-models)** | 为标题、标签、追问、自动补全、搜索查询和压缩摘要提供后端模型与参数 |
 | **[Analytics（分析）](/features/administration/analytics)** | 包含消息量、Token 消耗、模型明细及每用户活动的使用仪表板 |
-| **[Evaluation（评估）](/features/administration/evaluation)** | 模型竞技场、盲测 A/B 对比、基于 ELO 的排行榜及用于微调的对话快照 |
+| **[评测](/features/administration/evaluation)** | 盲测 A/B 对比、基于 ELO 的排行榜和用于微调的对话快照 |
 | **[Banners（横幅）](/features/administration/banners)** | 可定制的全系统公告，用户可关闭单条通知 |
 | **[Default Interface Settings（默认界面设置）](/features/administration/interface-defaults)** | 所有人「设置 > 界面」页面的实例级初始选项值 |
 | **[Translations（翻译）](/features/administration/translations)** | 为你创建的内容提供各语言版本的名称、描述、配置项标签和横幅文本 |
@@ -66,7 +66,7 @@ Open WebUI 为管理员提供了完整的运营工具包。跟踪团队使用的
 不确定哪个模型最适合您的团队？评估系统允许用户在日常对话中通过点赞/踩对模型回复评分。评分结果会汇入基于 ELO 的排行榜，已评分的对话将生成快照，用于未来的模型微调。
 
 **两种评估模式：**
-- **竞技场模式**：随机选择模型进行盲测对比，消除偏见
+- **盲测**：配置随机策略和两个或更多默认模型的[路由模型](/features/administration/router-models)会为每条消息选出一个模型，并隐藏所选模型，以避免偏差
 - **普通交互**：在日常使用中对回复评分，然后通过切换模型进行比较
 
 [**了解 Evaluation →**](/features/administration/evaluation)

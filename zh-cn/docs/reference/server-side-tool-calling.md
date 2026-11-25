@@ -14,7 +14,7 @@ title: "服务端工具调用 (API)"
 - **[内置工具](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode)**：网络搜索、知识库与文件浏览、代码解释器、笔记、频道、记忆、日历、自动化、子智能体、图像生成。
 - **[工作区工具](/features/extensibility/plugin/tools)**：你自己的 Python 工具。
 - 在 Open WebUI 中配置的 **[MCP 服务器](/features/extensibility/mcp)** 和 OpenAPI 工具服务器。
-- **[Open Terminal](/features/open-terminal)**：模型或你的用户有权访问的终端服务器。
+- **[Open Terminal](/features/open-terminal)**：模型或当前用户有权访问的机器。
 
 ---
 
@@ -63,25 +63,25 @@ curl -s -H "Authorization: Bearer $OWUI_KEY" $OWUI_URL/api/models | jq '.data[].
 # Workspace tools you have access to (use .id as a tool_ids entry)
 curl -s -H "Authorization: Bearer $OWUI_KEY" $OWUI_URL/api/v1/tools/ | jq '.[] | {id, name}'
 
-# Terminal servers you have access to (use .id as terminal_id)
-curl -s -H "Authorization: Bearer $OWUI_KEY" $OWUI_URL/api/v1/terminals/ | jq '.[] | {id, name, template_id, scope}'
+# Machines you have access to (use .id as machine_id)
+curl -s -H "Authorization: Bearer $OWUI_KEY" $OWUI_URL/api/v1/machines/ | jq '.[] | {id, name, template_id, scope}'
 ```
 
 MCP 服务器以 `server:mcp:<server-id>` 形式的工具 ID 来寻址。参见[在 API 中使用 Open WebUI 工具（含 MCP）](/reference/api-endpoints#using-open-webui-tools-including-mcp-from-the-api)。
 
-:::warning 模型的默认终端是界面默认值，而非服务端默认值
-在浏览器中挑选模型时，前端会读取模型上的 `meta.terminalId` 并替你放进请求里。后端**不会**这样做。API 调用方必须显式发送 `terminal_id`，否则即使模型配置了终端，模型也拿不到任何终端工具。
+:::warning 模型的默认机器仅在浏览器中生效
+在浏览器中选择模型时，前端会读取模型的 `meta.machineId` 并将其加入请求。API 调用必须自行发送 `machine_id`。即使模型配置了默认机器，省略该字段也会使模型无法获得机器工具。
 
-你可以通过 `GET /api/v1/models/model?id=<model-id>` 读取模型配置的终端并使用 `meta.terminalId`，或者直接从 `/api/v1/terminals/` 中挑选，后者已经只列出你的用户被允许使用的终端。
+可以通过 `GET /api/v1/models/model?id=<model-id>` 读取模型配置的机器，并使用 `meta.machineId`。也可以从 `/api/v1/machines/` 中选择一台，该端点仅列出当前用户有权使用的机器。
 :::
 
 :::warning 模型的工具、默认功能和知识库同样是界面默认值
 Web 界面还会把模型的 **Tools**（`meta.toolIds`）复制到 `tool_ids`，把它的 **Default Features** 复制到 `features`。后端两者都不会做，因此请自行发送。模型的 **Knowledge** 只能通过内置工具搜索，而这些工具需要 `session_id`，或者在旧版模式下搜索。两者都没有的请求完全不会使用模型的知识库。完整列表参见 [Chat Completions](/reference/api-endpoints#chat-completions)。
 :::
 
-### 终端实例范围 {#terminal-scope}
+### 机器作用域 {#machine-scope}
 
-Terminals 服务器上的终端具有 `scope` 字段，值为 `null`、`user`、`chat` 或 `model`。该值决定请求需要携带哪些信息才能使用终端：
+Terminals 服务器上的每台机器都有一个 `scope`，取值为 `null`、`user`、`chat` 或 `model`。它决定了请求必须携带哪些字段才能使用该机器：
 
 | `scope` | 请求所需信息 |
 | :--- | :--- |
@@ -89,7 +89,7 @@ Terminals 服务器上的终端具有 `scope` 字段，值为 `null`、`user`、
 | `chat` | 已保存的 `chat_id`。每个聊天都有自己的实例 |
 | `model` | 你有权访问的模型 |
 
-选择终端前先读取 `scope`。对于 `chat` 终端，必须使用[路径 A](#path-a-full-agentic-loop)及实际保存的聊天，因为[路径 B](#path-b-one-request-answer-in-the-body)不会创建聊天。各范围的行为见[创建终端](/features/open-terminal/terminals/orchestration/creating-terminals#machine-scope)。
+选择机器前先查看 `scope`。对于 `chat` 作用域的机器，必须使用[路径 A](#path-a-full-agentic-loop)和实际保存的对话，因为[路径 B](#path-b-one-request-answer-in-the-body)不会创建对话。各作用域的含义参见[创建机器](/features/open-terminal/terminals/orchestration/creating-terminals#machine-scope)。
 
 ---
 
@@ -140,7 +140,7 @@ curl -s -X POST $OWUI_URL/api/chat/completions \
     \"session_id\": \"api-$(uuidgen)\",
     \"features\": {\"web_search\": true, \"code_interpreter\": true, \"image_generation\": false, \"memory\": true},
     \"tool_ids\": [\"my_workspace_tool\", \"server:mcp:my_mcp_server\"],
-    \"terminal_id\": \"open-terminal\",
+    \"machine_id\": \"open-terminal\",
     \"background_tasks\": {\"title_generation\": false, \"tags_generation\": false, \"follow_up_generation\": false}
   }"
 ```
@@ -163,7 +163,7 @@ curl -s -X POST $OWUI_URL/api/chat/completions \
 | `session_id` | **内置工具的开关。** 任意非空字符串都可以。缺少它时，内置工具不会提供给模型。它还会让请求变为异步（你得到 `task_ids`，而不是阻塞等待）。 |
 | `features` | 开启四组可切换的内置工具：`web_search`、`code_interpreter`、`image_generation`、`memory`。其他内置工具（知识库、文件、笔记、频道、日历、自动化、聊天、时间、任务、子智能体）不需要开关，只要其全局设置、你的权限和模型类别允许，就会被提供。 |
 | `tool_ids` | 工作区工具和 MCP 服务器。可选。 |
-| `terminal_id` | Open Terminal 服务器。可选，独立于 `session_id`。若终端的 `scope` 为 `chat`，还要求 `chat_id` 对应已保存的聊天，路径 A 已满足此条件。 |
+| `machine_id` | 机器 ID。可选，独立于 `session_id`。如果机器的 `scope` 为 `chat`，则 `chat_id` 还必须指向已保存的对话。路径 A 已满足此要求。 |
 | `background_tasks` | 关闭标题、标签和后续问题生成，除非你想要这些额外的模型调用。 |
 
 :::danger 不要发送你自己的 `tools` 数组
@@ -204,7 +204,7 @@ curl -s -X DELETE -H "Authorization: Bearer $OWUI_KEY" "$OWUI_URL/api/v1/chats/$
 
 ### 阻塞式变体（不带 `session_id`） {#blocking-variant-no-session\_id}
 
-去掉 `session_id` 后请求将不再异步：HTTP 调用会阻塞直到整个工具循环结束，然后返回 `null`。你仍然从聊天中读取答案，但可以跳过 A3 中的轮询。代价是这种模式下**不可用内置工具**。当 `tool_ids`、`terminal_id` 和 MCP 就足够时使用它。
+省略 `session_id` 后，请求将同步执行。HTTP 调用会阻塞，直到整个工具调用循环结束，然后返回 `null`。仍需从对话中读取回答，但可跳过 A3 中的轮询。此模式**不提供内置工具**。当只需 `tool_ids`、`machine_id` 和 MCP 时，可使用此模式。
 
 ---
 
@@ -222,7 +222,7 @@ curl -s -X POST $OWUI_URL/api/chat/completions \
     "stream": false,
     "params": {"function_calling": "legacy"},
     "tool_ids": ["my_workspace_tool", "server:mcp:my_mcp_server"],
-    "terminal_id": "open-terminal"
+    "machine_id": "open-terminal"
   }'
 ```
 
@@ -233,8 +233,8 @@ curl -s -X POST $OWUI_URL/api/chat/completions \
 为换取简洁性，需要接受以下限制：
 
 - **只有一轮工具调用。** 模型无法查看结果后再决定调用别的工具。
-- **没有内置工具。** 没有网络搜索，没有代码解释器，没有知识库浏览，也没有终端驱动的智能体工作。
-- **无法使用范围为聊天的终端。** 此模式下的请求不携带 `chat_id`，因此无法使用将 `scope` 设为 `chat` 的终端。其他终端可正常使用。
+- **没有内置工具。** 无法使用 Web 搜索、代码解释器、知识浏览或让智能体在机器上执行工作。
+- **不支持对话作用域的机器。** 此模式的请求不携带 `chat_id`，因此无法使用 `scope` 为 `chat` 的机器。其他机器可正常使用。
 - 旧版模式**不受支持**，并且依赖一个能稳定输出 JSON 的任务模型。参见[工具调用模式](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)。
 
 ---
@@ -277,7 +277,7 @@ def _headers():
 def run(
     prompt,
     tool_ids=None,
-    terminal_id=None,
+    machine_id=None,
     features=None,
     system=None,
     builtin_tools=True,
@@ -361,8 +361,8 @@ def run(
         body["session_id"] = f"api-{uuid.uuid4()}"  # unlocks the built-in tools
     if tool_ids:
         body["tool_ids"] = tool_ids
-    if terminal_id:
-        body["terminal_id"] = terminal_id
+    if machine_id:
+        body["machine_id"] = machine_id
 
     started = requests.post(
         f"{OWUI_URL}/api/chat/completions", headers=_headers(), json=body, timeout=timeout
@@ -390,7 +390,7 @@ def run(
     return message
 
 
-def run_single_request(prompt, tool_ids=None, terminal_id=None, stream=False):
+def run_single_request(prompt, tool_ids=None, machine_id=None, stream=False):
     """Path B: one call, completion in the body. One tool round, no built-in tools."""
     body = {
         "model": MODEL,
@@ -400,8 +400,8 @@ def run_single_request(prompt, tool_ids=None, terminal_id=None, stream=False):
     }
     if tool_ids:
         body["tool_ids"] = tool_ids
-    if terminal_id:
-        body["terminal_id"] = terminal_id
+    if machine_id:
+        body["machine_id"] = machine_id
 
     if not stream:
         response = requests.post(
@@ -425,7 +425,7 @@ def run_single_request(prompt, tool_ids=None, terminal_id=None, stream=False):
 if __name__ == "__main__":
     result = run(
         "Search the web for the newest Open WebUI release, then write a three-bullet summary.",
-        terminal_id=None,
+        machine_id=None,
         tool_ids=None,
     )
     print(result["content"])
@@ -434,7 +434,7 @@ if __name__ == "__main__":
 如何改造它：
 
 - **不同的工具**：传入 `tool_ids=["my_tool", "server:mcp:my_server"]`。
-- **终端工作**：传入 `terminal_id="<id from /api/v1/terminals/>"`。
+- **在机器上执行工作**：传入 `machine_id="<id from /api/v1/machines/>"`。
 - **保留对话**：设置 `DELETE_CHAT_WHEN_DONE = False`。此后它会像一次浏览器对话一样出现在用户的聊天列表中。
 - **多轮对话**：复用 `chat_id`，向消息树中新增一条用户消息和一个助手占位消息，并发送完整的 `messages` 历史。参见[后端可控的 API 流程](/reference/api-flow#send-additional-messages-to-an-existing-chat)。
 - **不需要内置工具**：`builtin_tools=False` 会让请求变为阻塞式，并跳过轮询循环。
@@ -449,10 +449,10 @@ if __name__ == "__main__":
 | 完全没有调用任何工具，且 `stream` 为 `false` | 原生循环仅在流式路径上运行 | 发送 `stream: true` |
 | 发送了 `stream: true` 却没有任何流式输出 | 工作区模型的**流式聊天响应**参数覆盖了请求 | 在模型上清除该设置，或接受模型的设置 |
 | 网络搜索、代码解释器、记忆或图像生成始终不被提供 | 缺少 `session_id`、缺少 `features` 开关、缺少用户权限、被全局关闭，或模型的**内置工具**类别被关闭 | 这五项必须全部对齐，请按此顺序检查 |
-| `execute_code` 返回 “WebSocket connection required” | 代码解释器引擎是 `pyodide`，它在浏览器中运行 | 在 **设置 > 代码执行**（管理员区域） 中把引擎切换为 **Jupyter**，或从 `features` 中去掉 `code_interpreter` |
+| `execute_code` 返回 "WebSocket connection required" | 代码解释器引擎为 `pyodide`，它在浏览器中运行 | 在管理员区域的 **旧版功能**下打开**设置 > 代码执行**，将引擎切换为 **Jupyter**，或从 `features` 中移除 `code_interpreter` |
 | 文件工具（`view_file`、`grep_chat_files` 等）缺失 | 它们需要请求体中有 `files`、有 `session_id`、开启模型的**文件上传**能力，并且**预加载文件**为关闭。API 请求会把预加载文件视为开启，除非模型将其保存为关闭 | 参见[提示词缓存与上下文优化](/features/chat-conversations/prompt-caching) |
-| `503 Terminal unavailable` | 终端服务器不可达、已被禁用，或你的用户没有访问授权 | 确认该 ID 出现在该密钥的 `GET /api/v1/terminals/` 结果中 |
-| `409`，`This terminal requires a saved chat` | 终端的 `scope` 为 `chat`，而请求没有已保存的 `chat_id` | 使用路径 A 和已保存的聊天，或选择其他终端 |
+| `Machine unavailable: ...` | 机器不可达、已禁用，或当前用户未获授权。路径 B 返回 HTTP `503`，路径 A 在助手消息中显示错误 | 确认使用该密钥请求 `GET /api/v1/machines/` 时返回了此 ID |
+| `Machine unavailable: 409: This machine requires a saved chat` | 机器的 `scope` 为 `chat`，但请求未携带已保存对话的 `chat_id`。错误的返回方式与上一行相同 | 使用路径 A，或选择其他机器 |
 | MCP 工具连接失败 | 该 OAuth 受保护的 MCP 服务器尚未被 API 密钥所属用户授权 | 以该用户身份在浏览器中完成一次 OAuth 流程 |
 | 聊天已创建但在界面中始终为空 | 消息树损坏 | `currentId` 使用驼峰命名（camelCase），每条消息都需要 `parentId` 和 `childrenIds`。参见[后端可控的 API 流程](/reference/api-flow) |
 
@@ -464,5 +464,5 @@ if __name__ == "__main__":
 - [后端可控的 API 流程](/reference/api-flow)：路径 A 中使用的聊天与消息树结构。
 - [工具](/features/extensibility/plugin/tools)：内置工具参考、原生与旧版对比、按模型的启用控制。
 - [模型上下文协议 (MCP)](/features/extensibility/mcp)：添加 MCP 服务器。
-- [Open Terminal](/features/open-terminal)：配置终端服务器。
+- [Open Terminal](/features/open-terminal)：在机器上设置 Open Terminal。
 - [API 密钥](/features/authentication-access/api-keys)与[权限](/features/authentication-access/rbac/permissions)。
