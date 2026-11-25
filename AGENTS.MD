@@ -2,7 +2,7 @@
 
 > AGENTS.MD (this document) is time-sensitive. Agent assistants **must** update this document synchronously as the project evolves. See Section 8.
 > Do not blindly trust this document; content may be out of date.
-> Current document snapshot `Git Commit Hash`: `9877cae`, `Commit` timestamp: `2026-11-22T14:54:23+08:00`
+> Current document snapshot `Git Commit Hash`: `0c52b63`, `Commit` timestamp: `2026-11-25T22:03:56+08:00`
 
 ---
 
@@ -158,6 +158,7 @@ docs/
 ### Translation Principles
 
 * **Do NOT translate**: Code blocks, commands, environment variable names, configuration keys, error messages, and product/brand names.
+* **Browser warning terminology**: Preserve `mixed content` in prose. Add the Chinese gloss as `mixed content (混合内容)`.
 * **DO translate**: Body text, header display text, UI interaction descriptions, and step-by-step instructions. Preserve stable explicit heading IDs where links depend on the original English fragment.
 * **API terminology**: Use `端点` for explicit request URIs, `API` or `协议` for a named interface or protocol, `基础 API 端点` for a BaseURL, and `API 端点` for a common address shared by a family of routes. Keep webhook destinations distinct. Separate English words from adjacent Chinese text with spaces in prose; preserve literal UI labels, URLs, and code.
 * When syncing standalone static assets (images, etc.) from `en-us` to `zh-cn`, make sure to copy them to `./zh-cn/` as well.
@@ -198,4 +199,4 @@ When new commits appear in the official English documentation (`en-us/` submodul
 * When modifying the sync workflow, you **must** update that Skill simultaneously and adjust the pointers in this section accordingly.
 * Use one audit to validate installed review results and export the remaining pairs. The checker skill and its [usage reference](.agents/skills/translation-checker/references/usage.md) document the combined options.
 * For file-wide terminology recount and Markdown symbol warnings, use the JSON report's `section_drift` to find the affected headings and compare their text. Locations do not change the finding or its fingerprint.
-* Verification/tooling-only requests use offline acceptance tests, not translation requests. Autonomous translation needs no provider configuration; Live DeepL requests use `DEEPL_AUTH_KEY` from the environment or root `.env`. Use the Skill's offline plan, exact-match reuse, and checkpoint resume to avoid repeat requests. Both modes require a full, hash-bound candidate review before CLI writes, then a strict audit and production build. Only unchanged passed reviews may be reused. An exception-only config update requires the old config digest and a fresh deterministic audit before reuse. Respect user-directed delegation and concurrency limits.
+* Verification/tooling-only requests use offline acceptance tests, not translation requests. Autonomous translation needs no provider configuration; Live DeepL requests use `DEEPL_AUTH_KEY` from the environment or root `.env`. Use the Skill's offline plan, exact-match reuse, and checkpoint resume to avoid repeat requests. Both modes require a full, hash-bound candidate review before CLI writes, then a strict audit and production build. Only unchanged passed reviews may be reused. After exact exception changes or additions to the protected term list, reuse requires the old config digest and a fresh deterministic audit. A pair containing a newly added term needs a fresh review. Respect user-directed delegation and concurrency limits.

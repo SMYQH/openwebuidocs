@@ -3,33 +3,51 @@
 ## en-us Source Version
 
 - **Repo**: `en-us` (submodule)
-- **Git commit**: `307b3ad867f4bfa2d36598c7ab3a858b47763a63`
+- **Git commit**: `99a0308054d130a751d82918f6ab20b0038258a6`
 - **Branch**: `main`
-- **Snapshot date**: 2026-11-21
+- **Snapshot date**: 2026-11-25
 
 ## Translation Progress Overview
 
 | Metric | Value |
 | --- | --- |
-| en-us source files (.md/.mdx) | 409 |
-| zh-cn files (.md/.mdx) | 409 |
+| en-us source files (.md/.mdx) | 412 |
+| zh-cn files (.md/.mdx) | 412 |
 | en-us `_category_.json` | 43 |
 | zh-cn `_category_.json` | 43 |
-| File coverage | **100%** (all 409 en-us documents have corresponding zh-cn translations) |
-| Semantic review | **452 pairs** cover the current source and translation: 409 documents and 43 category records. The 168 pairs changed by this sync were read against upstream; the 284 unchanged pairs carry the review recorded for `f53eb330`. |
+| File coverage | **100%** (all 412 en-us documents have corresponding zh-cn translations) |
+| Semantic review | **109/109 changed pairs passed** full bilingual review. The checker validated the source, installed translation, and configuration hashes. |
+| Strict checker audit | **455/455 pairs** with 0 errors, 0 warnings, 15 notes, and 48 exact exceptions. |
 | Verbatim code blocks | No hard code-preservation errors. The HAProxy and Nginx Proxy Manager fence repairs were reviewed against upstream. |
 | Upstream inline code spans preserved | No unwaived hard preservation errors. Review signals and exact exceptions remain; this is not a universal preservation certification. |
 | Explicit heading IDs matching upstream | No hard heading-structure failures. The reviewed HAProxy repair restored a heading hidden by upstream fence markup. |
 | Untranslated English prose | No unwaived language warnings. Leftover English `endpoint` wording was normalized to the project terminology (`端点`, `API 端点`, `基础 API 端点`), and the `终结点` variant was replaced. |
-| Production build | **Passed on 2026-11-22** with zero broken links, anchors, Markdown links, or duplicate routes. The build generated 393 routed documentation pages. Local sitemap synchronization skips runs without `DOMAIN`. |
-| Checker behaviour tests | **183 tests passed on 2026-11-25**, including the line-ending regression. |
+| Production build | **Passed on 2026-11-25** with Node.js 24.15.0 and zero broken links, anchors, Markdown links, or duplicate routes. The build generated 390 routed documentation pages. Local sitemap synchronization skips runs without `DOMAIN`. |
+| Checker behaviour tests | **185 tests passed on 2026-11-25**, including diagnostic terminology and selective review reuse. |
 
 Workflow: [semantic review](.agents/skills/translation-semantic-review/SKILL.md) is separate from the [Python checker](.agents/skills/translation-checker/SKILL.md), which owns the scripts, tests, config, provider helpers, and ignored local artifacts. Changes to either document beyond line endings expire its exact exceptions. `scripts/restamp_exceptions.py` re-binds the surviving exceptions and reports findings that need a manual decision.
+
+### 2026-11-25 Sync through `99a03080`
+
+- Updated 106 documents and added three guides for Router Models, Local Machine setup, and SSH Machines setup. Copied seven screenshots and the coding-agent redirect byte for byte.
+- Major updates cover Router Models and blind evaluation, Open Terminal setup, built-in tools, model and tool version history, database storage, and environment settings. Tether chat uploads use **Filesystem** and shell tools use **Automatic**.
+- The changed-scope audit validated all 109 semantic reviews with 0 errors, 0 warnings, 2 notes, and 12 exact exceptions. Offline provider plans also passed.
+
+#### Upstream discrepancies
+
+- History & Search says “all three tools” after listing two. The translation refers to the listed tools.
+- Automations says admins cannot delete another user's automation from the interface. Its shared-automation section says creators and admins can delete. The translation preserves both scopes.
+- Analytics says all endpoints require admin authentication and lists a personal endpoint for any signed-in user. The translation limits the admin authentication instruction to admin endpoints.
+- RAG Troubleshooting calls Native the default. The RAG overview also uses Default as a distinct model setting. The troubleshooting guide suggests switching embedding models between ingestion and queries, while the overview requires compatible embeddings and reindexing after a model change.
+- The environment reference counts six forwarded headers in a table that also lists `X-OpenWebUI-Auth-Type`. The translation makes clear that the count covers the six user and session headers.
+- The async embedding tip ends mid-sentence after “to prevent”. The translation retains the instruction to consider raising `THREAD_POOL_SIZE` under concurrent use.
+- The `ONEDRIVE_CLIENT_ID_BUSINESS` description refers to personal Microsoft accounts. The translation specifies organizational accounts, consistent with the Business setting.
 
 ### 2026-11-25 Translation tooling CI
 
 - The November 22 CI run reported 18 warnings because the existing exceptions were fingerprinted with CRLF translation files. The checker now normalizes line endings to LF for exception fingerprints. Semantic review still uses hashes of the original file bytes.
 - Rebound the 18 affected exceptions and preserved all 46 recorded reasons. The strict audit passed all 452 pairs with 0 errors, 0 warnings, and 15 notes.
+- Added `mixed content` as a protected browser warning term. After an addition to the protected term list, the checker reruns the deterministic audit and reopens affected reviews while retaining eligible reviews of unchanged pairs.
 
 ### 2026-11-22 Sync through `307b3ad8`
 
@@ -930,11 +948,6 @@ Fourth pass over the same `36b7e50` snapshot. The previous passes had already re
 - **Content corrections**: Service Worker behaviour in `troubleshooting/connection-error.mdx` (upstream registers none), the "Open WebUI backend required" section that had lost its heading, the `PATCH operations` and `externalId` sections of `features/authentication-access/auth/scim.mdx`, the Gemini/OpenAI image-engine endpoint settings, the Redis persistence interval (30 seconds, not 30 minutes) and the vector-database placement in `troubleshooting/performance.md`.
 - **Verification**: production build (`onBrokenLinks`, `onBrokenAnchors`, `onDuplicateRoutes` all `throw`) completes with zero broken links and zero broken anchors; 1416 in-page links checked, 0 broken; heading parity check reports 0 missing upstream headings; 0 U+FFFD characters in the whole `zh-cn/docs` tree.
 - **Edit links fixed**: `zh-cn/docusaurus.config.ts` still pointed at the old `https://github.com/GamblerIX2/open-webui-docs/blob/main` fork, so every “编辑此页” button on the Chinese site linked to the wrong repository. `editUrl` is now `https://github.com/SMYQH/openwebuidocs/blob/main/zh-cn`, which renders as `https://github.com/SMYQH/openwebuidocs/blob/main/zh-cn/docs/<path>` for every Chinese page. The stale fork link in `zh-cn/docs/contributing.mdx` was removed as well, and `AGENTS.MD` now documents the Chinese edit-link target.
-
-## Outstanding
-
-- **`alternatives/` (13 pages)** — the earlier audit recorded pre-existing drift against the August 2026 rewrite. Correction edits from before the tooling task remain uncommitted; a complete semantic re-review is still pending. No translation work was authorized in the tooling task.
-- **HAProxy rendering** — the earlier audit recorded malformed upstream fences in `reference/https/haproxy.md`. Uncommitted Chinese rendering repairs predate the tooling task and still need rendered-content verification. The upstream submodule was not modified.
 
 ## Deployment Configuration
 
