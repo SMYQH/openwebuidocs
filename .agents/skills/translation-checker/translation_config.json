@@ -364,75 +364,75 @@
       "reason": "Open Terminal Docker tab: the editor-only MD041 directive permits a tab fragment without a standalone title. It does not change rendered content."
     },
     {
-      "fingerprint": "2eac0770e0ff5be71068a802e9d2c6dd1aca0be5bf00e6d05c25f2f08b9a5820",
+      "fingerprint": "1f1e7dc6dba6f566b6e84e840f79d9f2b06be7278a743925d00b9c5f9717cdd8",
       "reason": "The Chinese homepage keeps its translation-status notice and its link to the English source; the extra bold delimiters belong to that notice."
     },
     {
-      "fingerprint": "ce04707eae4df787cf12f9f05a36e1fabe9b96147c9fe7d192d0f472a77ba376",
+      "fingerprint": "3376571aa525604702791ceb90b271a97cd78e489a6374da624ffdd61b4a7705",
       "reason": "The Chinese translation Beta notice directs readers to the official English documentation because translated content may be out of date or incomplete."
     },
     {
-      "fingerprint": "69aa830331c042f0aadb2a358496c2e151b9a8e72fab7797ab84fdad26d6665e",
+      "fingerprint": "e3bb76001ad618ab0e7096974fd2245a61b0b150fd68748e55793d03ede072db",
       "reason": "Nginx: the local MD060 directive allows the editor's table formatting and does not change rendered content."
     },
     {
-      "fingerprint": "4d7dddd707c2e821d4d57de74a3095c3738ed33b141d5d4a6dfec1acc660749f",
+      "fingerprint": "2acf44937f76dabecffcbb0546b4f8ccc1ec51b9328e16305bcecbdd5ab12f61",
       "reason": "OpenTelemetry: the local MD060 directive allows the editor's table formatting and does not change rendered content."
     },
     {
-      "fingerprint": "a68efdde6b7d8465ec051a79e3dbdbdd64f93c8020718742d34253fbb33f60a7",
+      "fingerprint": "bee73982b0e0ef9120f813ece16a30a8a83c4c4d905da9c40c4fbf47e101d022",
       "reason": "Nginx Proxy Manager: the Chinese file moves the single-line DuckDNS assignment into its own fence. All eight code bodies match the upstream text in order."
     },
     {
-      "fingerprint": "50e00cb1c42f1070a1df75b6e86a6c8a55d618e39ccd5394860a497e6bf4a374",
+      "fingerprint": "366c7e2c3e3bd6f17bbadff39f1c9ead134bdc0993f5bcbe02e0c3055fc6aeb1",
       "reason": "Nginx Proxy Manager: the Chinese file adds a Bash fence for the single-line DuckDNS assignment. Existing fence metadata is retained."
     },
     {
-      "fingerprint": "ae3349638d7019e2491890f9251b4aace8f6208c8870da3f2c1a6db3295174f5",
+      "fingerprint": "18bb96c59c5d05eecaa36452df81c90ef3458f5dcbca987daa000a10386dcc78",
       "reason": "The translation repeats HTTPS to clarify the mobile browser requirement, explicitly locates Settings in Open WebUI, and uses a straight apostrophe in Let's Encrypt where upstream uses a curly apostrophe."
     },
     {
-      "fingerprint": "5a8a4a47139941e3e24957fafac4d2290c5cd12d593e5424307adc138f3c7bb1",
+      "fingerprint": "c7896de4c8a7fe72391906312cbdc28325ad16733b1f159a6ded51f391edf123",
       "reason": "The community-support bullet keeps the upstream Discord and Reddit wording and adds the GitHub Discussions link; the extra bracket pair belongs to that link."
     },
     {
-      "fingerprint": "51b624c814212199dba77edb958626aeacd0d67e35fccbe76f044093f7dd5b63",
+      "fingerprint": "d500744f06f38b65151ef7e38daf570ea51ffb04b1cd1b4e2008cafbfa9e76fa",
       "reason": "The community-support bullet adds the GitHub Discussions link because the upstream Discord and Reddit links are removed under the site's external-link policy."
     },
     {
-      "fingerprint": "e50c1ef4c98846571974694b432daa431adfef67a3ab44712978d83a584c3d6d",
+      "fingerprint": "b372925902666f78b232d753f82007a707554cd304647024bd5ee31a6d2f1aeb",
       "reason": "The Encryption table cell contains one additional local cross-reference to storage encryption guidance. The original advice to encrypt backup data at rest remains."
     },
     {
-      "fingerprint": "3b6ddddb95ca0ac4894d01efe0753ac1b50b05bcb57cf6d77b979c54a9e6955d",
+      "fingerprint": "7fb359b0933e1efc637b09868ec73fb5a2e1ddca86c33f26d887a28dc35f0ce5",
       "reason": "The extra reference points to the existing database encryption section explaining supported encrypted storage and that SQLCipher is not supported."
     },
     {
-      "fingerprint": "351b17ea9963315cf0ac1c45100508c9bbc90703e12df65c3e22cbc0889ac8dc",
+      "fingerprint": "78b2aed2b94f2ff95bd7e2d627fe60e53c5756158d1d57612965a6edb68fe0aa",
       "reason": "LDAP: the upstream Bash fence at EOF lacks its closing delimiter. The Chinese file closes it and every fenced code body matches."
     },
     {
-      "fingerprint": "fe07bbf291ba3a93573f32771be57c37dbe0599db23ee5940f852fb347dc9a40",
+      "fingerprint": "e1bfbe9f31449865a9889d8f7c7f9cff002c642fbc3c379b928a31ac37fe34c2",
       "reason": "The sidebar label names the Pi agent product, which stays in English like the other agent product names."
     },
     {
-      "fingerprint": "1d8267655168ff95a3711a590f6da0a836b4a902626aaf3d6f504b84e9753308",
+      "fingerprint": "ddc636655cdcdafc216ed7498ebdde37ceca96dd9382510367bd1ede17555456",
       "reason": "HAProxy: the upstream file leaves its first code fence unterminated, so one block swallows the rest of the page. The Chinese file splits the merged block into separate fences; every command and configuration line matches the upstream text verbatim."
     },
     {
-      "fingerprint": "a0da90116121da248677f33e84ffaa5948ed8a4003b5d0d384552110db5ae89b",
+      "fingerprint": "3aa5c07c9f27e56ff3ea42661e3fe9b11a50dbacc17478be3e0d91b869bb1d62",
       "reason": "HAProxy: the upstream fence delimiters are broken, so the Chinese file restores them and keeps the shell and configuration language metadata."
     },
     {
-      "fingerprint": "f4b43bc3edb84955e8041d886b2232649f2f7f5f63b3bc42a7a61db303af2130",
+      "fingerprint": "fc382a49a12b41e6d4ddca596122b4116077ed46d336ecec5c69618066877145",
       "reason": "HAProxy: the Red Hat and Debian samples retain the haproxy package name verbatim; the repair moves each command from a malformed inline span into a Bash block."
     },
     {
-      "fingerprint": "596df99550b9326d6ef8ffb091b36442d2692bfdb510be8d52987931e3ff003e",
+      "fingerprint": "b9f835a88d7643decc80f33b002b0a544a48de94d11bc74c07e441fc92ed17e0",
       "reason": "HAProxy: the Red Hat and Debian samples retain the haproxy package name verbatim; the repair moves each command from a malformed inline span into a Bash block."
     },
     {
-      "fingerprint": "0ab260f2d6c0563ae1070bd84fbe7b8160f5a4681b7058aa864a4b1e1df62485",
+      "fingerprint": "95278fab2cc031fc01aab35671820a6ad2e45698bb83a63e7e0d689b7e1304fb",
       "reason": "Monitoring: retain the published authentication-setup-for-api-key- fragment next to the API key setup guidance. The anchor is empty, and the built page exposes the ID."
     }
   ]

@@ -1,9 +1,9 @@
 """Re-bind exact exceptions to their findings after translation edits.
 
-An exception is bound to a fingerprint that mixes the file path, the upstream
-and target hashes, the finding line, the finding code and the finding text.
-Any edit to a translated file therefore invalidates the exceptions that
-belonged to it, even when the underlying finding is unchanged.
+An exception fingerprint mixes the file path, the upstream and target hashes
+with line endings normalized to LF, the finding line, the finding code and
+the finding text. Changes to the document beyond line endings invalidate the
+exceptions that belonged to it, even when the underlying finding is unchanged.
 
 This tool matches the findings of a current audit against the findings of a
 baseline audit. When a finding still exists with the same path, code and

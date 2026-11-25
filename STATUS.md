@@ -22,9 +22,14 @@
 | Explicit heading IDs matching upstream | No hard heading-structure failures. The reviewed HAProxy repair restored a heading hidden by upstream fence markup. |
 | Untranslated English prose | No unwaived language warnings. Leftover English `endpoint` wording was normalized to the project terminology (`端点`, `API 端点`, `基础 API 端点`), and the `终结点` variant was replaced. |
 | Production build | **Passed on 2026-11-22** with zero broken links, anchors, Markdown links, or duplicate routes. The build generated 393 routed documentation pages. Local sitemap synchronization skips runs without `DOMAIN`. |
-| Checker behaviour tests | **182 tests passed on 2026-11-22** with a uv-managed Python environment. |
+| Checker behaviour tests | **183 tests passed on 2026-11-25**, including the line-ending regression. |
 
-Workflow: [semantic review](.agents/skills/translation-semantic-review/SKILL.md) is separate from the [Python checker](.agents/skills/translation-checker/SKILL.md), which now owns the scripts, tests, config, provider helpers, and ignored local artifacts. The move does not change review counts or checker behavior. Edits to a translated file expire the exact exceptions of that file; `scripts/restamp_exceptions.py` re-binds the surviving exceptions to their current fingerprints and reports the findings that need a manual decision.
+Workflow: [semantic review](.agents/skills/translation-semantic-review/SKILL.md) is separate from the [Python checker](.agents/skills/translation-checker/SKILL.md), which owns the scripts, tests, config, provider helpers, and ignored local artifacts. Changes to either document beyond line endings expire its exact exceptions. `scripts/restamp_exceptions.py` re-binds the surviving exceptions and reports findings that need a manual decision.
+
+### 2026-11-25 Translation tooling CI
+
+- The November 22 CI run reported 18 warnings because the existing exceptions were fingerprinted with CRLF translation files. The checker now normalizes line endings to LF for exception fingerprints. Semantic review still uses hashes of the original file bytes.
+- Rebound the 18 affected exceptions and preserved all 46 recorded reasons. The strict audit passed all 452 pairs with 0 errors, 0 warnings, and 15 notes.
 
 ### 2026-11-22 Sync through `307b3ad8`
 

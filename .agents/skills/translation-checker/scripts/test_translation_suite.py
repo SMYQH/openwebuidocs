@@ -817,14 +817,40 @@ class VerificationTests(Fixture):
 
     def test_exception_expires_when_either_document_changes(self):
         source = "Source prose with enough words to trigger English review.\n"
-        self.put(self.source, "a.md", source)
+        source_path = self.put(self.source, "a.md", source)
         target_path = self.put(self.target, "a.md", source)
         report = verify(self.source, self.target, self.config)
         fingerprints = [i["fingerprint"] for i in report["issues"]]
         self.config["exceptions"] = [{"fingerprint": p, "reason": "Synthetic test exception"} for p in fingerprints]
         self.assertEqual(verify(self.source, self.target, self.config)["summary"]["warnings"], 0)
-        target_path.write_text(source + "\n", encoding="utf-8")
-        self.assertGreater(verify(self.source, self.target, self.config)["summary"]["warnings"], 0)
+        for path in (source_path, target_path):
+            with self.subTest(path=path):
+                path.write_bytes((source + "\n").encode("utf-8"))
+                self.assertGreater(verify(self.source, self.target, self.config)["summary"]["warnings"], 0)
+                path.write_bytes(source.encode("utf-8"))
+
+    def test_exception_survives_line_ending_changes_but_review_hashes_use_raw_bytes(self):
+        lf = b"Source prose with enough words to trigger English review.\n\nMore prose.\n"
+        crlf = lf.replace(b"\n", b"\r\n")
+        source_path = self.put(self.source, "a.md", lf.decode())
+        target_path = self.put(self.target, "a.md", lf.decode())
+        baseline = verify(self.source, self.target, self.config)
+        self.assertGreater(baseline["summary"]["warnings"], 0)
+        self.config["exceptions"] = [
+            {"fingerprint": issue["fingerprint"], "reason": "Synthetic test exception"}
+            for issue in baseline["issues"]
+        ]
+
+        for source, target in ((crlf, lf), (lf, crlf), (crlf, crlf)):
+            with self.subTest(source_crlf=source == crlf, target_crlf=target == crlf):
+                source_path.write_bytes(source)
+                target_path.write_bytes(target)
+                bundle = review_bundle(self.source, self.target, self.config, [])
+                summary = bundle["deterministic_report"]["summary"]
+                self.assertEqual(summary["warnings"], 0)
+                self.assertEqual(summary["suppressed"], len(baseline["issues"]))
+                self.assertEqual(bundle["files"][0]["source_sha256"], digest(source))
+                self.assertEqual(bundle["files"][0]["target_sha256"], digest(target))
 
     def test_review_bundle_has_complete_pairs_and_hashes(self):
         source = "# Source heading\n\nSource body.\n"

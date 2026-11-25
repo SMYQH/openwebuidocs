@@ -1389,8 +1389,10 @@ def verify(source_root: Path, target_root: Path, config: dict, patterns: list[st
             matched += 1
             current = compare(path, Document(source_text, src[path].suffix, config["terms"]),
                               Document(target_text, dst[path].suffix, config["terms"]), config)
+        source_fingerprint_hash = digest(normalize_line_endings(a)) if a is not None else None
+        target_fingerprint_hash = digest(normalize_line_endings(b)) if b is not None else None
         for issue in current:
-            issue.fingerprint = digest(json.dumps([path, source_hash, target_hash,
+            issue.fingerprint = digest(json.dumps([path, source_fingerprint_hash, target_fingerprint_hash,
                                                   issue.line, issue.code, issue.message], ensure_ascii=False))
             if issue.fingerprint in exceptions:
                 issue.suppressed, issue.reason = True, exceptions[issue.fingerprint]
@@ -1414,9 +1416,13 @@ def verify(source_root: Path, target_root: Path, config: dict, patterns: list[st
     }
 
 
+def normalize_line_endings(raw: bytes) -> bytes:
+    return raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
 def audit_text(raw: bytes) -> str:
     # Line ending style does not constitute a code difference in an audit.
-    return raw.decode("utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
+    return normalize_line_endings(raw).decode("utf-8-sig")
 
 
 def review_template(files, config: dict) -> dict:

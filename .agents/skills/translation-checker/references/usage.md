@@ -166,8 +166,9 @@ total. Locations do not affect findings or exception fingerprints.
 thresholds, and `non_compliant_link_patterns` (URL globs the translation may
 drop). Add project-specific terms there; do not add expected translations.
 Intentional localization differences need an `exceptions` entry containing an
-issue's `fingerprint` and a specific `reason`. Fingerprints bind both documents,
-the path, rule, line, and finding. Editing either document expires the exception.
+issue's `fingerprint` and a specific `reason`. Fingerprints bind both documents
+with line endings normalized to LF, plus the path, rule, line, and finding.
+Editing either document beyond line endings expires the exception.
 Do not blanket-exempt a directory or hide a stale upstream parse error.
 
 ## Semantic quality review without configuration
@@ -191,7 +192,8 @@ uv run --locked translation-check --strict --files alternatives --review-results
 ```
 
 Results require every selected source file exactly once, valid statuses, and
-matching source/target hashes. Incomplete, stale, or failed reviews cannot pass.
+matching source/target hashes computed from the original file bytes.
+Incomplete, stale, or failed reviews cannot pass.
 This validates review coverage and provenance, not the reviewer's truthfulness.
 Without submitted results, reports always say semantic review is required.
 
@@ -215,7 +217,7 @@ through this option.
 
 ## Re-binding exceptions after an edit
 
-An exact exception is bound to a fingerprint that mixes the file path, the upstream and target hashes, the finding line, the rule and the finding text. Every edit to a translated file therefore expires the exceptions of that file, even when the reviewed difference is unchanged. Do not delete and retype the reason by hand; re-bind it:
+An exact exception expires after a change to either document beyond line endings, even when the reviewed difference is unchanged. Use the following commands to re-bind the exception and preserve its reason.
 
 ```powershell
 uv run --locked translation-check --strict --report .agents/skills/translation-checker/.reports/audit-before.json
