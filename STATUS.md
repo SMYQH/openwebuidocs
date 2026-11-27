@@ -3,9 +3,9 @@
 ## en-us Source Version
 
 - **Repo**: `en-us` (submodule)
-- **Git commit**: `99a0308054d130a751d82918f6ab20b0038258a6`
+- **Git commit**: `ee47d77ed76357560568dd5a1b0898fd514e96d3`
 - **Branch**: `main`
-- **Snapshot date**: 2026-11-25
+- **Snapshot date**: 2026-11-27
 
 ## Translation Progress Overview
 
@@ -16,16 +16,22 @@
 | en-us `_category_.json` | 43 |
 | zh-cn `_category_.json` | 43 |
 | File coverage | **100%** (all 412 en-us documents have corresponding zh-cn translations) |
-| Semantic review | **109/109 changed pairs passed** full bilingual review. The checker validated the source, installed translation, and configuration hashes. |
+| Semantic review | **1/1 changed pair passed** full bilingual review. The checker validated the source, installed translation, and configuration hashes. |
 | Strict checker audit | **455/455 pairs** with 0 errors, 0 warnings, 15 notes, and 48 exact exceptions. |
 | Verbatim code blocks | No hard code-preservation errors. The HAProxy and Nginx Proxy Manager fence repairs were reviewed against upstream. |
 | Upstream inline code spans preserved | No unwaived hard preservation errors. Review signals and exact exceptions remain; this is not a universal preservation certification. |
 | Explicit heading IDs matching upstream | No hard heading-structure failures. The reviewed HAProxy repair restored a heading hidden by upstream fence markup. |
 | Untranslated English prose | No unwaived language warnings. Leftover English `endpoint` wording was normalized to the project terminology (`端点`, `API 端点`, `基础 API 端点`), and the `终结点` variant was replaced. |
-| Production build | **Passed on 2026-11-25** with Node.js 24.15.0 and zero broken links, anchors, Markdown links, or duplicate routes. The build generated 390 routed documentation pages. Local sitemap synchronization skips runs without `DOMAIN`. |
-| Checker behaviour tests | **185 tests passed on 2026-11-25**, including diagnostic terminology and selective review reuse. |
+| Production build | **Passed on 2026-11-27** with Node.js 24.15.0 and zero broken links, anchors, Markdown links, or duplicate routes. The build generated 390 routed documentation pages. Local sitemap synchronization skips runs without `DOMAIN`. |
+| Checker behaviour tests | **185 tests passed on 2026-11-27**, including diagnostic terminology and selective review reuse. |
 
 Workflow: [semantic review](.agents/skills/translation-semantic-review/SKILL.md) is separate from the [Python checker](.agents/skills/translation-checker/SKILL.md), which owns the scripts, tests, config, provider helpers, and ignored local artifacts. Changes to either document beyond line endings expire its exact exceptions. `scripts/restamp_exceptions.py` re-binds the surviving exceptions and reports findings that need a manual decision.
+
+### 2026-11-27 Sync through `ee47d77e`
+
+- Translated the environment reference update for `ENABLE_PERSISTENT_CONFIG`. When persistence is disabled, Admin UI changes stay in the worker that handled the save. Redis does not propagate these changes. Set the corresponding environment variable on every instance to apply the same value.
+- Corrected existing wording on PDF re-extraction, embedding prefixes, OAuth recipient clients, required LDAP fields, and the audience for public calendars.
+- Rebound the existing heading-order exception for `TERMINAL_PROXY_HEADERS`. The full bilingual review passed for the changed page.
 
 ### 2026-11-25 Sync through `99a03080`
 

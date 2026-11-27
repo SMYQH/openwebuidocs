@@ -2,7 +2,7 @@
 
 > AGENTS.MD (this document) is time-sensitive. Agent assistants **must** update this document synchronously as the project evolves. See Section 8.
 > Do not blindly trust this document; content may be out of date.
-> Current document snapshot `Git Commit Hash`: `0c52b63`, `Commit` timestamp: `2026-11-25T22:03:56+08:00`
+> Current document snapshot `Git Commit Hash`: `ce6e35c`, `Commit` timestamp: `2026-11-27T13:37:33+08:00`
 
 ---
 
