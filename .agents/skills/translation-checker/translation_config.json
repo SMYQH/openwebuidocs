@@ -441,7 +441,7 @@
       "reason": "The first base URL in the OpenAI-compatible audio settings is defined as 基础 API 端点（Base URL） per the Chinese API terminology convention. All three Base URL references and the API key reference are retained."
     },
     {
-      "fingerprint": "4198f93a468165a808ff0faf40b2eab19eb0d47f93b83891bc4e17629ce33b9f",
+      "fingerprint": "c7224fc27e3cff10bbf4ee2b709236d859e9db847545b9bf5363bdc90e7aca51",
       "reason": "The upstream TERMINAL_PROXY_HEADERS alias interrupts ENABLE_AUTOCOMPLETE_GENERATION before its type, default, description, and persistence rows. The Chinese page moves the intact alias directly after MACHINE_PROXY_HEADERS to keep those rows under the correct setting. Every heading retains its level and anchor."
     }
   ]
